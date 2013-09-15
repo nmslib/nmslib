@@ -1,6 +1,8 @@
 Non-Metric Space Library
 =================
 
+To appear shortly.
+
 Authors: Bilegsaikhan Naidan, Leonid Boytsov.
 Copyright (c) 2010--2013
 
