@@ -23,6 +23,8 @@ Some prerequisites:
 4. Boost (dev version)
 5. GNU scientific library (dev version)
 
+To compile, go to similarity_search, type cmake ., then type make. A sample run script similarity_search/test/sample_run.sh
+
 We use the data set created by Lawerence Cayton (lcayton.com). See, the download scrip in the data directory. If you use this data, please, consider citing:
 
 @inproceedings{cayton:2008,  
