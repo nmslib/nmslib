@@ -7,12 +7,12 @@ Copyright (c) 2010--2013
 Documentation will appear shortly. Some underlying principles and motivation are described in our paper:
 
 @incollection{boytsov_naidan:2013,  
-  title={Engineering Efficient and Effective Non-metric Space Library},  
-  author={Boytsov, Leonid and Naidan, Bilegsaikhan},  
-  booktitle={Similarity Search and Applications},  
-  pages={280--293},  
-  year={2013},  
-  publisher={Springer}  
+&nbsp;&nbsp;title={Engineering Efficient and Effective Non-metric Space Library},  
+&nbsp;&nbsp;author={Boytsov, Leonid and Naidan, Bilegsaikhan},  
+&nbsp;&nbsp;booktitle={Similarity Search and Applications},  
+&nbsp;&nbsp;pages={280--293},  
+&nbsp;&nbsp;year={2013},  
+&nbsp;&nbsp;publisher={Springer}  
 }  
 
 Some prerequisites:
@@ -23,17 +23,21 @@ Some prerequisites:
 4. Boost (dev version)
 5. GNU scientific library (dev version)
 
-To compile, go to similarity_search, type cmake ., then type make. A sample run script similarity_search/test/sample_run.sh
+To compile, go to similarity_search, type:  
+cmake .  
+Then, type:  
+make   
+A sample run script similarity_search/test/sample_run.sh
 
 We use the data set created by Lawerence Cayton (lcayton.com). See, the download scrip in the data directory. If you use this data, please, consider citing:
 
 @inproceedings{cayton:2008,  
-  title={Fast nearest neighbor retrieval for bregman divergences},  
-  author={Cayton, Lawrence},  
-  booktitle={Proceedings of the 25th international conference on Machine learning},  
-  pages={112--119},   
-  year={2008},   
-  organization={ACM}  
+&nbsp;&nbsp;title={Fast nearest neighbor retrieval for bregman divergences},  
+&nbsp;&nbsp;author={Cayton, Lawrence},  
+&nbsp;&nbsp;booktitle={Proceedings of the 25th international conference on Machine learning},  
+&nbsp;&nbsp;pages={112--119},   
+&nbsp;&nbsp;year={2008},   
+&nbsp;&nbsp;organization={ACM}  
 }  
 
 
