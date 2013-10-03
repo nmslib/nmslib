@@ -19,9 +19,10 @@ Some prerequisites:
 
 1. G++ that supports the new C++ standard, e.g., version 4.7
 2. Linux
-3. An Intel or AMD processor that supports SSE 4.1
-4. Boost (dev version)
-5. GNU scientific library (dev version)
+3. cmake
+4. An Intel or AMD processor that supports SSE 4.1
+5. Boost (dev version)
+6. GNU scientific library (dev version)
 
 To compile, go to similarity_search, type:  
 cmake .  
@@ -29,7 +30,7 @@ Then, type:
 make   
 A sample run script similarity_search/test/sample_run.sh
 
-We use the data set created by Lawerence Cayton (lcayton.com). See, the download scrip in the data directory. If you use this data, please, consider citing:
+We use the data set created by Lawerence Cayton (lcayton.com). See, the download script in the data directory. If you use this data, please, consider citing:
 
 @inproceedings{cayton:2008,  
 &nbsp;&nbsp;title={Fast nearest neighbor retrieval for bregman divergences},  
