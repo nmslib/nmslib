@@ -4,7 +4,7 @@ Non-Metric Space Library
 Authors: Bilegsaikhan Naidan, Leonid Boytsov.
 Copyright (c) 2010--2013
 
-Documentation will appear shortly. Some underlying principles and motivation are described in our paper:
+Documentation will appear shortly. Some underlying principles and motivation are described in our "engineering" paper:
 
 @incollection{boytsov_naidan:2013,  
 &nbsp;&nbsp;title={Engineering Efficient and Effective Non-metric Space Library},  
@@ -14,6 +14,8 @@ Documentation will appear shortly. Some underlying principles and motivation are
 &nbsp;&nbsp;year={2013},  
 &nbsp;&nbsp;publisher={Springer}  
 }  
+
+The details of the prunning approaches (in non-metric spaces) will appear shortly.
 
 Some prerequisites:
 
