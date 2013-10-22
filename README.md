@@ -15,7 +15,7 @@ Documentation will appear shortly. Some underlying principles and motivation are
 &nbsp;&nbsp;publisher={Springer}  
 }  
 
-The details of the prunning approaches (in non-metric spaces) will appear shortly.
+The details of the prunning approaches (in non-metric spaces) will also appear soon.
 
 Some prerequisites:
 
