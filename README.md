@@ -15,6 +15,9 @@ Documentation will appear shortly. Some underlying principles and motivation are
 &nbsp;&nbsp;publisher={Springer}  
 }  
 
+Preprint: http://boytsov.info/pubs/sisap2013.pdf  
+Slides: http://boytsov.info/pubs/sisap2013slides.pdf 
+
 The details of the prunning approaches (in non-metric spaces) will also appear soon.
 
 Some prerequisites:
@@ -31,6 +34,8 @@ cmake .
 Then, type:  
 make   
 A sample run script similarity_search/test/sample_run.sh
+
+Sample scipts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning
 
 We use the data set created by Lawerence Cayton (lcayton.com). See, the download script in the data directory. If you use this data, please, consider citing:
 
