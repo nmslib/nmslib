@@ -39,7 +39,7 @@ for (my $dn = 0; $dn < @DataSet; ++$dn) {
     $MinCand = 1 if $MinCand < 1;
     my $DesiredRecall = $RecallList[$i] or die("Undefined recall for i=$i");
     my $ip1 = $i + 1;
-    my $AlphaParams = `head -$ip1 Tunning/ResultsKL/OutFile.${Name}.$K|tail -1`;
+    my $AlphaParams = `head -$ip1 tunning/ResultsKL/OutFile.${Name}.$K|tail -1`;
     chomp $AlphaParams;
     $AlphaParams ne "" or die("Empty AlphaParams"); 
     my $cmd = "../../similarity_search/release/experiment --dataFile /home/leonid/DataNIPS/$Name.txt --maxNumData $MaxNumData --maxNumQuery $MaxNumQuery --dimension $dimension  --distType float --spaceType $SpaceType --knn $K --testSetQty $TestSetQty --outFilePrefix $OutFilePrefix ";
