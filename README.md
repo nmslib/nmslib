@@ -15,8 +15,8 @@ Documentation will appear shortly. Some underlying principles and motivation are
 &nbsp;&nbsp;publisher={Springer}  
 }  
 
-Preprint: http://boytsov.info/pubs/sisap2013.pdf
-Slides: http://boytsov.info/pubs/sisap2013slides.pdf
+Preprint: http://boytsov.info/pubs/sisap2013.pdf 
+Slides: http://boytsov.info/pubs/sisap2013slides.pdf 
 
 The details of the prunning approaches (in non-metric spaces) will also appear soon.
 
