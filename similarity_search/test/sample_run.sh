@@ -96,6 +96,7 @@ export MethDesc="\
   --method lsh_multiprobe:desiredRecall=$DesiredRecall,H=1017881,T=10,L=50,tuneK=$K  
   --method lsh_gaussian
   --method ghtree:bucketSize=$BucketSize  
+  --method satree:bucketSize=$BucketSize  
   --method list_clusters:bucketSize=$BucketSize  
   --method mvptree:bucketSize=$BucketSize  
   --method vptree:alphaLeft=1,alphaRight=1,bucketSize=$BucketSize 
@@ -118,6 +119,7 @@ export MethDesc="\
   --method lsh
   --method lsh_cauchy
   --method ghtree:bucketSize=$BucketSize  
+  --method satree:bucketSize=$BucketSize  
   --method list_clusters:bucketSize=$BucketSize  
   --method mvptree:bucketSize=$BucketSize  
   --method vptree:alphaLeft=1,alphaRight=1,bucketSize=$BucketSize 

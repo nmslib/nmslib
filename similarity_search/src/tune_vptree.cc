@@ -136,6 +136,12 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
 
             AnyParamManager pmgr(MethPars);
 
+            /* 
+             * We need delete other parameters, otherwise the destructor would
+             * complain about unused ones.
+             */
+            AnyParams  MethPars = pmgr.ExtractParametersExcept({"alphaLeft", "alphaRight"});
+
             pmgr.GetParamRequired("alphaLeft", alpha_left_best);
             pmgr.GetParamRequired("alphaRight", alpha_right_best);
         }

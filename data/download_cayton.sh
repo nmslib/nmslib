@@ -12,6 +12,9 @@ If you use it, please, consider citing:
   year={2008},
   organization={ACM}
 }
+
+Note that the sig10k.txt originally used by Cayton is not normalized. Thus,
+we additionally created a normalized version: sig10k_norm.txt. 
 EOF
 
 function CheckMD5() {
@@ -105,6 +108,9 @@ CheckMD5 semSpace500.txt.gz 043a77afe2247260d3a102c94b1fda78
 
 Download https://s3.amazonaws.com/7dcbd2dde926fb1e854bade78a448b3-default/3.DataSets.Cayton.sig10k_-txt_-gz.file sig10k.txt.gz  
 CheckMD5 sig10k.txt.gz 6927133979ea745b60467d751856e8fc
+
+Download https://s3.amazonaws.com/7dcbd2dde926fb1e854bade78a448b3-default/3.DataSets.Cayton.sig10k__norm_-txt_-gz.file sig10k_norm.txt.gz  
+CheckMD5 sig10k_norm.txt.gz b2618d4ef84ebdd54658c50cb7fe442e
 
 Download https://s3.amazonaws.com/7dcbd2dde926fb1e854bade78a448b3-default/3.DataSets.Cayton.sig2k_-txt_-gz.file sig2k.txt.gz 
 CheckMD5 sig2k.txt.gz 2b19cee166763b982c65bb3f8ce1cf5d 

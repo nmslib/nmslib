@@ -184,7 +184,7 @@ void ParseCommandLine(int argc, char*argv[],
                         "# of threads")
     ("appendToResFile", po::value<bool>(&AppendToResFile)->default_value(false),
                         "do not override information in results files, append new data")
-    ("eps",             po::value<float>(&eps)->default_value(1.0),
+    ("eps",             po::value<float>(&eps)->default_value(0.0),
                         "the parameter for the eps-approximate k-NN search.")
 
     ;
