@@ -1,5 +1,7 @@
 #/bin/bash
 
+SampleData="../sample_data"
+
 function Run {
     dim=$1
     DataFile=$2
@@ -26,7 +28,7 @@ function Run {
         SpaceTypeOpt="--spaceType $SpaceType"
     fi
 
-    cmd="../release/experiment --dimension $dim --dataFile $DataFile --maxNumData $MaxNumData $Queries "
+    cmd="../similarity_search/release/experiment --dimension $dim --dataFile $DataFile --maxNumData $MaxNumData $Queries "
     cmd="$cmd --appendToResFile 1 --outFilePrefix $OutFilePrefix $TestSetOpt $SpaceTypeOpt $DistanceTypeOpt $MethDesc"
 
     $cmd
@@ -55,15 +57,15 @@ IndexQty=5
 # Testing different variants of spaces
 export MethDesc=" --method perm_incsort:numPivot=$NumPivot,dbScanFrac=$DbScanFrac  "
 
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "l0" "float" "--knn $K"
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "l1" "float" "--knn $K"
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "l2" "float" "--knn $K"
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "kldivfast" "float" "--knn $K"
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "kldivfastrq" "float" "--knn $K"
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "kldivgenfast" "float" "--knn $K"
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "kldivgenslow" "float" "--knn $K"
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "kldivgenfastrq" "float" "--knn $K"
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "itakurasaitofast" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "l0" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "l1" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "l2" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "kldivfast" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "kldivfastrq" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "kldivgenfast" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "kldivgenslow" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "kldivgenfastrq" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "itakurasaitofast" "float" "--knn $K"
 
 # KL-div experiments
 
@@ -81,11 +83,11 @@ export MethDesc="\
 
 
 # Testing external query file
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "KLDivGenFast" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "KLDivGenFast" "float" "--knn $K"
 # Testing external query file with the limit on the number of queries
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "500" "KLDivGenFast" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "500" "KLDivGenFast" "float" "--knn $K"
 # Testing bootstrapping mode
-Run "128" "SampleData/final128_10K.txt" "0" "5" "" "500" "KLDivGenFast" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "5" "" "500" "KLDivGenFast" "float" "--knn $K"
 
 # L2 experiments
 export MethDesc="\
@@ -105,11 +107,11 @@ export MethDesc="\
 
 
 # Testing external query file
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "l2" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "l2" "float" "--knn $K"
 # Testing external query file with the limit on the number of queries
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "500" "l2" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "500" "l2" "float" "--knn $K"
 # Testing bootstrapping mode
-Run "128" "SampleData/final128_10K.txt" "0" "5" "" "500" "l2" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "5" "" "500" "l2" "float" "--knn $K"
 
 # L1 experiments
 export MethDesc="\
@@ -127,9 +129,9 @@ export MethDesc="\
 "
 
 # Testing external query file
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "0" "l1" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "l1" "float" "--knn $K"
 # Testing external query file with the limit on the number of queries
-Run "128" "SampleData/final128_10K.txt" "0" "0" "SampleData/final128_query1K.txt" "500" "l1" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "500" "l1" "float" "--knn $K"
 # Testing bootstrapping mode
-Run "128" "SampleData/final128_10K.txt" "0" "5" "" "500" "l1" "float" "--knn $K"
+Run "128" "$SampleData/final128_10K.txt" "0" "5" "" "500" "l1" "float" "--knn $K"
 
