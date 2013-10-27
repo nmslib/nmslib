@@ -33,7 +33,7 @@ To compile, go to similarity_search, type:
 cmake .  
 Then, type:  
 make   
-A sample run script similarity_search/test/sample_run.sh
+A sample run script sample_scripts/sample_run.sh
 
 Sample scipts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning
 
