@@ -24,7 +24,7 @@ for (my $dn = 0; $dn < @DataSet; ++$dn) {
   my $Name      = $DataSet[$dn];
 
   # We can select which methods to execute
-  next if (!exists $Use{$Name});
+  next if (!exists $Use{$Name} || !$Use{$Name});
 
   my $OutFileDir="ResultsL2/$Name";
   !system("mkdir -p $OutFileDir") or die("Cannot create $OutFileDir");

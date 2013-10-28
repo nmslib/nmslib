@@ -9,7 +9,7 @@ if (0) {
 my $TestSetQty=1;
 my $NumPivot=16;
 my $PrefixLen=4;
-my $BucketSize = 10;
+my $BucketSize = 50;
 
 my @DataSet       = ("final16", "final32", "final64", "final128", "final256", "sig10k");
 my @Dims          = (16, 32, 64, 128, 256, 1111);
@@ -23,7 +23,7 @@ for (my $dn = 0; $dn < @DataSet; ++$dn) {
   my $Name      = $DataSet[$dn];
 
   # We can select which methods to execute
-  next if (!$Use{$Name});
+  next if (!exists $Use{$Name} || !$Use{$Name});
 
   my $OutFileDir="ResultsExact_$SpaceType/$Name";
   !system("mkdir -p $OutFileDir") or die("Cannot create $OutFileDir");

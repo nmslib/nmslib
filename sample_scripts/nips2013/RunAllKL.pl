@@ -13,9 +13,9 @@ my $PrefixLen=4;
 my $BucketSize = 50;
 
 my @DataSet       = ("final8", "final16", "final32", "final64", "final128", "final256", "sig10k");
-my @Dims          = (8, 16, 32, 64, 128, 256, 1111);
-my @MaxScanFracs  = (0.015,0.02, 0.03, 0.04, 0.05, 0.06, 0.07);
-my @MaxMinCands   = (16000, 16000, 16000, 16000, 16000, 16000, 2000);
+my @Dims          = (8       , 16       , 32       , 64       , 128       , 256       , 1111);
+my @MaxScanFracs  = (0.015   , 0.02     , 0.03     , 0.04     , 0.05      , 0.06      , 0.07);
+my @MaxMinCands   = (16000   , 16000    , 16000    , 16000    , 16000     , 16000     , 2000);
 
 my %Use = ( "final8" => 1, "final16" => 1, "final32" => 1, "final128" => 1, "final256" => 1, "sig10k" => 1 );
 
@@ -24,7 +24,7 @@ for (my $dn = 0; $dn < @DataSet; ++$dn) {
   my $Name      = $DataSet[$dn];
 
   # We can select which methods to execute
-  next if (!exists $Use{$Name});
+  next if (!exists $Use{$Name} || !$Use{$Name});
 
   my $OutFileDir="ResultsKL/$Name";
   !system("mkdir -p $OutFileDir") or die("Cannot create $OutFileDir");
