@@ -16,8 +16,7 @@ my @Dims          = (16, 32, 64, 128, 256, 1111);
 
 my %Use = ( "final16" => 1, "final32" => 1, "final128" => 1, "final256" => 1, "sig10k" => 1 );
 
-#for my $SpaceType ("KLDivGenFast", "KLDivGenSlow") {
-for my $SpaceType ("KLDivGenSlow") {
+for my $SpaceType ("KLDivGenSlow", "KLDivGenFast") {
 for (my $dn = 0; $dn < @DataSet; ++$dn) {
   my $dimension = $Dims[$dn];
   my $Name      = $DataSet[$dn];
