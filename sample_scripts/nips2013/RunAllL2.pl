@@ -12,12 +12,12 @@ my $NumPivot=16;
 my $PrefixLen=4;
 my $BucketSize = 50;
 
-my @DataSet       = ("colors112", "final128", "unif64");
-my @Dims          = (112,       128,          64);
-my @MaxScanFracs  = (0.02,      0.02,         0.2);
-my @MaxMinCands   = (4000,      16000,        16000);
+my @DataSet       = ("colors112", "final128", "unif64", "final16", "final256", "sig10k");
+my @Dims          = (112,       128,          64,       16,         256,        1111);
+my @MaxScanFracs  = (0.02,      0.02,         0.2,      0.02,       0.02,       0.07);
+my @MaxMinCands   = (4000,      16000,        16000,    4000,       16000,      4000);
 
-my %Use = ( "colors112" => 1, "final128" => 1, "unif64" => 1 );
+my %Use = ( "colors112" => 1, "final128" => 1, "unif64" => 1, "final16" => 1, "final256" => 1,"sig10k" => 1 );
 
 for (my $dn = 0; $dn < @DataSet; ++$dn) {
   my $dimension = $Dims[$dn];
