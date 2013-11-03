@@ -22,4 +22,22 @@ for K in 1 ; do
     exit 1
   fi
 
+  ../../TuneOneMeth.sh "$RecallList" ~/DataNIPS/sig10k.txt l2  1111 9 9 $K ResultsL2/OutFile.sig10k.$K $BucketSize
+  if [ "$?" != "0" ] ; then
+    echo "Tunning failed!"
+    exit 1
+  fi
+
+
+  ../../TuneOneMeth.sh "$RecallList" ~/DataNIPS/final256.txt l2  256 9 9 $K ResultsL2/OutFile.final256.$K $BucketSize
+  if [ "$?" != "0" ] ; then
+    echo "Tunning failed!"
+    exit 1
+  fi
+
+  ../../TuneOneMeth.sh "$RecallList" ~/DataNIPS/final32.txt l2  32 9 9 $K ResultsL2/OutFile.final32.$K $BucketSize
+  if [ "$?" != "0" ] ; then
+    echo "Tunning failed!"
+    exit 1
+  fi
 done
