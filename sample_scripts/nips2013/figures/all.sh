@@ -17,3 +17,13 @@ rm -rf final16* ; rm -rf final128* ; rm -rf sig10k* ; rm -rf ResultsKL* ;
 ../genplots_nips2013.py -d ../../ResultsKL/final256 -y 0 -t RCV-256 && ../rem.sh
 ../genplots_nips2013.py -d ../../ResultsKL/sig10k -y 0 -t "SIFT signatures" && ../rem.sh
 
+cd ../FiguresItakuraSaito
+rm -rf final16* ; rm -rf final128* ; rm -rf sig10k* ; rm -rf ResultsItakuraSaito* ;
+
+../genplots_nips2013.py -d ../../ResultsItakuraSaito/final8 -y 1 -t RCV-8 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsItakuraSaito/final16 -y 1 -t RCV-16 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsItakuraSaito/final32 -y 1 -t RCV-32 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsItakuraSaito/final128 -y 0 -t RCV-128 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsItakuraSaito/final256 -y 0 -t RCV-256 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsItakuraSaito/sig10k -y 0 -t "SIFT signatures" && ../rem.sh
+
