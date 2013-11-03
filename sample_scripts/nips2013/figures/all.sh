@@ -11,6 +11,8 @@ cd ../FiguresKL
 rm -rf final16* ; rm -rf final128* ; rm -rf sig10k* ; rm -rf ResultsKL* ;
 
 ../genplots_nips2013.py -d ../../ResultsKL/final16 -y 1 -t RCV-16 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsKL/final32 -y 1 -t RCV-16 && ../rem.sh
 ../genplots_nips2013.py -d ../../ResultsKL/final128 -y 0 -t RCV-128 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsKL/final256 -y 0 -t RCV-128 && ../rem.sh
 ../genplots_nips2013.py -d ../../ResultsKL/sig10k -y 0 -t "SIFT signatures" && ../rem.sh
 
