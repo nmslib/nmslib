@@ -4,7 +4,10 @@ rm -rf colors112*  ; rm -rf final128*  ; rm -rf unif64*  ; rm -rf FiguresL2* ;
 
 ../genplots_nips2013.py -d ../../ResultsL2/colors112 -y 1 -t Colors && ../rem.sh
 ../genplots_nips2013.py -d ../../ResultsL2/final128 -y 0 -t RCV-128 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsL2/final256 -y 0 -t RCV-256 && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsL2/final16 -y 0 -t RCV-16 && ../rem.sh
 ../genplots_nips2013.py -d ../../ResultsL2/unif64 -y 0 -t Uniform && ../rem.sh
+../genplots_nips2013.py -d ../../ResultsL2/sig10k -y 0 -t "SIFT signatures" && ../rem.sh
 
 
 cd ../FiguresKL
