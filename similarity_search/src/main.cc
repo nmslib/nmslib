@@ -238,12 +238,13 @@ void RunExper(const multimap<string, AnyParams*>& Methods,
         ctm.split();
 
         const double vmsize_after = mem_usage_measure.get_vmsize();
+        const double data_size = config.GetDataObjects().size() * config.GetDimension() * sizeof(dist_t) / 1024.0 / 1024.0;
 
-        const double TotalMemByMethod = vmsize_after - vmsize_before
-                     + config.GetDataObjects().size() * config.GetDimension() * sizeof(dist_t) / 1024 / 1024.0 / 1024.0;
+        const double TotalMemByMethod = vmsize_after - vmsize_before + data_size;
 
         LOG(INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
         LOG(INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
+        LOG(INFO) << ">>>> Data size:            " << data_size << " MBs";
         LOG(INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
         LOG(INFO) << ">>>> CPU time elapsed:     " << (ctm.userelapsed()/double(1e6)) << " sec";
         LOG(INFO) << ">>>> System time elapsed:  " << (ctm.systemelapsed()/double(1e6)) << " sec";
