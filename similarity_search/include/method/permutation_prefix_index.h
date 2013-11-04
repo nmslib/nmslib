@@ -43,7 +43,8 @@ class PermutationPrefixIndex : public Index<dist_t> {
                          const ObjectVector& data,
                          const size_t num_pivot,
                          const size_t prefix_length,
-                         const size_t min_candidate);
+                         const size_t min_candidate,
+                         bool chunk_bucket);
   ~PermutationPrefixIndex();
 
   const std::string ToString() const;

@@ -31,7 +31,7 @@ class PrefixNodeLeaf;
 
 class PrefixNode {
  public:
-  virtual ~PrefixNode() {}
+  virtual ~PrefixNode() {};
   virtual bool IsLeaf() const = 0;
   virtual void Insert(const Permutation& perm,
                       const Object* object,
@@ -44,11 +44,21 @@ class PrefixNode {
   virtual const PrefixNode* SearchPath(const Permutation& perm,
                                        const size_t sub_length,
                                        const size_t cur_depth) const = 0;
+  virtual void ChunkBuckets() = 0;
 };
 
 class PrefixNodeLeaf : public PrefixNode {
  public:
-  ~PrefixNodeLeaf() {}
+  PrefixNodeLeaf() : bucket_(new ObjectVector()), CacheOptimizedBucket_(NULL) {}
+  virtual ~PrefixNodeLeaf() { ClearBucket(CacheOptimizedBucket_, bucket_); }
+
+  virtual void ChunkBuckets() {
+    ObjectVector* pData = bucket_;
+
+    CreateCacheOptimizedBucket(*pData, CacheOptimizedBucket_, bucket_);
+
+    delete pData;
+  }
 
   bool IsLeaf() const { return true; }
 
@@ -57,17 +67,17 @@ class PrefixNodeLeaf : public PrefixNode {
               const size_t length,
               const size_t cur_depth) {
     CHECK(cur_depth == length);
-    bucket_.push_back(object);
+    bucket_->push_back(object);
   }
 
-  size_t GetNumberObjects() const { return bucket_.size(); }
+  size_t GetNumberObjects() const { return bucket_->size(); }
 
   void GetAllObjectsInThisSubTree(
       ObjectVector* objects,
       std::unordered_set<const PrefixNode*>* visited) const {
     if (visited->count(this) == 0) {
       visited->insert(this);
-      objects->insert(objects->end(), bucket_.begin(), bucket_.end());
+      objects->insert(objects->end(), bucket_->begin(), bucket_->end());
     }
   }
 
@@ -78,7 +88,8 @@ class PrefixNodeLeaf : public PrefixNode {
   }
 
  private:
-  ObjectVector bucket_;
+  ObjectVector* bucket_;
+  char*         CacheOptimizedBucket_;
 };
 
 class PrefixNodeInternal : public PrefixNode {
@@ -92,6 +103,10 @@ class PrefixNodeInternal : public PrefixNode {
   }
 
   bool IsLeaf() const { return false; }
+
+  virtual void ChunkBuckets() {
+    for (auto& it: children_) it.second->ChunkBuckets();
+  }
 
   void Insert(const Permutation& perm,
               const Object* object,
@@ -150,6 +165,7 @@ class PrefixNodeInternal : public PrefixNode {
 class PrefixTree {
  public:
   PrefixTree() : root_(new PrefixNodeInternal) {}
+  void ChunkBuckets() { root_->ChunkBuckets(); }
 
   ~PrefixTree() { delete root_; }
 
@@ -164,6 +180,7 @@ class PrefixTree {
                       const size_t min_candidate,
                       ObjectVector* candidates) {
     std::unordered_set<const PrefixNode*> visited;
+    visited.reserve(min_candidate * 2);
     for (int i = static_cast<int>(prefix_length); i >= 0; --i) {
       const PrefixNode* node = root_->SearchPath(perm_q, i, 0);
       if (node != NULL &&
@@ -185,7 +202,8 @@ PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(
     const ObjectVector& data,
     const size_t num_pivot,
     const size_t prefix_length,
-    const size_t min_candidate)
+    const size_t min_candidate,
+    bool chunk_bucket)
   : prefix_length_(prefix_length), min_candidate_(min_candidate) {
   CHECK(prefix_length_ <= num_pivot);
   CHECK(prefix_length_ > 0);
@@ -202,6 +220,8 @@ PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(
     GetPermutationPPIndex(pivot_, space, it, &permutation);
     prefixtree_->Insert(permutation, it, prefix_length_);
   }
+  // Store elements in leaves/buckets contiguously
+  if (chunk_bucket) prefixtree_->ChunkBuckets();
 }
 
 template <typename dist_t>
@@ -221,6 +241,7 @@ void PermutationPrefixIndex<dist_t>::GenSearch(QueryType* query) {
   GetPermutationPPIndex(pivot_, query, &perm_q);
 
   ObjectVector candidates;
+  candidates.reserve(2  * min_candidate_);
   prefixtree_->FindCandidates(perm_q, prefix_length_,
                               min_candidate_, &candidates);
 

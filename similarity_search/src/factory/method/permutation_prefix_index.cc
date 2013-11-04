@@ -35,10 +35,12 @@ Index<dist_t>* CreatePermutationPrefixIndex(bool PrintProgress,
   size_t    NumPivot        = 16;
   size_t    PrefixLength    = 4;
   size_t    MinCandidate    = 1000;
+  bool      ChunkBucket     = true;
 
   pmgr.GetParamOptional("prefixLength", PrefixLength);
   pmgr.GetParamOptional("numPivot", NumPivot);
   pmgr.GetParamOptional("minCandidate", MinCandidate);
+  pmgr.GetParamOptional("chunkBucket", ChunkBucket);
 
   if (PrefixLength == 0 || PrefixLength > NumPivot) {
     LOG(FATAL) << METH_PERMUTATION_PREFIX_IND
@@ -55,7 +57,8 @@ Index<dist_t>* CreatePermutationPrefixIndex(bool PrintProgress,
                 DataObjects,
                 NumPivot, 
                 PrefixLength, 
-                MinCandidate);
+                MinCandidate,
+                ChunkBucket);
 
 }
 
