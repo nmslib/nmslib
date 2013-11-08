@@ -17,8 +17,7 @@ Documentation will appear shortly. Some underlying principles and motivation are
 
 Preprint: http://boytsov.info/pubs/sisap2013.pdf  
 Slides: http://boytsov.info/pubs/sisap2013slides.pdf 
-
-The details of the prunning approaches (in non-metric spaces) will also appear soon.
+The details of the prunning approach (in non-metric spaces) are outlined in the NIPS'13 paper: http://boytsov.info/pubs/nips2013.pdf (paper supplemental materials: http://boytsov.info/pubs/nips2013_suppl.zip).
 
 Some prerequisites:
 
@@ -33,9 +32,11 @@ To compile, go to similarity_search, type:
 cmake .  
 Then, type:  
 make   
+
 A sample run script sample_scripts/sample_run.sh
 
 Sample scipts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning
+In addition, sample_scripts/nips2013 contains the full set of scripts that were used to re-produce our NIPS'13 and SISAP'13 results. We also provide the software to generate plots.
 
 We use the data set created by Lawerence Cayton (lcayton.com). See, the download script in the data directory. If you use this data, please, consider citing:
 
