@@ -33,10 +33,10 @@ cmake .
 Then, type:  
 make   
 
-A sample run script sample_scripts/sample_run.sh
+Examples of how to use the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh
 
-Sample scipts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning
-In addition, sample_scripts/nips2013 contains the full set of scripts that were used to re-produce our NIPS'13 and SISAP'13 results. We also provide the software to generate plots.
+Sample scipts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
+In addition, sample_scripts/nips2013 contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results. This includes the software to generate plots. To generate plots one needs Python, Latex, and PGF.   
 
 We use the data set created by Lawerence Cayton (lcayton.com). See, the download script in the data directory. If you use this data, please, consider citing:
 
