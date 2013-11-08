@@ -17,7 +17,7 @@ Documentation will appear shortly. Some underlying principles and motivation are
 
 Preprint: http://boytsov.info/pubs/sisap2013.pdf  
 Slides: http://boytsov.info/pubs/sisap2013slides.pdf   
-The details of the prunning approach (in non-metric spaces) are outlined in the NIPS'13 paper: http://boytsov.info/pubs/nips2013.pdf (paper supplemental materials: http://boytsov.info/pubs/nips2013_suppl.zip).
+The details of the prunning approach are outlined in the NIPS'13 paper: http://boytsov.info/pubs/nips2013.pdf (paper supplemental materials: http://boytsov.info/pubs/nips2013_suppl.zip).
 
 Some prerequisites:
 
