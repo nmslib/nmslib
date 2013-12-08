@@ -20,5 +20,5 @@ else ()
     set (EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/debug/")
 endif ()
 
-ADD_SUBDIRECTORY("tools")
+#ADD_SUBDIRECTORY("tools")
 

@@ -56,7 +56,8 @@ bool GammaDoubleMleTol (double first, double second)
 GammaDouble GammaDoubleMLE (double M, double G)
 {
     GammaDoubleMleHelper hlp(G/M);
-    std::pair<double,double> pair = boost::math::tools::bisect(hlp, ABS_ERROR, MAX_SHAPE, GammaDoubleMleTol);
+    // Conversion to double is due to an Intel's bug with __builtin_signbit being undefined for float
+    std::pair<double,double> pair = boost::math::tools::bisect(hlp, (double)ABS_ERROR, (double)MAX_SHAPE, GammaDoubleMleTol);
     double k = (pair.first + pair.second) / 2.0;
     return GammaDouble(k, M/k);
 }

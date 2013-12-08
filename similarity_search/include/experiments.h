@@ -176,46 +176,46 @@ struct Experiments {
   };
 
   template <typename QueryType, typename QueryCreatorType> 
-  static void 
-  BenchmarkThread(BenchmarkThreadParams<QueryType, QueryCreatorType>& prm) {
+  struct BenchmarkThread {
+    void operator ()(BenchmarkThreadParams<QueryType, QueryCreatorType>& prm) {
+      int numquery = prm.config_.GetQueryObjects().size();
 
-    int numquery = prm.config_.GetQueryObjects().size();
+      WallClockTimer wtm;
+      CPUTimer       ctm;
 
-    WallClockTimer wtm;
-    CPUTimer       ctm;
+      wtm.reset();
+      ctm.reset();
 
-    wtm.reset();
-    ctm.reset();
+      unsigned MethNum = prm.MethNum_;
+      unsigned QueryPart = prm.QueryPart_;
+      unsigned ThreadQty = prm.ThreadQty_;
 
-    unsigned MethNum = prm.MethNum_;
-    unsigned QueryPart = prm.QueryPart_;
-    unsigned ThreadQty = prm.ThreadQty_;
+      for (int q = 0; q < numquery; ++q) {
+        if ((q % ThreadQty) == QueryPart) {
+          scoped_ptr<QueryType> query(prm.QueryCreator_(prm.config_.GetSpace(), 
+                                      prm.config_.GetQueryObjects()[q]));
+          uint64_t  t1 = wtm.split();
+          prm.Method_.Search(query.get());
+          uint64_t  t2 = wtm.split();
 
-    for (int q = 0; q < numquery; ++q) {
-      if ((q % ThreadQty) == QueryPart) {
-        scoped_ptr<QueryType> query(prm.QueryCreator_(prm.config_.GetSpace(), 
-                                    prm.config_.GetQueryObjects()[q]));
-        uint64_t  t1 = wtm.split();
-        prm.Method_.Search(query.get());
-        uint64_t  t2 = wtm.split();
+          {
+            lock_guard<mutex> g(prm.UpdateStat_);
 
-        {
-          lock_guard<mutex> g(prm.UpdateStat_);
-
-          prm.ExpRes_[MethNum]->AddDistComp(prm.TestSetId_, query->DistanceComputations());
-          prm.ExpRes_[MethNum]->AddQueryTime(prm.TestSetId_, (1.0*t2 - t1)/1e3);
+            prm.ExpRes_[MethNum]->AddDistComp(prm.TestSetId_, query->DistanceComputations());
+            prm.ExpRes_[MethNum]->AddQueryTime(prm.TestSetId_, (1.0*t2 - t1)/1e3);
 
 
-          prm.DistCompQty_[MethNum] += query->DistanceComputations();
-          prm.avg_result_size_[MethNum] += query->ResultSize();
+            prm.DistCompQty_[MethNum] += query->DistanceComputations();
+            prm.avg_result_size_[MethNum] += query->ResultSize();
 
-          if (query->ResultSize() > prm.max_result_size_[MethNum]) {
-            prm.max_result_size_[MethNum] = query->ResultSize();
+            if (query->ResultSize() > prm.max_result_size_[MethNum]) {
+              prm.max_result_size_[MethNum] = query->ResultSize();
+            }
           }
         }
       }
     }
-  }
+  };
 
   template <typename QueryType, typename QueryCreatorType>
   static void Execute(bool LogInfo, unsigned ThreadTestQty, size_t TestSetId, 
@@ -299,7 +299,7 @@ struct Experiments {
 
       if (ThreadTestQty> 1) {
         for (unsigned QueryPart = 0; QueryPart < ThreadTestQty; ++QueryPart) {
-          Threads[QueryPart] = thread(BenchmarkThread<QueryType, QueryCreatorType>, 
+          Threads[QueryPart] = std::thread(BenchmarkThread<QueryType, QueryCreatorType>(), 
                                      ref(*ThreadParams[QueryPart]));
         }
         for (unsigned QueryPart = 0; QueryPart < ThreadTestQty; ++QueryPart) {
@@ -307,7 +307,7 @@ struct Experiments {
         }
       } else {
         CHECK(ThreadTestQty == 1);
-        BenchmarkThread<QueryType, QueryCreatorType>(*ThreadParams[0]);
+        BenchmarkThread<QueryType, QueryCreatorType>()(*ThreadParams[0]);
       }
 
       wtm.split();

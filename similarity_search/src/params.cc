@@ -21,6 +21,7 @@
 #include "params.h"
 #include "logging.h"
 
+#include <cmath>
 #include <boost/program_options.hpp>
 
 using namespace std;
@@ -37,95 +38,6 @@ static void Usage(const char *prog,
     std::cout << prog << std::endl
               << desc << std::endl;
 }
-
-/*
-void CollectMethodParams(const vector<string>& MethodDesc, MethodParams& par) {
-  for (unsigned i = 0; i < MethodDesc.size(); ++i) {
-    vector<string>  OneParamPair;
-    if (!SplitStr(MethodDesc[i], OneParamPair, '=') ||
-        OneParamPair.size() != 2) {
-      LOG(FATAL) << "Wrong format of the method argument: '" << MethodDesc[i] << "' should be in the format: <Name>=<Value>";
-    }
-    const string& Name = OneParamPair[0];
-    const string& sVal = OneParamPair[1];
-    const char*   pVal = OneParamPair[1].c_str();
-    const int     iVal = atoi(pVal);
-    const float   fVal = atof(pVal);
-
-    if (Name == "indexQty") {
-      par.IndexQty = iVal;
-    } else if (Name == "bucketSize") {
-      par.BucketSize = iVal;
-    } else if (Name == "useBucketSize") {
-      par.UseBucketSize = iVal;
-    } else if (Name == "radius") {
-      par.Radius = fVal;
-    } else if (Name == "doRandSample") {
-      par.DoRandSample = iVal;
-    } else if (Name == "numPivot") {
-      par.NumPivot = iVal;
-    } else if (Name == "prefixLength") {
-      par.PrefixLength = iVal;
-    } else if (Name == "maxPathLength") {
-      par.MaxPathLength = iVal;
-    } else if (Name == "minCandidate") {
-      par.MinCandidate = iVal;
-    } else if (Name == "maxK") {
-      par.MaxK = iVal;
-    } else if (Name == "dbScanFrac") {
-      par.DbScanFrac = fVal;
-    } else if (Name == "distLearnThresh") {
-      par.DistLearnThreshold = fVal;
-    } else if (Name == "alphaLeft") {
-      par.AlphaLeft = fVal;
-    } else if (Name == "alphaRight") {
-      par.AlphaRight = fVal;
-    } else if (Name == "saveHistFileName") {
-      par.SaveHistFileName = sVal;
-    } else if (Name == "quantileStepPivot") {
-      par.QuantileStepPivot = fVal;
-    } else if (Name == "quantileStepPseudoQuery") {
-      par.QuantileStepPseudoQuery = fVal;
-    } else if (Name == "numOfPseudoQueriesInQuantile") {
-      par.NumOfPseudoQueriesInQuantile = fVal;
-    } else if (Name == "M") {
-      par.LSH_M = iVal;
-    } else if (Name == "L") {
-      par.LSH_L = iVal;
-    } else if (Name == "H") {
-      par.LSH_H = iVal;
-    } else if (Name == "T") {
-      par.LSH_T = iVal;
-    } else if (Name == "tuneK") {
-      par.LSH_TuneK = iVal;
-    } else if (Name == "chunkBucket") {
-      par.ChunkBucket = iVal;
-    } else if (Name == "maxLeavesToVisit") {
-      par.MaxLeavesToVisit = iVal;
-    } else if (Name == "W") {
-      par.LSH_W = fVal;
-    } else if (Name == "desiredRecall") {
-      par.DesiredRecall = fVal;
-    } else if (Name == "strategy") {
-      if (sVal == "random") {
-        par.LCStrategy =  ListClustersStrategy::kRandom;
-      } else if (sVal == "closestPrevCenter") {
-        par.LCStrategy = ListClustersStrategy::kClosestPrevCenter;
-      } else if (sVal == "farthestPrevCenter") {
-        par.LCStrategy = ListClustersStrategy::kFarthestPrevCenter;
-      } else if (sVal == "minSumDistPrevCenters") {
-        par.LCStrategy = ListClustersStrategy::kMinSumDistPrevCenters;
-      } else if (sVal == "maxSumDistPrevCenters") {
-        par.LCStrategy = ListClustersStrategy::kMaxSumDistPrevCenters;
-      } else {
-        LOG(FATAL) << "Incorrect value for parameter : " << Name;
-      }
-    } else {
-      LOG(FATAL) << "Incorrect parameter name: " << Name;
-    }
-  }
-};
-*/
 
 void ParseCommandLine(int argc, char*argv[],
                       string& DistType,
@@ -149,6 +61,8 @@ void ParseCommandLine(int argc, char*argv[],
 
   vector<string>  methParams;
   string          knnArg;
+  // Conversion to double is due to an Intel's bug with __builtin_signbit being undefined for float
+  double          epsTmp;
 
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
@@ -184,7 +98,7 @@ void ParseCommandLine(int argc, char*argv[],
                         "# of threads")
     ("appendToResFile", po::value<bool>(&AppendToResFile)->default_value(false),
                         "do not override information in results files, append new data")
-    ("eps",             po::value<float>(&eps)->default_value(0.0),
+    ("eps",             po::value<double>(&epsTmp)->default_value(0.0),
                         "the parameter for the eps-approximate k-NN search.")
 
     ;
@@ -197,6 +111,8 @@ void ParseCommandLine(int argc, char*argv[],
     Usage(argv[0], ProgOptDesc);
     LOG(FATAL) << e.what();
   }
+
+  eps = epsTmp;
 
   if (vm.count("help")  ) {
     Usage(argv[0], ProgOptDesc);

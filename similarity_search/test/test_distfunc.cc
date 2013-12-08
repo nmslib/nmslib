@@ -22,7 +22,9 @@ namespace similarity {
 
 using namespace std;
 
+//#define TEST_SPEED_DOUBLE
 
+// Agreement test functions
 template <class T>
 bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
     T* pVect1 = new T[dim];
@@ -281,6 +283,109 @@ bool TestKLGeneralAgree(size_t N, size_t dim, size_t Rep) {
 
     return true;
 }
+
+template <class T>
+bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
+    T* pVect1 = new T[dim];
+    T* pVect2 = new T[dim];
+    T* pPrecompVect1 = new T[dim * 2];
+    T* pPrecompVect2 = new T[dim * 2];
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim, T(1e-6), true);
+            SetRandZeros(pVect1, dim, pZero);
+            GenRandVect(pVect2, dim, T(1e-6), true);
+            SetRandZeros(pVect2, dim, pZero);
+
+            copy(pVect1, pVect1 + dim, pPrecompVect1); 
+            copy(pVect2, pVect2 + dim, pPrecompVect2); 
+    
+            PrecompLogarithms(pPrecompVect1, dim);
+            PrecompLogarithms(pPrecompVect2, dim);
+
+            T val0 = JSStandard(pVect1, pVect2, dim);
+            T val2 = JSPrecomp(pPrecompVect1, pPrecompVect2, dim);
+            T val3 = JSPrecomp(pPrecompVect1, pPrecompVect2, dim);
+
+            bool bug = false;
+
+            T AbsDiff1 = fabs(val2 - val0);
+            T RelDiff1 = AbsDiff1/max(max(fabs(val2),fabs(val0)),T(1e-18));
+            if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
+                cerr << "Bug JS !!! Dim = " << dim << " val0 = " << val0 << " val2 = " << val2 << " Diff: " << (val0 - val2) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl; 
+            }
+
+            T AbsDiff2 = fabs(val3 - val2);
+            T RelDiff2 = AbsDiff2/max(max(fabs(val3),fabs(val2)),T(1e-18));
+            if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
+                cerr << "Bug JS !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl; 
+            }
+
+            if (bug) return false;
+        }
+    }
+
+
+    delete [] pVect1;
+    delete [] pVect2;
+    delete [] pPrecompVect1;
+    delete [] pPrecompVect2;
+
+    return true;
+}
+
+TEST(TestAgree) {
+    int nTest  = 0;
+    int nFail = 0;
+
+    srand48(0);
+
+    for (unsigned dim = 1; dim <= 64; ++dim) {
+        cout << "Dim = " << dim << endl;
+
+        nTest++;
+        nFail = !TestJSAgree<float>(1024, dim, 10, 0.5);
+        nTest++;
+        nFail = !TestJSAgree<double>(1024, dim, 10, 0.5);
+
+        nTest++;
+        nFail = !TestKLGeneralAgree<float>(1024, dim, 10);
+        nTest++;
+        nFail = !TestKLGeneralAgree<double>(1024, dim, 10);
+
+        nTest++;
+        nFail = !TestLInfAgree<float>(1024, dim, 10);
+        nTest++;
+        nFail = !TestLInfAgree<double>(1024, dim, 10);
+
+        nTest++;
+        nFail = !TestL1Agree<float>(1024, dim, 10);
+        nTest++;
+        nFail = !TestL1Agree<double>(1024, dim, 10);
+
+        nTest++;
+        nFail = !TestL2Agree<float>(1024, dim, 10);
+        nTest++;
+        nFail = !TestL2Agree<double>(1024, dim, 10);
+
+        nTest++;
+        nFail = !TestKLAgree<float>(1024, dim, 10);
+        nTest++;
+        nFail = !TestKLAgree<double>(1024, dim, 10);
+
+        nTest++;
+        nFail = !TestItakuraSaitoAgree<float>(1024, dim, 10);
+        nTest++;
+        nFail = !TestItakuraSaitoAgree<double>(1024, dim, 10);
+    }
+
+    cout << nTest << " (sub) tests performed " << nFail << " failed" << endl;
+
+    EXPECT_EQ(0, nFail);
+}
+
+// Efficiency test functions
 
 template <class T>
 bool TestLInfNormStandard(size_t N, size_t dim, size_t Rep) {
@@ -851,52 +956,69 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
     return true;
 }
 
+template <class T>
+bool TestJSStandard(size_t N, size_t dim, float pZero, size_t Rep) {
+    T* pArr = new T[N * dim];
 
-TEST(TestAgree) {
-    int nTest  = 0;
-    int nFail = 0;
-
-    srand48(0);
-
-    for (unsigned dim = 1; dim <= 64; ++dim) {
-        cout << "Dim = " << dim << endl;
-
-        nTest++;
-        nFail = !TestKLGeneralAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail = !TestKLGeneralAgree<double>(1024, dim, 10);
-
-        nTest++;
-        nFail = !TestLInfAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail = !TestLInfAgree<double>(1024, dim, 10);
-
-        nTest++;
-        nFail = !TestL1Agree<float>(1024, dim, 10);
-        nTest++;
-        nFail = !TestL1Agree<double>(1024, dim, 10);
-
-        nTest++;
-        nFail = !TestL2Agree<float>(1024, dim, 10);
-        nTest++;
-        nFail = !TestL2Agree<double>(1024, dim, 10);
-
-        nTest++;
-        nFail = !TestKLAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail = !TestKLAgree<double>(1024, dim, 10);
-
-        nTest++;
-        nFail = !TestItakuraSaitoAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail = !TestItakuraSaitoAgree<double>(1024, dim, 10);
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim, T(0), true);
+        SetRandZeros(p, dim, pZero);
     }
 
-    cout << nTest << " (sub) tests performed " << nFail << " failed" << endl;
+    WallClockTimer  t;
 
-    EXPECT_EQ(0, nFail);
+    t.reset();
+
+    T DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += JSStandard(pArr + j*dim, pArr + (j-1)*dim, dim);
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
 }
 
+template <class T>
+bool TestJSPrecomp(size_t N, size_t dim, float pZero, size_t Rep) {
+    T* pArr = new T[N * dim];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim, T(0), true);
+        SetRandZeros(p, dim, pZero);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += JSPrecomp(pArr + j*dim, pArr + (j-1)*dim, dim);
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
 
 TEST(TestSpeed) {
     int nTest  = 0;
@@ -905,28 +1027,23 @@ TEST(TestSpeed) {
     srand48(0);
 
     int N = 128;
+    double pZero = 0.5;
+
 
     nTest++;
-    nFail = !TestItakuraSaitoStandard<float>(1024, N, 10000);
+    nFail = !TestJSStandard<float>(1024, N, 10000, pZero);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestItakuraSaitoStandard<double>(1024, N, 10000);
-#endif
-
-
-    nTest++;
-    nFail = !TestItakuraSaitoPrecomp<float>(1024, N, 10000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestItakuraSaitoPrecomp<double>(1024, N, 10000);
+    nFail = !TestJSStandard<double>(1024, N, 10000, pZero);
 #endif
 
     nTest++;
-    nFail = !TestItakuraSaitoPrecompSIMD<float>(1024, N, 10000);
+    nFail = !TestJSPrecomp<float>(1024, N, 10000, pZero);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestItakuraSaitoPrecompSIMD<double>(1024, N, 10000);
+    nFail = !TestJSPrecomp<double>(1024, N, 10000, pZero);
 #endif
+
 
     nTest++;
     nFail = !TestL1Norm<float>(1024, N, 100000);
@@ -951,6 +1068,49 @@ TEST(TestSpeed) {
 
 
     nTest++;
+    nFail = !TestLInfNorm<float>(1024, N, 100000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestLInfNorm<double>(1024, N, 100000);
+#endif
+
+    nTest++;
+    nFail = !TestLInfNormStandard<float>(1024, N, 100000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestLInfNormStandard<double>(1024, N, 100000);
+#endif
+
+    nTest++;
+    nFail = !TestLInfNormSIMD<float>(1024, N, 100000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestLInfNormSIMD<double>(1024, N, 100000);
+#endif
+
+    nTest++;
+    nFail = !TestItakuraSaitoStandard<float>(1024, N, 10000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestItakuraSaitoStandard<double>(1024, N, 10000);
+#endif
+
+
+    nTest++;
+    nFail = !TestItakuraSaitoPrecomp<float>(1024, N, 10000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestItakuraSaitoPrecomp<double>(1024, N, 10000);
+#endif
+
+    nTest++;
+    nFail = !TestItakuraSaitoPrecompSIMD<float>(1024, N, 10000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestItakuraSaitoPrecompSIMD<double>(1024, N, 10000);
+#endif
+
+    nTest++;
     nFail = !TestL2Norm<float>(1024, N, 100000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
@@ -971,27 +1131,6 @@ TEST(TestSpeed) {
     nFail = !TestL2NormSIMD<double>(1024, N, 100000);
 #endif
 
-
-    nTest++;
-    nFail = !TestLInfNorm<float>(1024, N, 100000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestLInfNorm<double>(1024, N, 100000);
-#endif
-
-    nTest++;
-    nFail = !TestLInfNormStandard<float>(1024, N, 100000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestLInfNormStandard<double>(1024, N, 100000);
-#endif
-
-    nTest++;
-    nFail = !TestLInfNormSIMD<float>(1024, N, 100000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestLInfNormSIMD<double>(1024, N, 100000);
-#endif
 
     nTest++;
     nFail = !TestKLStandard<float>(1024, N, 10000);

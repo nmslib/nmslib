@@ -12,8 +12,46 @@ cmake_minimum_required (VERSION 2.8)
 
 project (NonMetricSpaceLib)
 
-set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Ofast -lm -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -msse2 -msse4.1 -mssse3")
-set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -ggdb  -lm -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -msse2 -msse4.1 -mssse3")
+#
+# Runs compiler with "-dumpversion" and parses major/minor
+# version with a regex.
+#
+# Taken&Modified from Boost.cmake
+#
+function(CXX_COMPILER_DUMPVERSION _OUTPUT_VERSION)
+
+  exec_program(${CMAKE_CXX_COMPILER}
+    ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
+    OUTPUT_VARIABLE COMPILER_VERSION
+  )
+  #string(REGEX REPLACE "([0-9])\\.([0-9])(\\.[0-9])?" "\\1\\2"
+  #   COMPILER_VERSION ${COMPILER_VERSION})
+
+  set(${_OUTPUT_VERSION} ${COMPILER_VERSION} PARENT_SCOPE)
+endfunction()
+
+CXX_COMPILER_DUMPVERSION(CXX_COMPILER_VERSION)
+
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # require at least gcc 4.7
+    if (CXX_COMPILER_VERSION VERSION_LESS 4.7)
+        message(FATAL_ERROR "GCC version must be at least 4.7!")
+    endif()
+    set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Ofast -lm -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -march=native")
+    set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -ggdb  -lm -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -march=native")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+    if (CXX_COMPILER_VERSION VERSION_LESS 14.0.1)
+        message(FATAL_ERROR "Intel version must be at least 14.0.1!")
+    endif()
+    set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Ofast -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X  -march=native")
+    set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -ggdb  -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X  -march=native")
+    #set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Ofast -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X  -xSSE4.2")
+    #set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -ggdb  -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X  -xSSE4.2")
+else ()
+    message(FATAL_ERROR "Please, use GCC or the Intel compiler!")
+endif()
+
 
 if (NOT CMAKE_BUILD_TYPE)
     set (CMAKE_BUILD_TYPE Release CACHE STRING "Build types: Release Debug" FORCE)
@@ -31,10 +69,11 @@ else (GSL_FOUND)
     message (STATUS "Could not locate GSL.")
 endif (GSL_FOUND)
 
-#set (BOOST_ROOT $ENV{HOME}/boost_1_53_0)
+# Can be use to hardwire boost location.
+#set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
 set (Boost_INCLUDE_DIR ${BOOST_ROOT})
 set (Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
-find_package (Boost 1.49 COMPONENTS system filesystem program_options REQUIRED)
+find_package (Boost 1.48 COMPONENTS system filesystem program_options REQUIRED)
 include_directories (${Boost_INCLUDE_DIR})
 link_directories (${Boost_LIBRARY_DIR})
 
