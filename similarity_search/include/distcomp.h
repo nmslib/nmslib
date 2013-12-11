@@ -21,6 +21,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cstdlib>
+#include <limits>
 
 namespace similarity {
 
@@ -112,13 +113,11 @@ template <class T> T KLGeneralPrecompSIMD(const T* pVect1, const T* pVect2, size
  *       After this function completes, the would look like:
  *       x1 ... x1_qty log(x1) log(x2) ... log(x_qty)
  *
- * NOTE 2: if the number is <=0, its log is computed as 1. 
- *         This trick allows to greatly simplify computation
- *         of approximate Jensen-Shannon divergence.
+ * NOTE 2: if the number is <=0, its log is computed as the minimum possible numbers.
  */
 template <class T> void PrecompLogarithms(T* pVect, size_t qty) {
     for (size_t i = 0; i < qty; i++) { 
-        pVect[i + qty] = (pVect[i] > 0) ? log(pVect[i]):T(1);
+        pVect[i + qty] = (pVect[i] > 0) ? log(pVect[i]): std::numeric_limits<T>::lowest();
     }
 }
 
@@ -128,7 +127,13 @@ template <class T> void PrecompLogarithms(T* pVect, size_t qty) {
 template <class T> T JSStandard(const T *pVect1, const T *pVect2, size_t qty);
 // Precomputed logs
 template <class T> T JSPrecomp(const T *pVect1, const T *pVect2, size_t qty);
+// Precomputed logs, one log is approximate
+template <class T> T JSPrecompApproxLog(const T *pVect1, const T *pVect2, size_t qty);
 
+// Precomputed logs & inverse values
+template <class T> T JSPrecompDivApproxLog(const T *pVect1, const T *pVect2, size_t qty);
+
+template <class T> T JSPrecompSIMDApproxLog(const T* pVect1, const T* pVect2, size_t qty);
 
 
 

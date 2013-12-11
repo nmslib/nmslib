@@ -24,6 +24,24 @@ using namespace std;
 
 //#define TEST_SPEED_DOUBLE
 
+
+/*
+
+#ifdef  __INTEL_COMPILER
+
+// TODO: @Leo figure out how to use this function with Intel and cmake
+
+#include "mkl.h"
+
+TEST(set_intel) {
+    vmlSetMode(VML_HA);
+    std::cout << "Set high-accuracy mode." << std::endl;
+}
+
+#endif
+
+*/
+
 // Agreement test functions
 template <class T>
 bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
@@ -291,6 +309,10 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
     T* pPrecompVect1 = new T[dim * 2];
     T* pPrecompVect2 = new T[dim * 2];
 
+    T Dist = 0;
+    T Error = 0;
+    T TotalQty = 0;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
             GenRandVect(pVect1, dim, T(1e-6), true);
@@ -305,26 +327,46 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
             PrecompLogarithms(pPrecompVect2, dim);
 
             T val0 = JSStandard(pVect1, pVect2, dim);
-            T val2 = JSPrecomp(pPrecompVect1, pPrecompVect2, dim);
-            T val3 = JSPrecomp(pPrecompVect1, pPrecompVect2, dim);
+            T val1 = JSPrecomp(pPrecompVect1, pPrecompVect2, dim);
 
             bool bug = false;
 
-            T AbsDiff1 = fabs(val2 - val0);
-            T RelDiff1 = AbsDiff1/max(max(fabs(val2),fabs(val0)),T(1e-18));
+            T AbsDiff1 = fabs(val1 - val0);
+            T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
+
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug JS !!! Dim = " << dim << " val0 = " << val0 << " val2 = " << val2 << " Diff: " << (val0 - val2) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl; 
+                cerr << "Bug JS (1) " << typeid(T).name() << " !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl; 
+                bug = true;
             }
 
-            T AbsDiff2 = fabs(val3 - val2);
-            T RelDiff2 = AbsDiff2/max(max(fabs(val3),fabs(val2)),T(1e-18));
+            T val2 = JSPrecompApproxLog(pPrecompVect1, pPrecompVect2, dim);
+            T val3 = JSPrecompSIMDApproxLog(pPrecompVect1, pPrecompVect2, dim);
+
+            T AbsDiff2 = fabs(val2 - val3);
+            T RelDiff2 = AbsDiff2/max(max(fabs(val2),fabs(val3)),T(1e-18));
+
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug JS !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl; 
+                cerr << "Bug JS (2) " << typeid(T).name() << " !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl; 
+                bug = true;
+            }
+
+            T AbsDiff3 = fabs(val1 - val2);
+            T RelDiff3 = AbsDiff3/max(max(fabs(val1),fabs(val2)),T(1e-18));
+
+            Dist += val1;
+            Error += AbsDiff3;
+            ++TotalQty;
+
+            if (RelDiff3 > 1e-4 && AbsDiff3 > 1e-4) {
+                cerr << "Bug JS (3) " << typeid(T).name() << " !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff3: " << RelDiff3 << " AbsDiff2: " << AbsDiff3 << endl; 
+                bug = true;
             }
 
             if (bug) return false;
         }
     }
+
+    cout << "Average relative error for approximate JS version: " << Error / TotalQty << " Avg. dist: " << Dist / TotalQty << " Relative average: " << Error/Dist << endl;
 
 
     delete [] pVect1;
@@ -404,7 +446,7 @@ bool TestLInfNormStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += LInfNormStandard(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += LInfNormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -435,7 +477,7 @@ bool TestLInfNorm(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += LInfNorm(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += LInfNorm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -466,7 +508,7 @@ bool TestLInfNormSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += LInfNormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += LInfNormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -498,7 +540,7 @@ bool TestL1NormStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L1NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += L1NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -529,7 +571,7 @@ bool TestL1Norm(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L1Norm(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += L1Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -560,7 +602,7 @@ bool TestL1NormSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L1NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += L1NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -591,7 +633,7 @@ bool TestL2NormStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L2NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += L2NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -622,7 +664,7 @@ bool TestL2Norm(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L2Norm(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += L2Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -655,7 +697,7 @@ bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L2NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += L2NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -687,7 +729,7 @@ bool TestItakuraSaitoPrecomp(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += ItakuraSaitoPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim);
+            DiffSum += ItakuraSaitoPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
     }
 
@@ -719,7 +761,7 @@ bool TestItakuraSaitoPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += ItakuraSaitoPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim);
+            DiffSum += ItakuraSaitoPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
     }
 
@@ -750,7 +792,7 @@ bool TestItakuraSaitoStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += ItakuraSaito(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += ItakuraSaito(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -783,7 +825,7 @@ bool TestKLPrecomp(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim);
+            DiffSum += KLPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
     }
 
@@ -815,7 +857,7 @@ bool TestKLPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim);
+            DiffSum += KLPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
     }
 
@@ -846,7 +888,7 @@ bool TestKLStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLStandard(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += KLStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -879,7 +921,7 @@ bool TestKLGeneralPrecomp(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLGeneralPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim);
+            DiffSum += KLGeneralPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
     }
 
@@ -911,7 +953,7 @@ bool TestKLGeneralPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLGeneralPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim);
+            DiffSum += KLGeneralPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
     }
 
@@ -942,7 +984,7 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLGeneralStandard(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += KLGeneralStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -957,7 +999,7 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
 }
 
 template <class T>
-bool TestJSStandard(size_t N, size_t dim, float pZero, size_t Rep) {
+bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
     T* pArr = new T[N * dim];
 
     T *p = pArr;
@@ -974,7 +1016,7 @@ bool TestJSStandard(size_t N, size_t dim, float pZero, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += JSStandard(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += JSStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
@@ -989,13 +1031,14 @@ bool TestJSStandard(size_t N, size_t dim, float pZero, size_t Rep) {
 }
 
 template <class T>
-bool TestJSPrecomp(size_t N, size_t dim, float pZero, size_t Rep) {
-    T* pArr = new T[N * dim];
+bool TestJSPrecomp(size_t N, size_t dim, size_t Rep, float pZero) {
+    T* pArr = new T[N * dim * 2];
 
     T *p = pArr;
-    for (size_t i = 0; i < N; ++i, p+= dim) {
+    for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
         GenRandVect(p, dim, T(0), true);
         SetRandZeros(p, dim, pZero);
+        PrecompLogarithms(p, dim);
     }
 
     WallClockTimer  t;
@@ -1006,14 +1049,80 @@ bool TestJSPrecomp(size_t N, size_t dim, float pZero, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += JSPrecomp(pArr + j*dim, pArr + (j-1)*dim, dim);
+            DiffSum += JSPrecomp(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
     }
 
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
+template <class T>
+bool TestJSPrecompApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
+    T* pArr = new T[N * dim * 2];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
+        GenRandVect(p, dim, T(0), true);
+        SetRandZeros(p, dim, pZero);
+        PrecompLogarithms(p, dim);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += JSPrecompApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
+template <class T>
+bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
+    T* pArr = new T[N * dim * 2];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
+        GenRandVect(p, dim, T(0), true);
+        SetRandZeros(p, dim, pZero);
+        PrecompLogarithms(p, dim);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += JSPrecompSIMDApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1029,7 +1138,6 @@ TEST(TestSpeed) {
     int N = 128;
     double pZero = 0.5;
 
-
     nTest++;
     nFail = !TestJSStandard<float>(1024, N, 10000, pZero);
 #ifdef TEST_SPEED_DOUBLE
@@ -1044,6 +1152,15 @@ TEST(TestSpeed) {
     nFail = !TestJSPrecomp<double>(1024, N, 10000, pZero);
 #endif
 
+    nTest++;
+    nFail = !TestJSPrecompApproxLog<float>(1024, N, 10000, pZero);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestJSPrecompApproxLog<double>(1024, N, 10000, pZero);
+#endif
+
+    nTest++;
+    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, N, 10000, pZero);
 
     nTest++;
     nFail = !TestL1Norm<float>(1024, N, 100000);
