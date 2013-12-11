@@ -46,7 +46,7 @@ dist_t JSSpace<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) c
     case kJSFastPrecompApprox:  val = JSPrecompSIMDApproxLog(x, y, length); break;
     default: LOG(FATAL) << "Unknown JS space code: " << type_ << endl;
   }
-  return val * val; // squared JS is a metric
+  return sqrt(val); // the squared root from JS is a metric
 }
 
 template <typename dist_t>
