@@ -317,8 +317,10 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
         for (size_t j = 1; j < N; ++j) {
             GenRandVect(pVect1, dim, T(1e-6), true);
             SetRandZeros(pVect1, dim, pZero);
+            Normalize(pVect1, dim);
             GenRandVect(pVect2, dim, T(1e-6), true);
             SetRandZeros(pVect2, dim, pZero);
+            Normalize(pVect2, dim);
 
             copy(pVect1, pVect1 + dim, pPrecompVect1); 
             copy(pVect2, pVect2 + dim, pPrecompVect2); 
@@ -1006,6 +1008,7 @@ bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
     for (size_t i = 0; i < N; ++i, p+= dim) {
         GenRandVect(p, dim, T(0), true);
         SetRandZeros(p, dim, pZero);
+        Normalize(p, dim);
     }
 
     WallClockTimer  t;

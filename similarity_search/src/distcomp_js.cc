@@ -27,6 +27,16 @@ using namespace std;
 
 /*
  * Jensen-Shannon divergence 
+ * 
+ * Österreicher, Ferdinand, and Igor Vajda. 
+ * "A new class of metric divergences on probability spaces and its applicability in statistics." 
+ * Annals of the Institute of Statistical Mathematics 55.3 (2003): 639-653.
+ *
+ *
+ * Endres, Dominik Maria, and Johannes E. Schindelin. 
+ * "A new metric for probability distributions." 
+ * Information Theory, IEEE Transactions on 49.7 (2003): 1858-1860.
+ *
  */
 template <class T> T JSStandard(const T *pVect1, const T *pVect2, size_t qty)
 {
@@ -36,7 +46,7 @@ template <class T> T JSStandard(const T *pVect1, const T *pVect2, size_t qty)
       T m = (pVect1[i] + pVect2[i])*0.5;
       T lg1 = pVect1[i] < numeric_limits<T>::min() ? T(0):log(pVect1[i]);
       T lg2 = pVect2[i] < numeric_limits<T>::min() ? T(0):log(pVect2[i]);
-      sum1 += pVect1[i] * lg1 +  + pVect2[i] * lg2;
+      sum1 += pVect1[i] * lg1 + pVect2[i] * lg2;
       if (m >= numeric_limits<T>::min()) {
         sum2 +=  m * log(m);
       }

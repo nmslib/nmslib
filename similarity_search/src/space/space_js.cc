@@ -28,6 +28,18 @@
 namespace similarity {
 
 template <typename dist_t>
+Object* JSSpace<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+  std::vector<dist_t>   temp(InpVect);
+
+  // Reserve space to store logarithms
+  temp.resize(2 * InpVect.size());
+  // Compute logarithms
+  PrecompLogarithms(&temp[0], InpVect.size());
+  return new Object(id, temp.size() * sizeof(dist_t), &temp[0]);
+}
+
+
+template <typename dist_t>
 dist_t JSSpace<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
   CHECK(obj1->datalength() > 0);
   CHECK(obj1->datalength() == obj2->datalength());
@@ -38,12 +50,14 @@ dist_t JSSpace<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) c
 
   if (type_ != kJSSlow) length /= 2;
 
-  dist_t val;
+  dist_t val = 0;
 
   switch (type_) {
     case kJSSlow:               val = JSStandard(x, y, length); break;
     case kJSFastPrecomp:        val = JSPrecomp(x, y, length); break;
     case kJSFastPrecompApprox:  val = JSPrecompSIMDApproxLog(x, y, length); break;
+                                // A slower version is commented out
+                                /*val = JSPrecompApproxLog(x, y, length); break;*/
     default: LOG(FATAL) << "Unknown JS space code: " << type_ << endl;
   }
   return sqrt(val); // the squared root from JS is a metric

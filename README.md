@@ -21,10 +21,10 @@ The details of the prunning approach are outlined in the NIPS'13 paper: http://b
 
 Some prerequisites:
 
-1. G++ that supports the new C++ standard, e.g., version 4.7
+1. G++ that supports the new C++ standard, e.g., version 4.7 or the Intel compiler version 14.
 2. Linux
-3. cmake
-4. An Intel or AMD processor that supports SSE 4.1
+3. cmake (GNU make is also required)
+4. An Intel or AMD processor that supports SSE 4.2
 5. Boost (dev version)
 6. GNU scientific library (dev version)
 
@@ -33,7 +33,7 @@ cmake .
 Then, type:  
 make   
 
-Examples of how to use the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh
+Examples of using the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh
 
 Sample scipts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
 In addition, the directory sample_scripts contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results. This includes the software to generate plots. To generate plots one needs Python, Latex, and PGF.   

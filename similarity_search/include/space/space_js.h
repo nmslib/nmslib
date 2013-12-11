@@ -43,6 +43,7 @@ class JSSpace : public VectorSpace<dist_t> {
   virtual ~JSSpace() {}
 
   virtual std::string ToString() const;
+  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
 
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;

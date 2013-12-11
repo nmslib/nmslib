@@ -99,6 +99,7 @@ template <class T> T KLPrecompSIMD(const T* pVect1, const T* pVect2, size_t qty)
  * Should be applied ONLY to vectors such that:
  * 1) ALL elements are positive
  * 2) Yet, the sum of elements IS NOT NECESSARILY one.
+ *
  */
 template <class T> T KLGeneralStandard(const T* pVect1, const T* pVect2, size_t qty);
 // Precomputed logs
@@ -113,7 +114,8 @@ template <class T> T KLGeneralPrecompSIMD(const T* pVect1, const T* pVect2, size
  *       After this function completes, the would look like:
  *       x1 ... x1_qty log(x1) log(x2) ... log(x_qty)
  *
- * NOTE 2: if the number is <=0, its log is computed as the minimum possible numbers.
+ * NOTE 2: if the number is <=0, its log is computed as the minimum possible numbers,
+ *         rather than minus infinity.
  */
 template <class T> void PrecompLogarithms(T* pVect, size_t qty) {
     for (size_t i = 0; i < qty; i++) { 
@@ -123,6 +125,18 @@ template <class T> void PrecompLogarithms(T* pVect, size_t qty) {
 
 /*
  * Jensen-Shannon divergence 
+ *
+ * The squared root of JS-divergence is a metric.
+ * 
+ * Österreicher, Ferdinand, and Igor Vajda. 
+ * "A new class of metric divergences on probability spaces and its applicability in statistics." 
+ * Annals of the Institute of Statistical Mathematics 55.3 (2003): 639-653.
+ *
+ *
+ * Endres, Dominik Maria, and Johannes E. Schindelin. 
+ * "A new metric for probability distributions." 
+ * Information Theory, IEEE Transactions on 49.7 (2003): 1858-1860.
+ *
  */
 template <class T> T JSStandard(const T *pVect1, const T *pVect2, size_t qty);
 // Precomputed logs
@@ -135,6 +149,18 @@ template <class T> T JSPrecompDivApproxLog(const T *pVect1, const T *pVect2, siz
 
 template <class T> T JSPrecompSIMDApproxLog(const T* pVect1, const T* pVect2, size_t qty);
 
+template <class T> 
+void Normalize(T* pVect, size_t qty) {
+    T sum = 0;
+    for (size_t i = 0; i < qty; ++i) {
+        sum += pVect[i];
+    }
+    if (sum != 0) {
+      for (size_t i = 0; i < qty; ++i) {
+        pVect[i] /= sum;
+      }
+    }
+}
 
 
 template <class T> 
