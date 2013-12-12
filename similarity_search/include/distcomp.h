@@ -119,7 +119,8 @@ template <class T> T KLGeneralPrecompSIMD(const T* pVect1, const T* pVect2, size
  */
 template <class T> void PrecompLogarithms(T* pVect, size_t qty) {
     for (size_t i = 0; i < qty; i++) { 
-        pVect[i + qty] = (pVect[i] > 0) ? log(pVect[i]): std::numeric_limits<T>::lowest();
+        //pVect[i + qty] = (pVect[i] > 0) ? log(pVect[i]): std::numeric_limits<T>::lowest();
+        pVect[i + qty] = (pVect[i] > 0) ? log(pVect[i]): -1e5;
     }
 }
 

@@ -29,6 +29,9 @@ namespace similarity {
 
 template <typename dist_t>
 Object* JSSpace<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+  if (type_ == kJSSlow) {
+    return new Object(id, InpVect.size() * sizeof(dist_t), &InpVect[0]);
+  }
   std::vector<dist_t>   temp(InpVect);
 
   // Reserve space to store logarithms
@@ -55,9 +58,14 @@ dist_t JSSpace<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) c
   switch (type_) {
     case kJSSlow:               val = JSStandard(x, y, length); break;
     case kJSFastPrecomp:        val = JSPrecomp(x, y, length); break;
-    case kJSFastPrecompApprox:  val = JSPrecompSIMDApproxLog(x, y, length); break;
-                                // A slower version is commented out
-                                /*val = JSPrecompApproxLog(x, y, length); break;*/
+    case kJSFastPrecompApprox:  
+#ifdef  __INTEL_COMPILER
+                                // TODO: @leo On Intel, the SIMD version is buggy
+                                //val = JSPrecompSIMDApproxLog(x, y, length); break;
+                                val = JSPrecompApproxLog(x, y, length); break;
+#else
+                                val = JSPrecompSIMDApproxLog(x, y, length); break;
+#endif
     default: LOG(FATAL) << "Unknown JS space code: " << type_ << endl;
   }
   return sqrt(val); // the squared root from JS is a metric
