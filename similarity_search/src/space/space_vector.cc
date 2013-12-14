@@ -37,7 +37,7 @@ void VectorSpace<dist_t>::ReadVec(std::string line, std::vector<dist_t>& v) cons
 
   dist_t val;
 
-  ReplacePunct(line); 
+  ReplaceSomePunct(line); 
 
   try {
     while (str >> val) {

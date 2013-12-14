@@ -39,7 +39,7 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, std::vector<Elem
   uint32_t id;
   dist_t   val;
 
-  ReplacePunct(line); 
+  ReplaceSomePunct(line); 
 
   try {
     while (str >> id && str >> val) {
