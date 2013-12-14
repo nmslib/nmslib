@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef _SPACE_VECTOR_H_
-#define _SPACE_VECTOR_H_
+#ifndef _SPACE_SPARSE_LP_H_
+#define _SPACE_SPARSE_LP_H_
 
 #include <string>
 #include <map>
@@ -26,25 +26,30 @@
 #include "object.h"
 #include "utils.h"
 #include "space.h"
-#include "perm_type.h"
+#include "space_lp.h"
+#include "space_sparse_vector.h"
+
+#define SPACE_SPARSE_L0  "l0_sparse"
+#define SPACE_SPARSE_L1  "l1_sparse"
+#define SPACE_SPARSE_L2  "l2_sparse"
 
 namespace similarity {
 
 template <typename dist_t>
-class VectorSpace : public Space<dist_t> {
+class SpaceSparseLp : public SpaceSparseVector<dist_t> {
  public:
-  virtual ~VectorSpace() {}
+  explicit SpaceSparseLp(int p) : distObj_(p) {}
+  virtual ~SpaceSparseLp() {}
 
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config,
-                      const char* inputfile,
-                      const int MaxNumObjects) const;
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
+  virtual std::string ToString() const;
+
  protected:
-  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
-  void ReadVec(const std::string& line, std::vector<dist_t>& v) const;
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
+ private:
+  SpaceLpDist<dist_t> distObj_;
 };
+
 
 }  // namespace similarity
 
-#endif
+#endif 

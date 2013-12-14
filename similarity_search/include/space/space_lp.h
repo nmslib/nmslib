@@ -27,6 +27,7 @@
 #include "utils.h"
 #include "space.h"
 #include "space_vector.h"
+#include "distcomp.h"
 
 #define SPACE_L0  "l0"
 #define SPACE_L1  "l1"
@@ -34,18 +35,44 @@
 
 namespace similarity {
 
+
+
 template <typename dist_t>
-class LpSpace : public VectorSpace<dist_t> {
+class SpaceLpDist {
+public:
+  explicit SpaceLpDist(int p) : p_(p) {}
+
+  dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
+    CHECK(p_ >= 0);
+
+    if (p_ == 0) {
+      return LInfNormSIMD(x, y, length);
+    } else if (p_ == 1) {
+      return L1NormSIMD(x, y, length);
+    } else if (p_ == 2) {
+      return L2NormSIMD(x, y, length);
+    } 
+
+    // This one will be rather slow
+    return LPGenericDistance(x, y, length, p_);
+  }
+  int getP() const { return p_; }
+private:
+  int p_;
+};
+
+template <typename dist_t>
+class SpaceLp : public VectorSpace<dist_t> {
  public:
-  explicit LpSpace(int p) : p_(p) {}
-  virtual ~LpSpace() {}
+  explicit SpaceLp(int p) : distObj_(p) {}
+  virtual ~SpaceLp() {}
 
   virtual std::string ToString() const;
 
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
  private:
-  int p_;
+  SpaceLpDist<dist_t> distObj_;
 };
 
 

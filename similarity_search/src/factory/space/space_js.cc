@@ -26,17 +26,17 @@ namespace similarity {
 
 template <typename dist_t>
 Space<dist_t>* CreateJSSlow() {
-  return new JSSpace<dist_t>(JSSpace<dist_t>::kJSSlow);
+  return new SpaceJS<dist_t>(SpaceJS<dist_t>::kJSSlow);
 }
 
 template <typename dist_t>
 Space<dist_t>* CreateJSFastPrecomp() {
-  return new JSSpace<dist_t>(JSSpace<dist_t>::kJSFastPrecomp);
+  return new SpaceJS<dist_t>(SpaceJS<dist_t>::kJSFastPrecomp);
 }
 
 template <typename dist_t>
 Space<dist_t>* CreateJSFastPrecompApprox() {
-  return new JSSpace<dist_t>(JSSpace<dist_t>::kJSFastPrecompApprox);
+  return new SpaceJS<dist_t>(SpaceJS<dist_t>::kJSFastPrecompApprox);
 }
 
 

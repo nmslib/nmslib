@@ -15,7 +15,7 @@
  */
 
 #include "searchoracle.h"
-#include "space_lp.h"
+#include "space_sparse_lp.h"
 #include "spacefactory.h"
 
 namespace similarity {
@@ -25,18 +25,19 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Space<dist_t>* CreateL0() {
+Space<dist_t>* CreateSparseL0() {
   // Chebyshev Distance
-  return new SpaceLp<dist_t>(0);
+  return new SpaceSparseLp<dist_t>(0);
+}
 
-}
 template <typename dist_t>
-Space<dist_t>* CreateL1() {
-  return new SpaceLp<dist_t>(1);
+Space<dist_t>* CreateSparseL1() {
+  return new SpaceSparseLp<dist_t>(1);
 }
+
 template <typename dist_t>
-Space<dist_t>* CreateL2() {
-  return new SpaceLp<dist_t>(2);
+Space<dist_t>* CreateSparseL2() {
+  return new SpaceSparseLp<dist_t>(2);
 }
 
 /*
@@ -51,12 +52,12 @@ Space<dist_t>* CreateL2() {
  * that are stored in a library. Then, the registration code doesn't work.
  */
 
-REGISTER_SPACE_CREATOR(float,  SPACE_L0, CreateL0)
-REGISTER_SPACE_CREATOR(double, SPACE_L0, CreateL0)
-REGISTER_SPACE_CREATOR(float,  SPACE_L1, CreateL1)
-REGISTER_SPACE_CREATOR(double, SPACE_L1, CreateL1)
-REGISTER_SPACE_CREATOR(float,  SPACE_L2, CreateL2)
-REGISTER_SPACE_CREATOR(double, SPACE_L2, CreateL2)
+REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L0, CreateSparseL0)
+REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_L0, CreateSparseL0)
+REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L1, CreateSparseL1)
+REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_L1, CreateSparseL1)
+REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L2, CreateSparseL2)
+REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_L2, CreateSparseL2)
 
 }
 

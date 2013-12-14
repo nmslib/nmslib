@@ -100,6 +100,18 @@ class Object {
 
 typedef std::vector<const Object*> ObjectVector;
 
+inline size_t DataSpaceUsed(const ObjectVector &vect) {
+  size_t res = 0;
+  for (const auto elem: vect) res += elem->datalength();
+  return res;
+}
+
+inline size_t TotalSpaceUsed(const ObjectVector &vect) {
+  size_t res = 0;
+  for (const auto elem: vect) res += elem->bufferlength();
+  return res;
+}
+
 /* 
  * The caller is repsonsible for deleting:
  *  1) bucket
@@ -109,7 +121,7 @@ inline void CreateCacheOptimizedBucket(const ObjectVector& data,
                                        char*& CacheOptimizedBucket, 
                                        ObjectVector*& bucket) {
   CHECK(data.size());
-  CacheOptimizedBucket = new char [data.size() * data[0]->bufferlength()];
+  CacheOptimizedBucket = new char [TotalSpaceUsed(data)];
   char *p = CacheOptimizedBucket;
   bucket = new ObjectVector(data.size());
 

@@ -28,7 +28,7 @@
 namespace similarity {
 
 template <typename dist_t>
-Object* JSSpace<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+Object* SpaceJS<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
   if (type_ == kJSSlow) {
     return new Object(id, InpVect.size() * sizeof(dist_t), &InpVect[0]);
   }
@@ -43,7 +43,7 @@ Object* JSSpace<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>&
 
 
 template <typename dist_t>
-dist_t JSSpace<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
+dist_t SpaceJS<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
   CHECK(obj1->datalength() > 0);
   CHECK(obj1->datalength() == obj2->datalength());
   const dist_t* x = reinterpret_cast<const dist_t*>(obj1->data());
@@ -72,13 +72,13 @@ dist_t JSSpace<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) c
 }
 
 template <typename dist_t>
-std::string JSSpace<dist_t>::ToString() const {
+std::string SpaceJS<dist_t>::ToString() const {
   std::stringstream stream;
   stream << "Jensen-Divergence: type code = " << type_;
   return stream.str();
 }
 
-template class JSSpace<float>;
-template class JSSpace<double>;
+template class SpaceJS<float>;
+template class SpaceJS<double>;
 
 }  // namespace similarity

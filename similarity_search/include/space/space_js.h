@@ -35,12 +35,12 @@
 namespace similarity {
 
 template <typename dist_t>
-class JSSpace : public VectorSpace<dist_t> {
+class SpaceJS : public VectorSpace<dist_t> {
  public:
   enum JSType {kJSSlow, kJSFastPrecomp, kJSFastPrecompApprox};
 
-  explicit JSSpace(JSType type) : type_(type) {}
-  virtual ~JSSpace() {}
+  explicit SpaceJS(JSType type) : type_(type) {}
+  virtual ~SpaceJS() {}
 
   virtual std::string ToString() const;
   virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;

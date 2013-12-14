@@ -49,7 +49,7 @@ TEST(EuclideanDistance) {
   VectorDataset1 dataset;
   const ObjectVector& dataobjects = dataset.GetDataObjects();
 
-  scoped_ptr<Space<FLOAT_TYPE>> space(new LpSpace<FLOAT_TYPE>(2));
+  scoped_ptr<Space<FLOAT_TYPE>> space(new SpaceLp<FLOAT_TYPE>(2));
   const FLOAT_TYPE expected[8][8] = {
     {0.0, 1.120059, 0.96305295, 0.59664227, 0.85577684, 1.1493646, 1.04095581, 1.23306569},
     {1.120059, 0.0, 0.67128161, 0.96976079, 0.70403835, 1.1330097, 0.83340686, 1.15376817},
@@ -73,7 +73,7 @@ TEST(ManhattanDistance) {
   VectorDataset1 dataset;
   const ObjectVector& dataobjects = dataset.GetDataObjects();
 
-  scoped_ptr<Space<FLOAT_TYPE>> space(new LpSpace<FLOAT_TYPE>(1));
+  scoped_ptr<Space<FLOAT_TYPE>> space(new SpaceLp<FLOAT_TYPE>(1));
   const FLOAT_TYPE expected[8][8] = {
     {0.0, 2.408, 1.735, 1.006, 1.608, 2.149, 1.897, 2.343},
     {2.408, 0.0, 1.341, 2.034, 1.252, 2.045, 1.639, 2.185},
@@ -97,7 +97,7 @@ TEST(ChebyshevDistance) {
   VectorDataset1 dataset;
   const ObjectVector& dataobjects = dataset.GetDataObjects();
 
-  scoped_ptr<Space<FLOAT_TYPE>> space(new LpSpace<FLOAT_TYPE>(0));
+  scoped_ptr<Space<FLOAT_TYPE>> space(new SpaceLp<FLOAT_TYPE>(0));
   const FLOAT_TYPE expected[8][8] = {
     {0.0, 0.715, 0.733, 0.499, 0.614, 0.835, 0.766, 0.844},
     {0.715, 0.0, 0.422, 0.527, 0.581, 0.765, 0.645, 0.778},

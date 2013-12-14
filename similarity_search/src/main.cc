@@ -149,9 +149,6 @@ void RunExper(const multimap<string, AnyParams*>& Methods,
 {
   LOG(INFO) << "### Append? : "       << DoAppend;
   LOG(INFO) << "### OutFilePrefix : " << ResFilePrefix;
-  if (dimension <= 0) {
-    LOG(FATAL) << "# of dimensions should be > 0";
-  }
   vector<dist_t> range;
 
   bool bFail = false;
@@ -238,7 +235,8 @@ void RunExper(const multimap<string, AnyParams*>& Methods,
         ctm.split();
 
         const double vmsize_after = mem_usage_measure.get_vmsize();
-        const double data_size = config.GetDataObjects().size() * config.GetDimension() * sizeof(dist_t) / 1024.0 / 1024.0;
+
+        const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
 
         const double TotalMemByMethod = vmsize_after - vmsize_before + data_size;
 

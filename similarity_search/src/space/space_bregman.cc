@@ -330,7 +330,6 @@ Object* KLDivFastRightQuery<dist_t>::CreateObjFromVect(size_t id, const std::vec
   return new Object(id, temp.size() * sizeof(dist_t), &temp[0]);
 }
 
-template class LpSpace<double>;
 template class BregmanDiv<float>;
 template class BregmanDiv<double>;
 template class KLDivGenSlow<float>;
@@ -345,4 +344,5 @@ template class KLDivFast<float>;
 template class KLDivFast<double>;
 template class KLDivFastRightQuery<float>;
 template class KLDivFastRightQuery<double>;
+
 }  // namespace similarity

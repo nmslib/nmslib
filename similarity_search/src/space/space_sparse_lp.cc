@@ -19,32 +19,28 @@
 #include <string>
 #include <sstream>
 
-#include "space_lp.h"
+#include "space_sparse_lp.h"
+#include "space_sparse_vector.h"
 #include "scoped_ptr.h"
 #include "logging.h"
+#include "distcomp.h"
 #include "experimentconf.h"
 
 namespace similarity {
 
 template <typename dist_t>
-dist_t SpaceLp<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
-  CHECK(obj1->datalength() > 0);
-  CHECK(obj1->datalength() == obj2->datalength());
-  const dist_t* x = reinterpret_cast<const dist_t*>(obj1->data());
-  const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
-  const size_t length = obj1->datalength() / sizeof(dist_t);
-
-  return distObj_(x, y, length);
+dist_t SpaceSparseLp<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
+  return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObj_);
 }
 
 template <typename dist_t>
-std::string SpaceLp<dist_t>::ToString() const {
+std::string SpaceSparseLp<dist_t>::ToString() const {
   std::stringstream stream;
-  stream << "SpaceLp: p = " << distObj_.getP();
+  stream << "SpaceSparseLp: p = " << distObj_.getP();
   return stream.str();
 }
 
-template class SpaceLp<float>;
-template class SpaceLp<double>;
+template class SpaceSparseLp<float>;
+template class SpaceSparseLp<double>;
 
 }  // namespace similarity

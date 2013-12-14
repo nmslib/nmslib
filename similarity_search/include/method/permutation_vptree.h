@@ -76,7 +76,7 @@ class PermutationVPTree : public Index<dist_t> {
 #ifdef USE_VPTREE_SAMPLE
   const CorrelVectorSpace<CorrelDistFunc>*                                         VPTreeSpace_;
 #else
-  const LpSpace<float>*                                                            VPTreeSpace_;
+  const SpaceLp<float>*                                                            VPTreeSpace_;
 #endif
 
   // disable copy and assign

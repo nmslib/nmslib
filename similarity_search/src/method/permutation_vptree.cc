@@ -38,7 +38,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
 #ifdef USE_VPTREE_SAMPLE
       VPTreeSpace_(new RankCorrelVectorSpace<RankCorrelDistFunc>())
 #else
-      VPTreeSpace_(new LpSpace<float>(2))
+      VPTreeSpace_(new SpaceLp<float>(2))
 #endif
 {
   AnyParamManager pmgr(AllParams);
