@@ -52,7 +52,7 @@ class SpaceSparseVector : public Space<dist_t> {
  protected:
   typedef pair<uint32_t, dist_t>  ElemType;  
   virtual Object* CreateObjFromVect(size_t id, const std::vector<ElemType>& InpVect) const;
-  void ReadSparseVec(const std::string& line, std::vector<ElemType>& v) const;
+  void ReadSparseVec(std::string line, std::vector<ElemType>& v) const;
   
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 

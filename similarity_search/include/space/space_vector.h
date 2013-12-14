@@ -42,7 +42,7 @@ class VectorSpace : public Space<dist_t> {
   virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
-  void ReadVec(const std::string& line, std::vector<dist_t>& v) const;
+  void ReadVec(std::string line, std::vector<dist_t>& v) const;
 };
 
 }  // namespace similarity

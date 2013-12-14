@@ -28,7 +28,7 @@
 namespace similarity {
 
 template <typename dist_t>
-void VectorSpace<dist_t>::ReadVec(const std::string& line, std::vector<dist_t>& v) const
+void VectorSpace<dist_t>::ReadVec(std::string line, std::vector<dist_t>& v) const
 {
   v.clear();
   std::stringstream str(line);
@@ -36,6 +36,8 @@ void VectorSpace<dist_t>::ReadVec(const std::string& line, std::vector<dist_t>& 
   str.exceptions(std::ios::badbit);
 
   dist_t val;
+
+  ReplacePunct(line); 
 
   try {
     while (str >> val) {

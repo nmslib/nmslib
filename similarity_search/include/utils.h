@@ -28,7 +28,6 @@
 #include <typeinfo>
 
 
-
 namespace similarity {
 
 using std::string;
@@ -119,6 +118,10 @@ inline bool SplitStr(const std::string& str_, vector<ElemType>& res, const char 
 
 inline void ToLower(string &s) {
   for (size_t i = 0; i < s.size(); ++i) s[i] = std::tolower(s[i]);
+}
+
+inline void ReplacePunct(string &s) {
+  for (size_t i = 0; i < s.size(); ++i) if (ispunct(s[i])) s[i] = ' ';
 }
 
 template <class T>

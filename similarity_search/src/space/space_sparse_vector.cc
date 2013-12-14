@@ -28,7 +28,7 @@
 namespace similarity {
 
 template <typename dist_t>
-void SpaceSparseVector<dist_t>::ReadSparseVec(const std::string& line, std::vector<ElemType>& v) const
+void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, std::vector<ElemType>& v) const
 {
   v.clear();
   std::stringstream str(line);
@@ -38,6 +38,8 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(const std::string& line, std::vect
   uint32_t prevId = 0;
   uint32_t id;
   dist_t   val;
+
+  ReplacePunct(line); 
 
   try {
     while (str >> id && str >> val) {
