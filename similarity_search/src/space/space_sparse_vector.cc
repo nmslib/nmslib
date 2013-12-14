@@ -35,7 +35,6 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, std::vector<Elem
 
   str.exceptions(std::ios::badbit);
 
-  uint32_t prevId = 0;
   uint32_t id;
   dist_t   val;
 
@@ -43,13 +42,19 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, std::vector<Elem
 
   try {
     while (str >> id && str >> val) {
-      if (prevId && id <= prevId) {
+      v.push_back(ElemType(id, val));
+    }
+    sort(v.begin(), v.end());
+
+    for (unsigned i = 1; i < v.size(); ++i) {
+      uint32_t  prevId = v[i-1].first;
+      uint32_t  id = v[i].first;
+
+      if (id <= prevId) {
         stringstream err;
         err << "Ids are not sorted, prevId = " << prevId << " current id: " << id;
         throw std::runtime_error(err.str());
       }
-      prevId = id;
-      v.push_back(ElemType(id, val));
     }
   } catch (const std::exception &e) {
     LOG(ERROR) << "Exception: " << e.what() << std::endl;
