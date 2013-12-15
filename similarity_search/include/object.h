@@ -120,7 +120,13 @@ inline size_t TotalSpaceUsed(const ObjectVector &vect) {
 inline void CreateCacheOptimizedBucket(const ObjectVector& data, 
                                        char*& CacheOptimizedBucket, 
                                        ObjectVector*& bucket) {
-  CHECK(data.size());
+  if (data.empty()) {
+    /* TODO @leo Normally this wouldn't happen
+     *           However, some methods, e.g., list of clusters
+     *           with KLDiv may produce empty clusters.
+     */
+    LOG(WARNING) << "Empty bucket!"; 
+  }
   CacheOptimizedBucket = new char [TotalSpaceUsed(data)];
   char *p = CacheOptimizedBucket;
   bucket = new ObjectVector(data.size());
