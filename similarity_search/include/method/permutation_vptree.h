@@ -38,7 +38,7 @@ namespace similarity {
 
 /*
  * The hybrid of the permutation index and of the vptree. 
- * It is experimental and is not especially efficient.
+ * It is most useful when dimensionality is high.
  *
  * A very similar idea was proposed by Figueroa and Fredriksson in
  * Speeding up permutation based indexing with indexing (2009)

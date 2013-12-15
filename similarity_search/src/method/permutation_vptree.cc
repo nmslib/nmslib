@@ -53,16 +53,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
     LOG(FATAL) << METH_PERMUTATION_VPTREE << " requires that dbScanFrac is in the range [0,1]";
   }
 
-  size_t        BucketSize = 50;
-  bool          ChunkBucket = true;
-
-  pmgr.GetParamOptional("bucketSize", BucketSize);
-  pmgr.GetParamOptional("chunkBucket", ChunkBucket);
-
   AnyParams RemainParams;
-
-  int MaxLeavesToVisit;
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit);
 
 #ifdef USE_VPTREE_SAMPLE
     bool      DoRandSample                  = true;
@@ -80,9 +71,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
     pmgr.GetParamOptional("distLearnThresh",         DistLearnThreshold);
 
     RemainParams = pmgr.ExtractParametersExcept(
-                        {"bucketSize",
-                         "chunkBucket",
-                         "dbScanFrac",
+                        {"dbScanFrac",
                          "numPivot",
 
                          "doRandSample", 
@@ -91,7 +80,6 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
                          "quantileStepPseudoQuery",
                          "quantileStepPseudoQuery",
                          "distLearnThresh",
-                         "maxLeavesToVisit"
                         });
 #else
   double AlphaLeft = 1.0, AlphaRight = 1.0;
@@ -100,14 +88,11 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
   pmgr.GetParamOptional("alphaRight", AlphaRight);
 
   RemainParams = pmgr.ExtractParametersExcept(
-                        {"bucketSize",
-                         "chunkBucket",
-                         "dbScanFrac",
+                        { "dbScanFrac",
                          "numPivot",
 
                          "alphaLeft", 
                          "alphaRight",
-                         "maxLeavesToVisit"
                         });
 #endif
 
@@ -122,6 +107,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
     PermData_[i] = VPTreeSpace_->CreateObjFromVect(i, OnePerm);
   }
 
+  ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, PermData_);
   
   SamplingOracleCreator<PivotIdType> OracleCreator(VPTreeSpace_,
                                                   PermData_,
@@ -151,6 +137,8 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
     PermData_[i] = VPTreeSpace_->CreateObjFromVect(i, OnePermFloat);
   }
   TriangIneqCreator<float> OracleCreator(AlphaLeft, AlphaRight);
+
+  ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, PermData_);
 
 
   VPTreeIndex_ = new VPTree<float, TriangIneq<float>,

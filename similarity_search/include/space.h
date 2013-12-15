@@ -119,6 +119,24 @@ void ComputeIntrinsicDimensionality(const Space<dist_t>& space,
   DistSigma = sqrt(DistSigma);
 }
 
+template <typename dist_t>
+void ReportIntrinsicDimensionality(const string& reportName,
+                                   const Space<dist_t>& space, 
+                                   const ObjectVector& dataset,
+                                   size_t SampleQty = 1000000) {
+    double DistMean, DistSigma, IntrDim;
+
+    ComputeIntrinsicDimensionality(space, dataset,
+                                  IntrDim,
+                                  DistMean,
+                                  DistSigma,
+                                  SampleQty);
+
+    LOG(INFO) << "### " << reportName;
+    LOG(INFO) << "### intrinsic dim: " << IntrDim;
+    LOG(INFO) << "### distance mean: " << DistMean;
+    LOG(INFO) << "### distance sigma: " << DistSigma;
+}
 
 }  // namespace similarity
 

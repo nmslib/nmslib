@@ -60,7 +60,7 @@ class VPTree : public Index<dist_t> {
            size_t   TotalQty,
            size_t&  IndexedQty,
            const SearchOracleCreator& OracleCreator,
-           const Space<dist_t>* space, ObjectVector& data,
+           const Space<dist_t>* space, const ObjectVector& data,
            size_t BucketSize, bool ChunkBucket,
            const string& SaveHistFileName,
            bool use_random_center, bool is_root);
@@ -70,7 +70,7 @@ class VPTree : public Index<dist_t> {
     void GenericSearch(QueryType* query, int& MaxLeavesToVisit);
 
    private:
-    void CreateBucket(bool ChunkBucket, ObjectVector& data, 
+    void CreateBucket(bool ChunkBucket, const ObjectVector& data, 
                       bool PrintProgress,
                       size_t&  IndexedQty, size_t   TotalQty);
     const Object* pivot_;

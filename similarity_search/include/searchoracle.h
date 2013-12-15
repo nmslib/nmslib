@@ -46,8 +46,16 @@ public:
  * E Chavez, G Navarro 
  *
  */
-    if (double(MaxDist) <= alpha_left_ * (double(MedianDist) - dist)) return (kVisitLeft);
-    if (double(MaxDist) <= alpha_right_* (dist - double(MedianDist))) return (kVisitRight);
+
+    /*
+     * If the median is in both subtrees (e.g., this is often the case of a discreete metric)
+     * and the distance to the pivot is MedianDist, we need to visit both subtrees.
+     * Hence, we check for the strict inequality!!! Even if MaxDist == 0, 
+     * for the case of dist == MedianDist, 0 < 0 is false. 
+     * Thus, we visit both subtrees. 
+     */
+    if (double(MaxDist) < alpha_left_ * (double(MedianDist) - dist)) return (kVisitLeft);
+    if (double(MaxDist) < alpha_right_* (dist - double(MedianDist))) return (kVisitRight);
 
     return (kVisitBoth);
   }

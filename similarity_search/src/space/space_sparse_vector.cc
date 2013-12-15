@@ -18,6 +18,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <random>
 
 #include "space_sparse_vector.h"
 #include "scoped_ptr.h"
@@ -103,6 +104,25 @@ template <typename dist_t>
 Object* SpaceSparseVector<dist_t>::CreateObjFromVect(size_t id, const std::vector<ElemType>& InpVect) const {
   return new Object(id, InpVect.size() * sizeof(ElemType), &InpVect[0]);
 };
+
+template <typename dist_t>
+void SpaceSparseVector<dist_t>::GenRandProjPivots(ObjectVector& vDst, size_t Qty, size_t MaxElem) const {
+  // Static is thread-safe in C++-11
+  static  std::random_device          rd;
+  static  std::mt19937                engine(rd());
+  static  std::normal_distribution<>  normGen(0, 1);
+
+  vDst.clear();
+
+  for (unsigned i = 0; i < Qty; ++i) {
+    vector<ElemType>  temp;
+
+    for (unsigned id = 0; id < MaxElem; ++id) {
+      temp.push_back(ElemType(id, normGen(engine))); 
+    }
+    vDst.push_back(CreateObjFromVect(i, temp));
+  }
+}
 
 /* 
  * We don't instantiate sparse vector spaces for types other than float & double

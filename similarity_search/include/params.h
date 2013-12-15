@@ -111,9 +111,8 @@ public:
 
   /*
    * Takes a list of exceptions and extracts all parameter values, 
-   * except parameters from this list.
-   * The destructor won't check if any extracted parameters were 
-   * obtained through GetParamRequired or GetParamDefault.
+   * except parameters from this list. The extracted parameters
+   * are added to the list of parameters already seen.
    */
   AnyParams ExtractParametersExcept(const vector<string>& ExceptList) {
     set<string> except(ExceptList.begin(), ExceptList.end());

@@ -167,7 +167,6 @@ void RunExper(const multimap<string, AnyParams*>& Methods,
                                       dimension, knn, eps, range);
 
   config.ReadDataset();
-  double DistMean, DistSigma, IntrDim;
   MemUsage  mem_usage_measure;
 
 
@@ -197,15 +196,7 @@ void RunExper(const multimap<string, AnyParams*>& Methods,
 
     LOG(INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
 
-    ComputeIntrinsicDimensionality(*config.GetSpace(), config.GetDataObjects(),
-                                  IntrDim,
-                                  DistMean,
-                                  DistSigma);
-
-    LOG(INFO) << "### Data set properties: ";
-    LOG(INFO) << "### intrinsic dim: " << IntrDim;
-    LOG(INFO) << "### distance mean: " << DistMean;
-    LOG(INFO) << "### distance sigma: " << DistSigma;
+    ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
     vector<Index<dist_t>*>  IndexPtrs;
     try {

@@ -70,7 +70,7 @@ SamplingOracle<dist_t>::SamplingOracle(
   CHECK(QuantileStepPivot > 0 && QuantileStepPivot < 1);
   CHECK(QuantileStepPseudoQuery > 0 && QuantileStepPseudoQuery < 1);
 
-  dist_t               PivotR = GetMedian(DistsOrig);
+  dist_t               PivotR = GetMedian(DistsOrig).first;
 
   /*
    * Note that here using float (or any other floating-point type) is not

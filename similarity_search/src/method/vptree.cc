@@ -91,7 +91,7 @@ void VPTree<dist_t, SearchOracle, SearchOracleCreator>::Search(KNNQuery<dist_t>*
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
 void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::CreateBucket(bool ChunkBucket, 
-                                                                             ObjectVector& data, 
+                                                                             const ObjectVector& data, 
                                                                              bool PrintProgress,
                                                                              size_t&  IndexedQty,
                                                                              size_t   TotalQty) {
@@ -111,7 +111,7 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
                                size_t   TotalQty,
                                size_t&  IndexedQty,
                                const SearchOracleCreator& OracleCreator,
-                               const Space<dist_t>* space, ObjectVector& data,
+                               const Space<dist_t>* space, const ObjectVector& data,
                                size_t BucketSize, bool ChunkBucket,
                                const string& SaveHistFileName,
                                bool use_random_center, bool is_root)
@@ -139,12 +139,9 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
       dp.push_back(std::make_pair(space->IndexTimeDistance(pivot_, data[i]), data[i]));
     }
 
-    if (!is_root) {
-      ObjectVector().swap(data);
-    }
-
     std::sort(dp.begin(), dp.end(), DistObjectPairAscComparator<dist_t>());
-    mediandist_ = GetMedian(dp);
+    DistObjectPair<dist_t>  medianDistObj = GetMedian(dp);
+    mediandist_ = medianDistObj.first; 
 
     oracle_ = OracleCreator.Create(level, pivot_, dp);
 
@@ -165,10 +162,15 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
 
 #if 1
     for (auto it = dp.begin(); it != dp.end(); ++it) {
-      const dist_t d = it->first;
       const Object* v = it->second;
 
-      if (d < mediandist_) {
+      /* 
+       * Note that here we compare a pair (distance, pointer)
+       * If distances are equal, pointers are compared.
+       * Thus, we would get a balanced split, even if the median
+       * occurs many times in the array dp[].
+       */
+      if (*it < medianDistObj) {
         left.push_back(v);
       } else {
         right.push_back(v);
@@ -199,7 +201,12 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
       }
     }
 #endif
-    size_t LeastSize = data.size() / BalanceConst;
+    /*
+     * Sometimes, e.g.., for integer-valued distances,
+     * mediandist_ will be non-discriminative. In this case
+     * it is more efficient to put everything into a single bucket.
+     */
+    size_t LeastSize = dp.size() / BalanceConst;
 
     if (left.size() < LeastSize || right.size() < LeastSize) {
         CreateBucket(ChunkBucket, data, PrintProgress, IndexedQty, TotalQty);

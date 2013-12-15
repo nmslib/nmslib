@@ -27,6 +27,7 @@
 #include "object.h"
 #include "utils.h"
 #include "space.h"
+#include "distcomp.h"
 #include "perm_type.h"
 
 namespace similarity {
@@ -49,7 +50,19 @@ class SpaceSparseVector : public Space<dist_t> {
                       const ExperimentConfig<dist_t>* config,
                       const char* inputfile,
                       const int MaxNumObjects) const;
+
+  void GenRandProjPivots(ObjectVector& vDst, size_t Qty, size_t MaxElem) const;
+  static dist_t ScalarProduct(const Object* obj1, const Object* obj2) {
+    SpaceNormScalarProduct distObjNormSP;
+    return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjNormSP);
+  }
  protected:
+  struct SpaceNormScalarProduct {
+    dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
+     return NormScalarProduct(x, y, length);
+    }
+  };
+
   typedef pair<uint32_t, dist_t>  ElemType;  
   virtual Object* CreateObjFromVect(size_t id, const std::vector<ElemType>& InpVect) const;
   void ReadSparseVec(std::string line, std::vector<ElemType>& v) const;

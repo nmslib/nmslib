@@ -46,22 +46,18 @@ class SpaceSparseCosine : public SpaceSparseVector<dist_t> {
 
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
-    return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObj_);
+    return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjCosine_);
   }
  private:
   struct SpaceCosineDist {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = CosineDistance(x, y, length);
-
-      // TODO: @leo shouldn't happen any more, but let's keep it here for a while
-      if (std::isnan(val)) {
-        LOG(FATAL) << "NAN dist!!!!";
-      }
-
+      // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
+      if (std::isnan(val)) LOG(FATAL) << "NAN dist!!!!";
       return val;
     }
   };
-  SpaceCosineDist distObj_;
+  SpaceCosineDist        distObjCosine_;
 };
 
 

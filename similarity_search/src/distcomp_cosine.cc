@@ -23,16 +23,14 @@
 namespace similarity {
 
 using namespace std;
-
 /*
- * Cosine-distance (a proper metric)
+ * Scalar-product
  *
  * TODO: @leo implement an efficient version
- *
  */
 
 template <class T>
-T CosineDistance(const T *p1, const T *p2, size_t qty) 
+T NormScalarProduct(const T *p1, const T *p2, size_t qty) 
 { 
     T sum = 0;
     T norm1 = 0;
@@ -44,11 +42,25 @@ T CosineDistance(const T *p1, const T *p2, size_t qty)
       sum += p1[i] * p2[i];
     }
     /* 
-     * Sometimes due to rounding errors, the arg of arccos gets > 1 or < -1
-     * then acos returns NaN 
+     * Sometimes due to rounding errors, we get values > 1 or < -1.
+     * This throws off other functions that use scalar product, e.g., acos
      */
-    T val = max(T(-1), min(T(1), sum / sqrt(norm1) / sqrt(norm2)));
-    return acos(val);
+    return max(T(-1), min(T(1), sum / sqrt(norm1) / sqrt(norm2)));
+}
+
+template float  NormScalarProduct<float>(const float* pVect1, const float* pVect2, size_t qty);
+template double NormScalarProduct<double>(const double* pVect1, const double* pVect2, size_t qty);
+
+/*
+ * Cosine-distance (a proper metric)
+ *
+ *
+ */
+
+template <class T>
+T CosineDistance(const T *p1, const T *p2, size_t qty) 
+{ 
+    return acos(NormScalarProduct(p1, p2, qty));
 }
 
 template float  CosineDistance<float>(const float* pVect1, const float* pVect2, size_t qty);

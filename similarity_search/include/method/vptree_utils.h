@@ -31,20 +31,24 @@ inline size_t SelectVantagePoint(const ObjectVector& data, bool use_random_cente
 }
 
 /* 
- * Even if dist_t is double, or long double
- * storing the median as the single-precision number (i.e., float)
- * should be good enough.
+ * A median is a pair:
+ * a distance + an index.
  */
 template <typename dist_t>
-inline float GetMedian(const DistObjectPairVector<dist_t>& dp) {
+inline DistObjectPair<dist_t> GetMedian(const DistObjectPairVector<dist_t>& dp) {
   CHECK(!dp.empty());
+  dist_t val = 0;
+  size_t index;
   if ((dp.size() & 1) == 1) {   // odd
-    return static_cast<float>(dp[dp.size() / 2].first);
-  } else {                     //even
+    index = dp.size() / 2;
+    val = dp[index].first;
+  } else {                      //even
     CHECK(dp.size() >= 2);
-    return (static_cast<float>(dp[(dp.size() / 2 ) - 1].first) 
-          + static_cast<float>(dp[dp.size() / 2 ].first)) / 2.0f;
+    index = dp.size() / 2;
+    val = static_cast<dist_t>((static_cast<double>(dp[index - 1].first) 
+                             + static_cast<double>(dp[index ].first)) / 2.0);
   }
+  return DistObjectPair<dist_t>(val, dp[index].second); 
 }
 
 /* 
