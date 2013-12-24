@@ -50,18 +50,11 @@ cmake .
 Then, type:  
 make   
 
-Examples of using the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small data sets stored in this repository. The complete data set can be obtained as follows:
-
-1. Download Cayton data using data/download_cayton.sh
-2. The colors data set is stored in this repository (the file data/colors112.txt). 
-3. Generate a 64-dimensional data set, where each coordinate is a uniform number sampled from [0,1]:  
-
-data/genunif.py -d 64 -n 500000 -o unif64.txt  
+Examples of using the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small data sets stored in this repository. The complete data set can be obtained using the script data/get_all_data.sh
 
 Then, copy all the data to some directory X and set the environment variable:  
 
 export DATA_DIR=[path to the directory with data files]
-
 
 We use the data set created by Lawerence Cayton (lcayton.com). If you use this data, please, consider citing:
 
@@ -83,7 +76,6 @@ Additionally, we use the colors data set (see the file colors112.txt in the data
     Title = {Metric Spaces Library},  
     Year = {2007  
 } 
-
 
 
 Sample scripts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
