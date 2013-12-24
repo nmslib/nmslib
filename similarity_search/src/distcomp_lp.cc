@@ -15,10 +15,17 @@
  */
 #include "distcomp.h"
 #include "string.h"
+#include "logging.h"
+#include "pow.h"
 
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
+#include <cmath>
+
+#ifdef __SSE2__
+#include <immintrin.h>
+#endif
 
 namespace similarity {
 
@@ -75,6 +82,10 @@ template double LInfNorm<double>(const double* pVect1, const double* pVect2, siz
 
 template <> 
 float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
+#ifndef __SSE2__
+#warning "LInfNormSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return LInfNormStandard(pVect1, pVect2, qty);
+#else
     size_t qty4  = qty/4;
     size_t qty16 = qty/16;
 
@@ -129,10 +140,15 @@ float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     }
 
     return res;
+#endif
 }
 
 template <> 
 double LInfNormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
+#ifndef __SSE2__
+#warning "LInfNormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return LInfNormStandard(pVect1, pVect2, qty);
+#else
     size_t qty8 = qty/8;
 
     const double* pEnd1 = pVect1 + 8 * qty8;
@@ -167,6 +183,7 @@ double LInfNormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
     }
 
     return res;
+#endif
 }
 
 template float LInfNormSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
@@ -223,6 +240,10 @@ template double L1Norm<double>(const double* pVect1, const double* pVect2, size_
 
 template <> 
 float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
+#ifndef __SSE2__
+#warning "L1NormSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return L1NormStandard(pVect1, pVect2, qty);
+#else
     size_t qty4  = qty/4;
     size_t qty16 = qty/16;
 
@@ -278,10 +299,15 @@ float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     }
 
     return res;
+#endif
 }
 
 template <> 
 double L1NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
+#ifndef __SSE2__
+#warning "L1NormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return L1NormStandard(pVect1, pVect2, qty);
+#else
     size_t qty8 = qty/8;
 
     const double* pEnd1 = pVect1 + 8 * qty8;
@@ -317,6 +343,7 @@ double L1NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
 
     return res;
 }
+#endif
 
 template float L1NormSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double L1NormSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
@@ -373,6 +400,15 @@ template double L2Norm<double>(const double* pVect1, const double* pVect2, size_
  */
 
 float L2SqrSIMD(const float* pVect1, const float* pVect2, size_t qty) {
+#ifndef __SSE2__
+#warning "L2SqrSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+    float res = 0, diff;
+    for (int i = 0; i < qty; ++i) {
+        diff = pVect1[i] - pVect2[i];
+        r += diff * diff;
+    }
+    return res;
+#else
     size_t qty4  = qty/4;
     size_t qty16 = qty/16;
 
@@ -423,6 +459,7 @@ float L2SqrSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     }
 
     return res;
+#endif
 }
 
 template <> 
@@ -433,6 +470,10 @@ float L2NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 
 template <> 
 double L2NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
+#ifndef __SSE2__
+#warning "L2NormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return L2NormStandard(pVect1, pVect2, qty);
+#else
     size_t qty8 = qty/8;
 
     const double* pEnd1 = pVect1 + 8 * qty8;
@@ -465,9 +506,114 @@ double L2NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
     }
 
     return sqrt(res);
+#endif
 }
 
 template float  L2NormSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double L2NormSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
+
+/*
+ * Slower versions of LP-distance
+ */
+
+template <typename T>
+T LPGenericDistance(const T* x, const T* y, const int length, const T p) {
+  T result = 0;
+  T temp;
+
+  CHECK(p > 0);
+
+  for (int i = 0; i < length; ++i) {
+    // In C++ 11, std::abs is also defined for floating-point numbers
+    temp = std::abs(x[i] - y[i]);
+    result += pow(temp, p);
+  }
+
+  return std::pow(result, T(1.0) / p);
+}
+
+template float LPGenericDistance<float>(const float* x, const float* y, const int length, const float p);
+template double LPGenericDistance<double>(const double* x, const double* y, const int length, const double p);
+
+/*
+ * A hacky implementation that improves over pow-based function for the following cases:
+ *
+ * p=1/8,1/4,1/2
+ * p=n, n is integer
+ * p=n+1/2, n is integer
+ *
+ */
+template <typename T>
+T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p) {
+  T result = 0;
+  T temp;
+
+  CHECK(p > 0);
+
+  T pf8 = floor(8 * p);
+  if (fabs(8*p - pf8) <= std::numeric_limits<T>::min()) {
+    unsigned pintOrig = static_cast<unsigned>(pf8); 
+
+    if (1 == pintOrig) { // p == 1/8
+      for (int i = 0; i < length; ++i) {
+        // In C++ 11, std::abs is also defined for floating-point numbers
+        temp = std::abs(x[i] - y[i]);
+        result += sqrt(sqrt(sqrt(temp)));
+      }
+      result *= result;
+      result *= result;
+      result *= result;
+      return result; // result ^8
+    } else if (2 == pintOrig) { // p == 1/4
+      for (int i = 0; i < length; ++i) {
+        // In C++ 11, std::abs is also defined for floating-point numbers
+        temp = std::abs(x[i] - y[i]);
+        result += sqrt(sqrt(temp));
+      }
+      result *= result;
+      result *= result;
+      return result; // result ^4
+    } 
+  }
+  T pf2 = floor(2 * p);
+  if (fabs(2*p - pf2) <= std::numeric_limits<T>::min()) {
+    unsigned pintOrig = static_cast<unsigned>(pf2); 
+    unsigned pint = pintOrig / 2;
+
+    if (pintOrig & 1) { // p == n + 1/2, where n is int
+      for (int i = 0; i < length; ++i) {
+        // In C++ 11, std::abs is also defined for floating-point numbers
+        temp = std::abs(x[i] - y[i]);
+        result += EfficientPow(temp, pint) * sqrt(temp);
+      }
+
+      if (1 == pintOrig) { // Another important case: p == 1/2      
+        return result * result;
+      }
+    } else {
+      for (int i = 0; i < length; ++i) {
+        // In C++ 11, std::abs is also defined for floating-point numbers
+        temp = std::abs(x[i] - y[i]);
+        result += EfficientPow(temp, pint);
+      }
+
+      if (2 == pintOrig) { // Another important case: p == 1
+        return result;
+      }
+    }
+ 
+  } else {
+    for (int i = 0; i < length; ++i) {
+      // In C++ 11, std::abs is also defined for floating-point numbers
+      temp = std::abs(x[i] - y[i]);
+      result += pow(temp, p);
+    }
+  }
+
+  return std::pow(result, T(1.0) / p);
+}
+
+template float LPGenericDistanceOptim<float>(const float* x, const float* y, const int length, const float p);
+template double LPGenericDistanceOptim<double>(const double* x, const double* y, const int length, const double p);
 
 }

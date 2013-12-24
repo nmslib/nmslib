@@ -18,6 +18,7 @@
 #define _SPACE_LP_H_
 
 #include <string>
+#include <limits>
 #include <map>
 #include <stdexcept>
 
@@ -29,6 +30,7 @@
 #include "space_vector.h"
 #include "distcomp.h"
 
+#define SPACE_L   "l"
 #define SPACE_L0  "l0"
 #define SPACE_L1  "l1"
 #define SPACE_L2  "l2"
@@ -40,31 +42,43 @@ namespace similarity {
 template <typename dist_t>
 class SpaceLpDist {
 public:
-  explicit SpaceLpDist(int p) : p_(p) {}
+  explicit SpaceLpDist(dist_t pf) : p_(pf), pf_(pf), custom_(false) {
+    if (fabs(dist_t(p_) - pf_) < numeric_limits<dist_t>::min()) {
+      custom_ = p_ == 0 || p_ == 1 || p_ == 2;
+    }
+  }
 
   dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
     CHECK(p_ >= 0);
 
-    if (p_ == 0) {
-      return LInfNormSIMD(x, y, length);
-    } else if (p_ == 1) {
-      return L1NormSIMD(x, y, length);
-    } else if (p_ == 2) {
-      return L2NormSIMD(x, y, length);
-    } 
+    if (custom_) {
+      if (p_ == 0) {
+        return LInfNormSIMD(x, y, length);
+      } else if (p_ == 1) {
+        return L1NormSIMD(x, y, length);
+      } else if (p_ == 2) {
+        return L2NormSIMD(x, y, length);
+      } 
+    }
 
-    // This one will be rather slow
-    return LPGenericDistance(x, y, length, p_);
+    /* 
+     * This one will be relatively efficient for integer-valued p_,
+     * but not if p_ is an arbitrary value.
+     */
+    return LPGenericDistanceOptim(x, y, length, dist_t(pf_));
   }
-  int getP() const { return p_; }
+  dist_t getP() const { return pf_; }
+  bool getCustom() const { return custom_; }
 private:
-  int p_;
+  int     p_;
+  dist_t  pf_; 
+  bool    custom_; // Do we use a custom implementation for l=0,1,2?
 };
 
 template <typename dist_t>
 class SpaceLp : public VectorSpace<dist_t> {
  public:
-  explicit SpaceLp(int p) : distObj_(p) {}
+  explicit SpaceLp(dist_t p) : distObj_(p) {}
   virtual ~SpaceLp() {}
 
   virtual std::string ToString() const;

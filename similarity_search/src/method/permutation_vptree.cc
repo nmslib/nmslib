@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <memory>
 
 #include "space.h"
 #include "space_rank_correl.h"
@@ -25,9 +26,10 @@
 #include "permutation_vptree.h"
 #include "utils.h"
 #include "distcomp.h"
-#include "scoped_ptr.h"
 
 namespace similarity {
+
+using std::unique_ptr;
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
@@ -173,25 +175,25 @@ void PermutationVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* q
   Permutation perm_q;
   GetPermutation(pivots_, query, &perm_q);
 #ifdef USE_VPTREE_SAMPLE
-  scoped_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_q));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_q));
 
-  scoped_ptr<KNNQuery<PivotIdType>> VPTreeQuery(new KNNQuery<PivotIdType>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
+  unique_ptr<KNNQuery<PivotIdType>> VPTreeQuery(new KNNQuery<PivotIdType>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 #else
   vector<float> perm_qf(perm_q.size());
   for (size_t j = 0;j < perm_q.size(); ++j) {
     perm_qf[j] = perm_q[j];
   }
 
-  scoped_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_qf));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_qf));
 
-  scoped_ptr<KNNQuery<float>> VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
+  unique_ptr<KNNQuery<float>> VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 #endif
   VPTreeIndex_->Search(VPTreeQuery.get());
 
 #ifdef USE_VPTREE_SAMPLE
-  scoped_ptr<KNNQueue<PivotIdType>> ResQueue(VPTreeQuery->Result()->Clone());
+  unique_ptr<KNNQueue<PivotIdType>> ResQueue(VPTreeQuery->Result()->Clone());
 #else
-  scoped_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
+  unique_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
 #endif
 
   while (!ResQueue->Empty()) {
@@ -206,25 +208,25 @@ void PermutationVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* que
   Permutation perm_q;
   GetPermutation(pivots_, query, &perm_q);
 #ifdef USE_VPTREE_SAMPLE
-  scoped_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_q));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_q));
 
-  scoped_ptr<KNNQuery<PivotIdType>> VPTreeQuery(new KNNQuery<PivotIdType>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, query->GetEPS()));
+  unique_ptr<KNNQuery<PivotIdType>> VPTreeQuery(new KNNQuery<PivotIdType>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, query->GetEPS()));
 #else
   vector<float> perm_qf(perm_q.size());
   for (size_t j = 0;j < perm_q.size(); ++j) {
     perm_qf[j] = perm_q[j];
   }
 
-  scoped_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_qf));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_qf));
 
-  scoped_ptr<KNNQuery<float>> VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
+  unique_ptr<KNNQuery<float>> VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 #endif
   VPTreeIndex_->Search(VPTreeQuery.get());
 
 #ifdef USE_VPTREE_SAMPLE
-  scoped_ptr<KNNQueue<PivotIdType>> ResQueue(VPTreeQuery->Result()->Clone());
+  unique_ptr<KNNQueue<PivotIdType>> ResQueue(VPTreeQuery->Result()->Clone());
 #else
-  scoped_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
+  unique_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
 #endif
 
   while (!ResQueue->Empty()) {

@@ -20,7 +20,6 @@
 #include <sstream>
 
 #include "space_lp.h"
-#include "scoped_ptr.h"
 #include "logging.h"
 #include "experimentconf.h"
 
@@ -40,7 +39,7 @@ dist_t SpaceLp<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) c
 template <typename dist_t>
 std::string SpaceLp<dist_t>::ToString() const {
   std::stringstream stream;
-  stream << "SpaceLp: p = " << distObj_.getP();
+  stream << "SpaceLp: p = " << distObj_.getP() << " (custom implement.) = " << distObj_.getCustom();
   return stream.str();
 }
 

@@ -26,6 +26,8 @@
 #include <cstring>
 #include <map>
 #include <typeinfo>
+#include <random>
+#include <climits>
 
 
 namespace similarity {
@@ -33,6 +35,8 @@ namespace similarity {
 using std::string;
 using std::vector;
 using std::stringstream;
+using std::random_device;
+using std::mt19937;
 
 using namespace std;
 
@@ -46,14 +50,24 @@ bool IsFileExists(const char* filename);
 
 inline bool IsFileExists(const string& filename) { return IsFileExists(filename.c_str()); }
 
-void RandomReset();
+inline int RandomInt() {
+    // Static is thread-safe in C++ 11
+    static random_device rdev;
+    static mt19937 gen(rdev());
+    static std::uniform_int_distribution<int> distr(0, std::numeric_limits<int>::max());
+  
+    return distr(gen); 
+}
 
-int RandomInt();
+template <class T>
+inline T RandomReal() {
+    // Static is thread-safe in C++ 11
+    static random_device rdev;
+    static mt19937 gen(rdev());
+    static std::uniform_real_distribution<T> distr(0, 1);
 
-double RandomReal();
-
-void GenUniform(const char* filename, const int total, const int dimension,
-                const double maxrange);
+    return distr(gen); 
+}
 
 void RStrip(char* str);
 
@@ -74,13 +88,9 @@ inline dist_t DistMax() {
 }
 
 template <typename T>
-inline T Abs(const T& x) {
-  return x >= 0 ? x : -x;
-}
-
-template <typename T>
 inline bool ApproxEqual(const T& x, const T& y) {
-  return Abs(x - y) <= std::numeric_limits<T>::epsilon();
+  // In C++ 11, std::abs is also defined for floating-point numbers
+  return std::abs(x - y) <= std::numeric_limits<T>::epsilon();
 }
 
 template <typename T>

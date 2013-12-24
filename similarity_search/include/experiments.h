@@ -28,13 +28,13 @@
 #include <utility>
 #include <thread>
 #include <mutex>
+#include <memory>
 
 #include "global.h"
 #include "object.h"
 #include "memory.h"
 #include "ztimer.h"
 #include "utils.h"
-#include "scoped_ptr.h"
 #include "experimentconf.h"
 #include "space.h"
 #include "index.h"
@@ -54,6 +54,7 @@ using std::mutex;
 using std::thread;
 using std::ref;
 using std::lock_guard;
+using std::unique_ptr;
 
 template <typename dist_t>
 struct Experiments {
@@ -192,7 +193,7 @@ struct Experiments {
 
       for (int q = 0; q < numquery; ++q) {
         if ((q % ThreadQty) == QueryPart) {
-          scoped_ptr<QueryType> query(prm.QueryCreator_(prm.config_.GetSpace(), 
+          unique_ptr<QueryType> query(prm.QueryCreator_(prm.config_.GetSpace(), 
                                       prm.config_.GetQueryObjects()[q]));
           uint64_t  t1 = wtm.split();
           prm.Method_.Search(query.get());
@@ -332,7 +333,7 @@ struct Experiments {
     if (LogInfo) LOG(INFO) << ">>>> Computing effectiveness metrics " ;
 
     for (int q = 0; q < numquery; ++q) {
-      scoped_ptr<QueryType> queryGS(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
+      unique_ptr<QueryType> queryGS(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
 
       /* 
        * We compute gold stanard once for each query.
@@ -348,7 +349,7 @@ struct Experiments {
         size_t MethNum = it - IndexPtrs.begin();
         Index<dist_t>& Method = **it;
 
-        scoped_ptr<QueryType> query(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
+        unique_ptr<QueryType> query(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
         
         Method.Search(query.get());
 

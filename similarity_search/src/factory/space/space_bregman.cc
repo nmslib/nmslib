@@ -25,32 +25,32 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Space<dist_t>* CreateKLDivFast() {
+Space<dist_t>* CreateKLDivFast(const AnyParams& /* ignoring params */) {
   return new KLDivFast<dist_t>();
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateKLDivFastRightQuery() {
+Space<dist_t>* CreateKLDivFastRightQuery(const AnyParams& /* ignoring params */) {
   return new KLDivFastRightQuery<dist_t>();
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateKLDivGenFast() {
+Space<dist_t>* CreateKLDivGenFast(const AnyParams& /* ignoring params */) {
   return new KLDivGenFast<dist_t>();
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateKLDivGenFastRightQuery() {
+Space<dist_t>* CreateKLDivGenFastRightQuery(const AnyParams& /* ignoring params */) {
   return new KLDivGenFastRightQuery<dist_t>();
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateKLDivGenSlow() {
+Space<dist_t>* CreateKLDivGenSlow(const AnyParams& /* ignoring params */) {
   return new KLDivGenSlow<dist_t>();
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateItakuraSaitoFast() {
+Space<dist_t>* CreateItakuraSaitoFast(const AnyParams& /* ignoring params */) {
   return new ItakuraSaitoFast<dist_t>();
 }
 

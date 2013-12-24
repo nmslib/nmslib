@@ -20,6 +20,10 @@
 #include <limits>
 #include <algorithm>
 
+#ifdef __SSE2__
+#include <immintrin.h>
+#endif
+
 namespace similarity {
 
 using namespace std;
@@ -141,6 +145,10 @@ template double JSPrecompApproxLog<double>(const double* pVect1, const double* p
 template <>
 float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qty)
 {
+#ifndef __SSE2__
+#warning "JSPrecompSIMDApproxLog<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return JSPrecompApproxLog(pVect1, pVect2, qty);
+#else
     size_t qty4  = qty/4;
 
     static ApproxLogs<float> ApproxLogs; // Thread-safe in C++11
@@ -214,12 +222,17 @@ float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qt
     }
 
     return 0.5*res;
+#endif
 }
     
 
 template <>
 double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t qty)
 {
+#ifndef __SSE2__
+#warning "JSPrecompSIMDApproxLog<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return JSPrecompApproxLog(pVect1, pVect2, qty);
+#else
     size_t qty2  = qty/2;
 
     static ApproxLogs<double> ApproxLogs; // Thread-safe in C++11
@@ -294,6 +307,7 @@ double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t
     }
 
     return 0.5*res;
+#endif
 }
 
 template float JSPrecompSIMDApproxLog<float>(const float* pVect1, const float* pVect2, size_t qty);

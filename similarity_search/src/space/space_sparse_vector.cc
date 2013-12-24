@@ -21,7 +21,6 @@
 #include <random>
 
 #include "space_sparse_vector.h"
-#include "scoped_ptr.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"

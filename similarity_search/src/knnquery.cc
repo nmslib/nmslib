@@ -16,16 +16,18 @@
 
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 #include "knnqueue.h"
 #include "utils.h"
-#include "scoped_ptr.h"
 #include "space.h"
 #include "index.h"
 #include "rangequery.h"
 #include "knnquery.h"
 
 namespace similarity {
+
+using std::unique_ptr;
 
 template <typename dist_t>
 KNNQuery<dist_t>::KNNQuery(const Space<dist_t>* space, const Object* query_object, const unsigned K, float eps)
@@ -92,8 +94,8 @@ size_t KNNQuery<dist_t>::CheckAndAddToResult(const ObjectVector& bucket) {
 template <typename dist_t>
 bool KNNQuery<dist_t>::Equals(const KNNQuery<dist_t>* other) const {
   bool equal = true;
-  scoped_ptr<KNNQueue<dist_t>> first(result_->Clone());
-  scoped_ptr<KNNQueue<dist_t>> second(other->result_->Clone());
+  unique_ptr<KNNQueue<dist_t>> first(result_->Clone());
+  unique_ptr<KNNQueue<dist_t>> second(other->result_->Clone());
   while (equal && !first->Empty() && !second->Empty()) {
     equal = equal && ApproxEqual(first->TopDistance(), second->TopDistance());
     if (!equal) {
@@ -110,7 +112,7 @@ bool KNNQuery<dist_t>::Equals(const KNNQuery<dist_t>* other) const {
 
 template <typename dist_t>
 void KNNQuery<dist_t>::Print() const {
-  scoped_ptr<KNNQueue<dist_t>> clone(Result()->Clone());
+  unique_ptr<KNNQueue<dist_t>> clone(Result()->Clone());
   std::cerr << "queryID = " << this->query_object_->id()
             << " size = " << ResultSize()
             << " (k=" << GetK()

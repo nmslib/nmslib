@@ -1,4 +1,8 @@
 #!/usr/bin/perl -w
+my $DataDir=$ENV{"DATA_DIR"};
+defined($DataDir) or die("Define the environemnt variable DATA_DIR, which contains data files.");
+-d $DataDir or die("DATA_DIR='$DataDir' is not a directory");
+
 my $K=1;
 my $MaxNumData=500000;
 my $MaxNumQuery=1000;
@@ -44,7 +48,7 @@ for (my $dn = 0; $dn < @DataSet; ++$dn) {
     chomp $AlphaParams;
     $AlphaParams ne "" or die("Empty AlphaParams"); 
 
-    my $cmd = "../../similarity_search/release/experiment --dataFile /home/leonid/DataNIPS/$Name.txt --maxNumData $MaxNumData --maxNumQuery $MaxNumQuery --dimension $dimension  --distType float --spaceType $SpaceType --knn $K --testSetQty $TestSetQty --outFilePrefix $OutFilePrefix ";
+    my $cmd = "../../similarity_search/release/experiment --dataFile $DataDir/$Name.txt --maxNumData $MaxNumData --maxNumQuery $MaxNumQuery --dimension $dimension  --distType float --spaceType $SpaceType --knn $K --testSetQty $TestSetQty --outFilePrefix $OutFilePrefix ";
 
 #--bucketSize $BucketSize ";
 

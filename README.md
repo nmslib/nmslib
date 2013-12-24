@@ -7,17 +7,34 @@ Copyright (c) 2010--2013
 Detailed documentation will appear shortly. Some underlying principles and motivation are described in our "engineering" paper:
 
 @incollection{boytsov_naidan:2013,  
-&nbsp;&nbsp;title={Engineering Efficient and Effective Non-metric Space Library},  
-&nbsp;&nbsp;author={Boytsov, Leonid and Naidan, Bilegsaikhan},  
-&nbsp;&nbsp;booktitle={Similarity Search and Applications},  
-&nbsp;&nbsp;pages={280--293},  
-&nbsp;&nbsp;year={2013},  
-&nbsp;&nbsp;publisher={Springer}  
+    title={Engineering Efficient and Effective Non-metric Space Library},  
+    author={Boytsov, Leonid and Naidan, Bilegsaikhan},  
+    booktitle={Similarity Search and Applications},  
+    pages={280--293},  
+    year={2013},  
+    publisher={Springer}  
 }  
 
 Preprint: http://boytsov.info/pubs/sisap2013.pdf  
 Slides: http://boytsov.info/pubs/sisap2013slides.pdf   
-The details of the prunning approach are outlined in the NIPS'13 paper: http://boytsov.info/pubs/nips2013.pdf (supplemental materials: http://boytsov.info/pubs/nips2013_suppl.zip).
+
+
+The details of the prunning approach are outlined in the NIPS'13 paper:  
+
+@incollection{NIPS2013_5018,  
+    title = {Learning to Prune in Metric and Non-Metric Spaces},  
+    author = {Leonid Boytsov and Bilegsaikhan Naidan},  
+    booktitle = {Advances in Neural Information Processing Systems 26},  
+    pages = {1574--1582},  
+    year = {2013},  
+    url = {http://media.nips.cc/nipsbooks/nipspapers/paper_files/nips26/784.pdf},  
+}  
+
+
+Preprint: http://boytsov.info/pubs/nips2013.pdf  
+Poster:  http://boytsov.info/pubs/nips2013poster.pdf   
+Supplemental materials: http://boytsov.info/pubs/nips2013_suppl.zip  
+
 
 Some prerequisites:
 
@@ -33,21 +50,44 @@ cmake .
 Then, type:  
 make   
 
-Examples of using the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh
+Examples of using the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small data sets stored in this repository. The complete data set can be obtained as follows:
 
-Sample scipts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
-In addition, the directory sample_scripts contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results. This includes the software to generate plots. To generate plots one needs Python, Latex, and PGF.   
+1. Download Cayton data using data/download_cayton.sh
+2. The colors data set is stored in this repository (the file data/colors112.txt). 
+3. Generate a 64-dimensional data set, where each coordinate is a uniform number sampled from [0,1]:  
 
-We use the data set created by Lawerence Cayton (lcayton.com). See, the download script in the data directory. If you use this data, please, consider citing:
+data/genunif.py -d 64 -n 500000 -o unif64.txt  
+
+Then, copy all the data to some directory X and set the environment variable:  
+
+export DATA_DIR=[path to the directory with data files]
+
+
+We use the data set created by Lawerence Cayton (lcayton.com). If you use this data, please, consider citing:
 
 @inproceedings{cayton:2008,  
-&nbsp;&nbsp;title={Fast nearest neighbor retrieval for bregman divergences},  
-&nbsp;&nbsp;author={Cayton, Lawrence},  
-&nbsp;&nbsp;booktitle={Proceedings of the 25th international conference on Machine learning},  
-&nbsp;&nbsp;pages={112--119},   
-&nbsp;&nbsp;year={2008},   
-&nbsp;&nbsp;organization={ACM}  
+    title={Fast nearest neighbor retrieval for bregman divergences},  
+    author={Cayton, Lawrence},   
+    booktitle={Proceedings of the 25th international conference on Machine learning},  
+    pages={112--119},   
+    year={2008},   
+    organization={ACM}  
 }  
+
+Additionally, we use the colors data set (see the file colors112.txt in the data directory) from the Metric Spaces Library:
+
+@misc{LibMetricSpace, 
+    Author = {K.~Figueroa and G.{}~Navarro and E.~Ch\'avez},  
+    Keywords = {Metric Spaces, similarity searching},  
+    Note = {Available at {\tt http://www.sisap.org/Metric\_Space\_Library.html}},  
+    Title = {Metric Spaces Library},  
+    Year = {2007  
+} 
+
+
+
+Sample scripts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
+In addition, the directory sample_scripts contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we provide software to generate plots (which requires Python, Latex, and PGF).   
 
 
 Most of this code is released under the

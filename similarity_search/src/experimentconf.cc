@@ -20,7 +20,6 @@
 #include <sstream>
 
 #include "space.h"
-#include "scoped_ptr.h"
 #include "logging.h"
 #include "experimentconf.h"
 

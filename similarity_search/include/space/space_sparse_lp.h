@@ -29,6 +29,7 @@
 #include "space_lp.h"
 #include "space_sparse_vector.h"
 
+#define SPACE_SPARSE_L   "l_sparse"
 #define SPACE_SPARSE_L0  "l0_sparse"
 #define SPACE_SPARSE_L1  "l1_sparse"
 #define SPACE_SPARSE_L2  "l2_sparse"
@@ -38,7 +39,7 @@ namespace similarity {
 template <typename dist_t>
 class SpaceSparseLp : public SpaceSparseVector<dist_t> {
  public:
-  explicit SpaceSparseLp(int p) : distObj_(p) {}
+  explicit SpaceSparseLp(dist_t p) : distObj_(p) {}
   virtual ~SpaceSparseLp() {}
 
   virtual std::string ToString() const;

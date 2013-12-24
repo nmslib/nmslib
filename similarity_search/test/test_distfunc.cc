@@ -12,13 +12,54 @@
 #include <iostream>
 
 #include "space.h"
-#include "scoped_ptr.h"
 #include "common.h"
 #include "bunit.h"
 #include "distcomp.h"
 #include "ztimer.h"
+#include "pow.h"
+
+#define TEST_AGREE 1
 
 namespace similarity {
+
+template <class T> 
+inline void Normalize(T* pVect, size_t qty) {
+  T sum = 0;
+  for (size_t i = 0; i < qty; ++i) {
+    sum += pVect[i];
+  }
+  if (sum != 0) {
+    for (size_t i = 0; i < qty; ++i) {
+      pVect[i] /= sum;
+    }
+  }
+}
+
+
+template <class T> 
+inline void GenRandVect(T* pVect, size_t qty, T MinElem = T(0), bool DoNormalize = false) {
+  T sum = 0;
+  for (size_t i = 0; i < qty; ++i) {
+    pVect[i] = std::max(RandomReal<T>(), MinElem);
+    sum += pVect[i];
+  }
+  if (DoNormalize && sum != 0) {
+    for (size_t i = 0; i < qty; ++i) {
+      pVect[i] /= sum;
+    }
+  }
+}
+
+inline void GenRandIntVect(int* pVect, size_t qty) {
+  for (size_t i = 0; i < qty; ++i) {
+    pVect[i] = RandomInt();
+  }
+}
+
+template <class T> 
+inline void SetRandZeros(T* pVect, size_t qty, double pZero) {
+    for (size_t j = 0; j < qty; ++j) if (RandomReal<T>() < pZero) pVect[j] = T(0);
+}
 
 using namespace std;
 
@@ -41,6 +82,18 @@ TEST(set_intel) {
 #endif
 
 */
+
+
+TEST(TestEfficientPower) {
+    float f = 2.0;
+
+    for (unsigned i = 1; i <= 64; i++) {
+      float p1 = std::pow(f, i);
+      float p2 = EfficientPow(f, i);
+
+      EXPECT_EQ(p1, p2);
+    }
+}
 
 // Agreement test functions
 template <class T>
@@ -168,8 +221,9 @@ bool TestItakuraSaitoAgree(size_t N, size_t dim, size_t Rep) {
 
             T AbsDiff1 = fabs(val1 - val0);
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
+
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val0 = " << val0 << " Diff: " << (val1 - val0) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl; 
+                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val0 = " << val0 << " Diff: " << (val1 - val0) << " RelDiff1: " << RelDiff1 << " << AbsDiff1: " << AbsDiff1 << endl; 
             }
 
             T AbsDiff2 = fabs(val1 - val2);
@@ -379,14 +433,159 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
     return true;
 }
 
+bool TestSpearmanFootruleAgree(size_t N, size_t dim, size_t Rep) {
+    int* pVect1 = new int[dim];
+    int* pVect2 = new int[dim];
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandIntVect(pVect1, dim);
+            GenRandIntVect(pVect2, dim);
+
+            int val0 = SpearmanFootrule(pVect1, pVect2, dim);
+            int val1 = SpearmanFootruleSIMD(pVect1, pVect2, dim);
+
+            bool bug = false;
+
+
+            if (val0 != val1) {
+                cerr << "Bug SpearmanFootrule  !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1  << endl;
+                bug = true;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+
+    delete [] pVect1;
+    delete [] pVect2;
+
+    return true;
+}
+
+bool TestSpearmanRhoAgree(size_t N, size_t dim, size_t Rep) {
+    int* pVect1 = new int[dim];
+    int* pVect2 = new int[dim];
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandIntVect(pVect1, dim);
+            GenRandIntVect(pVect2, dim);
+
+            int val0 = SpearmanRho(pVect1, pVect2, dim);
+            int val1 = SpearmanRhoSIMD(pVect1, pVect2, dim);
+
+            bool bug = false;
+
+
+            if (val0 != val1) {
+                cerr << "Bug SpearmanRho !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << endl;
+                bug = true;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+
+    delete [] pVect1;
+    delete [] pVect2;
+
+    return true;
+}
+
+template <class T>
+bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
+    T* pVect1 = new T[dim];
+    T* pVect2 = new T[dim];
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim);
+            GenRandVect(pVect2, dim);
+
+            T val0 = LPGenericDistance(pVect1, pVect2, dim, power);
+            T val1 = LPGenericDistanceOptim(pVect1, pVect2, dim, power);
+
+            bool bug = false;
+
+            T AbsDiff1 = fabs(val1 - val0);
+            T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
+
+            T maxRelDiff = 1e-5;
+            T maxAbsDiff = 1e-5;
+            /* 
+             * For large powers, the difference can be larger,
+             * because our approximations are efficient, but not very
+             * precise
+             */
+            if (power > 8) { maxAbsDiff = maxRelDiff = 1e-3;}
+            if (power > 12) { maxAbsDiff = maxRelDiff = 0.01;}
+            if (power > 22) { maxAbsDiff = maxRelDiff = 0.1;}
+
+            if (RelDiff1 > maxRelDiff && AbsDiff1 > maxAbsDiff) {
+                cerr << "Bug LP" << power << " !!! Dim = " << dim << 
+                " val1 = " << val1 << " val0 = " << val0 << 
+                " Diff: " << (val1 - val0) << 
+                " RelDiff1: " << RelDiff1 << 
+                " (max for this power: " << maxRelDiff << ")  " <<
+                " AbsDiff1: " << AbsDiff1 << " (max for this power: " << maxAbsDiff << ")" << endl; 
+            }
+
+            if (bug) return false;
+        }
+    }
+
+
+    delete [] pVect1;
+    delete [] pVect2;
+
+    return true;
+}
+
+#if TEST_AGREE
 TEST(TestAgree) {
     int nTest  = 0;
     int nFail = 0;
 
     srand48(0);
 
-    for (unsigned dim = 1; dim <= 64; ++dim) {
+    /* 
+     * 32 should be more than enough: in all methods the loop-unrolling
+     * includes at most 16 distance computations.
+     * 
+     */
+    for (unsigned dim = 1; dim <= 32; ++dim) {
         cout << "Dim = " << dim << endl;
+
+        /* 
+         * This is a costly check, we don't need to do it for large # dimensions.
+         * Anyways, the function is not using any loop unrolling, so 8 should be sufficient.
+         */
+        if (dim <= 8) {
+          TestLPGenericAgree(1024, dim, 10, 0.125f);
+          TestLPGenericAgree(1024, dim, 10, 0.25f);
+          TestLPGenericAgree(1024, dim, 10, 0.5f);
+
+          for (float power = 1; power <= 32; power += 0.5) {
+            TestLPGenericAgree(1024, dim, 10, power);
+          }
+
+          TestLPGenericAgree(1024, dim, 10, (double)0.125);
+          TestLPGenericAgree(1024, dim, 10, (double)0.25);
+          TestLPGenericAgree(1024, dim, 10, (double)0.5);
+
+          for (double power = 1; power <= 32; power += 0.5) {
+            TestLPGenericAgree(1024, dim, 10, power);
+          }
+        }
+
+        nTest++;
+        nFail = !TestSpearmanFootruleAgree(1024, dim, 10);
+
+        nTest++;
+        nFail = !TestSpearmanRhoAgree(1024, dim, 10);
 
         nTest++;
         nFail = !TestJSAgree<float>(1024, dim, 10, 0.5);
@@ -428,6 +627,7 @@ TEST(TestAgree) {
 
     EXPECT_EQ(0, nFail);
 }
+#endif
 
 // Efficiency test functions
 
@@ -683,6 +883,38 @@ bool TestL2Norm(size_t N, size_t dim, size_t Rep) {
 template <class T>
 bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
     T* pArr = new T[N * dim];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+ 
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += L2NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+    }
+ 
+    uint64_t tDiff = t.split();
+ 
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
+ 
+    delete [] pArr;
+ 
+    return true;
+}
+
+
+template <class T>
+bool TestLPGeneric(size_t N, size_t dim, size_t Rep, T power) {
+    T* pArr = new T[N * dim];
     T* p = pArr;
 
     for (size_t i = 0; i < N; ++i, p+= dim) {
@@ -699,14 +931,47 @@ bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L2NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += LPGenericDistance(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
         }
     }
 
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Generic L" << power << " per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
+template <class T>
+bool TestLPGenericOptim(size_t N, size_t dim, size_t Rep, T power) {
+    T* pArr = new T[N * dim];
+    T* p = pArr;
+
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+     
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += LPGenericDistanceOptim(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Optimized generic L" << power << " per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1132,170 +1397,331 @@ bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
     return true;
 }
 
+bool TestSpearmanRho(size_t N, size_t dim, size_t Rep) {
+    int* pArr = new int[N * dim];
+
+    int *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandIntVect(p, dim);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    float DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += SpearmanRho(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanRho per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
+bool TestSpearmanRhoSIMD(size_t N, size_t dim, size_t Rep) {
+    int* pArr = new int[N * dim];
+
+    int *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandIntVect(p, dim);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    float DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += SpearmanRhoSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanRhoSIMD per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
+bool TestSpearmanFootrule(size_t N, size_t dim, size_t Rep) {
+    int* pArr = new int[N * dim];
+
+    int *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandIntVect(p, dim);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    float DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += SpearmanFootrule(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanFootrule per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
+bool TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
+    int* pArr = new int[N * dim];
+
+    int *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandIntVect(p, dim);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    float DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += SpearmanFootruleSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanFootruleSIMD per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
 TEST(TestSpeed) {
     int nTest  = 0;
     int nFail = 0;
 
     srand48(0);
 
-    int N = 128;
+    int dim = 128;
     double pZero = 0.5;
 
     nTest++;
-    nFail = !TestJSStandard<float>(1024, N, 10000, pZero);
+    nFail = !TestLPGeneric<float>(128, dim, 200, 0.125);
+    nTest++;
+    nFail = !TestLPGenericOptim<float>(128, dim, 200, 0.125);
+
+    for (float p = 0.25; p <= 16; p += 0.25) {
+      nTest++;
+      nFail = !TestLPGeneric<float>(128, dim, 200, p);
+      nTest++;
+      nFail = !TestLPGenericOptim<float>(128, dim, 200, p);
+    }
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSStandard<double>(1024, N, 10000, pZero);
+    nFail = !TestLPGeneric<double>(128, dim, 200, 0.125);
+    nTest++;
+    nFail = !TestLPGenericOptim<double>(128, dim, 200, 0.125);
+
+    for (double p = 0.25; p <= 16; p += 0.25) {
+      nTest++;
+      nFail = !TestLPGeneric<double>(128, dim, 200, p);
+      nTest++;
+      nFail = !TestLPGenericOptim<double>(128, dim, 200, p);
+    }
 #endif
 
     nTest++;
-    nFail = !TestJSPrecomp<float>(1024, N, 10000, pZero);
+    nFail = !TestSpearmanRho(1024, dim, 2000);
+
+    nTest++;
+    nFail = !TestSpearmanRhoSIMD(1024, dim, 2000);
+
+    nTest++;
+    nFail = !TestSpearmanFootrule(1024, dim, 2000);
+
+    nTest++;
+    nFail = !TestSpearmanFootruleSIMD(1024, dim, 2000);
+
+    nTest++;
+    nFail = !TestJSStandard<float>(1024, dim, 1000, pZero);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSPrecomp<double>(1024, N, 10000, pZero);
+    nFail = !TestJSStandard<double>(1024, dim, 500, pZero);
 #endif
 
     nTest++;
-    nFail = !TestJSPrecompApproxLog<float>(1024, N, 10000, pZero);
+    nFail = !TestJSPrecomp<float>(1024, dim, 500, pZero);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSPrecompApproxLog<double>(1024, N, 10000, pZero);
+    nFail = !TestJSPrecomp<double>(1024, dim, 500, pZero);
 #endif
 
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, N, 10000, pZero);
-
-    nTest++;
-    nFail = !TestL1Norm<float>(1024, N, 100000);
+    nFail = !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestL1Norm<double>(1024, N, 100000);
+    nFail = !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero);
 #endif
 
     nTest++;
-    nFail = !TestL1NormStandard<float>(1024, N, 100000);
+    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestL1NormStandard<double>(1024, N, 100000);
+    nFail = !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero);
 #endif
 
     nTest++;
-    nFail = !TestL1NormSIMD<float>(1024, N, 100000);
+    nFail = !TestL1Norm<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestL1NormSIMD<double>(1024, N, 100000);
-#endif
-
-
-    nTest++;
-    nFail = !TestLInfNorm<float>(1024, N, 100000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestLInfNorm<double>(1024, N, 100000);
+    nFail = !TestL1Norm<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestLInfNormStandard<float>(1024, N, 100000);
+    nFail = !TestL1NormStandard<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestLInfNormStandard<double>(1024, N, 100000);
+    nFail = !TestL1NormStandard<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestLInfNormSIMD<float>(1024, N, 100000);
+    nFail = !TestL1NormSIMD<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestLInfNormSIMD<double>(1024, N, 100000);
-#endif
-
-    nTest++;
-    nFail = !TestItakuraSaitoStandard<float>(1024, N, 10000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestItakuraSaitoStandard<double>(1024, N, 10000);
-#endif
-
-
-    nTest++;
-    nFail = !TestItakuraSaitoPrecomp<float>(1024, N, 10000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestItakuraSaitoPrecomp<double>(1024, N, 10000);
-#endif
-
-    nTest++;
-    nFail = !TestItakuraSaitoPrecompSIMD<float>(1024, N, 10000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestItakuraSaitoPrecompSIMD<double>(1024, N, 10000);
-#endif
-
-    nTest++;
-    nFail = !TestL2Norm<float>(1024, N, 100000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestL2Norm<double>(1024, N, 100000);
-#endif
-
-    nTest++;
-    nFail = !TestL2NormStandard<float>(1024, N, 100000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestL2NormStandard<double>(1024, N, 100000);
-#endif
-
-    nTest++;
-    nFail = !TestL2NormSIMD<float>(1024, N, 100000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestL2NormSIMD<double>(1024, N, 100000);
+    nFail = !TestL1NormSIMD<double>(1024, dim, 10000);
 #endif
 
 
     nTest++;
-    nFail = !TestKLStandard<float>(1024, N, 10000);
+    nFail = !TestLInfNorm<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLStandard<double>(1024, N, 10000);
+    nFail = !TestLInfNorm<double>(1024, dim, 10000);
+#endif
+
+    nTest++;
+    nFail = !TestLInfNormStandard<float>(1024, dim, 10000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestLInfNormStandard<double>(1024, dim, 10000);
+#endif
+
+    nTest++;
+    nFail = !TestLInfNormSIMD<float>(1024, dim, 10000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestLInfNormSIMD<double>(1024, dim, 10000);
+#endif
+
+    nTest++;
+    nFail = !TestItakuraSaitoStandard<float>(1024, dim, 1000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestItakuraSaitoStandard<double>(1024, dim, 1000);
 #endif
 
 
     nTest++;
-    nFail = !TestKLPrecomp<float>(1024, N, 10000);
+    nFail = !TestItakuraSaitoPrecomp<float>(1024, dim, 2000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLPrecomp<double>(1024, N, 10000);
+    nFail = !TestItakuraSaitoPrecomp<double>(1024, dim, 2000);
 #endif
 
     nTest++;
-    nFail = !TestKLPrecompSIMD<float>(1024, N, 10000);
+    nFail = !TestItakuraSaitoPrecompSIMD<float>(1024, dim, 4000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLPrecompSIMD<double>(1024, N, 10000);
+    nFail = !TestItakuraSaitoPrecompSIMD<double>(1024, dim, 4000);
 #endif
 
     nTest++;
-    nFail = !TestKLGeneralStandard<float>(1024, N, 10000);
+    nFail = !TestL2Norm<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLGeneralStandard<double>(1024, N, 10000);
+    nFail = !TestL2Norm<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestKLGeneralPrecomp<float>(1024, N, 10000);
+    nFail = !TestL2NormStandard<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLGeneralPrecomp<double>(1024, N, 10000);
+    nFail = !TestL2NormStandard<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestKLGeneralPrecompSIMD<float>(1024, N, 10000);
+    nFail = !TestL2NormSIMD<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLGeneralPrecompSIMD<double>(1024, N, 10000);
+    nFail = !TestL2NormSIMD<double>(1024, dim, 10000);
 #endif
 
-    cout << "Dimensionality " << N << " " << nTest << " tests performed " << nFail << " failed" << endl;
+
+    nTest++;
+    nFail = !TestKLStandard<float>(1024, dim, 1000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestKLStandard<double>(1024, dim, 1000);
+#endif
+
+
+    nTest++;
+    nFail = !TestKLPrecomp<float>(1024, dim, 2000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestKLPrecomp<double>(1024, dim, 2000);
+#endif
+
+    nTest++;
+    nFail = !TestKLPrecompSIMD<float>(1024, dim, 4000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestKLPrecompSIMD<double>(1024, dim, 4000);
+#endif
+
+    nTest++;
+    nFail = !TestKLGeneralStandard<float>(1024, dim, 1000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestKLGeneralStandard<double>(1024, dim, 1000);
+#endif
+
+    nTest++;
+    nFail = !TestKLGeneralPrecomp<float>(1024, dim, 2000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestKLGeneralPrecomp<double>(1024, dim, 2000);
+#endif
+
+    nTest++;
+    nFail = !TestKLGeneralPrecompSIMD<float>(1024, dim, 2000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestKLGeneralPrecompSIMD<double>(1024, dim, 2000);
+#endif
+
+    cout << "Dimensionality " << dim << " " << nTest << " tests performed " << nFail << " failed" << endl;
 
     EXPECT_EQ(0, nFail);
 }

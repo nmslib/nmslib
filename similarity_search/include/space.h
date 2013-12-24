@@ -25,7 +25,7 @@
 #include "global.h"
 #include "object.h"
 #include "utils.h"
-#include "perm_type.h"
+#include "permutation_type.h"
 
 namespace similarity {
 

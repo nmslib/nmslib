@@ -33,7 +33,6 @@
 #endif
 
 #include "global.h"       // for snprintf
-#include "mt19937ar.h"
 #include "utils.h"
 #include "logging.h"
 
@@ -62,56 +61,6 @@ const char* GetFileName(const char* fullpath) {
 
 bool IsFileExists(const char* filename) {
   return access(filename, F_OK) == 0;
-}
-
-// Mersenne-Twister
-static unsigned long init[4] = {0x123, 0x234, 0x345, 0x456};
-static unsigned long length = 4;
-static bool inited = false;
-inline static void init_rand() {
-  if (!inited) {
-    inited = true;
-    // init_by_array(init, length);
-    // fprintf(stderr, "MT rand generator initialized ...\n");
-    unsigned seed = time(NULL);
-    init_genrand(seed);
-    LOG(INFO) << "MT rand generator initialized ... seed = " <<  seed;
-  }
-}
-
-void RandomReset() {
-  printf("No RandomReset\n");
-  // inited = false;
-}
-
-int RandomInt() {
-  init_rand();
-  // return genrand_int32();
-  return genrand_int31();
-}
-
-double RandomReal() {
-  init_rand();
-  return genrand_real2();
-}
-
-void GenUniform(const char* filename, const int total, const int dimension,
-                const double maxrange) {
-  printf("generating uniformly distributed data .......\n");
-  printf("filename  = %s\n", filename);
-  printf("total     = %d\n", total);
-  printf("dimension = %d\n", dimension);
-  printf("maxrange  = %lf\n", maxrange);   // [0,maxrange)
-
-  init_by_array(init, length);
-  FILE* fp = fopen(filename, "wt");
-  for (int i = 0; i < total; ++i) {
-    for (int j = 0; j < dimension; ++j) {
-      fprintf(fp, "%lf\t", genrand_real2() * maxrange);
-    }
-    fprintf(fp, "\n");
-  }
-  fclose(fp);
 }
 
 void RStrip(char* str) {

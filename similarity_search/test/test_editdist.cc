@@ -16,7 +16,6 @@
 
 #include <string.h>
 #include "space.h"
-#include "scoped_ptr.h"
 #include "common.h"
 #include "bunit.h"
 

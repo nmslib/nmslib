@@ -22,6 +22,7 @@
 #include "space.h"
 #include "space_lp.h"
 #include "space_bregman.h"
+#include "params.h"
 
 namespace similarity {
 
@@ -37,7 +38,7 @@ namespace similarity {
 template <typename dist_t>
 class SpaceFactoryRegistry {
 public:
-  typedef Space<dist_t>* (*CreateFuncPtr)();
+  typedef Space<dist_t>* (*CreateFuncPtr)(const AnyParams&);
   static SpaceFactoryRegistry& Instance() {
     static SpaceFactoryRegistry elem;
 
@@ -49,9 +50,9 @@ public:
     Creators_[SpaceType] = func;
   }
 
-  Space<dist_t>* CreateSpace(const string& SpaceType) {
+  Space<dist_t>* CreateSpace(const string& SpaceType, const AnyParams& SpaceParams) {
     if (Creators_.count(SpaceType)) {
-      return Creators_[SpaceType]();
+      return Creators_[SpaceType](SpaceParams);
     } else {
       LOG(FATAL) << "It looks like the space " << SpaceType << 
                     " is not defined for the distance type : " << DistTypeName<dist_t>();

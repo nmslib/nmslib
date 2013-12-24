@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <memory>
 
 #include "space.h"
 #include "rangequery.h"
@@ -24,9 +25,10 @@
 #include "proj_vptree.h"
 #include "utils.h"
 #include "distcomp.h"
-#include "scoped_ptr.h"
 
 namespace similarity {
+
+using std::unique_ptr;
 
 template <typename dist_t>
 Object* 
@@ -129,12 +131,12 @@ const std::string ProjectionVPTree<dist_t>::ToString() const {
 
 template <typename dist_t>
 void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query) {
-  scoped_ptr<Object>            QueryObject(ProjectOneVect(0, query->QueryObject()));
-  scoped_ptr<KNNQuery<float>>   VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
+  unique_ptr<Object>            QueryObject(ProjectOneVect(0, query->QueryObject()));
+  unique_ptr<KNNQuery<float>>   VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 
   VPTreeIndex_->Search(VPTreeQuery.get());
 
-  scoped_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
+  unique_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
 
   while (!ResQueue->Empty()) {
       size_t id = reinterpret_cast<const Object*>(ResQueue->TopObject())->id();
@@ -145,12 +147,12 @@ void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query) {
 
 template <typename dist_t>
 void ProjectionVPTree<dist_t>::Search(KNNQuery<dist_t>* query) {
-  scoped_ptr<Object>            QueryObject(ProjectOneVect(0, query->QueryObject()));
-  scoped_ptr<KNNQuery<float>>   VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
+  unique_ptr<Object>            QueryObject(ProjectOneVect(0, query->QueryObject()));
+  unique_ptr<KNNQuery<float>>   VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 
   VPTreeIndex_->Search(VPTreeQuery.get());
 
-  scoped_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
+  unique_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
 
   while (!ResQueue->Empty()) {
       size_t id = reinterpret_cast<const Object*>(ResQueue->TopObject())->id();

@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <vector>
 #include <set>
+#include <memory>
 
 #include "utils.h"
 #include "space.h"
@@ -161,7 +162,7 @@ private:
       else break; // ExactDists are sorted by distance
     }
 
-    scoped_ptr<KNNQueue<dist_t>> ResQ(query->Result()->Clone());
+    unique_ptr<KNNQueue<dist_t>> ResQ(query->Result()->Clone());
 
     while (!ResQ->Empty()) {
       const Object* ResObject = reinterpret_cast<const Object*>(ResQ->TopObject());

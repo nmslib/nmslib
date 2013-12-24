@@ -20,7 +20,6 @@
 #include <vector>
 #include <iostream>
 #include <queue>
-#include <cstdlib>
 
 namespace similarity {
 
@@ -101,7 +100,7 @@ SamplingOracle<dist_t>::SamplingOracle(
   if (dists.size() < MinReqSize) {
     // Let's ignore a few unlikely duplicates
     for (unsigned i = 0; i < MinReqSize - dists.size(); ++i) {
-      size_t RandId = rand() % AllVectors.size();
+      size_t RandId = RandomInt() % AllVectors.size();
 
       // Distance can be asymmetric, pivot should be on the left
       dists.push_back(std::make_pair(space->IndexTimeDistance(pivot, AllVectors[RandId]), AllVectors[RandId]));
@@ -134,7 +133,7 @@ SamplingOracle<dist_t>::SamplingOracle(
         size_t d = qind[quant + 1] - qind[quant];
         CHECK(d > 0);
 
-        size_t Id = qind[quant] + static_cast<size_t>(rand() % d);
+        size_t Id = qind[quant] + static_cast<size_t>(RandomInt() % d);
 
         CHECK(qind[quant] <= Id && Id < qind[quant + 1]);
 
@@ -206,7 +205,7 @@ SamplingOracle<dist_t>::SamplingOracle(
           }
         } else {
           for (size_t k = 0; k < MaxK; ++k) {
-            size_t Id = static_cast<size_t>(rand() % dists.size());
+            size_t Id = static_cast<size_t>(RandomInt() % dists.size());
             const Object* ThatObj = dists[Id].second;
 
             // distance can be asymmetric, but the pivot is on the left

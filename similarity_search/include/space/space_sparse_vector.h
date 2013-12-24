@@ -28,7 +28,6 @@
 #include "utils.h"
 #include "space.h"
 #include "distcomp.h"
-#include "perm_type.h"
 
 namespace similarity {
 

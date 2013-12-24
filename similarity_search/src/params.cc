@@ -40,21 +40,22 @@ static void Usage(const char *prog,
 }
 
 void ParseCommandLine(int argc, char*argv[],
-                      string& DistType,
-                      string& SpaceType,
-                      unsigned& dimension,
-                      unsigned& ThreadTestQty,
-                      bool& AppendToResFile,
-                      string& ResFilePrefix,
-                      unsigned&  TestSetQty,
-                      string& DataFile,
-                      string& QueryFile,
-                      unsigned& MaxNumData,
-                      unsigned& MaxNumQuery,
-                      vector<unsigned>& knn,
-                      float& eps,
-                      string& RangeArg,
-                      multimap<string, AnyParams*>& pars) {
+                      string&                 DistType,
+                      string&                 SpaceType,
+                      shared_ptr<AnyParams>&  SpaceParams,
+                      unsigned&               dimension,
+                      unsigned&               ThreadTestQty,
+                      bool&                   AppendToResFile,
+                      string&                 ResFilePrefix,
+                      unsigned&               TestSetQty,
+                      string&                 DataFile,
+                      string&                 QueryFile,
+                      unsigned&               MaxNumData,
+                      unsigned&               MaxNumQuery,
+                      vector<unsigned>&       knn,
+                      float&                  eps,
+                      string&                 RangeArg,
+                      multimap<string, shared_ptr<AnyParams>>& pars) {
   knn.clear();
   RangeArg.clear();
   pars.clear();
@@ -77,11 +78,11 @@ void ParseCommandLine(int argc, char*argv[],
     ("range,r",         po::value<string>(&RangeArg),
                         "comma-separated values for the range searches")
     ("spaceType,s",     po::value<string>(&SpaceType)->required(),
-                        "space type, e.g., l1, l2")
+                        "space type, e.g., l1, l2, space with a parameter, e.g., l:0.5")
     ("dimension,d",     po::value<unsigned>(&dimension)->default_value(0),
-                        "dimensionality (required for vector spaces)")
+                        "optional dimensionality")
     ("distType",        po::value<string>(&DistType)->default_value("float"),
-                        "distance type: int, float, double")
+                        "distance value type: int, float, double")
     ("outFilePrefix,o", po::value<string>(&ResFilePrefix)->default_value(""),
                         "output file prefix")
     ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
@@ -91,7 +92,7 @@ void ParseCommandLine(int argc, char*argv[],
                         " ignored if queryFile is specified")
     ("maxNumData",      po::value<unsigned>(&MaxNumData)->default_value(0),
                         "if non-zero, only the first maxNumData elements are used")
-    ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(0),
+    ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(1000),
                         "if non-zero, use maxNumQuery query elements"
                         "(required in the case of bootstrapping)")
     ("threadTestQty",   po::value<unsigned>(&ThreadTestQty)->default_value(1),
@@ -121,12 +122,29 @@ void ParseCommandLine(int argc, char*argv[],
 
   ToLower(DistType);
   ToLower(SpaceType);
+  
+  {
+    vector<string> tmp;
+    if (!SplitStr(SpaceType, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
+      Usage(argv[0], ProgOptDesc);
+      LOG(FATAL) << "Wrong format of the space argument: '" << SpaceType;
+    }
+    SpaceType = tmp[0];
+
+    vector<string> SpaceDesc;
+    if (tmp.size() == 2) {
+      if (!SplitStr(tmp[1], SpaceDesc, ',')) {
+        LOG(FATAL) << "Cannot split space arguments in: " << tmp[1];
+      }
+    }
+    SpaceParams = shared_ptr<AnyParams>(new AnyParams(SpaceDesc));
+  }
 
   for(const auto s: methParams) {
     vector<string> tmp;
     if (!SplitStr(s, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
       Usage(argv[0], ProgOptDesc);
-      LOG(FATAL) << "Wrong format of the method argument: '" << ProgOptDesc;
+      LOG(FATAL) << "Wrong format of the method argument: '" << s;
     }
     string         MethName = tmp[0];
 
@@ -141,7 +159,7 @@ void ParseCommandLine(int argc, char*argv[],
       LOG(FATAL) << "Duplicate method name: " << MethName << endl;
     }
 
-    pars.insert(make_pair(MethName, new AnyParams(MethodDesc)));
+    pars.insert(make_pair(MethName, shared_ptr<AnyParams>(new AnyParams(MethodDesc))));
   }
   if (vm.count("knn")) {
     if (!SplitStr(knnArg, knn, ',')) {
@@ -162,6 +180,10 @@ void ParseCommandLine(int argc, char*argv[],
 
   if (!QueryFile.empty() && !IsFileExists(QueryFile)) {
     LOG(FATAL) << "query file " << QueryFile << " doesn't exist";
+  }
+
+  if (!MaxNumQuery) {
+    LOG(FATAL) << "Set a positive # of queries!"; 
   }
 }
 

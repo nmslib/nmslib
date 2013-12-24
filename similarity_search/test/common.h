@@ -19,7 +19,6 @@
 
 #include <string.h>
 #include "space.h"
-#include "scoped_ptr.h"
 #include "bunit.h"
 
 namespace similarity {

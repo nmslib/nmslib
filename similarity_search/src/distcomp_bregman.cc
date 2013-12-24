@@ -20,6 +20,10 @@
 #include <limits>
 #include <algorithm>
 
+#ifdef __SSE2__
+#include <immintrin.h>
+#endif
+
 namespace similarity {
 
 using namespace std;
@@ -79,6 +83,10 @@ template double ItakuraSaitoPrecomp<double>(const double* pVect1, const double* 
 template <>
 float ItakuraSaitoPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 {
+#ifndef __SSE2__
+#warning "ItakuraSaitoPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return ItakuraSaitoPrecomp(pVect1, pVect2, qty);
+#else
     size_t qty4  = qty/4;
     size_t qty16 = qty/16;
 
@@ -138,11 +146,16 @@ float ItakuraSaitoPrecompSIMD(const float* pVect1, const float* pVect2, size_t q
     }
 
     return res - qty;
+#endif
 }
 
 template <>
 double ItakuraSaitoPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
 {
+#ifndef __SSE2__
+#warning "ItakuraSaitoPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return ItakuraSaitoPrecomp(pVect1, pVect2, qty);
+#else
     size_t qty8 = qty/8;
 
     const double* pEnd1 = pVect1 + 8 * qty8;
@@ -179,6 +192,7 @@ double ItakuraSaitoPrecompSIMD(const double* pVect1, const double* pVect2, size_
     }
 
     return res - qty;
+#endif
 }
 
 template float  ItakuraSaitoPrecompSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
@@ -253,6 +267,10 @@ template double KLPrecomp<double>(const double* pVect1, const double* pVect2, si
 template <>
 float KLPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 {
+#ifndef __SSE2__
+#warning "KLPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return KLPrecomp(pVect1, pVect2, qty);
+#else
     size_t qty4  = qty/4;
     size_t qty16 = qty/16;
 
@@ -305,11 +323,16 @@ float KLPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
     }
 
     return res;
+#endif
 }
 
 template <>
 double KLPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
 {
+#ifndef __SSE2__
+#warning "KLPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return KLPrecomp(pVect1, pVect2, qty);
+#else
     size_t qty8 = qty/8;
 
     const double* pEnd1 = pVect1 + 8 * qty8;
@@ -343,6 +366,7 @@ double KLPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
     }
 
     return res;
+#endif
 }
 
 template float KLPrecompSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
@@ -401,6 +425,10 @@ template double KLGeneralPrecomp<double>(const double* pVect1, const double* pVe
 template <>
 float KLGeneralPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 {
+#ifndef __SSE2__
+#warning "KLGeneralPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return KLGeneralPrecomp(pVect1, pVect2, qty);
+#else
     size_t qty4  = qty/4;
     size_t qty16 = qty/16;
 
@@ -461,11 +489,16 @@ float KLGeneralPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
     }
 
     return res;
+#endif
 }
 
 template <>
 double KLGeneralPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
 {
+#ifndef __SSE2__
+#warning "KLGeneralPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+    return KLGeneralPrecomp(pVect1, pVect2, qty);
+#else
     size_t qty8 = qty/8;
 
     const double* pEnd1 = pVect1 + 8 * qty8;
@@ -503,6 +536,7 @@ double KLGeneralPrecompSIMD(const double* pVect1, const double* pVect2, size_t q
     }
 
     return res;
+#endif
 }
 
 template float KLGeneralPrecompSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);

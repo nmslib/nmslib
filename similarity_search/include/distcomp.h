@@ -23,14 +23,9 @@
 #include <cstdlib>
 #include <limits>
 
+#include "permutation_type.h"
+
 namespace similarity {
-
-#ifndef __SSE2__
-// Of course, this would work only for Intel
-#error "Need SSE2 to compile! Did you add -msse2 to the compiler options?"
-#endif
-
-#include <immintrin.h>
 
 using std::max;
 
@@ -156,60 +151,33 @@ template <class T> T JSPrecompDivApproxLog(const T *pVect1, const T *pVect2, siz
 
 template <class T> T JSPrecompSIMDApproxLog(const T* pVect1, const T* pVect2, size_t qty);
 
-template <class T> 
-void Normalize(T* pVect, size_t qty) {
-    T sum = 0;
-    for (size_t i = 0; i < qty; ++i) {
-        sum += pVect[i];
-    }
-    if (sum != 0) {
-      for (size_t i = 0; i < qty; ++i) {
-        pVect[i] /= sum;
-      }
-    }
-}
-
-
-template <class T> 
-void GenRandVect(T* pVect, size_t qty, T MinElem = T(0), bool DoNormalize = false) {
-    T sum = 0;
-    for (size_t i = 0; i < qty; ++i) {
-        pVect[i] = std::max(static_cast<T>(drand48()), MinElem);
-        sum += pVect[i];
-    }
-    if (DoNormalize && sum != 0) {
-      for (size_t i = 0; i < qty; ++i) {
-        pVect[i] /= sum;
-      }
-    }
-}
-
-template <class T> 
-void SetRandZeros(T* pVect, size_t qty, double pZero) {
-    for (size_t j = 0; j < qty; ++j) if (drand48() < pZero) pVect[j] = T(0);
-}
+/*
+ * Slower versions of LP-distance
+ */
+template <typename T> T LPGenericDistance(const T* x, const T* y, const int length, const T p);
 
 /*
- * A slow version of LP-distance
+ * A hacky implementation that improves over pow-based function for the following cases:
+ *
+ * p=1/8,1/4,1/2
+ * p=n, n is integer
+ * p=n+1/2, n is integer
+ *
  */
-template <typename T>
-T LPGenericDistance(const T* x, const T* y, const int length, const int p) {
-  T result = 0;
-  T temp;
-  if (p == 0) {    // Infinity distance
-    for (int i = 0; i < length; ++i) {
-      temp = Abs(x[i] - y[i]);
-      result = std::max(result, temp);
-    }
-  } else {
-    for (int i = 0; i < length; ++i) {
-      temp = Abs(x[i] - y[i]);
-      result += pow(temp, p);
-    }
-    result = static_cast<T>(pow(static_cast<double>(result), 1.0 / p));
-  }
-  return result;
-}
+template <typename T> T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p);
+
+
+/*
+ * Rank correlations
+ */
+
+typedef int (*IntDistFuncPtr)(const PivotIdType* x, const PivotIdType* y, size_t qty);
+
+int SpearmanFootrule(const PivotIdType* x, const PivotIdType* y, size_t qty);
+int SpearmanRho(const PivotIdType* x, const PivotIdType* y, size_t qty);
+int SpearmanFootruleSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
+int SpearmanRhoSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
+
 
 }
 

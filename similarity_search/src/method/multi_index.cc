@@ -18,6 +18,7 @@
 #include <sstream>
 #include <vector>
 #include <unordered_set>
+#include <memory>
 
 #include "space.h"
 #include "knnqueue.h"
@@ -25,9 +26,10 @@
 #include "rangequery.h"
 #include "methodfactory.h"
 #include "multi_index.h"
-#include "scoped_ptr.h"
 
 namespace similarity {
+
+using std::unique_ptr;
 
 template <typename dist_t>
 MultiIndex<dist_t>::MultiIndex(
@@ -107,7 +109,7 @@ void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
     KNNQuery<dist_t> TmpRes(space_, query->QueryObject(), query->GetK(), query->GetEPS());
 
     indices_[i]->Search(&TmpRes);
-    scoped_ptr<KNNQueue<dist_t>> ResQ(TmpRes.Result()->Clone());
+    unique_ptr<KNNQueue<dist_t>> ResQ(TmpRes.Result()->Clone());
 
     query->AddDistanceComputations(TmpRes.DistanceComputations());
     while(!ResQ->Empty()) {

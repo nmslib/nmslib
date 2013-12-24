@@ -27,11 +27,9 @@
 #include "utils.h"
 #include "space.h"
 #include "space_vector.h"
-#include "perm_type.h"
+#include "permutation_type.h"
 
 namespace similarity {
-
-typedef PivotIdType (*IntDistFuncPtr)(const PivotIdType* x, const PivotIdType* y, size_t qty);
 
 template <PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 class RankCorrelVectorSpace : public VectorSpace<PivotIdType> {

@@ -24,6 +24,7 @@
 #include <functional>
 #include <utility>
 #include <tuple>
+#include <cmath>
 #include <exception>
 
 namespace similarity {
@@ -70,23 +71,20 @@ class TestRunner {
 
 
 template <typename T>
-inline T ABS(const T& x) {
-  return x >= 0 ? x : -x;
-}
-
-template <typename T>
-inline bool EQ(const T& x, const T& y) {
+inline bool EQ(const T& x, const T& y, T eps) {
   return x == y;
 }
 
 template <>
-inline bool EQ<float>(const float& x, const float& y) {
-  return ABS(x - y) <= 1e-5;
+inline bool EQ<float>(const float& x, const float& y, float eps) {
+  // In C++ 11, std::abs is also defined for real-valued arguments
+  return std::abs(x - y) <= eps;
 }
 
 template <>
-inline bool EQ<double>(const double& x, const double& y) {
-  return ABS(x - y) <= 1e-5;
+inline bool EQ<double>(const double& x, const double& y, double eps) {
+  // In C++ 11, std::abs is also defined for real-valued arguments
+  return std::abs(x - y) <= eps;
 }
 
 template <typename T>
@@ -94,8 +92,9 @@ static inline void Expect_EQ(const std::string& msg,
                              const T& expected,
                              const T& actual,
                              const std::string& file_name,
-                             int line_num) {
-  if (!EQ(expected, actual)) {
+                             int line_num,
+                             T eps = 1e-10) {
+  if (!EQ(expected, actual, eps)) {
     std::stringstream ss;
     ss << file_name << "(" << line_num << "): "
        << "EXPECT_EQ(" << msg << ") " << std::endl
@@ -111,8 +110,9 @@ static inline void Expect_NE(const std::string& msg,
                              const T& expected,
                              const T& actual,
                              const std::string& file_name,
-                             int line_num) {
-  if (EQ(expected, actual)) {
+                             int line_num,
+                             T eps = 1e-10) {
+  if (EQ(expected, actual, eps)) {
     std::stringstream ss;
     ss << file_name << "(" << line_num << "): "
        << "EXPECT_NE(" << msg << ") " << std::endl
@@ -150,8 +150,14 @@ static inline void Expect_False(const std::string& msg,
 #define EXPECT_EQ(expected, actual) \
   similarity::Expect_EQ(#expected ", " #actual, (expected), (actual), __FILE__, __LINE__)
 
+#define EXPECT_EQ_EPS(expected, actual, eps) \
+  similarity::Expect_EQ(#expected ", " #actual, (expected), (actual), __FILE__, __LINE__, eps)
+
 #define EXPECT_NE(expected, actual) \
   similarity::Expect_NE(#expected ", " #actual, (expected), (actual), __FILE__, __LINE__)
+
+#define EXPECT_NE_EPS(expected, actual, eps) \
+  similarity::Expect_NE(#expected ", " #actual, (expected), (actual), __FILE__, __LINE__, eps)
 
 #define EXPECT_TRUE(condition) \
   similarity::Expect_True(#condition, (condition), __FILE__, __LINE__)

@@ -131,20 +131,21 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 };
 
 template <typename dist_t>
-void RunExper(const multimap<string, AnyParams*>& Methods,
-             const string   SpaceType,
-             unsigned       dimension,
-             unsigned       ThreadTestQty,
-             bool           DoAppend, 
-             const string&  ResFilePrefix,
-             unsigned       TestSetQty,
-             const string&  DataFile,
-             const string&  QueryFile,
-             unsigned       MaxNumData,
-             unsigned       MaxNumQuery,
-             const          vector<unsigned>& knn,
-             const          float eps,
-             const string&  RangeArg
+void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
+             const string                 SpaceType,
+             const shared_ptr<AnyParams>& SpaceParams,
+             unsigned                     dimension,
+             unsigned                     ThreadTestQty,
+             bool                         DoAppend, 
+             const string&                ResFilePrefix,
+             unsigned                     TestSetQty,
+             const string&                DataFile,
+             const string&                QueryFile,
+             unsigned                     MaxNumData,
+             unsigned                     MaxNumQuery,
+             const                        vector<unsigned>& knn,
+             const                        float eps,
+             const string&                RangeArg
 )
 {
   LOG(INFO) << "### Append? : "       << DoAppend;
@@ -161,10 +162,11 @@ void RunExper(const multimap<string, AnyParams*>& Methods,
   }
 
   // Note that space will be deleted by the destructor of ExperimentConfig
-  ExperimentConfig<dist_t> config(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType),
-                                      DataFile, QueryFile, TestSetQty,
-                                      MaxNumData, MaxNumQuery,
-                                      dimension, knn, eps, range);
+  ExperimentConfig<dist_t> config(SpaceFactoryRegistry<dist_t>::
+                                  Instance().CreateSpace(SpaceType, *SpaceParams),
+                                  DataFile, QueryFile, TestSetQty,
+                                  MaxNumData, MaxNumQuery,
+                                  dimension, knn, eps, range);
 
   config.ReadDataset();
   MemUsage  mem_usage_measure;
@@ -323,27 +325,28 @@ int main(int ac, char* av[]) {
   WallClockTimer timer;
   timer.reset();
 
-  string            DistType;
-  string            SpaceType;
-  bool              DoAppend;
-  string            ResFilePrefix;
-  unsigned          TestSetQty;
-  string            DataFile;
-  string            QueryFile;
-  unsigned          MaxNumData;
-  unsigned          MaxNumQuery;
-  vector<unsigned>  knn;
-  string            RangeArg;
-  unsigned          dimension;
-  float             eps = 0.0;
-  unsigned          ThreadTestQty;
+  string                DistType;
+  string                SpaceType;
+  shared_ptr<AnyParams> SpaceParams;
+  bool                  DoAppend;
+  string                ResFilePrefix;
+  unsigned              TestSetQty;
+  string                DataFile;
+  string                QueryFile;
+  unsigned              MaxNumData;
+  unsigned              MaxNumQuery;
+  vector<unsigned>      knn;
+  string                RangeArg;
+  unsigned              dimension;
+  float                 eps = 0.0;
+  unsigned              ThreadTestQty;
 
-  multimap<string, AnyParams*>            Methods;
-  AutoMultiMapDel<string, AnyParams>      AutoDeleteMethParams(Methods);
+  multimap<string, shared_ptr<AnyParams>>        Methods;
 
   ParseCommandLine(ac, av,
                        DistType,
                        SpaceType,
+                       SpaceParams,
                        dimension,
                        ThreadTestQty,
                        DoAppend, 
@@ -363,6 +366,7 @@ int main(int ac, char* av[]) {
   if ("int" == DistType) {
     RunExper<int>(Methods,
                   SpaceType,
+                  SpaceParams,
                   dimension,
                   ThreadTestQty,
                   DoAppend, 
@@ -379,6 +383,7 @@ int main(int ac, char* av[]) {
   } else if ("float" == DistType) {
     RunExper<float>(Methods,
                   SpaceType,
+                  SpaceParams,
                   dimension,
                   ThreadTestQty,
                   DoAppend, 
@@ -395,6 +400,7 @@ int main(int ac, char* av[]) {
   } else if ("double" == DistType) {
     RunExper<double>(Methods,
                   SpaceType,
+                  SpaceParams,
                   dimension,
                   ThreadTestQty,
                   DoAppend, 
@@ -409,7 +415,7 @@ int main(int ac, char* av[]) {
                   RangeArg
                  );
   } else {
-    LOG(FATAL) << "Unknown distance type: " << DistType;
+    LOG(FATAL) << "Unknown distance value type: " << DistType;
   }
 
   timer.split();

@@ -25,19 +25,30 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Space<dist_t>* CreateSparseL0() {
+Space<dist_t>* CreateSparseL0(const AnyParams& /* ignoring params */) {
   // Chebyshev Distance
   return new SpaceSparseLp<dist_t>(0);
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateSparseL1() {
+Space<dist_t>* CreateSparseL1(const AnyParams& /* ignoring params */) {
   return new SpaceSparseLp<dist_t>(1);
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateSparseL2() {
+Space<dist_t>* CreateSparseL2(const AnyParams& /* ignoring params */) {
   return new SpaceSparseLp<dist_t>(2);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateSparseL(const AnyParams& AllParams) {
+  AnyParamManager pmgr(AllParams);
+
+  dist_t p;
+
+  pmgr.GetParamOptional("p",  p);
+
+  return new SpaceSparseLp<dist_t>(p);
 }
 
 /*
@@ -52,6 +63,8 @@ Space<dist_t>* CreateSparseL2() {
  * that are stored in a library. Then, the registration code doesn't work.
  */
 
+REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L, CreateSparseL)
+REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_L, CreateSparseL)
 REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L0, CreateSparseL0)
 REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_L0, CreateSparseL0)
 REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L1, CreateSparseL1)

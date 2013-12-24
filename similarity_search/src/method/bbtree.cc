@@ -28,13 +28,17 @@
  *
  */
 
+#include <cmath>
+#include <memory>
+
 #include "space_bregman.h"
-#include "scoped_ptr.h"
 #include "knnquery.h"
 #include "rangequery.h"
 #include "bbtree.h"
 
 namespace similarity {
+
+using std::unique_ptr;
 
 template <typename dist_t>
 BBTree<dist_t>::BBTree(
@@ -67,7 +71,7 @@ const std::string BBTree<dist_t>::ToString() const {
 
 template <typename dist_t>
 void BBTree<dist_t>::Search(RangeQuery<dist_t>* query) {
-  scoped_ptr<Object> query_gradient(BregmanDivSpace_->GradientFunction(query->QueryObject()));
+  unique_ptr<Object> query_gradient(BregmanDivSpace_->GradientFunction(query->QueryObject()));
 
   /*
    * This is a basic version of the range search that is almost identical to NN search.
@@ -82,7 +86,7 @@ void BBTree<dist_t>::Search(RangeQuery<dist_t>* query) {
 
 template <typename dist_t>
 void BBTree<dist_t>::Search(KNNQuery<dist_t>* query) {
-  scoped_ptr<Object> query_gradient(BregmanDivSpace_->GradientFunction(query->QueryObject()));
+  unique_ptr<Object> query_gradient(BregmanDivSpace_->GradientFunction(query->QueryObject()));
 
   int mx = MaxLeavesToVisit_;
   root_node_->LeftSearch(BregmanDivSpace_, query_gradient.get(), query, mx);
@@ -303,7 +307,8 @@ bool BBTree<dist_t>::BBNode::RecBinSearch(
 
   static dist_t kCloseEnough = 1e-3;
 
-  if (Abs(div_to_center - covering_radius_) < covering_radius_ * kCloseEnough) {
+  // In C++ 11, std::abs is also defined for floating-point numbers
+  if (std::abs(div_to_center - covering_radius_) < covering_radius_ * kCloseEnough) {
     return true;
   }
 

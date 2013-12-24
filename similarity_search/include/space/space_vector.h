@@ -26,7 +26,6 @@
 #include "object.h"
 #include "utils.h"
 #include "space.h"
-#include "perm_type.h"
 
 namespace similarity {
 

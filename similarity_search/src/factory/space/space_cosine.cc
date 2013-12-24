@@ -25,7 +25,7 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Space<dist_t>* CreateSparseCosine() {
+Space<dist_t>* CreateSparseCosine(const AnyParams& /* ignoring params */) {
   // Cosine Distance
   return new SpaceSparseCosine<dist_t>();
 }

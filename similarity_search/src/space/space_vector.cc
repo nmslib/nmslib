@@ -20,7 +20,6 @@
 #include <sstream>
 
 #include "space_vector.h"
-#include "scoped_ptr.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"

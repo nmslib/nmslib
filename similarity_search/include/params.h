@@ -21,6 +21,7 @@
 #include <limits>
 #include <map>
 #include <set>
+#include <memory>
 
 #include "lcstrategy.h"
 #include "logging.h"
@@ -31,21 +32,23 @@ using std::string;
 using std::vector;
 using std::multimap;
 using std::set;
+using std::shared_ptr;
+using std::unique_ptr;
 
 
 class AnyParams {
 public:
   /* 
-   * Each element of the MethodDesc array is in the form:
+   * Each element of the description array is in the form:
    * <param name>=<param value>
    */
-  AnyParams(const vector<string>& MethodDesc) :ParamNames(0), ParamValues(0) {
+  AnyParams(const vector<string>& Desc) :ParamNames(0), ParamValues(0) {
     set<string> seen;
-    for (unsigned i = 0; i < MethodDesc.size(); ++i) {
+    for (unsigned i = 0; i < Desc.size(); ++i) {
       vector<string>  OneParamPair;
-      if (!SplitStr(MethodDesc[i], OneParamPair, '=') ||
+      if (!SplitStr(Desc[i], OneParamPair, '=') ||
           OneParamPair.size() != 2) {
-        LOG(FATAL) << "Wrong format of the method argument: '" << MethodDesc[i] << "' should be in the format: <Name>=<Value>";
+        LOG(FATAL) << "Wrong format of an argument: '" << Desc[i] << "' should be in the format: <Name>=<Value>";
       }
       const string& Name = OneParamPair[0];
       const string& sVal = OneParamPair[1];
@@ -187,21 +190,22 @@ inline void AnyParamManager::ConvertStrToValue<string>(const string& str, string
 }
 
 void ParseCommandLine(int argc, char*av[],
-                      string&             DistType,
-                      string&             SpaceType,
-                      unsigned&           dimension,
-                      unsigned&           ThreadTestQty,
-                      bool&               DoAppend, 
-                      string&             ResFilePrefix,
-                      unsigned&           TestSetQty,
-                      string&             DataFile,
-                      string&             QueryFile,
-                      unsigned&           MaxNumData,
-                      unsigned&           MaxNumQuery,
-                      vector<unsigned>&   knn,
-                      float&              eps,
-                      string&             RangeArg,
-                      multimap<string, AnyParams*>& Methods);
+                      string&                 DistType,
+                      string&                 SpaceType,
+                      shared_ptr<AnyParams>&  SpaceParams,
+                      unsigned&               dimension,
+                      unsigned&               ThreadTestQty,
+                      bool&                   DoAppend, 
+                      string&                 ResFilePrefix,
+                      unsigned&               TestSetQty,
+                      string&                 DataFile,
+                      string&                 QueryFile,
+                      unsigned&               MaxNumData,
+                      unsigned&               MaxNumQuery,
+                      vector<unsigned>&       knn,
+                      float&                  eps,
+                      string&                 RangeArg,
+                      multimap<string, shared_ptr<AnyParams>>& Methods);
 
 };
 

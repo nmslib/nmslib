@@ -21,7 +21,6 @@
 
 #include "space_sparse_lp.h"
 #include "space_sparse_vector.h"
-#include "scoped_ptr.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"
@@ -36,7 +35,7 @@ dist_t SpaceSparseLp<dist_t>::HiddenDistance(const Object* obj1, const Object* o
 template <typename dist_t>
 std::string SpaceSparseLp<dist_t>::ToString() const {
   std::stringstream stream;
-  stream << "SpaceSparseLp: p = " << distObj_.getP();
+  stream << "SpaceSparseLp: p = " << distObj_.getP() << " (custom implement.) = " << distObj_.getCustom();
   return stream.str();
 }
 
