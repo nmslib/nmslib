@@ -18,7 +18,11 @@
 #include "ztimer.h"
 #include "pow.h"
 
-#define TEST_AGREE 1
+#define TEST_SPEED_DOUBLE
+
+#define TEST_AGREE    1
+#define RANGE         8.0f
+#define RANGE_SMALL   1e-6f
 
 namespace similarity {
 
@@ -37,11 +41,11 @@ inline void Normalize(T* pVect, size_t qty) {
 
 
 template <class T> 
-inline void GenRandVect(T* pVect, size_t qty, T MinElem = T(0), bool DoNormalize = false) {
+inline void GenRandVect(T* pVect, size_t qty, T MinElem = T(0), T MaxElem = T(1), bool DoNormalize = false) {
   T sum = 0;
   for (size_t i = 0; i < qty; ++i) {
-    pVect[i] = std::max(RandomReal<T>(), MinElem);
-    sum += pVect[i];
+    pVect[i] = MinElem + (MaxElem - MinElem) * RandomReal<T>();
+    sum += fabs(pVect[i]);
   }
   if (DoNormalize && sum != 0) {
     for (size_t i = 0; i < qty; ++i) {
@@ -63,8 +67,6 @@ inline void SetRandZeros(T* pVect, size_t qty, double pZero) {
 
 using namespace std;
 
-//#define TEST_SPEED_DOUBLE
-
 
 /*
 
@@ -85,14 +87,32 @@ TEST(set_intel) {
 
 
 TEST(TestEfficientPower) {
-    float f = 2.0;
+  float f = 2.0;
 
-    for (unsigned i = 1; i <= 64; i++) {
-      float p1 = std::pow(f, i);
-      float p2 = EfficientPow(f, i);
+  for (unsigned i = 1; i <= 64; i++) {
+    float p1 = std::pow(f, i);
+    float p2 = EfficientPow(f, i);
 
-      EXPECT_EQ(p1, p2);
+    EXPECT_EQ(p1, p2);
+  }
+}
+
+TEST(TestEfficientFract) {
+  unsigned MaxNumDig = 16;
+
+  for (float a = 1.1 ; a <= 2; a+= 0.1) {
+    for (unsigned NumDig = 1; NumDig < MaxNumDig; ++NumDig) {
+      uint64_t MaxFract = uint64_t(1) << NumDig;
+
+      for (uint64_t intFract = 0; intFract < MaxFract; ++intFract) {
+        float fract = float(intFract) / float(MaxFract);
+        float v1 = pow(a, fract);
+        float v2 = EfficientFractPow(a, fract, NumDig);
+
+        EXPECT_EQ_EPS(v1, v2, 1e-5f);
+      }
     }
+  }  
 }
 
 // Agreement test functions
@@ -103,8 +123,8 @@ bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            GenRandVect(pVect1, dim);
-            GenRandVect(pVect2, dim);
+            GenRandVect(pVect1, dim, -T(RANGE), T(RANGE));
+            GenRandVect(pVect2, dim, -T(RANGE), T(RANGE));
 
             T val1 = LInfNormStandard(pVect1, pVect2, dim);
             T val2 = LInfNorm(pVect1, pVect2, dim);
@@ -136,8 +156,8 @@ bool TestL1Agree(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            GenRandVect(pVect1, dim);
-            GenRandVect(pVect2, dim);
+            GenRandVect(pVect1, dim, -T(RANGE), T(RANGE));
+            GenRandVect(pVect2, dim, -T(RANGE), T(RANGE));
 
             T val1 = L1NormStandard(pVect1, pVect2, dim);
             T val2 = L1Norm(pVect1, pVect2, dim);
@@ -169,8 +189,8 @@ bool TestL2Agree(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            GenRandVect(pVect1, dim);
-            GenRandVect(pVect2, dim);
+            GenRandVect(pVect1, dim, -T(RANGE), T(RANGE));
+            GenRandVect(pVect2, dim, -T(RANGE), T(RANGE));
 
             T val1 = L2NormStandard(pVect1, pVect2, dim);
             T val2 = L2Norm(pVect1, pVect2, dim);
@@ -204,8 +224,8 @@ bool TestItakuraSaitoAgree(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            GenRandVect(pVect1, dim, T(1e-6), true);
-            GenRandVect(pVect2, dim, T(1e-6), true);
+            GenRandVect(pVect1, dim, T(RANGE_SMALL), T(1.0), true);
+            GenRandVect(pVect2, dim, T(RANGE_SMALL), T(1.0), true);
 
             copy(pVect1, pVect1 + dim, pPrecompVect1); 
             copy(pVect2, pVect2 + dim, pPrecompVect2); 
@@ -254,8 +274,8 @@ bool TestKLAgree(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            GenRandVect(pVect1, dim, T(1e-6), true);
-            GenRandVect(pVect2, dim, T(1e-6), true);
+            GenRandVect(pVect1, dim, T(RANGE_SMALL), T(1.0), true);
+            GenRandVect(pVect2, dim, T(RANGE_SMALL), T(1.0), true);
 
             copy(pVect1, pVect1 + dim, pPrecompVect1); 
             copy(pVect2, pVect2 + dim, pPrecompVect2); 
@@ -316,8 +336,8 @@ bool TestKLGeneralAgree(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            GenRandVect(pVect1, dim, T(1e-6), true);
-            GenRandVect(pVect2, dim, T(1e-6), true);
+            GenRandVect(pVect1, dim, T(RANGE_SMALL), T(1.0), false);
+            GenRandVect(pVect2, dim, T(RANGE_SMALL), T(1.0), false);
 
             copy(pVect1, pVect1 + dim, pPrecompVect1); 
             copy(pVect2, pVect2 + dim, pPrecompVect2); 
@@ -369,10 +389,10 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            GenRandVect(pVect1, dim, T(1e-6), true);
+            GenRandVect(pVect1, dim, T(RANGE_SMALL), T(1.0), true);
             SetRandZeros(pVect1, dim, pZero);
             Normalize(pVect1, dim);
-            GenRandVect(pVect2, dim, T(1e-6), true);
+            GenRandVect(pVect2, dim, T(RANGE_SMALL), T(1.0), true);
             SetRandZeros(pVect2, dim, pZero);
             Normalize(pVect2, dim);
 
@@ -500,10 +520,12 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
     T* pVect1 = new T[dim];
     T* pVect2 = new T[dim];
 
+    T  TotalQty = 0, Error = 0, Dist = 0;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            GenRandVect(pVect1, dim);
-            GenRandVect(pVect2, dim);
+            GenRandVect(pVect1, dim, -T(RANGE), T(RANGE));
+            GenRandVect(pVect2, dim, -T(RANGE), T(RANGE));
 
             T val0 = LPGenericDistance(pVect1, pVect2, dim, power);
             T val1 = LPGenericDistanceOptim(pVect1, pVect2, dim, power);
@@ -524,6 +546,10 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
             if (power > 12) { maxAbsDiff = maxRelDiff = 0.01;}
             if (power > 22) { maxAbsDiff = maxRelDiff = 0.1;}
 
+            ++TotalQty;
+            Error += RelDiff1;
+            Dist += val0;
+
             if (RelDiff1 > maxRelDiff && AbsDiff1 > maxAbsDiff) {
                 cerr << "Bug LP" << power << " !!! Dim = " << dim << 
                 " val1 = " << val1 << " val0 = " << val0 << 
@@ -537,6 +563,10 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
         }
     }
 
+    if (power < 4) {
+      cout << "Average relative error for out LP version: " << Error / TotalQty << " Avg. dist: " << Dist / TotalQty << " Relative average: " << Error/Dist << endl;
+
+    }
 
     delete [] pVect1;
     delete [] pVect2;
@@ -564,19 +594,12 @@ TEST(TestAgree) {
          * Anyways, the function is not using any loop unrolling, so 8 should be sufficient.
          */
         if (dim <= 8) {
-          TestLPGenericAgree(1024, dim, 10, 0.125f);
-          TestLPGenericAgree(1024, dim, 10, 0.25f);
-          TestLPGenericAgree(1024, dim, 10, 0.5f);
 
-          for (float power = 1; power <= 32; power += 0.5) {
+          for (float power = 0.125; power <= 32; power += 0.125) {
             TestLPGenericAgree(1024, dim, 10, power);
           }
 
-          TestLPGenericAgree(1024, dim, 10, (double)0.125);
-          TestLPGenericAgree(1024, dim, 10, (double)0.25);
-          TestLPGenericAgree(1024, dim, 10, (double)0.5);
-
-          for (double power = 1; power <= 32; power += 0.5) {
+          for (double power = 0.125; power <= 32; power += 0.125) {
             TestLPGenericAgree(1024, dim, 10, power);
           }
         }
@@ -637,7 +660,7 @@ bool TestLInfNormStandard(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -655,7 +678,7 @@ bool TestLInfNormStandard(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -668,7 +691,7 @@ bool TestLInfNorm(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -686,7 +709,7 @@ bool TestLInfNorm(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -699,7 +722,7 @@ bool TestLInfNormSIMD(size_t N, size_t dim, size_t Rep) {
     T* p = pArr;
 
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -717,7 +740,7 @@ bool TestLInfNormSIMD(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -731,7 +754,7 @@ bool TestL1NormStandard(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -749,7 +772,7 @@ bool TestL1NormStandard(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -762,7 +785,7 @@ bool TestL1Norm(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -780,7 +803,7 @@ bool TestL1Norm(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -793,7 +816,7 @@ bool TestL1NormSIMD(size_t N, size_t dim, size_t Rep) {
     T* p = pArr;
 
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -811,7 +834,7 @@ bool TestL1NormSIMD(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -824,7 +847,7 @@ bool TestL2NormStandard(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -842,7 +865,7 @@ bool TestL2NormStandard(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -855,7 +878,7 @@ bool TestL2Norm(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -873,7 +896,7 @@ bool TestL2Norm(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -886,7 +909,7 @@ bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -904,7 +927,7 @@ bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
  
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
  
     delete [] pArr;
  
@@ -918,7 +941,7 @@ bool TestLPGeneric(size_t N, size_t dim, size_t Rep, T power) {
     T* p = pArr;
 
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(-RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -938,7 +961,7 @@ bool TestLPGeneric(size_t N, size_t dim, size_t Rep, T power) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Generic L" << power << " per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Generic L" << power << " per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -951,7 +974,7 @@ bool TestLPGenericOptim(size_t N, size_t dim, size_t Rep, T power) {
     T* p = pArr;
 
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(-RANGE), T(RANGE));
     }
 
     WallClockTimer  t;
@@ -971,7 +994,7 @@ bool TestLPGenericOptim(size_t N, size_t dim, size_t Rep, T power) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Optimized generic L" << power << " per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Optimized generic L" << power << " per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -984,7 +1007,7 @@ bool TestItakuraSaitoPrecomp(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0));
         PrecompLogarithms(p, dim);
     }
 
@@ -1003,7 +1026,7 @@ bool TestItakuraSaitoPrecomp(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1016,7 +1039,7 @@ bool TestItakuraSaitoPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0));
         PrecompLogarithms(p, dim);
     }
 
@@ -1035,7 +1058,7 @@ bool TestItakuraSaitoPrecompSIMD(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1048,7 +1071,7 @@ bool TestItakuraSaitoStandard(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0));
     }
 
     WallClockTimer  t;
@@ -1066,7 +1089,7 @@ bool TestItakuraSaitoStandard(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1080,7 +1103,7 @@ bool TestKLPrecomp(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0), true /* norm. for regular KL */);
         PrecompLogarithms(p, dim);
     }
 
@@ -1099,7 +1122,7 @@ bool TestKLPrecomp(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1112,7 +1135,7 @@ bool TestKLPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0), true /* norm. for regular KL */);
         PrecompLogarithms(p, dim);
     }
 
@@ -1131,7 +1154,7 @@ bool TestKLPrecompSIMD(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1144,7 +1167,7 @@ bool TestKLStandard(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0), true /* norm. for regular KL */);
     }
 
     WallClockTimer  t;
@@ -1162,7 +1185,7 @@ bool TestKLStandard(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1176,7 +1199,7 @@ bool TestKLGeneralPrecomp(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0));
         PrecompLogarithms(p, dim);
     }
 
@@ -1195,7 +1218,7 @@ bool TestKLGeneralPrecomp(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1208,7 +1231,7 @@ bool TestKLGeneralPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0));
         PrecompLogarithms(p, dim);
     }
 
@@ -1227,7 +1250,7 @@ bool TestKLGeneralPrecompSIMD(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1240,7 +1263,7 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim);
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0));
     }
 
     WallClockTimer  t;
@@ -1258,7 +1281,7 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1271,7 +1294,7 @@ bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= dim) {
-        GenRandVect(p, dim, T(0), true);
+        GenRandVect(p, dim, T(0), T(1), true);
         SetRandZeros(p, dim, pZero);
         Normalize(p, dim);
     }
@@ -1291,7 +1314,7 @@ bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1304,7 +1327,7 @@ bool TestJSPrecomp(size_t N, size_t dim, size_t Rep, float pZero) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim, T(0), true);
+        GenRandVect(p, dim, T(0), T(1), true);
         SetRandZeros(p, dim, pZero);
         PrecompLogarithms(p, dim);
     }
@@ -1324,7 +1347,7 @@ bool TestJSPrecomp(size_t N, size_t dim, size_t Rep, float pZero) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1337,7 +1360,7 @@ bool TestJSPrecompApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim, T(0), true);
+        GenRandVect(p, dim, T(0), T(1), true);
         SetRandZeros(p, dim, pZero);
         PrecompLogarithms(p, dim);
     }
@@ -1357,7 +1380,7 @@ bool TestJSPrecompApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1370,7 +1393,7 @@ bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     T *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= 2 * dim) {
-        GenRandVect(p, dim, T(0), true);
+        GenRandVect(p, dim, T(0), T(1), true);
         SetRandZeros(p, dim, pZero);
         PrecompLogarithms(p, dim);
     }
@@ -1390,7 +1413,7 @@ bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1525,30 +1548,27 @@ TEST(TestSpeed) {
 
     int dim = 128;
     double pZero = 0.5;
+    float delta = 0.125;
 
-    nTest++;
-    nFail = !TestLPGeneric<float>(128, dim, 200, 0.125);
-    nTest++;
-    nFail = !TestLPGenericOptim<float>(128, dim, 200, 0.125);
-
-    for (float p = 0.25; p <= 16; p += 0.25) {
+    cout << "Single-precision LP-distance tests" << endl;
+    for (float power = 0.125; power <= 24; power += delta) {
       nTest++;
-      nFail = !TestLPGeneric<float>(128, dim, 200, p);
+      nFail = !TestLPGeneric<float>(128, dim, 200, power);
       nTest++;
-      nFail = !TestLPGenericOptim<float>(128, dim, 200, p);
+      nFail = !TestLPGenericOptim<float>(128, dim, 200, power);
+      if (power == 8) delta = 0.5;
     }
+    cout << "========================================" << endl;
 #ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestLPGeneric<double>(128, dim, 200, 0.125);
-    nTest++;
-    nFail = !TestLPGenericOptim<double>(128, dim, 200, 0.125);
-
-    for (double p = 0.25; p <= 16; p += 0.25) {
+    cout << "Double-precision LP-distance tests" << endl;
+    for (double power = 0.125; power <= 24; power += delta) {
       nTest++;
-      nFail = !TestLPGeneric<double>(128, dim, 200, p);
+      nFail = !TestLPGeneric<double>(128, dim, 200, power);
       nTest++;
-      nFail = !TestLPGenericOptim<double>(128, dim, 200, p);
+      nFail = !TestLPGenericOptim<double>(128, dim, 200, power);
+      if (power == 8) delta = 0.5;
     }
+    cout << "========================================" << endl;
 #endif
 
     nTest++;

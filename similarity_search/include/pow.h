@@ -25,6 +25,8 @@
  *
  */
 
+#include <cmath>
+
 namespace similarity {
 
 template <class T>
@@ -147,6 +149,41 @@ inline T EfficientPow(T Base, unsigned Exp) {
     return res;
 }
 
+
+
 }
+
+template <class T>
+inline T EfficientFractPowUtil(T Base, uint64_t Exp, uint64_t MaxK) {
+    if (Exp == 0)    return 1;     // pow == 0 
+    if (Exp == MaxK) return Base;  // pow == 1
+
+    uint64_t Mask1 = MaxK - 1;
+    uint64_t Mask2 = MaxK >>= 1;
+
+    T res = 1.0;
+
+    while (true) {
+        Base = sqrt(Base);
+
+        if (Exp & Mask2) res *= Base;
+
+        Exp = (Exp << 1) & Mask1;
+
+        if (!Exp) return res;
+    }
+
+    return res;
+}
+
+template <class T>
+inline T EfficientFractPow(T Base, T FractExp, unsigned NumDig) {
+    CHECK(FractExp <= 1 && NumDig);
+    uint64_t MaxK = uint64_t(1) << NumDig;
+    uint64_t Exp = static_cast<unsigned>(std::ceil(FractExp * MaxK));
+
+    return EfficientFractPowUtil(Base, Exp, MaxK);
+}
+
 
 #endif

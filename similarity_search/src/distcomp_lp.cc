@@ -536,72 +536,45 @@ template float LPGenericDistance<float>(const float* x, const float* y, const in
 template double LPGenericDistance<double>(const double* x, const double* y, const int length, const double p);
 
 /*
- * A hacky implementation that improves over pow-based function for the following cases:
- *
- * p=1/8,1/4,1/2
- * p=n, n is integer
- * p=n+1/2, n is integer
- *
+ * A hacky implementation that improves over pow-based function,
+ * if p * 2^maxDig is an integer.
  */
 template <typename T>
 T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p) {
   T result = 0;
   T temp;
 
+
   CHECK(p > 0);
 
-  T pf8 = floor(8 * p);
-  if (fabs(8*p - pf8) <= std::numeric_limits<T>::min()) {
-    unsigned pintOrig = static_cast<unsigned>(pf8); 
+  constexpr unsigned maxDig  = 3;
+  constexpr unsigned maxK = 1 << maxDig;
 
-    if (1 == pintOrig) { // p == 1/8
+  unsigned pfm = floor(maxK * p);
+
+  if (fabs(maxK*p - pfm) <= std::numeric_limits<T>::min()) {
+    unsigned intPow    = pfm >> maxDig;
+    unsigned fractPow  = pfm - (intPow << maxDig);
+
+    if (!intPow) {
       for (int i = 0; i < length; ++i) {
         // In C++ 11, std::abs is also defined for floating-point numbers
         temp = std::abs(x[i] - y[i]);
-        result += sqrt(sqrt(sqrt(temp)));
+        result += EfficientFractPowUtil(temp, fractPow, maxK);;
       }
-      result *= result;
-      result *= result;
-      result *= result;
-      return result; // result ^8
-    } else if (2 == pintOrig) { // p == 1/4
+    } else if (!fractPow) {
       for (int i = 0; i < length; ++i) {
         // In C++ 11, std::abs is also defined for floating-point numbers
         temp = std::abs(x[i] - y[i]);
-        result += sqrt(sqrt(temp));
-      }
-      result *= result;
-      result *= result;
-      return result; // result ^4
-    } 
-  }
-  T pf2 = floor(2 * p);
-  if (fabs(2*p - pf2) <= std::numeric_limits<T>::min()) {
-    unsigned pintOrig = static_cast<unsigned>(pf2); 
-    unsigned pint = pintOrig / 2;
-
-    if (pintOrig & 1) { // p == n + 1/2, where n is int
-      for (int i = 0; i < length; ++i) {
-        // In C++ 11, std::abs is also defined for floating-point numbers
-        temp = std::abs(x[i] - y[i]);
-        result += EfficientPow(temp, pint) * sqrt(temp);
-      }
-
-      if (1 == pintOrig) { // Another important case: p == 1/2      
-        return result * result;
+        result += EfficientPow(temp, intPow);
       }
     } else {
       for (int i = 0; i < length; ++i) {
         // In C++ 11, std::abs is also defined for floating-point numbers
         temp = std::abs(x[i] - y[i]);
-        result += EfficientPow(temp, pint);
-      }
-
-      if (2 == pintOrig) { // Another important case: p == 1
-        return result;
+        result += EfficientPow(temp, intPow) * EfficientFractPowUtil(temp, fractPow, maxK);;
       }
     }
- 
   } else {
     for (int i = 0; i < length; ++i) {
       // In C++ 11, std::abs is also defined for floating-point numbers
