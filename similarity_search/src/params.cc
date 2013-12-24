@@ -182,8 +182,8 @@ void ParseCommandLine(int argc, char*argv[],
     LOG(FATAL) << "query file " << QueryFile << " doesn't exist";
   }
 
-  if (!MaxNumQuery) {
-    LOG(FATAL) << "Set a positive # of queries!"; 
+  if (!MaxNumQuery && QueryFile.empty()) {
+    LOG(FATAL) << "Set a positive # of queries or specify a query file!"; 
   }
 }
 

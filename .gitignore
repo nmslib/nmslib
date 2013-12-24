@@ -1,4 +1,6 @@
 CMakeFiles
 CMakeCache.txt
 cmake_install.cmake
+similarity_search/debug
+similarity_search/release
 
