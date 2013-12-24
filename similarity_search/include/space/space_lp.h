@@ -30,7 +30,7 @@
 #include "space_vector.h"
 #include "distcomp.h"
 
-#define SPACE_L   "l"
+#define SPACE_L   "lp"
 #define SPACE_L0  "l0"
 #define SPACE_L1  "l1"
 #define SPACE_L2  "l2"

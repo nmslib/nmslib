@@ -41,7 +41,7 @@ Some prerequisites:
 1. G++ that supports the new C++ standard, e.g., version 4.7 or the Intel compiler version 14.
 2. Linux
 3. cmake (GNU make is also required)
-4. An Intel or AMD processor that supports SSE 4.2
+4. An Intel or AMD processor that supports SSE 4.2 is recommended
 5. Boost (dev version)
 6. GNU scientific library (dev version)
 

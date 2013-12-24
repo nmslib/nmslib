@@ -54,7 +54,8 @@ MinCand=128
 MaxK=1000
 IndexQty=5
 
-# Testing different variants of spaces
+# Testing different spaces
+
 export MethDesc=" --method perm_incsort:numPivot=$NumPivot,dbScanFrac=$DbScanFrac  "
 
 Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "l0" "float" "--knn $K"
@@ -66,6 +67,19 @@ Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.t
 Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "kldivgenslow" "float" "--knn $K"
 Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "kldivgenfastrq" "float" "--knn $K"
 Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "itakurasaitofast" "float" "--knn $K"
+
+# L0.5 experiment
+export MethDesc="\
+  --method perm_vptree:numPivot=$NumPivot,dbScanFrac=$DbScanFrac,alphaLeft=2,alphaRight=2,bucketSize=$BucketSize
+  --method permutation:dbScanFrac=$DbScanFrac,numPivot=$NumPivot
+  --method perm_incsort:numPivot=$NumPivot,dbScanFrac=$DbScanFrac  
+  --method ghtree:bucketSize=$BucketSize  
+  --method satree:bucketSize=$BucketSize  
+  --method list_clusters:bucketSize=$BucketSize  
+  --method mvptree:bucketSize=$BucketSize  
+  --method vptree:alphaLeft=1,alphaRight=1,bucketSize=$BucketSize"
+
+Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "lp:p=0.5" "float" "--knn $K"
 
 # KL-div experiments
 
