@@ -5,7 +5,7 @@ Authors: Bilegsaikhan Naidan, Leonid Boytsov. Leo(nid) Boytsov is a maintainer.
 
 Copyright (c) 2010--2013
 
-Detailed documentation will appear shortly. Some underlying principles and motivation are described in our "engineering" paper:
+More detailed documentation will appear shortly. Some underlying principles and motivation are described in our "engineering" paper:
 
 @incollection{boytsov_naidan:2013,  
     title={Engineering Efficient and Effective Non-metric Space Library},  
@@ -51,11 +51,11 @@ cmake .
 Then, type:  
 make   
 
-Examples of using the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small data sets stored in this repository. The complete data set can be obtained using the script data/get_all_data.sh Beware: it is more than 600 Gbytes compressed!
+Examples of using the software can be found in the directory sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small files stored in this repository. The complete data set can be obtained using the script data/get_all_data.sh Beware: it is more than 600 Gbytes compressed!
 
-After downloading and generating data, copy it to some directory X and set the environment variable:  
+After downloading and generating data, copy data files to a directory of choice set the environment variable:  
 
-export DATA_DIR=[path to the directory with data files]
+export DATA_DIR=[path to the chosen directory with data files]
 
 We use the data set created by Lawerence Cayton (lcayton.com). If you use it, please, consider citing:
 
