@@ -57,7 +57,7 @@ After downloading and generating data, copy data files to a directory of choice 
 
 export DATA_DIR=[path to the chosen directory with data files]
 
-We use the data set created by Lawerence Cayton (lcayton.com). If you use it, please, consider citing:
+We use the data set created by Lawrence Cayton (lcayton.com). If you use it, please, consider citing:
 
 @inproceedings{cayton:2008,  
     title={Fast nearest neighbor retrieval for bregman divergences},  
