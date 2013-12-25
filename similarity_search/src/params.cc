@@ -68,39 +68,39 @@ void ParseCommandLine(int argc, char*argv[],
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
     ("help,h", "produce help message")
+    ("spaceType,s",     po::value<string>(&SpaceType)->required(),
+                        "space type, e.g., l1, l2, space with a parameter, e.g., l:0.5")
+    ("distType",        po::value<string>(&DistType)->default_value("float"),
+                        "distance value type: int, float, double")
     ("dataFile,i",      po::value<string>(&DataFile)->required(),
                         "input data file")
-    ("method,m",        po::value< vector<string> >(&methParams)->required(),
-                        "list of method(s) with comma-separated parameters in the format:\n"
-                        "<method name>:<param1>,<param2>,...,<paramK>")
+    ("maxNumData",      po::value<unsigned>(&MaxNumData)->default_value(0),
+                        "if non-zero, only the first maxNumData elements are used")
+    ("dimension,d",     po::value<unsigned>(&dimension)->default_value(0),
+                        "optional dimensionality")
+    ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
+                        "query file")
+    ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(1000),
+                        "if non-zero, use maxNumQuery query elements"
+                        "(required in the case of bootstrapping)")
+    ("testSetQty,b",    po::value<unsigned>(&TestSetQty)->default_value(0),
+                        "# of test sets obtained by bootstrapping;"
+                        " ignored if queryFile is specified")
     ("knn,k",           po::value< string>(&knnArg),
                         "comma-separated Ks for the k-NN searches")
     ("range,r",         po::value<string>(&RangeArg),
                         "comma-separated values for the range searches")
-    ("spaceType,s",     po::value<string>(&SpaceType)->required(),
-                        "space type, e.g., l1, l2, space with a parameter, e.g., l:0.5")
-    ("dimension,d",     po::value<unsigned>(&dimension)->default_value(0),
-                        "optional dimensionality")
-    ("distType",        po::value<string>(&DistType)->default_value("float"),
-                        "distance value type: int, float, double")
-    ("outFilePrefix,o", po::value<string>(&ResFilePrefix)->default_value(""),
-                        "output file prefix")
-    ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
-                        "query file")
-    ("testSetQty,b",    po::value<unsigned>(&TestSetQty)->default_value(0),
-                        "# of test sets obtained by bootstrapping;"
-                        " ignored if queryFile is specified")
-    ("maxNumData",      po::value<unsigned>(&MaxNumData)->default_value(0),
-                        "if non-zero, only the first maxNumData elements are used")
-    ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(1000),
-                        "if non-zero, use maxNumQuery query elements"
-                        "(required in the case of bootstrapping)")
-    ("threadTestQty",   po::value<unsigned>(&ThreadTestQty)->default_value(1),
-                        "# of threads")
-    ("appendToResFile", po::value<bool>(&AppendToResFile)->default_value(false),
-                        "do not override information in results files, append new data")
     ("eps",             po::value<double>(&epsTmp)->default_value(0.0),
                         "the parameter for the eps-approximate k-NN search.")
+    ("method,m",        po::value< vector<string> >(&methParams)->required(),
+                        "list of method(s) with comma-separated parameters in the format:\n"
+                        "<method name>:<param1>,<param2>,...,<paramK>")
+    ("threadTestQty",   po::value<unsigned>(&ThreadTestQty)->default_value(1),
+                        "# of threads")
+    ("outFilePrefix,o", po::value<string>(&ResFilePrefix)->default_value(""),
+                        "output file prefix")
+    ("appendToResFile", po::value<bool>(&AppendToResFile)->default_value(false),
+                        "do not override information in results files, append new data")
 
     ;
 

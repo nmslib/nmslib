@@ -446,7 +446,8 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
         }
     }
 
-    cout << "Average relative error for approximate JS version: " << Error / TotalQty << " Avg. dist: " << Dist / TotalQty << " Relative average: " << Error/Dist << endl;
+    cout << typeid(T).name() << " JS approximation error: average absolute: " << Error / TotalQty << 
+                                " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist << endl;
 
 
     delete [] pVect1;
@@ -568,7 +569,7 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
     }
 
     if (power < 4) {
-      cout << "Average relative error for out LP version: " << Error / TotalQty << " Avg. dist: " << Dist / TotalQty << " Relative average: " << Error/Dist << endl;
+      cout << typeid(T).name() << " LP approximation error: average absolute " << Error / TotalQty << " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist << endl;
 
     }
 

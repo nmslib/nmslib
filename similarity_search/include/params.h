@@ -114,7 +114,7 @@ public:
 
   /*
    * Takes a list of exceptions and extracts all parameter values, 
-   * except parameters from this list. The extracted parameters
+   * except parameters from the excpetions' list. The extracted parameters
    * are added to the list of parameters already seen.
    */
   AnyParams ExtractParametersExcept(const vector<string>& ExceptList) {
@@ -152,7 +152,7 @@ private:
     bool bFound = false;
     /* 
      * This loop is reasonably efficient, unless
-     * we have thousands of parameters (which will not happen)
+     * we have thousands of parameters (which realistically won't happen)
      */
     for (size_t i =0; i < params.ParamNames.size(); ++i) 
     if (Name == params.ParamNames[i]) {

@@ -547,7 +547,7 @@ T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p) {
 
   CHECK(p > 0);
 
-  constexpr unsigned maxDig  = 3;
+  constexpr unsigned maxDig  = 20;
   constexpr unsigned maxK = 1 << maxDig;
 
   unsigned pfm = floor(maxK * p);
