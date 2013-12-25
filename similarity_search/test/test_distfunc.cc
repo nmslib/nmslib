@@ -673,10 +673,17 @@ bool TestLInfNormStandard(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += LInfNormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * LInfNormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -704,10 +711,17 @@ bool TestLInfNorm(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += LInfNorm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * LInfNorm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -735,10 +749,17 @@ bool TestLInfNormSIMD(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += LInfNormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * LInfNormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -767,10 +788,17 @@ bool TestL1NormStandard(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L1NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * L1NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -798,10 +826,17 @@ bool TestL1Norm(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L1Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * L1Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -828,11 +863,18 @@ bool TestL1NormSIMD(size_t N, size_t dim, size_t Rep) {
     t.reset();
 
     T DiffSum = 0;
+    T fract = T(1)/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L1NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * L1NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -859,11 +901,18 @@ bool TestL2NormStandard(size_t N, size_t dim, size_t Rep) {
     t.reset();
 
     T DiffSum = 0;
+    T fract = T(1)/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L2NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * L2NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -890,11 +939,18 @@ bool TestL2Norm(size_t N, size_t dim, size_t Rep) {
     t.reset();
 
     T DiffSum = 0;
+    T fract = T(1)/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L2Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * L2Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -922,10 +978,17 @@ bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
  
+    T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += L2NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * L2NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
  
     uint64_t tDiff = t.split();
@@ -954,12 +1017,18 @@ bool TestLPGeneric(size_t N, size_t dim, size_t Rep, T power) {
 
     T DiffSum = 0;
 
-     
+    T fract = T(1)/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += LPGenericDistance(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
+            DiffSum += 0.01 * LPGenericDistance(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -987,12 +1056,18 @@ bool TestLPGenericOptim(size_t N, size_t dim, size_t Rep, T power) {
 
     T DiffSum = 0;
 
-     
+    T fract = T(1)/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += LPGenericDistanceOptim(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
+            DiffSum += 0.01 * LPGenericDistanceOptim(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1021,10 +1096,18 @@ bool TestItakuraSaitoPrecomp(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += ItakuraSaitoPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01 * ItakuraSaitoPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1053,10 +1136,18 @@ bool TestItakuraSaitoPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += ItakuraSaitoPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01 * ItakuraSaitoPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1084,10 +1175,18 @@ bool TestItakuraSaitoStandard(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += ItakuraSaito(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * ItakuraSaito(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1117,10 +1216,18 @@ bool TestKLPrecomp(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01 * KLPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1149,10 +1256,18 @@ bool TestKLPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01 * KLPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1180,10 +1295,18 @@ bool TestKLStandard(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * KLStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1213,10 +1336,18 @@ bool TestKLGeneralPrecomp(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLGeneralPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01 * KLGeneralPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1245,10 +1376,18 @@ bool TestKLGeneralPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLGeneralPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01 * KLGeneralPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1276,10 +1415,18 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += KLGeneralStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * KLGeneralStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1309,10 +1456,18 @@ bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += JSStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * JSStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1342,10 +1497,18 @@ bool TestJSPrecomp(size_t N, size_t dim, size_t Rep, float pZero) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += JSPrecomp(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * JSPrecomp(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1375,10 +1538,18 @@ bool TestJSPrecompApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += JSPrecompApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
+            DiffSum += 0.01 * JSPrecompApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1408,10 +1579,18 @@ bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += JSPrecompSIMDApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
+            DiffSum += 0.01 * JSPrecompSIMDApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1438,10 +1617,18 @@ bool TestSpearmanRho(size_t N, size_t dim, size_t Rep) {
 
     float DiffSum = 0;
 
+    float fract = 1.0/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += SpearmanRho(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * SpearmanRho(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1468,10 +1655,18 @@ bool TestSpearmanRhoSIMD(size_t N, size_t dim, size_t Rep) {
 
     float DiffSum = 0;
 
+    float fract = 1.0/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += SpearmanRhoSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * SpearmanRhoSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1498,10 +1693,18 @@ bool TestSpearmanFootrule(size_t N, size_t dim, size_t Rep) {
 
     float DiffSum = 0;
 
+    float fract = 1.0/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += SpearmanFootrule(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * SpearmanFootrule(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1528,10 +1731,18 @@ bool TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 
     float DiffSum = 0;
 
+    float fract = 1.0/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += SpearmanFootruleSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01 * SpearmanFootruleSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
@@ -1559,10 +1770,18 @@ bool TestSparseLp(size_t N, size_t Rep, int power) {
 
     T DiffSum = 0;
 
+    T fract = T(1)/N;
+
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+            DiffSum += 0.01 * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
         }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
     }
 
     uint64_t tDiff = t.split();
