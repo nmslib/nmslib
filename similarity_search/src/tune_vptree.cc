@@ -201,9 +201,6 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
              const string&                  RangeArg
 )
 {
-  if (dimension <= 0) {
-    LOG(FATAL) << "# of dimensions should be > 0";
-  }
   vector<dist_t> rangeAll;
 
   if (!RangeArg.empty()) {

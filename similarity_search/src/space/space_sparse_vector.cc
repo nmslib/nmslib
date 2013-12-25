@@ -66,10 +66,9 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, std::vector<Elem
 template <typename dist_t>
 void SpaceSparseVector<dist_t>::ReadDataset(
     ObjectVector& dataset,
-    const ExperimentConfig<dist_t>* config,
+    const ExperimentConfig<dist_t>* /* ignoring it here */,
     const char* FileName,
     const int MaxNumObjects) const {
-  CHECK(config != NULL);
 
   dataset.clear();
   dataset.reserve(MaxNumObjects);

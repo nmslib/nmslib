@@ -10,8 +10,10 @@
  */
 
 #include <iostream>
+#include <memory>
 
 #include "space.h"
+#include "space_sparse_lp.h"
 #include "common.h"
 #include "bunit.h"
 #include "distcomp.h"
@@ -25,6 +27,8 @@
 #define RANGE_SMALL   1e-6f
 
 namespace similarity {
+
+using std::unique_ptr;
 
 template <class T> 
 inline void Normalize(T* pVect, size_t qty) {
@@ -1540,6 +1544,36 @@ bool TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
     return true;
 }
 
+template <class T>
+bool TestSparseLp(size_t N, size_t Rep, int power) {
+    unique_ptr<SpaceSparseLp<T>>  space(new SpaceSparseLp<T>(power));
+    ObjectVector                  elems;
+
+    space->ReadDataset(elems, NULL, "../sample_data/sparse_5K.txt", N); 
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of sparse LP (p=" << power << ") per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    return true;
+}
+
 TEST(TestSpeed) {
     int nTest  = 0;
     int nFail = 0;
@@ -1549,6 +1583,13 @@ TEST(TestSpeed) {
     int dim = 128;
     double pZero = 0.5;
     float delta = 0.125;
+
+    TestSparseLp<float>(1000, 1000, 0);
+    TestSparseLp<double>(1000, 1000, 0);
+    TestSparseLp<float>(1000, 1000, 1);
+    TestSparseLp<double>(1000, 1000, 1);
+    TestSparseLp<float>(1000, 1000, 2);
+    TestSparseLp<double>(1000, 1000, 2);
 
     cout << "Single-precision LP-distance tests" << endl;
     for (float power = 0.125; power <= 24; power += delta) {

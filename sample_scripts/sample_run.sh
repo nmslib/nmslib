@@ -68,7 +68,6 @@ Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.t
 Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "kldivgenfastrq" "float" "--knn $K"
 Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "itakurasaitofast" "float" "--knn $K"
 
-# L0.5 experiment
 export MethDesc="\
   --method perm_vptree:numPivot=$NumPivot,dbScanFrac=$DbScanFrac,alphaLeft=2,alphaRight=2,bucketSize=$BucketSize
   --method permutation:dbScanFrac=$DbScanFrac,numPivot=$NumPivot
@@ -79,6 +78,10 @@ export MethDesc="\
   --method mvptree:bucketSize=$BucketSize  
   --method vptree:alphaLeft=1,alphaRight=1,bucketSize=$BucketSize"
 
+# Sparse space experiment
+Run "128" "$SampleData/sparse_5K.txt" "0" "1" "" "500" "l1_sparse" "float" "--knn $K"
+
+# L0.5 experiment
 Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "lp:p=0.5" "float" "--knn $K"
 
 # KL-div experiments

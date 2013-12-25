@@ -1,7 +1,8 @@
 Non-Metric Space Library
 =================
 
-Authors: Bilegsaikhan Naidan, Leonid Boytsov.
+Authors: Bilegsaikhan Naidan, Leonid Boytsov. Leo(nid) Boytsov is a maintainer.
+
 Copyright (c) 2010--2013
 
 Detailed documentation will appear shortly. Some underlying principles and motivation are described in our "engineering" paper:
@@ -38,25 +39,25 @@ Supplemental materials: http://boytsov.info/pubs/nips2013_suppl.zip
 
 Some prerequisites:
 
-1. G++ that supports the new C++ standard, e.g., version 4.7 or the Intel compiler version 14.
+1. G++ 4.7 or the Intel compiler version 14.
 2. Linux
 3. cmake (GNU make is also required)
-4. An Intel or AMD processor that supports SSE 4.2 is recommended
 5. Boost (dev version)
 6. GNU scientific library (dev version)
+7. An Intel or AMD processor that supports SSE 4.2 is recommended
 
 To compile, go to similarity_search, type:  
 cmake .  
 Then, type:  
 make   
 
-Examples of using the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small data sets stored in this repository. The complete data set can be obtained using the script data/get_all_data.sh
+Examples of using the software can be found in sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small data sets stored in this repository. The complete data set can be obtained using the script data/get_all_data.sh Beware: it is more than 600 Gbytes compressed!
 
-Then, copy all the data to some directory X and set the environment variable:  
+After downloading and generating data, copy it to some directory X and set the environment variable:  
 
 export DATA_DIR=[path to the directory with data files]
 
-We use the data set created by Lawerence Cayton (lcayton.com). If you use this data, please, consider citing:
+We use the data set created by Lawerence Cayton (lcayton.com). If you use it, please, consider citing:
 
 @inproceedings{cayton:2008,  
     title={Fast nearest neighbor retrieval for bregman divergences},  
@@ -67,7 +68,7 @@ We use the data set created by Lawerence Cayton (lcayton.com). If you use this d
     organization={ACM}  
 }  
 
-Additionally, we use the colors data set (see the file colors112.txt in the data directory) from the Metric Spaces Library:
+Additionally, we employ the Colors data set from the Metric Spaces Library. Our software uses slightly different format (without a header). Hence, we put this file into the data directory (in this repository).
 
 @misc{LibMetricSpace, 
     Author = {K.~Figueroa and G.{}~Navarro and E.~Ch\'avez},  

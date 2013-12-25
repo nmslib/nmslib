@@ -55,7 +55,6 @@ void VectorSpace<dist_t>::ReadDataset(
     const ExperimentConfig<dist_t>* config,
     const char* FileName,
     const int MaxNumObjects) const {
-  CHECK(config != NULL);
 
   dataset.clear();
   dataset.reserve(MaxNumObjects);
@@ -89,7 +88,7 @@ void VectorSpace<dist_t>::ReadDataset(
 
       actualDim = dim;
 
-      if (config->GetDimension()) {
+      if (config && config->GetDimension()) {
         if (config->GetDimension() > currDim) {
           LOG(FATAL) << "The # of vector elements (" << currDim << ")" <<
                       " is smaller than the requested # of dimensions. " <<

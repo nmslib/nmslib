@@ -62,7 +62,8 @@ class Space {
   // This function is public and it is not supposed to be used in the query-mode
   dist_t IndexTimeDistance(const Object* obj1, const Object* obj2) const {
     if (!bIndexPhase) {
-      throw runtime_error("The public DistanceWrapper function is accessible only during the indexing phase!");
+      throw runtime_error(string("The public function ") + __func__ + 
+                                 " function is accessible only during the indexing phase!");
     }
     return HiddenDistance(obj1, obj2);
   }
@@ -73,17 +74,18 @@ class Space {
   virtual std::string ToString() const = 0;
   virtual void PrintInfo() const { LOG(INFO) << ToString(); }
 
+ protected:
   void SetIndexPhase() const { bIndexPhase = true; }
   void SetQueryPhase() const { bIndexPhase = false; }
- protected:
-  /* 
-   * This function is private, but it will be accessible by the friend class Query
-   * Public access can be disable/enabled only by function friends 
-   */
+
   friend class Query<dist_t>;
   friend class RangeQuery<dist_t>;
   friend class KNNQuery<dist_t>;
   friend class Experiments<dist_t>;
+  /* 
+   * This function is private, but it will be accessible by the friend class Query
+   * IndexTimeDistance access can be disable/enabled only by function friends 
+   */
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
  private:
   bool mutable bIndexPhase = true;
