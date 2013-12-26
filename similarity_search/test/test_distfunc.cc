@@ -1854,46 +1854,46 @@ TEST(TestSpeed) {
 
     float delta = 0.125/2.0;
 
-    for (float power = delta; power <= 24; power += delta) {
+    for (float power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       // This one should use an optimized LP function
       nFail = !TestSparseLp<float>(1000, 1000, power);
-      if (power == 3) delta = 0.125;
-      if (power == 8) delta = 0.5;
+      if (power == 3) step = 0.125;
+      if (power == 8) step = 0.5;
     }
     cout << "========================================" << endl;
 
     cout << "Double-precision (sparse) LP-distance tests" << endl;
     nFail = !TestSparseLp<double>(1000, 1000, -1);
     nTest++;
-    for (double power = delta; power <= 24; power += delta) {
+    for (double power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       // This one should use an optimized LP function
       nFail = !TestSparseLp<double>(1000, 1000, power);
-      if (power == 3) delta = 0.125;
-      if (power == 8) delta = 0.5;
+      if (power == 3) step = 0.125;
+      if (power == 8) step = 0.5;
     }
     cout << "========================================" << endl;
 
     cout << "Single-precision LP-distance tests" << endl;
-    for (float power = delta; power <= 24; power += delta) {
+    for (float power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       nFail = !TestLPGeneric<float>(128, dim, 200, power);
       nTest++;
       nFail = !TestLPGenericOptim<float>(128, dim, 200, power);
-      if (power == 3) delta = 0.125;
-      if (power == 8) delta = 0.5;
+      if (power == 3) step = 0.125;
+      if (power == 8) step = 0.5;
     }
     cout << "========================================" << endl;
 #ifdef TEST_SPEED_DOUBLE
     cout << "Double-precision LP-distance tests" << endl;
-    for (double power = delta; power <= 24; power += delta) {
+    for (double power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       nFail = !TestLPGeneric<double>(128, dim, 200, power);
       nTest++;
       nFail = !TestLPGenericOptim<double>(128, dim, 200, power);
-      if (power == 3) delta = 0.125;
-      if (power == 8) delta = 0.5;
+      if (power == 3) step = 0.125;
+      if (power == 8) step = 0.5;
     }
     cout << "========================================" << endl;
 #endif
