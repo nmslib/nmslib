@@ -21,7 +21,7 @@
 #include "ztimer.h"
 #include "pow.h"
 
-#define TEST_SPEED_DOUBLE
+//#define TEST_SPEED_DOUBLE
 
 #define TEST_AGREE    1
 #define RANGE         8.0f
@@ -1844,13 +1844,18 @@ TEST(TestSpeed) {
 
     nTest++;
     nFail = !TestSparseCosine<float>(1000, 1000);
+#ifdef TEST_SPEED_DOUBLE
     nTest++;
     nFail = !TestSparseCosine<double>(1000, 1000);
+#endif
 
 
     cout << "Single-precision (sparse) LP-distance tests" << endl;
     nTest++;
     nFail = !TestSparseLp<float>(1000, 1000, -1);
+    nTest++;
+    nTest++;
+    nFail = !TestSparseLp<float>(1000, 1000, 1/3.0);
 
     float delta = 0.125/2.0;
 
@@ -1863,8 +1868,11 @@ TEST(TestSpeed) {
     }
     cout << "========================================" << endl;
 
+#ifdef TEST_SPEED_DOUBLE
     cout << "Double-precision (sparse) LP-distance tests" << endl;
     nFail = !TestSparseLp<double>(1000, 1000, -1);
+    nTest++;
+    nFail = !TestSparseLp<double>(1000, 1000, 1/3.0);
     nTest++;
     for (double power = delta, step = delta; power <= 24; power += step) {
       nTest++;
@@ -1873,6 +1881,7 @@ TEST(TestSpeed) {
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
+#endif
     cout << "========================================" << endl;
 
     cout << "Single-precision LP-distance tests" << endl;
