@@ -30,10 +30,10 @@
 #include "space_vector.h"
 #include "distcomp.h"
 
-#define SPACE_L   "lp"
-#define SPACE_L0  "l0"
-#define SPACE_L1  "l1"
-#define SPACE_L2  "l2"
+#define SPACE_L     "lp"
+#define SPACE_LINF  "linf"
+#define SPACE_L1    "l1"
+#define SPACE_L2    "l2"
 
 namespace similarity {
 
@@ -44,15 +44,15 @@ class SpaceLpDist {
 public:
   explicit SpaceLpDist(dist_t pf) : p_(pf), pf_(pf), custom_(false) {
     if (fabs(dist_t(p_) - pf_) < numeric_limits<dist_t>::min()) {
-      custom_ = p_ == 0 || p_ == 1 || p_ == 2;
+      custom_ = p_ == -1 || p_ == 1 || p_ == 2;
     }
   }
 
   dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
-    CHECK(p_ >= 0);
+    CHECK(p_ >= 0 || -1 == p_);
 
     if (custom_) {
-      if (p_ == 0) {
+      if (p_ == -1) {
         return LInfNormSIMD(x, y, length);
       } else if (p_ == 1) {
         return L1NormSIMD(x, y, length);

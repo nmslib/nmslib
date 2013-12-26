@@ -69,7 +69,7 @@ void ParseCommandLine(int argc, char*argv[],
   ProgOptDesc.add_options()
     ("help,h", "produce help message")
     ("spaceType,s",     po::value<string>(&SpaceType)->required(),
-                        "space type, e.g., l1, l2, space with a parameter, e.g., l:0.5")
+                        "space type, e.g., l1, l2, lp:p=0.5")
     ("distType",        po::value<string>(&DistType)->default_value("float"),
                         "distance value type: int, float, double")
     ("dataFile,i",      po::value<string>(&DataFile)->required(),

@@ -29,10 +29,10 @@
 #include "space_lp.h"
 #include "space_sparse_vector.h"
 
-#define SPACE_SPARSE_L   "lp_sparse"
-#define SPACE_SPARSE_L0  "l0_sparse"
-#define SPACE_SPARSE_L1  "l1_sparse"
-#define SPACE_SPARSE_L2  "l2_sparse"
+#define SPACE_SPARSE_L     "lp_sparse"
+#define SPACE_SPARSE_LINF  "linf_sparse"
+#define SPACE_SPARSE_L1    "l1_sparse"
+#define SPACE_SPARSE_L2    "l2_sparse"
 
 namespace similarity {
 

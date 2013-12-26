@@ -25,9 +25,9 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Space<dist_t>* CreateL0(const AnyParams& /* ignoring params */) {
+Space<dist_t>* CreateLINF(const AnyParams& /* ignoring params */) {
   // Chebyshev Distance
-  return new SpaceLp<dist_t>(0);
+  return new SpaceLp<dist_t>(-1);
 
 }
 template <typename dist_t>
@@ -64,8 +64,8 @@ Space<dist_t>* CreateL(const AnyParams& AllParams) {
 
 REGISTER_SPACE_CREATOR(float,  SPACE_L,  CreateL)
 REGISTER_SPACE_CREATOR(double, SPACE_L,  CreateL)
-REGISTER_SPACE_CREATOR(float,  SPACE_L0, CreateL0)
-REGISTER_SPACE_CREATOR(double, SPACE_L0, CreateL0)
+REGISTER_SPACE_CREATOR(float,  SPACE_LINF, CreateLINF)
+REGISTER_SPACE_CREATOR(double, SPACE_LINF, CreateLINF)
 REGISTER_SPACE_CREATOR(float,  SPACE_L1, CreateL1)
 REGISTER_SPACE_CREATOR(double, SPACE_L1, CreateL1)
 REGISTER_SPACE_CREATOR(float,  SPACE_L2, CreateL2)
