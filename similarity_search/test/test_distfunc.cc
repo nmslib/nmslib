@@ -14,6 +14,7 @@
 
 #include "space.h"
 #include "space_sparse_lp.h"
+#include "space_sparse_cosine.h"
 #include "common.h"
 #include "bunit.h"
 #include "distcomp.h"
@@ -1757,7 +1758,7 @@ bool TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 }
 
 template <class T>
-bool TestSparseLp(size_t N, size_t Rep, int power) {
+bool TestSparseLp(size_t N, size_t Rep, T power) {
     unique_ptr<SpaceSparseLp<T>>  space(new SpaceSparseLp<T>(power));
     ObjectVector                  elems;
 
@@ -1794,6 +1795,44 @@ bool TestSparseLp(size_t N, size_t Rep, int power) {
     return true;
 }
 
+template <class T>
+bool TestSparseCosine(size_t N, size_t Rep) {
+    unique_ptr<SpaceSparseCosine<T>>  space(new SpaceSparseCosine<T>());
+    ObjectVector                  elems;
+
+    space->ReadDataset(elems, NULL, "../sample_data/sparse_5K.txt", N); 
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01 * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of sparse cosine dist per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    return true;
+}
+
 TEST(TestSpeed) {
     int nTest  = 0;
     int nFail = 0;
@@ -1802,31 +1841,58 @@ TEST(TestSpeed) {
 
     int dim = 128;
     double pZero = 0.5;
-    float delta = 0.125;
 
-    TestSparseLp<float>(1000, 1000, 0);
-    TestSparseLp<double>(1000, 1000, 0);
-    TestSparseLp<float>(1000, 1000, 1);
-    TestSparseLp<double>(1000, 1000, 1);
-    TestSparseLp<float>(1000, 1000, 2);
-    TestSparseLp<double>(1000, 1000, 2);
+    nTest++;
+    nFail = !TestSparseCosine<float>(1000, 1000);
+    nTest++;
+    nFail = !TestSparseCosine<double>(1000, 1000);
+
+
+    cout << "Single-precision (sparse) LP-distance tests" << endl;
+    nTest++;
+    nFail = !TestSparseLp<float>(1000, 1000, -1);
+
+    float delta = 0.125/2.0;
+
+    for (float power = delta; power <= 24; power += delta) {
+      nTest++;
+      // This one should use an optimized LP function
+      nFail = !TestSparseLp<float>(1000, 1000, power);
+      if (power == 3) delta = 0.125;
+      if (power == 8) delta = 0.5;
+    }
+    cout << "========================================" << endl;
+
+    cout << "Double-precision (sparse) LP-distance tests" << endl;
+    nFail = !TestSparseLp<double>(1000, 1000, -1);
+    nTest++;
+    for (double power = delta; power <= 24; power += delta) {
+      nTest++;
+      // This one should use an optimized LP function
+      nFail = !TestSparseLp<double>(1000, 1000, power);
+      if (power == 3) delta = 0.125;
+      if (power == 8) delta = 0.5;
+    }
+    cout << "========================================" << endl;
 
     cout << "Single-precision LP-distance tests" << endl;
-    for (float power = 0.125; power <= 24; power += delta) {
+    for (float power = delta; power <= 24; power += delta) {
       nTest++;
       nFail = !TestLPGeneric<float>(128, dim, 200, power);
       nTest++;
       nFail = !TestLPGenericOptim<float>(128, dim, 200, power);
+      if (power == 3) delta = 0.125;
       if (power == 8) delta = 0.5;
     }
     cout << "========================================" << endl;
 #ifdef TEST_SPEED_DOUBLE
     cout << "Double-precision LP-distance tests" << endl;
-    for (double power = 0.125; power <= 24; power += delta) {
+    for (double power = delta; power <= 24; power += delta) {
       nTest++;
       nFail = !TestLPGeneric<double>(128, dim, 200, power);
       nTest++;
       nFail = !TestLPGenericOptim<double>(128, dim, 200, power);
+      if (power == 3) delta = 0.125;
       if (power == 8) delta = 0.5;
     }
     cout << "========================================" << endl;

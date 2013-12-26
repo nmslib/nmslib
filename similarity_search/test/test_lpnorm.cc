@@ -98,7 +98,7 @@ TEST(ChebyshevDistance) {
   VectorDataset1 dataset;
   const ObjectVector& dataobjects = dataset.GetDataObjects();
 
-  unique_ptr<Space<FLOAT_TYPE>> space(new SpaceLp<FLOAT_TYPE>(0));
+  unique_ptr<Space<FLOAT_TYPE>> space(new SpaceLp<FLOAT_TYPE>(-1));
   const FLOAT_TYPE expected[8][8] = {
     {0.0, 0.715, 0.733, 0.499, 0.614, 0.835, 0.766, 0.844},
     {0.715, 0.0, 0.422, 0.527, 0.581, 0.765, 0.645, 0.778},
