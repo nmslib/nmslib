@@ -15,7 +15,7 @@
  */
 
 #include "searchoracle.h"
-#include "space_sparse_cosine.h"
+#include "space_scalar.h"
 #include "spacefactory.h"
 
 namespace similarity {
@@ -25,11 +25,17 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Space<dist_t>* CreateSparseCosine(const AnyParams& /* ignoring params */) {
-  // Cosine Distance
-  return new SpaceSparseCosine<dist_t>();
+Space<dist_t>* CreateCosineSimilarity(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceCosineSimilarity<dist_t>();
 }
 
+
+template <typename dist_t>
+Space<dist_t>* CreateAngularDistance(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceAngularDistance<dist_t>();
+}
 
 /*
  * End of creating functions.
@@ -43,8 +49,10 @@ Space<dist_t>* CreateSparseCosine(const AnyParams& /* ignoring params */) {
  * that are stored in a library. Then, the registration code doesn't work.
  */
 
-REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_COSINE, CreateSparseCosine)
-REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_COSINE, CreateSparseCosine)
+REGISTER_SPACE_CREATOR(float,  SPACE_COSINE_SIMILARITY, CreateCosineSimilarity)
+REGISTER_SPACE_CREATOR(double, SPACE_COSINE_SIMILARITY, CreateCosineSimilarity)
+REGISTER_SPACE_CREATOR(float,  SPACE_ANGULAR_DISTANCE, CreateAngularDistance)
+REGISTER_SPACE_CREATOR(double, SPACE_ANGULAR_DISTANCE, CreateAngularDistance)
 
 }
 

@@ -26,7 +26,7 @@ using namespace std;
 /*
  * Scalar-product
  *
- * TODO: @leo implement an efficient version
+ * TODO: @leo implement a more efficient version
  */
 
 template <class T>
@@ -52,18 +52,31 @@ template float  NormScalarProduct<float>(const float* pVect1, const float* pVect
 template double NormScalarProduct<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 /*
- * Cosine-distance (a proper metric)
- *
+ * Angular distance (a proper metric)
  *
  */
 
 template <class T>
-T CosineDistance(const T *p1, const T *p2, size_t qty) 
+T AngularDistance(const T *p1, const T *p2, size_t qty) 
 { 
     return acos(NormScalarProduct(p1, p2, qty));
 }
 
-template float  CosineDistance<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double CosineDistance<double>(const double* pVect1, const double* pVect2, size_t qty);
+template float  AngularDistance<float>(const float* pVect1, const float* pVect2, size_t qty);
+template double AngularDistance<double>(const double* pVect1, const double* pVect2, size_t qty);
+
+/*
+ * Cosine similarity (not exactly a metric)
+ *
+ */
+
+template <class T>
+T CosineSimilarity(const T *p1, const T *p2, size_t qty) 
+{ 
+    return std::max(T(0), 1 - NormScalarProduct(p1, p2, qty));
+}
+
+template float  CosineSimilarity<float>(const float* pVect1, const float* pVect2, size_t qty);
+template double CosineSimilarity<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 }

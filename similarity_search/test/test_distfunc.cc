@@ -14,7 +14,8 @@
 
 #include "space.h"
 #include "space_sparse_lp.h"
-#include "space_sparse_cosine.h"
+#include "space_sparse_scalar.h"
+#include "space_scalar.h"
 #include "common.h"
 #include "bunit.h"
 #include "distcomp.h"
@@ -1796,8 +1797,8 @@ bool TestSparseLp(size_t N, size_t Rep, T power) {
 }
 
 template <class T>
-bool TestSparseCosine(size_t N, size_t Rep) {
-    unique_ptr<SpaceSparseCosine<T>>  space(new SpaceSparseCosine<T>());
+bool TestSparseAngularDistance(size_t N, size_t Rep) {
+    unique_ptr<SpaceSparseAngularDistance<T>>  space(new SpaceSparseAngularDistance<T>());
     ObjectVector                  elems;
 
     space->ReadDataset(elems, NULL, "../sample_data/sparse_5K.txt", N); 
@@ -1828,7 +1829,121 @@ bool TestSparseCosine(size_t N, size_t Rep) {
 
     cout << "Ignore: " << DiffSum << endl;
     cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of sparse cosine dist per second: " << (1e6/tDiff) * N * Rep  << endl;
+            " # of sparse angular dist per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    return true;
+}
+
+template <class T>
+bool TestSparseCosineSimilarity(size_t N, size_t Rep) {
+    unique_ptr<SpaceSparseCosineSimilarity<T>>  space(new SpaceSparseCosineSimilarity<T>());
+    ObjectVector                  elems;
+
+    space->ReadDataset(elems, NULL, "../sample_data/sparse_5K.txt", N); 
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01 * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    return true;
+}
+
+template <class T>
+bool TestCosineSimilarity(size_t N, size_t dim, size_t Rep) {
+    T* pArr = new T[N * dim];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01 * CosineSimilarity(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard CosineSimilarity per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
+template <class T>
+bool TestAngularDistance(size_t N, size_t dim, size_t Rep) {
+    T* pArr = new T[N * dim];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01 * AngularDistance(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard AngularDistance per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
 
     return true;
 }
@@ -1845,10 +1960,25 @@ TEST(TestSpeed) {
     double pZero3 = 0.0;
 
     nTest++;
-    nFail = !TestSparseCosine<float>(1000, 1000);
+    nFail = !TestCosineSimilarity<float>(1000, dim, 1000);
+    nTest++;
+    nFail = !TestAngularDistance<float>(1000, dim, 1000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestSparseCosine<double>(1000, 1000);
+    nFail = !TestCosineSimilarity<double>(1000, dim, 1000);
+    nTest++;
+    nFail = !TestAngularDistance<double>(1000, dim, 1000);
+#endif
+
+    nTest++;
+    nFail = !TestSparseCosineSimilarity<float>(1000, 1000);
+    nTest++;
+    nFail = !TestSparseAngularDistance<float>(1000, 1000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail = !TestSparseCosineSimilarity<double>(1000, 1000);
+    nTest++;
+    nFail = !TestSparseAngularDistance<double>(1000, 1000);
 #endif
 
 

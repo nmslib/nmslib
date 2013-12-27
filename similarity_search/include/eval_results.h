@@ -240,9 +240,9 @@ private:
           dist_t mx = fabs(std::max(ApproxDists_[k], ExactDists_[p].first));
           dist_t mn = fabs(std::min(ApproxDists_[k], ExactDists_[p].first));
 
-          if (mx > 0 && mn/mx < 1 - 1e-5) {
+          if (mx > 0 && 1- mn/mx > 1e-5) {
             for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxDists_.size()); ++i ) {
-              LOG(INFO) << "Ex: " << ExactDists_[i].first << " -> Apr: " << ApproxDists_[i];
+              LOG(INFO) << "Ex: " << ExactDists_[i].first << " -> Apr: " << ApproxDists_[i] << " 1 - ratio: " << (1 - mn/mx);
             }
             LOG(FATAL) << "bug: the approximate query should not return objects "
                    << "that are closer to the query than object returned by "

@@ -60,7 +60,8 @@ float L2SqrSIMD(const float* pVect1, const float* pVect2, size_t qty);
 /*
  * Scalar product related distances 
  */
-template <class T> T CosineDistance(const T *p1, const T *p2, size_t qty);
+template <class T> T AngularDistance(const T *p1, const T *p2, size_t qty);
+template <class T> T CosineSimilarity(const T *p1, const T *p2, size_t qty);
 template <class T> T NormScalarProduct(const T *p1, const T *p2, size_t qty);
 
 /*
