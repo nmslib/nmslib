@@ -30,8 +30,10 @@ using namespace std;
 
 
 /*
- * Jensen-Shannon divergence 
+ * Jensen-Shannon divergence.
  * 
+ * The square root of JS is a metric: 
+ *
  * Österreicher, Ferdinand, and Igor Vajda. 
  * "A new class of metric divergences on probability spaces and its applicability in statistics." 
  * Annals of the Institute of Statistical Mathematics 55.3 (2003): 639-653.
@@ -56,6 +58,7 @@ template <class T> T JSStandard(const T *pVect1, const T *pVect2, size_t qty)
       }
     }
 
+    // Due to computation/rounding errors, we may get a small-magnitude negative number
     return std::max(T(0.5)*sum1 - sum2, T(0));
 }
 
@@ -80,6 +83,7 @@ T JSPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
         pVect1++; pVect2++; pVectLog1++; pVectLog2++;
     }
 
+    // Due to computation/rounding errors, we may get a small-magnitude negative number
     return std::max(T(0.5)*sum1 - sum2, T(0));
 }
 
@@ -221,7 +225,8 @@ float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qt
       pVect1++; pVect2++; pVectLog1++; pVectLog2++;
     }
 
-    return 0.5*res;
+    // Due to computation/rounding errors, we may get a small-magnitude negative number
+    return 0.5*max(0.f, res);
 #endif
 }
     
@@ -306,7 +311,8 @@ double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t
       pVect1++; pVect2++; pVectLog1++; pVectLog2++;
     }
 
-    return 0.5*res;
+    // Due to computation errors, we may get a small-magnitude negative number
+    return max(0.5*res, double(0));
 #endif
 }
 

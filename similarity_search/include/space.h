@@ -20,6 +20,8 @@
 #include <string>
 #include <map>
 #include <stdexcept>
+#include <iostream>
+#include <cmath>
 
 #include <string.h>
 #include "global.h"
@@ -107,8 +109,21 @@ void ComputeIntrinsicDimensionality(const Space<dist_t>& space,
   std::vector<double> dist;
   DistMean = 0;
   for (size_t n = 0; n < SampleQty; ++n) {
-    dist_t d = space.IndexTimeDistance(dataset[RandomInt() % dataset.size()], dataset[RandomInt() % dataset.size()]);
+    size_t r1 = RandomInt() % dataset.size();
+    size_t r2 = RandomInt() % dataset.size();
+    const Object* obj1 = dataset[r1];
+    const Object* obj2 = dataset[r2];
+    dist_t d = space.IndexTimeDistance(obj1, obj2);
     dist.push_back(d);
+    if (std::isnan(d)) {
+      /* 
+       * TODO: @leo Dump object contents here. To this end,
+       *            we need to subclass objects, so that sparse
+       *            vectors, dense vectors and other objects
+       *            can implement their own dump function.
+       */
+      LOG(FATAL) << "!!! Bug: a distance returned NAN!";
+    }
     DistMean += d;
   }
   DistMean /= double(SampleQty);

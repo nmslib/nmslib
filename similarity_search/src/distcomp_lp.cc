@@ -536,7 +536,8 @@ template float LPGenericDistance<float>(const float* x, const float* y, const in
 template double LPGenericDistance<double>(const double* x, const double* y, const int length, const double p);
 
 /*
- * A hacky implementation that improves over pow-based function,
+ * Exponentiation by square rooting and squaring:
+ * a  hacky implementation that works faster than std::pow()
  * if p * 2^maxDig is an integer.
  */
 template <typename T>
@@ -547,7 +548,7 @@ T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p) {
 
   CHECK(p > 0);
 
-  constexpr unsigned maxDig  = 20;
+  constexpr unsigned maxDig  = 18;
   constexpr unsigned maxK = 1 << maxDig;
 
   unsigned pfm = floor(maxK * p);

@@ -25,19 +25,36 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Space<dist_t>* CreateJSSlow(const AnyParams& /* ignoring params */) {
-  return new SpaceJS<dist_t>(SpaceJS<dist_t>::kJSSlow);
+Space<dist_t>* CreateJSDivSlow(const AnyParams& /* ignoring params */) {
+  return new SpaceJSDiv<dist_t>(SpaceJSDiv<dist_t>::kJSSlow);
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateJSFastPrecomp(const AnyParams& /* ignoring params */) {
-  return new SpaceJS<dist_t>(SpaceJS<dist_t>::kJSFastPrecomp);
+Space<dist_t>* CreateJSDivFastPrecomp(const AnyParams& /* ignoring params */) {
+  return new SpaceJSDiv<dist_t>(SpaceJSDiv<dist_t>::kJSFastPrecomp);
 }
 
 template <typename dist_t>
-Space<dist_t>* CreateJSFastPrecompApprox(const AnyParams& /* ignoring params */) {
-  return new SpaceJS<dist_t>(SpaceJS<dist_t>::kJSFastPrecompApprox);
+Space<dist_t>* CreateJSDivFastPrecompApprox(const AnyParams& /* ignoring params */) {
+  return new SpaceJSDiv<dist_t>(SpaceJSDiv<dist_t>::kJSFastPrecompApprox);
 }
+
+
+template <typename dist_t>
+Space<dist_t>* CreateJSMetricSlow(const AnyParams& /* ignoring params */) {
+  return new SpaceJSMetric<dist_t>(SpaceJSMetric<dist_t>::kJSSlow);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateJSMetricFastPrecomp(const AnyParams& /* ignoring params */) {
+  return new SpaceJSMetric<dist_t>(SpaceJSMetric<dist_t>::kJSFastPrecomp);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateJSMetricFastPrecompApprox(const AnyParams& /* ignoring params */) {
+  return new SpaceJSMetric<dist_t>(SpaceJSMetric<dist_t>::kJSFastPrecompApprox);
+}
+
 
 
 /*
@@ -52,12 +69,19 @@ Space<dist_t>* CreateJSFastPrecompApprox(const AnyParams& /* ignoring params */)
  * that are stored in a library. Then, the registration code doesn't work.
  */
 
-REGISTER_SPACE_CREATOR(float,  SPACE_JS_SLOW, CreateJSSlow)
-REGISTER_SPACE_CREATOR(double, SPACE_JS_SLOW, CreateJSSlow)
-REGISTER_SPACE_CREATOR(float,  SPACE_JS_FAST, CreateJSFastPrecomp)
-REGISTER_SPACE_CREATOR(double, SPACE_JS_FAST, CreateJSFastPrecomp)
-REGISTER_SPACE_CREATOR(float,  SPACE_JS_FAST_APPROX, CreateJSFastPrecompApprox)
-REGISTER_SPACE_CREATOR(double, SPACE_JS_FAST_APPROX, CreateJSFastPrecompApprox)
+REGISTER_SPACE_CREATOR(float,  SPACE_JS_DIV_SLOW, CreateJSDivSlow)
+REGISTER_SPACE_CREATOR(double, SPACE_JS_DIV_SLOW, CreateJSDivSlow)
+REGISTER_SPACE_CREATOR(float,  SPACE_JS_DIV_FAST, CreateJSDivFastPrecomp)
+REGISTER_SPACE_CREATOR(double, SPACE_JS_DIV_FAST, CreateJSDivFastPrecomp)
+REGISTER_SPACE_CREATOR(float,  SPACE_JS_DIV_FAST_APPROX, CreateJSDivFastPrecompApprox)
+REGISTER_SPACE_CREATOR(double, SPACE_JS_DIV_FAST_APPROX, CreateJSDivFastPrecompApprox)
+
+REGISTER_SPACE_CREATOR(float,  SPACE_JS_METR_SLOW, CreateJSMetricSlow)
+REGISTER_SPACE_CREATOR(double, SPACE_JS_METR_SLOW, CreateJSMetricSlow)
+REGISTER_SPACE_CREATOR(float,  SPACE_JS_METR_FAST, CreateJSMetricFastPrecomp)
+REGISTER_SPACE_CREATOR(double, SPACE_JS_METR_FAST, CreateJSMetricFastPrecomp)
+REGISTER_SPACE_CREATOR(float,  SPACE_JS_METR_FAST_APPROX, CreateJSMetricFastPrecompApprox)
+REGISTER_SPACE_CREATOR(double, SPACE_JS_METR_FAST_APPROX, CreateJSMetricFastPrecompApprox)
 
 }
 

@@ -21,7 +21,7 @@
 #include "ztimer.h"
 #include "pow.h"
 
-//#define TEST_SPEED_DOUBLE
+#define TEST_SPEED_DOUBLE
 
 #define TEST_AGREE    1
 #define RANGE         8.0f
@@ -1475,7 +1475,7 @@ bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1516,7 +1516,7 @@ bool TestJSPrecomp(size_t N, size_t dim, size_t Rep, float pZero) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) (sparsity:" << pZero << ")  per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1557,7 +1557,7 @@ bool TestJSPrecompApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1598,7 +1598,7 @@ bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) per second: " << (1e6/tDiff) * N * Rep  << endl;
+    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     delete [] pArr;
 
@@ -1840,7 +1840,9 @@ TEST(TestSpeed) {
     srand48(0);
 
     int dim = 128;
-    double pZero = 0.5;
+    double pZero1 = 0.5;
+    double pZero2 = 0.25;
+    double pZero3 = 0.0;
 
     nTest++;
     nFail = !TestSparseCosine<float>(1000, 1000);
@@ -1920,31 +1922,63 @@ TEST(TestSpeed) {
     nFail = !TestSpearmanFootruleSIMD(1024, dim, 2000);
 
     nTest++;
-    nFail = !TestJSStandard<float>(1024, dim, 1000, pZero);
+    nFail = !TestJSStandard<float>(1024, dim, 1000, pZero1);
+    nTest++;
+    nFail = !TestJSStandard<float>(1024, dim, 1000, pZero2);
+    nTest++;
+    nFail = !TestJSStandard<float>(1024, dim, 1000, pZero3);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSStandard<double>(1024, dim, 500, pZero);
+    nFail = !TestJSStandard<double>(1024, dim, 500, pZero1);
+    nTest++;
+    nFail = !TestJSStandard<double>(1024, dim, 500, pZero2);
+    nTest++;
+    nFail = !TestJSStandard<double>(1024, dim, 500, pZero3);
 #endif
 
     nTest++;
-    nFail = !TestJSPrecomp<float>(1024, dim, 500, pZero);
+    nFail = !TestJSPrecomp<float>(1024, dim, 500, pZero1);
+    nTest++;
+    nFail = !TestJSPrecomp<float>(1024, dim, 500, pZero2);
+    nTest++;
+    nFail = !TestJSPrecomp<float>(1024, dim, 500, pZero3);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSPrecomp<double>(1024, dim, 500, pZero);
+    nFail = !TestJSPrecomp<double>(1024, dim, 500, pZero1);
+    nTest++;
+    nFail = !TestJSPrecomp<double>(1024, dim, 500, pZero2);
+    nTest++;
+    nFail = !TestJSPrecomp<double>(1024, dim, 500, pZero3);
 #endif
 
     nTest++;
-    nFail = !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero);
+    nFail = !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero1);
+    nTest++;
+    nFail = !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero2);
+    nTest++;
+    nFail = !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero3);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero);
+    nFail = !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero1);
+    nTest++;
+    nFail = !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero2);
+    nTest++;
+    nFail = !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero3);
 #endif
 
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero);
+    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero1);
+    nTest++;
+    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero2);
+    nTest++;
+    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero3);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero);
+    nFail = !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero1);
+    nTest++;
+    nFail = !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero2);
+    nTest++;
+    nFail = !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero3);
 #endif
 
     nTest++;

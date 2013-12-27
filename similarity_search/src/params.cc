@@ -16,6 +16,7 @@
 #include <cstring>
 #include <map>
 #include <limits>
+#include <iostream>
 
 #include "utils.h"
 #include "params.h"

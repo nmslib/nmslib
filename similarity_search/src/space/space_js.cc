@@ -27,7 +27,7 @@
 namespace similarity {
 
 template <typename dist_t>
-Object* SpaceJS<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+Object* SpaceJSBase<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
   if (type_ == kJSSlow) {
     return new Object(id, InpVect.size() * sizeof(dist_t), &InpVect[0]);
   }
@@ -42,7 +42,7 @@ Object* SpaceJS<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>&
 
 
 template <typename dist_t>
-dist_t SpaceJS<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
+dist_t SpaceJSBase<dist_t>::JensenShannonFunc(const Object* obj1, const Object* obj2) const {
   CHECK(obj1->datalength() > 0);
   CHECK(obj1->datalength() == obj2->datalength());
   const dist_t* x = reinterpret_cast<const dist_t*>(obj1->data());
@@ -57,27 +57,20 @@ dist_t SpaceJS<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) c
   switch (type_) {
     case kJSSlow:               val = JSStandard(x, y, length); break;
     case kJSFastPrecomp:        val = JSPrecomp(x, y, length); break;
-    case kJSFastPrecompApprox:  
-#ifdef  __INTEL_COMPILER
-                                // TODO: @leo On Intel, the SIMD version is buggy
-                                //val = JSPrecompSIMDApproxLog(x, y, length); break;
-                                val = JSPrecompApproxLog(x, y, length); break;
-#else
-                                val = JSPrecompSIMDApproxLog(x, y, length); break;
-#endif
-    default: LOG(FATAL) << "Unknown JS space code: " << type_ << endl;
+    case kJSFastPrecompApprox:  val = JSPrecompSIMDApproxLog(x, y, length); break;
+    default: LOG(FATAL) << "Unknown JS function type code: " << type_ << endl;
   }
-  return sqrt(val); // the squared root from JS is a metric
+
+  return val;
 }
 
-template <typename dist_t>
-std::string SpaceJS<dist_t>::ToString() const {
-  std::stringstream stream;
-  stream << "Jensen-Divergence: type code = " << type_;
-  return stream.str();
-}
+template class SpaceJSBase<float>;
+template class SpaceJSBase<double>;
 
-template class SpaceJS<float>;
-template class SpaceJS<double>;
+template class SpaceJSDiv<float>;
+template class SpaceJSDiv<double>;
+
+template class SpaceJSMetric<float>;
+template class SpaceJSMetric<double>;
 
 }  // namespace similarity

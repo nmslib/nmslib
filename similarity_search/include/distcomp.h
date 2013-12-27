@@ -156,14 +156,6 @@ template <class T> T JSPrecompSIMDApproxLog(const T* pVect1, const T* pVect2, si
  */
 template <typename T> T LPGenericDistance(const T* x, const T* y, const int length, const T p);
 
-/*
- * A hacky implementation that improves over pow-based function for the following cases:
- *
- * p=1/8,1/4,1/2
- * p=n, n is integer
- * p=n+1/2, n is integer
- *
- */
 template <typename T> T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p);
 
 
