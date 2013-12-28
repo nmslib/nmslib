@@ -32,6 +32,8 @@ using namespace std;
 template <class T>
 T NormScalarProduct(const T *p1, const T *p2, size_t qty) 
 { 
+    constexpr T eps = numeric_limits<T>::min() * 2;
+
     T sum = 0;
     T norm1 = 0;
     T norm2 = 0;
@@ -41,6 +43,14 @@ T NormScalarProduct(const T *p1, const T *p2, size_t qty)
       norm2 += p2[i] * p2[i];
       sum += p1[i] * p2[i];
     }
+
+    if (norm1 < eps) { /* 
+                        * This shouldn't normally happen for this space, but 
+                        * if it does, we don't want to get NANs 
+                        */
+      if (norm2 < eps) return 1;
+      return 0;
+    } 
     /* 
      * Sometimes due to rounding errors, we get values > 1 or < -1.
      * This throws off other functions that use scalar product, e.g., acos

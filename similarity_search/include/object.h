@@ -28,9 +28,14 @@
 
 namespace similarity {
 
-// Structure of object: | id | datasize | data ........ |
+/* 
+ * Structure of object: | id | datasize | data ........ |
+ * We need data to be aligned on 8-byte boundaries.
+ * 
+ * See: http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
+ */
 
-typedef int IdType;
+typedef size_t IdType;
 
 const size_t ID_SIZE = sizeof(IdType);
 const size_t DATALENGTH_SIZE = sizeof(size_t);
@@ -75,7 +80,7 @@ class Object {
     return clone;
   }
 
-  inline IdType id() const { return *(reinterpret_cast<int*>(buffer_)); }
+  inline IdType id() const { return *(reinterpret_cast<IdType*>(buffer_)); }
   inline const char* data() const { return buffer_ + ID_SIZE + DATALENGTH_SIZE; }
   inline char* data()             { return buffer_ + ID_SIZE + DATALENGTH_SIZE; }
   inline size_t datalength() const { return *(reinterpret_cast<size_t*>(buffer_ + ID_SIZE));}

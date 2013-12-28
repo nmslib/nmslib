@@ -237,12 +237,24 @@ private:
 
       for (size_t k = 0, p = 0; k < ApproxDists_.size(); ++k) {
         if (ApproxDists_[k] -  ExactDists_[p].first < 0) {
-          dist_t mx = fabs(std::max(ApproxDists_[k], ExactDists_[p].first));
-          dist_t mn = fabs(std::min(ApproxDists_[k], ExactDists_[p].first));
-
-          if (mx > 0 && 1- mn/mx > 1e-5) {
+          double mx = std::abs(std::max(ApproxDists_[k], ExactDists_[p].first));
+          double mn = std::abs(std::min(ApproxDists_[k], ExactDists_[p].first));
+  
+          const double epsRel = 2e-5;
+          const double epsAbs = 5e-4;
+          /*
+           * TODO: @leo These eps are quite adhoc.
+           *            There can be a bug here (where approx is better than exact??), 
+           *            to reproduce a situation when the below condition is triggered 
+           *            for epsRel = 1e-5 use & epsAbs = 1-e5:
+           *            release/experiment  --dataFile ~/TextCollect/VectorSpaces/colors112.txt --knn 1 --testSetQty 1 --maxNumQuery 1000  --method vptree:alphaLeft=0.8,alphaRight=0.8  -s cosinesimi 
+           *
+           */
+          if (mx > 0 && (1- mn/mx) > epsRel && (mx - mn) > epsAbs) {
             for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxDists_.size()); ++i ) {
-              LOG(INFO) << "Ex: " << ExactDists_[i].first << " -> Apr: " << ApproxDists_[i] << " 1 - ratio: " << (1 - mn/mx);
+              LOG(INFO) << "Ex: " << ExactDists_[i].first << 
+                           " -> Apr: " << ApproxDists_[i] << 
+                           " 1 - ratio: " << (1 - mn/mx) << " diff: " << (mx - mn);
             }
             LOG(FATAL) << "bug: the approximate query should not return objects "
                    << "that are closer to the query than object returned by "

@@ -177,8 +177,7 @@ double LInfNormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
     double res= max(TmpRes[0], TmpRes[1]);
 
     while (pVect1 < pEnd2) {
-        // Leonid (@TODO) sometimes seg-faults in the unit test if float is replaced with double
-        float diff = fabs(*pVect1++ - *pVect2++);
+        double diff = fabs(*pVect1++ - *pVect2++);
         res = max(res, (double)diff);
     }
 
@@ -292,7 +291,7 @@ float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     float __attribute__((aligned(16))) TmpRes[4];
 
     _mm_store_ps(TmpRes, sum);
-    float res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
+    double res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 
     while (pVect1 < pEnd3) {
         res += fabs(*pVect1++ - *pVect2++);
@@ -500,8 +499,7 @@ double L2NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
     double res= TmpRes[0] + TmpRes[1];
 
     while (pVect1 < pEnd2) {
-        // Leonid (@TODO) sometimes seg-faults in the unit test if float is replaced with double
-        float diff = *pVect1++ - *pVect2++; 
+        double diff = *pVect1++ - *pVect2++; 
         res += diff * diff;
     }
 

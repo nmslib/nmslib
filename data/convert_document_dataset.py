@@ -23,7 +23,8 @@ for filename in listDir:
   fullpath = os.path.join(args.inpd, filename)
   if os.path.isfile(fullpath):
     filecontent = open(fullpath, "r").read().strip().split("\n")
-    line = [filename]
+    #line = [filename]
+    line = [] # Don't output the file name (at least for now)
     line.extend([w.strip() for w in filecontent if len(w.strip()) > 0])
     outf.write("\t".join(w for w in line) + "\n")
 

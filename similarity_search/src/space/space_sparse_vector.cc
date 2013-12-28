@@ -50,9 +50,15 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, std::vector<Elem
       uint32_t  prevId = v[i-1].first;
       uint32_t  id = v[i].first;
 
-      if (id <= prevId) {
+      if (id == prevId) {
         stringstream err;
-        err << "Ids are not sorted, prevId = " << prevId << " current id: " << id;
+        err << "Repeating ID: prevId = " << prevId << " current id: " << id;
+        throw std::runtime_error(err.str());
+      }
+
+      if (id < prevId) {
+        stringstream err;
+        err << "But: Ids are not sorted, prevId = " << prevId << " current id: " << id;
         throw std::runtime_error(err.str());
       }
     }

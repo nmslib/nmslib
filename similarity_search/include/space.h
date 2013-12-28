@@ -111,6 +111,8 @@ void ComputeIntrinsicDimensionality(const Space<dist_t>& space,
   for (size_t n = 0; n < SampleQty; ++n) {
     size_t r1 = RandomInt() % dataset.size();
     size_t r2 = RandomInt() % dataset.size();
+    CHECK(r1 < dataset.size());
+    CHECK(r2 < dataset.size());
     const Object* obj1 = dataset[r1];
     const Object* obj2 = dataset[r2];
     dist_t d = space.IndexTimeDistance(obj1, obj2);
