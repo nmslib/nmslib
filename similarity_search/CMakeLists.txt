@@ -72,7 +72,7 @@ else (GSL_FOUND)
 endif (GSL_FOUND)
 
 # Can be use to hardwire boost location.
-set (BOOST_ROOT $ENV{HOME}/boost_1_53_0)
+#set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
 set (Boost_INCLUDE_DIR ${BOOST_ROOT})
 set (Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
 find_package (Boost 1.48 COMPONENTS system filesystem program_options REQUIRED)

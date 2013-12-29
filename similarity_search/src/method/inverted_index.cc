@@ -88,7 +88,7 @@ void InvertedIndex<dist_t>::GenSearch(QueryType* query) {
         int spearman_dist = std::abs(static_cast<int>(v.second) - static_cast<int>(perm_q[i]));
         // spearman rho
         //spearman_dist = spearman_dist * spearman_dist;
-        perm_dists[v.first].first += spearman_dist - num_pivot_index_;
+        perm_dists[v.first].first += spearman_dist - static_cast<int>(num_pivot_index_);
       }
     }
   }
