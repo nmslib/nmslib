@@ -78,7 +78,7 @@ PermutationInvertedIndex<dist_t>::~PermutationInvertedIndex() {
 template <typename dist_t>
 const string PermutationInvertedIndex<dist_t>::ToString() const {
   stringstream str;
-  str <<  "inverted index";
+  str <<  "(permutation) inverted index";
   return str.str();
 }
 
