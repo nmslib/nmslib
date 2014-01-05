@@ -15,7 +15,7 @@
  */
 
 #include "searchoracle.h"
-#include "inverted_index.h"
+#include "permutation_inverted_index.h"
 #include "methodfactory.h"
 
 namespace similarity {
@@ -25,7 +25,7 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Index<dist_t>* CreateInvertedIndex(
+Index<dist_t>* CreatePermInvertedIndex(
     bool PrintProgress,
     const string& SpaceType,
     const Space<dist_t>* space,
@@ -37,32 +37,35 @@ Index<dist_t>* CreateInvertedIndex(
   size_t num_pivot_index = 32;
   size_t num_pivot_search = 20;
   double db_scan_frac = 0.05;
+  size_t max_pos_diff = num_pivot;
 
   pmgr.GetParamOptional("numPivot", num_pivot);
   pmgr.GetParamOptional("numPivotIndex", num_pivot_index);
   pmgr.GetParamOptional("numPivotSearch", num_pivot_search);
+  pmgr.GetParamOptional("maxPosDiff", max_pos_diff);
   pmgr.GetParamOptional("dbScanFrac", db_scan_frac);
 
   if (num_pivot_search > num_pivot_index) {
-    LOG(FATAL) << METH_INVERTED_INDEX << " requires that numPivotSearch "
+    LOG(FATAL) << METH_PERM_INVERTED_INDEX << " requires that numPivotSearch "
                << "should be less than or equal to numPivotIndex";
   }
 
   if (num_pivot_index > num_pivot) {
-    LOG(FATAL) << METH_INVERTED_INDEX << " requires that numPivotIndex "
+    LOG(FATAL) << METH_PERM_INVERTED_INDEX << " requires that numPivotIndex "
                << "should be less than or equal to numPivot";
   }
 
   if (db_scan_frac < 0.0 || db_scan_frac > 1.0) {
-    LOG(FATAL) << METH_INVERTED_INDEX << " requires that dbScanFrac is in the range [0,1]";
+    LOG(FATAL) << METH_PERM_INVERTED_INDEX << " requires that dbScanFrac is in the range [0,1]";
   }
 
-  return new InvertedIndex<dist_t>(
+  return new PermutationInvertedIndex<dist_t>(
       space,
       DataObjects,
       num_pivot,
       num_pivot_index,
       num_pivot_search,
+      max_pos_diff,
       db_scan_frac
   );
 }
@@ -79,8 +82,8 @@ Index<dist_t>* CreateInvertedIndex(
  * that are stored in a library. Then, the registration code doesn't work.
  */
 
-REGISTER_METHOD_CREATOR(float,  METH_INVERTED_INDEX, CreateInvertedIndex)
-REGISTER_METHOD_CREATOR(double, METH_INVERTED_INDEX, CreateInvertedIndex)
-REGISTER_METHOD_CREATOR(int,    METH_INVERTED_INDEX, CreateInvertedIndex)
+REGISTER_METHOD_CREATOR(float,  METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
+REGISTER_METHOD_CREATOR(double, METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
+REGISTER_METHOD_CREATOR(int,    METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
 
 }
