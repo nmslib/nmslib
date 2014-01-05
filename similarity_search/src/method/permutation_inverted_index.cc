@@ -142,8 +142,6 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 
   //LOG(INFO) << "bUseMap: " << bUseMap << " maxScanQty: " << maxScanQty << " data.size() " << data_.size();
 
-  bUseMap = false;
-
   if (bUseMap) {
     unordered_map<int,int> perm_dists_set;
 
