@@ -18,6 +18,8 @@
 #include "proj_vptree.h"
 #include "methodfactory.h"
 
+#include "space_sparse_scalar.h"
+
 namespace similarity {
 
 /*
@@ -30,6 +32,12 @@ Index<dist_t>* CreateProjVPTree(bool PrintProgress,
                            const Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
+
+    if (SpaceType != SPACE_SPARSE_ANGULAR_DISTANCE &&
+        SpaceType != SPACE_SPARSE_COSINE_SIMILARITY) LOG(FATAL) << METH_PROJ_VPTREE << 
+        " works only with " << SPACE_SPARSE_ANGULAR_DISTANCE << 
+        " or with " << SPACE_SPARSE_COSINE_SIMILARITY;
+      ;
 
     return new ProjectionVPTree<dist_t>(space, DataObjects, AllParams);
 }
