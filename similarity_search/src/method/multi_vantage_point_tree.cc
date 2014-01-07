@@ -37,7 +37,7 @@ MultiVantagePointTree<dist_t>::MultiVantagePointTree(
     MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT) {
   AnyParamManager pmgr(MethParams);
 
-  pmgr.GetParamOptional("maxPathLength", MaxPathLength_);
+  pmgr.GetParamOptional("maxPathLen", MaxPathLength_);
   pmgr.GetParamOptional("bucketSize", BucketSize_);
   pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
   pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
