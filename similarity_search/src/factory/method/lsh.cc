@@ -75,7 +75,7 @@ Index<dist_t>* CreateLSHGaussian(bool PrintProgress,
     pmgr.GetParamOptional("H",  LSH_H);
 
     int SpaceSelector = 2;
-    if (SpaceType != "l2") LOG(FATAL) << "LSH (Guassian) works only with L1";
+    if (SpaceType != "l2") LOG(FATAL) << "LSH (Guassian) works only with L2";
 
     return new LSHGaussian<dist_t>(
                       space,

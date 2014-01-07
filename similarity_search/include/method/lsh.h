@@ -21,7 +21,7 @@
 #include "space.h"
 #include "lshkit.h"
 
-#define METH_LSH_THRESHOLD          "lsh"
+#define METH_LSH_THRESHOLD          "lsh_threshold"
 #define METH_LSH_CAUCHY             "lsh_cauchy"
 #define METH_LSH_GAUSSIAN           "lsh_gaussian"
 
