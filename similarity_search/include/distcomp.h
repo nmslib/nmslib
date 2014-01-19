@@ -171,12 +171,47 @@ int SpearmanRho(const PivotIdType* x, const PivotIdType* y, size_t qty);
 int SpearmanFootruleSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 int SpearmanRhoSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 
-inline unsigned BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
+//unsigned BitHamming(const uint32_t* a, const uint32_t* b, size_t qty);
+
+#ifdef __SSE4_2__
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <tmmintrin.h>
+#endif
+
+
+unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
   unsigned res = 0;
+//#ifndef __SSE4_2__
+/* 
+ * TODO @Leo this works equally well for g++4.7 and Intel
+ *      If we ever port library to other platforms, the SSE code
+ *      below may be useful.
+ *      Then, @Leo would need to check if produces the same results as the scalar version.
+ */      
+#if 1
   for (size_t i = 0; i < qty; ++i) {
     //  __builtin_popcount quickly computes the number on 1s
     res +=  __builtin_popcount(a[i] ^ b[i]);
   }
+#else
+  const uint32_t* aend = a + qty;
+  const uint32_t* aend4 = a + (qty/4)*4;
+
+  while (a < aend4) {
+    __m128i tmp = _mm_xor_si128(_mm_loadu_si128(reinterpret_cast<const __m128i*>(a)),
+                   _mm_loadu_si128(reinterpret_cast<const __m128i*>(b)));
+    res += _mm_extract_epi32(tmp, 0) + _mm_extract_epi32(tmp, 1) +
+           _mm_extract_epi32(tmp, 2) + _mm_extract_epi32(tmp, 3);
+    a+=4;
+    b+=4;
+
+  }
+
+  while (a < aend) {
+    res +=  __builtin_popcount((*a++) ^ (*b++));
+  }
+#endif
   return res;
 }
 
