@@ -19,6 +19,7 @@
 #include "common.h"
 #include "bunit.h"
 #include "distcomp.h"
+#include "permutation_utils.h"
 #include "ztimer.h"
 #include "pow.h"
 
@@ -1948,6 +1949,52 @@ bool TestAngularDistance(size_t N, size_t dim, size_t Rep) {
     return true;
 }
 
+bool TestBitHamming(size_t N, size_t dim, size_t Rep) {
+    size_t WordQty = (dim + 31)/32; 
+    uint32_t* pArr = new uint32_t[N * WordQty];
+
+    uint32_t *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= WordQty) {
+        vector<PivotIdType> perm(dim);
+        GenRandIntVect(&perm[0], dim);
+        for (unsigned j = 0; j < dim; ++j)
+          perm[j] = perm[j] % 2;
+        vector<uint32_t> h;
+        Binarize(perm, 1, h); 
+        CHECK(h.size() == WordQty);
+        memcpy(p, &h[0], WordQty * sizeof(h[0]));
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    float DiffSum = 0;
+
+    float fract = 1.0/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01 * BitHamming(pArr + j*WordQty, pArr + (j-1)*WordQty, WordQty) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of BitHamming per second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    delete [] pArr;
+
+    return true;
+}
+
 TEST(TestSpeed) {
     int nTest  = 0;
     int nFail = 0;
@@ -1955,6 +2002,10 @@ TEST(TestSpeed) {
     srand48(0);
 
     int dim = 128;
+
+    nTest++;
+    nFail = !TestBitHamming(1000, dim, 1000);
+
     double pZero1 = 0.5;
     double pZero2 = 0.25;
     double pZero3 = 0.0;

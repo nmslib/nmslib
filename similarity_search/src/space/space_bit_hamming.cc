@@ -18,6 +18,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <bitset>
 
 #include "space_bit_hamming.h"
 #include "permutation_utils.h"
@@ -62,6 +63,11 @@ void SpaceBitHamming::ReadVec(std::string line, std::vector<uint32_t>& binVect) 
     LOG(FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
   }
   Binarize(v, 1, binVect);
+/*
+  for (int i = 0; i < binVect.size(); ++i)
+    cout << bitset<32>(binVect[i]);
+  cout << endl;
+*/
 }
 
 
