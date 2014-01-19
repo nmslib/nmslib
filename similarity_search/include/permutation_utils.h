@@ -148,6 +148,23 @@ void GetPermutationPPIndex(const ObjectVector& pivot,
   }
 }
 
+/*
+ * Create a binary version of the permutation.
+ */
+inline void Binarize(const vector<PivotIdType> &perm, const PivotIdType thresh, vector<uint32_t>&bin_perm) {
+  size_t bin_perm_word_qty = (perm.size() + 31)/32;
+
+  bin_perm.resize(bin_perm_word_qty);
+
+  for (size_t i = 0; i < perm.size(); ++i) {
+    bool b =perm[i] >= thresh;
+
+    if (b) {
+      bin_perm[i/32] |= (1<<(i%32)) ;
+    }
+  }
+}
+
 }  // namespace similarity
 
 #endif     // _PERMUTATION_UTILS_H_

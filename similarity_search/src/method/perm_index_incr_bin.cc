@@ -26,29 +26,6 @@
 
 namespace similarity {
 
-void Binarize(const vector<PivotIdType> &perm, const PivotIdType thresh, vector<uint32_t>&bin_perm) {
-  size_t bin_perm_word_qty = (perm.size() + 31)/32;
-
-  bin_perm.resize(bin_perm_word_qty);
-
-  for (size_t i = 0; i < perm.size(); ++i) {
-    bool b =perm[i] <= thresh;
-
-    if (b) {
-      bin_perm[i/32] |= (1<<(i%32)) ;
-    }
-  }
-}
-
-unsigned BinHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
-  unsigned res = 0;
-  for (size_t i = 0; i < qty; ++i) {
-    //  __builtin_popcount quickly computes the number on 1s
-    res +=  __builtin_popcount(a[i] ^ b[i]);
-  }
-  return res;
-}
-
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBin(
     const Space<dist_t>* space,
@@ -107,7 +84,7 @@ void PermutationIndexIncrementalBin<dist_t, perm_func>::GenSearch(QueryType* que
   perm_dists.reserve(data_.size());
 
   for (size_t i = 0, start = 0; i < data_.size(); ++i, start += bin_perm_word_qty_) {
-    perm_dists.push_back(std::make_pair(BinHamming(&permtable_[start], &binPivot[0], bin_perm_word_qty_), i));
+    perm_dists.push_back(std::make_pair(BitHamming(&permtable_[start], &binPivot[0], bin_perm_word_qty_), i));
   }
 
   IncrementalQuickSelect<IntInt> quick_select(perm_dists);

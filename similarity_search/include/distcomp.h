@@ -171,6 +171,15 @@ int SpearmanRho(const PivotIdType* x, const PivotIdType* y, size_t qty);
 int SpearmanFootruleSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 int SpearmanRhoSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 
+inline unsigned BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
+  unsigned res = 0;
+  for (size_t i = 0; i < qty; ++i) {
+    //  __builtin_popcount quickly computes the number on 1s
+    res +=  __builtin_popcount(a[i] ^ b[i]);
+  }
+  return res;
+}
+
 
 }
 
