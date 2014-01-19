@@ -236,8 +236,6 @@ void PermutationVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* que
   }
 }
 
-#undef GEN_SEARCH
-
 template class PermutationVPTree<float, SpearmanRho>;
 template class PermutationVPTree<float, SpearmanRhoSIMD>;
 template class PermutationVPTree<float, SpearmanFootrule>;
