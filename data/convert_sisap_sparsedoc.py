@@ -3,6 +3,10 @@
 # This script is released under the
 # Apache License Version 2.0 http://www.apache.org/licenses/.
 #
+# It is used to convert sparse documents available in
+# Metric Spaces Library (http://www.sisap.org/sisap2/SISAP/Metric_Space_Library.html)
+# to a format that our software can understand
+#
 #
 
 import os
