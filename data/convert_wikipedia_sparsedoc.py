@@ -34,15 +34,15 @@ for line in inf:
     if len(currDoc)>0: 
       outf.write("\t".join(currDoc)+"\n")
       docNo = docNo + 1
+      if docNo % 1000 == 0: print("Processed: " + str(docNo))
     outf.flush()
     prevDocId = docId
     currDoc = []
   currDoc.extend([termId, tfidf])
-  if docNo % 1000 == 0 print("Processed: " + docNo)
 
 # The last doc
 if len(currDoc)>0: outf.write("\t".join(currDoc)+"\n")
-print("Processed: " + docNo)
+print("Processed: " + str(docNo))
 
 outf.close()
 
