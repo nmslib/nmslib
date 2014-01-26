@@ -15,10 +15,8 @@
  */
 
 #include "searchoracle.h"
-#include "proj_vptree.h"
+#include "dummy.h"
 #include "methodfactory.h"
-
-#include "space_sparse_scalar.h"
 
 namespace similarity {
 
@@ -27,19 +25,16 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Index<dist_t>* CreateProjVPTree(bool PrintProgress,
+Index<dist_t>* CreateDummy(bool PrintProgress,
                            const string& SpaceType,
                            const Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
-
-    if (SpaceType != SPACE_SPARSE_ANGULAR_DISTANCE &&
-        SpaceType != SPACE_SPARSE_COSINE_SIMILARITY) LOG(FATAL) << METH_PROJ_VPTREE << 
-        " works only with " << SPACE_SPARSE_ANGULAR_DISTANCE << 
-        " or with " << SPACE_SPARSE_COSINE_SIMILARITY;
-      ;
-
-    return new ProjectionVPTree<dist_t>(space, DataObjects, AllParams);
+    AnyParamManager pmgr(AllParams);
+    bool bDoSeqSearch = false;
+    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch);
+    
+    return new DummyMethod<dist_t>(space, DataObjects, bDoSeqSearch);
 }
 
 /*
@@ -54,8 +49,9 @@ Index<dist_t>* CreateProjVPTree(bool PrintProgress,
  * that are stored in a library. Then, the registration code doesn't work.
  */
 
-REGISTER_METHOD_CREATOR(float,  METH_PROJ_VPTREE, CreateProjVPTree)
-REGISTER_METHOD_CREATOR(double, METH_PROJ_VPTREE, CreateProjVPTree)
+REGISTER_METHOD_CREATOR(float,  METH_DUMMY, CreateDummy)
+REGISTER_METHOD_CREATOR(double, METH_DUMMY, CreateDummy)
+REGISTER_METHOD_CREATOR(int,    METH_DUMMY, CreateDummy)
 
 
 }

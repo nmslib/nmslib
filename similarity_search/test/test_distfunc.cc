@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan, Leonid Boytsov.
- * Copyright (c) 2010--2013
+ * Copyright (c) 2014
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -25,7 +25,7 @@
 
 #define TEST_SPEED_DOUBLE
 
-#define TEST_AGREE    1
+#define TEST_AGREE    0
 #define RANGE         8.0f
 #define RANGE_SMALL   1e-6f
 

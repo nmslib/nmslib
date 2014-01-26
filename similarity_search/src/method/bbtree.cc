@@ -7,7 +7,7 @@
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
  * 
- * Copyright (c) 2010--2013
+ * Copyright (c) 2014
  *
  * This code is based on the BBTREE implementation written by Lawrence Cayton
  *

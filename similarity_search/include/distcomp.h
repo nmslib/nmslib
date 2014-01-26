@@ -7,7 +7,7 @@
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
  * 
- * Copyright (c) 2010--2013
+ * Copyright (c) 2014
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -190,10 +190,25 @@ unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
  *      Then, @Leo would need to check if produces the same results as the scalar version.
  */      
 #if 1
+#if 0
   for (size_t i = 0; i < qty; ++i) {
     //  __builtin_popcount quickly computes the number on 1s
     res +=  __builtin_popcount(a[i] ^ b[i]);
   }
+#else
+  // This seems to be the fastest version
+  size_t qty2 = (qty/2);
+  const uint64_t* aa = reinterpret_cast<const uint64_t*>(a);
+  const uint64_t* bb = reinterpret_cast<const uint64_t*>(b);
+  for (size_t i = 0; i < qty2; ++i) {
+    //  __builtin_popcount quickly computes the number on 1s
+    res +=  __builtin_popcount(aa[i] ^ bb[i]);
+  }
+  for (size_t i = qty2*2; i < qty; ++i) {
+    //  __builtin_popcount quickly computes the number on 1s
+    res +=  __builtin_popcount(a[i] ^ b[i]);
+  }
+#endif
 #else
   const uint32_t* aend = a + qty;
   const uint32_t* aend4 = a + (qty/4)*4;
@@ -201,8 +216,7 @@ unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
   while (a < aend4) {
     __m128i tmp = _mm_xor_si128(_mm_loadu_si128(reinterpret_cast<const __m128i*>(a)),
                    _mm_loadu_si128(reinterpret_cast<const __m128i*>(b)));
-    res += _mm_extract_epi32(tmp, 0) + _mm_extract_epi32(tmp, 1) +
-           _mm_extract_epi32(tmp, 2) + _mm_extract_epi32(tmp, 3);
+    res += __builtin_popcount(_mm_extract_epi64(tmp, 0)) + __builtin_popcount(_mm_extract_epi64(tmp, 1));
     a+=4;
     b+=4;
 

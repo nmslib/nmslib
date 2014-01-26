@@ -7,7 +7,7 @@
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
  * 
- * Copyright (c) 2010--2013
+ * Copyright (c) 2014
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -42,7 +42,7 @@ Space<dist_t>* CreateSparseAngularDistance(const AnyParams& /* ignoring params *
  */
 
 /*
- * Let's register creating functions in a method factory.
+ * Let's register creating functions in a space factory.
  *
  * IMPORTANT NOTE: don't include this source-file into a library.
  * Sometimes C++ carries out a lazy initialization of global objects

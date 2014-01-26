@@ -15,8 +15,8 @@
  */
 
 #include "searchoracle.h"
-#include "bbtree.h"
-#include "methodfactory.h"
+#include "space_dummy.h"
+#include "spacefactory.h"
 
 namespace similarity {
 
@@ -25,13 +25,15 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Index<dist_t>* CreateBBTree(bool PrintProgress,
-                           const string& SpaceType,
-                           const Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
+Space<dist_t>* CreateDummy(const AnyParams& AllParams) {
+  AnyParamManager pmgr(AllParams);
 
-    return new BBTree<dist_t>(space, DataObjects, AllParams);
+  int param1, param2;
+
+  pmgr.GetParamRequired("param1",  param1);
+  pmgr.GetParamRequired("param2",  param2);
+
+  return new SpaceDummy<dist_t>(param1, param2);
 }
 
 /*
@@ -39,18 +41,16 @@ Index<dist_t>* CreateBBTree(bool PrintProgress,
  */
 
 /*
- * Let's register creating functions in a method factory.
- *
- * BB-tree works only with the distance of type float and double.
+ * Let's register creating functions in a space factory.
  *
  * IMPORTANT NOTE: don't include this source-file into a library.
  * Sometimes C++ carries out a lazy initialization of global objects
  * that are stored in a library. Then, the registration code doesn't work.
  */
 
-REGISTER_METHOD_CREATOR(float,  METH_BBTREE, CreateBBTree)
-REGISTER_METHOD_CREATOR(double, METH_BBTREE, CreateBBTree)
-
+REGISTER_SPACE_CREATOR(int,    SPACE_DUMMY,  CreateDummy)
+REGISTER_SPACE_CREATOR(float,  SPACE_DUMMY,  CreateDummy)
+REGISTER_SPACE_CREATOR(double, SPACE_DUMMY,  CreateDummy)
 
 }
 

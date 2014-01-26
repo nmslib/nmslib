@@ -7,7 +7,7 @@
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
  * 
- * Copyright (c) 2010--2013
+ * Copyright (c) 2014
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -35,7 +35,6 @@ class RangeQuery : public Query<dist_t> {
   unsigned ResultSize() const;
 
   void Reset();
-  void AddToResult(const Object* object);
   bool CheckAndAddToResult(const dist_t distance, const Object* object);
   bool CheckAndAddToResult(const Object* object);
   size_t CheckAndAddToResult(const ObjectVector& bucket);
