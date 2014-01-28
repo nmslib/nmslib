@@ -1,4 +1,5 @@
 #!/bin/bash
+. ./lib.sh
 
 cat <<EOF
 This data set was created by Lawrence Cayton (lcayton.com)
@@ -16,35 +17,6 @@ If you use it, please, consider citing:
 Note that the sig10k.txt originally used by Cayton is not normalized. Thus,
 we additionally created a normalized version: sig10k_norm.txt. 
 EOF
-
-function CheckMD5() {
-    file=$1
-    md5=$2
-    echo "Computing MD5 for $file"
-    val=`md5sum $file|cut -f 1 -d \   `
-    echo "Checking MD5 for $file"
-    if [ "$?" != "0" ] ; then
-        echo "Failed to compute the MD5 sum for $file"
-        exit 1
-    fi
-    if [ "$val" != "$md5" ] ; then
-        echo "MD5 check failed, expected value: '$md5', but obtained: '$val'"
-        exit 2
-    fi
-    echo "$md5 -> $val"
-}
-
-function Download() {
-    url=$1
-    file=$2
-    echo "Downloading $url"
-    rm -f $file
-    wget $1 --output-document $file 
-    if [ $? != "0" ] ; then
-        echo "Failed to download, url: $url"
-        exit 1
-    fi
-}
 
 Download https://s3.amazonaws.com/7dcbd2dde926fb1e854bade78a448b3-default/3.DataSets.Cayton.corelQ_-txt_-gz.file corelQ.txt.gz
 CheckMD5 corelQ.txt.gz 2cfd7ad28f728e44bdaebfcdabd2f01d

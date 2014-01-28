@@ -155,6 +155,7 @@ inline void Binarize(const vector<PivotIdType> &perm, const PivotIdType thresh, 
   size_t bin_perm_word_qty = (perm.size() + 31)/32;
 
   bin_perm.resize(bin_perm_word_qty);
+  fill(bin_perm.begin(), bin_perm.end(), 0);
 
   for (size_t i = 0; i < perm.size(); ++i) {
     bool b =perm[i] >= thresh;

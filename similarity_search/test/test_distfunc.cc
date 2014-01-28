@@ -25,7 +25,7 @@
 
 #define TEST_SPEED_DOUBLE
 
-#define TEST_AGREE    0
+#define TEST_AGREE    1
 #define RANGE         8.0f
 #define RANGE_SMALL   1e-6f
 
@@ -582,6 +582,51 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
     return true;
 }
 
+bool TestBitHammingAgree(size_t N, size_t dim, size_t Rep) {
+    size_t WordQty = (dim + 31)/32; 
+    uint32_t* pArr = new uint32_t[N * WordQty];
+
+    uint32_t *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= WordQty) {
+        vector<PivotIdType> perm(dim);
+        GenRandIntVect(&perm[0], dim);
+        for (unsigned j = 0; j < dim; ++j)
+          perm[j] = perm[j] % 2;
+        vector<uint32_t> h;
+        Binarize(perm, 1, h); 
+        CHECK(h.size() == WordQty);
+        memcpy(p, &h[0], WordQty * sizeof(h[0]));
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    bool res = true;
+
+    for (size_t j = 1; j < N; ++j) {
+        uint32_t* pVect1 = pArr + j*WordQty;
+        uint32_t* pVect2 = pArr + (j-1)*WordQty;
+        int d1 =  BitHamming(pVect1, pVect2, WordQty);
+        int d2 = 0;
+
+        for (unsigned t = 0; t < WordQty; ++t) {
+          for (unsigned k = 0; k < 32; ++k) {
+            d2 += ((pVect1[t]>>k)&1) != ((pVect2[t]>>k)&1);
+          }
+        }
+        if (d1 != d2) {
+          cerr << "Bug bit hamming, WordQty = " << WordQty << " d1 = " << d1 << " d2 = " << d2 << endl;
+          res = false;
+          break;
+        }
+    }
+
+    delete [] pArr;
+
+    return res;
+}
+
 #if TEST_AGREE
 TEST(TestAgree) {
     int nTest  = 0;
@@ -590,10 +635,18 @@ TEST(TestAgree) {
     srand48(0);
 
     /* 
-     * 32 should be more than enough: in all methods the loop-unrolling
-     * includes at most 16 distance computations.
+     * 32 should be more than enough for almost all methods,
+     * where loop-unrolling  includes at most 16 distance computations.
+     *
+     * Bit-Hamming is an exception.
      * 
      */
+    for (unsigned dim = 1; dim <= 1024; dim+=2) {
+        cout << "Dim = " << dim << endl;
+
+        nFail += !TestBitHammingAgree(1000, dim, 1000);
+    }
+
     for (unsigned dim = 1; dim <= 32; ++dim) {
         cout << "Dim = " << dim << endl;
 
@@ -613,45 +666,45 @@ TEST(TestAgree) {
         }
 
         nTest++;
-        nFail = !TestSpearmanFootruleAgree(1024, dim, 10);
+        nFail += !TestSpearmanFootruleAgree(1024, dim, 10);
 
         nTest++;
-        nFail = !TestSpearmanRhoAgree(1024, dim, 10);
+        nFail += !TestSpearmanRhoAgree(1024, dim, 10);
 
         nTest++;
-        nFail = !TestJSAgree<float>(1024, dim, 10, 0.5);
+        nFail += !TestJSAgree<float>(1024, dim, 10, 0.5);
         nTest++;
-        nFail = !TestJSAgree<double>(1024, dim, 10, 0.5);
+        nFail += !TestJSAgree<double>(1024, dim, 10, 0.5);
 
         nTest++;
-        nFail = !TestKLGeneralAgree<float>(1024, dim, 10);
+        nFail += !TestKLGeneralAgree<float>(1024, dim, 10);
         nTest++;
-        nFail = !TestKLGeneralAgree<double>(1024, dim, 10);
+        nFail += !TestKLGeneralAgree<double>(1024, dim, 10);
 
         nTest++;
-        nFail = !TestLInfAgree<float>(1024, dim, 10);
+        nFail += !TestLInfAgree<float>(1024, dim, 10);
         nTest++;
-        nFail = !TestLInfAgree<double>(1024, dim, 10);
+        nFail += !TestLInfAgree<double>(1024, dim, 10);
 
         nTest++;
-        nFail = !TestL1Agree<float>(1024, dim, 10);
+        nFail += !TestL1Agree<float>(1024, dim, 10);
         nTest++;
-        nFail = !TestL1Agree<double>(1024, dim, 10);
+        nFail += !TestL1Agree<double>(1024, dim, 10);
 
         nTest++;
-        nFail = !TestL2Agree<float>(1024, dim, 10);
+        nFail += !TestL2Agree<float>(1024, dim, 10);
         nTest++;
-        nFail = !TestL2Agree<double>(1024, dim, 10);
+        nFail += !TestL2Agree<double>(1024, dim, 10);
 
         nTest++;
-        nFail = !TestKLAgree<float>(1024, dim, 10);
+        nFail += !TestKLAgree<float>(1024, dim, 10);
         nTest++;
-        nFail = !TestKLAgree<double>(1024, dim, 10);
+        nFail += !TestKLAgree<double>(1024, dim, 10);
 
         nTest++;
-        nFail = !TestItakuraSaitoAgree<float>(1024, dim, 10);
+        nFail += !TestItakuraSaitoAgree<float>(1024, dim, 10);
         nTest++;
-        nFail = !TestItakuraSaitoAgree<double>(1024, dim, 10);
+        nFail += !TestItakuraSaitoAgree<double>(1024, dim, 10);
     }
 
     cout << nTest << " (sub) tests performed " << nFail << " failed" << endl;
@@ -2004,48 +2057,58 @@ TEST(TestSpeed) {
     int dim = 128;
 
     nTest++;
-    nFail = !TestBitHamming(1000, dim, 1000);
+    nFail += !TestBitHamming(1000, 32, 1000);
+    nTest++;
+    nFail += !TestBitHamming(1000, 64, 1000);
+    nTest++;
+    nFail += !TestBitHamming(1000, 128, 1000);
+    nTest++;
+    nFail += !TestBitHamming(1000, 256, 1000);
+    nTest++;
+    nFail += !TestBitHamming(1000, 512, 1000);
+    nTest++;
+    nFail += !TestBitHamming(1000, 1024, 1000);
 
     double pZero1 = 0.5;
     double pZero2 = 0.25;
     double pZero3 = 0.0;
 
     nTest++;
-    nFail = !TestCosineSimilarity<float>(1000, dim, 1000);
+    nFail += !TestCosineSimilarity<float>(1000, dim, 1000);
     nTest++;
-    nFail = !TestAngularDistance<float>(1000, dim, 1000);
+    nFail += !TestAngularDistance<float>(1000, dim, 1000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestCosineSimilarity<double>(1000, dim, 1000);
+    nFail += !TestCosineSimilarity<double>(1000, dim, 1000);
     nTest++;
-    nFail = !TestAngularDistance<double>(1000, dim, 1000);
+    nFail += !TestAngularDistance<double>(1000, dim, 1000);
 #endif
 
     nTest++;
-    nFail = !TestSparseCosineSimilarity<float>(1000, 1000);
+    nFail += !TestSparseCosineSimilarity<float>(1000, 1000);
     nTest++;
-    nFail = !TestSparseAngularDistance<float>(1000, 1000);
+    nFail += !TestSparseAngularDistance<float>(1000, 1000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestSparseCosineSimilarity<double>(1000, 1000);
+    nFail += !TestSparseCosineSimilarity<double>(1000, 1000);
     nTest++;
-    nFail = !TestSparseAngularDistance<double>(1000, 1000);
+    nFail += !TestSparseAngularDistance<double>(1000, 1000);
 #endif
 
 
     cout << "Single-precision (sparse) LP-distance tests" << endl;
     nTest++;
-    nFail = !TestSparseLp<float>(1000, 1000, -1);
+    nFail += !TestSparseLp<float>(1000, 1000, -1);
     nTest++;
     nTest++;
-    nFail = !TestSparseLp<float>(1000, 1000, 1/3.0);
+    nFail += !TestSparseLp<float>(1000, 1000, 1/3.0);
 
     float delta = 0.125/2.0;
 
     for (float power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       // This one should use an optimized LP function
-      nFail = !TestSparseLp<float>(1000, 1000, power);
+      nFail += !TestSparseLp<float>(1000, 1000, power);
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
@@ -2053,14 +2116,14 @@ TEST(TestSpeed) {
 
 #ifdef TEST_SPEED_DOUBLE
     cout << "Double-precision (sparse) LP-distance tests" << endl;
-    nFail = !TestSparseLp<double>(1000, 1000, -1);
+    nFail += !TestSparseLp<double>(1000, 1000, -1);
     nTest++;
-    nFail = !TestSparseLp<double>(1000, 1000, 1/3.0);
+    nFail += !TestSparseLp<double>(1000, 1000, 1/3.0);
     nTest++;
     for (double power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       // This one should use an optimized LP function
-      nFail = !TestSparseLp<double>(1000, 1000, power);
+      nFail += !TestSparseLp<double>(1000, 1000, power);
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
@@ -2070,9 +2133,9 @@ TEST(TestSpeed) {
     cout << "Single-precision LP-distance tests" << endl;
     for (float power = delta, step = delta; power <= 24; power += step) {
       nTest++;
-      nFail = !TestLPGeneric<float>(128, dim, 200, power);
+      nFail += !TestLPGeneric<float>(128, dim, 200, power);
       nTest++;
-      nFail = !TestLPGenericOptim<float>(128, dim, 200, power);
+      nFail += !TestLPGenericOptim<float>(128, dim, 200, power);
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
@@ -2081,9 +2144,9 @@ TEST(TestSpeed) {
     cout << "Double-precision LP-distance tests" << endl;
     for (double power = delta, step = delta; power <= 24; power += step) {
       nTest++;
-      nFail = !TestLPGeneric<double>(128, dim, 200, power);
+      nFail += !TestLPGeneric<double>(128, dim, 200, power);
       nTest++;
-      nFail = !TestLPGenericOptim<double>(128, dim, 200, power);
+      nFail += !TestLPGenericOptim<double>(128, dim, 200, power);
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
@@ -2091,205 +2154,205 @@ TEST(TestSpeed) {
 #endif
 
     nTest++;
-    nFail = !TestSpearmanRho(1024, dim, 2000);
+    nFail += !TestSpearmanRho(1024, dim, 2000);
 
     nTest++;
-    nFail = !TestSpearmanRhoSIMD(1024, dim, 2000);
+    nFail += !TestSpearmanRhoSIMD(1024, dim, 2000);
 
     nTest++;
-    nFail = !TestSpearmanFootrule(1024, dim, 2000);
+    nFail += !TestSpearmanFootrule(1024, dim, 2000);
 
     nTest++;
-    nFail = !TestSpearmanFootruleSIMD(1024, dim, 2000);
+    nFail += !TestSpearmanFootruleSIMD(1024, dim, 2000);
 
     nTest++;
-    nFail = !TestJSStandard<float>(1024, dim, 1000, pZero1);
+    nFail += !TestJSStandard<float>(1024, dim, 1000, pZero1);
     nTest++;
-    nFail = !TestJSStandard<float>(1024, dim, 1000, pZero2);
+    nFail += !TestJSStandard<float>(1024, dim, 1000, pZero2);
     nTest++;
-    nFail = !TestJSStandard<float>(1024, dim, 1000, pZero3);
+    nFail += !TestJSStandard<float>(1024, dim, 1000, pZero3);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSStandard<double>(1024, dim, 500, pZero1);
+    nFail += !TestJSStandard<double>(1024, dim, 500, pZero1);
     nTest++;
-    nFail = !TestJSStandard<double>(1024, dim, 500, pZero2);
+    nFail += !TestJSStandard<double>(1024, dim, 500, pZero2);
     nTest++;
-    nFail = !TestJSStandard<double>(1024, dim, 500, pZero3);
+    nFail += !TestJSStandard<double>(1024, dim, 500, pZero3);
 #endif
 
     nTest++;
-    nFail = !TestJSPrecomp<float>(1024, dim, 500, pZero1);
+    nFail += !TestJSPrecomp<float>(1024, dim, 500, pZero1);
     nTest++;
-    nFail = !TestJSPrecomp<float>(1024, dim, 500, pZero2);
+    nFail += !TestJSPrecomp<float>(1024, dim, 500, pZero2);
     nTest++;
-    nFail = !TestJSPrecomp<float>(1024, dim, 500, pZero3);
+    nFail += !TestJSPrecomp<float>(1024, dim, 500, pZero3);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSPrecomp<double>(1024, dim, 500, pZero1);
+    nFail += !TestJSPrecomp<double>(1024, dim, 500, pZero1);
     nTest++;
-    nFail = !TestJSPrecomp<double>(1024, dim, 500, pZero2);
+    nFail += !TestJSPrecomp<double>(1024, dim, 500, pZero2);
     nTest++;
-    nFail = !TestJSPrecomp<double>(1024, dim, 500, pZero3);
+    nFail += !TestJSPrecomp<double>(1024, dim, 500, pZero3);
 #endif
 
     nTest++;
-    nFail = !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero1);
+    nFail += !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero1);
     nTest++;
-    nFail = !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero2);
+    nFail += !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero2);
     nTest++;
-    nFail = !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero3);
+    nFail += !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero3);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero1);
+    nFail += !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero1);
     nTest++;
-    nFail = !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero2);
+    nFail += !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero2);
     nTest++;
-    nFail = !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero3);
+    nFail += !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero3);
 #endif
 
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero1);
+    nFail += !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero1);
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero2);
+    nFail += !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero2);
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero3);
+    nFail += !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero3);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero1);
+    nFail += !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero1);
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero2);
+    nFail += !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero2);
     nTest++;
-    nFail = !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero3);
+    nFail += !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero3);
 #endif
 
     nTest++;
-    nFail = !TestL1Norm<float>(1024, dim, 10000);
+    nFail += !TestL1Norm<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestL1Norm<double>(1024, dim, 10000);
+    nFail += !TestL1Norm<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestL1NormStandard<float>(1024, dim, 10000);
+    nFail += !TestL1NormStandard<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestL1NormStandard<double>(1024, dim, 10000);
+    nFail += !TestL1NormStandard<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestL1NormSIMD<float>(1024, dim, 10000);
+    nFail += !TestL1NormSIMD<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestL1NormSIMD<double>(1024, dim, 10000);
-#endif
-
-
-    nTest++;
-    nFail = !TestLInfNorm<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestLInfNorm<double>(1024, dim, 10000);
-#endif
-
-    nTest++;
-    nFail = !TestLInfNormStandard<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestLInfNormStandard<double>(1024, dim, 10000);
-#endif
-
-    nTest++;
-    nFail = !TestLInfNormSIMD<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestLInfNormSIMD<double>(1024, dim, 10000);
-#endif
-
-    nTest++;
-    nFail = !TestItakuraSaitoStandard<float>(1024, dim, 1000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestItakuraSaitoStandard<double>(1024, dim, 1000);
+    nFail += !TestL1NormSIMD<double>(1024, dim, 10000);
 #endif
 
 
     nTest++;
-    nFail = !TestItakuraSaitoPrecomp<float>(1024, dim, 2000);
+    nFail += !TestLInfNorm<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestItakuraSaitoPrecomp<double>(1024, dim, 2000);
+    nFail += !TestLInfNorm<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestItakuraSaitoPrecompSIMD<float>(1024, dim, 4000);
+    nFail += !TestLInfNormStandard<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestItakuraSaitoPrecompSIMD<double>(1024, dim, 4000);
+    nFail += !TestLInfNormStandard<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestL2Norm<float>(1024, dim, 10000);
+    nFail += !TestLInfNormSIMD<float>(1024, dim, 10000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestL2Norm<double>(1024, dim, 10000);
+    nFail += !TestLInfNormSIMD<double>(1024, dim, 10000);
 #endif
 
     nTest++;
-    nFail = !TestL2NormStandard<float>(1024, dim, 10000);
+    nFail += !TestItakuraSaitoStandard<float>(1024, dim, 1000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestL2NormStandard<double>(1024, dim, 10000);
-#endif
-
-    nTest++;
-    nFail = !TestL2NormSIMD<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
-    nTest++;
-    nFail = !TestL2NormSIMD<double>(1024, dim, 10000);
+    nFail += !TestItakuraSaitoStandard<double>(1024, dim, 1000);
 #endif
 
 
     nTest++;
-    nFail = !TestKLStandard<float>(1024, dim, 1000);
+    nFail += !TestItakuraSaitoPrecomp<float>(1024, dim, 2000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLStandard<double>(1024, dim, 1000);
+    nFail += !TestItakuraSaitoPrecomp<double>(1024, dim, 2000);
+#endif
+
+    nTest++;
+    nFail += !TestItakuraSaitoPrecompSIMD<float>(1024, dim, 4000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail += !TestItakuraSaitoPrecompSIMD<double>(1024, dim, 4000);
+#endif
+
+    nTest++;
+    nFail += !TestL2Norm<float>(1024, dim, 10000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail += !TestL2Norm<double>(1024, dim, 10000);
+#endif
+
+    nTest++;
+    nFail += !TestL2NormStandard<float>(1024, dim, 10000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail += !TestL2NormStandard<double>(1024, dim, 10000);
+#endif
+
+    nTest++;
+    nFail += !TestL2NormSIMD<float>(1024, dim, 10000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail += !TestL2NormSIMD<double>(1024, dim, 10000);
 #endif
 
 
     nTest++;
-    nFail = !TestKLPrecomp<float>(1024, dim, 2000);
+    nFail += !TestKLStandard<float>(1024, dim, 1000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLPrecomp<double>(1024, dim, 2000);
+    nFail += !TestKLStandard<double>(1024, dim, 1000);
+#endif
+
+
+    nTest++;
+    nFail += !TestKLPrecomp<float>(1024, dim, 2000);
+#ifdef TEST_SPEED_DOUBLE
+    nTest++;
+    nFail += !TestKLPrecomp<double>(1024, dim, 2000);
 #endif
 
     nTest++;
-    nFail = !TestKLPrecompSIMD<float>(1024, dim, 4000);
+    nFail += !TestKLPrecompSIMD<float>(1024, dim, 4000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLPrecompSIMD<double>(1024, dim, 4000);
+    nFail += !TestKLPrecompSIMD<double>(1024, dim, 4000);
 #endif
 
     nTest++;
-    nFail = !TestKLGeneralStandard<float>(1024, dim, 1000);
+    nFail += !TestKLGeneralStandard<float>(1024, dim, 1000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLGeneralStandard<double>(1024, dim, 1000);
+    nFail += !TestKLGeneralStandard<double>(1024, dim, 1000);
 #endif
 
     nTest++;
-    nFail = !TestKLGeneralPrecomp<float>(1024, dim, 2000);
+    nFail += !TestKLGeneralPrecomp<float>(1024, dim, 2000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLGeneralPrecomp<double>(1024, dim, 2000);
+    nFail += !TestKLGeneralPrecomp<double>(1024, dim, 2000);
 #endif
 
     nTest++;
-    nFail = !TestKLGeneralPrecompSIMD<float>(1024, dim, 2000);
+    nFail += !TestKLGeneralPrecompSIMD<float>(1024, dim, 2000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail = !TestKLGeneralPrecompSIMD<double>(1024, dim, 2000);
+    nFail += !TestKLGeneralPrecompSIMD<double>(1024, dim, 2000);
 #endif
 
     cout << "Dimensionality " << dim << " " << nTest << " tests performed " << nFail << " failed" << endl;

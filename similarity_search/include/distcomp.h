@@ -181,51 +181,23 @@ int SpearmanRhoSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 
 
 unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
-  unsigned res = 0;
-//#ifndef __SSE4_2__
-/* 
- * TODO @Leo this works equally well for g++4.7 and Intel
- *      If we ever port library to other platforms, the SSE code
- *      below may be useful.
- *      Then, @Leo would need to check if produces the same results as the scalar version.
- */      
-#if 1
-#if 0
-  for (size_t i = 0; i < qty; ++i) {
-    //  __builtin_popcount quickly computes the number on 1s
-    res +=  __builtin_popcount(a[i] ^ b[i]);
-  }
-#else
-  // This seems to be the fastest version
-  size_t qty2 = (qty/2);
   const uint64_t* aa = reinterpret_cast<const uint64_t*>(a);
   const uint64_t* bb = reinterpret_cast<const uint64_t*>(b);
-  for (size_t i = 0; i < qty2; ++i) {
+
+  size_t qty4 = (qty/4)*2;
+  unsigned res = 0;
+
+  for (size_t i = 0; i < qty4; ) {
     //  __builtin_popcount quickly computes the number on 1s
-    res +=  __builtin_popcount(aa[i] ^ bb[i]);
+    res +=  __builtin_popcountl(aa[i] ^ bb[i]);i++;
+    res +=  __builtin_popcountl(aa[i] ^ bb[i]);i++;
   }
-  for (size_t i = qty2*2; i < qty; ++i) {
+
+  for (size_t i=2*qty4; i < qty; ++i) {
     //  __builtin_popcount quickly computes the number on 1s
     res +=  __builtin_popcount(a[i] ^ b[i]);
   }
-#endif
-#else
-  const uint32_t* aend = a + qty;
-  const uint32_t* aend4 = a + (qty/4)*4;
 
-  while (a < aend4) {
-    __m128i tmp = _mm_xor_si128(_mm_loadu_si128(reinterpret_cast<const __m128i*>(a)),
-                   _mm_loadu_si128(reinterpret_cast<const __m128i*>(b)));
-    res += __builtin_popcount(_mm_extract_epi64(tmp, 0)) + __builtin_popcount(_mm_extract_epi64(tmp, 1));
-    a+=4;
-    b+=4;
-
-  }
-
-  while (a < aend) {
-    res +=  __builtin_popcount((*a++) ^ (*b++));
-  }
-#endif
   return res;
 }
 
