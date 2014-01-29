@@ -13,8 +13,8 @@ A detailed description is given [in the manual](docs/manual.pdf).
 
 Related papers:
 
-http://boytsov.info/pubs/sisap2013.pdf  
-http://boytsov.info/pubs/nips2013.pdf  
+Boytsov, L., Bilegsaikhan. N., 2013. [Engineering Efficient and Effective Non-Metric Space Library.](http://boytsov.info/pubs/sisap2013.pdf)   In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013). 
+Boytsov, L., Bilegsaikhan. N., 2013. [Learning to Prune in Metric and Non-Metric Spaces.](http://boytsov.info/pubs/nips2013.pdf)   In Advances in Neural Information Processing Systems 2013.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
