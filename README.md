@@ -41,9 +41,10 @@ Quick start
 -----------------------
 
 To compile, go to the directory **similarity_search** and type:  
-**cmake .**  
-Then, type:  
-**make**   
+```bash
+cmake .
+make  
+```
 
 
 A more detailed description is given in [in the manual](docs/manual.pdf).  
@@ -52,7 +53,9 @@ Examples of using the software can be found in the directory sample_scripts. A g
 
 The downloaded data needs to be decompressed (use 7z  and gzip). Then, copy data files to a directory of choice set the environment variable:  
 
-**export DATA_DIR=[path to the chosen directory with data files]**
+```bash
+export DATA_DIR=[path to the chosen directory with data files]
+```
 
 
 Sample scripts to tune the decision function for the VP-tree are in the directory [sample_scripts/nips2013/tunning](sample_scripts/nips2013/tunning).   
