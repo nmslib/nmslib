@@ -8,7 +8,7 @@ Copyright (c) 2014
 Documentation
 -----------------------
 
-The manual is in: docs/manual.pdf
+A detailed description is given [in the manual](docs/manual.pdf).
 
 Related papers:
 
@@ -38,22 +38,22 @@ Prerequisites
 Quick start
 -----------------------
 
-To compile, go to similarity_search, type:  
-cmake .  
+To compile, go to the directory **similarity_search** and type:  
+**cmake .**  
 Then, type:  
-make   
+**make**   
 
 
-Detailed description: see docs/manual.pdf
+A more detailed description is given in [in the manual](docs/manual.pdf).  
 
-Examples of using the software can be found in the directory sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small files stored in this repository. The complete data set can be obtained using the script data/get_all_data.sh Beware: it is more than 5 GBs compressed! The Wikipedia dataset (sparse vectors) is the largest part occupying 5 GB. The Cayton collection is about 500 MB.
+Examples of using the software can be found in the directory sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small files stored in this repository. The complete data set can be obtained using the script [data/get_all_data.sh](data/get_all_data.sh). Beware: it is more than 5 GBs compressed! The Wikipedia dataset (sparse vectors) is the largest part occupying 5 GB. The Cayton collection is about 500 MB.
 
 After downloading and generating data, copy data files to a directory of choice set the environment variable:  
 
-export DATA_DIR=[path to the chosen directory with data files]
+**export DATA_DIR=[path to the chosen directory with data files]**
 
 
-Sample scripts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
+Sample scripts to tune the decision function for the VP-tree are in the directory [sample_scripts/nips2013/tunning](sample_scripts/nips2013/tunning).   
 In addition, the directory sample_scripts contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we provide software to generate plots (which requires Python, Latex, and PGF).   
 
 
@@ -65,7 +65,8 @@ or using 3d party software. If you use these data sets, please, consider
 giving proper credit.
 
 The data set created by Lawrence Cayton (lcayton.com).
-To download use: download_cayton.sh
+To download use [data/download_cayton.sh](data/download_cayton.sh).  
+To acknowledge the use in an academic publication:
 
 @inproceedings{cayton:2008,  
     title={Fast nearest neighbor retrieval for bregman divergences},  
@@ -77,7 +78,8 @@ To download use: download_cayton.sh
 }  
 
 The Wikipedia data set was created using the gensim library.
-To download use: data/download_wikipedia.sh
+To download use [data/download_wikipedia.sh](data/download_wikipedia.sh).     
+To acknowledge the use in an academic publication:
 
 @inproceedings{rehurek_lrec,  
     title = {{Software Framework for Topic Modelling   
@@ -98,7 +100,8 @@ To download use: data/download_wikipedia.sh
 The Colors data set belongs to the Metric Spaces Library.
 However, our software uses data in a different format.
 Thus, we changed the format a bit (removed the header),
-To download use: data/download_colors.sh
+To download use [data/download_colors.sh](data/download_colors.sh).   
+To acknowledge the use in an academic publication:
 
 @misc{LibMetricSpace, 
     Author = {K.~Figueroa and G.{}~Navarro and E.~Ch\'avez},  
