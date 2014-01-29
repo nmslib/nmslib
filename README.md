@@ -68,6 +68,7 @@ The data set created by Lawrence Cayton (lcayton.com).
 To download use [data/download_cayton.sh](data/download_cayton.sh).  
 To acknowledge the use in an academic publication:
 
+```
 @inproceedings{cayton:2008,  
     title={Fast nearest neighbor retrieval for bregman divergences},  
     author={Cayton, Lawrence},   
@@ -75,12 +76,14 @@ To acknowledge the use in an academic publication:
     pages={112--119},   
     year={2008},   
     organization={ACM}  
-}  
+}
+```
 
 The Wikipedia data set was created using the gensim library.
 To download use [data/download_wikipedia.sh](data/download_wikipedia.sh).     
 To acknowledge the use in an academic publication:
 
+```
 @inproceedings{rehurek_lrec,  
     title = {{Software Framework for Topic Modelling   
             with Large Corpora}},  
@@ -95,7 +98,8 @@ To acknowledge the use in an academic publication:
     address = {Valletta, Malta},  
     note={\url{http://is.muni.cz/publication/884893/en}},  
     language={English}  
-}  
+} 
+```
 
 The Colors data set belongs to the Metric Spaces Library.
 However, our software uses data in a different format.
@@ -103,13 +107,15 @@ Thus, we changed the format a bit (removed the header),
 To download use [data/download_colors.sh](data/download_colors.sh).   
 To acknowledge the use in an academic publication:
 
+```
 @misc{LibMetricSpace, 
     Author = {K.~Figueroa and G.{}~Navarro and E.~Ch\'avez},  
     Keywords = {Metric Spaces, similarity searching},  
     Note = {Available at {\tt http://www.sisap.org/Metric\_Space\_Library.html}},  
     Title = {Metric Spaces Library},  
-    Year = {2007  
+    Year = {2007}  
 } 
+```
 
 
 
