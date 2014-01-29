@@ -12,6 +12,15 @@ Related papers:
 http://boytsov.info/pubs/sisap2013.pdf  
 http://boytsov.info/pubs/nips2013.pdf  
 
+Most of this code is released under the
+Apache License Version 2.0 http://www.apache.org/licenses/.
+
+The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
+
+To acknowledge the use of the library, you can cite the paper:
+
+Boytsov, L., Bilegsaikhan. N., 2013. Engineering Efficient and Effective Non-Metric Space Library. In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013).  
+
 Some prerequisites:
 
 1. G++ 4.7 or the Intel compiler version 14.
@@ -84,10 +93,5 @@ To download use: data/download_colors.sh
 Sample scripts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
 In addition, the directory sample_scripts contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we provide software to generate plots (which requires Python, Latex, and PGF).   
 
-
-Most of this code is released under the
-Apache License Version 2.0 http://www.apache.org/licenses/.
-
-The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
 
 
