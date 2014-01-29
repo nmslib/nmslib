@@ -1,9 +1,10 @@
 Non-Metric Space Library
 =================
 
-Authors: Bilegsaikhan Naidan, Leonid Boytsov. Leo(nid) Boytsov is a maintainer.  
+Authors: Bilegsaikhan Naidan, Leonid Boytsov. Copyright (c) 2014.  
 
-Copyright (c) 2014
+Leo(nid) Boytsov is a maintainer.  
+
 
 Documentation
 -----------------------
