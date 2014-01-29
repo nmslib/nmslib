@@ -6,7 +6,7 @@ Authors: Bilegsaikhan Naidan, Leonid Boytsov. Copyright (c) 2014.
 Leo(nid) Boytsov is a maintainer.  
 
 
-Documentation
+General information
 -----------------------
 
 A detailed description is given [in the manual](docs/manual.pdf).
