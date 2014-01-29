@@ -46,7 +46,7 @@ Then, type:
 
 A more detailed description is given in [in the manual](docs/manual.pdf).  
 
-Examples of using the software can be found in the directory sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small files stored in this repository. The complete data set can be obtained using the script [data/get_all_data.sh](data/get_all_data.sh). Beware: it is more than 5 GBs compressed! The Wikipedia dataset (sparse vectors) is the largest part occupying 5 GB. The Cayton collection is about 500 MB.
+Examples of using the software can be found in the directory sample_scripts. A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small files stored in this repository. The complete data set can be obtained using the script [data/get_all_data.sh](data/get_all_data.sh). Beware: it is more than 5 GBs compressed! The Wikipedia dataset (sparse vectors) is the largest part occupying 5 GB. The Cayton collection is about 500 MB.
 
 After downloading and generating data, copy data files to a directory of choice set the environment variable:  
 
