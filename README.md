@@ -21,7 +21,7 @@ Apache License Version 2.0 http://www.apache.org/licenses/.
 
 The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
 
-To acknowledge the use of the library, you can cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13),   
+To acknowledge the use of the library, you could cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13),   
 
 
 Prerequisites
