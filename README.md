@@ -69,7 +69,7 @@ To download use: data/download_wikipedia.sh
 
 The Colors data set belongs to the Metric Spaces Library.
 However, our software uses data in a different format.
-Thus, we changed the formate(removed a header),
+Thus, we changed the format a bit (removed the header),
 To download use: data/download_colors.sh
 
 @misc{LibMetricSpace, 
