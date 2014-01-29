@@ -1,11 +1,14 @@
 Non-Metric Space Library
 =================
 
-Authors: Bilegsaikhan Naidan, Leonid Boytsov. Leo(nid) Boytsov is a maintainer.
+Authors: Bilegsaikhan Naidan, Leonid Boytsov. Leo(nid) Boytsov is a maintainer.  
 
 Copyright (c) 2014
 
-Detailed documentation is in: docs/manual.pdf
+Documentation
+-----------------------
+
+The manual is in: docs/manual.pdf
 
 Related papers:
 
@@ -21,7 +24,8 @@ To acknowledge the use of the library, you can cite the paper:
 
 Boytsov, L., Bilegsaikhan. N., 2013. Engineering Efficient and Effective Non-Metric Space Library. In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013).  
 
-Some prerequisites:
+Prerequisites
+-----------------------
 
 1. G++ 4.7 or the Intel compiler version 14.
 2. Linux
@@ -30,16 +34,31 @@ Some prerequisites:
 6. GNU scientific library (dev version)
 7. An Intel or AMD processor that supports SSE 4.2 is recommended
 
+
+Quick start
+-----------------------
+
 To compile, go to similarity_search, type:  
 cmake .  
 Then, type:  
 make   
+
+
+Detailed description: see docs/manual.pdf
 
 Examples of using the software can be found in the directory sample_scripts. A good starting point is a script sample_scripts/sample_run.sh. This script uses small files stored in this repository. The complete data set can be obtained using the script data/get_all_data.sh Beware: it is more than 5 GBs compressed! The Wikipedia dataset (sparse vectors) is the largest part occupying 5 GB. The Cayton collection is about 500 MB.
 
 After downloading and generating data, copy data files to a directory of choice set the environment variable:  
 
 export DATA_DIR=[path to the chosen directory with data files]
+
+
+Sample scripts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
+In addition, the directory sample_scripts contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we provide software to generate plots (which requires Python, Latex, and PGF).   
+
+
+Data sets
+-----------------------
 
 We use several data sets, which were either created by other people,
 or using 3d party software. If you use these data sets, please, consider
@@ -89,9 +108,6 @@ To download use: data/download_colors.sh
     Year = {2007  
 } 
 
-
-Sample scripts to tune the decision function for the VP-tree are in sample_scripts/nips2013/tunning   
-In addition, the directory sample_scripts contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we provide software to generate plots (which requires Python, Latex, and PGF).   
 
 
 
