@@ -23,7 +23,7 @@ outf = open(args.outf, "w")
 
 currDoc = []
 
-def writeDoc(outf, currDoc, lineNum, nc):
+def writeDoc(docId, outf, currDoc, lineNum, nc):
   tfs = []
 
   prevId = 0;
@@ -34,16 +34,17 @@ def writeDoc(outf, currDoc, lineNum, nc):
 
   for i in range(1, nc + 1):
     if vals.has_key(i):
-      tfs.append(vals[i])
+      tfs.append(str(vals[i]))
     else:
-      tfs.append('0.0')
+      tfs.append('0')
 
+  if len(tfs) != nc: 
+    print tfs
+    raise Exception("bug wrong number of elements!")
   #print len(tfs)
 
-  outf.write("\t".join(tfs)+"\n")
+  outf.write(" ".join(tfs)+"\n")
   outf.flush()
-
-  return len(currDoc)
 
 prevDocId = -1
 lineNum = 0
@@ -57,7 +58,7 @@ for line in inf:
   (docId, termId, tfidf) = line.strip().split() 
   if docId != prevDocId:
     if len(currDoc)>0: 
-      nc = writeDoc(outf, currDoc, lineNum, nc)
+      writeDoc(docId, outf, currDoc, lineNum, nc)
       docNo = docNo + 1
       if docNo % 1000 == 0: print("Processed: " + str(docNo))
     prevDocId = docId
@@ -68,7 +69,7 @@ for line in inf:
 
 # The last doc
 if len(currDoc)>0:
-  writeDoc(outf, currDoc, lineNum, nc)
+  writeDoc(docId, outf, currDoc, lineNum, nc)
 
 print("Processed: " + str(docNo))
 
