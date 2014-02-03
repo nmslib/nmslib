@@ -9,7 +9,8 @@ mm = gensim.corpora.MmCorpus(bz2.BZ2File('sparse_wiki_tfidf.mm.bz2'))
 
 print mm
 
-ntop=512
+# In reality this would mean 128 LSI topics
+ntop=128
 
 lsi = gensim.models.lsimodel.LsiModel(corpus=mm, id2word=id2word, num_topics=ntop, chunksize=10000)
 
