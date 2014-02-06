@@ -1,4 +1,4 @@
-\pdfoutput=1
+{\pdfoutput=1
 \documentclass[runningheads,a4paper]{llncs}
 
 \usepackage{amssymb}
@@ -311,18 +311,248 @@ evaluate the speed of various distance functions;
 \item \ttt{experiment} is a main binary (the benchmarking utility) that runs benchmarks and saves evaluation results.
 \end{itemize}
 
-Note that a shortcut \ttt{cmake .} (re)-creates makefiles for the previously 
+The directory \ttt{similarity\_search/release} contains release versions of
+these binaries. Debug versions are placed into the \ttt{similarity\_search/debug}.
+\textbf{Important note:} a shortcut command:
+\begin{verbatim}
+cmake .
+\end{verbatim} 
+(re)-creates makefiles for the previously 
 created build. When you type \ttt{cmake .} for the first time,
 it creates release makefiles. However, if you create debug
 makefiles and then type \ttt{cmake .}, 
 this will not lead to creation of release makefiles! 
 
+\subsubsection{Developing and Debugging on Linux}
+There are several debuggers that can be employed.
+Among them, some of the most popular are: \ttt{gdb} (a command line tool)
+and a \ttt{ddd} (a GUI wrapper for gdb).
+For users who prefer IDEs, one good option is Eclipse IDE for C/C++
+developers.
+It is not the same as Eclipse for Java and one needs 
+to \href{http://www.eclipse.org/downloads/moreinfo/c.php}{download 
+this version of Eclipse separately.}.
+
+\begin{figure}
+\caption{\label{FigEclipse1}Selecting an existing project to import}
+\includegraphics[width=0.9\textwidth]{figures/Eclipse1.pdf}
+\end{figure}
+
+After downloading and decompressing, e.g. as follows:
+\begin{verbatim}
+tar -zxvf eclipse-cpp-europa-winter-linux-gtk-x86_64.tar.gz
+\end{verbatim}
+one can simply run the binary \ttt{eclipse} (in a
+newly created directory \ttt{eclipse}).
+On the first start, Eclipse will ask you select a repository location.
+This would be the place to store the project metadata and (optionally)
+actual project source files.
+
+\begin{figure}
+\caption{\label{FigEclipse2}Importing an existing project}
+\includegraphics[width=0.9\textwidth]{figures/Eclipse2.pdf}
+\end{figure}
+
+After selecting the workspace, the user can import the Eclipse project
+stored in the GitHub repository.
+Go to the menu \ttt{File}, sub-menu \ttt{Import}, category \ttt{General} 
+and choose to import
+an existing project into the workspace as shown in Fig.~\ref{FigEclipse1}.
+After that select a root directory. To this end,
+go to the directory where you checked out the contents 
+of the GitHub repository and enter a sub-directory \ttt{similarity\_search}.
+You should now be able to see the project \ttt{Non-Metric-Space-Library}
+as shown in Fig~\ref{FigEclipse2}.
+You can now finalize the import by pressing the button \ttt{Finish}.
+
+\begin{figure}
+\caption{\label{FigEclipse3}Enabling indexing of the source code}
+\includegraphics[width=0.9\textwidth]{figures/Eclipse3.pdf}
+\end{figure}
+
+Next, we need to set some useful settings.
+Most importantly, we need to enable indexing of source files.
+This would allow us to browse class hierarchies, find declarations
+of variables, and classes.
+To this end, go to the menu \ttt{Window}, sub-menu \ttt{Preferences}
+and select a category \ttt{C++/indexing} (see Fig.~\ref{FigEclipse3}).
+Then, check the box \ttt{Index all files}.
+Eclipse will start indexing your files 
+with the progress being shown in the status bar (right down corner).
+
+The user can also change the editor settings. 
+We would strongly encourage to disable the use of tabs.
+Again, go the menu \ttt{Window}, sub-menu \ttt{Preferences}
+and select a category \ttt{General/Editors/Text Editors}.
+Then, check the box \ttt{Insert spaces for tabs}.
+In the same menu, you can also change the fonts (use the
+category \ttt{General/Appearance/Colors and Fonts}).
+
+It is possible to build the project from Eclipse (
+see the menu \texttt{Project}).
+However, one first needs to generate makefiles as described in \S~\ref{SectionBuild}.
+The current limitation is that you can build either release
+or the debug version at a time.
+Moreover, to switch from one version to another, you need to recreate
+the makefiles from the command line.
+
+\begin{figure}
+\caption{\label{FigDebugConf}Creating a debug/run configuration}
+\includegraphics[width=0.9\textwidth]{figures/EclipseDebugConf.pdf}
+\end{figure}
+
+After building you can debug the project.
+To do this, you need to create a debug configuration.
+As an example, one configuration can be found in the 
+project folder \ttt{launches}.
+Right click on the item \ttt{sample.launch},
+choose the option \ttt{Debug as} (in the drop-down menu),
+and click on \ttt{sample} (in the pop-up menu).
+After switching to a debug perspective,
+the Eclipse may stop the debugger in 
+the file \ttt{dl-debug.c} as shown in Fig.~\ref{FigDebug}.
+If this happened, simply, press the continue icon a couple of
+times until the debugger enters the code belonging to the library.
+
+Additional configurations can be created by right clicking
+on the project name (left pane), selecting \ttt{Properties}
+in the pop-up menu and clicking on \ttt{Run/Debug settings}. 
+The respective screenshot is shown in Fig.~\ref{FigDebugConf}.
+
+
+\begin{figure}
+\caption{\label{FigDebug}Starting a debugger}
+\includegraphics[width=0.9\textwidth]{figures/EclipseDebug.pdf}
+\end{figure}
+
+
+Note that this manual contains only a basic introduction.
+If the user is new to Eclipse, we recommend reading
+additional \href{http://www.eclipse.org/downloads/moreinfo/c.php}{documentation available online}.
+
+
+
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
-There is a one \ttt{single} benchmarking utility \ttt{similarity\_search/release/experiment} 
-that includes implementation of all methods.
+There is a one \ttt{single} benchmarking utility 
+\ttt{experiment} that includes implementation of all methods.
 It has multiple options, which specify, among others, 
 a space, a data set, a type of search, and a list of methods to test (with parameters).
-These options and their use cases are described below.
+These options and their use cases are described in the following subsections.
+
+\subsubsection{Space and distance value type}
+
+A distance function can return an integer (\ttt{int}), a single-precision (\ttt{float}),
+or a double-precision (\ttt{double}) real value.
+A type of the distance and its value is specified as follows:
+
+\begin{verbatim}
+  -s [ --spaceType ] arg       space type, e.g., l1, l2, lp:p=0.25
+  --distType arg (=float)      distance value type: 
+                               int, float, double
+\end{verbatim}
+
+A description of a space may contain parameters.
+In this case, there is colon after the space benchmark label followed by a
+comma-separated (not spaces) list of parameters in the format:
+\ttt{<parameter name>=<parameter value>}.
+Currently, this is used only for $L_p$ spaces. For instance,
+ \ttt{lp:0.5} denotes the space $L_{0.5}$.
+A detailed list of possible spaces and respective
+distance functions is given in Table~\ref{TableSpaces} in \S~\ref{SectionSpaces}.
+
+For real-valued distance functions, one can use either single- or double-precision
+type. Single-precision is a recommended default.\footnote{It is not clear yet,
+if having double-precision distance functions is essential. Yet, we decided
+to keep them. Thanks to C++ templates, it requires very little additional effort.}
+We do not have a space with integer-valued distance function, but we
+plan to implement an edit distance in the nearest future.
+
+\subsubsection{Input Data/Test Set}
+There are three options that define the data to be indexed:
+\begin{verbatim}
+  -i [ --dataFile ] arg        input data file
+  --maxNumData arg (=0)        if non-zero, only the first 
+                               maxNumData elements are used
+  -d [ --dimension ] arg (=0)  optional dimensionality
+\end{verbatim}
+The input file can be indexed either completely, or partially.
+In the latter case, the user can create the index using only
+the first \ttt{--maxNumData} elements.
+In the case of vector-space data, the dimensionality is determined
+by the number of columns in the data file.
+The user may choose to restrict the dimensionality and use only the first 
+\ttt{--dimension} columns.
+
+For testing, the user can use a separate test set.
+It is, again, possible to limit the number of queries:
+\begin{verbatim}
+  -q [ --queryFile ] arg       query file
+  --maxNumQuery arg (=1000)    if non-zero, use maxNumQuery query 
+                               elements(required in the case 
+                               of bootstrapping)
+\end{verbatim}
+If a separate test set is not available, it can be simulated by bootstrapping.
+To this, end the \ttt{--maxNumData} elements of the original data set
+are randomly divided into testing and indexable sets.
+The number of queries in this case is defined by the option \ttt{--maxNumQuery}.
+A number of bootstrap iterations is specified through an option:
+\begin{verbatim}
+  -b [ --testSetQty ] arg (=0) # of sets created by bootstrapping; 
+\end{verbatim}
+Benchmarking can be carried out in either a single- or a multi-threaded
+mode. The number of test threads are specified as follows:
+\begin{verbatim}
+ --threadTestQty arg (=1)   # of threads
+\end{verbatim}
+
+\subsubsection{Query Type} 
+Our framework supports the \knn and the range search.
+The user can request to run both types of queries:
+\begin{verbatim}
+  -k [ --knn ] arg         comma-separated Ks for k-NN search
+  -r [ --range ] arg       comma-separated values for range search
+\end{verbatim}
+For example, by specifying the options 
+\begin{verbatim}
+--knn 1,10 --range 0.01,0.1,1
+\end{verbatim}
+the user requests to run queries of five different types: $1$-NN, $10$-NN,
+as well three range queries with radii 0.01, 0.1, and 1.
+
+\subsubsection{Methods}
+The following is an option to specify search methods:
+\begin{verbatim}
+  -m [ --method ] arg      list of method(s) with parameters
+\end{verbatim}
+Methods, similar to spaces, accept parameters. 
+In this case,
+the name of the method is followed by a colon and a comma-separated list (no-spaces)
+of parameters in the format:
+\ttt{<parameter name>=<parameter value>}.
+For a detailed list of methods and their parameters, please, refer to \S~\ref{SectionMethods}.
+
+\subsubsection{Saving and Processing Benchmark Results}
+The benchmarking utility outputs a detailed report (including all the log entries) to the screen
+(we plan to improve logging in the nearest future).
+To save benchmarking results to a file, on needs to specify a parameter:
+\begin{verbatim}
+  -o [ --outFilePrefix ] arg   output file prefix
+\end{verbatim}
+In fact, we create two files: a human-readable report (suffix \ttt{.rep}) and 
+a tab-separated data file (suffix \ttt{.data}).
+By default, the benchmarking utility creates files from scratch. The
+following option can be used to make it work in the append mode:
+\begin{verbatim}
+  --appendToResFile arg (=0)   append mode flag
+\end{verbatim}
+For informat
+
+\subsection{Running Benchmarks}\label{SectionRunBenchmark}
+There is a one \ttt{single} benchmarking utility 
+\ttt{experiment} that includes implementation of all methods.
+It has multiple options, which specify, among others, 
+a space, a data set, a type of search, and a list of methods to test (with parameters).
+These options and their use cases are described in the following subsections.
 
 \subsubsection{Space and distance value type}
 
