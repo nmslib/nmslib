@@ -1,7 +1,6 @@
 Non-Metric Space Library
 =================
 
-Authors: Bilegsaikhan Naidan, Leonid Boytsov. Copyright (c) 2014.  
 
 Leo(nid) Boytsov is a maintainer.  
 
@@ -23,7 +22,7 @@ Related papers:
 
 
 
-To acknowledge the use of the library, you could give the link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13),   
+To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13),   
 
 
 Prerequisites
@@ -49,9 +48,9 @@ make
 
 A more detailed description is given in [in the manual](docs/manual.pdf).  
 
-Examples of using the software can be found in the directory sample_scripts. A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small files stored in this repository. The complete data set can be obtained using the script [data/get_all_data.sh](data/get_all_data.sh). Beware: it is more than 5 GBs compressed! The Wikipedia dataset (sparse vectors) is the largest part occupying 5 GB. The Cayton collection is about 500 MB.
+Examples of using the software can be found in the directory sample_scripts. A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small data sets stored in this repository. The complete data set can be obtained using the script [data/get_all_data.sh](data/get_all_data.sh). Beware: it is more than 5 GBs compressed! The Wikipedia dataset (sparse vectors) is the largest part occupying 5 GB. The Cayton collection is about 500 MB.
 
-The downloaded data needs to be decompressed (use 7z  and gzip). Then, copy data files to a directory of choice set the environment variable:  
+The downloaded data needs to be decompressed (use 7z  and gzip). Then, copy data files to a directory of choice and set the environment variable:  
 
 ```bash
 export DATA_DIR=[path to the chosen directory with data files]
@@ -59,13 +58,13 @@ export DATA_DIR=[path to the chosen directory with data files]
 
 
 Sample scripts to tune the decision function for the VP-tree are in the directory [sample_scripts/nips2013/tunning](sample_scripts/nips2013/tunning).   
-In addition, the directory [sample_scripts](sample_scripts) contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we provide software to generate plots (which requires Python, Latex, and PGF).   
+In addition, the directory [sample_scripts](sample_scripts) contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we also provide software to generate plots (which requires Python, Latex, and PGF).   
 
 
 Data sets
 -----------------------
 
-We use several data sets, which were either created by other people,
+We use several data sets, which were created either by other folks,
 or using 3d party software. If you use these data sets, please, consider
 giving proper credit.
 
