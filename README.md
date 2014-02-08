@@ -84,8 +84,8 @@ To acknowledge the use in an academic publication:
 }
 ```
 
-The Wikipedia data set was created using the gensim library.
-To download use [data/download_wikipedia_sparse.sh](data/download_wikipedia_sparse.sh)
+The Wikipedia data sets were created using the [gensim library](https://github.com/piskvorky/gensim/).
+To download use the the script [data/download_wikipedia_sparse.sh](data/download_wikipedia_sparse.sh) and
 [data/download_wikipedia_lsi128.sh](data/download_wikipedia_lsi128.sh).      
 To acknowledge the use in an academic publication:
 
