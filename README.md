@@ -49,7 +49,7 @@ make
 
 A more detailed description is given in [in the manual](docs/manual.pdf).  
 
-Examples of using the software can be found in the directory sample_scripts. A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small data sets stored in this repository. The complete data set can be obtained using the script [data/get_all_data.sh](data/get_all_data.sh). Beware: it is more than 5 GBs compressed! The Wikipedia dataset (sparse vectors) is the largest part occupying 5 GB. The Cayton collection is about 500 MB.
+Examples of using the software can be found in the directory sample_scripts. A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small data sets stored in this repository. The complete data set can be obtained using the script [data/get_all_data.sh](data/get_all_data.sh). Beware: it is more than 5 GBs compressed! The Wikipedia datasets (sparse and dense vectors) is the largest part occupying 5 GB and 3GB, respectively. The Cayton collection is about 500 MB.
 
 The downloaded data needs to be decompressed (use 7z  and gzip). Then, copy data files to a directory of choice and set the environment variable:  
 
@@ -85,7 +85,8 @@ To acknowledge the use in an academic publication:
 ```
 
 The Wikipedia data set was created using the gensim library.
-To download use [data/download_wikipedia.sh](data/download_wikipedia.sh).     
+To download use [data/download_wikipedia_sparse.sh](data/download_wikipedia_sparse.sh)
+[data/download_wikipedia_lsi128.sh](data/download_wikipedia_lsi128.sh).      
 To acknowledge the use in an academic publication:
 
 ```
