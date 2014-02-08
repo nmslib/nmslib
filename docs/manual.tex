@@ -255,7 +255,10 @@ Examples of using this benchmarking utility can be found in the directory \href{
 Please, check the script \href{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/sample_scripts/sample_run.sh}{sample\_run.sh}. 
 In addition, the directory \ttt{sample\_scripts} contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results \cite{Boytsov_and_Bilegsaikhan:sisap2013,Boytsov_and_Bilegsaikhan:nips2013}.
 This includes the software to generate plots. 
-Additionally, to reproduce our previous results, one needs to obtain a complete data set using the script \href{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/data/get_all_data.sh}{data/get\_all\_data.sh}. 
+Additionally, to reproduce our previous results, one needs to obtain a data set using the script 
+\href{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/data/get_data_nips2013.sh}{data/get\_data\_nips2013.sh}. 
+To get all data set sets available, please, use the script
+\href{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/data/get_all_data.sh}{data/get\_all\_data.sh}. 
 The complete set contains the following:
 
 \begin{itemize} 
@@ -267,19 +270,23 @@ To download, use the script
 \href{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/data/download_colors.sh}{data/download\_colors.sh};
 \item The Wikipedia tf-idf vectors in the sparse format.
 To download, use the script 
-\href{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/data/download_wikipedia.sh}{data/download\_wikipedia.sh};
+\href{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/data/download_wikipedia_sparse.sh}{data/download\_wikipedia\_sparse.sh};
+\item The Wikipedia dense 128-element vectors obtained from sparse vectors.
+Dimensionality is reduced via the singular value decomposition (SVD).
+To download, use the script 
+\href{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/data/download_wikipedia_lsi128.sh}{data/download\_wikipedia\_lsi128.sh};
 \item A synthetic, randomly generated, 64-dimensional data set, where each coordinate is a real number sampled independently from $U[0,1]$:  
 
 \ttt{data/genunif.py -d 64 -n 500000 -o unif64.txt}
 \end{itemize}
 
-Note that all data sets, except the Wikipedia data set, are vectors in the 
-dense format (see \S~\ref{SectionSpaces}).
+Note that all data sets, except the Wikipedia tf-idf (sparse) vectors, 
+are vectors in the dense format (see \S~\ref{SectionSpaces}).
 If we use any of them, please consider citing the sources (see Section \ref{SectionCredits}) for details.
 Also note that, the data will be downloaded in the \textbf{compressed} form.
 You would need the standard \ttt{gunzip} to uncompress all the data except
-the Wikipedia sparse vectors.
-The Wikipedia vectors are compressed using \ttt{7z}, which provides 
+the Wikipedia (sparse and dense) vectors.
+The Wikipedia data is compressed using \ttt{7z}, which provides 
 superior compression ratios.
 
 \section{Building and running the code (in detail)}\label{SectionBuild}
@@ -1910,7 +1917,7 @@ The Colors data set originally belongs to the Metric Spaces Library:
 } 
 \end{verbatim}
 
-The Wikipedia data set was created with a help of the \ttt{gensim} library:
+The Wikipedia data sets were created with a help of the \href{https://github.com/piskvorky/gensim/}{\ttt{gensim} library}:
 
 \begin{verbatim}
 @inproceedings{rehurek_lrec,
