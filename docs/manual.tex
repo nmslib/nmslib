@@ -210,6 +210,7 @@ This part will work only for Linux.
 
 More specifically, we require:
 \begin{enumerate}
+\item A \textbf{64-bit} Linux;
 \item A GNU C++ compiler, version 4.7 (or higher), or the Intel compiler version 11;
 \item cmake (GNU make is also required);
 \item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev});
@@ -230,6 +231,10 @@ However, it did not work for us and we needed to use an experimental repository 
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
 sudo apt-get install gcc-4.7 g++-4.7
+\end{verbatim}
+If \ttt{add-apt-repository} is missing, it can be installed as follows:
+\begin{verbatim}
+sudo apt-get install python-software-properties
 \end{verbatim}
 More details can be found on the \href{http://askubuntu.com/questions/113291/how-do-i-install-gcc-4-7}{AskUbuntu web-site.}
 
