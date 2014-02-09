@@ -238,6 +238,17 @@ sudo apt-get install python-software-properties
 \end{verbatim}
 More details can be found on the \href{http://askubuntu.com/questions/113291/how-do-i-install-gcc-4-7}{AskUbuntu web-site.}
 
+One pitfall is that installing GCC 4.7 or the Intel compiler does not make them a default compiler (in most cases).
+Thus, one may need to set environment variables \ttt{CXX} and \ttt{CC}.
+For the GNU 4.7 compiler:
+\begin{verbatim}
+export CXX=g++-4.7 CC=gcc-4.7 
+\end{verbatim}
+For the Intel compiler:
+\begin{verbatim}
+export CXX=icc CC=icc 
+\end{verbatim}
+
 The Intel compiler has a powerful math library, 
 which allows one to efficiently compute several hard distances functions
 such as the KL-divergence, the Jensen-Shanon divergence/metric, 
@@ -298,6 +309,18 @@ superior compression ratios.
 \subsection{Compiling}
 Implementation of similarity search methods is in the directory \ttt{similarity\_search}.
 The code is built using a \ttt{cmake}, which works on top of the GNU make.
+Before creating the makefiles, we need to ensure that a right compiler is used.
+This is done by setting two environment variables: \ttt{CXX} and \ttt{CC}.
+In the case of GNU C++ (version 4.7), you need to type:
+\begin{verbatim}
+export CCX=g++-4.7 CC=gcc-4.7 
+\end{verbatim}
+In the case of the Intel compiler, you need to type:
+\begin{verbatim}
+export CXX=icc CC=icc 
+\end{verbatim}
+
+
 To create makefiles for a release version of the code, type:
 \begin{verbatim}
 cmake -DCMAKE_BUILD_TYPE=Release .
@@ -313,6 +336,13 @@ cmake -DCMAKE_BUILD_TYPE=Debug .
 When makefiles are created, just type:
 \begin{verbatim}
 make
+\end{verbatim}
+If the compiler complains about the wrong version of the GCC, 
+it is most likely that you forgot to set the environment variables \ttt{CXX} and \ttt{CC} (as described above).
+If this is the case, make these variables point to the correction version of the compiler.
+\textbf{Important note:} do not forget to delete the \ttt{cmake} cache file, before recreating the makefiles:
+\begin{verbatim}
+rm CMakeCache.txt
 \end{verbatim}
 
 The build process creates the following binaries:
