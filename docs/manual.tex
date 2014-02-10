@@ -8,6 +8,7 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{todonotes}
+\usepackage{datetime}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{wrapfig}
@@ -79,7 +80,7 @@ Pittsburgh, PA, USA\\
 
 {\begin{center}{\small \textbf{Maintainer}: Leonid Boytsov}\end{center}}
 {\begin{center}{Version 1.0}\end{center} 
-{\begin{center}{December 2013}\end{center}}
+{\begin{center}{{\today}}\end{center}}
 
 \begin{abstract}
 This document describes a library for similarity searching.
@@ -220,6 +221,7 @@ One needs Python to generate vectors with element values drawn from $U[0,1]$.
 To plot the graphs you need Python, Latex, and PGF. 
 Most of the code was tested and run on Linux Ubuntu (Intel CPU), 
 but it should be possible to run the code on other (perhaps, even non-Unix) platforms.
+If you decide to use Ubuntu, please, download an \textbf{LTS} version.
 
 Installing GNU C++ version 4.7 compiler may be tricky, because it is not always provided as a standard package.
 On some Linux distributions with the Debian package management system, you can simply type:
