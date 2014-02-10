@@ -83,7 +83,7 @@ Run "128" "$SampleData/sparse_5K.txt" "0" "1" "" "500" "l1_sparse" "float" "--kn
 Run "128" "$SampleData/sparse_5K.txt" "0" "1" "" "500" "linf_sparse" "float" "--knn $K"
 Run "128" "$SampleData/sparse_5K.txt" "0" "1" "" "500" "l2_sparse" "float" "--knn $K"
 Run "128" "$SampleData/sparse_5K.txt" "0" "1" "" "500" "lp_sparse:p=0.5" "float" "--knn $K"
-Run "128" "$SampleData/sparse_5K.txt" "0" "1" "" "500" "cosine_sparse" "float" "--knn $K"
+Run "128" "$SampleData/sparse_5K.txt" "0" "1" "" "500" "cosinesimil_sparse" "float" "--knn $K"
 
 # L0.5 experiment
 Run "128" "$SampleData/final128_10K.txt" "0" "0" "$SampleData/final128_query1K.txt" "0" "lp:p=0.5" "float" "--knn $K"
@@ -139,7 +139,7 @@ export MethDesc="\
   --method perm_vptree:numPivot=$NumPivot,dbScanFrac=$DbScanFrac,alphaLeft=2,alphaRight=2,bucketSize=$BucketSize
   --method perm_incsort:numPivot=$NumPivot,dbScanFrac=$DbScanFrac  
   --method permutation:numPivot=$NumPivot,dbScanFrac=$DbScanFrac  
-  --method lsh
+  --method lsh_threshold
   --method lsh_cauchy
   --method ghtree:bucketSize=$BucketSize  
   --method satree:bucketSize=$BucketSize  
