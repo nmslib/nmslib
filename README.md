@@ -30,7 +30,7 @@ Prerequisites
 -----------------------
 
 1. G++ 4.7 or the Intel compiler version 14.
-2. **64-bit** Linux
+2. **64-bit** Linux is recommended
 3. cmake (GNU make is also required)
 5. Boost (dev version)
 6. GNU scientific library (dev version)
