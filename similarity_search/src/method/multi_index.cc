@@ -103,7 +103,7 @@ void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
    * There may be duplicates: the same object coming from 
    * different indices. The set found is used to filter them out.
    */
-  std::unordered_set<const Object*> found;
+  std::unordered_set<IdType> found;
 
   for (size_t i = 0; i < indices_.size(); ++i) {
     KNNQuery<dist_t> TmpRes(space_, query->QueryObject(), query->GetK(), query->GetEPS());
@@ -115,9 +115,9 @@ void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
     while(!ResQ->Empty()) {
       const Object* obj = reinterpret_cast<const Object*>(ResQ->TopObject());
 
-      if (!found.count(obj)) {
+      if (!found.count(obj->id())) {
         query->CheckAndAddToResult(ResQ->TopDistance(), obj);
-        found.insert(obj);
+        found.insert(obj->id());
       }
       ResQ->Pop();
     }
