@@ -67,9 +67,9 @@ public:
   }
 
   void ComputeAll() {
-    ComputeOneMeta("Recall", Recall_, RecallAvg, RecallConfMin, RecallConfMax);
-    ComputeOneMeta("LogRelPosError", LogRelPosError_, LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax);
-    ComputeOneMeta("NumCloser", NumCloser_, NumCloserAvg, NumCloserConfMin, NumCloserConfMax);
+    ComputeOneSimple("Recall", Recall_, RecallAvg, RecallConfMin, RecallConfMax);
+    ComputeOneSimple("LogRelPosError", LogRelPosError_, LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax);
+    ComputeOneSimple("NumCloser", NumCloser_, NumCloserAvg, NumCloserConfMin, NumCloserConfMax);
     ComputeOneMeta("QueryTime", QueryTime_, QueryTimeAvg, QueryTimeConfMin, QueryTimeConfMax);
     ComputeOneMeta("DistComp", DistComp_, DistCompAvg, DistCompConfMin, DistCompConfMax);
 
@@ -130,6 +130,15 @@ vector<double>           ImprDistComp_;
 vector<double>           Mem_; 
 
 MetaAnalysis(){} // be private!
+
+void ComputeOneSimple(const string &Name, 
+                    const vector<vector<double>>& vals, double& avg, double& ConfMin, double& ConfMax) {
+  vector<double> avgVals;
+  for (size_t i = 0; i < vals.size(); ++i) {
+    avgVals.push_back(Mean(&vals[i][0], vals[i].size()));
+  }
+  ComputeOneSimple(Name, avgVals, avg, ConfMin, ConfMax);
+}
 
 void ComputeOneSimple(const string& Name, 
                       const vector<double>& vals, double& avg, double& ConfMin, double& ConfMax) {
