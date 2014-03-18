@@ -36,6 +36,14 @@ using std::string;
 template <typename dist_t>
 class Space;
 
+/*
+ *
+ * A method described in the paper:
+ * Approximate nearest neighbor algorithm based on navigable small world graphs
+ * Yury Malkov, Alexander Ponomarenko, Andrey Logvinovb, Vladimir Krylov
+ *
+ */
+
 //----------------------------------
 class MSWNode{
 public:
