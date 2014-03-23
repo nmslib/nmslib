@@ -90,7 +90,7 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 
 /* 
  * TODO @leo it is not unclear, if the second version is more efficient,
- *           but they seems to be equivalent in terms of effectiveness.
+ *           but they seem to be equivalent in terms of effectiveness.
  */
 #if 0
   vector<IntInt> perm_dists(data_.size());
