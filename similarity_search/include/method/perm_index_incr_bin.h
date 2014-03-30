@@ -42,7 +42,10 @@ class PermutationIndexIncrementalBin : public Index<dist_t> {
                               const ObjectVector& data,
                               const size_t num_pivot,
                               const size_t bin_threshold,
-                              const double db_scan_percentage);
+                              const double db_scan_percentage,
+                              const size_t max_hamming_dist_,
+                              const bool use_sort_,
+                              const bool skip_checking);
   ~PermutationIndexIncrementalBin();
 
   const std::string ToString() const;
@@ -55,6 +58,9 @@ class PermutationIndexIncrementalBin : public Index<dist_t> {
   const size_t        bin_threshold_;
   const size_t        db_scan_;
   const size_t        bin_perm_word_qty_;
+  const bool          use_sort_;
+  const size_t        max_hamming_dist_;
+  const bool          skip_checking_;
 
   std::vector<uint32_t> permtable_;
 

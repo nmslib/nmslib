@@ -32,11 +32,17 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBi
     const ObjectVector& data,
     const size_t num_pivot,
     const size_t bin_threshold,
-    const double db_scan_fraction)
+    const double db_scan_fraction,
+    const size_t max_hamming_dist,
+    const bool use_sort,
+    const bool skip_checking)
     : data_(data),   // reference
       bin_threshold_(bin_threshold),
       db_scan_(static_cast<size_t>(db_scan_fraction * data.size())),
-      bin_perm_word_qty_((num_pivot + 31)/32) {
+      bin_perm_word_qty_((num_pivot + 31)/32),
+      use_sort_(use_sort),
+      max_hamming_dist_(max_hamming_dist),
+      skip_checking_(skip_checking) {
   CHECK(db_scan_fraction > 0.0);
   CHECK(db_scan_fraction <= 1.0);
 
@@ -57,7 +63,13 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBi
   LOG(INFO) << "# pivots                  = " << num_pivot;
   LOG(INFO) << "# binarization threshold = "  << bin_threshold_;
   LOG(INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
-  LOG(INFO) << "db scan fraction = " << db_scan_fraction;
+  LOG(INFO) << "use sort = " << use_sort_;
+  if (use_sort_) {
+    LOG(INFO) << "db scan fraction = " << db_scan_fraction;
+  } else {
+    LOG(INFO) << "max hamming distance = " << max_hamming_dist_;
+  }
+  LOG(INFO) << "skip checking = " << skip_checking_;
   //SavePermTable(permtable_, "permtab");
 }
 
@@ -83,15 +95,23 @@ void PermutationIndexIncrementalBin<dist_t, perm_func>::GenSearch(QueryType* que
   std::vector<IntInt> perm_dists;
   perm_dists.reserve(data_.size());
 
-  for (size_t i = 0, start = 0; i < data_.size(); ++i, start += bin_perm_word_qty_) {
-    perm_dists.push_back(std::make_pair(BitHamming(&permtable_[start], &binPivot[0], bin_perm_word_qty_), i));
-  }
+  if (use_sort_) {
+    for (size_t i = 0, start = 0; i < data_.size(); ++i, start += bin_perm_word_qty_) {
+      perm_dists.push_back(std::make_pair(BitHamming(&permtable_[start], &binPivot[0], bin_perm_word_qty_), i));
+    }
 
-  IncrementalQuickSelect<IntInt> quick_select(perm_dists);
-  for (size_t i = 0; i < db_scan_; ++i) {
-    const size_t idx = quick_select.GetNext().second;
-    quick_select.Next();
-    query->CheckAndAddToResult(data_[idx]);
+    IncrementalQuickSelect<IntInt> quick_select(perm_dists);
+    for (size_t i = 0; i < db_scan_; ++i) {
+      const size_t idx = quick_select.GetNext().second;
+      quick_select.Next();
+      if (!skip_checking_) query->CheckAndAddToResult(data_[idx]);
+    }
+  } else {
+    for (size_t i = 0, start = 0; i < data_.size(); ++i, start += bin_perm_word_qty_) {
+      if (BitHamming(&permtable_[start], &binPivot[0], bin_perm_word_qty_) < max_hamming_dist_) {
+        if (!skip_checking_) query->CheckAndAddToResult(data_[i]);
+      }
+    }
   }
 }
 

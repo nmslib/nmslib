@@ -28,28 +28,37 @@ template <typename dist_t>
 Index<dist_t>* CreatePermutationIndexIncrementalBin(bool PrintProgress,
                            const string& SpaceType,
                            const Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
-  AnyParamManager pmgr(AllParams);
+                           const ObjectVector& dataObjects,
+                           const AnyParams& allParams) {
+  AnyParamManager pmgr(allParams);
 
-  double    DbScanFrac = 0.05;
-  size_t    NumPivot   = 16;
-  size_t    BinThres   = 8;
+  double    dbScanFrac = 0.05;
+  size_t    numPivot   = 16;
+  size_t    binThres   = 8;
+  bool      skipChecking = false;
+  bool      useSort    = true;
+  size_t    maxHammingDist = numPivot = 4;
 
-  pmgr.GetParamOptional("dbScanFrac", DbScanFrac);
-  pmgr.GetParamOptional("numPivot", NumPivot);
-  pmgr.GetParamOptional("binThreshold", BinThres);
+  pmgr.GetParamOptional("dbScanFrac",   dbScanFrac);
+  pmgr.GetParamOptional("numPivot",     numPivot);
+  pmgr.GetParamOptional("binThreshold", binThres);
+  pmgr.GetParamOptional("skipChecking", skipChecking);
+  pmgr.GetParamOptional("useSort",      useSort);
+  pmgr.GetParamOptional("maxHammingDist", maxHammingDist);
 
-  if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
+  if (dbScanFrac < 0.0 || dbScanFrac > 1.0) {
     LOG(FATAL) << METH_PERMUTATION_INC_SORT_BIN << " requires that dbScanFrac is in the range [0,1]";
   }
 
   return new PermutationIndexIncrementalBin<dist_t, SpearmanRhoSIMD>(
                                                        space,
-                                                       DataObjects,
-                                                       NumPivot,
-                                                       BinThres,
-                                                       DbScanFrac);
+                                                       dataObjects,
+                                                       numPivot,
+                                                       binThres,
+                                                       dbScanFrac,
+                                                       maxHammingDist,
+                                                       useSort,
+                                                       skipChecking);
 
 }
 
