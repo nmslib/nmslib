@@ -85,6 +85,7 @@ template <typename dist_t>
 void ProcessResults(const ExperimentConfig<dist_t>& config,
                     MetaAnalysis& ExpRes,
                     const string& MethDesc,
+                    const string& MethParamStr,
                     string& PrintStr, // For display
                     string& HeaderStr,
                     string& DataStr   /* to be processed by a script */) {
@@ -92,7 +93,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tRelPosError\tNumCloser\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem" << std::endl;
+  Header << "MethodName\tRecall\tRelPosError\tNumCloser\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tMethodParams" << std::endl;
 
   Data << "\"" << MethDesc << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
@@ -102,12 +103,14 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << ExpRes.GetDistCompAvg() << "\t";
   Data << ExpRes.GetImprEfficiencyAvg() << "\t";
   Data << ExpRes.GetImprDistCompAvg() << "\t";
-  Data << size_t(ExpRes.GetMemAvg());
+  Data << size_t(ExpRes.GetMemAvg()) << "\t";
+  Data << "\"" << MethParamStr << "\"";
   Data << std::endl;
 
   Print << std::endl << 
             "===================================" << std::endl;
   Print << MethDesc << std::endl;
+  Print << MethParamStr << std::endl;
   Print << "===================================" << std::endl;
   Print << "# of points: " << config.GetDataObjects().size() << std::endl;
   Print << "# of queries: " << config.GetQueryQty() << std::endl;
@@ -173,6 +176,7 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
 
 
   std::vector<std::string>          MethDesc;
+  std::vector<std::string>          MethParams;
   vector<double>                    MemUsage;
 
   vector<vector<MetaAnalysis*>> ExpResRange(config.GetRange().size(),
@@ -206,8 +210,10 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
       for (auto it = Methods.begin(); it != Methods.end(); ++it, ++MethNum) {
         const string& MethodName = it->first;
         const AnyParams& MethPars = *it->second;
+        const string& MethParStr = MethPars.ToString();
 
-        LOG(INFO) << ">>>> Index type parameter: " << MethodName;
+        LOG(INFO) << ">>>> Index type : " << MethodName;
+        LOG(INFO) << ">>>> Parameters: " << MethParStr;
         const double vmsize_before = mem_usage_measure.get_vmsize();
 
 
@@ -250,7 +256,10 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
           res->SetMem(TestSetId, TotalMemByMethod);
         }
 
-        if (!TestSetId) MethDesc.push_back(IndexPtrs.back()->ToString());
+        if (!TestSetId) {
+          MethDesc.push_back(IndexPtrs.back()->ToString());
+          MethParams.push_back(MethParStr);
+        }
       }
 
       Experiments<dist_t>::RunAll(true /* print info */, 
@@ -288,7 +297,7 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       MetaAnalysis* res = ExpResRange[i][MethNum];
 
-      ProcessResults(config, *res, MethDesc[MethNum], Print, Header, Data);
+      ProcessResults(config, *res, MethDesc[MethNum], MethParams[MethNum], Print, Header, Data);
       LOG(INFO) << "Range: " << config.GetRange()[i];
       LOG(INFO) << Print;
       LOG(INFO) << "Data: " << Header << Data;
@@ -305,7 +314,7 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
       MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-      ProcessResults(config, *res, MethDesc[MethNum], Print, Header, Data);
+      ProcessResults(config, *res, MethDesc[MethNum], MethParams[MethNum], Print, Header, Data);
       LOG(INFO) << "KNN: " << config.GetKNN()[i];
       LOG(INFO) << Print;
       LOG(INFO) << "Data: " << Header << Data;

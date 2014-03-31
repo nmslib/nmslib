@@ -156,10 +156,6 @@ void ParseCommandLine(int argc, char*argv[],
       }
     }
 
-    if (pars.count(MethName)) {
-      LOG(FATAL) << "Duplicate method name: " << MethName << endl;
-    }
-
     pars.insert(make_pair(MethName, shared_ptr<AnyParams>(new AnyParams(MethodDesc))));
   }
   if (vm.count("knn")) {

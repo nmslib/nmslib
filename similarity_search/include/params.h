@@ -22,6 +22,7 @@
 #include <map>
 #include <set>
 #include <memory>
+#include <sstream>
 
 #include "lcstrategy.h"
 #include "logging.h"
@@ -32,6 +33,7 @@ using std::string;
 using std::vector;
 using std::multimap;
 using std::set;
+using std::stringstream;
 using std::shared_ptr;
 using std::unique_ptr;
 
@@ -61,6 +63,15 @@ public:
       ParamNames.push_back(Name);
       ParamValues.push_back(sVal);
     }
+  }
+
+  string ToString() const {
+    stringstream res;
+    for (unsigned i = 0; i < ParamNames.size(); ++i) {
+      if (i) res << ",";
+      res << ParamNames[i] << "=" << ParamValues[i];
+    }
+    return res.str();
   }
 
   template <typename ParamType> 
