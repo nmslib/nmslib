@@ -15,7 +15,7 @@
  */
 
 #include "searchoracle.h"
-#include "metrized_small_world.h"
+#include "small_world_rand.h"
 #include "methodfactory.h"
 
 namespace similarity {
@@ -25,13 +25,13 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Index<dist_t>* CreateMetrizedSmallWorld(bool PrintProgress,
+Index<dist_t>* CreateSmallWorldRand(bool PrintProgress,
                                         const string& SpaceType,
                                         const Space<dist_t>* space,
                                         const ObjectVector& DataObjects,
                                         const AnyParams& AllParams) {
 
-    return new Metrized_small_world<dist_t>(space, DataObjects, AllParams);
+    return new SmallWorldRand<dist_t>(space, DataObjects, AllParams);
 }
 
 /*
@@ -46,9 +46,9 @@ Index<dist_t>* CreateMetrizedSmallWorld(bool PrintProgress,
  * that are stored in a library. Then, the registration code doesn't work.
  */
 
-REGISTER_METHOD_CREATOR(float,  METH_METRIZED_SMALL_WORLD, CreateMetrizedSmallWorld)
-REGISTER_METHOD_CREATOR(double, METH_METRIZED_SMALL_WORLD, CreateMetrizedSmallWorld)
-REGISTER_METHOD_CREATOR(int,    METH_METRIZED_SMALL_WORLD, CreateMetrizedSmallWorld)
+REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
+REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
+REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
 
 
 }
