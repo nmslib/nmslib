@@ -71,6 +71,8 @@ public:
    * 2. addFriend checks for duplicates using binary searching
    */
   void addFriend(MSWNode* element) {
+    unique_lock<mutex> lock(accessGuard_);
+
     auto it = lower_bound(friends.begin(), friends.end(), element);
     if (it == friends.end() || (*it) != element) {
       friends.insert(it, element);
@@ -79,9 +81,20 @@ public:
   const Object* getData() const {
     return data_;
   }
+  /* 
+   * THIS NOTE APPLIES ONLY TO THE INDEXING PHASE:
+   *
+   * Before getting access to the friends,
+   * one needs to lock the mutex accessGuard_
+   * The mutex can be released ONLY when
+   * we exit the scope that has access to
+   * the reference returned by getAllFriends()
+   */
   const vector<MSWNode*>& getAllFriends() const {
     return friends;
   }
+
+  mutex accessGuard_;
 
 private:
   const Object*       data_;
@@ -115,6 +128,30 @@ enum SearchThreadStatus {kThreadWait = 0, kThreadSearch = 1, kThreadFinish = 2};
 
 //----------------------------------
 template <typename dist_t> class SmallWorldRand;
+
+template <typename dist_t>
+struct IndexThreadParams {
+  const Space<dist_t>*                        space_;
+  SmallWorldRand<dist_t>&                     index_;
+  const ObjectVector&                         data_;
+  size_t                                      index_every_;
+  size_t                                      out_of_;
+  
+  IndexThreadParams(
+                     const Space<dist_t>*             space,
+                     SmallWorldRand<dist_t>&          index, 
+                     const ObjectVector&              data,
+                     size_t                           index_every,
+                     size_t                           out_of
+                      ) : 
+                     space_(space),
+                     index_(index), 
+                     data_(data),
+                     index_every_(index_every),
+                     out_of_(out_of) 
+                     {
+  }
+};
 
 template <typename dist_t>
 struct SearchThreadParams {
@@ -154,19 +191,13 @@ public:
   const std::string ToString() const;
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
-  MSWNode* getRandomEnterPoint() const;
-  /* 
-   * kSearchElementsWithAttempts functions doesn't cleare resultSet.
-   * This functionality is used in the function kSearchElementsWithAttemptsMultiThread.
-   */ 
-  void kSearchElementsWithAttemptsSingleThread(const Space<dist_t>* space, 
+  MSWNode* getRandomEntryPoint() const;
+  MSWNode* getRandomEntryPointLocked() const;
+   
+  void kSearchElementsWithAttempts(const Space<dist_t>* space, 
                                    const Object* queryObj, size_t NN, 
                                    size_t initAttempts, 
                                    set<EvaluatedMSWNode<dist_t>>& resultSet) const;
-  void kSearchElementsWithAttemptsMultiThread(const Space<dist_t>* space, 
-                                              const Object* queryObj, size_t NN, 
-                                              size_t initAttempts, 
-                                              set<EvaluatedMSWNode<dist_t>>& resultSet) const;
   void add(const Space<dist_t>* space, MSWNode *newElement);
   void link(MSWNode* first, MSWNode* second){
     // addFriend checks for duplicates
@@ -180,19 +211,11 @@ private:
   size_t initSearchAttempts_;
   size_t size_;
   size_t indexThreadQty_;
-  ElementList ElList;
 
-  mutable vector<shared_ptr<SearchThreadParams<dist_t>>>       threadParams_; 
-  mutable vector<set<EvaluatedMSWNode<dist_t>>>                threadResultSet_;
-  vector<thread>                                               threads_;
+  mutable mutex   ElListGuard_;
+  ElementList     ElList_;
 
-  protected:
-  void incSize(){
-    size_ = size_ + 1;
-  }
-  size_t getSize(){
-    return size_;
-  }
+protected:
 
   DISABLE_COPY_AND_ASSIGN(SmallWorldRand);
 };

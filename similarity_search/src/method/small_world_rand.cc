@@ -30,43 +30,20 @@
 #include <unordered_set>
 #include <queue>
 
-// Set to 1, if you want to use a thread pool
-#define THREAD_POOL 1
-
 namespace similarity {
 
-
 template <typename dist_t>
-struct PermSearchThread {
-  void operator()(SearchThreadParams<dist_t>& prm) {
-    while (true) {
-      {
-        unique_lock<mutex>  lck1(prm.mtx_);
-        while (prm.status_ == kThreadWait) prm.cv1_.wait(lck1);
-  
-        if (prm.status_ == kThreadFinish) break;
-        if (prm.status_ != kThreadSearch) {
-          stringstream err;
-          err << "Bug: should not see the status other than kSearch here, got: " << prm.status_;
-          throw runtime_error(err.str());
-        }
-      }
-      prm.index_.kSearchElementsWithAttemptsSingleThread(prm.space_, prm.queryObj_, prm.NN_, 1, prm.result_);
-
-      {
-        unique_lock<mutex> lck2(prm.mtx2_);
-        prm.status_ = kThreadWait;
-        prm.cv2_.notify_one();
+struct IndexThread {
+  void operator()(IndexThreadParams<dist_t>& prm) {
+    /* 
+     * Skip the first element, it was added already
+     */
+    for (size_t i = 1; i < prm.data_.size(); ++i) {
+      if (prm.index_every_ == i % prm.out_of_) {
+        MSWNode* node = new MSWNode(prm.data_[i]);
+        prm.index_.add(prm.space_, node);
       }
     }
-    LOG(INFO) << "Indexing thread finished";
-  }
-};
-
-template <typename dist_t>
-struct TempSearchThread {
-  void operator()(SearchThreadParams<dist_t>& prm) {
-    prm.index_.kSearchElementsWithAttemptsSingleThread(prm.space_, prm.queryObj_, prm.NN_, 1, prm.result_);
   }
 };
 
@@ -92,20 +69,30 @@ SmallWorldRand<dist_t>::SmallWorldRand(const Space<dist_t>* space,
   LOG(INFO) << "initSearchAttempts  = " << initSearchAttempts_;
   LOG(INFO) << "indexThreadQty      = " << indexThreadQty_;
 
-#if THREAD_POOL
-  if (indexThreadQty_ > 0) {
-    threadResultSet_.resize(indexThreadQty_);
-    for (size_t i = 0; i < indexThreadQty_; ++i) {
-      threadParams_.push_back(shared_ptr<SearchThreadParams<dist_t>>(
-                          new SearchThreadParams<dist_t>(space, *this, threadResultSet_[i], NULL, NN_)));
-      threads_.push_back(thread(PermSearchThread<dist_t>(), ref(*threadParams_[i])));
-    }
-  }
-#endif
+  if (data.empty()) return;
 
-  for (size_t i = 0; i != data.size(); ++i) {
-    MSWNode* node = new MSWNode(data[i]);
-    add(space, node);
+  ElList_.push_back(new MSWNode(data[0]));
+
+  if (indexThreadQty_ <= 1) {
+    // Skip the first element, one element is already added
+    for (size_t i = 1; i != data.size(); ++i) {
+      MSWNode* node = new MSWNode(data[i]);
+      add(space, node);
+    }
+  } else {
+    vector<thread>                                  threads(indexThreadQty_);
+    vector<shared_ptr<IndexThreadParams<dist_t>>>   threadParams; 
+
+    for (size_t i = 0; i < indexThreadQty_; ++i) {
+      threadParams.push_back(shared_ptr<IndexThreadParams<dist_t>>(
+                              new IndexThreadParams<dist_t>(space, *this, data, i, indexThreadQty_)));
+    }
+    for (size_t i = 0; i < indexThreadQty_; ++i) {
+      threads[i] = thread(IndexThread<dist_t>(), ref(*threadParams[i]));
+    }
+    for (size_t i = 0; i < indexThreadQty_; ++i) {
+      threads[i].join();
+    }
   }
 }
 
@@ -116,122 +103,38 @@ const std::string SmallWorldRand<dist_t>::ToString() const {
 
 template <typename dist_t>
 SmallWorldRand<dist_t>::~SmallWorldRand() {
-#if THREAD_POOL 
-// Let's terminate threads
-  for (size_t i = 0; i < threads_.size(); ++i) {
-    SearchThreadParams<dist_t>&   prm = *threadParams_[i];
-    unique_lock<mutex> lck(prm.mtx_);
-    threadParams_[i]->status_ = kThreadFinish;
-    prm.cv1_.notify_one();
-  }
-  for (size_t i = 0; i < threads_.size(); ++i) {
-    threads_[i].join();
-  }
-#endif
 }
 
 template <typename dist_t>
-MSWNode* SmallWorldRand<dist_t>::getRandomEnterPoint() const
+MSWNode* SmallWorldRand<dist_t>::getRandomEntryPointLocked() const
 {
-  size_t size = ElList.size();
-  if(!ElList.size()) {
+  unique_lock<mutex> lock(ElListGuard_);
+  MSWNode* res = getRandomEntryPoint();
+  return res;
+}
+
+template <typename dist_t>
+MSWNode* SmallWorldRand<dist_t>::getRandomEntryPoint() const {
+  size_t size = ElList_.size();
+
+  if(!ElList_.size()) {
     return NULL;
   } else {
     size_t num = rand()%size;
-    return ElList[num];
+    return ElList_[num];
   }
 }
 
-#if THREAD_POOL
-template <typename dist_t>
-void
-SmallWorldRand<dist_t>::kSearchElementsWithAttemptsMultiThread(const Space<dist_t>* space, 
-                                                              const Object* queryObj, 
-                                                              size_t NN, size_t initIndexAttempts,
-                                                              set<EvaluatedMSWNode<dist_t>>& resultSet) const
-{
-  // Thread params don't change we need to create them out only once
-  for (size_t i = 0; i < indexThreadQty_; ++i) {
-    SearchThreadParams<dist_t>&   prm = *threadParams_[i];
-    prm.queryObj_ = queryObj;
-  }
-
-
-  for (size_t i = 0; i < (initIndexAttempts + indexThreadQty_ - 1)/indexThreadQty_; i++) {
-    size_t qty = min((i + 1) * indexThreadQty_, initIndexAttempts) - i * indexThreadQty_;
-
-    if (qty > indexThreadQty_) {
-      throw runtime_error("Bug, qty > indexThreadQty_!");
-    }
-
-    for (size_t  n = 0; n < qty; ++n) {
-      SearchThreadParams<dist_t>&   prm = *threadParams_[n];
-      unique_lock<mutex> lck1(prm.mtx_);
-      prm.status_ = kThreadSearch;
-      prm.cv1_.notify_one();
-    }
-
-    for (size_t  n = 0; n < qty; ++n) {
-      SearchThreadParams<dist_t>&   prm = *threadParams_[n];
-      unique_lock<mutex> lck2(prm.mtx2_);
-      while (prm.status_ != kThreadWait) prm.cv2_.wait(lck2);
-    }
-
-    for (auto& e: threadResultSet_) {
-      resultSet.insert(e.begin(), e.end());
-      e.clear();
-    }
-  }
-
-}
-#else
-template <typename dist_t>
-void
-SmallWorldRand<dist_t>::kSearchElementsWithAttemptsMultiThread(const Space<dist_t>* space, 
-                                                              const Object* queryObj, 
-                                                              size_t NN, size_t initIndexAttempts,
-                                                              set<EvaluatedMSWNode<dist_t>>& resultSet) const
-{
-  vector<set<EvaluatedMSWNode<dist_t>>>     threadResultSet(indexThreadQty_);
-  vector<thread>                            threads(indexThreadQty_);
-  vector<SearchThreadParams<dist_t>*>       threadParams; 
-  AutoVectDel<SearchThreadParams<dist_t>>   delThreadParams(threadParams); 
-
-  // Thread params don't change we need to create them out only once
-  for (size_t i = 0; i < indexThreadQty_; ++i)
-    threadParams.push_back(new SearchThreadParams<dist_t>(space, *this, threadResultSet[i], queryObj, NN));
-
-  for (size_t i = 0; i < (initIndexAttempts + indexThreadQty_ - 1)/indexThreadQty_; i++) {
-    size_t qty = min((i + 1) * indexThreadQty_, initIndexAttempts) - i * indexThreadQty_;
-
-    if (qty > indexThreadQty_) {
-      throw runtime_error("Bug, qty > indexThreadQty_!");
-    }
-
-    for (size_t  n = 0; n < qty; ++n) {
-      threads[n] = thread(TempSearchThread<dist_t>(), ref(*threadParams[n]));
-    }
-    for (size_t  n = 0; n < qty; ++n) {
-      threads[n].join();
-    }
-
-    for (auto& e: threadResultSet) {
-      resultSet.insert(e.begin(), e.end());
-      e.clear();
-    }
-  }
-
-}
-#endif
 
 template <typename dist_t>
 void 
-SmallWorldRand<dist_t>::kSearchElementsWithAttemptsSingleThread(const Space<dist_t>* space, 
+SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space, 
                                                     const Object* queryObj, 
                                                     size_t NN, 
                                                     size_t initIndexAttempts,
                                                     set <EvaluatedMSWNode<dist_t>>& resultSet) const
 {
+  resultSet.clear();
   unordered_set <MSWNode*>       visitedNodes;
 
   for (size_t i=0; i < initIndexAttempts; i++){
@@ -239,7 +142,7 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttemptsSingleThread(const Space<dist
     /**
      * Search for the k most closest elements to the query.
      */
-    MSWNode* provider = getRandomEnterPoint();
+    MSWNode* provider = getRandomEntryPointLocked();
 
     priority_queue <dist_t>                     closestDistQueue;                      
     priority_queue <EvaluatedMSWNode<dist_t>>   candidateSet; 
@@ -262,8 +165,15 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttemptsSingleThread(const Space<dist
       if (currEv.getDistance() > lowerBound) {
         break;
       }
+      MSWNode* currNode = currEv.getMSWNode();
 
-      const vector<MSWNode*>& neighbor = (currEv.getMSWNode())->getAllFriends();
+      /*
+       * This lock protects currNode from being modified
+       * while we are accessing elements of currNode.
+       */
+      unique_lock<mutex>  lock(currNode->accessGuard_);
+
+      const vector<MSWNode*>& neighbor = currNode->getAllFriends();
 
       // Can't access curEv anymore! The reference would become invalid
       candidateSet.pop();
@@ -288,22 +198,16 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttemptsSingleThread(const Space<dist
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::add(const Space<dist_t>* space, MSWNode *newElement){
-  MSWNode* enterPoint = getRandomEnterPoint();
   newElement->removeAllFriends(); 
 
-  if(enterPoint == NULL){
-    ElList.push_back(newElement);
-    incSize();
+  if(ElList_.empty()){
+    throw runtime_error("Bug: create at least one element, before calling the function add!");
     return;
   }
 
   set<EvaluatedMSWNode<dist_t>> viewed;
 
-  if (!indexThreadQty_) {
-    kSearchElementsWithAttemptsSingleThread(space, newElement->getData(), NN_, initIndexAttempts_, viewed);
-  } else {
-    kSearchElementsWithAttemptsMultiThread(space, newElement->getData(), NN_, initIndexAttempts_, viewed);
-  }
+  kSearchElementsWithAttempts(space, newElement->getData(), NN_, initIndexAttempts_, viewed);
 
   size_t i = 0;
   
@@ -311,12 +215,17 @@ void SmallWorldRand<dist_t>::add(const Space<dist_t>* space, MSWNode *newElement
     if (i >= NN_) break;
     i++;
 
-    // link will check for duplicates
+    /* 
+     * link will 
+     * 1) check for duplicates
+     * 2) update each node in a node-specific critical section (supported via mutex)
+     */
     link(((*ee).getMSWNode()), newElement);
   }
 
-  ElList.push_back(newElement);
-  incSize();
+  unique_lock<mutex> lock(ElListGuard_);
+
+  ElList_.push_back(newElement);
 }
 
 template <typename dist_t>
@@ -334,7 +243,7 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
   /**
    * Search of most k-closest elements to the query.
    */
-    MSWNode* provider = getRandomEnterPoint();
+    MSWNode* provider = getRandomEntryPoint();
 
     priority_queue <dist_t>                   closestDistQueue; //The set of all elements which distance was calculated
     priority_queue <EvaluatedMSWNode<dist_t>> candidateSet; //the set of elements which we can use to evaluate
