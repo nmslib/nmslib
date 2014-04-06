@@ -24,6 +24,10 @@
 #include <iostream>
 #include <map>
 #include <unordered_set>
+#include <thread>
+#include <memory>
+#include <mutex>
+#include <condition_variable>
 
 
 #define METH_SMALL_WORLD_RAND                 "small_world_rand"
@@ -32,6 +36,11 @@ namespace similarity {
 
 using std::string;
 using std::vector;
+using std::thread;
+using std::mutex;
+using std::unique_lock;
+using std::condition_variable;
+using std::ref;
 
 template <typename dist_t>
 class Space;
@@ -61,16 +70,16 @@ public:
    * 1. The list of friend pointers is sorted.
    * 2. addFriend checks for duplicates using binary searching
    */
-  void addFriend(MSWNode* element){
+  void addFriend(MSWNode* element) {
     auto it = lower_bound(friends.begin(), friends.end(), element);
     if (it == friends.end() || (*it) != element) {
       friends.insert(it, element);
     }
   }
-  const Object* getData(){
+  const Object* getData() const {
     return data_;
   }
-  const vector<MSWNode*>& getAllFriends(){
+  const vector<MSWNode*>& getAllFriends() const {
     return friends;
   }
 
@@ -101,6 +110,36 @@ private:
   dist_t distance;
   MSWNode* element;
 };
+
+enum SearchThreadStatus {kThreadWait = 0, kThreadSearch = 1, kThreadFinish = 2};
+
+//----------------------------------
+template <typename dist_t> class SmallWorldRand;
+
+template <typename dist_t>
+struct SearchThreadParams {
+  const Space<dist_t>*                        space_;
+  const SmallWorldRand<dist_t>&               index_;
+  set<EvaluatedMSWNode<dist_t>>&              result_;
+  const Object*                               queryObj_;
+  size_t                                      NN_; 
+  mutex                                       mtx_;
+  mutex                                       mtx2_;
+  condition_variable                          cv1_;
+  condition_variable                          cv2_;
+  SearchThreadStatus                          status_;
+  
+  SearchThreadParams(const Space<dist_t>*             space,
+                     const SmallWorldRand<dist_t>&    index, 
+                     set<EvaluatedMSWNode<dist_t>>&   result,
+                     const Object*                    queryObj,
+                     size_t                           NN) : 
+                     space_(space),
+                     index_(index), result_(result),
+                     queryObj_(queryObj), NN_(NN),
+                     status_(kThreadWait) {}
+};
+
 //----------------------------------
 template <typename dist_t>
 class SmallWorldRand : public Index<dist_t> {
@@ -115,9 +154,19 @@ public:
   const std::string ToString() const;
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
-  MSWNode* getRandomEnterPoint();
-  dist_t getKDistance(const set<EvaluatedMSWNode<dist_t>>& ElementSet, size_t k);
-  set <EvaluatedMSWNode<dist_t>> kSearchElementsWithAttempts(const Space<dist_t>* space, MSWNode* query, size_t NN, size_t initAttempts);
+  MSWNode* getRandomEnterPoint() const;
+  /* 
+   * kSearchElementsWithAttempts functions doesn't cleare resultSet.
+   * This functionality is used in the function kSearchElementsWithAttemptsMultiThread.
+   */ 
+  void kSearchElementsWithAttemptsSingleThread(const Space<dist_t>* space, 
+                                   const Object* queryObj, size_t NN, 
+                                   size_t initAttempts, 
+                                   set<EvaluatedMSWNode<dist_t>>& resultSet) const;
+  void kSearchElementsWithAttemptsMultiThread(const Space<dist_t>* space, 
+                                              const Object* queryObj, size_t NN, 
+                                              size_t initAttempts, 
+                                              set<EvaluatedMSWNode<dist_t>>& resultSet) const;
   void add(const Space<dist_t>* space, MSWNode *newElement);
   void link(MSWNode* first, MSWNode* second){
     // addFriend checks for duplicates
@@ -130,7 +179,12 @@ private:
   size_t initIndexAttempts_;
   size_t initSearchAttempts_;
   size_t size_;
+  size_t indexThreadQty_;
   ElementList ElList;
+
+  mutable vector<shared_ptr<SearchThreadParams<dist_t>>>       threadParams_; 
+  mutable vector<set<EvaluatedMSWNode<dist_t>>>                threadResultSet_;
+  vector<thread>                                               threads_;
 
   protected:
   void incSize(){

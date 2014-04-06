@@ -275,8 +275,9 @@ struct Experiments {
 
       if (!ThreadTestQty) ThreadTestQty = 1;
 
-      vector<BenchmarkThreadParams<QueryType, QueryCreatorType>*> ThreadParams(ThreadTestQty);
-      vector<thread>                                              Threads(ThreadTestQty);
+      vector<BenchmarkThreadParams<QueryType, QueryCreatorType>*>       ThreadParams(ThreadTestQty);
+      vector<thread>                                                    Threads(ThreadTestQty);
+      AutoVectDel<BenchmarkThreadParams<QueryType, QueryCreatorType>>   DelThreadParams(ThreadParams);
 
 
       for (unsigned QueryPart = 0; QueryPart < ThreadTestQty; ++QueryPart) {
