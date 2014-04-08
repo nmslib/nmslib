@@ -86,48 +86,48 @@ template <typename dist_t>
 PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     const Space<dist_t>* space,
     const ObjectVector& data,
-    const size_t chunk_index_size,
-    const size_t num_pivot,
-    const size_t num_prefix,
-    const size_t min_times,
-    const double db_scan_fraction,
-    const bool use_sort,
-    const string& inv_proc_alg,
-    const bool skip_checking)
-    : data_(data),   // reference
-      chunk_index_size_(chunk_index_size),
-      db_scan_(static_cast<size_t>(db_scan_fraction * chunk_index_size_)),
-      num_prefix_(num_prefix),
-      min_times_(min_times),
-      use_sort_(use_sort),
-      skip_checking_(skip_checking) {
-  CHECK(num_prefix <= num_pivot);
-  if (inv_proc_alg == PERM_PROC_FAST_SCAN) {
-    inv_proc_alg_ = kScan; 
-  } else if (inv_proc_alg == PERM_PROC_MAP) {
-    inv_proc_alg_ = kMap; 
-  } else if (inv_proc_alg == PERM_PROC_MERGE) {
-    inv_proc_alg_ = kMerge; 
-  } else {
-    LOG(FATAL) << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
-  } 
-  size_t indexQty = (data_.size() + chunk_index_size - 1) / chunk_index_size;
+    const AnyParams& AllParams) 
+: data_(data),   // reference
+  chunk_index_size_(65536),
+  db_scan_(0),
+  num_prefix_(32),
+  min_times_(2),
+  use_sort_(false),
+  skip_checking_(false),
+  inv_proc_alg_ (kScan) {
+  AnyParamManager pmgr(AllParams);
+
+  size_t num_pivot        = 512; 
+    
+  string inv_proc_alg = PERM_PROC_FAST_SCAN;
+
+  pmgr.GetParamOptional("numPivot", num_pivot);
+  pmgr.GetParamOptional("numPrefix", num_prefix_);
+  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
+
+  if (num_prefix_ > num_pivot) {
+    LOG(FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix "
+               << "should be less than or equal to numPivot";
+  }
+
+  CHECK(num_prefix_ <= num_pivot);
+  
+  size_t indexQty = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
 
 
   LOG(INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
   LOG(INFO) << "# of index chunks  = " << posting_lists_.size();
   LOG(INFO) << "# pivots      = " << num_pivot;
   LOG(INFO) << "# prefix (K)  = " << num_prefix_;
-  LOG(INFO) << "use sort       = " << use_sort_;
-  LOG(INFO) << "inverted file processing algorithm = " << inv_proc_alg << "( code: " << inv_proc_alg_  << ")";
-  LOG(INFO) << "skip checking = " << skip_checking_;
+  
+  SetQueryTimeParams(pmgr);
 
   GetPermutationPivot(data, space, num_pivot, &pivot_);
 
   posting_lists_.resize(indexQty);
   for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
-    size_t minId = chunkId * chunk_index_size;
-    size_t maxId = min(data_.size(), minId + chunk_index_size);
+    size_t minId = chunkId * chunk_index_size_;
+    size_t maxId = min(data_.size(), minId + chunk_index_size_);
 
     auto & chunkPostLists = posting_lists_[chunkId];
     chunkPostLists.resize(num_pivot);
@@ -135,7 +135,7 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     for (size_t id = 0; id < maxId - minId; ++id) {
       Permutation perm;
       GetPermutationPPIndex(pivot_, space, data[minId + id], &perm);
-      for (size_t j = 0; j < num_prefix; ++j) {
+      for (size_t j = 0; j < num_prefix_; ++j) {
         chunkPostLists[perm[j]].push_back(id);
       }
     }
@@ -146,6 +146,51 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     }
   }
 }
+    
+
+    
+    
+template <typename dist_t>
+void 
+PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
+  float db_scan_frac = 0.05;
+  
+  string inv_proc_alg = PERM_PROC_FAST_SCAN;
+  
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac);
+  pmgr.GetParamOptional("skipChecking", skip_checking_);
+  pmgr.GetParamOptional("useSort",      use_sort_);
+  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg);
+  pmgr.GetParamOptional("minTimes",     min_times_);
+  
+  if (inv_proc_alg == PERM_PROC_FAST_SCAN) {
+    inv_proc_alg_ = kScan; 
+  } else if (inv_proc_alg == PERM_PROC_MAP) {
+    inv_proc_alg_ = kMap; 
+  } else if (inv_proc_alg == PERM_PROC_MERGE) {
+    inv_proc_alg_ = kMerge; 
+  } else {
+    LOG(FATAL) << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
+  } 
+    
+  ComputeDbScan(db_scan_frac);
+}
+
+template <typename dist_t>
+vector<string>
+PivotNeighbInvertedIndex<dist_t>::GetQueryTimeParamNames() const {
+  vector<string> names;
+  
+  names.push_back("dbScanFrac");
+  names.push_back("useSort");
+  names.push_back("skipChecking");
+  names.push_back("invProcAlg");
+  names.push_back("minTimes");
+    
+  return names;
+}
+    
+    
 
 template <typename dist_t>
 PivotNeighbInvertedIndex<dist_t>::~PivotNeighbInvertedIndex() {

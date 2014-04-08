@@ -205,6 +205,9 @@ public:
     second->addFriend(first);
   }
 
+  virtual void SetQueryTimeParams(AnyParamManager& );
+  virtual vector<string> GetQueryTimeParamNames() const;
+
 private:
   size_t NN_;
   size_t initIndexAttempts_;

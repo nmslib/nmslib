@@ -98,8 +98,8 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
                         });
 #endif
 
-  // db_can_qty_ should always be > 0
-  db_scan_qty_ = max(size_t(1), static_cast<size_t>(DbScanFrac * data.size())),
+  ComputeDbScanQty(DbScanFrac);
+  
   GetPermutationPivot(data, space, NumPivot, &pivots_);
   PermData_.resize(data.size());
 #ifdef USE_VPTREE_SAMPLE
@@ -153,6 +153,23 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
                                     );
 #endif
 }
+    
+template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
+void 
+PermutationVPTree<dist_t, RankCorrelDistFunc>::SetQueryTimeParams(AnyParamManager& pmgr) {
+  float           dbScanFrac;
+  pmgr.GetParamOptional("dbScanFrac", dbScanFrac);
+  
+  ComputeDbScanQty(dbScanFrac);
+}
+
+template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
+vector<string>
+PermutationVPTree<dist_t, RankCorrelDistFunc>::GetQueryTimeParamNames() const {
+  vector<string> names;
+  names.push_back("dbScanFrac");
+  return names;
+}    
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 PermutationVPTree<dist_t, RankCorrelDistFunc>::~PermutationVPTree() {
@@ -239,12 +256,15 @@ void PermutationVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* que
 template class PermutationVPTree<float, SpearmanRho>;
 template class PermutationVPTree<float, SpearmanRhoSIMD>;
 template class PermutationVPTree<float, SpearmanFootrule>;
+template class PermutationVPTree<float, SpearmanFootruleSIMD>;
 template class PermutationVPTree<double, SpearmanRho>;
 template class PermutationVPTree<double, SpearmanRhoSIMD>;
 template class PermutationVPTree<double, SpearmanFootrule>;
+template class PermutationVPTree<double, SpearmanFootruleSIMD>;
 template class PermutationVPTree<int, SpearmanRho>;
 template class PermutationVPTree<int, SpearmanRhoSIMD>;
 template class PermutationVPTree<int, SpearmanFootrule>;
+template class PermutationVPTree<int, SpearmanFootruleSIMD>;
 
 }  // namespace similarity
 

@@ -38,7 +38,7 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBi
     const bool skip_checking)
     : data_(data),   // reference
       bin_threshold_(bin_threshold),
-      db_scan_(static_cast<size_t>(db_scan_fraction * data.size())),
+      db_scan_(max(size_t(1), static_cast<size_t>(db_scan_fraction * data.size()))),
       bin_perm_word_qty_((num_pivot + 31)/32),
       use_sort_(use_sort),
       max_hamming_dist_(max_hamming_dist),

@@ -60,6 +60,9 @@ class PermutationVPTree : public Index<dist_t> {
   const std::string ToString() const;
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
+  
+  void SetQueryTimeParams(AnyParamManager& );
+  vector<string> GetQueryTimeParamNames() const;
 
  private:
   const Space<dist_t>*      space_;
@@ -67,6 +70,11 @@ class PermutationVPTree : public Index<dist_t> {
   size_t                    db_scan_qty_;
   ObjectVector              pivots_;
   ObjectVector              PermData_;
+  
+  void ComputeDbScanQty(float DbScanFrac) {
+    // db_can_qty_ should always be > 0
+    db_scan_qty_ = max(size_t(1), static_cast<size_t>(DbScanFrac * data_.size()));
+  }
 
 #ifdef USE_VPTREE_SAMPLE
   VPTree<PivotIdType, SamplingOracle<PivotIdType>, SamplingOracleCreator<PivotIdType> >*   VPTreeIndex_;

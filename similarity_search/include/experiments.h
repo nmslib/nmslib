@@ -48,6 +48,7 @@
 namespace similarity {
 
 using std::vector;
+using std::shared_ptr;
 using std::string;
 using std::stringstream;
 using std::mutex;
@@ -96,7 +97,8 @@ struct Experiments {
                      vector<vector<MetaAnalysis*>>&   ExpResRange,
                      vector<vector<MetaAnalysis*>>&   ExpResKNN,
                      const ExperimentConfig<dist_t>&  config,
-                     const  std::vector<IndexType* >& IndexPtrs) {
+                     const  std::vector<shared_ptr<IndexType>>& IndexPtrs,
+                     const vector<shared_ptr<MethodWithParams>>& MethodsDesc) {
 
     if (LogInfo) LOG(INFO) << ">>>> TestSetId: " << TestSetId;
     if (LogInfo) LOG(INFO) << ">>>> Will use: "  << ThreadTestQty << " threads in efficiency testing";
@@ -106,7 +108,9 @@ struct Experiments {
       for (size_t i = 0; i < config.GetRange().size(); ++i) {
         const dist_t radius = config.GetRange()[i];
         RangeCreator  cr(radius);
-        Execute<RangeQuery<dist_t>, RangeCreator>(LogInfo, ThreadTestQty, TestSetId, ExpResRange[i], config, cr, IndexPtrs);
+        Execute<RangeQuery<dist_t>, RangeCreator>(LogInfo, ThreadTestQty, TestSetId, 
+                                                  ExpResRange[i], config, cr, 
+                                                  IndexPtrs, MethodsDesc);
       }
     }
 
@@ -114,7 +118,9 @@ struct Experiments {
       for (size_t i = 0; i < config.GetKNN().size(); ++i) {
         const size_t K = config.GetKNN()[i];
         KNNCreator  cr(K, config.GetEPS());
-        Execute<KNNQuery<dist_t>, KNNCreator>(LogInfo, ThreadTestQty, TestSetId, ExpResKNN[i], config, cr, IndexPtrs);
+        Execute<KNNQuery<dist_t>, KNNCreator>(LogInfo, ThreadTestQty, TestSetId, 
+                                              ExpResKNN[i], config, cr, 
+                                              IndexPtrs, MethodsDesc);
       }
     }
     if (LogInfo) LOG(INFO) << "experiment done at " << CurrentTime();
@@ -220,10 +226,11 @@ struct Experiments {
 
   template <typename QueryType, typename QueryCreatorType>
   static void Execute(bool LogInfo, unsigned ThreadTestQty, size_t TestSetId, 
-                     std::vector<MetaAnalysis*>& ExpRes,
-                     const ExperimentConfig<dist_t>& config,
-                     const  QueryCreatorType& QueryCreator,
-                     const  std::vector<IndexType* >& IndexPtrs) {
+                     std::vector<MetaAnalysis*>&                  ExpRes,
+                     const ExperimentConfig<dist_t>&              config,
+                     const QueryCreatorType&                      QueryCreator,
+                     const vector<shared_ptr<IndexType>>&         IndexPtrs,
+                     const vector<shared_ptr<MethodWithParams>>&  MethodsDesc) {
     int numquery = config.GetQueryObjects().size();
 
       /*
@@ -264,6 +271,15 @@ struct Experiments {
     for (auto it = IndexPtrs.begin(); it != IndexPtrs.end(); ++it) {
       size_t MethNum = it - IndexPtrs.begin();
       Index<dist_t>& Method = **it;
+      
+      AnyParamManager tmpParamMngr(MethodsDesc[MethNum]->methPars_);
+      AnyParams       tmpParams = tmpParamMngr.ExtractParametersExcept(Method.GetQueryTimeParamNames());
+
+     /* 
+      * Reset the query-time parameters again,
+      * because they could have been changed previously.
+      */
+      Method.SetQueryTimeParams(tmpParamMngr);
 
       if (LogInfo) LOG(INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 
@@ -333,6 +349,8 @@ struct Experiments {
     // 2d pass
     if (LogInfo) LOG(INFO) << ">>>> Computing effectiveness metrics " ;
 
+      
+
     for (int q = 0; q < numquery; ++q) {
       unique_ptr<QueryType> queryGS(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
 
@@ -350,6 +368,17 @@ struct Experiments {
         size_t MethNum = it - IndexPtrs.begin();
         Index<dist_t>& Method = **it;
 
+        /* 
+         * Reset the query-time parameters again,
+         * because they could have changed previously (also by answering
+         * another query during the effectiveness evaluation phase, i.e.,
+         * for smaller values of the query id (q) in the loop (see on level up)
+         */
+        AnyParamManager tmpParamMngr(MethodsDesc[MethNum]->methPars_);
+        AnyParams       tmpParams = tmpParamMngr.ExtractParametersExcept(Method.GetQueryTimeParamNames());
+
+        Method.SetQueryTimeParams(tmpParamMngr);
+      
         unique_ptr<QueryType> query(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
         
         Method.Search(query.get());

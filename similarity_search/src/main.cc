@@ -84,7 +84,7 @@ void OutData(bool DoAppend, const string& FilePrefix,
 template <typename dist_t>
 void ProcessResults(const ExperimentConfig<dist_t>& config,
                     MetaAnalysis& ExpRes,
-                    const string& MethDesc,
+                    const string& MethDescStr,
                     const string& MethParamStr,
                     string& PrintStr, // For display
                     string& HeaderStr,
@@ -95,7 +95,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   Header << "MethodName\tRecall\tRelPosError\tNumCloser\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tMethodParams" << std::endl;
 
-  Data << "\"" << MethDesc << "\"\t";
+  Data << "\"" << MethDescStr << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
   Data << ExpRes.GetRelPosErrorAvg() << "\t";
   Data << ExpRes.GetNumCloserAvg() << "\t";
@@ -109,7 +109,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   Print << std::endl << 
             "===================================" << std::endl;
-  Print << MethDesc << std::endl;
+  Print << MethDescStr << std::endl;
   Print << MethParamStr << std::endl;
   Print << "===================================" << std::endl;
   Print << "# of points: " << config.GetDataObjects().size() << std::endl;
@@ -134,7 +134,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 };
 
 template <typename dist_t>
-void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
+void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
              const string                 SpaceType,
              const shared_ptr<AnyParams>& SpaceParams,
              unsigned                     dimension,
@@ -175,18 +175,18 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
   MemUsage  mem_usage_measure;
 
 
-  std::vector<std::string>          MethDesc;
+  std::vector<std::string>          MethDescStr;
   std::vector<std::string>          MethParams;
   vector<double>                    MemUsage;
 
   vector<vector<MetaAnalysis*>> ExpResRange(config.GetRange().size(),
-                                                vector<MetaAnalysis*>(Methods.size()));
+                                                vector<MetaAnalysis*>(MethodsDesc.size()));
   vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
-                                              vector<MetaAnalysis*>(Methods.size()));
+                                              vector<MetaAnalysis*>(MethodsDesc.size()));
 
   size_t MethNum = 0;
 
-  for (auto it = Methods.begin(); it != Methods.end(); ++it, ++MethNum) {
+  for (auto it = MethodsDesc.begin(); it != MethodsDesc.end(); ++it, ++MethNum) {
 
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetQty());
@@ -204,12 +204,15 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
 
     ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
-    vector<Index<dist_t>*>  IndexPtrs;
+    vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
+
     try {
-      MethNum = 0;
-      for (auto it = Methods.begin(); it != Methods.end(); ++it, ++MethNum) {
-        const string& MethodName = it->first;
-        const AnyParams& MethPars = *it->second;
+      
+      for (const auto& methElem: MethodsDesc) {
+        MethNum = &methElem - &MethodsDesc[0];
+        
+        const string& MethodName  = methElem->methName_;
+        const AnyParams& MethPars = methElem->methPars_;
         const string& MethParStr = MethPars.ToString();
 
         LOG(INFO) << ">>>> Index type : " << MethodName;
@@ -222,12 +225,29 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
 
         wtm.reset();
         ctm.reset();
+        
+        bool bCreateNew = true;
+        
+        if (MethNum && MethodName == MethodsDesc[MethNum-1]->methName_) {
+          vector<string> exceptList = IndexPtrs.back()->GetQueryTimeParamNames();
+          
+          if (MethodsDesc[MethNum-1]->methPars_.equalsIgnoreInList(MethPars, exceptList)) {
+            bCreateNew = false;
+          }
+        }
 
-        IndexPtrs.push_back(MethodFactoryRegistry<dist_t>::Instance().
+        LOG(INFO) << (bCreateNew ? "Creating a new index":"Using a previosuly created index");
+
+        IndexPtrs.push_back(
+                bCreateNew ?
+                           shared_ptr<Index<dist_t>>(
+                           MethodFactoryRegistry<dist_t>::Instance().
                            CreateMethod(true /* print progress */,
                                         MethodName, 
                                         SpaceType, config.GetSpace(), 
-                                        config.GetDataObjects(), MethPars));
+                                        config.GetDataObjects(), MethPars)
+                           )
+                           :IndexPtrs.back());
 
         LOG(INFO) << "==============================================";
         wtm.split();
@@ -257,7 +277,7 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
         }
 
         if (!TestSetId) {
-          MethDesc.push_back(IndexPtrs.back()->ToString());
+          MethDescStr.push_back(IndexPtrs.back()->ToString());
           MethParams.push_back(MethParStr);
         }
       }
@@ -266,7 +286,8 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
                                       ThreadTestQty, 
                                       TestSetId,
                                       ExpResRange, ExpResKNN,
-                                      config, IndexPtrs);
+                                      config, 
+                                      IndexPtrs, MethodsDesc);
 
 
     } catch (const std::exception& e) {
@@ -277,17 +298,13 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
       bFail = true;
     }
 
-    for (auto& it : IndexPtrs) {
-      delete it;
-    }
-
     if (bFail) {
       LOG(FATAL) << "Failure due to an exception!";
     }
   }
 
-  for (auto it = MethDesc.begin(); it != MethDesc.end(); ++it) {
-    size_t MethNum = it - MethDesc.begin();
+  for (auto it = MethDescStr.begin(); it != MethDescStr.end(); ++it) {
+    size_t MethNum = it - MethDescStr.begin();
 
     // Don't overwrite file after we output data at least for one method!
     bool DoAppendHere = DoAppend || MethNum;
@@ -297,7 +314,7 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       MetaAnalysis* res = ExpResRange[i][MethNum];
 
-      ProcessResults(config, *res, MethDesc[MethNum], MethParams[MethNum], Print, Header, Data);
+      ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
       LOG(INFO) << "Range: " << config.GetRange()[i];
       LOG(INFO) << Print;
       LOG(INFO) << "Data: " << Header << Data;
@@ -314,7 +331,7 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
       MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-      ProcessResults(config, *res, MethDesc[MethNum], MethParams[MethNum], Print, Header, Data);
+      ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
       LOG(INFO) << "KNN: " << config.GetKNN()[i];
       LOG(INFO) << Print;
       LOG(INFO) << "Data: " << Header << Data;
@@ -350,7 +367,7 @@ int main(int ac, char* av[]) {
   float                 eps = 0.0;
   unsigned              ThreadTestQty;
 
-  multimap<string, shared_ptr<AnyParams>>        Methods;
+  vector<shared_ptr<MethodWithParams>>        MethodsDesc;
 
   ParseCommandLine(ac, av,
                        DistType,
@@ -368,12 +385,12 @@ int main(int ac, char* av[]) {
                        knn,
                        eps,
                        RangeArg,
-                       Methods);
+                       MethodsDesc);
 
   ToLower(DistType);
 
   if ("int" == DistType) {
-    RunExper<int>(Methods,
+    RunExper<int>(MethodsDesc,
                   SpaceType,
                   SpaceParams,
                   dimension,
@@ -390,7 +407,7 @@ int main(int ac, char* av[]) {
                   RangeArg
                  );
   } else if ("float" == DistType) {
-    RunExper<float>(Methods,
+    RunExper<float>(MethodsDesc,
                   SpaceType,
                   SpaceParams,
                   dimension,
@@ -407,7 +424,7 @@ int main(int ac, char* av[]) {
                   RangeArg
                  );
   } else if ("double" == DistType) {
-    RunExper<double>(Methods,
+    RunExper<double>(MethodsDesc,
                   SpaceType,
                   SpaceParams,
                   dimension,

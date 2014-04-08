@@ -112,20 +112,25 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
         for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
           config.SelectTestSet(TestSetId);
           LOG(INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
-          std::unique_ptr<Index<dist_t>> MethodPtr( MethodFactoryRegistry<dist_t>::Instance().
+          std::shared_ptr<Index<dist_t>> MethodPtr( MethodFactoryRegistry<dist_t>::Instance().
                                            CreateMethod(false, 
                                                         METH_VPTREE, 
                                                         SpaceType, config.GetSpace(), 
                                                         config.GetDataObjects(), 
                                                         MethPars) );
 
-          vector<Index<dist_t>*>  IndexPtrs;
-          IndexPtrs.push_back(MethodPtr.get());
+          vector<shared_ptr<Index<dist_t>>>          IndexPtrs;
+          vector<shared_ptr<MethodWithParams>>       MethodsDesc;
+          
+          IndexPtrs.push_back(MethodPtr);
+          MethodsDesc.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(METH_VPTREE, MethPars)));
 
           Experiments<dist_t>::RunAll(false /* don't print info */, 1 /* thread */,
                                       TestSetId,
                                       ExpResRange, ExpResKNN,
-                                      config, IndexPtrs);
+                                      config, 
+                                      IndexPtrs,
+                                      MethodsDesc);
 
         }
         Stat.ComputeAll();
@@ -187,7 +192,7 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
 }
 
 template <typename dist_t>
-void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
+void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
              const string&                  SpaceType,
              const shared_ptr<AnyParams>&   SpaceParams,
              unsigned                       dimension,
@@ -210,11 +215,11 @@ void RunExper(const multimap<string, shared_ptr<AnyParams>>& Methods,
   }
 
   if (Methods.size() != 1 ||
-      Methods.begin()->first != METH_VPTREE) {
+      Methods[0]->methName_ != METH_VPTREE) {
     LOG(FATAL) << "Should specify only the single method: " << METH_VPTREE;
   }
 
-  const AnyParams& MethPars = *Methods.begin()->second;
+  const AnyParams& MethPars = Methods[0]->methPars_;
 
   try {
 
@@ -297,7 +302,7 @@ int main(int ac, char* av[]) {
   unsigned                dimension;
   unsigned                ThreadTestQty;
   float                   eps;
-  multimap<string, shared_ptr<AnyParams>> Methods;
+  vector<shared_ptr<MethodWithParams>> Methods;
 
 
 

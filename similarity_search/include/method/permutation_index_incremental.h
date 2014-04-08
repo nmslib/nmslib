@@ -45,16 +45,23 @@ class PermutationIndexIncremental : public Index<dist_t> {
   const std::string ToString() const;
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
+  
+  virtual void SetQueryTimeParams(AnyParamManager& );
+  virtual vector<string> GetQueryTimeParamNames() const;
 
  private:
-  const ObjectVector& data_;
-  const size_t db_scan_;
-  ObjectVector pivot_;
+  const ObjectVector&   data_;
+  size_t                db_scan_;
+  ObjectVector          pivot_;
 #ifdef CONTIGUOUS_STORAGE
   std::vector<PivotIdType> permtable_;
 #else
   std::vector<Permutation> permtable_;
 #endif
+  
+  void ComputeDbScan(float db_scan_fraction) {
+    db_scan_ = max(size_t(1), static_cast<size_t>(db_scan_fraction * data_.size()));
+  }
 
   template <typename QueryType> void GenSearch(QueryType* query);
 

@@ -97,6 +97,20 @@ SmallWorldRand<dist_t>::SmallWorldRand(const Space<dist_t>* space,
 }
 
 template <typename dist_t>
+void 
+SmallWorldRand<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
+  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
+}
+
+template <typename dist_t>
+vector<string>
+SmallWorldRand<dist_t>::GetQueryTimeParamNames() const {
+  vector<string> names;
+  names.push_back("initSearchAttempts");
+  return names;
+}
+
+template <typename dist_t>
 const std::string SmallWorldRand<dist_t>::ToString() const {
   return "small_world_rand";
 }

@@ -18,8 +18,14 @@
 
 #include <stdio.h>
 #include <string>
+#include <vector>
+
+#include "params.h"
 
 namespace similarity {
+
+using std::string;
+using std::vector;
 
 template <typename dist_t>
 class RangeQuery;
@@ -36,7 +42,15 @@ class Index {
   virtual ~Index() {}
   virtual void Search(RangeQuery<dist_t>* query) = 0;
   virtual void Search(KNNQuery<dist_t>* query) = 0;
-  virtual const std::string ToString() const = 0;
+  virtual const string ToString() const = 0;
+  /*
+   * If a method has query time parameters that
+   * can be changed without rebuilding the index,
+   * the method can implement methods SetQueryTimeParams()
+   * and GetQueryTimeParamNames() 
+   */
+  virtual void SetQueryTimeParams(AnyParamManager& ) {}
+  virtual vector<string> GetQueryTimeParamNames() const { return vector<string>(); }
 };
 
 }  // namespace similarity

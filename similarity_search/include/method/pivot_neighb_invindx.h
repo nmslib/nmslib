@@ -63,28 +63,25 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
  public:
   PivotNeighbInvertedIndex(const Space<dist_t>* space,
                            const ObjectVector& data,
-                           const size_t chunk_index_size,// the max number of elements in each index chunk
-                           const size_t num_pivot,     // sigma in the original paper
-                           const size_t num_prefix,
-                           const size_t min_times,
-                           const double db_scan_fraction,
-                           const bool use_sort,
-                           const string &inv_proc_alg,
-                           const bool skip_checking);
+                           const AnyParams& AllParams);
 
   ~PivotNeighbInvertedIndex();
 
   const std::string ToString() const;
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
+  
+  virtual void SetQueryTimeParams(AnyParamManager& );
+  virtual vector<string> GetQueryTimeParamNames() const;
 
  private:
   const ObjectVector& data_;
-  const size_t chunk_index_size_;
-  const size_t db_scan_;
-  const size_t num_prefix_;       // K in the original paper
-  const size_t min_times_;        // t in the original paper
-  const bool   use_sort_;
+  size_t  chunk_index_size_;
+  size_t  db_scan_;
+  size_t  num_prefix_;       // K in the original paper
+  size_t  min_times_;        // t in the original paper
+  bool    use_sort_;
+  bool    skip_checking_;
 
   enum eAlgProctype {
     kScan,
@@ -92,9 +89,16 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
     kMerge
   } inv_proc_alg_;
 
-  const bool skip_checking_;
+
   ObjectVector pivot_;
 
+  void ComputeDbScan(float db_scan_frac) {
+    if (db_scan_frac < 0.0 || db_scan_frac > 1.0) {
+      LOG(FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that dbScanFrac is in the range [0,1]";
+    }    
+    db_scan_ = std::max(size_t(1),static_cast<size_t>(db_scan_frac * data_.size()));
+  }
+  
   vector<vector<PostingListInt>> posting_lists_;
 
   template <typename QueryType> void GenSearch(QueryType* query);

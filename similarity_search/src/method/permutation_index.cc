@@ -33,7 +33,7 @@ PermutationIndex<dist_t>::PermutationIndex(
     const double db_scan_fraction,
     const IntDistFuncPtr permfunc)
     : data_(data),   // reference
-      db_scan_(static_cast<size_t>(db_scan_fraction * data.size())),
+      db_scan_(max(size_t(1), static_cast<size_t>(db_scan_fraction * data.size()))),
       permfunc_(permfunc) {
   CHECK(db_scan_fraction > 0.0);
   CHECK(db_scan_fraction <= 1.0);

@@ -32,11 +32,15 @@ PermutationIndexIncremental<dist_t, perm_func>::PermutationIndexIncremental(
     const ObjectVector& data,
     const size_t num_pivot,
     const double db_scan_fraction)
-    : data_(data),   // reference
-      db_scan_(static_cast<size_t>(db_scan_fraction * data.size())) {
+    : data_(data)   // reference {
+       {
   CHECK(db_scan_fraction > 0.0);
   CHECK(db_scan_fraction <= 1.0);
+  
+  ComputeDbScan(db_scan_fraction);
+  
   GetPermutationPivot(data, space, num_pivot, &pivot_);
+  
 #ifdef CONTIGUOUS_STORAGE
   permtable_.resize(data.size() * num_pivot);
 
@@ -54,8 +58,25 @@ PermutationIndexIncremental<dist_t, perm_func>::PermutationIndexIncremental(
 #endif
   LOG(INFO) << "# pivots         = " << num_pivot;
   LOG(INFO) << "db scan fraction = " << db_scan_fraction;
-  //SavePermTable(permtable_, "permtab");
 }
+    
+template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
+void 
+PermutationIndexIncremental<dist_t, perm_func>::SetQueryTimeParams(AnyParamManager& pmgr) {
+  float           dbScanFrac;
+  pmgr.GetParamOptional("dbScanFrac", dbScanFrac);
+  
+  ComputeDbScan(dbScanFrac);
+}
+
+template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
+vector<string>
+PermutationIndexIncremental<dist_t, perm_func>::GetQueryTimeParamNames() const {
+  vector<string> names;
+  names.push_back("dbScanFrac");
+  return names;
+}    
+    
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 PermutationIndexIncremental<dist_t, perm_func>::~PermutationIndexIncremental() {

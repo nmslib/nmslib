@@ -3,8 +3,6 @@
 
 #include <iostream>
 
-#define FAKE_MAX_LEAVES_TO_VISIT std::numeric_limits<int>::max() 
-
 namespace similarity {
 
 enum class ListClustersStrategy {

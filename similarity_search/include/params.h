@@ -23,9 +23,10 @@
 #include <set>
 #include <memory>
 #include <sstream>
+#include <algorithm>
 
-#include "lcstrategy.h"
 #include "logging.h"
+#include "utils.h"
 
 namespace similarity {
 
@@ -37,6 +38,8 @@ using std::stringstream;
 using std::shared_ptr;
 using std::unique_ptr;
 
+
+#define FAKE_MAX_LEAVES_TO_VISIT std::numeric_limits<int>::max() 
 
 class AnyParams {
 public:
@@ -64,6 +67,46 @@ public:
       ParamValues.push_back(sVal);
     }
   }
+  
+  /* 
+   * Compare parameters against parameters in the other parameter container.
+   * In doing so, IGNORE parameters from the exception list.
+   */
+  bool equalsIgnoreInList(const AnyParams& that, const vector<string>& ExceptList) {   
+   /*
+    * These loops are reasonably efficient, unless
+    * we have thousands of parameters in the exception
+    * list (which realistically won't happen)
+    */
+    
+    vector<pair<string, string>> vals[2], inter;
+    const AnyParams*             objRefs[2] = {this, &that};
+
+
+    for (size_t objId = 0; objId < 2; ++objId) {
+      const AnyParams& obj = *objRefs[objId];
+ 
+      for (size_t i = 0; i < obj.ParamNames.size(); ++i) {
+        const string& name = obj.ParamNames[i];
+        if (find(ExceptList.begin(), ExceptList.end(), name) == ExceptList.end()) {
+          vals[objId].push_back(make_pair(name, obj.ParamValues[i]));
+        }
+      }      
+      sort(vals[objId].begin(), vals[objId].end());
+    }
+    
+    inter.resize(ParamNames.size() + that.ParamNames.size());
+    size_t qty = set_intersection(vals[0].begin(), vals[0].end(),
+                     vals[1].begin(), vals[1].end(),
+                     inter.begin()) - inter.begin();
+    /*
+     * We compute the size of the intersection.
+     * If it is equal to the size of one of the original 
+     * param lists (entries in the exception lists are excluded
+     * at this point), then both sets are equal.
+     */
+    return qty == vals[0].size();    
+  }
 
   string ToString() const {
     stringstream res;
@@ -90,6 +133,8 @@ public:
   AnyParams(){}
   AnyParams(const vector<string>& Names, const vector<string>& Values) 
             : ParamNames(Names), ParamValues(Values) {}
+  AnyParams(const AnyParams& that)
+            : ParamNames(that.ParamNames), ParamValues(that.ParamValues) {}
 
   vector<string>  ParamNames;
   vector<string>  ParamValues;
@@ -125,7 +170,7 @@ public:
 
   /*
    * Takes a list of exceptions and extracts all parameter values, 
-   * except parameters from the excpetions' list. The extracted parameters
+   * except parameters from the exceptions' list. The extracted parameters
    * are added to the list of parameters already seen.
    */
   AnyParams ExtractParametersExcept(const vector<string>& ExceptList) {
@@ -177,7 +222,7 @@ private:
         LOG(FATAL) << "Mandatory parameter: " << Name << " is missing!";
       }
     }
-    LOG(INFO) << "@@@ Parameter: " << Name << "=" << Value << " @@@";
+    //LOG(INFO) << "@@@ Parameter: " << Name << "=" << Value << " @@@";
     seen.insert(Name);
   }
 
@@ -200,6 +245,17 @@ inline void AnyParamManager::ConvertStrToValue<string>(const string& str, string
   Value = str;
 }
 
+struct MethodWithParams {
+	string			methName_;
+	AnyParams		methPars_;
+	MethodWithParams(const string& methName, const vector<string>& methDesc) :
+					methName_(methName),
+					methPars_(methDesc) {}
+	MethodWithParams(const string& methName, const AnyParams& methPars) :
+	                    methName_(methName),
+	                    methPars_(methPars) {}				
+};
+
 void ParseCommandLine(int argc, char*av[],
                       string&                 DistType,
                       string&                 SpaceType,
@@ -216,8 +272,7 @@ void ParseCommandLine(int argc, char*av[],
                       vector<unsigned>&       knn,
                       float&                  eps,
                       string&                 RangeArg,
-                      multimap<string, shared_ptr<AnyParams>>& Methods);
-
+                      vector<shared_ptr<MethodWithParams>>& Methods);
 };
 
 #endif

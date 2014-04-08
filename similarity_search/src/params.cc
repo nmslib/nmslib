@@ -56,7 +56,7 @@ void ParseCommandLine(int argc, char*argv[],
                       vector<unsigned>&       knn,
                       float&                  eps,
                       string&                 RangeArg,
-                      multimap<string, shared_ptr<AnyParams>>& pars) {
+                      vector<shared_ptr<MethodWithParams>>& pars) {
   knn.clear();
   RangeArg.clear();
   pars.clear();
@@ -156,7 +156,7 @@ void ParseCommandLine(int argc, char*argv[],
       }
     }
 
-    pars.insert(make_pair(MethName, shared_ptr<AnyParams>(new AnyParams(MethodDesc))));
+    pars.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(MethName, MethodDesc)));
   }
   if (vm.count("knn")) {
     if (!SplitStr(knnArg, knn, ',')) {
