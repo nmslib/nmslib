@@ -74,14 +74,18 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   virtual void SetQueryTimeParams(AnyParamManager& );
   virtual vector<string> GetQueryTimeParamNames() const;
 
+  void IndexChunk(size_t chunkId);
  private:
-  const ObjectVector& data_;
+  const   ObjectVector& data_;
+  const   Space<dist_t>*  space_;
   size_t  chunk_index_size_;
   size_t  db_scan_;
   size_t  num_prefix_;       // K in the original paper
   size_t  min_times_;        // t in the original paper
   bool    use_sort_;
   bool    skip_checking_;
+  size_t  index_thread_qty_;
+  size_t  num_pivot_;
 
   enum eAlgProctype {
     kScan,
@@ -99,7 +103,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
     db_scan_ = std::max(size_t(1),static_cast<size_t>(db_scan_frac * data_.size()));
   }
   
-  vector<vector<PostingListInt>> posting_lists_;
+  vector<shared_ptr<vector<PostingListInt>>> posting_lists_;
 
   template <typename QueryType> void GenSearch(QueryType* query);
 

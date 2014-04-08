@@ -33,8 +33,32 @@
 namespace similarity {
 
 template <typename dist_t>
-struct IndexThread {
-  void operator()(IndexThreadParams<dist_t>& prm) {
+struct IndexThreadParamsSW {
+  const Space<dist_t>*                        space_;
+  SmallWorldRand<dist_t>&                     index_;
+  const ObjectVector&                         data_;
+  size_t                                      index_every_;
+  size_t                                      out_of_;
+  
+  IndexThreadParamsSW(
+                     const Space<dist_t>*             space,
+                     SmallWorldRand<dist_t>&          index, 
+                     const ObjectVector&              data,
+                     size_t                           index_every,
+                     size_t                           out_of
+                      ) : 
+                     space_(space),
+                     index_(index), 
+                     data_(data),
+                     index_every_(index_every),
+                     out_of_(out_of) 
+                     {
+  }
+};
+
+template <typename dist_t>
+struct IndexThreadSW {
+  void operator()(IndexThreadParamsSW<dist_t>& prm) {
     /* 
      * Skip the first element, it was added already
      */
@@ -80,15 +104,16 @@ SmallWorldRand<dist_t>::SmallWorldRand(const Space<dist_t>* space,
       add(space, node);
     }
   } else {
-    vector<thread>                                  threads(indexThreadQty_);
-    vector<shared_ptr<IndexThreadParams<dist_t>>>   threadParams; 
+    vector<thread>                                    threads(indexThreadQty_);
+    vector<shared_ptr<IndexThreadParamsSW<dist_t>>>   threadParams; 
 
     for (size_t i = 0; i < indexThreadQty_; ++i) {
-      threadParams.push_back(shared_ptr<IndexThreadParams<dist_t>>(
-                              new IndexThreadParams<dist_t>(space, *this, data, i, indexThreadQty_)));
+      threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
+                              new IndexThreadParamsSW<dist_t>(space, *this, data, i, indexThreadQty_)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
-      threads[i] = thread(IndexThread<dist_t>(), ref(*threadParams[i]));
+      LOG(INFO) << "Creating indexing thread: " << (i+1) << " out of " << indexThreadQty_;
+      threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threads[i].join();

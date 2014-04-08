@@ -16,6 +16,8 @@
 
 #include <algorithm>
 #include <sstream>
+#include <thread>
+#include <memory>
 #include <unordered_map>
 
 #include "space.h"
@@ -39,6 +41,12 @@ struct IdCount {
 typedef vector<IdCount> VectIdCount;
 
 /*
+ * 
+ * TODO: @Leo. This function isn't helping performance much
+ *             Need to make more thorough tests at some point.
+ *
+ */
+/*
 void fastMemSet(uint32_t* ptr, size_t qty) {
   size_t qty4 = qty / 4;
   
@@ -51,6 +59,37 @@ void fastMemSet(uint32_t* ptr, size_t qty) {
     ptr[i] = 0;
 }
 */
+
+template <typename dist_t>
+struct IndexThreadParamsPNII {
+  PivotNeighbInvertedIndex<dist_t>&           index_;
+  size_t                                      chunk_qty_;
+  size_t                                      index_every_;
+  size_t                                      out_of_;
+
+  IndexThreadParamsPNII(
+                     PivotNeighbInvertedIndex<dist_t>&  index,
+                     size_t                             chunk_qty,
+                     size_t                             index_every,
+                     size_t                             out_of
+                      ) :
+                     index_(index),
+                     chunk_qty_(chunk_qty),
+                     index_every_(index_every),
+                     out_of_(out_of)
+                     { }
+};
+
+template <typename dist_t>
+struct IndexThreadPNII {
+  void operator()(IndexThreadParamsPNII<dist_t>& prm) {
+    for (size_t i = 0; i < prm.chunk_qty_; ++i) {
+      if (prm.index_every_ == i % prm.out_of_) {
+        prm.index_.IndexChunk(i);
+      }
+    }
+  }
+};
 
 void postListUnion(const VectIdCount& lst1, const PostingListInt lst2, VectIdCount& res) {
   res.clear();
@@ -88,62 +127,103 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     const ObjectVector& data,
     const AnyParams& AllParams) 
 : data_(data),   // reference
+  space_(space), // pointer
   chunk_index_size_(65536),
   db_scan_(0),
   num_prefix_(32),
   min_times_(2),
   use_sort_(false),
   skip_checking_(false),
+  index_thread_qty_(0),
+  num_pivot_(512),
   inv_proc_alg_ (kScan) {
   AnyParamManager pmgr(AllParams);
 
-  size_t num_pivot        = 512; 
-    
   string inv_proc_alg = PERM_PROC_FAST_SCAN;
 
-  pmgr.GetParamOptional("numPivot", num_pivot);
+  pmgr.GetParamOptional("numPivot", num_pivot_);
   pmgr.GetParamOptional("numPrefix", num_prefix_);
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
+  pmgr.GetParamOptional("indexThreadQty", index_thread_qty_);
 
-  if (num_prefix_ > num_pivot) {
+  if (num_prefix_ > num_pivot_) {
     LOG(FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix "
                << "should be less than or equal to numPivot";
   }
 
-  CHECK(num_prefix_ <= num_pivot);
+  CHECK(num_prefix_ <= num_pivot_);
   
   size_t indexQty = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
 
 
   LOG(INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
   LOG(INFO) << "# of index chunks  = " << posting_lists_.size();
-  LOG(INFO) << "# pivots      = " << num_pivot;
+  LOG(INFO) << "# of indexing thread  = " << index_thread_qty_;
+  LOG(INFO) << "# pivots      = " << num_pivot_;
   LOG(INFO) << "# prefix (K)  = " << num_prefix_;
   
   SetQueryTimeParams(pmgr);
 
-  GetPermutationPivot(data, space, num_pivot, &pivot_);
+  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
 
   posting_lists_.resize(indexQty);
+
+  /*
+   * After we allocated a pointer to each index chunks' vector,
+   * it is thread-safe to index each chunk separately.
+   */
   for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
-    size_t minId = chunkId * chunk_index_size_;
-    size_t maxId = min(data_.size(), minId + chunk_index_size_);
+    posting_lists_[chunkId] = shared_ptr<vector<PostingListInt>>(new vector<PostingListInt>());
+  }
 
-    auto & chunkPostLists = posting_lists_[chunkId];
-    chunkPostLists.resize(num_pivot);
+  // Don't need more thread than you have chunks
+  index_thread_qty_ = min(index_thread_qty_, indexQty);
 
-    for (size_t id = 0; id < maxId - minId; ++id) {
-      Permutation perm;
-      GetPermutationPPIndex(pivot_, space, data[minId + id], &perm);
-      for (size_t j = 0; j < num_prefix_; ++j) {
-        chunkPostLists[perm[j]].push_back(id);
-      }
+  if (index_thread_qty_ <= 1) {
+    for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
+      IndexChunk(chunkId);
+    }
+  } else {
+    vector<thread>                                      threads(index_thread_qty_);
+    vector<shared_ptr<IndexThreadParamsPNII<dist_t>>>   threadParams;
+
+    for (size_t i = 0; i < index_thread_qty_; ++i) {
+      threadParams.push_back(shared_ptr<IndexThreadParamsPNII<dist_t>>(
+                              new IndexThreadParamsPNII<dist_t>(*this, indexQty, i, index_thread_qty_)));
     }
 
-    // Sorting is essential for merging algos
-    for (auto & p:chunkPostLists) {
-      sort(p.begin(), p.end());
+    for (size_t i = 0; i < index_thread_qty_; ++i) {
+      LOG(INFO) << "Creating indexing thread: " << (i+1) << " out of " << index_thread_qty_;
+      threads[i] = thread(IndexThreadPNII<dist_t>(), ref(*threadParams[i]));
     }
+
+    for (size_t i = 0; i < index_thread_qty_; ++i) {
+      threads[i].join();
+    }
+  }
+}
+
+template <typename dist_t>
+void 
+PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId) {
+  size_t minId = chunkId * chunk_index_size_;
+  size_t maxId = min(data_.size(), minId + chunk_index_size_);
+
+
+  auto & chunkPostLists = *posting_lists_[chunkId];
+  chunkPostLists.resize(num_pivot_);
+
+  for (size_t id = 0; id < maxId - minId; ++id) {
+    Permutation perm;
+    GetPermutationPPIndex(pivot_, space_, data_[minId + id], &perm);
+    for (size_t j = 0; j < num_prefix_; ++j) {
+      chunkPostLists[perm[j]].push_back(id);
+    }
+  }
+
+  // Sorting is essential for merging algos
+  for (auto & p:chunkPostLists) {
+    sort(p.begin(), p.end());
   }
 }
     
@@ -214,7 +294,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 
 
   for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {
-    const auto & chunkPostLists = posting_lists_[chunkId];
+    const auto & chunkPostLists = *posting_lists_[chunkId];
     size_t minId = chunkId * chunk_index_size_;
     size_t maxId = min(data_.size(), minId + chunk_index_size_);
     size_t chunkQty = maxId - minId;

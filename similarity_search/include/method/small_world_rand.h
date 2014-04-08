@@ -130,30 +130,6 @@ enum SearchThreadStatus {kThreadWait = 0, kThreadSearch = 1, kThreadFinish = 2};
 template <typename dist_t> class SmallWorldRand;
 
 template <typename dist_t>
-struct IndexThreadParams {
-  const Space<dist_t>*                        space_;
-  SmallWorldRand<dist_t>&                     index_;
-  const ObjectVector&                         data_;
-  size_t                                      index_every_;
-  size_t                                      out_of_;
-  
-  IndexThreadParams(
-                     const Space<dist_t>*             space,
-                     SmallWorldRand<dist_t>&          index, 
-                     const ObjectVector&              data,
-                     size_t                           index_every,
-                     size_t                           out_of
-                      ) : 
-                     space_(space),
-                     index_(index), 
-                     data_(data),
-                     index_every_(index_every),
-                     out_of_(out_of) 
-                     {
-  }
-};
-
-template <typename dist_t>
 struct SearchThreadParams {
   const Space<dist_t>*                        space_;
   const SmallWorldRand<dist_t>&               index_;
