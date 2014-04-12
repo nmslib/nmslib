@@ -149,8 +149,8 @@ class SpaceSparseVector : public Space<dist_t> {
       res = distObj(vect1, vect2, qty);
 
     } catch (...) {
-      delete [] vect1;
-      delete [] vect2;
+      delete [] mem1;
+      delete [] mem2;
     }
 
     delete [] mem1;
