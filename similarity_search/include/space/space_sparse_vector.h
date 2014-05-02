@@ -21,6 +21,7 @@
 #include <map>
 #include <stdexcept>
 #include <algorithm>
+#include <ostream>
 
 #include <string.h>
 #include "global.h"
@@ -30,6 +31,29 @@
 #include "distcomp.h"
 
 namespace similarity {
+
+using std::vector;
+
+template <typename dist_t>
+struct SparseVectElem {  
+  uint32_t  id_;
+  dist_t    val_;
+  SparseVectElem(uint32_t id = 0, dist_t val = 0) : id_(id), val_(val) {}
+  bool operator<(const SparseVectElem<dist_t>& that) const {
+    return id_ < that.id_;
+  }
+  bool operator==(const SparseVectElem<dist_t>& that) const {
+    return id_ == that.id_ && val_ == that.val_;
+  }
+  bool operator!=(const SparseVectElem<dist_t>& that) const {
+    return !operator==(that);
+  }
+};
+
+template <typename dist_t>
+ostream& operator<<(ostream& out, SparseVectElem<dist_t> e) {
+  return out << "[" << e.id_ << ": " << e.val_ << "]";
+}
 
 /* 
  * The maximum number of sparse elements that will be kept on the stack
@@ -56,14 +80,16 @@ class SpaceSparseVector : public Space<dist_t> {
     return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjNormSP);
   }
  protected:
+  typedef SparseVectElem<dist_t> ElemType;
+
   struct SpaceNormScalarProduct {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
      return NormScalarProduct(x, y, length);
     }
   };
 
-  typedef pair<uint32_t, dist_t>  ElemType;  
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<ElemType>& InpVect) const;
+
+  virtual Object* CreateObjFromVect(size_t id, const vector<ElemType>& InpVect) const;
   void ReadSparseVec(std::string line, std::vector<ElemType>& v) const;
   
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
@@ -106,27 +132,27 @@ class SpaceSparseVector : public Space<dist_t> {
       const ElemType* it1 = beg1, *it2 = beg2; 
 
       while (it1 < end1 && it2 < end2) {
-        if (it1->first == it2->first) {
-          vect1[qty] = it1->second;
-          vect2[qty] = it2->second;
+        if (it1->id_ == it2->id_) {
+          vect1[qty] = it1->val_;
+          vect2[qty] = it2->val_;
           ++it1;
           ++it2;
           ++qty; 
-        } else if (it1->first < it2->first) {
-          vect1[qty] = it1->second;
+        } else if (it1->id_ < it2->id_) {
+          vect1[qty] = it1->val_;
           vect2[qty] = missingValue;
           ++qty;
           ++it1;
         } else {
           vect1[qty] = missingValue;
-          vect2[qty] = it2->second;
+          vect2[qty] = it2->val_;
           ++qty;
           ++it2;
         }
       }
       
       while (it1 < end1) {
-        vect1[qty] = it1->second;
+        vect1[qty] = it1->val_;
         vect2[qty] = missingValue;
         ++qty;
         ++it1;
@@ -134,7 +160,7 @@ class SpaceSparseVector : public Space<dist_t> {
       
       while (it2 < end2) {
         vect1[qty] = missingValue;
-        vect2[qty] = it2->second;
+        vect2[qty] = it2->val_;
         ++qty;
         ++it2;
       }

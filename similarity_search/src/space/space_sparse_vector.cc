@@ -28,7 +28,7 @@
 namespace similarity {
 
 template <typename dist_t>
-void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, std::vector<ElemType>& v) const
+void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, vector<ElemType>& v) const
 {
   v.clear();
   std::stringstream str(line);
@@ -47,8 +47,8 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, std::vector<Elem
     sort(v.begin(), v.end());
 
     for (unsigned i = 1; i < v.size(); ++i) {
-      uint32_t  prevId = v[i-1].first;
-      uint32_t  id = v[i].first;
+      uint32_t  prevId = v[i-1].id_;
+      uint32_t  id = v[i].id_;
 
       if (id == prevId) {
         stringstream err;
@@ -79,7 +79,7 @@ void SpaceSparseVector<dist_t>::ReadDataset(
   dataset.clear();
   dataset.reserve(MaxNumObjects);
 
-  std::vector<ElemType>    temp;
+  vector<ElemType>    temp;
 
   std::ifstream InFile(FileName);
   InFile.exceptions(std::ios::badbit);
@@ -105,7 +105,7 @@ void SpaceSparseVector<dist_t>::ReadDataset(
 }
 
 template <typename dist_t>
-Object* SpaceSparseVector<dist_t>::CreateObjFromVect(size_t id, const std::vector<ElemType>& InpVect) const {
+Object* SpaceSparseVector<dist_t>::CreateObjFromVect(size_t id, const vector<ElemType>& InpVect) const {
   return new Object(id, InpVect.size() * sizeof(ElemType), &InpVect[0]);
 };
 

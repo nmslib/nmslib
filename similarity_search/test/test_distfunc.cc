@@ -11,10 +11,14 @@
 
 #include <iostream>
 #include <memory>
+#include <cmath>
 
 #include "space.h"
 #include "space_sparse_lp.h"
 #include "space_sparse_scalar.h"
+#include "space_sparse_vector_inter.h"
+#include "space_sparse_scalar_fast.h"
+#include "space_sparse_vector.h"
 #include "space_scalar.h"
 #include "common.h"
 #include "bunit.h"
@@ -25,13 +29,14 @@
 
 #define TEST_SPEED_DOUBLE
 
-#define TEST_AGREE    1
+#define TEST_AGREE    0
 #define RANGE         8.0f
 #define RANGE_SMALL   1e-6f
 
 namespace similarity {
 
 using std::unique_ptr;
+using std::vector;
 
 template <class T> 
 inline void Normalize(T* pVect, size_t qty) {
@@ -91,6 +96,79 @@ TEST(set_intel) {
 #endif
 
 */
+
+template <typename dist_t>
+void GenSparseVectZipf(size_t maxSize, vector<SparseVectElem<dist_t>>& res) {
+  maxSize = max(maxSize, (size_t)1);
+
+  for (size_t i = 1; i < maxSize; ++i) {
+    float f = RandomReal<float>();
+    if (f <= sqrt((float)i)/i) { // This is a bit ad hoc, but is ok for testing purposes
+      res.push_back(SparseVectElem<dist_t>(i, RandomReal<float>()));
+    }
+  }
+};
+
+template <typename dist_t>
+bool checkElemVectEq(const vector<SparseVectElem<dist_t>>& source,
+                     const vector<SparseVectElem<dist_t>>& target) {
+  if (source.size() != target.size()) return false;
+
+  for (size_t i = 0; i < source.size(); ++i)
+    if (source[i] != target[i]) return false;
+
+  return true;
+}
+
+template <typename dist_t>
+void TestSparsePackUnpack() {
+  for (size_t maxSize = 1024 ; maxSize < 1024*1024; maxSize += 8192) {
+    vector<SparseVectElem<dist_t>> source;
+    GenSparseVectZipf(maxSize, source);
+
+    LOG(INFO) << "testing maxSize: " << maxSize << "\nqty: " <<  source.size()
+              << " maxId: " << source.back().id_;
+
+    char*     pBuff = NULL; 
+    size_t    dataLen = 0;
+
+    PackSparseElements(source, pBuff, dataLen);
+    
+    vector<SparseVectElem<dist_t>> target;
+    UnpackSparseElements(pBuff, dataLen, target);
+
+    bool eqFlag = checkElemVectEq(source, target);
+
+    if (!eqFlag) {
+      LOG(INFO) << "Different source and target, source.size(): " << source.size()
+                << " target.size(): " << target.size();
+      // Let's print the first different in the case of equal # of elements
+      size_t i = 0;
+      for (; i < min(source.size(), target.size()); ++i) {
+        if (!(source[i] == target[i])) {
+          LOG(INFO) << "First diff, i = " << i << " " << source[i] << " vs " << target[i];
+          break;
+        }
+      }
+    }
+
+    EXPECT_EQ(eqFlag, true);
+  }
+}
+
+TEST(BlockZeros) {
+  for (size_t id = 0 ; id <= 3*65536; id++) {
+    size_t id1 = removeBlockZeros(id);
+   
+    size_t id2 = addBlockZeros(id1); 
+    EXPECT_EQ(id, id2);
+  }
+}
+
+TEST(SparsePackUnpack) {
+  TestSparsePackUnpack<float>();
+  TestSparsePackUnpack<double>();
+}
 
 
 TEST(TestEfficientPower) {
@@ -1851,11 +1929,11 @@ bool TestSparseLp(size_t N, size_t Rep, T power) {
 }
 
 template <class T>
-bool TestSparseAngularDistance(size_t N, size_t Rep) {
+bool TestSparseAngularDistance(const string& dataFile, size_t N, size_t Rep) {
     unique_ptr<SpaceSparseAngularDistance<T>>  space(new SpaceSparseAngularDistance<T>());
     ObjectVector                  elems;
 
-    space->ReadDataset(elems, NULL, "../sample_data/sparse_5K.txt", N); 
+    space->ReadDataset(elems, NULL, dataFile.c_str(), N); 
 
     N = min(N, elems.size());
 
@@ -1882,18 +1960,20 @@ bool TestSparseAngularDistance(size_t N, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
+    cout << typeid(T).name() << " File: " << dataFile 
+         << " Elapsed: " << tDiff / 1e3 << " ms " << 
             " # of sparse angular dist per second: " << (1e6/tDiff) * N * Rep  << endl;
 
     return true;
 }
 
-template <class T>
-bool TestSparseCosineSimilarity(size_t N, size_t Rep) {
-    unique_ptr<SpaceSparseCosineSimilarity<T>>  space(new SpaceSparseCosineSimilarity<T>());
-    ObjectVector                  elems;
+bool TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
 
-    space->ReadDataset(elems, NULL, "../sample_data/sparse_5K.txt", N); 
+    unique_ptr<SpaceSparseCosineSimilarityFast>  space(new SpaceSparseCosineSimilarityFast());
+    ObjectVector                                 elems;
+
+    space->ReadDataset(elems, NULL, dataFile.c_str(),  N); 
 
     N = min(N, elems.size());
 
@@ -1920,7 +2000,47 @@ bool TestSparseCosineSimilarity(size_t N, size_t Rep) {
     uint64_t tDiff = t.split();
 
     cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
+    cout << typeid(T).name() << " File: " << dataFile << 
+            " Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep  << endl;
+
+    return true;
+}
+
+template <class T>
+bool TestSparseCosineSimilarity(const string& dataFile, size_t N, size_t Rep) {
+    unique_ptr<SpaceSparseCosineSimilarity<T>>  space(new SpaceSparseCosineSimilarity<T>());
+    ObjectVector                  elems;
+
+    space->ReadDataset(elems, NULL, dataFile.c_str(), N); 
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01 * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    cout << "Ignore: " << DiffSum << endl;
+    cout << typeid(T).name() << " File: " << dataFile 
+         << " Elapsed: " << tDiff / 1e3 << " ms " << 
             " # of sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep  << endl;
 
     return true;
@@ -2085,14 +2205,31 @@ TEST(TestSpeed) {
 #endif
 
     nTest++;
-    nFail += !TestSparseCosineSimilarity<float>(1000, 1000);
+    nFail += !TestSparseCosineSimilarityFast("../sample_data/sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseAngularDistance<float>(1000, 1000);
+    nFail += !TestSparseCosineSimilarityFast("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
+    nFail += !TestSparseCosineSimilarityFast("../sample_data/sparse_5K.txt", 1000, 1000);
+    nTest++;
+    nFail += !TestSparseCosineSimilarityFast("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+
+    nTest++;
+    nFail += !TestSparseCosineSimilarity<float>("../sample_data/sparse_5K.txt", 1000, 1000);
+    nTest++;
+    nFail += !TestSparseCosineSimilarity<float>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
+    nFail += !TestSparseAngularDistance<float>("../sample_data/sparse_5K.txt", 1000, 1000);
+    nTest++;
+    nFail += !TestSparseAngularDistance<float>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
 #ifdef TEST_SPEED_DOUBLE
     nTest++;
-    nFail += !TestSparseCosineSimilarity<double>(1000, 1000);
+    nFail += !TestSparseCosineSimilarity<double>("../sample_data/sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseAngularDistance<double>(1000, 1000);
+    nFail += !TestSparseCosineSimilarity<double>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
+    nFail += !TestSparseAngularDistance<double>("../sample_data/sparse_5K.txt", 1000, 1000);
+    nTest++;
+    nFail += !TestSparseAngularDistance<double>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
 #endif
 
 
