@@ -61,7 +61,14 @@ const static __m128i shuffle_mask16[16] = {
  * Schlegel, Benjamin, Thomas Willhalm, and Wolfgang Lehner. 
  * "Fast sorted-set intersection using simd instructions." ADMS Workshop, Seattle, WA, USA. 2011.
  *
- * The code was adapted, simplified, and modified by Leo as follows:
+ * Daniel improved the code of Schlegel et al by replacing a slow function
+ * _mm_cmpistri with a faster analog _mm_cmpistrm. The _mm_cmpistrm is 
+ * fast, but it cannot deal with IDs that are multiples of 65536.
+ * Thus, some extra checking is need to handle the case of such IDs.
+ * In this version, however, Leo works around this problem by
+ * transforming IDs in advance.
+ *
+ * More details about Leo's changes:
  *
  * 1) The original algorithm was used to obtain only IDs.
  *    to extract both IDs and respective floating-point values,
