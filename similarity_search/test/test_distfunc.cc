@@ -29,7 +29,7 @@
 
 #define TEST_SPEED_DOUBLE
 
-#define TEST_AGREE    0
+#define TEST_AGREE    1
 #define RANGE         8.0f
 #define RANGE_SMALL   1e-6f
 
@@ -169,7 +169,6 @@ TEST(SparsePackUnpack) {
   TestSparsePackUnpack<float>();
   TestSparsePackUnpack<double>();
 }
-
 
 TEST(TestEfficientPower) {
   float f = 2.0;
@@ -705,12 +704,62 @@ bool TestBitHammingAgree(size_t N, size_t dim, size_t Rep) {
     return res;
 }
 
+bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
+
+    unique_ptr<SpaceSparseCosineSimilarityFast>     spaceFast(new SpaceSparseCosineSimilarityFast());
+    unique_ptr<SpaceSparseCosineSimilarity<float>>  spaceReg (new SpaceSparseCosineSimilarity<T>());
+
+    ObjectVector                                 elemsFast;
+    ObjectVector                                 elemsReg;
+
+    spaceFast->ReadDataset(elemsFast, NULL, dataFile.c_str(),  N); 
+    spaceReg->ReadDataset(elemsReg, NULL, dataFile.c_str(),  N); 
+
+    CHECK(elemsFast.size() == elemsReg.size());
+
+    N = min(N, elemsReg.size());
+
+    bool bug = false;
+
+    float maxRelDiff = 1e-6;
+    float maxAbsDiff = 1e-6;
+
+    for (size_t j = Rep; j < N; ++j) 
+    for (size_t k = j - Rep; k < j; ++k) {
+        float val1 = spaceFast->IndexTimeDistance(elemsFast[k], elemsFast[j]);
+        float val2 = spaceReg->IndexTimeDistance(elemsReg[k], elemsReg[j]);
+
+        float AbsDiff1 = fabs(val1 - val2);
+        float RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val2)),T(1e-18));
+
+        if (RelDiff1 > maxRelDiff && AbsDiff1 > maxAbsDiff) {
+            cerr << "Bug fast vs non-fast cosine " << 
+            " val1 = " << val1 << " val2 = " << val2 << 
+            " Diff: " << (val1 - val2) << 
+            " RelDiff1: " << RelDiff1 << 
+            " AbsDiff1: " << AbsDiff1 << endl; 
+            bug = true;
+        }
+
+        if (bug) return false;
+    }
+
+    return true;
+}
+
 #if TEST_AGREE
 TEST(TestAgree) {
     int nTest  = 0;
     int nFail = 0;
 
     srand48(0);
+
+    nTest++;
+    nFail += !TestSparseCosineSimilarityAgree("../sample_data/sparse_5K.txt", 1000, 200);
+
+    nTest++;
+    nFail += !TestSparseCosineSimilarityAgree("../sample_data/sparse_wiki_5K.txt", 1000, 200);
 
     /* 
      * 32 should be more than enough for almost all methods,
@@ -2002,7 +2051,7 @@ bool TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep
     cout << "Ignore: " << DiffSum << endl;
     cout << typeid(T).name() << " File: " << dataFile << 
             " Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep  << endl;
+            " # of (fast) sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep  << endl;
 
     return true;
 }

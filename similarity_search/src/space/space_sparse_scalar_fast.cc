@@ -23,6 +23,7 @@
 #include "logging.h"
 #include "experimentconf.h"
 
+#define MM_EXTRACT_FLOAT(v,i) _mm_cvtss_f32(_mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, i)))
 
 namespace similarity {
 
@@ -216,10 +217,10 @@ float ScalarProjectFast(const char* pData1, size_t len1,
                                          _mm_loadu_ps(val2 + k)));
         }
 
-        sum += _mm_extract_ps(sum128, 0);
-        sum += _mm_extract_ps(sum128, 1);
-        sum += _mm_extract_ps(sum128, 2);
-        sum += _mm_extract_ps(sum128, 3);
+        sum += MM_EXTRACT_FLOAT(sum128, 0);
+        sum += MM_EXTRACT_FLOAT(sum128, 1);
+        sum += MM_EXTRACT_FLOAT(sum128, 2);
+        sum += MM_EXTRACT_FLOAT(sum128, 3);
       }
 
       for (ssize_t k = resQty4 ; k < resQty; ++k)
