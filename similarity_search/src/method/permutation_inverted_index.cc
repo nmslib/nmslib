@@ -87,40 +87,6 @@ template <typename QueryType>
 void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
   Permutation perm_q;
   GetPermutation(pivot_, query, &perm_q);
-
-/* 
- * TODO @leo it is not unclear, if the second version is more efficient,
- *           but they seem to be equivalent in terms of effectiveness.
- */
-#if 0
-  vector<IntInt> perm_dists(data_.size());
-  for (size_t i = 0; i < data_.size(); ++i) {
-    perm_dists[i] = make_pair(num_pivot_search_ * num_pivot_index_, i);
-  }
-
-  for (size_t i = 0; i < perm_q.size(); ++i) {
-    if (perm_q[i] < num_pivot_search_) {
-      for (auto& v : posting_lists_[i]) {
-        // spearman footrule
-        int spearman_dist = std::abs(static_cast<int>(v.pos_) - static_cast<int>(perm_q[i]));
-        if (spearman_dist > max_pos_diff_) continue;
-        // spearman rho
-        //spearman_dist = spearman_dist * spearman_dist;
-        perm_dists[v.id_].first += spearman_dist - static_cast<int>(num_pivot_index_);
-      }
-    }
-  }
-
-  IncrementalQuickSelect<IntInt> quick_select(perm_dists);
-
-  size_t scan_qty = min(db_scan_, perm_dists.size());
-
-  for (size_t i = 0; i < scan_qty; ++i) {
-    const size_t idx = quick_select.GetNext().second;
-    quick_select.Next();
-    query->CheckAndAddToResult(data_[idx]);
-  }
-#else
   vector<vector<ObjectInvEntry>::iterator>  iterBegs;
   vector<vector<ObjectInvEntry>::iterator>  iterEnds;
 
@@ -219,7 +185,6 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
     quick_select.Next();
     query->CheckAndAddToResult(data_[idx]);
   }
-#endif
 }
 
 template <typename dist_t>

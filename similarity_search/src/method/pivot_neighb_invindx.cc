@@ -157,7 +157,7 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
 
 
   LOG(INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
-  LOG(INFO) << "# of index chunks  = " << posting_lists_.size();
+  LOG(INFO) << "# of index chunks  = " << indexQty;
   LOG(INFO) << "# of indexing thread  = " << index_thread_qty_;
   LOG(INFO) << "# pivots      = " << num_pivot_;
   LOG(INFO) << "# prefix (K)  = " << num_prefix_;
