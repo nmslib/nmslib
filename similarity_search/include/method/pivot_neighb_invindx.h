@@ -38,9 +38,9 @@ using std::vector;
  * Eric Sadit Tellez, Edgar Chavez and Gonzalo Navarro,
  * Succinct Nearest Neighbor Search, SISAP 2011
  *
- * In this implementation, we introduce several important modifications:
+ * In this implementation, we introduce several modifications:
  * 1) The inverted file is split into small parts
- * 2) The index is not compressed (thought it could be)
+ * 2) The index is not compressed (though it could be)
  * 3) Instead of the adaptive union algorithm, we use a well-known ScanCount algorithm (by default). 
  *    The overall time spent on processing of the inverted file is 20-30% of the overall
  *    search time. Thus, the retrieval time cannot be substantially improved by
