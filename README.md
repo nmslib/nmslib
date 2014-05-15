@@ -1,6 +1,8 @@
 Non-Metric Space Library
 =================
 
+Contributors: Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Avrelin Nikita, Alexander Ponomarenko.
+
 
 Leo(nid) Boytsov is a maintainer.  
 
