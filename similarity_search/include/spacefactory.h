@@ -27,12 +27,7 @@
 namespace similarity {
 
 #define REGISTER_SPACE_CREATOR(type, name, func)\
-  namespace SpaceFact##type##name##func {\
-    struct DummyStruct { DummyStruct()\
-      { SpaceFactoryRegistry<type>::Instance().Register(name, func); }\
-    };\
-    DummyStruct DummyVar;\
-  }
+      SpaceFactoryRegistry<type>::Instance().Register(name, func);
  
 
 template <typename dist_t>

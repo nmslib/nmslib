@@ -27,16 +27,18 @@
 #include "ztimer.h"
 #include "pow.h"
 
-#define TEST_SPEED_DOUBLE
+#define TEST_SPEED_DOUBLE 1
 
-#define TEST_AGREE    1
-#define RANGE         8.0f
-#define RANGE_SMALL   1e-6f
+#define TEST_AGREE     1
+#define TEST_SPEED_ LP 0
+#define RANGE          8.0f
+#define RANGE_SMALL    1e-6f
 
 namespace similarity {
 
 using std::unique_ptr;
 using std::vector;
+
 
 template <class T> 
 inline void Normalize(T* pVect, size_t qty) {
@@ -2246,7 +2248,7 @@ TEST(TestSpeed) {
     nFail += !TestCosineSimilarity<float>(1000, dim, 1000);
     nTest++;
     nFail += !TestAngularDistance<float>(1000, dim, 1000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestCosineSimilarity<double>(1000, dim, 1000);
     nTest++;
@@ -2270,7 +2272,7 @@ TEST(TestSpeed) {
     nFail += !TestSparseAngularDistance<float>("../sample_data/sparse_5K.txt", 1000, 1000);
     nTest++;
     nFail += !TestSparseAngularDistance<float>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestSparseCosineSimilarity<double>("../sample_data/sparse_5K.txt", 1000, 1000);
     nTest++;
@@ -2289,6 +2291,7 @@ TEST(TestSpeed) {
     nTest++;
     nFail += !TestSparseLp<float>(1000, 1000, 1/3.0);
 
+#if TEST_SPEED_LP
     float delta = 0.125/2.0;
 
     for (float power = delta, step = delta; power <= 24; power += step) {
@@ -2300,7 +2303,7 @@ TEST(TestSpeed) {
     }
     cout << "========================================" << endl;
 
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     cout << "Double-precision (sparse) LP-distance tests" << endl;
     nFail += !TestSparseLp<double>(1000, 1000, -1);
     nTest++;
@@ -2326,7 +2329,7 @@ TEST(TestSpeed) {
       if (power == 8) step = 0.5;
     }
     cout << "========================================" << endl;
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     cout << "Double-precision LP-distance tests" << endl;
     for (double power = delta, step = delta; power <= 24; power += step) {
       nTest++;
@@ -2337,6 +2340,7 @@ TEST(TestSpeed) {
       if (power == 8) step = 0.5;
     }
     cout << "========================================" << endl;
+#endif
 #endif
 
     nTest++;
@@ -2357,7 +2361,7 @@ TEST(TestSpeed) {
     nFail += !TestJSStandard<float>(1024, dim, 1000, pZero2);
     nTest++;
     nFail += !TestJSStandard<float>(1024, dim, 1000, pZero3);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestJSStandard<double>(1024, dim, 500, pZero1);
     nTest++;
@@ -2372,7 +2376,7 @@ TEST(TestSpeed) {
     nFail += !TestJSPrecomp<float>(1024, dim, 500, pZero2);
     nTest++;
     nFail += !TestJSPrecomp<float>(1024, dim, 500, pZero3);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestJSPrecomp<double>(1024, dim, 500, pZero1);
     nTest++;
@@ -2387,7 +2391,7 @@ TEST(TestSpeed) {
     nFail += !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero2);
     nTest++;
     nFail += !TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero3);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero1);
     nTest++;
@@ -2402,7 +2406,7 @@ TEST(TestSpeed) {
     nFail += !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero2);
     nTest++;
     nFail += !TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero3);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero1);
     nTest++;
@@ -2413,21 +2417,21 @@ TEST(TestSpeed) {
 
     nTest++;
     nFail += !TestL1Norm<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestL1Norm<double>(1024, dim, 10000);
 #endif
 
     nTest++;
     nFail += !TestL1NormStandard<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestL1NormStandard<double>(1024, dim, 10000);
 #endif
 
     nTest++;
     nFail += !TestL1NormSIMD<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestL1NormSIMD<double>(1024, dim, 10000);
 #endif
@@ -2435,28 +2439,28 @@ TEST(TestSpeed) {
 
     nTest++;
     nFail += !TestLInfNorm<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestLInfNorm<double>(1024, dim, 10000);
 #endif
 
     nTest++;
     nFail += !TestLInfNormStandard<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestLInfNormStandard<double>(1024, dim, 10000);
 #endif
 
     nTest++;
     nFail += !TestLInfNormSIMD<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestLInfNormSIMD<double>(1024, dim, 10000);
 #endif
 
     nTest++;
     nFail += !TestItakuraSaitoStandard<float>(1024, dim, 1000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestItakuraSaitoStandard<double>(1024, dim, 1000);
 #endif
@@ -2464,35 +2468,35 @@ TEST(TestSpeed) {
 
     nTest++;
     nFail += !TestItakuraSaitoPrecomp<float>(1024, dim, 2000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestItakuraSaitoPrecomp<double>(1024, dim, 2000);
 #endif
 
     nTest++;
     nFail += !TestItakuraSaitoPrecompSIMD<float>(1024, dim, 4000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestItakuraSaitoPrecompSIMD<double>(1024, dim, 4000);
 #endif
 
     nTest++;
     nFail += !TestL2Norm<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestL2Norm<double>(1024, dim, 10000);
 #endif
 
     nTest++;
     nFail += !TestL2NormStandard<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestL2NormStandard<double>(1024, dim, 10000);
 #endif
 
     nTest++;
     nFail += !TestL2NormSIMD<float>(1024, dim, 10000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestL2NormSIMD<double>(1024, dim, 10000);
 #endif
@@ -2500,7 +2504,7 @@ TEST(TestSpeed) {
 
     nTest++;
     nFail += !TestKLStandard<float>(1024, dim, 1000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestKLStandard<double>(1024, dim, 1000);
 #endif
@@ -2508,35 +2512,35 @@ TEST(TestSpeed) {
 
     nTest++;
     nFail += !TestKLPrecomp<float>(1024, dim, 2000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestKLPrecomp<double>(1024, dim, 2000);
 #endif
 
     nTest++;
     nFail += !TestKLPrecompSIMD<float>(1024, dim, 4000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestKLPrecompSIMD<double>(1024, dim, 4000);
 #endif
 
     nTest++;
     nFail += !TestKLGeneralStandard<float>(1024, dim, 1000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestKLGeneralStandard<double>(1024, dim, 1000);
 #endif
 
     nTest++;
     nFail += !TestKLGeneralPrecomp<float>(1024, dim, 2000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestKLGeneralPrecomp<double>(1024, dim, 2000);
 #endif
 
     nTest++;
     nFail += !TestKLGeneralPrecompSIMD<float>(1024, dim, 2000);
-#ifdef TEST_SPEED_DOUBLE
+#if TEST_SPEED_DOUBLE
     nTest++;
     nFail += !TestKLGeneralPrecompSIMD<double>(1024, dim, 2000);
 #endif

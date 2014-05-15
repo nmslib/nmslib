@@ -29,12 +29,7 @@ namespace similarity {
 using std::string;
 
 #define REGISTER_METHOD_CREATOR(type, name, func)\
-  namespace MethFact##type##name##func {\
-    struct DummyStruct { DummyStruct()\
-      { MethodFactoryRegistry<type>::Instance().Register(name, func); }\
-    };\
-    DummyStruct DummyVar;\
-  }
+      MethodFactoryRegistry<type>::Instance().Register(name, func); 
  
 
 template <typename dist_t>

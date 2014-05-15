@@ -27,6 +27,7 @@
 #include <fstream>
 #include <map>
 
+#include "init.h"
 #include "global.h"
 #include "utils.h"
 #include "memory.h"
@@ -348,8 +349,12 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 }
 
 int main(int ac, char* av[]) {
+  // This should be the first function called before
+  initLibrary();
+
   WallClockTimer timer;
   timer.reset();
+
 
   string                DistType;
   string                SpaceType;

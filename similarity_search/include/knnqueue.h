@@ -20,6 +20,7 @@
 #include <queue>
 #include <vector>
 #include <utility>
+#include <limits>
 
 #include "global.h"
 

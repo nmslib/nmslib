@@ -58,10 +58,12 @@ using std::lock_guard;
 using std::unique_ptr;
 
 template <typename dist_t>
-struct Experiments {
+class Experiments {
+public:
   typedef Index<dist_t> IndexType;
 
-  struct RangeCreator {
+  class RangeCreator {
+  public:
     RangeCreator(dist_t radius) : radius_(radius){}
     RangeQuery<dist_t>* operator()(const Space<dist_t>* space,
                                    const Object* query_object) const {
@@ -75,7 +77,8 @@ struct Experiments {
     dist_t radius_;
   };
 
-  struct KNNCreator {
+  class KNNCreator {
+  public:
     KNNCreator(size_t K, float eps) : K_(K), eps_(eps) {}
     KNNQuery<dist_t>* operator()(const Space<dist_t>* space,
                                  const Object* query_object) const {

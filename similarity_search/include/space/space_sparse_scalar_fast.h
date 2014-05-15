@@ -31,8 +31,8 @@
 #include "distcomp.h"
 
 
-#define SPACE_SPARSE_COSINE_SIMILARITY_FAST  "cosinesimil_fast"
-#define SPACE_SPARSE_ANGULAR_DISTANCE_FAST   "angulardist_fast"
+#define SPACE_SPARSE_COSINE_SIMILARITY_FAST  "cosinesimil_sparse_fast"
+#define SPACE_SPARSE_ANGULAR_DISTANCE_FAST   "angulardist_sparse_fast"
 
 namespace similarity {
 

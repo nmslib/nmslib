@@ -10,10 +10,13 @@
 
 include_directories (${NonMetricSpaceLib_SOURCE_DIR}/include ${NonMetricSpaceLib_SOURCE_DIR}/include/space ${NonMetricSpaceLib_SOURCE_DIR}/include/method)
 
+add_dependencies (NonMetricSpaceLib lshkit)
+
 file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/test*.cc)
 
 add_executable (bunit bunit.cc ${TEST_SRC_FILES})
-target_link_libraries (bunit NonMetricSpaceLib)
+
+target_link_libraries (bunit NonMetricSpaceLib lshkit ${GSL_LIBRARIES} )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")

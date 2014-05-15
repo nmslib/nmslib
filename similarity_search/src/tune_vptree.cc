@@ -28,6 +28,7 @@
 #include <fstream>
 #include <map>
 
+#include "init.h"
 #include "global.h"
 #include "utils.h"
 #include "memory.h"
@@ -284,6 +285,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
 }
 
 int main(int ac, char* av[]) {
+  initLibrary();
   WallClockTimer timer;
   timer.reset();
 

@@ -15,7 +15,9 @@
  */
 
 #include <stdlib.h>
+
 #include "bunit.h"
+#include "init.h"
 
 namespace similarity {
 
@@ -84,5 +86,7 @@ int TestRunner::RunAllTests() {
 }     // namespace similarity
 
 int main() {
+  similarity::initLibrary();
+
   return similarity::TestRunner::Instance().RunAllTests();
 }

@@ -114,9 +114,9 @@ void ExperimentConfig<dist_t>::PrintInfo() const {
   LOG(INFO) << "# of query points     = " << GetQueryQty();
 }
 
-template struct ExperimentConfig<float>;
-template struct ExperimentConfig<double>;
-template struct ExperimentConfig<int>;
+template class ExperimentConfig<float>;
+template class ExperimentConfig<double>;
+template class ExperimentConfig<int>;
 
 }
 

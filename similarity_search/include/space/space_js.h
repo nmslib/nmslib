@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef _SPACE_LP_H_
-#define _SPACE_LP_H_
+#ifndef _SPACE_JS_H_
+#define _SPACE_JS_H_
 
 #include <string>
 #include <map>

@@ -1,0 +1,65 @@
+/**
+ * Non-metric Space Library
+ *
+ * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
+ * With contributions from Lawrence Cayton (http://lcayton.com/).
+ *
+ * For the complete list of contributors and further details see:
+ * https://github.com/searchivarius/NonMetricSpaceLib 
+ * 
+ * Copyright (c) 2014
+ *
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
+
+#include "searchoracle.h"
+#include "space/space_js.h"
+
+namespace similarity {
+
+/*
+ * Creating functions.
+ */
+
+template <typename dist_t>
+Space<dist_t>* CreateJSDivSlow(const AnyParams& /* ignoring params */) {
+  return new SpaceJSDiv<dist_t>(SpaceJSDiv<dist_t>::kJSSlow);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateJSDivFastPrecomp(const AnyParams& /* ignoring params */) {
+  return new SpaceJSDiv<dist_t>(SpaceJSDiv<dist_t>::kJSFastPrecomp);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateJSDivFastPrecompApprox(const AnyParams& /* ignoring params */) {
+  return new SpaceJSDiv<dist_t>(SpaceJSDiv<dist_t>::kJSFastPrecompApprox);
+}
+
+
+template <typename dist_t>
+Space<dist_t>* CreateJSMetricSlow(const AnyParams& /* ignoring params */) {
+  return new SpaceJSMetric<dist_t>(SpaceJSMetric<dist_t>::kJSSlow);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateJSMetricFastPrecomp(const AnyParams& /* ignoring params */) {
+  return new SpaceJSMetric<dist_t>(SpaceJSMetric<dist_t>::kJSFastPrecomp);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateJSMetricFastPrecompApprox(const AnyParams& /* ignoring params */) {
+  return new SpaceJSMetric<dist_t>(SpaceJSMetric<dist_t>::kJSFastPrecompApprox);
+}
+
+
+
+/*
+ * End of creating functions.
+ */
+
+
+}
+

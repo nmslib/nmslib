@@ -93,7 +93,7 @@ static inline void Expect_EQ(const std::string& msg,
                              const T& actual,
                              const std::string& file_name,
                              int line_num,
-                             T eps = 1e-10) {
+                             T eps = static_cast<T>(1e-10)) {
   if (!EQ(expected, actual, eps)) {
     std::stringstream ss;
     ss << file_name << "(" << line_num << "): "
@@ -111,7 +111,7 @@ static inline void Expect_NE(const std::string& msg,
                              const T& actual,
                              const std::string& file_name,
                              int line_num,
-                             T eps = 1e-10) {
+                             T eps = static_cast<T>(1e-10)) {
   if (EQ(expected, actual, eps)) {
     std::stringstream ss;
     ss << file_name << "(" << line_num << "): "

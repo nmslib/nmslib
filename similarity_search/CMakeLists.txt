@@ -31,6 +31,7 @@ function(CXX_COMPILER_DUMPVERSION _OUTPUT_VERSION)
 endfunction()
 
 CXX_COMPILER_DUMPVERSION(CXX_COMPILER_VERSION)
+#message(FATAL_ERROR "stopping... compiler version is: ${CMAKE_CXX_COMPILER_ID} ${CXX_COMPILER_VERSION}")
 
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -50,8 +51,14 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
     endif()
     set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Ofast -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X  -march=native")
     set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -ggdb  -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X  -march=native")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    if (CXX_COMPILER_VERSION VERSION_LESS 4.2.1)
+        message(FATAL_ERROR "Clang version must be at least 4.2.1!")
+    endif()
+    set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wcast-align -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X -march=native")
+    set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wcast-align -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X -march=native")
 else ()
-    message(FATAL_ERROR "Please, use GCC or the Intel compiler!")
+    message(FATAL_ERROR "Please, use GCC, Clang, or the Intel compiler!")
 endif()
 
 
@@ -71,16 +78,20 @@ else (GSL_FOUND)
     message (STATUS "Could not locate GSL.")
 endif (GSL_FOUND)
 
-# Can be use to hardwire boost location.
+# Can be used to hardwire boost location.
 #set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
 #set (Boost_INCLUDE_DIR ${BOOST_ROOT})
 #set (Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
+
 find_package (Boost 1.48 COMPONENTS system filesystem program_options REQUIRED)
 include_directories (${Boost_INCLUDE_DIR})
+include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
 link_directories (${Boost_LIBRARY_DIR})
 
 add_subdirectory (lshkit)
 add_subdirectory (src)
 add_subdirectory (test)
+
+message (STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CXX_COMPILER_VERSION}")
 
 

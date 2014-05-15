@@ -23,14 +23,11 @@
 #include "logging.h"
 #include "experimentconf.h"
 
-#define MM_EXTRACT_FLOAT(v,i) _mm_cvtss_f32(_mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, i)))
+#include "simdutils.h"
 
 namespace similarity {
 
 #ifdef __SSE4_2__
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <tmmintrin.h>
 
 const static __m128i shuffle_mask16[16] = {
   _mm_set_epi8(-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127),
@@ -50,6 +47,8 @@ const static __m128i shuffle_mask16[16] = {
   _mm_set_epi8(-127,-127,-127,-127,15,14,13,12,11,10,9,8,7,6,5,4),
   _mm_set_epi8(15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0),
 };
+#else 
+#error "No SSE4.2 detected!"
 
 #endif
 

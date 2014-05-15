@@ -29,7 +29,8 @@ namespace similarity {
 using std::string;
 
 template <typename dist_t>
-struct ExperimentConfig {
+class ExperimentConfig {
+public:
   ExperimentConfig(Space<dist_t>* space,
                    const string& datafile,
                    const string& queryfile,

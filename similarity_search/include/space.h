@@ -35,7 +35,7 @@ using std::map;
 using std::runtime_error;
 
 template <typename dist_t>
-struct ExperimentConfig;
+class ExperimentConfig;
 
 template <typename dist_t>
 const char* DistTypeName();
@@ -55,7 +55,7 @@ template <typename dist_t>
 class RangeQuery;
 
 template <typename dist_t>
-struct Experiments;
+class Experiments;
 
 template <typename dist_t>
 class Space {
