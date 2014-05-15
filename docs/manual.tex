@@ -342,10 +342,20 @@ make
 If the compiler complains about the wrong version of the GCC, 
 it is most likely that you forgot to set the environment variables \ttt{CXX} and \ttt{CC} (as described above).
 If this is the case, make these variables point to the correction version of the compiler.
-\textbf{Important note:} do not forget to delete the \ttt{cmake} cache file, before recreating the makefiles:
+\textbf{Important note:} 
+do not forget to delete the \ttt{cmake} cache file, before recreating the makefiles:
 \begin{verbatim}
 rm CMakeCache.txt
 \end{verbatim}
+
+Also note that, for some reason, \ttt{cmake} may ignore environmental variables \ttt{CXX} and \ttt{CC}.
+Then, you can specify the compiler directly through \ttt{cmake} arguments.
+For example, in the case of the GNU C++ and the \ttt{Release} build, 
+this can be done as follows:
+\begin{verbatim}
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-4.7 \
+-DCMAKE_GCC_COMPILER=gcc-4.7 CMAKE_CC_COMPILER=gcc-4.7 .
+\end{verbatim} 
 
 The build process creates the following binaries:
 \begin{itemize}
@@ -1142,7 +1152,7 @@ at a specified recall threshold.
 Another approach to learn $D()$, which did not work out well yet, is to use sampling.
 It is possible to implement new search oracles and plug them into the implementation of the VP-tree.
 
-\newpage
+%\newpage
 
 \begin{table}[H]
 \caption{Description of implemented methods\label{TableMethods}}
@@ -1455,17 +1465,28 @@ A complete list of the methods, including their labels and parameters, is given 
 
 \section{Extending the code}\label{SectionExtend}
 It is possible to add new spaces and search methods.
-This is done in two steps. 
+This is done in three steps, which we only outline here.
+A more detailed description can be found in \S~\ref{SectionCreateSpace}
+and \S~\ref{SectionCreateMethod}.
+
 In the first step, the user writes the code that implements a
 functionality of a method or a space.
 In the second step, the user writes a special helper file  
-that registers the space or method in a factory class.
-This helper files need to be placed into a special directory.
-After that ,the user needs to re-run \ttt{cmake} as described in \S~\ref{SectionBuild}.
+containing methods that creates a class or a method.
+In the third step, the user adds 
+the registration code to either the file 
+\href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/include/factory/init_spaces.h}{init\_spaces.h} (for spaces)
+or to the file
+\href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/include/factory/init_methods.h}{init\_methods.h} (for methods).
+This step has two sub-steps. 
+First, the user includes the previously created helper file into either
+\texttt{init\_spaces.h} or \texttt{init\_methods.h}.
+Finally the function \texttt{initMethods} or \texttt{initSpaces} are extended
+by adding a macro call that actually registers the space or method in a factory class.
 No modification of makefiles (or other configuration files) is required.
 
 Is is noteworthy that all implementations of methods and spaces
-are template classes parameterized by the distance value type.
+are mostly template classes parameterized by the distance value type.
 Recall that the distance function can return an integer (\ttt{int}), 
 a single-precision (\ttt{float}), or a double-precision (\ttt{double}) real value.
 The user may choose to provide specializations for all possible
@@ -1550,7 +1571,7 @@ creating new objects and/or their copies as well providing
 access to the raw (i.e., unstructured) representation of the data
 (through functions \ttt{data} and \ttt{datalength}).
 We would re-iterate that currently (though this is likely to change in the future),
-\ttt{Object} is a very basic class that only keeps a blob of data and remembers its size.
+\ttt{Object} is a very basic class that only keeps a blob of data and blob's size.
 For example, the \ttt{Object} can store an array of single-precision floating point
 numbers, but it has no function to obtain the number of elements.
 These are the spaces that are responsible for reading objects from files,
@@ -1566,12 +1587,12 @@ the header file
 and the source file
 \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/src/space/space_dummy.cc}{space\_dummy.cc}.
 The user is encouraged to study these files and read the comments.
-Here we focus only on the main aspects of creating a new method.
-\newpage
+Here we focus only on the main aspects of creating a new space.
 
 The sample files describe a template class \ttt{DummySpace}, 
 which is declared and defined in the namespace \ttt{similarity}.
 It is a direct ancestor of the class \ttt{Space}:
+
 \begin{verbatim}
 template <typename dist_t>
 class SpaceDummy : public Space<dist_t> {
@@ -1587,7 +1608,7 @@ class SpaceDummy : public Space<dist_t> {
 }
 \end{verbatim}
 It is possible to provide the complete implementation of the \ttt{DummySpace}
-in the header file. However, this would make compilation very slow.
+in the header file. However, this would make compilation slower.
 Instead, we recommend to use the mechanism of explicit template instantiation.
 To this end, the user should instantiate the template in the source file
 for all possible combination of parameters.
@@ -1620,15 +1641,9 @@ During the testing phase, a search method can compute a distance
 only by accessing functions \ttt{Distance}, \ttt{DistanceObjLeft}, or
 \ttt{DistanceObjRight}, which are member functions of the \ttt{Query}.
 
+
 Finally, we need to ``tell'' the library about the space,
 by registering the space in the space factory.
-An example of registering the space \ttt{SpaceDummy}
-is given in the file \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/src/factory/space/space_dummy.cc}{space\_dummy}.
-\textbf{It is very important} to place the registration code in the subdirectory 
-\ttt{similarity\_search/src/factory/space}. 
-Otherwise, for certain platforms and compilers, this code may not be executed.
-\newpage
-
 At runtime, the space is created through a helper function.
 In our case, it is called \ttt{CreateDummy}.
 The function, accepts only one parameter,
@@ -1656,7 +1671,7 @@ to integer or floating-point numbers if necessary.
 A conversion occurs, if the type of a receiving variable (passed as a second parameter
 to the functions \ttt{GetParam*}) is different from a string.
 It is possible to use boolean variables as parameters.
-In that, in the command line, one has to use 1 (for \ttt{true}) or 0 (for \ttt{false}).
+In that, in the command line, one has to specify 1 (for \ttt{true}) or 0 (for \ttt{false}).
 Note that the function \ttt{GetParamRequired} raises an error, 
 if the request parameter was not supplied in the command line.
 
@@ -1672,8 +1687,15 @@ REGISTER_SPACE_CREATOR(int,    SPACE_DUMMY,  CreateDummy)
 REGISTER_SPACE_CREATOR(float,  SPACE_DUMMY,  CreateDummy)
 REGISTER_SPACE_CREATOR(double, SPACE_DUMMY,  CreateDummy)
 \end{verbatim}
-To include new files into the build process, 
-the user needs to re-run \ttt{cmake} as described in \S~\ref{SectionBuild}.
+
+This macro should be placed into the function \texttt{initSpaces} in the 
+file 
+\href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/include/factory/init\_spaces.h}{init\_spaces.h}.
+Last, but not least we need to include the helper function, which creates
+the class into file \texttt{init\_spaces.h} as follows:
+\begin{verbatim}
+#include "factory/space/space_dummy.h"
+\end{verbatim}
 
 \subsection{Creating a method}\label{SectionCreateMethod}
 To explain the basics of developing a new search method,
@@ -1686,9 +1708,10 @@ and the source file
 The user is encouraged to study these files and read the comments.
 Here we would omit certain minor details.
 
-\newpage
 Similar to the space and query classes, a search method is implemented using
 a template class, which is parameterized by the distance function value:
+
+\newpage
 \begin{verbatim}
 template <typename dist_t>
 class DummyMethod : public Index<dist_t> {
@@ -1719,30 +1742,24 @@ Otherwise, it does nothing useful.
 
 The space object is typically used to compute the distance by calling
 the function \ttt{IndexTimeDistance}.
-Note again that \ttt{IndexTimeDistance} \textbf{should not be used} in functions
+Note again that \ttt{IndexTimeDistance} \textbf{should not be used} in a function
 \ttt{Search}. 
 If the user attempts to invoke \ttt{IndexTimeDistance} during the test phase,
 \textbf{the program will terminate}.
-As noted previously, we want to compute the number of times
+\footnote{As noted previously, we want to compute the number of times
 the distance was computed for each query. This allows us to estimate the variance.
 Hence, during the testing phase, the distance function should be invoked only through
-a query object.
+a query object.}
 
 
 Finally, we need to ``tell'' the library about the method,
-by registering the method in the method factory.
-This done similarly to registering a space.
-An example of registering the method \ttt{MethodDummy}
-is given in the file \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/src/factory/method/dummy.cc}{dummy.cc}.
-\textbf{It is very important} to place the registration code in the subdirectory \newline
-\ttt{similarity\_search/src/factory/space}. Otherwise, the registering code may not execute (for certain
-platforms and compilers).
+by registering the method in the method factory,
+similarly to registering a space.
+At runtime, the method is created through a helper function,
+which accepts several parameters.
+One parameter is a reference to an object of the type \ttt{AllParams}.
+In our case, the function name is \ttt{CreateDummy}:
 
-\newpage
-At runtime, the method is created through a helper function.
-In our case, it is called \ttt{CreateDummy}.
-This function accepts several parameters,
-one which is a reference to an object of the type \ttt{AllParams}:
 \begin{verbatim}
 template <typename dist_t>
 Index<dist_t>* CreateDummy(bool PrintProgress,
@@ -1762,21 +1779,30 @@ we use a parameter extraction class \ttt{AnyParamManager}.
 The only difference, is that we retrieve an optional parameter \ttt{doSeqSearch}.
 If this parameter is not present in the command line,
 the code uses an old value of the variable \ttt{bDoSeqSearch}
-(which it had before we called \ttt{GetParamOptional}). 
-Again, similarly to space, the method-creating function \ttt{CreateDummy} needs
-to be registered in the space factory as follows:
+(which was set to false before we called \ttt{GetParamOptional}). 
+An example of such function for the method \ttt{MethodDummy}
+is given in the file \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/include/factory/method/dummy.h}{dummy.h}.
+
+Again, similarly to the case of the space, 
+the method-creating function \ttt{CreateDummy} needs
+to be registered in the method factory in two steps.
+First, we need to include \texttt{dummy.h} into the file
+\href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/include/factory/init_methods.h}{init\_methods.h} as follows:
+\begin{verbatim}
+#include "factory/method/dummy.h"
+\end{verbatim}
+Then, this file is further modified by adding the following lines to the function \texttt{initMethods}:
 \begin{verbatim}
 REGISTER_METHOD_CREATOR(float,  METH_DUMMY, CreateDummy)
 REGISTER_METHOD_CREATOR(double, METH_DUMMY, CreateDummy)
 REGISTER_METHOD_CREATOR(int,    METH_DUMMY, CreateDummy)
 \end{verbatim}
-Imagine that we want our method to work only with integer-valued distances.
-Then, we only need the following line:
+
+If we want our method to work only with integer-valued distances,
+we only need the following line:
 \begin{verbatim}
 REGISTER_METHOD_CREATOR(int,    METH_DUMMY, CreateDummy)
 \end{verbatim}
-To include new files into the build process, 
-the user needs to re-run \ttt{cmake} as described in \S~\ref{SectionBuild}.
 
 \subsection{Creating an application}\label{SectionCreateApp}
 First, we create a hello-world source file 
