@@ -17,9 +17,6 @@
 #ifndef _INIT_H_
 #define _INIT_H_
 
-#include "factory/init_spaces.h"
-#include "factory/init_methods.h"
-
 /*
  * This function should be called only *ONCE*,
  * but before actually using library functionality.
@@ -27,10 +24,11 @@
 
 namespace similarity {
 
-  inline void initLibrary() {
-    initSpaces();
-    initMethods();
-  };
+
+  /*
+   *  If pLogFile is NULL, then stderr will be used
+   */
+  void initLibrary(const char*pLogFile);
 }
 
 #endif

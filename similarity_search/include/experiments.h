@@ -126,7 +126,7 @@ public:
                                               IndexPtrs, MethodsDesc);
       }
     }
-    if (LogInfo) LOG(INFO) << "experiment done at " << CurrentTime();
+    if (LogInfo) LOG(INFO) << "experiment done at " << GetCurrentTime();
 
   }
 
@@ -440,7 +440,7 @@ public:
       }
     }
 
-    if (LogInfo) LOG(INFO) << "#### Finished " << QueryType::Type() << " " << CurrentTime();
+    if (LogInfo) LOG(INFO) << "#### Finished " << QueryType::Type() << " " << GetCurrentTime();
   }
 };
 

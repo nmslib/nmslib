@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_PIVOT_NEIGHB_H_
+#define _FACTORY_PIVOT_NEIGHB_H_
+
 #include "method/pivot_neighb_invindx.h"
 
 namespace similarity {
@@ -41,3 +44,5 @@ Index<dist_t>* CreatePivotNeighbInvertedIndex(
  * End of creating functions.
  */
 }
+
+#endif

@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_PERM_INDEX_INCR_BIN_H_
+#define _FACTORY_PERM_INDEX_INCR_BIN_H_
+
 #include "method/perm_index_incr_bin.h"
 
 namespace similarity {
@@ -66,3 +69,4 @@ Index<dist_t>* CreatePermutationIndexIncrementalBin(bool PrintProgress,
 
 }
 
+#endif

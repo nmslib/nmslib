@@ -13,8 +13,9 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+#ifndef FACTORY_SPACE_BREGMAN_H
+#define FACTORY_SPACE_BREGMAN_H
 
-#include "searchoracle.h"
 #include "space/space_bregman.h"
 
 namespace similarity {
@@ -61,3 +62,4 @@ Space<dist_t>* CreateItakuraSaitoFast(const AnyParams& /* ignoring params */) {
 
 }
 
+#endif

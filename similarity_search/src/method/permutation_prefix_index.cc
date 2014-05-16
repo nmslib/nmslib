@@ -21,7 +21,7 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "permutation_utils.h"
-#include "permutation_prefix_index.h"
+#include "method/permutation_prefix_index.h"
 
 namespace similarity {
 

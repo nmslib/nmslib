@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_LSH_MULTIPROBE_H_
+#define _FACTORY_LSH_MULTIPROBE_H_
+
 #include "method/lsh_multiprobe.h"
 
 namespace similarity {
@@ -85,3 +88,4 @@ Index<dist_t>* CreateLSHMultiprobe(bool PrintProgress,
 
 }
 
+#endif

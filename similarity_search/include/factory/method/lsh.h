@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_LSH_
+#define _FACTORY_LSH_
+
 #include "method/lsh.h"
 
 namespace similarity {
@@ -121,3 +124,4 @@ Index<dist_t>* CreateLSHThreshold(bool PrintProgress,
 
 }
 
+#endif

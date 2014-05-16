@@ -18,12 +18,12 @@
 
 #include "methodfactory.h"
 
+#include "factory/method/lsh.h"
+#include "factory/method/lsh_multiprobe.h"
 #include "factory/method/dummy.h"
 #include "factory/method/bbtree.h"
 #include "factory/method/ghtree.h"
 #include "factory/method/list_clusters.h"
-#include "factory/method/lsh.h"
-#include "factory/method/lsh_multiprobe.h"
 #include "factory/method/multi_index.h"
 #include "factory/method/multi_vantage_point_tree.h"
 #include "factory/method/perm_bin_vptree.h"

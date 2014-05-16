@@ -19,8 +19,8 @@
 #include <string>
 #include <sstream>
 
-#include "space_sparse_lp.h"
-#include "space_sparse_vector.h"
+#include "space/space_sparse_lp.h"
+#include "space/space_sparse_vector.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"

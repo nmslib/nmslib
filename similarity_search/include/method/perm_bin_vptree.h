@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "index.h"
-#include "space_bit_hamming.h"
+#include "space/space_bit_hamming.h"
 #include "permutation_utils.h"
 #include "vptree.h"
 #include "params.h"

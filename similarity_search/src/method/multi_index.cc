@@ -25,7 +25,7 @@
 #include "knnquery.h"
 #include "rangequery.h"
 #include "methodfactory.h"
-#include "multi_index.h"
+#include "method/multi_index.h"
 
 namespace similarity {
 

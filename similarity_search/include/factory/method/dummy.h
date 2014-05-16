@@ -14,7 +14,10 @@
  *
  */
 
-#include "searchoracle.h"
+#ifndef _FACTORY_DUMMY_H_
+#define _FACTORY_DUMMY_H_
+
+#include "index.h"
 #include "method/dummy.h"
 
 namespace similarity {
@@ -42,3 +45,4 @@ Index<dist_t>* CreateDummy(bool PrintProgress,
 
 }
 
+#endif

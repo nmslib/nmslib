@@ -173,11 +173,7 @@ int SpearmanRhoSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 
 //unsigned BitHamming(const uint32_t* a, const uint32_t* b, size_t qty);
 
-#ifdef __SSE4_2__
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <tmmintrin.h>
-#endif
+#include "simdutils.h"
 
 
 unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {

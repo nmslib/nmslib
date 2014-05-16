@@ -25,6 +25,8 @@ void InitializeLogger(const char* logfile);
 
 enum LogSeverity {INFO, WARNING, ERROR, FATAL};
 
+std::string GetCurrentTime();
+
 class Logger {
  public:
   Logger(LogSeverity severity, const std::string& file, int line, const char* function);

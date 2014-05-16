@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_SEQ_SEARCH_H
+#define _FACTORY_SEQ_SEARCH_H
+
 #include "method/seqsearch.h"
 
 namespace similarity {
@@ -38,3 +41,4 @@ Index<dist_t>* CreateSeqSearch(bool PrintProgress,
 
 }
 
+#endif

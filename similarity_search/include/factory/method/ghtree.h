@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_GH_TREE_H_
+#define _FACTORY_GH_TREE_H_
+
 #include "searchoracle.h"
 #include "method/ghtree.h"
 
@@ -39,3 +42,4 @@ Index<dist_t>* CreateGHTree(bool PrintProgress,
 
 }
 
+#endif

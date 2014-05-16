@@ -7,7 +7,7 @@ set(lshkit_SRCS
   src/apost.cpp
   src/char_bit_cnt.cpp
   src/vq.cpp
-  src/kdtree.c)
+  src/kdtree.cpp)
 
 add_library(lshkit ${lshkit_SRCS})
 target_link_libraries(lshkit ${CMAKE_REQUIRED_LIBRARIES})

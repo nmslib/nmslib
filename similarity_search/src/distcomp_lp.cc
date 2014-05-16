@@ -14,6 +14,7 @@
  *
  */
 #include "distcomp.h"
+#include "simdutils.h"
 #include "string.h"
 #include "logging.h"
 #include "pow.h"
@@ -83,7 +84,7 @@ template double LInfNorm<double>(const double* pVect1, const double* pVect2, siz
 template <> 
 float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 #ifndef __SSE2__
-#warning "LInfNormSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("LInfNormSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return LInfNormStandard(pVect1, pVect2, qty);
 #else
     size_t qty4  = qty/4;
@@ -130,7 +131,7 @@ float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
         MAX  = _mm_max_ps(MAX, _mm_and_ps(diff, mask_sign ));
     }
 
-    float __attribute__((aligned(16))) TmpRes[4];
+    float PORTABLE_ALIGN16 TmpRes[4];
 
     _mm_store_ps(TmpRes, MAX);
     float res= max(max(TmpRes[0], TmpRes[1]), max(TmpRes[2], TmpRes[3]));
@@ -146,7 +147,7 @@ float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 template <> 
 double LInfNormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
 #ifndef __SSE2__
-#warning "LInfNormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("LInfNormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return LInfNormStandard(pVect1, pVect2, qty);
 #else
     size_t qty8 = qty/8;
@@ -171,9 +172,9 @@ double LInfNormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
 
     }
 
-    double __attribute__((aligned(16))) TmpRes[2];
+    double PORTABLE_ALIGN16 TmpRes[2];
 
-    _mm_storeu_pd(TmpRes, MAX);
+    _mm_store_pd(TmpRes, MAX);
     double res= max(TmpRes[0], TmpRes[1]);
 
     while (pVect1 < pEnd2) {
@@ -240,7 +241,7 @@ template double L1Norm<double>(const double* pVect1, const double* pVect2, size_
 template <> 
 float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 #ifndef __SSE2__
-#warning "L1NormSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("L1NormSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return L1NormStandard(pVect1, pVect2, qty);
 #else
     size_t qty4  = qty/4;
@@ -288,7 +289,7 @@ float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
         sum  = _mm_add_ps(sum, _mm_and_ps(diff, mask_sign));
     }
 
-    float __attribute__((aligned(16))) TmpRes[4];
+    float PORTABLE_ALIGN16 TmpRes[4];
 
     _mm_store_ps(TmpRes, sum);
     double res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
@@ -304,45 +305,45 @@ float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 template <> 
 double L1NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
 #ifndef __SSE2__
-#warning "L1NormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
-    return L1NormStandard(pVect1, pVect2, qty);
+#pragma message WARN("L1NormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
+	return L1NormStandard(pVect1, pVect2, qty);
 #else
-    size_t qty8 = qty/8;
+	size_t qty8 = qty/8;
 
-    const double* pEnd1 = pVect1 + 8 * qty8;
-    const double* pEnd2 = pVect1 + qty;
+	const double* pEnd1 = pVect1 + 8 * qty8;
+	const double* pEnd2 = pVect1 + qty;
 
-    __m128d  diff, v1, v2; 
-    __m128d  sum = _mm_set1_pd(0); 
+	__m128d  diff, v1, v2; 
+	__m128d  sum = _mm_set1_pd(0); 
 
 
-    while (pVect1 < pEnd1) {
-        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
-        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
-        diff = _mm_sub_pd(v1, v2);
-        sum  = _mm_add_pd(sum, _mm_max_pd(_mm_sub_pd(_mm_setzero_pd(), diff), diff));
+	while (pVect1 < pEnd1) {
+		v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+		v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+		diff = _mm_sub_pd(v1, v2);
+		sum  = _mm_add_pd(sum, _mm_max_pd(_mm_sub_pd(_mm_setzero_pd(), diff), diff));
 
-        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
-        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
-        diff = _mm_sub_pd(v1, v2);
-        sum  = _mm_add_pd(sum, _mm_max_pd(_mm_sub_pd(_mm_setzero_pd(), diff), diff));
+		v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+		v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+		diff = _mm_sub_pd(v1, v2);
+		sum  = _mm_add_pd(sum, _mm_max_pd(_mm_sub_pd(_mm_setzero_pd(), diff), diff));
 
-    }
+	}
 
-    double __attribute__((aligned(16))) TmpRes[2];
+	double PORTABLE_ALIGN16 TmpRes[2];
 
-    _mm_store_pd(TmpRes, sum);
-    double res= TmpRes[0] + TmpRes[1];
+	_mm_store_pd(TmpRes, sum);
+	double res= TmpRes[0] + TmpRes[1];
 
-    while (pVect1 < pEnd2) {
-        // Leonid (@TODO) sometimes seg-faults in the unit test if float is replaced with double
-        float diff = *pVect1++ - *pVect2++;
-        res += fabs(diff);
-    }
+	while (pVect1 < pEnd2) {
+		// Leonid (@TODO) sometimes seg-faults in the unit test if float is replaced with double
+		float diff = *pVect1++ - *pVect2++;
+		res += fabs(diff);
+	}
 
-    return res;
-}
+	return res;
 #endif
+}
 
 template float L1NormSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double L1NormSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
@@ -400,11 +401,11 @@ template double L2Norm<double>(const double* pVect1, const double* pVect2, size_
 
 float L2SqrSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 #ifndef __SSE2__
-#warning "L2SqrSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("L2SqrSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     float res = 0, diff;
     for (int i = 0; i < qty; ++i) {
         diff = pVect1[i] - pVect2[i];
-        r += diff * diff;
+        res += diff * diff;
     }
     return res;
 #else
@@ -447,7 +448,7 @@ float L2SqrSIMD(const float* pVect1, const float* pVect2, size_t qty) {
         sum  = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
     }
 
-    float __attribute__((aligned(16))) TmpRes[4];
+    float PORTABLE_ALIGN16 TmpRes[4];
 
     _mm_store_ps(TmpRes, sum);
     float res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
@@ -470,7 +471,7 @@ float L2NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 template <> 
 double L2NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
 #ifndef __SSE2__
-#warning "L2NormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("L2NormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return L2NormStandard(pVect1, pVect2, qty);
 #else
     size_t qty8 = qty/8;
@@ -493,7 +494,7 @@ double L2NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
         sum  = _mm_add_pd(sum, _mm_mul_pd(diff, diff));
     }
 
-    double __attribute__((aligned(16))) TmpRes[2];
+    double PORTABLE_ALIGN16 TmpRes[2];
 
     _mm_store_pd(TmpRes, sum);
     double res= TmpRes[0] + TmpRes[1];
@@ -546,8 +547,8 @@ T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p) {
 
   CHECK(p > 0);
 
-  constexpr unsigned maxDig  = 18;
-  constexpr unsigned maxK = 1 << maxDig;
+  const unsigned maxDig  = 18;
+  const unsigned maxK = 1 << maxDig;
 
   unsigned pfm = floor(maxK * p);
 

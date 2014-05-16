@@ -20,7 +20,7 @@
 #include <sstream>
 #include <random>
 
-#include "space_sparse_vector_inter.h"
+#include "space/space_sparse_vector_inter.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"

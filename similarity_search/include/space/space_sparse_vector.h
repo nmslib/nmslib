@@ -60,6 +60,7 @@ ostream& operator<<(ostream& out, SparseVectElem<dist_t> e) {
  * by the function ComputeDistanceHelper. 
  *
  * TODO:@leo If there are too many threads, we might run out stack memory.
+ *           but it is probably extremely unlikely with the buffer of this size.
  *
  */
 #define MAX_BUFFER_QTY  8192

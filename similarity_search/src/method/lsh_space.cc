@@ -15,7 +15,7 @@
  */
 
 #include "distcomp.h"
-#include "lsh_space.h"
+#include "method/lsh_space.h"
 
 namespace similarity {
 

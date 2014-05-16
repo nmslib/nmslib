@@ -22,7 +22,7 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "knnqueue.h"
-#include "proj_vptree.h"
+#include "method/proj_vptree.h"
 #include "utils.h"
 #include "distcomp.h"
 

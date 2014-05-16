@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_PERM_INV_INDEX_H_
+#define _FACTORY_PERM_INV_INDEX_H_
+
 #include "method/permutation_inverted_index.h"
 
 namespace similarity {
@@ -73,3 +76,5 @@ Index<dist_t>* CreatePermInvertedIndex(
  */
 
 }
+
+#endif

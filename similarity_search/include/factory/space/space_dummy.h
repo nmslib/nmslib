@@ -14,7 +14,9 @@
  *
  */
 
-#include "searchoracle.h"
+#ifndef FACTORY_SPACE_DUMMY_H
+#define FACTORY_SPACE_DUMMY_H
+
 #include "space/space_dummy.h"
 
 namespace similarity {
@@ -41,3 +43,4 @@ Space<dist_t>* CreateDummy(const AnyParams& AllParams) {
 
 }
 
+#endif

@@ -41,6 +41,7 @@ static void Usage(const char *prog,
 }
 
 void ParseCommandLine(int argc, char*argv[],
+                      string&                 LogFile,
                       string&                 DistType,
                       string&                 SpaceType,
                       shared_ptr<AnyParams>&  SpaceParams,
@@ -81,6 +82,8 @@ void ParseCommandLine(int argc, char*argv[],
                         "optional dimensionality")
     ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
                         "query file")
+    ("logFile,l",       po::value<string>(&LogFile)->default_value(""),
+                        "log file")
     ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(1000),
                         "if non-zero, use maxNumQuery query elements"
                         "(required in the case of bootstrapping)")
@@ -164,8 +167,6 @@ void ParseCommandLine(int argc, char*argv[],
       LOG(FATAL) << "Wrong format of the KNN argument: '" << knnArg;
     }
   }
-
-  LOG(INFO) << "program arguments processed.";
 
   if (DataFile.empty()) {
     LOG(FATAL) << "data file is not specified!";

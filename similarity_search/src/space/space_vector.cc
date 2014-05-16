@@ -19,7 +19,7 @@
 #include <string>
 #include <sstream>
 
-#include "space_vector.h"
+#include "space/space_vector.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"

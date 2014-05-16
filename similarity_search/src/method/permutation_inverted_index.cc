@@ -22,7 +22,7 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "incremental_quick_select.h"
-#include "permutation_inverted_index.h"
+#include "method/permutation_inverted_index.h"
 #include "utils.h"
 
 namespace similarity {

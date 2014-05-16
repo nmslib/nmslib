@@ -19,7 +19,7 @@
 #include <string>
 #include <sstream>
 
-#include "space_dummy.h"
+#include "space/space_dummy.h"
 #include "experimentconf.h"
 
 namespace similarity {

@@ -17,7 +17,7 @@ list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
 
 
-include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/method ${PROJECT_SOURCE_DIR}/include/space)
+include_directories(${PROJECT_SOURCE_DIR}/include)
 message(STATUS "Header files: ${HDR_FILES}")
 message(STATUS "Source files: ${SRC_FILES}")
 

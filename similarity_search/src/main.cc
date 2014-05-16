@@ -350,12 +350,12 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
 int main(int ac, char* av[]) {
   // This should be the first function called before
-  initLibrary();
 
   WallClockTimer timer;
   timer.reset();
 
 
+  string                LogFile;
   string                DistType;
   string                SpaceType;
   shared_ptr<AnyParams> SpaceParams;
@@ -374,7 +374,7 @@ int main(int ac, char* av[]) {
 
   vector<shared_ptr<MethodWithParams>>        MethodsDesc;
 
-  ParseCommandLine(ac, av,
+  ParseCommandLine(ac, av, LogFile,
                        DistType,
                        SpaceType,
                        SpaceParams,
@@ -391,6 +391,10 @@ int main(int ac, char* av[]) {
                        eps,
                        RangeArg,
                        MethodsDesc);
+
+  initLibrary(LogFile.empty() ? NULL:LogFile.c_str());
+
+  LOG(INFO) << "Program arguments are processed";
 
   ToLower(DistType);
 
@@ -451,7 +455,7 @@ int main(int ac, char* av[]) {
 
   timer.split();
   LOG(INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
-  LOG(INFO) << "Finished at " << CurrentTime();
+  LOG(INFO) << "Finished at " << GetCurrentTime();
 
   return 0;
 }

@@ -19,7 +19,7 @@
 #include <string>
 #include <sstream>
 
-#include "space_bregman.h"
+#include "space/space_bregman.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"

@@ -14,7 +14,9 @@
  *
  */
 
-#include "searchoracle.h"
+#ifndef FACTORY_SPACE_JS_H
+#define FACTORY_SPACE_JS_H
+
 #include "space/space_js.h"
 
 namespace similarity {
@@ -63,3 +65,4 @@ Space<dist_t>* CreateJSMetricFastPrecompApprox(const AnyParams& /* ignoring para
 
 }
 
+#endif

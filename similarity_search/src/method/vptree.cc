@@ -23,9 +23,9 @@
 #include "space.h"
 #include "rangequery.h"
 #include "knnquery.h"
-#include "vptree.h"
 #include "searchoracle.h"
-#include "vptree_utils.h"
+#include "method/vptree.h"
+#include "method/vptree_utils.h"
 #include "methodfactory.h"
 
 namespace similarity {

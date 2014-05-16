@@ -14,7 +14,9 @@
  *
  */
 
-#include "searchoracle.h"
+#ifndef FACTORY_SPACE_SPARSE_SCALAR_H
+#define FACTORY_SPACE_SPARSE_SCALAR_H
+
 #include "space/space_sparse_scalar.h"
 #include "space/space_sparse_scalar_fast.h"
 
@@ -54,3 +56,4 @@ Space<float>* CreateSparseAngularDistanceFast(const AnyParams& /* ignoring param
 
 }
 
+#endif

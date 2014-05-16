@@ -20,7 +20,7 @@
 #include "space.h"
 #include "knnquery.h"
 #include "rangequery.h"
-#include "small_world_rand.h"
+#include "method/small_world_rand.h"
 
 #include <vector>
 #include <set>

@@ -21,7 +21,7 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "incremental_quick_select.h"
-#include "perm_index_incr_bin.h"
+#include "method/perm_index_incr_bin.h"
 #include "utils.h"
 
 namespace similarity {

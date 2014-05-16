@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_MULTI_INDEX_H_
+#define _FACTORY_MULTI_INDEX_H_
+
 #include "method/multi_index.h"
 
 namespace similarity {
@@ -37,3 +40,4 @@ Index<dist_t>* CreateMultiIndex(bool PrintProgress,
  */
 }
 
+#endif

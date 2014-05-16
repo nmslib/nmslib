@@ -20,9 +20,9 @@
 #include <vector>
 
 #include "index.h"
-#include "space_lp.h"
 #include "permutation_utils.h"
-#include "vptree.h"
+#include "space/space_lp.h"
+#include "method/vptree.h"
 #include "params.h"
 #include "searchoracle.h"
 

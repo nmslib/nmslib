@@ -17,7 +17,7 @@
 #include "space.h"
 #include "knnquery.h"
 #include "rangequery.h"
-#include "list_clusters.h"
+#include "method/list_clusters.h"
 #include "utils.h"
 
 #include <queue>

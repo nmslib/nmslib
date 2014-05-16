@@ -257,6 +257,7 @@ struct MethodWithParams {
 };
 
 void ParseCommandLine(int argc, char*av[],
+                      string&                 LogFile,
                       string&                 DistType,
                       string&                 SpaceType,
                       shared_ptr<AnyParams>&  SpaceParams,

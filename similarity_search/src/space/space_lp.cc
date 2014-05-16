@@ -19,7 +19,7 @@
 #include <string>
 #include <sstream>
 
-#include "space_lp.h"
+#include "space/space_lp.h"
 #include "logging.h"
 #include "experimentconf.h"
 

@@ -58,10 +58,10 @@ class ParameterCreator {
 template <>
 class ParameterCreator<TailRepeatHashThreshold> {
  public:
-  static typename TailRepeatHashThreshold::Parameter GetParameter(
+  static TailRepeatHashThreshold::Parameter GetParameter(
     const lshkit::FloatMatrix& matrix,
     unsigned H, unsigned M, float W) {
-    typename TailRepeatHashThreshold::Parameter param;
+    TailRepeatHashThreshold::Parameter param;
     param.range = H;
     param.repeat = M;
     param.dim = matrix.getDim();
@@ -85,10 +85,10 @@ class ParameterCreator<TailRepeatHashThreshold> {
 template <>
 class ParameterCreator<TailRepeatHashCauchy> {
  public:
-  static typename TailRepeatHashCauchy::Parameter GetParameter(
+  static TailRepeatHashCauchy::Parameter GetParameter(
     const lshkit::FloatMatrix& matrix,
     unsigned H, unsigned M, float W) {
-    typename TailRepeatHashCauchy::Parameter param;
+    TailRepeatHashCauchy::Parameter param;
     param.range = H;
     param.repeat = M;
     param.dim = matrix.getDim();
@@ -104,10 +104,10 @@ class ParameterCreator<TailRepeatHashCauchy> {
 template <>
 class ParameterCreator<TailRepeatHashGaussian> {
  public:
-  static typename TailRepeatHashGaussian::Parameter GetParameter(
+  static TailRepeatHashGaussian::Parameter GetParameter(
     const lshkit::FloatMatrix& matrix,
     unsigned H, unsigned M, float W) {
-    typename TailRepeatHashGaussian::Parameter param;
+    TailRepeatHashGaussian::Parameter param;
     param.range = H;
     param.repeat = M;
     param.dim = matrix.getDim();

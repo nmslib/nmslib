@@ -14,7 +14,9 @@
  *
  */
 
-#include "searchoracle.h"
+#ifndef FACTORY_SPACE_LP_H
+#define FACTORY_SPACE_LP_H
+
 #include "space/space_lp.h"
 
 namespace similarity {
@@ -55,3 +57,4 @@ Space<dist_t>* CreateL(const AnyParams& AllParams) {
 
 }
 
+#endif

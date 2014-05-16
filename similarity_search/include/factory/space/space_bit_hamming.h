@@ -13,8 +13,9 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+#ifndef FACTORY_SPACE_BIT_HAMMING_H
+#define FACTORY_SPACE_BIT_HAMMING_H
 
-#include "searchoracle.h"
 #include "space/space_bit_hamming.h"
 
 namespace similarity {
@@ -30,7 +31,9 @@ inline Space<int>* CreateBitHamming(const AnyParams& /* ignoring params */) {
 /*
  * End of creating functions.
  */
-
-
 }
+
+#endif
+
+
 

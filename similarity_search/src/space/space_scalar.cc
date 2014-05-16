@@ -19,7 +19,7 @@
 #include <string>
 #include <sstream>
 
-#include "space_scalar.h"
+#include "space/space_scalar.h"
 #include "logging.h"
 #include "experimentconf.h"
 

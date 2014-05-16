@@ -17,7 +17,7 @@
 #include "space.h"
 #include "rangequery.h"
 #include "knnquery.h"
-#include "dummy.h"
+#include "method/dummy.h"
 
 namespace similarity {
 

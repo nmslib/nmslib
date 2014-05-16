@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_VPTREE_H_
+#define _FACTORY_VPTREE_H_
+
 #include "searchoracle.h"
 #include "method/vptree.h"
 
@@ -103,3 +106,4 @@ Index<dist_t>* CreateVPTreeSample(bool PrintProgress,
  */
 }
 
+#endif

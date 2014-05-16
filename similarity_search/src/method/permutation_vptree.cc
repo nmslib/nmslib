@@ -19,11 +19,11 @@
 #include <memory>
 
 #include "space.h"
-#include "space_rank_correl.h"
+#include "space/space_rank_correl.h"
 #include "rangequery.h"
 #include "knnquery.h"
 #include "knnqueue.h"
-#include "permutation_vptree.h"
+#include "method/permutation_vptree.h"
 #include "utils.h"
 #include "distcomp.h"
 

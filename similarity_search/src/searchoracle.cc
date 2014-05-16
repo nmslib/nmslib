@@ -14,7 +14,7 @@
  *
  */
 #include "searchoracle.h"
-#include "vptree_utils.h"
+#include "method/vptree_utils.h"
 #include "space.h"
 
 #include <vector>

@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_SMALL_WORLD_RAND_H_
+#define _FACTORY_SMALL_WORLD_RAND_H_
+
 #include "method/small_world_rand.h"
 
 namespace similarity {
@@ -38,5 +41,5 @@ Index<dist_t>* CreateSmallWorldRand(bool PrintProgress,
 
 }
 
-
+#endif
 

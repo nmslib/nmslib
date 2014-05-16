@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_PERM_INDEX_H_
+#define _FACTORY_PERM_INDEX_H_
+
 #include "method/permutation_index.h"
 
 namespace similarity {
@@ -56,3 +59,4 @@ Index<dist_t>* CreatePermutationIndex(bool PrintProgress,
 
 }
 
+#endif

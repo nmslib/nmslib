@@ -16,6 +16,10 @@
 
 #ifndef _PERM_TYPE_H
 #define _PERM_TYPE_H
+
+#include <vector>
+#include <cstdint>
+
 namespace similarity {
 
 

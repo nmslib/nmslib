@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_BBTREE_H_
+#define _FACTORY_BBTREE_H_
+
 #include "searchoracle.h"
 #include "method/bbtree.h"
 
@@ -39,3 +42,4 @@ Index<dist_t>* CreateBBTree(bool PrintProgress,
 
 }
 
+#endif

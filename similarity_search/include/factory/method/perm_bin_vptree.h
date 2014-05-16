@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_PERM_BIN_VPTREE_H_
+#define _FACTORY_PERM_BIN_VPTREE_H_
+
 #include "method/perm_bin_vptree.h"
 
 namespace similarity {
@@ -38,3 +41,4 @@ Index<dist_t>* CreatePermutationBinVPTree(bool PrintProgress,
 
 }
 
+#endif

@@ -17,6 +17,7 @@
 #ifndef _SPACE_SPARSE_VECTOR_INTER_H_
 #define _SPACE_SPARSE_VECTOR_INTER_H_
 
+#include <cstdint>
 #include <string>
 #include <map>
 #include <stdexcept>

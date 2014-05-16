@@ -20,7 +20,7 @@
 #include <sstream>
 #include <bitset>
 
-#include "space_bit_hamming.h"
+#include "space/space_bit_hamming.h"
 #include "permutation_utils.h"
 #include "logging.h"
 #include "distcomp.h"

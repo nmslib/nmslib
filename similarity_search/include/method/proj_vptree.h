@@ -20,9 +20,9 @@
 #include <vector>
 
 #include "index.h"
-#include "space_lp.h"
-#include "space_sparse_vector.h"
-#include "vptree.h"
+#include "space/space_lp.h"
+#include "space/space_sparse_vector.h"
+#include "method/vptree.h"
 #include "params.h"
 #include "searchoracle.h"
 

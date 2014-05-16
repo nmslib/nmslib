@@ -14,7 +14,9 @@
  *
  */
 
-#include "searchoracle.h"
+#ifndef FACTORY_SPACE_SCALAR_H
+#define FACTORY_SPACE_SCALAR_H
+
 #include "space/space_scalar.h"
 
 namespace similarity {
@@ -42,3 +44,4 @@ Space<dist_t>* CreateAngularDistance(const AnyParams& /* ignoring params */) {
 
 }
 
+#endif

@@ -19,8 +19,8 @@
 
 #include <vector>
 #include "index.h"
-#include "space_rank_correl.h"
 #include "permutation_utils.h"
+#include "space/space_rank_correl.h"
 
 #define METH_PERMUTATION            "permutation"
 

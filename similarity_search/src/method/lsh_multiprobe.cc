@@ -17,10 +17,10 @@
 #include <limits>
 
 #include "space.h"
-#include "lsh_space.h"
+#include "method/lsh_space.h"
+#include "method/lsh_multiprobe.h"
 #include "knnquery.h"
 #include "rangequery.h"
-#include "lsh_multiprobe.h"
 
 namespace similarity {
 

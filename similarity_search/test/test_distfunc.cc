@@ -92,7 +92,7 @@ using namespace std;
 
 TEST(set_intel) {
     vmlSetMode(VML_HA);
-    std::cout << "Set high-accuracy mode." << std::endl;
+    LOG(INFO) << "Set high-accuracy mode.";
 }
 
 #endif
@@ -219,10 +219,10 @@ bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
             bool bug = false;
 
             if (fabs(val1 - val2)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug LInf !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << endl; 
+                cerr << "Bug LInf !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2;
             }
             if (fabs(val1 - val3)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug LInf !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3 << endl; 
+                cerr << "Bug LInf !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3;
             }
             if (bug) return false;
         }
@@ -252,10 +252,10 @@ bool TestL1Agree(size_t N, size_t dim, size_t Rep) {
             bool bug = false;
 
             if (fabs(val1 - val2)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug L1 !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << endl; 
+                cerr << "Bug L1 !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2;
             }
             if (fabs(val1 - val3)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug L1 !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3 << endl; 
+                cerr << "Bug L1 !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3;
             }
             if (bug) return false;
         }
@@ -285,10 +285,10 @@ bool TestL2Agree(size_t N, size_t dim, size_t Rep) {
             bool bug = false;
 
             if (fabs(val1 - val2)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug L2 !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << endl; 
+                cerr << "Bug L2 !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2;
             }
             if (fabs(val1 - val3)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug L2 !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3 << endl; 
+                cerr << "Bug L2 !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3;
             }
             if (bug) return false;
         }
@@ -329,13 +329,13 @@ bool TestItakuraSaitoAgree(size_t N, size_t dim, size_t Rep) {
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
 
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val0 = " << val0 << " Diff: " << (val1 - val0) << " RelDiff1: " << RelDiff1 << " << AbsDiff1: " << AbsDiff1 << endl; 
+                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val0 = " << val0 << " Diff: " << (val1 - val0) << " RelDiff1: " << RelDiff1 << " << AbsDiff1: " << AbsDiff1;
             }
 
             T AbsDiff2 = fabs(val1 - val2);
             T RelDiff2 = AbsDiff2/max(max(fabs(val1),fabs(val2)),T(1e-18));
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl; 
+                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2;
             }
 
             if (bug) return false;
@@ -385,19 +385,19 @@ bool TestKLAgree(size_t N, size_t dim, size_t Rep) {
             T AbsDiff1 = fabs(val1 - val0);
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl; 
+                cerr << "Bug KL !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1;
             }
 
             T AbsDiff2 = fabs(val1 - val2);
             T RelDiff2 = AbsDiff2/max(max(fabs(val1),fabs(val2)),T(1e-18));
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val2 = " << val2 << " val1 = " << val1 << " Diff: " << (val2 - val1) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl; 
+                cerr << "Bug KL !!! Dim = " << dim << " val2 = " << val2 << " val1 = " << val1 << " Diff: " << (val2 - val1) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2;
             }
 
             T AbsDiff3 = fabs(val1 - val3);
             T RelDiff3 = AbsDiff3/max(max(fabs(val1),fabs(val3)),T(1e-18));
             if (RelDiff3 > 1e-5 && AbsDiff3 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val3 = " << val3 << " val1 = " << val1 << " Diff: " << (val3 - val1) << " RelDiff3: " << RelDiff3 << " AbsDiff3: " << AbsDiff3 << endl; 
+                cerr << "Bug KL !!! Dim = " << dim << " val3 = " << val3 << " val1 = " << val1 << " Diff: " << (val3 - val1) << " RelDiff3: " << RelDiff3 << " AbsDiff3: " << AbsDiff3;
             }
 
             if (bug) return false;
@@ -440,13 +440,13 @@ bool TestKLGeneralAgree(size_t N, size_t dim, size_t Rep) {
             T AbsDiff1 = fabs(val2 - val0);
             T RelDiff1 = AbsDiff1/max(max(fabs(val2),fabs(val0)),T(1e-18));
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val0 = " << val0 << " val2 = " << val2 << " Diff: " << (val0 - val2) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl; 
+                cerr << "Bug KL !!! Dim = " << dim << " val0 = " << val0 << " val2 = " << val2 << " Diff: " << (val0 - val2) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1;
             }
 
             T AbsDiff2 = fabs(val3 - val2);
             T RelDiff2 = AbsDiff2/max(max(fabs(val3),fabs(val2)),T(1e-18));
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl; 
+                cerr << "Bug KL !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2;
             }
 
             if (bug) return false;
@@ -497,7 +497,7 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
 
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug JS (1) " << typeid(T).name() << " !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl; 
+                cerr << "Bug JS (1) " << typeid(T).name() << " !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1;
                 bug = true;
             }
 
@@ -508,7 +508,7 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
             T RelDiff2 = AbsDiff2/max(max(fabs(val2),fabs(val3)),T(1e-18));
 
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug JS (2) " << typeid(T).name() << " !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl; 
+                cerr << "Bug JS (2) " << typeid(T).name() << " !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2;
                 bug = true;
             }
 
@@ -520,7 +520,7 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
             ++TotalQty;
 
             if (RelDiff3 > 1e-4 && AbsDiff3 > 1e-4) {
-                cerr << "Bug JS (3) " << typeid(T).name() << " !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff3: " << RelDiff3 << " AbsDiff2: " << AbsDiff3 << endl; 
+                cerr << "Bug JS (3) " << typeid(T).name() << " !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff3: " << RelDiff3 << " AbsDiff2: " << AbsDiff3;
                 bug = true;
             }
 
@@ -528,8 +528,8 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
         }
     }
 
-    cout << typeid(T).name() << " JS approximation error: average absolute: " << Error / TotalQty << 
-                                " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist << endl;
+    LOG(INFO) << typeid(T).name() << " JS approximation error: average absolute: " << Error / TotalQty << 
+                                " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
 
 
     delete [] pVect1;
@@ -556,7 +556,7 @@ bool TestSpearmanFootruleAgree(size_t N, size_t dim, size_t Rep) {
 
 
             if (val0 != val1) {
-                cerr << "Bug SpearmanFootrule  !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1  << endl;
+                cerr << "Bug SpearmanFootrule  !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 ;
                 bug = true;
             }
 
@@ -587,7 +587,7 @@ bool TestSpearmanRhoAgree(size_t N, size_t dim, size_t Rep) {
 
 
             if (val0 != val1) {
-                cerr << "Bug SpearmanRho !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << endl;
+                cerr << "Bug SpearmanRho !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1);
                 bug = true;
             }
 
@@ -643,7 +643,7 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
                 " Diff: " << (val1 - val0) << 
                 " RelDiff1: " << RelDiff1 << 
                 " (max for this power: " << maxRelDiff << ")  " <<
-                " AbsDiff1: " << AbsDiff1 << " (max for this power: " << maxAbsDiff << ")" << endl; 
+                " AbsDiff1: " << AbsDiff1 << " (max for this power: " << maxAbsDiff << ")";
             }
 
             if (bug) return false;
@@ -651,7 +651,7 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
     }
 
     if (power < 4) {
-      cout << typeid(T).name() << " LP approximation error: average absolute " << Error / TotalQty << " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist << endl;
+      LOG(INFO) << typeid(T).name() << " LP approximation error: average absolute " << Error / TotalQty << " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
 
     }
 
@@ -695,7 +695,7 @@ bool TestBitHammingAgree(size_t N, size_t dim, size_t Rep) {
           }
         }
         if (d1 != d2) {
-          cerr << "Bug bit hamming, WordQty = " << WordQty << " d1 = " << d1 << " d2 = " << d2 << endl;
+          cerr << "Bug bit hamming, WordQty = " << WordQty << " d1 = " << d1 << " d2 = " << d2;
           res = false;
           break;
         }
@@ -740,7 +740,7 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
             " val1 = " << val1 << " val2 = " << val2 << 
             " Diff: " << (val1 - val2) << 
             " RelDiff1: " << RelDiff1 << 
-            " AbsDiff1: " << AbsDiff1 << endl; 
+            " AbsDiff1: " << AbsDiff1;
             bug = true;
         }
 
@@ -771,13 +771,13 @@ TEST(TestAgree) {
      * 
      */
     for (unsigned dim = 1; dim <= 1024; dim+=2) {
-        cout << "Dim = " << dim << endl;
+        LOG(INFO) << "Dim = " << dim;
 
         nFail += !TestBitHammingAgree(1000, dim, 1000);
     }
 
     for (unsigned dim = 1; dim <= 32; ++dim) {
-        cout << "Dim = " << dim << endl;
+        LOG(INFO) << "Dim = " << dim;
 
         /* 
          * This is a costly check, we don't need to do it for large # dimensions.
@@ -836,7 +836,7 @@ TEST(TestAgree) {
         nFail += !TestItakuraSaitoAgree<double>(1024, dim, 10);
     }
 
-    cout << nTest << " (sub) tests performed " << nFail << " failed" << endl;
+    LOG(INFO) << nTest << " (sub) tests performed " << nFail << " failed";
 
     EXPECT_EQ(0, nFail);
 }
@@ -874,8 +874,8 @@ bool TestLInfNormStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard LInfs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -912,8 +912,8 @@ bool TestLInfNorm(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. LInfs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -950,8 +950,8 @@ bool TestLInfNormSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD LInfs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD LInfs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -989,8 +989,8 @@ bool TestL1NormStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L1s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1027,8 +1027,8 @@ bool TestL1Norm(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L1s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1065,8 +1065,8 @@ bool TestL1NormSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L1s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L1s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1103,8 +1103,8 @@ bool TestL2NormStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L2s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1141,8 +1141,8 @@ bool TestL2Norm(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L2s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1179,8 +1179,8 @@ bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
  
     uint64_t tDiff = t.split();
  
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L2s per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L2s per second: " << (1e6/tDiff) * N * Rep ;
  
     delete [] pArr;
  
@@ -1219,8 +1219,8 @@ bool TestLPGeneric(size_t N, size_t dim, size_t Rep, T power) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Generic L" << power << " per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Generic L" << power << " per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1258,8 +1258,8 @@ bool TestLPGenericOptim(size_t N, size_t dim, size_t Rep, T power) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Optimized generic L" << power << " per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Optimized generic L" << power << " per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1298,8 +1298,8 @@ bool TestItakuraSaitoPrecomp(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1338,8 +1338,8 @@ bool TestItakuraSaitoPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1377,8 +1377,8 @@ bool TestItakuraSaitoStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of ItakuraSaito per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1418,8 +1418,8 @@ bool TestKLPrecomp(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1458,8 +1458,8 @@ bool TestKLPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1497,8 +1497,8 @@ bool TestKLStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1538,8 +1538,8 @@ bool TestKLGeneralPrecomp(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1578,8 +1578,8 @@ bool TestKLGeneralPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1617,8 +1617,8 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of general. KLs per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of general. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1658,8 +1658,8 @@ bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1699,8 +1699,8 @@ bool TestJSPrecomp(size_t N, size_t dim, size_t Rep, float pZero) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) (sparsity:" << pZero << ")  per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) (sparsity:" << pZero << ")  per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1740,8 +1740,8 @@ bool TestJSPrecompApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1781,8 +1781,8 @@ bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1819,8 +1819,8 @@ bool TestSpearmanRho(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanRho per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanRho per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1857,8 +1857,8 @@ bool TestSpearmanRhoSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanRhoSIMD per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanRhoSIMD per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1895,8 +1895,8 @@ bool TestSpearmanFootrule(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanFootrule per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanFootrule per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1933,8 +1933,8 @@ bool TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanFootruleSIMD per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanFootruleSIMD per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1972,9 +1972,9 @@ bool TestSparseLp(size_t N, size_t Rep, T power) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of sparse LP (p=" << power << ") per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of sparse LP (p=" << power << ") per second: " << (1e6/tDiff) * N * Rep ;
 
     return true;
 }
@@ -2010,10 +2010,10 @@ bool TestSparseAngularDistance(const string& dataFile, size_t N, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " File: " << dataFile 
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " File: " << dataFile 
          << " Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of sparse angular dist per second: " << (1e6/tDiff) * N * Rep  << endl;
+            " # of sparse angular dist per second: " << (1e6/tDiff) * N * Rep ;
 
     return true;
 }
@@ -2050,10 +2050,10 @@ bool TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " File: " << dataFile << 
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " File: " << dataFile << 
             " Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of (fast) sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep  << endl;
+            " # of (fast) sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep ;
 
     return true;
 }
@@ -2089,10 +2089,10 @@ bool TestSparseCosineSimilarity(const string& dataFile, size_t N, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " File: " << dataFile 
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " File: " << dataFile 
          << " Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep  << endl;
+            " # of sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep ;
 
     return true;
 }
@@ -2127,8 +2127,8 @@ bool TestCosineSimilarity(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard CosineSimilarity per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard CosineSimilarity per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -2165,8 +2165,8 @@ bool TestAngularDistance(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard AngularDistance per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard AngularDistance per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -2211,8 +2211,8 @@ bool TestBitHamming(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    cout << "Ignore: " << DiffSum << endl;
-    cout << "Elapsed: " << tDiff / 1e3 << " ms " << " # of BitHamming per second: " << (1e6/tDiff) * N * Rep  << endl;
+    LOG(INFO) << "Ignore: " << DiffSum;
+    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of BitHamming per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -2284,7 +2284,7 @@ TEST(TestSpeed) {
 #endif
 
 
-    cout << "Single-precision (sparse) LP-distance tests" << endl;
+    LOG(INFO) << "Single-precision (sparse) LP-distance tests";
     nTest++;
     nFail += !TestSparseLp<float>(1000, 1000, -1);
     nTest++;
@@ -2301,10 +2301,10 @@ TEST(TestSpeed) {
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
-    cout << "========================================" << endl;
+    LOG(INFO) << "========================================";
 
 #if TEST_SPEED_DOUBLE
-    cout << "Double-precision (sparse) LP-distance tests" << endl;
+    LOG(INFO) << "Double-precision (sparse) LP-distance tests";
     nFail += !TestSparseLp<double>(1000, 1000, -1);
     nTest++;
     nFail += !TestSparseLp<double>(1000, 1000, 1/3.0);
@@ -2317,9 +2317,9 @@ TEST(TestSpeed) {
       if (power == 8) step = 0.5;
     }
 #endif
-    cout << "========================================" << endl;
+    LOG(INFO) << "========================================";
 
-    cout << "Single-precision LP-distance tests" << endl;
+    LOG(INFO) << "Single-precision LP-distance tests";
     for (float power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       nFail += !TestLPGeneric<float>(128, dim, 200, power);
@@ -2328,9 +2328,9 @@ TEST(TestSpeed) {
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
-    cout << "========================================" << endl;
+    LOG(INFO) << "========================================";
 #if TEST_SPEED_DOUBLE
-    cout << "Double-precision LP-distance tests" << endl;
+    LOG(INFO) << "Double-precision LP-distance tests";
     for (double power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       nFail += !TestLPGeneric<double>(128, dim, 200, power);
@@ -2339,7 +2339,7 @@ TEST(TestSpeed) {
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
-    cout << "========================================" << endl;
+    LOG(INFO) << "========================================";
 #endif
 #endif
 
@@ -2545,7 +2545,7 @@ TEST(TestSpeed) {
     nFail += !TestKLGeneralPrecompSIMD<double>(1024, dim, 2000);
 #endif
 
-    cout << "Dimensionality " << dim << " " << nTest << " tests performed " << nFail << " failed" << endl;
+    LOG(INFO) << "Dimensionality " << dim << " " << nTest << " tests performed " << nFail << " failed";
 
     EXPECT_EQ(0, nFail);
 }

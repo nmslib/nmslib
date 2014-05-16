@@ -19,11 +19,11 @@
 #include <memory>
 
 #include "space.h"
-#include "space_bit_hamming.h"
+#include "space/space_bit_hamming.h"
 #include "rangequery.h"
 #include "knnquery.h"
 #include "knnqueue.h"
-#include "perm_bin_vptree.h"
+#include "method/perm_bin_vptree.h"
 #include "utils.h"
 #include "distcomp.h"
 

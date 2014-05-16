@@ -24,7 +24,7 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "incremental_quick_select.h"
-#include "pivot_neighb_invindx.h"
+#include "method/pivot_neighb_invindx.h"
 #include "utils.h"
 
 namespace similarity {

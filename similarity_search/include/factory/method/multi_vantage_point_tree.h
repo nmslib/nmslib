@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_MULTI_VPTREE_H_
+#define _FACTORY_MULTI_VPTREE_H_
+
 #include "method/multi_vantage_point_tree.h"
 
 namespace similarity {
@@ -38,3 +41,4 @@ Index<dist_t>* CreateMultiVantagePointTree(bool PrintProgress,
 
 }
 
+#endif

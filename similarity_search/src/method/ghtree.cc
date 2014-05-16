@@ -19,7 +19,7 @@
 #include "space.h"
 #include "knnquery.h"
 #include "rangequery.h"
-#include "ghtree.h"
+#include "method/ghtree.h"
 #include "utils.h"
 
 namespace similarity {

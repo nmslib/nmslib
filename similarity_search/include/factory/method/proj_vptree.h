@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_PROJ_VPTREE_H
+#define _FACTORY_PROJ_VPTREE_H
+
 #include "method/proj_vptree.h"
 #include "space/space_sparse_scalar.h"
 
@@ -45,3 +48,4 @@ Index<dist_t>* CreateProjVPTree(bool PrintProgress,
 
 }
 
+#endif

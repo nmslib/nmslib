@@ -19,7 +19,7 @@
 #include <string>
 #include <sstream>
 
-#include "space_js.h"
+#include "space/space_js.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"

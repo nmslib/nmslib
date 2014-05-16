@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_SAT_H_
+#define _FACTORY_SAT_H_
+
 #include "method/spatial_approx_tree.h"
 
 namespace similarity {
@@ -38,3 +41,4 @@ Index<dist_t>* CreateSATree(bool PrintProgress,
 
 }
 
+#endif

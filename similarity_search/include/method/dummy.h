@@ -13,8 +13,8 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
-#ifndef _DUMMY_SPACE_H_
-#define _DUMMY_SPACE_H_
+#ifndef _DUMMY_METHOD_H_
+#define _DUMMY_METHOD_H_
 
 #include <string>
 #include <sstream>

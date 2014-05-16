@@ -9,6 +9,17 @@
  *
  */
 
+/* 
+ * Note that __GNUC__ is also defined for Intel and Clang,
+ * which do understand __attribute__ ((aligned(16)))
+ */
+
+#if defined(__GNUC__) 
+#define PORTABLE_ALIGN16 __attribute__((aligned(16)))
+#else
+#define PORTABLE_ALIGN16 __declspec(align(16))
+#endif
+
 #ifdef __SSE4_2__
 #include <immintrin.h>
 #include <smmintrin.h>
@@ -22,5 +33,12 @@
 
 #define MM_EXTRACT_DOUBLE(v,i) _mm_cvtsd_f64(_mm_shuffle_pd(v, v, _MM_SHUFFLE2(0, i)))
 #define MM_EXTRACT_FLOAT(v,i) _mm_cvtss_f32(_mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, i)))
+
+#endif
+
+#ifdef _MSC_VER
+#include <intrin.h>
+
+#define  __builtin_popcount(t) __popcnt(t)
 
 #endif

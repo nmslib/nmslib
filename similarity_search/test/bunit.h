@@ -34,7 +34,12 @@ using TestFunc = std::function<void()>;
 class TestException : std::exception {
  public:
   TestException(const std::string& msg) : msg_(msg) {}
-  const char* what() const noexcept { return msg_.c_str(); }
+  const char* what() const 
+#ifndef _MSC_VER
+// TODO: @leo/bileg Do we really need noexcept here, MSVS chokes on it
+	  noexcept 
+#endif
+  { return msg_.c_str(); }
  private:
   const std::string msg_;
 };

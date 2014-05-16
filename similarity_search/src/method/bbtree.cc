@@ -31,10 +31,10 @@
 #include <cmath>
 #include <memory>
 
-#include "space_bregman.h"
+#include "space/space_bregman.h"
 #include "knnquery.h"
 #include "rangequery.h"
-#include "bbtree.h"
+#include "method/bbtree.h"
 
 namespace similarity {
 

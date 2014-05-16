@@ -14,6 +14,9 @@
  *
  */
 
+#ifndef _FACTORY_LIST_CLUSTERS_H_
+#define _FACTORY_LIST_CLUSTERS_H_
+
 #include "searchoracle.h"
 #include "method/list_clusters.h"
 
@@ -39,3 +42,4 @@ Index<dist_t>* CreateListClusters(bool PrintProgress,
 
 }
 
+#endif

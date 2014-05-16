@@ -14,7 +14,9 @@
  *
  */
 
-#include "searchoracle.h"
+#ifndef FACTORY_SPACE_SPARSE_LP_H
+#define FACTORY_SPACE_SPARSE_LP_H
+
 #include "space/space_sparse_lp.h"
 
 namespace similarity {
@@ -56,3 +58,4 @@ Space<dist_t>* CreateSparseL(const AnyParams& AllParams) {
 
 }
 
+#endif

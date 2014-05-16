@@ -20,8 +20,8 @@
 #include <string>
 
 #include "space.h"
-#include "space_lp.h"
-#include "space_bregman.h"
+#include "space/space_lp.h"
+#include "space/space_bregman.h"
 #include "params.h"
 
 namespace similarity {
