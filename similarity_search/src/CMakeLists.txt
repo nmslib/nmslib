@@ -37,7 +37,7 @@ endif (Threads_FOUND)
 add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES})
 add_dependencies (NonMetricSpaceLib boost_1_55_0)
 if (NOT WIN32)
-  add_dependencies (lshkit)
+  add_dependencies (NonMetricSpaceLib lshkit)
   set(LSHKIT_LIB "lshkit")
 else()
 # NO lshkit for Win32
