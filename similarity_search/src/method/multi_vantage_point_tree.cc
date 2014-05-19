@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -20,8 +20,8 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "utils.h"
-#include "multi_vantage_point_tree_utils.h"
-#include "multi_vantage_point_tree.h"
+#include "method/multi_vantage_point_tree_utils.h"
+#include "method/multi_vantage_point_tree.h"
 
 namespace similarity {
 
@@ -69,7 +69,7 @@ template <typename dist_t>
 typename MultiVantagePointTree<dist_t>::Node*
 MultiVantagePointTree<dist_t>::BuildTree(
     const Space<dist_t>* space,
-    MultiVantagePointTree::Entries& entries) {
+    typename MultiVantagePointTree<dist_t>::Entries& entries) {
   if (entries.empty()) {
     return NULL;
   }
@@ -160,7 +160,7 @@ void MultiVantagePointTree<dist_t>::Search(KNNQuery<dist_t>* query) {
 template <typename dist_t>
 template <typename QueryType>
 void MultiVantagePointTree<dist_t>::GenericSearch(
-    MultiVantagePointTree<dist_t>::Node* node,
+    typename MultiVantagePointTree<dist_t>::Node* node,
     QueryType* query,
     Dists& path,
     size_t query_path_len,

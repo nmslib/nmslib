@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -17,10 +17,10 @@
 #include <limits>
 
 #include "space.h"
-#include "lsh_space.h"
+#include "method/lsh_space.h"
 #include "knnquery.h"
 #include "rangequery.h"
-#include "lsh.h"
+#include "method/lsh.h"
 
 namespace similarity {
 

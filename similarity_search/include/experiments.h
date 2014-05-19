@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -126,7 +126,7 @@ public:
                                               IndexPtrs, MethodsDesc);
       }
     }
-    if (LogInfo) LOG(INFO) << "experiment done at " << CurrentTime();
+    if (LogInfo) LOG(INFO) << "experiment done at " << GetCurrentTime();
 
   }
 
@@ -143,8 +143,6 @@ public:
               Index<dist_t>&                  Method,
               unsigned                        MethNum,
               vector<uint64_t>&               SearchTime,
-              vector<uint64_t>&               SearchCPUTime,
-
               vector<double>&                 AvgNumDistComp,
               vector<unsigned>&               max_result_size,
               vector<double>&                 avg_result_size,
@@ -159,7 +157,6 @@ public:
     Method_(Method),
     MethNum_(MethNum),
     SearchTime_(SearchTime),
-    SearchCPUTime_(SearchCPUTime),
 
     AvgNumDistComp_(AvgNumDistComp),
     max_result_size_(max_result_size),
@@ -177,7 +174,6 @@ public:
     Index<dist_t>&                  Method_;
     unsigned                        MethNum_;
     vector<uint64_t>&               SearchTime_;
-    vector<uint64_t>&               SearchCPUTime_;
 
     vector<double>&                 AvgNumDistComp_;
     vector<unsigned>&               max_result_size_;
@@ -191,10 +187,8 @@ public:
       int numquery = prm.config_.GetQueryObjects().size();
 
       WallClockTimer wtm;
-      CPUTimer       ctm;
 
       wtm.reset();
-      ctm.reset();
 
       unsigned MethNum = prm.MethNum_;
       unsigned QueryPart = prm.QueryPart_;
@@ -250,7 +244,6 @@ public:
     unsigned MethQty = IndexPtrs.size();
 
     vector<uint64_t>  SearchTime(MethQty); 
-    vector<uint64_t>  SearchCPUTime(MethQty);
 
     vector<double>    Recall(MethQty);
     vector<double>    NumCloser(MethQty);
@@ -259,7 +252,6 @@ public:
     vector<double>    SystemTimeElapsed(MethQty);
 
     uint64_t  SeqSearchTime     = 0;
-    uint64_t  SeqSearchCPUTime  = 0;
 
     vector<double>    AvgNumDistComp(MethQty);
     vector<double>    ImprDistComp(MethQty);
@@ -287,10 +279,8 @@ public:
       if (LogInfo) LOG(INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 
       WallClockTimer wtm;
-      CPUTimer       ctm;
 
       wtm.reset();
-      ctm.reset();
 
       if (!ThreadTestQty) ThreadTestQty = 1;
 
@@ -311,7 +301,6 @@ public:
                                               Method,
                                               MethNum,
                                               SearchTime,
-                                              SearchCPUTime,
                                               AvgNumDistComp,
                                               max_result_size,
                                               avg_result_size,
@@ -332,11 +321,8 @@ public:
       }
 
       wtm.split();
-      ctm.split();
 
       SearchTime[MethNum] = wtm.elapsed();
-      SearchCPUTime[MethNum] = ctm.elapsed();
-      SystemTimeElapsed[MethNum] = ctm.systemelapsed();
 
       AvgNumDistComp[MethNum] = static_cast<double>(DistCompQty[MethNum])/numquery;
       ImprDistComp[MethNum]   = config.GetDataObjects().size() / AvgNumDistComp[MethNum];
@@ -365,7 +351,6 @@ public:
       GoldStandard<dist_t>  QueryGS(config.GetSpace(), config.GetDataObjects(), queryGS.get());
 
       SeqSearchTime     += QueryGS.GetSeqSearchTime();
-      SeqSearchCPUTime  += QueryGS.GetSeqSearchCPUTime();
 
       for (auto it = IndexPtrs.begin(); it != IndexPtrs.end(); ++it) {
         size_t MethNum = it - IndexPtrs.begin();
@@ -413,8 +398,6 @@ public:
         LOG(INFO) << "=========================================";
         LOG(INFO) << ">>>> Time elapsed:           " << (SearchTime[MethNum]/double(1e6)) << " sec";
         LOG(INFO) << ">>>> Avg time per query:     " << (SearchTime[MethNum]/double(1e3)/numquery) << " msec";
-        LOG(INFO) << ">>>> CPU time elapsed:       " << (SearchCPUTime[MethNum]/double(1e6)) << " sec";
-        LOG(INFO) << ">>>> Avg CPU time per query: " << (SearchCPUTime[MethNum]/double(1e3)/numquery) << " msec";
         LOG(INFO) << ">>>> System time elapsed:    " << (SystemTimeElapsed[MethNum]/double(1e6)) << " sec";
         LOG(INFO) << "=========================================";
       }
@@ -431,7 +414,6 @@ public:
       if (LogInfo) {
         LOG(INFO) << "=========================================";
         LOG(INFO) << ">>>> Seq. search time elapsed:       " << (SeqSearchTime/double(1e6)) << " sec";
-        LOG(INFO) << ">>>> CPU Seq. search time elapsed:   " << (SeqSearchCPUTime/double(1e6)) << " sec";
         LOG(INFO) << ">>>> Avg Seq. search time per query: " << (SeqSearchTime/double(1e3)/numquery) << " msec";
         LOG(INFO) << ">>>> Impr. in Efficiency = "  << ImprEfficiency;
         LOG(INFO) << ">>>> Recall         = "       << Recall[MethNum];
@@ -440,7 +422,7 @@ public:
       }
     }
 
-    if (LogInfo) LOG(INFO) << "#### Finished " << QueryType::Type() << " " << CurrentTime();
+    if (LogInfo) LOG(INFO) << "#### Finished " << QueryType::Type() << " " << GetCurrentTime();
   }
 };
 

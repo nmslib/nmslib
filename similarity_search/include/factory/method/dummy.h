@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -14,8 +14,10 @@
  *
  */
 
-#include "searchoracle.h"
-#include "method/dummy.h"
+#ifndef _FACTORY_DUMMY_H_
+#define _FACTORY_DUMMY_H_
+
+#include <method/dummy.h>
 
 namespace similarity {
 
@@ -42,3 +44,4 @@ Index<dist_t>* CreateDummy(bool PrintProgress,
 
 }
 
+#endif

@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -13,8 +13,8 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
-#ifndef _DUMMY_SPACE_H_
-#define _DUMMY_SPACE_H_
+#ifndef _DUMMY_METHOD_H_
+#define _DUMMY_METHOD_H_
 
 #include <string>
 #include <sstream>

@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -15,10 +15,16 @@
  */
 #include "distcomp.h"
 #include "string.h"
+#include "utils.h"
+#include "simdutils.h"
 
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
+
+#ifdef __SSE2__
+#include <immintrin.h>
+#endif
 
 namespace similarity {
 
@@ -86,7 +92,7 @@ T JSPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
 template float JSPrecomp<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double JSPrecomp<double>(const double* pVect1, const double* pVect2, size_t qty);
 
-constexpr unsigned LogQty = 65536;
+const unsigned LogQty = 65536;
 
 template <class T>
 inline unsigned lapprox(T f) {
@@ -142,13 +148,11 @@ JSPrecompApproxLog(const T *pVect1, const T *pVect2, size_t qty) {
 template float JSPrecompApproxLog<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double JSPrecompApproxLog<double>(const double* pVect1, const double* pVect2, size_t qty);
 
-#include "simdutils.h"
-
 template <>
 float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qty)
 {
-#ifndef __SSE4_2__
-#warning "JSPrecompSIMDApproxLog<float>: SSE4.2 is not available, defaulting to pure C++ implementation!"
+#ifndef __SSE2__
+#pragma message WARN("JSPrecompSIMDApproxLog<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return JSPrecompApproxLog(pVect1, pVect2, qty);
 #else
     size_t qty4  = qty/4;
@@ -171,6 +175,9 @@ float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qt
     __m128i tmpi;
 
     while (pVect1 < pEnd2) {
+        int PORTABLE_ALIGN16 TmpRes[4];
+
+
         v1      = _mm_loadu_ps(pVect1);     pVect1 += 4;
         vLog1   = _mm_loadu_ps(pVectLog1);  pVectLog1 += 4;
         s1      = _mm_mul_ps(v1, vLog1);
@@ -190,19 +197,17 @@ float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qt
         tmpi    = _mm_cvttps_epi32(_mm_mul_ps(cmult, _mm_div_ps(minv, maxv)));
         sum     = _mm_add_ps(sum, _mm_add_ps(s1,s2));
 
-        ltmp = _mm_set_ps(ltbl[_mm_extract_epi32(tmpi, 3)] , 
-                          ltbl[_mm_extract_epi32(tmpi, 2)] ,
-                          ltbl[_mm_extract_epi32(tmpi, 1)] ,
-                          ltbl[_mm_extract_epi32(tmpi, 0)]);
+        _mm_store_si128((__m128i*)TmpRes, tmpi);
 
+        ltmp = _mm_set_ps(ltbl[TmpRes[3]], ltbl[TmpRes[2]], ltbl[TmpRes[1]], ltbl[TmpRes[0]]);
         __m128 d = _mm_sub_ps(_mm_add_ps(max_mod_logv, ltmp), clog2simd);
         sum     = _mm_sub_ps(sum, _mm_mul_ps(_mm_add_ps(v1, v2), d));
     }
 
-    float res= MM_EXTRACT_FLOAT(sum, 0) + 
-               MM_EXTRACT_FLOAT(sum, 1) + 
-               MM_EXTRACT_FLOAT(sum, 2) + 
-               MM_EXTRACT_FLOAT(sum, 3);
+    float PORTABLE_ALIGN16 TmpRes[4];
+
+    _mm_store_ps(TmpRes, sum);
+    float res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 
     while (pVect1 < pEnd3) {
       float v1 = *pVect1;
@@ -232,7 +237,7 @@ template <>
 double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t qty)
 {
 #ifndef __SSE2__
-#warning "JSPrecompSIMDApproxLog<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("JSPrecompSIMDApproxLog<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return JSPrecompApproxLog(pVect1, pVect2, qty);
 #else
     size_t qty2  = qty/2;
@@ -255,6 +260,9 @@ double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t
     __m128i tmpi;
 
     while (pVect1 < pEnd2) {
+        u_int32_t PORTABLE_ALIGN16 TmpRes[4];
+
+
         v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;
         vLog1   = _mm_loadu_pd(pVectLog1);  pVectLog1 += 2;
         s1      = _mm_mul_pd(v1, vLog1);
@@ -274,16 +282,18 @@ double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t
         sum     = _mm_add_pd(sum, _mm_add_pd(s1, s2));
         tmpi    = _mm_cvttpd_epi32(_mm_mul_pd(cmult, _mm_div_pd(minv, maxv)));
 
-        ltmp = _mm_set_pd(ltbl[_mm_extract_epi32(tmpi, 1)], 
-                          ltbl[_mm_extract_epi32(tmpi, 0)]);
-
+        _mm_store_si128((__m128i*)TmpRes, tmpi);
+        ltmp = _mm_set_pd(ltbl[TmpRes[1]], ltbl[TmpRes[0]]);
         __m128d   d = _mm_sub_pd(_mm_add_pd(max_mod_logv, ltmp), clog2simd);
 
         sum     = _mm_sub_pd(sum, _mm_mul_pd(_mm_add_pd(v1, v2), d));
 
     }
 
-    double res= MM_EXTRACT_DOUBLE(sum, 0) + MM_EXTRACT_DOUBLE(sum, 1);
+    double PORTABLE_ALIGN16 TmpRes[2];
+
+    _mm_store_pd(TmpRes, sum);
+    double res= TmpRes[0] + TmpRes[1];
 
     while (pVect1 < pEnd3) {
       double v1 = *pVect1;

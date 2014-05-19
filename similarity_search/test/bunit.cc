@@ -85,8 +85,8 @@ int TestRunner::RunAllTests() {
 
 }     // namespace similarity
 
-int main() {
-  similarity::initLibrary();
+int main(int argc, char *pArgv[]) {
+  similarity::initLibrary(argc == 2 ? pArgv[1]:NULL);
 
   return similarity::TestRunner::Instance().RunAllTests();
 }

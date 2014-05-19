@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -17,6 +17,7 @@
 #include <cmath>
 
 #include "distcomp.h"
+#include "simdutils.h"
 
 namespace similarity {
 
@@ -42,7 +43,8 @@ int SpearmanFootrule(const PivotIdType* x, const PivotIdType* y, size_t qty) {
 
 int SpearmanFootruleSIMD(const int32_t* pVect1, const int32_t* pVect2, size_t qty) {
 #ifndef __SSE4_2__
-#warning "SpearmanFootruleSIMD: SSE4.2 is not available, defaulting to pure C++ implementation!"
+#pragma message(WARN("SpearmanFootruleSIMD: SSE4.2 is not available, defaulting to pure C++ implementation!"))
+
     return SpearmanFootrule(pVect1, pVect2, qty);
 #else
     size_t qty4  = qty/4;
@@ -85,7 +87,7 @@ int SpearmanFootruleSIMD(const int32_t* pVect1, const int32_t* pVect2, size_t qt
 
     }
 
-    int32_t __attribute__((aligned(16))) TmpRes[4];
+    int32_t PORTABLE_ALIGN16 TmpRes[4];
 
     _mm_store_si128(reinterpret_cast<__m128i*>(TmpRes), sum);
     int res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
@@ -113,7 +115,7 @@ int SpearmanRho(const PivotIdType* x, const PivotIdType* y, size_t qty) {
 
 int SpearmanRhoSIMD(const PivotIdType* pVect1, const PivotIdType* pVect2, size_t qty) {
 #ifndef __SSE4_2__
-#warning "SpearmanRhoSIMD: SSE4.2 is not available, defaulting to pure C++ implementation!"
+#pragma message(WARN("SpearmanRhoSIMD: SSE4.2 is not available, defaulting to pure C++ implementation!"))
     return SpearmanRho(pVect1, pVect2, qty);
 #else
     size_t qty4  = qty/4;
@@ -155,7 +157,7 @@ int SpearmanRhoSIMD(const PivotIdType* pVect1, const PivotIdType* pVect2, size_t
         sum  = _mm_add_epi32(sum, _mm_mullo_epi32(diff, diff));
     }
 
-    int32_t __attribute__((aligned(16))) TmpRes[8];
+    int32_t PORTABLE_ALIGN16 TmpRes[8];
 
     _mm_store_si128(reinterpret_cast<__m128i*>(TmpRes), sum);
     int32_t res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];

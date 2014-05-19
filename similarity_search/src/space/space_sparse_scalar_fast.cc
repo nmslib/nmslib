@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -14,12 +14,15 @@
  *
  */
 
+#include <memory>
 #include <cmath>
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <cstdint>
 
-#include "space_sparse_scalar_fast.h"
+#include "utils.h"
+#include "space/space_sparse_scalar_fast.h"
 #include "logging.h"
 #include "experimentconf.h"
 
@@ -28,7 +31,6 @@
 namespace similarity {
 
 #ifdef __SSE4_2__
-
 const static __m128i shuffle_mask16[16] = {
   _mm_set_epi8(-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127),
   _mm_set_epi8(-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,3,2,1,0),
@@ -47,11 +49,17 @@ const static __m128i shuffle_mask16[16] = {
   _mm_set_epi8(-127,-127,-127,-127,15,14,13,12,11,10,9,8,7,6,5,4),
   _mm_set_epi8(15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0),
 };
-#else 
-#error "No SSE4.2 detected!"
-
 #endif
 
+/*
+* The maximum number of sparse elements that will be kept on the stack
+* by the function ComputeDistanceHelper.
+*
+* TODO:@leo If there are too many threads, we might run out stack memory.
+*           but it is probably extremely unlikely with the buffer of this size.
+*
+*/
+#define MAX_BUFFER_QTY  8192
 
 /*
  * The efficient SIMD intersection is based on the code of Daniel Lemire (lemire.me). 
@@ -90,6 +98,12 @@ float ScalarProjectFast(const char* pData1, size_t len1,
   const char*     pBlockBeg1 = NULL; 
   const char*     pBlockBeg2 = NULL;
 
+  float						buf1[MAX_BUFFER_QTY];
+  float						buf2[MAX_BUFFER_QTY];
+  unique_ptr<float[]>		mem1;
+  unique_ptr<float[]>		mem2;
+  size_t					allocQty = 0;
+
   ParseSparseElementHeader(pData1, blockQty1, norm1, pBlockQtys1, pBlockOffs1, pBlockBeg1);
   ParseSparseElementHeader(pData2, blockQty2, norm2, pBlockQtys2, pBlockOffs2, pBlockBeg2);
 
@@ -111,8 +125,23 @@ float ScalarProjectFast(const char* pData1, size_t len1,
 
       size_t mx = max(qty1, qty2);
 
-      float val1[mx];
-      float val2[mx];
+	  float* val1 = buf1;
+      float* val2 = buf2;
+
+	  /* 
+	   * Let's do some flexible memory allocation. 
+	   * If there is enough space on stack, use the stack,
+	   * otherwise allocate a large chunk of memory	  
+	   */
+	  if (mx > MAX_BUFFER_QTY) {
+		  if (allocQty < mx) {
+			  mem1.reset(new float[mx]);
+			  mem2.reset(new float[mx]);
+			  allocQty = mx;
+		  }
+		  val1 = mem1.get();
+		  val2 = mem2.get();
+	  }
   
       float* pVal1 = val1;
       float* pVal2 = val2;
@@ -121,6 +150,7 @@ float ScalarProjectFast(const char* pData1, size_t len1,
       size_t iEnd1 = qty1 / 8 * 8; 
       size_t iEnd2 = qty2 / 8 * 8; 
 
+#ifdef __SSE4_2__
       if (i1 < iEnd1 && i2 < iEnd2) {
         while (pBlockIds1[i1 + 7] < pBlockIds2[i2]) {
           i1 += 8;
@@ -188,7 +218,9 @@ float ScalarProjectFast(const char* pData1, size_t len1,
           }
         }
       }
-
+#else
+	#pragma message(WARN("No SSE 4.2, defaulting to scalar implementation!"))
+#endif
     scalar_inter:
       while (i1 < qty1 && i2 < qty2) {
         if (pBlockIds1[i1] == pBlockIds2[i2]) {
@@ -212,7 +244,10 @@ float ScalarProjectFast(const char* pData1, size_t len1,
 
       CHECK(resQty == pVal2 - val2);
 
-      ssize_t resQty4 = resQty /4 * 4; 
+      
+
+#ifdef __SSE4_2__
+	  ssize_t resQty4 = resQty / 4 * 4;
 
       if (resQty4) {
         __m128 sum128 = _mm_set1_ps(0);
@@ -229,8 +264,13 @@ float ScalarProjectFast(const char* pData1, size_t len1,
         sum += MM_EXTRACT_FLOAT(sum128, 3);
       }
 
-      for (ssize_t k = resQty4 ; k < resQty; ++k)
-        sum += val1[k] * val2[k];
+	  for (ssize_t k = resQty4; k < resQty; ++k)
+		  sum += val1[k] * val2[k];
+#else
+	  for (ssize_t k = 0; k < resQty; ++k)
+		  sum += val1[k] * val2[k];
+#endif
+
     } else if (pBlockOffs1[bid1] < pBlockOffs2[bid2]) {
       pBlockBeg1 += elemSize * pBlockQtys1[bid1++];
     } else {

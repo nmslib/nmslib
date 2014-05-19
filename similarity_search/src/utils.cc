@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -14,13 +14,12 @@
  *
  */
 
-#include <math.h>
-#include <string.h>       // for strlen
-#include <time.h>
+#include <cmath>
+#include <cstring>
 
-#include <sys/time.h>
 
 #ifdef _MSC_VER
+#include <time.h>
 #include <io.h>
 #ifndef F_OK
 #define F_OK 0
@@ -29,6 +28,7 @@
 #endif
 #else
 #include <unistd.h>
+#include <sys/time.h>
 #include <sys/stat.h>     // for mkdir
 #endif
 
@@ -38,17 +38,6 @@
 
 namespace similarity {
 
-const char* CurrentTime() {
-  static char buffer[255];
-  time_t now;
-  time(&now);
-  snprintf(buffer, sizeof(buffer), "%s", ctime(&now));
-  return buffer;
-}
-
-bool CreateDir(const char* name, int mode) {
-  return mkdir(name, mode) == 0;
-}
 
 const char* GetFileName(const char* fullpath) {
   for (int i = strlen(fullpath) - 1; i >= 0; --i) {
@@ -60,7 +49,11 @@ const char* GetFileName(const char* fullpath) {
 }
 
 bool IsFileExists(const char* filename) {
+#ifdef _MSC_VER
+  return _access(filename, F_OK) == 0;
+#else
   return access(filename, F_OK) == 0;
+#endif
 }
 
 void RStrip(char* str) {

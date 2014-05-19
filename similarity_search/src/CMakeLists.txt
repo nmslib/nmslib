@@ -8,7 +8,7 @@
 #
 #
 
-file(GLOB HDR_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/method/*.h ${PROJECT_SOURCE_DIR}/include/space/*.h)
+file(GLOB HDR_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/method/*.h ${PROJECT_SOURCE_DIR}/include/space/*.h ${Boost_INCLUDE_DIR})
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/space/*.cc ${PROJECT_SOURCE_DIR}/src/method/*.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/main.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
@@ -17,11 +17,9 @@ list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
 
 
-include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/method ${PROJECT_SOURCE_DIR}/include/space)
+include_directories(${PROJECT_SOURCE_DIR}/include)
 message(STATUS "Header files: ${HDR_FILES}")
 message(STATUS "Source files: ${SRC_FILES}")
-
-link_directories(${Boost_LIBRARY_DIRS})
 
 find_package (Threads)
 if (Threads_FOUND)
@@ -31,16 +29,16 @@ else (Threads_FOUND)
 endif (Threads_FOUND)
 
 add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES})
-add_dependencies (NonMetricSpaceLib lshkit)
+add_dependencies (NonMetricSpaceLib lshkit boost_1_55_0)
 add_executable (experiment main.cc)
 add_executable (tune_vptree tune_vptree.cc)
 # The following line is necessary to create an executable for the dummy application:
 add_executable (dummy_app dummy_app.cc)
 
-target_link_libraries (experiment NonMetricSpaceLib lshkit ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (tune_vptree NonMetricSpaceLib lshkit ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (experiment NonMetricSpaceLib lshkit  boost_1_55_0 ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (tune_vptree NonMetricSpaceLib lshkit boost_1_55_0  ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 # What are the libraries that we need to link with for dummy_app?
-target_link_libraries (dummy_app NonMetricSpaceLib lshkit ${Boost_LIBRARIES} 
+target_link_libraries (dummy_app NonMetricSpaceLib lshkit boost_1_55_0 
                                                           ${GSL_LIBRARIES} 
                                                           ${CMAKE_THREAD_LIBS_INIT})
 

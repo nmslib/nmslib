@@ -1,5 +1,4 @@
 include_directories(${PROJECT_SOURCE_DIR}/lshkit/include ${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIBRARY_DIRS})
 
 set(lshkit_SRCS
   src/mplsh.cpp
@@ -7,7 +6,7 @@ set(lshkit_SRCS
   src/apost.cpp
   src/char_bit_cnt.cpp
   src/vq.cpp
-  src/kdtree.c)
+  src/kdtree.cpp)
 
 add_library(lshkit ${lshkit_SRCS})
 target_link_libraries(lshkit ${CMAKE_REQUIRED_LIBRARIES})

@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -14,8 +14,11 @@
  *
  */
 
-#include "method/proj_vptree.h"
-#include "space/space_sparse_scalar.h"
+#ifndef _FACTORY_PROJ_VPTREE_H
+#define _FACTORY_PROJ_VPTREE_H
+
+#include <method/proj_vptree.h>
+#include <space/space_sparse_scalar.h>
 
 namespace similarity {
 
@@ -45,3 +48,4 @@ Index<dist_t>* CreateProjVPTree(bool PrintProgress,
 
 }
 
+#endif

@@ -20,8 +20,12 @@
 #ifndef __LSHKIT_SPECTRAL_HASH__
 #define __LSHKIT_SPECTRAL_HASH__
 
+// This define is needed for Micrisoft VS
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <cmath>
 #include <vector>
+#include <algorithm>
 
 /**
  * \file spectral-hash.h

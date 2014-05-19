@@ -67,7 +67,6 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-#set (Boost_DEBUG TRUE)
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 find_package (GSL REQUIRED)
 if (GSL_FOUND)
@@ -78,16 +77,11 @@ else (GSL_FOUND)
     message (STATUS "Could not locate GSL.")
 endif (GSL_FOUND)
 
-# Can be used to hardwire boost location.
-#set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
-#set (Boost_INCLUDE_DIR ${BOOST_ROOT})
-#set (Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
-
-find_package (Boost 1.48 COMPONENTS system filesystem program_options REQUIRED)
-include_directories (${Boost_INCLUDE_DIR})
+set (Boost_HOME_DIR ${PROJECT_SOURCE_DIR}/boost_1_55_0)
+set (Boost_INCLUDE_DIR ${Boost_HOME_DIR})
 include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
-link_directories (${Boost_LIBRARY_DIR})
 
+add_subdirectory (boost_1_55_0)
 add_subdirectory (lshkit)
 add_subdirectory (src)
 add_subdirectory (test)

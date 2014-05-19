@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -15,6 +15,8 @@
  */
 #include "distcomp.h"
 #include "string.h"
+#include "utils.h"
+#include "simdutils.h"
 
 #include <cstdlib>
 #include <limits>
@@ -84,7 +86,7 @@ template <>
 float ItakuraSaitoPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 {
 #ifndef __SSE2__
-#warning "ItakuraSaitoPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("ItakuraSaitoPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return ItakuraSaitoPrecomp(pVect1, pVect2, qty);
 #else
     size_t qty4  = qty/4;
@@ -136,7 +138,7 @@ float ItakuraSaitoPrecompSIMD(const float* pVect1, const float* pVect2, size_t q
 
     }
 
-    float __attribute__((aligned(16))) TmpRes[4];
+    float PORTABLE_ALIGN16 TmpRes[4];
 
     _mm_store_ps(TmpRes, sum);
     float res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
@@ -153,7 +155,7 @@ template <>
 double ItakuraSaitoPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
 {
 #ifndef __SSE2__
-#warning "ItakuraSaitoPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("ItakuraSaitoPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return ItakuraSaitoPrecomp(pVect1, pVect2, qty);
 #else
     size_t qty8 = qty/8;
@@ -182,7 +184,7 @@ double ItakuraSaitoPrecompSIMD(const double* pVect1, const double* pVect2, size_
     
     }
 
-    double __attribute__((aligned(16))) TmpRes[2];
+    double PORTABLE_ALIGN16 TmpRes[2];
 
     _mm_store_pd(TmpRes, sum);
     double res= TmpRes[0] + TmpRes[1];
@@ -268,7 +270,7 @@ template <>
 float KLPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 {
 #ifndef __SSE2__
-#warning "KLPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("KLPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return KLPrecomp(pVect1, pVect2, qty);
 #else
     size_t qty4  = qty/4;
@@ -313,7 +315,7 @@ float KLPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
         sum  = _mm_add_ps(sum, _mm_mul_ps(v1, _mm_sub_ps(vLog1, vLog2)));
     }
 
-    float __attribute__((aligned(16))) TmpRes[4];
+    float PORTABLE_ALIGN16 TmpRes[4];
 
     _mm_store_ps(TmpRes, sum);
     float res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
@@ -330,7 +332,7 @@ template <>
 double KLPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
 {
 #ifndef __SSE2__
-#warning "KLPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("KLPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return KLPrecomp(pVect1, pVect2, qty);
 #else
     size_t qty8 = qty/8;
@@ -356,7 +358,7 @@ double KLPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
         sum  = _mm_add_pd(sum, _mm_mul_pd(v1, _mm_sub_pd(vLog1, vLog2)));
     }
 
-    double __attribute__((aligned(16))) TmpRes[2];
+    double PORTABLE_ALIGN16 TmpRes[2];
 
     _mm_store_pd(TmpRes, sum);
     double res= TmpRes[0] + TmpRes[1];
@@ -426,7 +428,7 @@ template <>
 float KLGeneralPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 {
 #ifndef __SSE2__
-#warning "KLGeneralPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message WARN("KLGeneralPrecompSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return KLGeneralPrecomp(pVect1, pVect2, qty);
 #else
     size_t qty4  = qty/4;
@@ -478,7 +480,7 @@ float KLGeneralPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 
     }
 
-    float __attribute__((aligned(16))) TmpRes[4];
+    float PORTABLE_ALIGN16 TmpRes[4];
 
     _mm_store_ps(TmpRes, sum);
     float res= TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
@@ -496,7 +498,7 @@ template <>
 double KLGeneralPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
 {
 #ifndef __SSE2__
-#warning "KLGeneralPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"
+#pragma message(WARN("KLGeneralPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"))
     return KLGeneralPrecomp(pVect1, pVect2, qty);
 #else
     size_t qty8 = qty/8;
@@ -525,7 +527,7 @@ double KLGeneralPrecompSIMD(const double* pVect1, const double* pVect2, size_t q
     
     }
 
-    double __attribute__((aligned(16))) TmpRes[2];
+    double PORTABLE_ALIGN16 TmpRes[2];
 
     _mm_store_pd(TmpRes, sum);
     double res= TmpRes[0] + TmpRes[1];

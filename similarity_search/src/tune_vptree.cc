@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -37,7 +37,7 @@
 #include "experimentconf.h"
 #include "space.h"
 #include "index.h"
-#include "vptree.h"
+#include "method/vptree.h"
 #include "logging.h"
 #include "spacefactory.h"
 #include "methodfactory.h"
@@ -285,10 +285,10 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
 }
 
 int main(int ac, char* av[]) {
-  initLibrary();
   WallClockTimer timer;
   timer.reset();
 
+  string                  LogFile;
   string                  DistType;
   string                  SpaceType;
   shared_ptr<AnyParams>   SpaceParams;
@@ -308,7 +308,7 @@ int main(int ac, char* av[]) {
 
 
 
-  ParseCommandLine(ac, av,
+  ParseCommandLine(ac, av, LogFile,
                        DistType,
                        SpaceType,
                        SpaceParams,
@@ -325,6 +325,8 @@ int main(int ac, char* av[]) {
                        eps,
                        RangeArg,
                        Methods);
+
+  initLibrary(LogFile.empty() ? NULL:LogFile.c_str());
 
   ToLower(DistType);
 
@@ -376,7 +378,7 @@ int main(int ac, char* av[]) {
 
   timer.split();
   LOG(INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
-  LOG(INFO) << "Finished at " << CurrentTime();
+  LOG(INFO) << "Finished at " << GetCurrentTime();
 
   return 0;
 }

@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -17,6 +17,7 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#include <cctype>
 #include <cstddef>
 #include <cmath>
 #include <algorithm>
@@ -29,6 +30,31 @@
 #include <random>
 #include <climits>
 
+// compiler_warning.h
+#define STRINGISE_IMPL(x) #x
+#define STRINGISE(x) STRINGISE_IMPL(x)
+
+// This solution is taken from http://stackoverflow.com/a/1911632/2120401
+// Use: #pragma message WARN("My message")
+/*
+ * May need other other definitions for other compilers,
+ * but so far was good for MSVS, GCC, CLang, Intel.
+ */
+#   define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) ") : "
+#   define WARN(exp) (FILE_LINE_LINK "WARNING: " exp)
+
+
+#ifdef _MSC_VER
+#define ISNAN _isnan
+#define __func__ __FUNCTION__ 
+#else
+#define ISNAN std::isnan
+#endif
+
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
 
 namespace similarity {
 

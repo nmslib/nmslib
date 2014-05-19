@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -46,7 +46,6 @@ public:
     DoSeqSearch(space, datapoints, query->QueryObject());
   }
   uint64_t GetSeqSearchTime()     const { return SeqSearchTime_; }
-  uint64_t GetSeqSearchCPUTime()  const { return SeqSearchCPUTime_; }
 
   const DistObjectPairVector<dist_t>&   GetExactDists() const { return  ExactDists_;}
 private:
@@ -54,10 +53,8 @@ private:
                    const ObjectVector&              datapoints,
                    const Object*                    query) {
     WallClockTimer  wtm;
-    CPUTimer        ctm;
 
     wtm.reset();
-    ctm.reset();
 
     ExactDists_.resize(datapoints.size());
 
@@ -67,16 +64,13 @@ private:
     }
 
     wtm.split();
-    ctm.split();
 
     SeqSearchTime_ = wtm.elapsed();
-    SeqSearchCPUTime_ = ctm.elapsed();
 
     std::sort(ExactDists_.begin(), ExactDists_.end());
   }
 
   uint64_t                            SeqSearchTime_;
-  uint64_t                            SeqSearchCPUTime_;
 
   DistObjectPairVector<dist_t>        ExactDists_;
 };

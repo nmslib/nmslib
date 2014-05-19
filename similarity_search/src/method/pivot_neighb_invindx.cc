@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib
@@ -24,7 +24,7 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "incremental_quick_select.h"
-#include "pivot_neighb_invindx.h"
+#include "method/pivot_neighb_invindx.h"
 #include "utils.h"
 
 namespace similarity {
@@ -316,7 +316,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 
         for (auto& it : map_counter) {
           if (it.second >= min_times_) {
-            candidates.push_back(std::make_pair(-it.second, it.first));
+            candidates.push_back(std::make_pair(-static_cast<int>(it.second), it.first));
           }
         }
       } else if (inv_proc_alg_ == kScan) {
@@ -343,7 +343,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 
         for (const auto& it: tmpRes[1-prevRes]) {
           if (it.qty >= min_times_) {
-            candidates.push_back(std::make_pair(-it.qty, it.id));
+            candidates.push_back(std::make_pair(-static_cast<int>(it.qty), it.id));
           }
         }
       } else {
