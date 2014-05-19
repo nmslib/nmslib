@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -39,10 +39,6 @@
 namespace similarity {
 
 
-bool CreateDir(const char* name, int mode) {
-  return mkdir(name, mode) == 0;
-}
-
 const char* GetFileName(const char* fullpath) {
   for (int i = strlen(fullpath) - 1; i >= 0; --i) {
     if (fullpath[i] == '\\' || fullpath[i] == '/') {
@@ -53,7 +49,11 @@ const char* GetFileName(const char* fullpath) {
 }
 
 bool IsFileExists(const char* filename) {
+#ifdef _MSC_VER
+  return _access(filename, F_OK) == 0;
+#else
   return access(filename, F_OK) == 0;
+#endif
 }
 
 void RStrip(char* str) {

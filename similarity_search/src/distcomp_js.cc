@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -92,7 +92,7 @@ T JSPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
 template float JSPrecomp<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double JSPrecomp<double>(const double* pVect1, const double* pVect2, size_t qty);
 
-constexpr unsigned LogQty = 65536;
+const unsigned LogQty = 65536;
 
 template <class T>
 inline unsigned lapprox(T f) {

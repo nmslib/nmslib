@@ -4,7 +4,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -18,8 +18,12 @@
 
 #include "methodfactory.h"
 
+
+#ifndef _MSC_VER
+// These guys won't work on Windows yet
 #include "factory/method/lsh.h"
 #include "factory/method/lsh_multiprobe.h"
+#endif
 #include "factory/method/dummy.h"
 #include "factory/method/bbtree.h"
 #include "factory/method/ghtree.h"

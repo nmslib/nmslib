@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -222,10 +222,8 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
 
         WallClockTimer wtm;
-        CPUTimer       ctm;
 
         wtm.reset();
-        ctm.reset();
         
         bool bCreateNew = true;
         
@@ -251,8 +249,6 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
                            :IndexPtrs.back());
 
         LOG(INFO) << "==============================================";
-        wtm.split();
-        ctm.split();
 
         const double vmsize_after = mem_usage_measure.get_vmsize();
 
@@ -260,12 +256,12 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
         const double TotalMemByMethod = vmsize_after - vmsize_before + data_size;
 
+        wtm.split();
+
         LOG(INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
         LOG(INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
         LOG(INFO) << ">>>> Data size:            " << data_size << " MBs";
         LOG(INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
-        LOG(INFO) << ">>>> CPU time elapsed:     " << (ctm.userelapsed()/double(1e6)) << " sec";
-        LOG(INFO) << ">>>> System time elapsed:  " << (ctm.systemelapsed()/double(1e6)) << " sec";
 
 
         for (size_t i = 0; i < config.GetRange().size(); ++i) {

@@ -1,84 +1,51 @@
 /**
- * This is code is released under the
- * Apache License Version 2.0 http://www.apache.org/licenses/.
- *
- * (c) Daniel Lemire, http://lemire.me/en/
- */
+* Non-metric Space Library
+*
+* Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
+* With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+*
+* For the complete list of contributors and further details see:
+* https://github.com/searchivarius/NonMetricSpaceLib
+*
+* Copyright (c) 2014
+*
+* This code is released under the
+* Apache License Version 2.0 http://www.apache.org/licenses/.
+*
+*/
 
-#ifndef ZTIMER
-#define ZTIMER
+#ifndef _CHRONO_TIMER_H_
+#define _CHRONO_TIMER_H_
 
-#include "time.h"
-#include "sys/time.h"
-#include "sys/resource.h"
-#include "inttypes.h"
+#include <chrono>
+#include <cstdint>
+#include <cmath>
 
-/**
- *  author: Preston Bannister
- */
+using namespace std::chrono;
+using std::round;
+
 class WallClockTimer {
 public:
-    struct timeval t1, t2;
-    WallClockTimer() :
-        t1(), t2() {
-        gettimeofday(&t1, 0);
-        t2 = t1;
-    }
-    void reset() {
-        gettimeofday(&t1, 0);
-        t2 = t1;
-    }
-    uint64_t elapsed() {
-        return ((t2.tv_sec - t1.tv_sec) * 1000ULL * 1000ULL) + ((t2.tv_usec - t1. tv_usec));
-    }
-    uint64_t split() {
-        gettimeofday(&t2, 0);
-        return elapsed();
-    }
-};
+  time_point<system_clock> t1, t2;
 
-/**
- *  author: Daniel Lemire
- */
-class CPUTimer {
-public:
-    //clock_t t1, t2;
-    struct rusage t1,t2;
+  WallClockTimer() {
+    reset();
+  }
 
-    CPUTimer() :
-        t1(), t2() {
-        getrusage(RUSAGE_SELF, &t1);
-        //t1 = clock();
-        t2 = t1;
-    }
-    void reset() {
-        getrusage(RUSAGE_SELF, &t1);
-        t2 = t1;
-    }
-    // proxy for userelapsed
-    uint64_t elapsed() {
-        return totalelapsed();
-    }
+  void reset() {
+    t1 = high_resolution_clock::now();
+    t2 = t1;
+  }
 
-    uint64_t totalelapsed() {
-        return userelapsed() + systemelapsed();
-    }
-    // returns the *user* CPU time in micro seconds (mu s)
-    uint64_t userelapsed() {
-        return ((t2.ru_utime.tv_sec - t1.ru_utime.tv_sec) * 1000ULL * 1000ULL) + ((t2.ru_utime.tv_usec - t1.ru_utime.tv_usec)
-                );
-    }
+  uint64_t elapsed() {
+    duration<double> elapsed_seconds = t2 - t1;
+    return static_cast<uint64_t>(round(1e6 * elapsed_seconds.count()));
+  }
 
-    // returns the *system* CPU time in micro seconds (mu s)
-    uint64_t systemelapsed() {
-        return ((t2.ru_stime.tv_sec - t1.ru_stime.tv_sec) * 1000ULL * 1000ULL) + ((t2.ru_stime.tv_usec - t1.ru_stime.tv_usec)
-                );
-    }
-
-    uint64_t split() {
-        getrusage(RUSAGE_SELF, &t2);
-        return elapsed();
-    }
+  uint64_t split() {
+    t2 = high_resolution_clock::now();
+    return elapsed();
+  }
 };
 
 #endif

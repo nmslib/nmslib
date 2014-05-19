@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "space_lp.h"
+#include "space/space_lp.h"
 #include "common.h"
 #include "bunit.h"
 

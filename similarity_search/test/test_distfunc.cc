@@ -8,18 +8,21 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+#ifdef _MSC_VER
+#define _SCL_SECURE_NO_WARNINGS
+#endif
 
 #include <iostream>
 #include <memory>
 #include <cmath>
 
 #include "space.h"
-#include "space_sparse_lp.h"
-#include "space_sparse_scalar.h"
-#include "space_sparse_vector_inter.h"
-#include "space_sparse_scalar_fast.h"
-#include "space_sparse_vector.h"
-#include "space_scalar.h"
+#include "space/space_sparse_lp.h"
+#include "space/space_sparse_scalar.h"
+#include "space/space_sparse_vector_inter.h"
+#include "space/space_sparse_scalar_fast.h"
+#include "space/space_sparse_vector.h"
+#include "space/space_scalar.h"
 #include "common.h"
 #include "bunit.h"
 #include "distcomp.h"
@@ -754,8 +757,6 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
 TEST(TestAgree) {
     int nTest  = 0;
     int nFail = 0;
-
-    srand48(0);
 
     nTest++;
     nFail += !TestSparseCosineSimilarityAgree("../sample_data/sparse_5K.txt", 1000, 200);
@@ -2222,8 +2223,6 @@ bool TestBitHamming(size_t N, size_t dim, size_t Rep) {
 TEST(TestSpeed) {
     int nTest  = 0;
     int nFail = 0;
-
-    srand48(0);
 
     int dim = 128;
 

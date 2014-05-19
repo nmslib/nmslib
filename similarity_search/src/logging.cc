@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -13,6 +13,10 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+//  To shutup Microsoft Compiler who complains about localtime being unsafe
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #include <time.h>
 #include <stdio.h>
@@ -32,6 +36,7 @@ std::ofstream Logger::logfile_;
 std::ostream& Logger::stream() {
   return logfile_.is_open() ? logfile_ : std::cerr;
 }
+
 
 std::string GetCurrentTime() {
   time_t now;
