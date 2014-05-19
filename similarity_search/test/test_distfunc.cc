@@ -42,6 +42,8 @@ namespace similarity {
 using std::unique_ptr;
 using std::vector;
 
+const string sampleDataPrefix = string("..") + PATH_SEPARATOR + string("sample_data") + PATH_SEPARATOR;
+
 
 template <class T> 
 inline void Normalize(T* pVect, size_t qty) {
@@ -101,6 +103,11 @@ TEST(set_intel) {
 #endif
 
 */
+
+
+TEST(Platform64) {
+  EXPECT_EQ(8 == sizeof(size_t), true);
+}
 
 template <typename dist_t>
 void GenSparseVectZipf(size_t maxSize, vector<SparseVectElem<dist_t>>& res) {
@@ -759,10 +766,10 @@ TEST(TestAgree) {
     int nFail = 0;
 
     nTest++;
-    nFail += !TestSparseCosineSimilarityAgree("../sample_data/sparse_5K.txt", 1000, 200);
+    nFail += !TestSparseCosineSimilarityAgree(sampleDataPrefix + "sparse_5K.txt", 1000, 200);
 
     nTest++;
-    nFail += !TestSparseCosineSimilarityAgree("../sample_data/sparse_wiki_5K.txt", 1000, 200);
+    nFail += !TestSparseCosineSimilarityAgree(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 200);
 
     /* 
      * 32 should be more than enough for almost all methods,
@@ -1947,7 +1954,7 @@ bool TestSparseLp(size_t N, size_t Rep, T power) {
     unique_ptr<SpaceSparseLp<T>>  space(new SpaceSparseLp<T>(power));
     ObjectVector                  elems;
 
-    space->ReadDataset(elems, NULL, "../sample_data/sparse_5K.txt", N); 
+    space->ReadDataset(elems, NULL, (sampleDataPrefix + "sparse_5K.txt").c_str(), N); 
 
     N = min(N, elems.size());
 
@@ -2255,31 +2262,31 @@ TEST(TestSpeed) {
 #endif
 
     nTest++;
-    nFail += !TestSparseCosineSimilarityFast("../sample_data/sparse_5K.txt", 1000, 1000);
+    nFail += !TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseCosineSimilarityFast("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nFail += !TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseCosineSimilarityFast("../sample_data/sparse_5K.txt", 1000, 1000);
+    nFail += !TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseCosineSimilarityFast("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nFail += !TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
 
     nTest++;
-    nFail += !TestSparseCosineSimilarity<float>("../sample_data/sparse_5K.txt", 1000, 1000);
+    nFail += !TestSparseCosineSimilarity<float>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseCosineSimilarity<float>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nFail += !TestSparseCosineSimilarity<float>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseAngularDistance<float>("../sample_data/sparse_5K.txt", 1000, 1000);
+    nFail += !TestSparseAngularDistance<float>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseAngularDistance<float>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nFail += !TestSparseAngularDistance<float>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
 #if TEST_SPEED_DOUBLE
     nTest++;
-    nFail += !TestSparseCosineSimilarity<double>("../sample_data/sparse_5K.txt", 1000, 1000);
+    nFail += !TestSparseCosineSimilarity<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseCosineSimilarity<double>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nFail += !TestSparseCosineSimilarity<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseAngularDistance<double>("../sample_data/sparse_5K.txt", 1000, 1000);
+    nFail += !TestSparseAngularDistance<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseAngularDistance<double>("../sample_data/sparse_wiki_5K.txt", 1000, 1000);
+    nFail += !TestSparseAngularDistance<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
 #endif
 
 

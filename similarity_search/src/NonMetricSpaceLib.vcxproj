@@ -1,0 +1,365 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{08B5B5CC-2938-4C1C-B835-A3868076D791}</ProjectGUID>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>Win32</Platform>
+    <ProjectName>NonMetricSpaceLib</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NonMetricSpaceLib</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NonMetricSpaceLib</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">NonMetricSpaceLib</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">NonMetricSpaceLib</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search -BC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search --check-stamp-file C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindThreads.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckIncludeFiles.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckLibraryExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckSymbolExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeConfigurableFile.in;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search -BC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search --check-stamp-file C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindThreads.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckIncludeFiles.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckLibraryExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckSymbolExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeConfigurableFile.in;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search -BC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search --check-stamp-file C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindThreads.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckIncludeFiles.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckLibraryExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckSymbolExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeConfigurableFile.in;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search -BC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search --check-stamp-file C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindThreads.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckIncludeFiles.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckLibraryExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckSymbolExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeConfigurableFile.in;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\distcomp.h" />
+    <ClInclude Include="..\include\eval_results.h" />
+    <ClInclude Include="..\include\experimentconf.h" />
+    <ClInclude Include="..\include\experiments.h" />
+    <ClInclude Include="..\include\global.h" />
+    <ClInclude Include="..\include\incremental_quick_select.h" />
+    <ClInclude Include="..\include\index.h" />
+    <ClInclude Include="..\include\init.h" />
+    <ClInclude Include="..\include\knnquery.h" />
+    <ClInclude Include="..\include\knnqueue.h" />
+    <ClInclude Include="..\include\logging.h" />
+    <ClInclude Include="..\include\memory.h" />
+    <ClInclude Include="..\include\meta_analysis.h" />
+    <ClInclude Include="..\include\methodfactory.h" />
+    <ClInclude Include="..\include\object.h" />
+    <ClInclude Include="..\include\params.h" />
+    <ClInclude Include="..\include\permutation_type.h" />
+    <ClInclude Include="..\include\permutation_utils.h" />
+    <ClInclude Include="..\include\pow.h" />
+    <ClInclude Include="..\include\query.h" />
+    <ClInclude Include="..\include\rangequery.h" />
+    <ClInclude Include="..\include\searchoracle.h" />
+    <ClInclude Include="..\include\simddebug.h" />
+    <ClInclude Include="..\include\simdutils.h" />
+    <ClInclude Include="..\include\space.h" />
+    <ClInclude Include="..\include\spacefactory.h" />
+    <ClInclude Include="..\include\utils.h" />
+    <ClInclude Include="..\include\ztimer.h" />
+    <ClInclude Include="..\include\method\bbtree.h" />
+    <ClInclude Include="..\include\method\dummy.h" />
+    <ClInclude Include="..\include\method\ghtree.h" />
+    <ClInclude Include="..\include\method\lcstrategy.h" />
+    <ClInclude Include="..\include\method\list_clusters.h" />
+    <ClInclude Include="..\include\method\lsh.h" />
+    <ClInclude Include="..\include\method\lsh_multiprobe.h" />
+    <ClInclude Include="..\include\method\lsh_space.h" />
+    <ClInclude Include="..\include\method\multi_index.h" />
+    <ClInclude Include="..\include\method\multi_vantage_point_tree.h" />
+    <ClInclude Include="..\include\method\multi_vantage_point_tree_utils.h" />
+    <ClInclude Include="..\include\method\permutation_index.h" />
+    <ClInclude Include="..\include\method\permutation_index_incremental.h" />
+    <ClInclude Include="..\include\method\permutation_inverted_index.h" />
+    <ClInclude Include="..\include\method\permutation_prefix_index.h" />
+    <ClInclude Include="..\include\method\permutation_vptree.h" />
+    <ClInclude Include="..\include\method\perm_bin_vptree.h" />
+    <ClInclude Include="..\include\method\perm_index_incr_bin.h" />
+    <ClInclude Include="..\include\method\pivot_neighb_invindx.h" />
+    <ClInclude Include="..\include\method\proj_vptree.h" />
+    <ClInclude Include="..\include\method\seqsearch.h" />
+    <ClInclude Include="..\include\method\small_world_rand.h" />
+    <ClInclude Include="..\include\method\spatial_approx_tree.h" />
+    <ClInclude Include="..\include\method\vptree.h" />
+    <ClInclude Include="..\include\method\vptree_utils.h" />
+    <ClInclude Include="..\include\space\space_bit_hamming.h" />
+    <ClInclude Include="..\include\space\space_bregman.h" />
+    <ClInclude Include="..\include\space\space_dummy.h" />
+    <ClInclude Include="..\include\space\space_js.h" />
+    <ClInclude Include="..\include\space\space_lp.h" />
+    <ClInclude Include="..\include\space\space_rank_correl.h" />
+    <ClInclude Include="..\include\space\space_scalar.h" />
+    <ClInclude Include="..\include\space\space_sparse_lp.h" />
+    <ClInclude Include="..\include\space\space_sparse_scalar.h" />
+    <ClInclude Include="..\include\space\space_sparse_scalar_fast.h" />
+    <ClInclude Include="..\include\space\space_sparse_vector.h" />
+    <ClInclude Include="..\include\space\space_sparse_vector_inter.h" />
+    <ClInclude Include="..\include\space\space_vector.h" />
+    <ClCompile Include="distcomp_bregman.cc" />
+    <ClCompile Include="distcomp_js.cc" />
+    <ClCompile Include="distcomp_lp.cc" />
+    <ClCompile Include="distcomp_rankcorr.cc" />
+    <ClCompile Include="distcomp_scalar.cc" />
+    <ClCompile Include="experimentconf.cc" />
+    <ClCompile Include="global.cc" />
+    <ClCompile Include="init.cc" />
+    <ClCompile Include="knnquery.cc" />
+    <ClCompile Include="logging.cc" />
+    <ClCompile Include="params.cc" />
+    <ClCompile Include="query.cc" />
+    <ClCompile Include="rangequery.cc" />
+    <ClCompile Include="searchoracle.cc" />
+    <ClCompile Include="utils.cc" />
+    <ClCompile Include="space\space_bit_hamming.cc" />
+    <ClCompile Include="space\space_bregman.cc" />
+    <ClCompile Include="space\space_dummy.cc" />
+    <ClCompile Include="space\space_js.cc" />
+    <ClCompile Include="space\space_lp.cc" />
+    <ClCompile Include="space\space_scalar.cc" />
+    <ClCompile Include="space\space_sparse_lp.cc" />
+    <ClCompile Include="space\space_sparse_scalar_fast.cc" />
+    <ClCompile Include="space\space_sparse_vector.cc" />
+    <ClCompile Include="space\space_sparse_vector_inter.cc" />
+    <ClCompile Include="space\space_vector.cc" />
+    <ClCompile Include="method\bbtree.cc" />
+    <ClCompile Include="method\dummy.cc" />
+    <ClCompile Include="method\ghtree.cc" />
+    <ClCompile Include="method\list_clusters.cc" />
+    <ClCompile Include="method\multi_index.cc" />
+    <ClCompile Include="method\multi_vantage_point_tree.cc" />
+    <ClCompile Include="method\permutation_index.cc" />
+    <ClCompile Include="method\permutation_index_incremental.cc" />
+    <ClCompile Include="method\permutation_inverted_index.cc" />
+    <ClCompile Include="method\permutation_prefix_index.cc" />
+    <ClCompile Include="method\permutation_vptree.cc" />
+    <ClCompile Include="method\perm_bin_vptree.cc" />
+    <ClCompile Include="method\perm_index_incr_bin.cc" />
+    <ClCompile Include="method\pivot_neighb_invindx.cc" />
+    <ClCompile Include="method\proj_vptree.cc" />
+    <ClCompile Include="method\seqsearch.cc" />
+    <ClCompile Include="method\small_world_rand.cc" />
+    <ClCompile Include="method\spatial_approx_tree.cc" />
+    <ClCompile Include="method\vptree.cc" />
+    <None Include="c:\local\boost_1_55_0.64" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -331,6 +331,8 @@ Object* KLDivFastRightQuery<dist_t>::CreateObjFromVect(size_t id, const std::vec
 
 template class BregmanDiv<float>;
 template class BregmanDiv<double>;
+template class KLDivAbstract<float>;
+template class KLDivAbstract<double>;
 template class KLDivGenSlow<float>;
 template class KLDivGenSlow<double>;
 template class KLDivGenFast<float>;

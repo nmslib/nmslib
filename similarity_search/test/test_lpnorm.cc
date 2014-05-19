@@ -45,7 +45,6 @@ class VectorDataset1 : public TestDataset {
 };
 
 
-
 TEST(EuclideanDistance) {
   VectorDataset1 dataset;
   const ObjectVector& dataobjects = dataset.GetDataObjects();

@@ -34,14 +34,25 @@
 #define STRINGISE_IMPL(x) #x
 #define STRINGISE(x) STRINGISE_IMPL(x)
 
-// This solution is taken from http://stackoverflow.com/a/1911632/2120401
-// Use: #pragma message WARN("My message")
 /*
- * May need other other definitions for other compilers,
- * but so far was good for MSVS, GCC, CLang, Intel.
+ * This solution for generating
+ * cross-platform warnings
+ * is taken from http://stackoverflow.com/a/1911632/2120401
+ * Use: #pragma message WARN("My message")
+ *
+ * Two problems:
+ * 1) It generates one extra warning
+ * 2) We may need other other definitions for other compilers,
+ *    but so far was good for MSVS, GCC, CLang, Intel.
  */
 #   define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) ") : "
 #   define WARN(exp) (FILE_LINE_LINK "WARNING: " exp)
+
+#ifdef _MSC_VER
+#define PATH_SEPARATOR "\\"
+#else 
+#define PATH_SEPARATOR "/"
+#endif
 
 
 #ifdef _MSC_VER
