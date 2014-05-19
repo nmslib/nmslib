@@ -5,10 +5,6 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="MinSizeRel|x64">
-      <Configuration>MinSizeRel</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
@@ -37,12 +33,6 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseOfMfc>false</UseOfMfc>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
@@ -66,10 +56,6 @@
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">experiment</TargetName>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
-    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">experiment</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
@@ -94,10 +80,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -106,7 +92,7 @@
     </Midl>
     <Link>
       <AdditionalOptions> /machine:X64 /debug %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;boost_program_options-vc120-mt-gd-1_55.lib;NonMetricSpaceLib.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;NonMetricSpaceLib.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>c:\local\boost_1_55_0.64\lib64-msvc-12.0;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ImportLibrary>
@@ -140,10 +126,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -152,57 +138,13 @@
     </Midl>
     <Link>
       <AdditionalOptions> /machine:X64 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;boost_program_options-vc120-mt-1_55.lib;NonMetricSpaceLib.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;NonMetricSpaceLib.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>c:/local/boost_1_55_0.64/lib64-msvc-12.0;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ImportLibrary>
       </ImportLibrary>
       <ProgramDataBaseFile>
       </ProgramDataBaseFile>
-      <SubSystem>Console</SubSystem>
-      <Version>
-      </Version>
-    </Link>
-    <ProjectReference>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-    </ProjectReference>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
-    <ClCompile>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <Optimization>MinSpace</Optimization>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>
-      </DebugInformationFormat>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
-    </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <Midl>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(IntDir)</OutputDirectory>
-      <HeaderFileName>%(Filename).h</HeaderFileName>
-      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
-      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
-      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
-    </Midl>
-    <Link>
-      <AdditionalOptions> /machine:X86 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;..\release\MinSizeRel\NonMetricSpaceLib.lib;c:\local\boost_1_55_0.64\lib64-msvc-12.0\boost_system-vc120-mt-1_55.lib;c:\local\boost_1_55_0.64\lib64-msvc-12.0\boost_filesystem-vc120-mt-1_55.lib;c:\local\boost_1_55_0.64\lib64-msvc-12.0\boost_program_options-vc120-mt-1_55.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>c:/local/boost_1_55_0.64/lib64-msvc-12.0;c:/local/boost_1_55_0.64/lib64-msvc-12.0/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
-      <ImportLibrary>C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/release/MinSizeRel/experiment.lib</ImportLibrary>
-      <ProgramDataBaseFile>C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/release/MinSizeRel/experiment.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
       <Version>
       </Version>
@@ -229,10 +171,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -241,7 +183,7 @@
     </Midl>
     <Link>
       <AdditionalOptions> /machine:X64 /debug %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;boost_program_options-vc120-mt-1_55.lib;NonMetricSpaceLib.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;NonMetricSpaceLib.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>c:/local/boost_1_55_0.64/lib64-msvc-12.0;$(TargetDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ImportLibrary>
@@ -258,9 +200,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cc" />
+    <ClCompile Include="params.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/NonMetricSpaceLib.vcxproj">
+    <ProjectReference Include="$(SolutionDir)src\NonMetricSpaceLib.vcxproj">
       <Project>08B5B5CC-2938-4C1C-B835-A3868076D791</Project>
     </ProjectReference>
   </ItemGroup>

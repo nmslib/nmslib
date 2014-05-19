@@ -31,9 +31,6 @@
     <ClCompile Include="logging.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="params.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="query.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -336,9 +333,6 @@
     <ClInclude Include="..\include\space\space_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="c:\local\boost_1_55_0.64" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
