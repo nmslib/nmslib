@@ -16,6 +16,12 @@ list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
 # of library source files:
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
 
+# NO lshkit for Win32
+if (WIN32)
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh.cc)
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_multiprobe.cc)
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_space.cc)
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 message(STATUS "Header files: ${HDR_FILES}")
@@ -29,16 +35,23 @@ else (Threads_FOUND)
 endif (Threads_FOUND)
 
 add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES})
-add_dependencies (NonMetricSpaceLib lshkit boost_1_55_0)
+add_dependencies (NonMetricSpaceLib boost_1_55_0)
+if (NOT WIN32)
+  add_dependencies (lshkit)
+  set(LSHKIT_LIB "lshkit")
+else()
+# NO lshkit for Win32
+  set(LSHKIT_LIB "")
+endif()
 add_executable (experiment main.cc)
 add_executable (tune_vptree tune_vptree.cc)
 # The following line is necessary to create an executable for the dummy application:
 add_executable (dummy_app dummy_app.cc)
 
-target_link_libraries (experiment NonMetricSpaceLib lshkit  boost_1_55_0 ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (tune_vptree NonMetricSpaceLib lshkit boost_1_55_0  ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (experiment NonMetricSpaceLib ${LSHKIT_LIB}  boost_1_55_0 ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (tune_vptree NonMetricSpaceLib ${LSHKIT_LIB} boost_1_55_0  ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 # What are the libraries that we need to link with for dummy_app?
-target_link_libraries (dummy_app NonMetricSpaceLib lshkit boost_1_55_0 
+target_link_libraries (dummy_app NonMetricSpaceLib ${LSHKIT_LIB} boost_1_55_0 
                                                           ${GSL_LIBRARIES} 
                                                           ${CMAKE_THREAD_LIBS_INIT})
 

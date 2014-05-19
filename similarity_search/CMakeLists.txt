@@ -30,7 +30,9 @@ function(CXX_COMPILER_DUMPVERSION _OUTPUT_VERSION)
   set(${_OUTPUT_VERSION} ${COMPILER_VERSION} PARENT_SCOPE)
 endfunction()
 
-CXX_COMPILER_DUMPVERSION(CXX_COMPILER_VERSION)
+if(NOT WIN32)
+    CXX_COMPILER_DUMPVERSION(CXX_COMPILER_VERSION)
+endif()
 #message(FATAL_ERROR "stopping... compiler version is: ${CMAKE_CXX_COMPILER_ID} ${CXX_COMPILER_VERSION}")
 
 
@@ -57,6 +59,11 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     endif()
     set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wcast-align -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X -march=native")
     set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wcast-align -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X -march=native")
+elseif(WIN32)
+    # TODO add support for later versions?
+    if(NOT MSVC12)
+         message(FATAL_ERROR "On Windows, only MSVC version 12 is supported!") 
+    endif()
 else ()
     message(FATAL_ERROR "Please, use GCC, Clang, or the Intel compiler!")
 endif()
@@ -68,21 +75,28 @@ endif (NOT CMAKE_BUILD_TYPE)
 message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-find_package (GSL REQUIRED)
-if (GSL_FOUND)
-    message (STATUS "Found GSL.")
-    include_directories (${GSL_INCLUDE_DIRS} ${GSLCBLAS_INCLUDE_DIRS})
-    set (LIBS ${LIBS} ${GSL_LIBRARIES} ${GSLCBLAS_LIBRARIES})
-else (GSL_FOUND)
-    message (STATUS "Could not locate GSL.")
-endif (GSL_FOUND)
+
+# GSL is needed by lshkit, yet NO lshkit for Win32
+if (NOT WIN32)
+  find_package (GSL REQUIRED)
+  if (GSL_FOUND)
+      message (STATUS "Found GSL.")
+      include_directories (${GSL_INCLUDE_DIRS} ${GSLCBLAS_INCLUDE_DIRS})
+      set (LIBS ${LIBS} ${GSL_LIBRARIES} ${GSLCBLAS_LIBRARIES})
+  else (GSL_FOUND)
+      message (STATUS "Could not locate GSL.")
+  endif (GSL_FOUND)
+
+  include_directories (${PROJECT_SOURCE_DIR}/lshkit/include)
+  add_subdirectory (lshkit)
+endif()
 
 set (Boost_HOME_DIR ${PROJECT_SOURCE_DIR}/boost_1_55_0)
 set (Boost_INCLUDE_DIR ${Boost_HOME_DIR})
-include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
+
+include_directories(${Boost_INCLUDE_DIR})
 
 add_subdirectory (boost_1_55_0)
-add_subdirectory (lshkit)
 add_subdirectory (src)
 add_subdirectory (test)
 
