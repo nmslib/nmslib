@@ -69,7 +69,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -86,10 +86,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -102,7 +102,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -119,10 +119,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -132,7 +132,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -149,10 +149,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -162,7 +162,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -178,10 +178,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>c:\local\boost_1_55_0.64;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\lshkit\include;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -189,62 +189,6 @@
       <ProxyFileName>%(Filename)_p.c</ProxyFileName>
     </Midl>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <CustomBuild Include="CMakeLists.txt">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search -BC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search --check-stamp-file C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindThreads.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckIncludeFiles.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckLibraryExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckSymbolExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeConfigurableFile.in;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search -BC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search --check-stamp-file C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindThreads.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckIncludeFiles.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckLibraryExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckSymbolExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeConfigurableFile.in;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
-"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search -BC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search --check-stamp-file C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindThreads.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckIncludeFiles.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckLibraryExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckSymbolExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeConfigurableFile.in;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
-"C:\Program Files (x86)\CMake 2.8\bin\cmake.exe" -HC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search -BC:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search --check-stamp-file C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:/Users/leo_000/Documents/GitHub/NonMetricSpaceLib/similarity_search/src/CMakeLists.txt;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindThreads.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckIncludeFiles.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckLibraryExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CheckSymbolExists.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeConfigurableFile.in;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\FindPackageMessage.cmake;C:\Program Files (x86)\CMake 2.8\share\cmake-2.8\Modules\CMakeParseArguments.cmake;C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\leo_000\Documents\GitHub\NonMetricSpaceLib\similarity_search\src\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
-    </CustomBuild>
-  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\distcomp.h" />
     <ClInclude Include="..\include\eval_results.h" />
@@ -357,7 +301,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="method\small_world_rand.cc" />
     <ClCompile Include="method\spatial_approx_tree.cc" />
     <ClCompile Include="method\vptree.cc" />
-    <None Include="c:\local\boost_1_55_0.64" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

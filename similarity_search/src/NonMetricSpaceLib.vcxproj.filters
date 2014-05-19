@@ -338,9 +338,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="c:\local\boost_1_55_0.64" />
   </ItemGroup>
   <ItemGroup>
