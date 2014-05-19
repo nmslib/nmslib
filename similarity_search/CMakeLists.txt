@@ -91,12 +91,17 @@ if (NOT WIN32)
   add_subdirectory (lshkit)
 endif()
 
-set (Boost_HOME_DIR ${PROJECT_SOURCE_DIR}/boost_1_55_0)
-set (Boost_INCLUDE_DIR ${Boost_HOME_DIR})
 
-include_directories(${Boost_INCLUDE_DIR})
+# Can be used to hardwire boost location.
+#set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
+#set (Boost_INCLUDE_DIR ${BOOST_ROOT})
+#set (Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
 
-add_subdirectory (boost_1_55_0)
+find_package (Boost 1.48 COMPONENTS system filesystem program_options REQUIRED)
+include_directories (${Boost_INCLUDE_DIR})
+include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
+link_directories (${Boost_LIBRARY_DIR})
+
 add_subdirectory (src)
 add_subdirectory (test)
 

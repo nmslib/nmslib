@@ -18,6 +18,7 @@
 <booleanAttribute key="org.eclipse.cdt.launch.ENABLE_VARIABLE_BOOKKEEPING" value="false"/>
 <stringAttribute key="org.eclipse.cdt.launch.GLOBAL_VARIABLES" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;globalVariableList/&gt;&#10;"/>
 <stringAttribute key="org.eclipse.cdt.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;memoryBlockExpressionList/&gt;&#10;"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_ARGUMENTS" value="--space l2_sparse --dataFile ~/TextCollect/Reuters/reuters.txt --knn 1 --testSetQty 1 --maxNumQuery 300 --method mult_index:indexQty=1,methodName=vptree_rank,alphaLeft=2.0,alphaRight=40  --maxNumData 10000"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="debug/experiment"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="Non-Metric-Space-Library"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="0.719730696"/>
