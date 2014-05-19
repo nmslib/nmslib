@@ -67,6 +67,8 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_LIST_CLUSTERS, CreateListClusters)
   REGISTER_METHOD_CREATOR(int,    METH_LIST_CLUSTERS, CreateListClusters)
 
+#ifndef _MSC_VER
+// These guys won't work on Windows yet
   // Regular LSH
   REGISTER_METHOD_CREATOR(float,  METH_LSH_CAUCHY, CreateLSHCauchy)
   REGISTER_METHOD_CREATOR(float,  METH_LSH_GAUSSIAN, CreateLSHGaussian)
@@ -74,6 +76,7 @@ inline void initMethods() {
 
   // Multiprobe LSH
   REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE, CreateLSHMultiprobe)
+#endif
 
   // Multi-vantage point tree
   REGISTER_METHOD_CREATOR(float,  METH_MVPTREE, CreateMultiVantagePointTree)

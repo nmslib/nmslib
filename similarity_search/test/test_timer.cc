@@ -92,8 +92,6 @@ TEST(Timer) {
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < 100, true);
 }
 
-#endif
-
-
 }  // namespace similarity
+#endif
 
