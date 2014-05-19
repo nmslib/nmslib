@@ -23,7 +23,7 @@
 
 #define METH_PERM_INVERTED_INDEX   "perm_inv_indx"
 
-#define USE_MAP_THRESHOLD 0.2
+#define USE_MAP_THRESHOLD 0.01
 
 namespace similarity {
 
