@@ -498,7 +498,7 @@ template <>
 double KLGeneralPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
 {
 #ifndef __SSE2__
-#pragma message(WARN("KLGeneralPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!"))
+#pragma message WARN("KLGeneralPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return KLGeneralPrecomp(pVect1, pVect2, qty);
 #else
     size_t qty8 = qty/8;

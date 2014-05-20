@@ -72,8 +72,6 @@ public:
   }
 
   void ReadDataset();
-  void ComputeStats();
-  void ComputeMaxDistance();
   void PrintInfo() const;
   void SelectTestSet(int SetNum);
   int GetTestSetQty() const {
@@ -87,7 +85,7 @@ public:
   float GetEPS() const { return eps; }
   const typename std::vector<dist_t>& GetRange() const { return range; }
   int   GetDimension() const { return dimension; }
-  int   GetQueryQty() const { return NoQueryFile ? MaxNumQuery : OrigQuery.size(); }
+  int   GetQueryQty() const { return NoQueryFile ? MaxNumQuery : static_cast<unsigned>(OrigQuery.size()); }
 private:
   Space<dist_t>*    space;
   ObjectVector      dataobjects;

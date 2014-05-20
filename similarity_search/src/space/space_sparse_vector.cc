@@ -114,7 +114,7 @@ void SpaceSparseVector<dist_t>::GenRandProjPivots(ObjectVector& vDst, size_t Qty
   // Static is thread-safe in C++-11
   static  std::random_device          rd;
   static  std::mt19937                engine(rd());
-  static  std::normal_distribution<>  normGen(0, 1);
+  static  std::normal_distribution<>  normGen(0.0f, 1.0f);
 
   vDst.clear();
 

@@ -40,10 +40,8 @@
  * is taken from http://stackoverflow.com/a/1911632/2120401
  * Use: #pragma message WARN("My message")
  *
- * Two problems:
- * 1) It generates one extra warning
- * 2) We may need other other definitions for other compilers,
- *    but so far was good for MSVS, GCC, CLang, Intel.
+ * Note: We may need other other definitions for other compilers,
+ *       but so far it worked for MSVS, GCC, CLang, and Intel.
  */
 #   define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) ") : "
 #   define WARN(exp) (FILE_LINE_LINK "WARNING: " exp)

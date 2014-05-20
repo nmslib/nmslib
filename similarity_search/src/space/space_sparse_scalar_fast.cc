@@ -218,10 +218,11 @@ float ScalarProjectFast(const char* pData1, size_t len1,
           }
         }
       }
+  scalar_inter:
 #else
-	#pragma message(WARN("No SSE 4.2, defaulting to scalar implementation!"))
+	#pragma message WARN("No SSE 4.2, defaulting to scalar implementation!")
 #endif
-    scalar_inter:
+
       while (i1 < qty1 && i2 < qty2) {
         if (pBlockIds1[i1] == pBlockIds2[i2]) {
           *pVal1++ = pBlockVals1[i1]; 
@@ -237,8 +238,6 @@ float ScalarProjectFast(const char* pData1, size_t len1,
 
       pBlockBeg1 += elemSize * pBlockQtys1[bid1++];
       pBlockBeg2 += elemSize * pBlockQtys2[bid2++];
-
-
 
       ssize_t resQty = pVal1 - val1;
 

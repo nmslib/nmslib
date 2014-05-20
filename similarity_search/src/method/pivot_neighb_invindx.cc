@@ -233,7 +233,7 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId) {
 template <typename dist_t>
 void 
 PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
-  float db_scan_frac = 0.05;
+  float db_scan_frac = 0.05f;
   
   string inv_proc_alg = PERM_PROC_FAST_SCAN;
   

@@ -215,24 +215,24 @@ void MultiVantagePointTree<dist_t>::GenericSearch(
     bool FirstRight1 = dp1 > internal_node->m1_; 
 
     for (int order1 = 0; order1 < 2; ++ order1) {
-      if (order1 == FirstRight1 && dp1 - query->Radius() <= internal_node->m1_) {      // left
+      if (order1 == int(FirstRight1) && dp1 - query->Radius() <= internal_node->m1_) {      // left
         bool FirstRight2 = dp2 > internal_node->m21_;
         for (int order2 = 0; order2 < 2; ++order2) {
-          if (order2 == FirstRight2 && dp2 - query->Radius() <= internal_node->m21_) {   // left-left
+          if (order2 == int(FirstRight2) && dp2 - query->Radius() <= internal_node->m21_) {   // left-left
             GenericSearch(internal_node->child1_, query, path, query_path_len, MaxLeavesToVisit);
           }
-          if (order2 != FirstRight2 && dp2 + query->Radius() >= internal_node->m21_) {   // left-right
+		  if (order2 != int(FirstRight2) && dp2 + query->Radius() >= internal_node->m21_) {   // left-right
             GenericSearch(internal_node->child2_, query, path, query_path_len, MaxLeavesToVisit);
           }
         }
       }
-      if (order1 != FirstRight1 && dp1 + query->Radius() >= internal_node->m1_) {      // right
+	  if (order1 != int(FirstRight1) && dp1 + query->Radius() >= internal_node->m1_) {      // right
         bool FirstRight2 = dp2 > internal_node->m22_;
         for (int order2 = 0; order2 < 2; ++order2) {
-          if (order2 == FirstRight2 && dp2 - query->Radius() <= internal_node->m22_) {   // right-left
+          if (order2 == int(FirstRight2) && dp2 - query->Radius() <= internal_node->m22_) {   // right-left
             GenericSearch(internal_node->child3_, query, path, query_path_len, MaxLeavesToVisit);
           }
-          if (order2 != FirstRight2 && dp2 + query->Radius() >= internal_node->m22_) {   // right-right
+		  if (order2 != int(FirstRight2) && dp2 + query->Radius() >= internal_node->m22_) {   // right-right
             GenericSearch(internal_node->child4_, query, path, query_path_len, MaxLeavesToVisit);
           }
         }

@@ -72,7 +72,7 @@ void GetPermutation(const ObjectVector& pivot, const Space<dist_t>* space,
   std::sort(pivot_idx.begin(), pivot_idx.end());
   // pivot_idx.second = pos of pivot  (which is needed for computing the Rho func)
   for (size_t i = 0; i < pivot.size(); ++i) {
-    p->push_back(pivot_idx[i].second);
+    p->push_back(static_cast<PivotIdType>(pivot_idx[i].second));
   }
 }
 
@@ -94,7 +94,7 @@ void GenPermutation(const ObjectVector& pivot,
   }
   std::sort(pivot_idx.begin(), pivot_idx.end());
   for (size_t i = 0; i < pivot.size(); ++i) {
-    p->push_back(pivot_idx[i].second);
+	  p->push_back(static_cast<PivotIdType>(pivot_idx[i].second));
   }
 }
 

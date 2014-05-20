@@ -152,9 +152,12 @@ inline  void PackSparseElements(const vector<SparseVectElem<dist_t>>& InpVect,
   dist_t sqSum = 0;
 
   for (size_t i = 0; i < InpVect.size(); ++i) {
-    size_t id = removeBlockZeros(InpVect[i].id_);
+	  uint32_t id = static_cast<uint32_t> // Blocks are never too large
+						(removeBlockZeros(InpVect[i].id_));
 
-    size_t blockId = id / 65536;
+	
+    uint32_t blockId = static_cast<uint32_t> // Blocks are never too large
+						(id / 65536);
 
     id &= 65535; // in-block id will contain only the last two bytes
 

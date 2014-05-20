@@ -183,11 +183,11 @@ TEST(SparsePackUnpack) {
 }
 
 TEST(TestEfficientPower) {
-  float f = 2.0;
+  double f = 2.0;
 
   for (unsigned i = 1; i <= 64; i++) {
-    float p1 = std::pow(f, i);
-    float p2 = EfficientPow(f, i);
+    double p1 = std::pow(f, i);
+    double p2 = EfficientPow(f, i);
 
     EXPECT_EQ(p1, p2);
   }
@@ -196,7 +196,7 @@ TEST(TestEfficientPower) {
 TEST(TestEfficientFract) {
   unsigned MaxNumDig = 16;
 
-  for (float a = 1.1 ; a <= 2; a+= 0.1) {
+  for (float a = 1.1f ; a <= 2.0f; a+= 0.1f) {
     for (unsigned NumDig = 1; NumDig < MaxNumDig; ++NumDig) {
       uint64_t MaxFract = uint64_t(1) << NumDig;
 
@@ -632,16 +632,16 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
             T AbsDiff1 = fabs(val1 - val0);
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
 
-            T maxRelDiff = 1e-5;
-            T maxAbsDiff = 1e-5;
+            T maxRelDiff = 1e-5f;
+            T maxAbsDiff = 1e-5f;
             /* 
              * For large powers, the difference can be larger,
              * because our approximations are efficient, but not very
              * precise
              */
-            if (power > 8) { maxAbsDiff = maxRelDiff = 1e-3;}
-            if (power > 12) { maxAbsDiff = maxRelDiff = 0.01;}
-            if (power > 22) { maxAbsDiff = maxRelDiff = 0.1;}
+            if (power > 8) { maxAbsDiff = maxRelDiff = 1e-3f;}
+            if (power > 12) { maxAbsDiff = maxRelDiff = 0.01f;}
+            if (power > 22) { maxAbsDiff = maxRelDiff = 0.1f;}
 
             ++TotalQty;
             Error += RelDiff1;
@@ -734,8 +734,8 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
 
     bool bug = false;
 
-    float maxRelDiff = 1e-6;
-    float maxAbsDiff = 1e-6;
+    float maxRelDiff = 1e-6f;
+    float maxAbsDiff = 1e-6f;
 
     for (size_t j = Rep; j < N; ++j) 
     for (size_t k = j - Rep; k < j; ++k) {
@@ -870,7 +870,7 @@ bool TestLInfNormStandard(size_t N, size_t dim, size_t Rep) {
     T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * LInfNormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * LInfNormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -908,7 +908,7 @@ bool TestLInfNorm(size_t N, size_t dim, size_t Rep) {
     T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * LInfNorm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * LInfNorm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -946,7 +946,7 @@ bool TestLInfNormSIMD(size_t N, size_t dim, size_t Rep) {
     T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * LInfNormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * LInfNormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -985,7 +985,7 @@ bool TestL1NormStandard(size_t N, size_t dim, size_t Rep) {
     T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * L1NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * L1NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1023,7 +1023,7 @@ bool TestL1Norm(size_t N, size_t dim, size_t Rep) {
     T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * L1Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * L1Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1061,7 +1061,7 @@ bool TestL1NormSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * L1NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * L1NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1099,7 +1099,7 @@ bool TestL2NormStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * L2NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * L2NormStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1137,7 +1137,7 @@ bool TestL2Norm(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * L2Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * L2Norm(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1175,7 +1175,7 @@ bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
     T fract = T(1)/N;
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * L2NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * L2NormSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1215,7 +1215,7 @@ bool TestLPGeneric(size_t N, size_t dim, size_t Rep, T power) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * LPGenericDistance(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
+            DiffSum += 0.01f * LPGenericDistance(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1254,7 +1254,7 @@ bool TestLPGenericOptim(size_t N, size_t dim, size_t Rep, T power) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * LPGenericDistanceOptim(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
+            DiffSum += 0.01f * LPGenericDistanceOptim(pArr + j*dim, pArr + (j-1)*dim, dim, power) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1294,7 +1294,7 @@ bool TestItakuraSaitoPrecomp(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * ItakuraSaitoPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01f * ItakuraSaitoPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1334,7 +1334,7 @@ bool TestItakuraSaitoPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * ItakuraSaitoPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01f * ItakuraSaitoPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1373,7 +1373,7 @@ bool TestItakuraSaitoStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * ItakuraSaito(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * ItakuraSaito(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1414,7 +1414,7 @@ bool TestKLPrecomp(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * KLPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01f * KLPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1454,7 +1454,7 @@ bool TestKLPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * KLPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01f * KLPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1493,7 +1493,7 @@ bool TestKLStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * KLStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * KLStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1534,7 +1534,7 @@ bool TestKLGeneralPrecomp(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * KLGeneralPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01f * KLGeneralPrecomp(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1574,7 +1574,7 @@ bool TestKLGeneralPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * KLGeneralPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
+            DiffSum += 0.01f * KLGeneralPrecompSIMD(pArr + j*dim*2, pArr + (j-1)*dim*2, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1613,7 +1613,7 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * KLGeneralStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * KLGeneralStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1654,7 +1654,7 @@ bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * JSStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * JSStandard(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1695,7 +1695,7 @@ bool TestJSPrecomp(size_t N, size_t dim, size_t Rep, float pZero) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * JSPrecomp(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * JSPrecomp(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1736,7 +1736,7 @@ bool TestJSPrecompApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * JSPrecompApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
+            DiffSum += 0.01f * JSPrecompApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1777,7 +1777,7 @@ bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * JSPrecompSIMDApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
+            DiffSum += 0.01f * JSPrecompSIMDApproxLog(pArr + 2*j*dim, pArr + 2*(j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1809,13 +1809,13 @@ bool TestSpearmanRho(size_t N, size_t dim, size_t Rep) {
 
     t.reset();
 
-    float DiffSum = 0;
+    float DiffSum = 0.0f;
 
-    float fract = 1.0/N;
+    float fract = 1.0f/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * SpearmanRho(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * SpearmanRho(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1847,13 +1847,13 @@ bool TestSpearmanRhoSIMD(size_t N, size_t dim, size_t Rep) {
 
     t.reset();
 
-    float DiffSum = 0;
+    float DiffSum = 0.0f;
 
-    float fract = 1.0/N;
+    float fract = 1.0f/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * SpearmanRhoSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * SpearmanRhoSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1887,11 +1887,11 @@ bool TestSpearmanFootrule(size_t N, size_t dim, size_t Rep) {
 
     float DiffSum = 0;
 
-    float fract = 1.0/N;
+    float fract = 1.0f/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * SpearmanFootrule(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * SpearmanFootrule(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1925,11 +1925,11 @@ bool TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 
     float DiffSum = 0;
 
-    float fract = 1.0/N;
+    float fract = 1.0f/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * SpearmanFootruleSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * SpearmanFootruleSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -1968,7 +1968,7 @@ bool TestSparseLp(size_t N, size_t Rep, T power) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -2006,7 +2006,7 @@ bool TestSparseAngularDistance(const string& dataFile, size_t N, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -2046,7 +2046,7 @@ bool TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -2085,7 +2085,7 @@ bool TestSparseCosineSimilarity(const string& dataFile, size_t N, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -2123,7 +2123,7 @@ bool TestCosineSimilarity(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * CosineSimilarity(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * CosineSimilarity(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -2161,7 +2161,7 @@ bool TestAngularDistance(size_t N, size_t dim, size_t Rep) {
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * AngularDistance(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+            DiffSum += 0.01f * AngularDistance(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -2203,11 +2203,11 @@ bool TestBitHamming(size_t N, size_t dim, size_t Rep) {
 
     float DiffSum = 0;
 
-    float fract = 1.0/N;
+    float fract = 1.0f/N;
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
-            DiffSum += 0.01 * BitHamming(pArr + j*WordQty, pArr + (j-1)*WordQty, WordQty) / N;
+            DiffSum += 0.01f * BitHamming(pArr + j*WordQty, pArr + (j-1)*WordQty, WordQty) / N;
         }
         /* 
          * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
@@ -2246,9 +2246,9 @@ TEST(TestSpeed) {
     nTest++;
     nFail += !TestBitHamming(1000, 1024, 1000);
 
-    double pZero1 = 0.5;
-    double pZero2 = 0.25;
-    double pZero3 = 0.0;
+    float pZero1 = 0.5f;
+    float pZero2 = 0.25f;
+    float pZero3 = 0.0f;
 
     nTest++;
     nFail += !TestCosineSimilarity<float>(1000, dim, 1000);
@@ -2295,7 +2295,7 @@ TEST(TestSpeed) {
     nFail += !TestSparseLp<float>(1000, 1000, -1);
     nTest++;
     nTest++;
-    nFail += !TestSparseLp<float>(1000, 1000, 1/3.0);
+    nFail += !TestSparseLp<float>(1000, 1000, 1/3.0f);
 
 #if TEST_SPEED_LP
     float delta = 0.125/2.0;

@@ -62,10 +62,10 @@ Index<dist_t>* CreateVPTreeSample(bool PrintProgress,
 
     bool      DoRandSample                  = true;
     unsigned  MaxK                          = 100;
-    float     QuantileStepPivot             = 0.005;
-    float     QuantileStepPseudoQuery       = 0.001;
+    float     QuantileStepPivot             = 0.005f;
+    float     QuantileStepPseudoQuery       = 0.001f;
     size_t    NumOfPseudoQueriesInQuantile  = 5;
-    float     DistLearnThreshold            = 0.05;
+    float     DistLearnThreshold            = 0.05f;
 
     pmgr.GetParamOptional("doRandSample",            DoRandSample);
     pmgr.GetParamOptional("maxK",                    MaxK);

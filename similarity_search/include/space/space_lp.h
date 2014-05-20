@@ -42,7 +42,7 @@ namespace similarity {
 template <typename dist_t>
 class SpaceLpDist {
 public:
-  explicit SpaceLpDist(dist_t pf) : p_(pf), pf_(pf), custom_(false) {
+  explicit SpaceLpDist(dist_t pf) : p_(static_cast<int>(pf)), pf_(pf), custom_(false) {
     if (fabs(dist_t(p_) - pf_) < numeric_limits<dist_t>::min()) {
       custom_ = p_ == -1 || p_ == 1 || p_ == 2;
     }

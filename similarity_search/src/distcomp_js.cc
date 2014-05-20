@@ -51,7 +51,7 @@ template <class T> T JSStandard(const T *pVect1, const T *pVect2, size_t qty)
     T sum1 = 0, sum2 = 0;
 
     for (size_t i = 0; i < qty; i++) {
-      T m = (pVect1[i] + pVect2[i])*0.5;
+      T m = (pVect1[i] + pVect2[i])*T(0.5);
       T lg1 = pVect1[i] < numeric_limits<T>::min() ? T(0):log(pVect1[i]);
       T lg2 = pVect2[i] < numeric_limits<T>::min() ? T(0):log(pVect2[i]);
       sum1 += pVect1[i] * lg1 + pVect2[i] * lg2;
@@ -77,7 +77,7 @@ T JSPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
     const T* pVectLog2 = pVect2 + qty;
 
     while (pVect1 < pEnd2) {
-        T m = 0.5*(*pVect1 + *pVect2);
+        T m = T(0.5)*(*pVect1 + *pVect2);
         sum1 += (*pVect1) * (*pVectLog1) + (*pVect2)*(*pVectLog2);
         if (m >= numeric_limits<T>::min()) {
           sum2 += m * log(m);
@@ -96,7 +96,7 @@ const unsigned LogQty = 65536;
 
 template <class T>
 inline unsigned lapprox(T f) {
-  return floor(LogQty*f);
+  return static_cast<unsigned>(floor(LogQty*f));
 };
 
 template <class T>

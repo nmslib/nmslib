@@ -35,11 +35,20 @@ static const int kMaxFilenameLength = 255;
 #endif
 
 namespace similarity {
-// disable copy and assign
+/*
+ * disable copy and assign
+ * Let's not do it on Windows
+ * as it generates way to many warnings C4661
+ */
+#if defined(_MSC_VER)
+#undef DISABLE_COPY_AND_ASSIGN
+#define DISABLE_COPY_AND_ASSIGN(Type) 
+#else
 #undef DISABLE_COPY_AND_ASSIGN
 #define DISABLE_COPY_AND_ASSIGN(Type) \
   explicit Type(const Type&); \
   Type& operator=(const Type&)
+#endif
 
 }   // namespace similarity
 

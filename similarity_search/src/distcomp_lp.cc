@@ -17,6 +17,7 @@
 #include "simdutils.h"
 #include "string.h"
 #include "logging.h"
+#include "utils.h"
 #include "pow.h"
 
 #include <cstdlib>
@@ -550,7 +551,7 @@ T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p) {
   const unsigned maxDig  = 18;
   const unsigned maxK = 1 << maxDig;
 
-  unsigned pfm = floor(maxK * p);
+  unsigned pfm = static_cast<unsigned>(floor(maxK * p));
 
   if (fabs(maxK*p - pfm) <= std::numeric_limits<T>::min()) {
     unsigned intPow    = pfm >> maxDig;
