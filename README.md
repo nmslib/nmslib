@@ -1,8 +1,8 @@
 Non-Metric Space Library
 =================
-A library/toolkit for evaluation of approximate nearest-neighbor or range search methods.
+A similarity search library and a toolkit for evaluation of similarity search methods.
 
-Contributors: Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
+**Contributors**: Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
 
 Leo(nid) Boytsov is a maintainer.  
