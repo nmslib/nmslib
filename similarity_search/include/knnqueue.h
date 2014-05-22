@@ -23,6 +23,7 @@
 #include <limits>
 
 #include "global.h"
+#include "object.h"
 
 namespace similarity {
 
@@ -45,15 +46,15 @@ class KNNQueue {
         : queue_.top().first;
   }
 
-  const void* TopObject() const { return queue_.top().second; }
+  const Object* TopObject() const { return queue_.top().second; }
 
-  const void* Pop() {
-    const void* top_object = TopObject();
+  const Object* Pop() {
+    const Object* top_object = TopObject();
     queue_.pop();
     return top_object;
   }
 
-  void Push(const dist_t distance, const void* object) {
+  void Push(const dist_t distance, const Object* object) {
     if (Size() < K_) {
       queue_.push(QueueElement(distance, object));
     } else {
@@ -71,7 +72,7 @@ class KNNQueue {
   }
 
  private:
-  typedef std::pair<dist_t, const void*> QueueElement;
+  typedef std::pair<dist_t, const Object*> QueueElement;
   typedef std::priority_queue<QueueElement> QueueType;
 
   QueueType queue_;

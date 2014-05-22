@@ -21,3 +21,8 @@ endif ()
 
 #ADD_SUBDIRECTORY("tools")
 
+install(TARGETS lshkit   
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  COMPONENT library
+)

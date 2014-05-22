@@ -69,8 +69,11 @@ class Space {
     }
     return HiddenDistance(obj1, obj2);
   }
+  /*
+   * Read data set from the external file.
+   */
   virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config,
+                      const ExperimentConfig<dist_t>* config, // NULL pointers are allowed
                       const char* inputfile,
                       const int MaxNumObjects) const = 0;
   virtual std::string ToString() const = 0;

@@ -8,7 +8,9 @@
 #
 #
 
-file(GLOB HDR_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/method/*.h ${PROJECT_SOURCE_DIR}/include/space/*.h ${Boost_INCLUDE_DIR})
+file(GLOB PROJ_HDR_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/method/*.h ${PROJECT_SOURCE_DIR}/include/space/*.h ${PROJECT_SOURCE_DIR}/include/factory/*.h ${PROJ_HDR_FILES}/include/factory/*/*.h)
+file(GLOB OTH_HDR_FILES)
+set(HDR_FILES ${PROJ_HDR_FILES} ${OTH_HDR_FILES})
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/space/*.cc ${PROJECT_SOURCE_DIR}/src/method/*.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/main.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
@@ -64,3 +66,19 @@ else ()
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/debug/")
     set (EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/debug/")
 endif ()
+
+string(LENGTH ${PROJECT_SOURCE_DIR} PREFIX_LEN) 
+MATH(EXPR PREFIX_LEN "${PREFIX_LEN}+1")
+foreach(F ${PROJ_HDR_FILES}) 
+  GET_FILENAME_COMPONENT(FP ${F} PATH)
+  string(SUBSTRING ${FP} ${PREFIX_LEN} -1 FS)
+  #message(${PREFIX_LEN} ":" ${FS})
+  install(FILES "${F}" DESTINATION ${FS})
+endforeach(F)
+
+install(TARGETS NonMetricSpaceLib   
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  COMPONENT library
+)
+

@@ -103,6 +103,12 @@ class Object {
 };
 
 
+/* 
+ * Clearing memory: we will use some smart pointer here (somewhen).
+ *                  can't use standard shared_ptr, b/c they have
+ *                  performance issues.
+ * see, e.g.: http://nerds-central.blogspot.com/2012/03/sharedptr-performance-issues-and.html 
+ */
 typedef std::vector<const Object*> ObjectVector;
 
 inline size_t DataSpaceUsed(const ObjectVector &vect) {

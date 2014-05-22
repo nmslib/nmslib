@@ -35,7 +35,7 @@ template <typename dist_t>
 class KNNQuery : public Query<dist_t> {
  public:
   ~KNNQuery();
-  KNNQuery(const Space<dist_t>* space, const Object* query_object, const unsigned K, float eps);
+  KNNQuery(const Space<dist_t>* space, const Object* query_object, const unsigned K, float eps = 0);
 
   const KNNQueue<dist_t>* Result() const;
   virtual dist_t Radius() const;
