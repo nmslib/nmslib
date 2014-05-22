@@ -49,7 +49,7 @@ struct DistL2 {
    */
   float operator()(const float* x, const float* y, size_t qty) const {
     float res = 0;
-    for (size_t i = 0; i < qty; ++i) res+=(x-y)*(x-y);
+    for (size_t i = 0; i < qty; ++i) res+=(x[i]-y[i])*(x[i]-y[i]);
     return sqrt(res);
   }
 };
@@ -64,6 +64,12 @@ void printResults(KNNQuery<float>* qobj) {
 }
 
 void printResults(RangeQuery<float>* qobj) {
+  const ObjectVector&    objs = *qobj->Result();
+  const vector<float>&    dists = *qobj->ResultDists();
+
+  for (size_t i = 0; i < objs.size(); ++i) {
+    cout << objs[i]->id() << " : " << dists[i] << endl;
+  }
 }
 
 template <class QueryType>
@@ -97,7 +103,7 @@ int main(int argc, char* argv[]) {
                       NULL, // we don't need config here
                       fileName,
                       MaxNumObjects);
-    if (MaxNumObjects < 2) {
+    if (dataSet.size() < 2) {
       cerr << "Too few data elements in " << fileName << endl; 
       return 1;
     }
@@ -144,12 +150,14 @@ int main(int argc, char* argv[]) {
                                         AnyParams(
                                                   {
                                                   "NN=11",
-                                                  "initIndexAttempts=5",
+                                                  "initIndexAttempts=3",
                                                   "initSearchAttempts=3",
-                                                  "indexThreadQty=2", /* 2 indexing threads */
+                                                  "indexThreadQty=4", /* 4 indexing threads */
                                                   }
                                                   )
                                         );
+
+  cout << "Small-world index is created!" << endl;
 
   Index<float>*   indexVPTree = 
                         MethodFactoryRegistry<float>::Instance().
@@ -165,14 +173,16 @@ int main(int argc, char* argv[]) {
                                                   )
                                         );
 
+  cout << "VP-tree index is created!" << endl;
+
   /* Now let's try some searches */
-  float radius = 10000;
+  float radius = 0.1;
   RangeQuery<float>   rangeQ(&customSpace, queryObj, radius);
 
   //doSearch(indexSmallWorld, &rangeQ); not supported for small world method
   doSearch(indexVPTree, &rangeQ);
 
-  unsigned K = 10; // 10-NN query
+  unsigned K = 5; // 10-NN query
   KNNQuery<float>   knnQ(&customSpace, queryObj, K);
 
   doSearch(indexSmallWorld, &knnQ);
