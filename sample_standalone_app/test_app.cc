@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
   cout << "VP-tree index is created!" << endl;
 
   /* Now let's try some searches */
-  float radius = 0.1;
+  float radius = 0.12;
   RangeQuery<float>   rangeQ(&customSpace, queryObj, radius);
 
   //doSearch(indexSmallWorld, &rangeQ); not supported for small world method
