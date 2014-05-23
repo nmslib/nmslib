@@ -76,10 +76,12 @@ class SpaceSparseVector : public Space<dist_t> {
                       const int MaxNumObjects) const;
 
   void GenRandProjPivots(ObjectVector& vDst, size_t Qty, size_t MaxElem) const;
-  static dist_t ScalarProduct(const Object* obj1, const Object* obj2) {
+
+  virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
     SpaceNormScalarProduct distObjNormSP;
     return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjNormSP);
   }
+
  protected:
   typedef SparseVectElem<dist_t> ElemType;
 

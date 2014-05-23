@@ -64,6 +64,8 @@ template <class T> T AngularDistance(const T *p1, const T *p2, size_t qty);
 template <class T> T CosineSimilarity(const T *p1, const T *p2, size_t qty);
 template <class T> T NormScalarProduct(const T *p1, const T *p2, size_t qty);
 
+float ScalarProjectFast(const char* pData1, size_t len1, const char* pData2, size_t len2);
+
 /*
  *  Itakura-Saito distance
  */

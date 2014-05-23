@@ -46,6 +46,9 @@ class ListClusters : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
+  virtual void SetQueryTimeParams(AnyParamManager& );
+  virtual vector<string> GetQueryTimeParamNames() const;
+
   static const Object* SelectNextCenter(
       DistObjectPairVector<dist_t>& remaining,
       ListClustersStrategy strategy);

@@ -39,6 +39,21 @@ struct DistDistObjectTupleAscComparator {
     return std::get<0>(x) < std::get<0>(y);
   }
 };
+    
+template <typename dist_t>
+void 
+ListClusters<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
+  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
+}
+
+template <typename dist_t>
+vector<string>
+ListClusters<dist_t>::GetQueryTimeParamNames() const {
+  vector<string> names;
+  names.push_back("maxLeavesToVisit");
+  return names;
+}    
+    
 
 template <typename dist_t>
 ListClusters<dist_t>::ListClusters(
@@ -75,8 +90,9 @@ ListClusters<dist_t>::ListClusters(
   pmgr.GetParamOptional("useBucketSize", UseBucketSize_);
   pmgr.GetParamOptional("bucketSize", BucketSize_);
   pmgr.GetParamOptional("radius", Radius_);
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
   pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
+
+  SetQueryTimeParams(pmgr);
     
   // <distance to previous centers, object>
   DistObjectPairVector<dist_t> remaining;

@@ -52,6 +52,17 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
  public:
   typedef SparseVectElem<dist_t> ElemType;
 
+
+  /*
+   * Need to override the function from the base class
+   */
+  virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
+    CHECK(obj1->datalength() > 0);
+    CHECK(obj2->datalength() > 0);
+
+    return ScalarProjectFast(obj1->data(), obj1->datalength(),
+                             obj2->data(), obj2->datalength());
+  }
  protected:
 
   virtual Object* CreateObjFromVect(size_t id, const vector<ElemType>& InpVect) const;
