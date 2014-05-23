@@ -31,13 +31,13 @@ PermutationIndexIncremental<dist_t, perm_func>::PermutationIndexIncremental(
     const Space<dist_t>* space,
     const ObjectVector& data,
     const size_t num_pivot,
-    const double db_scan_fraction)
-    : data_(data)   // reference {
-       {
-  CHECK(db_scan_fraction > 0.0);
-  CHECK(db_scan_fraction <= 1.0);
+	const float db_scan_frac)
+	: data_(data),  /* reference */
+     db_scan_frac_(db_scan_frac)  {       
+  CHECK(db_scan_frac > 0.0);
+  CHECK(db_scan_frac <= 1.0);
   
-  ComputeDbScan(db_scan_fraction);
+  ComputeDbScan(db_scan_frac_);
   
   GetPermutationPivot(data, space, num_pivot, &pivot_);
   
@@ -57,16 +57,14 @@ PermutationIndexIncremental<dist_t, perm_func>::PermutationIndexIncremental(
   }
 #endif
   LOG(INFO) << "# pivots         = " << num_pivot;
-  LOG(INFO) << "db scan fraction = " << db_scan_fraction;
+  LOG(INFO) << "db scan fraction = " << db_scan_frac_;
 }
     
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 void 
 PermutationIndexIncremental<dist_t, perm_func>::SetQueryTimeParams(AnyParamManager& pmgr) {
-  float           dbScanFrac;
-  pmgr.GetParamOptional("dbScanFrac", dbScanFrac);
-  
-  ComputeDbScan(dbScanFrac);
+  pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);
+  ComputeDbScan(db_scan_frac_);
 }
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
@@ -109,6 +107,9 @@ void PermutationIndexIncremental<dist_t, perm_func>::GenSearch(QueryType* query)
   }
 #endif
   IncrementalQuickSelect<IntInt> quick_select(perm_dists);
+
+  CHECK(db_scan_ <= data_.size());
+
   for (size_t i = 0; i < db_scan_; ++i) {
     const size_t idx = quick_select.GetNext().second;
     quick_select.Next();

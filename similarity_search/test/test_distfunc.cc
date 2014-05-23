@@ -42,7 +42,13 @@ namespace similarity {
 using std::unique_ptr;
 using std::vector;
 
+#ifdef _MSC_VER
+const string sampleDataPrefix = string("..") + PATH_SEPARATOR +
+                                string("..") + PATH_SEPARATOR +
+                                string("..") + PATH_SEPARATOR + string("sample_data") + PATH_SEPARATOR;
+#else
 const string sampleDataPrefix = string("..") + PATH_SEPARATOR + string("sample_data") + PATH_SEPARATOR;
+#endif
 
 
 template <class T> 

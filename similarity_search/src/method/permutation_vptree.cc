@@ -45,13 +45,13 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
 {
   AnyParamManager pmgr(AllParams);
 
-  double    DbScanFrac = 0.05;
+  db_scan_frac_        = 0.05;
   size_t    NumPivot   = 16;
 
-  pmgr.GetParamOptional("dbScanFrac", DbScanFrac);
+  pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);
   pmgr.GetParamOptional("numPivot", NumPivot);
 
-  if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
+  if (db_scan_frac_< 0.0 || db_scan_frac_> 1.0) {
     LOG(FATAL) << METH_PERMUTATION_VPTREE << " requires that dbScanFrac is in the range [0,1]";
   }
 
@@ -98,7 +98,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
                         });
 #endif
 
-  ComputeDbScanQty(DbScanFrac);
+  ComputeDbScanQty(db_scan_frac_);
   
   GetPermutationPivot(data, space, NumPivot, &pivots_);
   PermData_.resize(data.size());
@@ -157,10 +157,8 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 void 
 PermutationVPTree<dist_t, RankCorrelDistFunc>::SetQueryTimeParams(AnyParamManager& pmgr) {
-  float           dbScanFrac;
-  pmgr.GetParamOptional("dbScanFrac", dbScanFrac);
-  
-  ComputeDbScanQty(dbScanFrac);
+  pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);  
+  ComputeDbScanQty(db_scan_frac_);
 }
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>

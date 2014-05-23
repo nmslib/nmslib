@@ -67,6 +67,7 @@ class PermutationVPTree : public Index<dist_t> {
  private:
   const Space<dist_t>*      space_;
   const ObjectVector&       data_;
+  float                     db_scan_frac_;
   size_t                    db_scan_qty_;
   ObjectVector              pivots_;
   ObjectVector              PermData_;

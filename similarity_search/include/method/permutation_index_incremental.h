@@ -39,7 +39,7 @@ class PermutationIndexIncremental : public Index<dist_t> {
   PermutationIndexIncremental(const Space<dist_t>* space,
                               const ObjectVector& data,
                               const size_t num_pivot,
-                              const double db_scan_percentage);
+                              const float db_scan_frac);
   ~PermutationIndexIncremental();
 
   const std::string ToString() const;
@@ -51,6 +51,7 @@ class PermutationIndexIncremental : public Index<dist_t> {
 
  private:
   const ObjectVector&   data_;
+  float					db_scan_frac_;
   size_t                db_scan_;
   ObjectVector          pivot_;
 #ifdef CONTIGUOUS_STORAGE
