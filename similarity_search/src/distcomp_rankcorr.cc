@@ -24,7 +24,7 @@ namespace similarity {
 
 using namespace std;
 
-#ifdef __SSE4_2__
+#ifdef PORTABLE_SSE4
 #include <immintrin.h>
 #include <smmintrin.h>
 #include <tmmintrin.h>
@@ -43,7 +43,7 @@ int SpearmanFootrule(const PivotIdType* x, const PivotIdType* y, size_t qty) {
 }
 
 int SpearmanFootruleSIMD(const int32_t* pVect1, const int32_t* pVect2, size_t qty) {
-#ifndef __SSE4_2__
+#ifndef PORTABLE_SSE4
 #pragma message WARN("SpearmanFootruleSIMD: SSE4.2 is not available, defaulting to pure C++ implementation!")
 
     return SpearmanFootrule(pVect1, pVect2, qty);
@@ -115,7 +115,7 @@ int SpearmanRho(const PivotIdType* x, const PivotIdType* y, size_t qty) {
 }
 
 int SpearmanRhoSIMD(const PivotIdType* pVect1, const PivotIdType* pVect2, size_t qty) {
-#ifndef __SSE4_2__
+#ifndef PORTABLE_SSE4
 #pragma message WARN("SpearmanRhoSIMD: SSE4.2 is not available, defaulting to pure C++ implementation!")
     return SpearmanRho(pVect1, pVect2, qty);
 #else

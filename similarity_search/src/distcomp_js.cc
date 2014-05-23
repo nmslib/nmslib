@@ -19,10 +19,11 @@
 #include "simdutils.h"
 
 #include <cstdlib>
+#include <cstdint>
 #include <limits>
 #include <algorithm>
 
-#ifdef __SSE2__
+#ifdef PORTABLE_SSE2
 #include <immintrin.h>
 #endif
 
@@ -151,7 +152,7 @@ template double JSPrecompApproxLog<double>(const double* pVect1, const double* p
 template <>
 float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qty)
 {
-#ifndef __SSE2__
+#ifndef PORTABLE_SSE2
 #pragma message WARN("JSPrecompSIMDApproxLog<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return JSPrecompApproxLog(pVect1, pVect2, qty);
 #else
@@ -236,7 +237,7 @@ float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qt
 template <>
 double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t qty)
 {
-#ifndef __SSE2__
+#ifndef PORTABLE_SSE2
 #pragma message WARN("JSPrecompSIMDApproxLog<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return JSPrecompApproxLog(pVect1, pVect2, qty);
 #else
@@ -260,7 +261,7 @@ double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t
     __m128i tmpi;
 
     while (pVect1 < pEnd2) {
-        u_int32_t PORTABLE_ALIGN16 TmpRes[4];
+        uint32_t PORTABLE_ALIGN16 TmpRes[4];
 
 
         v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;

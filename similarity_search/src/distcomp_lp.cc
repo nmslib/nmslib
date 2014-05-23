@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <cmath>
 
-#ifdef __SSE2__
+#ifdef PORTABLE_SSE2
 #include <immintrin.h>
 #endif
 
@@ -84,7 +84,7 @@ template double LInfNorm<double>(const double* pVect1, const double* pVect2, siz
 
 template <> 
 float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
-#ifndef __SSE2__
+#ifndef PORTABLE_SSE2
 #pragma message WARN("LInfNormSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return LInfNormStandard(pVect1, pVect2, qty);
 #else
@@ -100,7 +100,9 @@ float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     /* 
      * A hack to quickly unset the sign flag.
      */
-    __m128 mask_sign = reinterpret_cast<__m128>(_mm_set1_epi32(0x7fffffffu));
+	uint32_t scalar_mask = 0x7fffffffu;
+    __m128 mask_sign = _mm_set1_ps(reinterpret_cast<float&>(scalar_mask));
+
     __m128 MAX = _mm_setzero_ps();
 
     while (pVect1 < pEnd1) {
@@ -147,7 +149,7 @@ float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 
 template <> 
 double LInfNormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
-#ifndef __SSE2__
+#ifndef PORTABLE_SSE2
 #pragma message WARN("LInfNormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return LInfNormStandard(pVect1, pVect2, qty);
 #else
@@ -241,7 +243,7 @@ template double L1Norm<double>(const double* pVect1, const double* pVect2, size_
 
 template <> 
 float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
-#ifndef __SSE2__
+#ifndef PORTABLE_SSE2
 #pragma message WARN("L1NormSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return L1NormStandard(pVect1, pVect2, qty);
 #else
@@ -258,8 +260,8 @@ float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     /* 
      * A hack to quickly unset the sign flag.
      */
-    __m128 mask_sign = reinterpret_cast<__m128>(_mm_set1_epi32(0x7fffffffu));
-
+	uint32_t scalar_mask = 0x7fffffffu;
+	__m128 mask_sign = _mm_set1_ps(reinterpret_cast<float&>(scalar_mask));
 
     while (pVect1 < pEnd1) {
         v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
@@ -305,7 +307,7 @@ float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 
 template <> 
 double L1NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
-#ifndef __SSE2__
+#ifndef PORTABLE_SSE2
 #pragma message WARN("L1NormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
 	return L1NormStandard(pVect1, pVect2, qty);
 #else
@@ -401,7 +403,7 @@ template double L2Norm<double>(const double* pVect1, const double* pVect2, size_
  */
 
 float L2SqrSIMD(const float* pVect1, const float* pVect2, size_t qty) {
-#ifndef __SSE2__
+#ifndef PORTABLE_SSE2
 #pragma message WARN("L2SqrSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     float res = 0, diff;
     for (int i = 0; i < qty; ++i) {
@@ -471,7 +473,7 @@ float L2NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 
 template <> 
 double L2NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
-#ifndef __SSE2__
+#ifndef PORTABLE_SSE2
 #pragma message WARN("L2NormSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return L2NormStandard(pVect1, pVect2, qty);
 #else

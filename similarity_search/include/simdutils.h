@@ -20,7 +20,17 @@
 #define PORTABLE_ALIGN16 __declspec(align(16))
 #endif
 
-#ifdef __SSE4_2__
+#if defined(__SSE2__) || _M_IX86_FP == 2 || defined(__AVX__)
+#define PORTABLE_SSE2
+#endif
+
+// Unfortunately on Win32/64, there is not separate option for SSE4
+#if defined(__SSE4_2__) || defined(__AVX__)
+#define PORTABLE_SSE4
+#endif
+
+
+#ifdef PORTABLE_SSE4
 #include <immintrin.h>
 #include <smmintrin.h>
 #include <tmmintrin.h>

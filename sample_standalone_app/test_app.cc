@@ -30,6 +30,8 @@
 
 #include "ztimer.h"
 
+#define REP_QTY 1000
+
 using namespace std;
 using namespace similarity;
 
@@ -73,13 +75,24 @@ void printResults(RangeQuery<float>* qobj) {
 }
 
 template <class QueryType>
-void doSearch(Index<float>* index, QueryType* qobj) {
+void doSearch(Index<float>* index, QueryType* qobj, int repQty) {
   WallClockTimer timer;
 
-  index->Search(qobj);
+  /*
+   * In this example we repeat the search many times,
+   * but only because we need to measure the result
+   * properly.
+   */
+  for (int i = 0; i < repQty; ++i) {
+     index->Search(qobj);
+	 if (i + 1 < repQty) qobj->Reset(); // This is needed b/c we reuse the same query many times
+  }
 
-  cout << "Search " << qobj->Type() << " using index: " << index->ToString() << endl;
-  cout << "Time:  " << timer.split() << " ms" << endl;
+  timer.split();
+
+  cout << "Search " << qobj->Type() << " using index: " << index->ToString() 
+	   << " repeated: " << repQty << " times " << endl;
+  cout << "Avg time:  " << timer.elapsed()/1000.0/repQty << " ms" << endl;
   cout << "# of results: " << qobj->ResultSize() << endl;
 
   printResults(qobj);
@@ -180,13 +193,13 @@ int main(int argc, char* argv[]) {
   RangeQuery<float>   rangeQ(&customSpace, queryObj, radius);
 
   //doSearch(indexSmallWorld, &rangeQ); not supported for small world method
-  doSearch(indexVPTree, &rangeQ);
+  doSearch(indexVPTree, &rangeQ, REP_QTY);
 
   unsigned K = 5; // 10-NN query
   KNNQuery<float>   knnQ(&customSpace, queryObj, K);
 
-  doSearch(indexSmallWorld, &knnQ);
-  doSearch(indexVPTree, &knnQ);
+  doSearch(indexSmallWorld, &knnQ, REP_QTY);
+  doSearch(indexVPTree, &knnQ, REP_QTY);
 
   delete indexSmallWorld;
   delete indexVPTree;

@@ -30,7 +30,7 @@
 
 namespace similarity {
 
-#ifdef __SSE4_2__
+#ifdef PORTABLE_SSE4
 const static __m128i shuffle_mask16[16] = {
   _mm_set_epi8(-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127),
   _mm_set_epi8(-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,-127,3,2,1,0),
@@ -150,7 +150,7 @@ float ScalarProjectFast(const char* pData1, size_t len1,
       size_t iEnd1 = qty1 / 8 * 8; 
       size_t iEnd2 = qty2 / 8 * 8; 
 
-#ifdef __SSE4_2__
+#ifdef PORTABLE_SSE4
       if (i1 < iEnd1 && i2 < iEnd2) {
         while (pBlockIds1[i1 + 7] < pBlockIds2[i2]) {
           i1 += 8;
@@ -175,13 +175,13 @@ float ScalarProjectFast(const char* pData1, size_t len1,
 
             int r1 = r & 15;
             __m128i v = _mm_loadu_si128(reinterpret_cast<const __m128i *>(&pBlockVals1[i1]));
-            __m128  vs = (__m128)_mm_shuffle_epi8(v, shuffle_mask16[r1]);
+			__m128  vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r1]));
             _mm_storeu_ps(pVal1, vs);
             pVal1 += _mm_popcnt_u32(r1);
 
             int r2 = (r >> 4) & 15;
             v = _mm_loadu_si128(reinterpret_cast<const __m128i *>(&pBlockVals1[i1+4]));
-            vs = (__m128)_mm_shuffle_epi8(v, shuffle_mask16[r2]);
+			vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r2]));
             _mm_storeu_ps(pVal1, vs);
             pVal1 += _mm_popcnt_u32(r2);
 
@@ -194,13 +194,13 @@ float ScalarProjectFast(const char* pData1, size_t len1,
             r1 = r & 15;
 
             v = _mm_loadu_si128(reinterpret_cast<const __m128i *>(&pBlockVals2[i2]));
-            vs = (__m128)_mm_shuffle_epi8(v, shuffle_mask16[r1]);
+			vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r1]));
             _mm_storeu_ps(pVal2, vs);
             pVal2 += _mm_popcnt_u32(r1);
 
             r2 = (r >> 4) & 15;
             v = _mm_loadu_si128(reinterpret_cast<const __m128i *>(&pBlockVals2[i2+4]));
-            vs = (__m128)_mm_shuffle_epi8(v, shuffle_mask16[r2]);
+			vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r2]));
             _mm_storeu_ps(pVal2, vs);
             pVal2 += _mm_popcnt_u32(r2);
           }
@@ -245,7 +245,7 @@ float ScalarProjectFast(const char* pData1, size_t len1,
 
       
 
-#ifdef __SSE4_2__
+#ifdef PORTABLE_SSE4
 	  ssize_t resQty4 = resQty / 4 * 4;
 
       if (resQty4) {
