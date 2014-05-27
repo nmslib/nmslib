@@ -47,7 +47,7 @@ class VectorSpaceGen : public VectorSpace<dist_t> {
       if (!dim) dim = currDim;
       else {
         if (dim != currDim) {
-            LOG(FATAL) << "The # of vector elements (" << currDim << ")" <<
+            LOG(LIB_FATAL) << "The # of vector elements (" << currDim << ")" <<
                       " doesn't match the # of elements in previous lines. (" << dim << " )" <<
                       "Found mismatch, index : " << (index + 1);
         }
