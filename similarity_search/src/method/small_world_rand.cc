@@ -88,10 +88,10 @@ SmallWorldRand<dist_t>::SmallWorldRand(const Space<dist_t>* space,
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_);
 
-  LOG(INFO) << "NN                  = " << NN_;
-  LOG(INFO) << "initIndexAttempts   = " << initIndexAttempts_;
-  LOG(INFO) << "initSearchAttempts  = " << initSearchAttempts_;
-  LOG(INFO) << "indexThreadQty      = " << indexThreadQty_;
+  LOG(LIB_INFO) << "NN                  = " << NN_;
+  LOG(LIB_INFO) << "initIndexAttempts   = " << initIndexAttempts_;
+  LOG(LIB_INFO) << "initSearchAttempts  = " << initSearchAttempts_;
+  LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
 
   if (data.empty()) return;
 
@@ -112,7 +112,7 @@ SmallWorldRand<dist_t>::SmallWorldRand(const Space<dist_t>* space,
                               new IndexThreadParamsSW<dist_t>(space, *this, data, i, indexThreadQty_)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
-      LOG(INFO) << "Creating indexing thread: " << (i+1) << " out of " << indexThreadQty_;
+      LOG(LIB_INFO) << "Creating indexing thread: " << (i+1) << " out of " << indexThreadQty_;
       threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {

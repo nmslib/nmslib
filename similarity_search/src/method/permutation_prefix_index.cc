@@ -208,9 +208,9 @@ PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(
   CHECK(prefix_length_ <= num_pivot);
   CHECK(prefix_length_ > 0);
 
-  LOG(INFO) << "# pivots         = " << num_pivot;
-  LOG(INFO) << "prefix length    = " << prefix_length_;
-  LOG(INFO) << "min candidate    = " << min_candidate_;
+  LOG(LIB_INFO) << "# pivots         = " << num_pivot;
+  LOG(LIB_INFO) << "prefix length    = " << prefix_length_;
+  LOG(LIB_INFO) << "min candidate    = " << min_candidate_;
 
   GetPermutationPivot(data, space, num_pivot, &pivot_);
   prefixtree_ = new PrefixTree;

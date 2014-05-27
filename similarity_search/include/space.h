@@ -77,7 +77,7 @@ class Space {
                       const char* inputfile,
                       const int MaxNumObjects) const = 0;
   virtual std::string ToString() const = 0;
-  virtual void PrintInfo() const { LOG(INFO) << ToString(); }
+  virtual void PrintInfo() const { LOG(LIB_INFO) << ToString(); }
 
  protected:
   void SetIndexPhase() const { bIndexPhase = true; }
@@ -127,7 +127,7 @@ void ComputeIntrinsicDimensionality(const Space<dist_t>& space,
        *            vectors, dense vectors and other objects
        *            can implement their own dump function.
        */
-      LOG(FATAL) << "!!! Bug: a distance returned NAN!";
+      LOG(LIB_FATAL) << "!!! Bug: a distance returned NAN!";
     }
     DistMean += d;
   }
@@ -154,10 +154,10 @@ void ReportIntrinsicDimensionality(const string& reportName,
                                   DistSigma,
                                   SampleQty);
 
-    LOG(INFO) << "### " << reportName;
-    LOG(INFO) << "### intrinsic dim: " << IntrDim;
-    LOG(INFO) << "### distance mean: " << DistMean;
-    LOG(INFO) << "### distance sigma: " << DistSigma;
+    LOG(LIB_INFO) << "### " << reportName;
+    LOG(LIB_INFO) << "### intrinsic dim: " << IntrDim;
+    LOG(LIB_INFO) << "### distance mean: " << DistMean;
+    LOG(LIB_INFO) << "### distance sigma: " << DistSigma;
 }
 
 }  // namespace similarity

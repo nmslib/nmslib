@@ -60,16 +60,16 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBi
     memcpy(&permtable_[start], &binPivot[0], bin_perm_word_qty_ * sizeof(binPivot[0]));
   }
 
-  LOG(INFO) << "# pivots                  = " << num_pivot;
-  LOG(INFO) << "# binarization threshold = "  << bin_threshold_;
-  LOG(INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
-  LOG(INFO) << "use sort = " << use_sort_;
+  LOG(LIB_INFO) << "# pivots                  = " << num_pivot;
+  LOG(LIB_INFO) << "# binarization threshold = "  << bin_threshold_;
+  LOG(LIB_INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
+  LOG(LIB_INFO) << "use sort = " << use_sort_;
   if (use_sort_) {
-    LOG(INFO) << "db scan fraction = " << db_scan_fraction;
+    LOG(LIB_INFO) << "db scan fraction = " << db_scan_fraction;
   } else {
-    LOG(INFO) << "max hamming distance = " << max_hamming_dist_;
+    LOG(LIB_INFO) << "max hamming distance = " << max_hamming_dist_;
   }
-  LOG(INFO) << "skip checking = " << skip_checking_;
+  LOG(LIB_INFO) << "skip checking = " << skip_checking_;
   //SavePermTable(permtable_, "permtab");
 }
 

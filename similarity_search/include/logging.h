@@ -23,9 +23,9 @@
 // write log to file
 void InitializeLogger(const char* logfile);
 
-enum LogSeverity {INFO, WARNING, ERROR, FATAL};
+enum LogSeverity {LIB_INFO, LIB_WARNING, LIB_ERROR, LIB_FATAL};
 
-std::string GetCurrentTime();
+std::string LibGetCurrentTime();
 
 class Logger {
  public:
@@ -46,7 +46,7 @@ class Logger {
 
 // always check
 #define CHECK(condition) \
-  if (!(condition)) LOG(FATAL) << "Check failed: " << #condition
+  if (!(condition)) LOG(LIB_FATAL) << "Check failed: " << #condition
 
 // debug only check and log
 #ifndef NDEBUG

@@ -26,7 +26,7 @@ namespace similarity {
 
 template <typename dist_t>
 dist_t SpaceDummy<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
-  LOG(INFO) << "Calculating the distance between objects: " << obj1->id() << " and " << obj2->id() << endl;
+  LOG(LIB_INFO) << "Calculating the distance between objects: " << obj1->id() << " and " << obj2->id() << endl;
   CHECK(obj1->datalength() > 0);
   CHECK(obj1->datalength() == obj2->datalength());
   /* 
@@ -45,7 +45,7 @@ void SpaceDummy<dist_t>::ReadDataset(
     const ExperimentConfig<dist_t>* config,
     const char* FileName,
     const int MaxNumObjects) const {
-  LOG(INFO) << "Reading at most " << MaxNumObjects << " from the file: " << FileName;
+  LOG(LIB_INFO) << "Reading at most " << MaxNumObjects << " from the file: " << FileName;
 }
 
 template class SpaceDummy<int>;

@@ -58,6 +58,9 @@ class VectorSpaceGen : public VectorSpace<dist_t> {
   virtual std::string ToString() const {
     return "custom space";
   }
+  Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+    return VectorSpace<dist_t>::CreateObjFromVect(id, InpVect);
+  };
  protected:
   DistObjType      distObj_;
 
@@ -71,9 +74,6 @@ class VectorSpaceGen : public VectorSpace<dist_t> {
     return distObj_(x, y, length);
   }
 
-  Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
-    return VectorSpace<dist_t>::CreateObjFromVect(id, InpVect);
-  };
 };
 
 }  // namespace similarity

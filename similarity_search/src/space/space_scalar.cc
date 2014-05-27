@@ -35,7 +35,7 @@ dist_t SpaceCosineSimilarity<dist_t>::HiddenDistance(const Object* obj1, const O
 
   dist_t val = CosineSimilarity(x, y, length);
   // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
-  if (std::isnan(val)) LOG(FATAL) << "Bug: NAN dist!!!!";
+  if (std::isnan(val)) LOG(LIB_FATAL) << "Bug: NAN dist!!!!";
   return val;
 }
 
@@ -52,7 +52,7 @@ dist_t SpaceAngularDistance<dist_t>::HiddenDistance(const Object* obj1, const Ob
 
   dist_t val = AngularDistance(x, y, length);
   // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
-  if (std::isnan(val)) LOG(FATAL) << "Bug: NAN dist!!!!";
+  if (std::isnan(val)) LOG(LIB_FATAL) << "Bug: NAN dist!!!!";
   return val;
 }
 

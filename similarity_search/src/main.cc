@@ -54,13 +54,13 @@ void OutData(bool DoAppend, const string& FilePrefix,
   string FileNameData = FilePrefix + ".dat";
   string FileNameRep  = FilePrefix + ".rep";
 
-  LOG(INFO) << "DoAppend? " << DoAppend;
+  LOG(LIB_INFO) << "DoAppend? " << DoAppend;
 
   std::ofstream   OutFileData(FileNameData.c_str(),
                               (DoAppend ? std::ios::app : (std::ios::trunc | std::ios::out)));
 
   if (!OutFileData) {
-    LOG(FATAL) << "Cannot create output file: '" << FileNameData << "'";
+    LOG(LIB_FATAL) << "Cannot create output file: '" << FileNameData << "'";
   }
   OutFileData.exceptions(std::ios::badbit);
 
@@ -68,7 +68,7 @@ void OutData(bool DoAppend, const string& FilePrefix,
                               (DoAppend ? std::ios::app : (std::ios::trunc | std::ios::out)));
 
   if (!OutFileRep) {
-    LOG(FATAL) << "Cannot create output file: '" << FileNameRep << "'";
+    LOG(LIB_FATAL) << "Cannot create output file: '" << FileNameRep << "'";
   }
   OutFileRep.exceptions(std::ios::badbit);
 
@@ -152,8 +152,8 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
              const string&                RangeArg
 )
 {
-  LOG(INFO) << "### Append? : "       << DoAppend;
-  LOG(INFO) << "### OutFilePrefix : " << ResFilePrefix;
+  LOG(LIB_INFO) << "### Append? : "       << DoAppend;
+  LOG(LIB_INFO) << "### OutFilePrefix : " << ResFilePrefix;
   vector<dist_t> range;
 
   bool bFail = false;
@@ -161,7 +161,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
   if (!RangeArg.empty()) {
     if (!SplitStr(RangeArg, range, ',')) {
-      LOG(FATAL) << "Wrong format of the range argument: '" << RangeArg << "' Should be a list of coma-separated values.";
+      LOG(LIB_FATAL) << "Wrong format of the range argument: '" << RangeArg << "' Should be a list of coma-separated values.";
     }
   }
 
@@ -201,7 +201,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
   for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
 
-    LOG(INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
+    LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
 
     ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
@@ -216,8 +216,8 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
         const AnyParams& MethPars = methElem->methPars_;
         const string& MethParStr = MethPars.ToString();
 
-        LOG(INFO) << ">>>> Index type : " << MethodName;
-        LOG(INFO) << ">>>> Parameters: " << MethParStr;
+        LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
+        LOG(LIB_INFO) << ">>>> Parameters: " << MethParStr;
         const double vmsize_before = mem_usage_measure.get_vmsize();
 
 
@@ -235,7 +235,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
           }
         }
 
-        LOG(INFO) << (bCreateNew ? "Creating a new index":"Using a previosuly created index");
+        LOG(LIB_INFO) << (bCreateNew ? "Creating a new index":"Using a previosuly created index");
 
         IndexPtrs.push_back(
                 bCreateNew ?
@@ -248,7 +248,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
                            )
                            :IndexPtrs.back());
 
-        LOG(INFO) << "==============================================";
+        LOG(LIB_INFO) << "==============================================";
 
         const double vmsize_after = mem_usage_measure.get_vmsize();
 
@@ -258,10 +258,10 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
         wtm.split();
 
-        LOG(INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
-        LOG(INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
-        LOG(INFO) << ">>>> Data size:            " << data_size << " MBs";
-        LOG(INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
+        LOG(LIB_INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
+        LOG(LIB_INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
+        LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
+        LOG(LIB_INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
 
 
         for (size_t i = 0; i < config.GetRange().size(); ++i) {
@@ -288,15 +288,15 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
 
     } catch (const std::exception& e) {
-      LOG(ERROR) << "Exception: " << e.what();
+      LOG(LIB_ERROR) << "Exception: " << e.what();
       bFail = true;
     } catch (...) {
-      LOG(ERROR) << "Unknown exception";
+      LOG(LIB_ERROR) << "Unknown exception";
       bFail = true;
     }
 
     if (bFail) {
-      LOG(FATAL) << "Failure due to an exception!";
+      LOG(LIB_FATAL) << "Failure due to an exception!";
     }
   }
 
@@ -312,9 +312,9 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
       MetaAnalysis* res = ExpResRange[i][MethNum];
 
       ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
-      LOG(INFO) << "Range: " << config.GetRange()[i];
-      LOG(INFO) << Print;
-      LOG(INFO) << "Data: " << Header << Data;
+      LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
+      LOG(LIB_INFO) << Print;
+      LOG(LIB_INFO) << "Data: " << Header << Data;
 
       if (!ResFilePrefix.empty()) {
         stringstream str;
@@ -329,9 +329,9 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
       MetaAnalysis* res = ExpResKNN[i][MethNum];
 
       ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
-      LOG(INFO) << "KNN: " << config.GetKNN()[i];
-      LOG(INFO) << Print;
-      LOG(INFO) << "Data: " << Header << Data;
+      LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
+      LOG(LIB_INFO) << Print;
+      LOG(LIB_INFO) << "Data: " << Header << Data;
 
       if (!ResFilePrefix.empty()) {
         stringstream str;
@@ -390,7 +390,7 @@ int main(int ac, char* av[]) {
 
   initLibrary(LogFile.empty() ? NULL:LogFile.c_str());
 
-  LOG(INFO) << "Program arguments are processed";
+  LOG(LIB_INFO) << "Program arguments are processed";
 
   ToLower(DistType);
 
@@ -446,12 +446,12 @@ int main(int ac, char* av[]) {
                   RangeArg
                  );
   } else {
-    LOG(FATAL) << "Unknown distance value type: " << DistType;
+    LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
   }
 
   timer.split();
-  LOG(INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
-  LOG(INFO) << "Finished at " << GetCurrentTime();
+  LOG(LIB_INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
+  LOG(LIB_INFO) << "Finished at " << LibGetCurrentTime();
 
   return 0;
 }

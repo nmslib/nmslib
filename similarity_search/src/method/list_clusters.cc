@@ -83,7 +83,7 @@ ListClusters<dist_t>::ListClusters(
   } else if (sVal == "maxSumDistPrevCenters") {
     Strategy_ = ListClustersStrategy::kMaxSumDistPrevCenters;
   } else {
-    LOG(FATAL) << "Incorrect value :'" << sVal << "' for parameter strategy ";
+    LOG(LIB_FATAL) << "Incorrect value :'" << sVal << "' for parameter strategy ";
   }
 
 
@@ -118,7 +118,7 @@ ListClusters<dist_t>::ListClusters(
         if (p.second == center) {
           // sanity check
           if (center_skipped) {
-            LOG(FATAL) << "found skipped center again" << std::endl;
+            LOG(LIB_FATAL) << "found skipped center again" << std::endl;
           }
           center_skipped = true;
         } else {
@@ -142,7 +142,7 @@ ListClusters<dist_t>::ListClusters(
         if (p.second == center) {
           // sanity check
           if (center_skipped) {
-            LOG(FATAL) << "found skipped center again" << std::endl;
+            LOG(LIB_FATAL) << "found skipped center again" << std::endl;
           }
           center_skipped = true;
         } else {
@@ -292,7 +292,7 @@ const Object* ListClusters<dist_t>::SelectNextCenter(
       return remaining[idx].second;
   }
 
-  LOG(FATAL) << "Unknown CenterStrategy";
+  LOG(LIB_FATAL) << "Unknown CenterStrategy";
   return remaining[0].second;
 }
 

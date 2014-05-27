@@ -55,7 +55,7 @@ public:
 {
     if (NoQueryFile) {
       if (!TestSetQty) {
-        LOG(FATAL) << "Bad configuration. One should either specify a query file, " <<
+        LOG(LIB_FATAL) << "Bad configuration. One should either specify a query file, " <<
                       " or the number of test sets obtained by bootstrapping (random division into query and data files).";
       }
     }

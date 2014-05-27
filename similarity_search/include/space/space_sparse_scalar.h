@@ -54,7 +54,7 @@ class SpaceSparseAngularDistance : public SpaceSparseVector<dist_t> {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = AngularDistance(x, y, length);
       // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
-      if (std::isnan(val)) LOG(FATAL) << "Bug: NAN dist!!!!";
+      if (std::isnan(val)) LOG(LIB_FATAL) << "Bug: NAN dist!!!!";
       return val;
     }
   };
@@ -80,7 +80,7 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVector<dist_t> {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = CosineSimilarity(x, y, length);
       // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
-      if (std::isnan(val)) LOG(FATAL) << "Bug: NAN dist!!!!";
+      if (std::isnan(val)) LOG(LIB_FATAL) << "Bug: NAN dist!!!!";
       return val;
     }
   };

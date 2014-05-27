@@ -41,7 +41,7 @@ public:
   }
 
   void Register(const string& SpaceType, CreateFuncPtr func) {
-    LOG(INFO) << "Registering at the factory, space: " << SpaceType << " distance type: " << DistTypeName<dist_t>();
+    LOG(LIB_INFO) << "Registering at the factory, space: " << SpaceType << " distance type: " << DistTypeName<dist_t>();
     Creators_[SpaceType] = func;
   }
 
@@ -49,7 +49,7 @@ public:
     if (Creators_.count(SpaceType)) {
       return Creators_[SpaceType](SpaceParams);
     } else {
-      LOG(FATAL) << "It looks like the space " << SpaceType << 
+      LOG(LIB_FATAL) << "It looks like the space " << SpaceType << 
                     " is not defined for the distance type : " << DistTypeName<dist_t>();
     }
     return NULL;

@@ -43,8 +43,8 @@ PermutationIndex<dist_t>::PermutationIndex(
   for (size_t i = 0; i < data.size(); ++i) {
     GetPermutation(pivot_, space, data[i], &permtable_[i]);
   }
-  LOG(INFO) << "# pivots         = " << num_pivot;
-  LOG(INFO) << "db scan fraction = " << db_scan_fraction;
+  LOG(LIB_INFO) << "# pivots         = " << num_pivot;
+  LOG(LIB_INFO) << "db scan fraction = " << db_scan_fraction;
 }
 
 template <typename dist_t>

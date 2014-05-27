@@ -57,7 +57,7 @@ MultiProbeLSH<dist_t>::MultiProbeLSH(const Space<dist_t>* space,
   T_ = T;
 
   if (W <= 0) {
-    LOG(FATAL) << "LshW must be > 0";
+    LOG(LIB_FATAL) << "LshW must be > 0";
   }
 
 #define TUNE_MPLSH_PARAMS
@@ -69,12 +69,12 @@ MultiProbeLSH<dist_t>::MultiProbeLSH(const Space<dist_t>* space,
   lshkit::MPLSHTune(N2, fit_data, T_, L, R, K, M, W);
 #endif
 
-  LOG(INFO) << "M (# of hash functions) : "  << M;
-  LOG(INFO) << "L (# of hash tables) :    "  << L;
-  LOG(INFO) << "H (# hash table size) :   "  << H;
-  LOG(INFO) << "W (width) :               "  << W;
-  LOG(INFO) << "T (# of probes) :         "  << T;
-  LOG(INFO) << "R (desired recall) :      "  << R;
+  LOG(LIB_INFO) << "M (# of hash functions) : "  << M;
+  LOG(LIB_INFO) << "L (# of hash tables) :    "  << L;
+  LOG(LIB_INFO) << "H (# hash table size) :   "  << H;
+  LOG(LIB_INFO) << "W (width) :               "  << W;
+  LOG(LIB_INFO) << "T (# of probes) :         "  << T;
+  LOG(LIB_INFO) << "R (desired recall) :      "  << R;
 
   lshkit::FloatMatrix::Accessor accessor(*matrix_);
   LshIndexType::Parameter param;
@@ -105,7 +105,7 @@ const std::string MultiProbeLSH<dist_t>::ToString() const {
 
 template <typename dist_t>
 void MultiProbeLSH<dist_t>::Search(RangeQuery<dist_t>* query) {
-  LOG(FATAL) << "Not applicable";
+  LOG(LIB_FATAL) << "Not applicable";
 }
 
 template <typename dist_t>

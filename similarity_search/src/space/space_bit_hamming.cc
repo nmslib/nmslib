@@ -54,13 +54,13 @@ void SpaceBitHamming::ReadVec(std::string line, std::vector<uint32_t>& binVect) 
   try {
     while (str >> val) {
       if (val != 0 && val != 1) {
-        LOG(FATAL) << "Only zeros and ones are allowed, line: '" << line << "'";
+        LOG(LIB_FATAL) << "Only zeros and ones are allowed, line: '" << line << "'";
       }
       v.push_back(val);
     }
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
+    LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
   }
   Binarize(v, 1, binVect);
 /*
@@ -100,7 +100,7 @@ void SpaceBitHamming::ReadDataset(
       if (!wordQty) wordQty = currWordQty;
       else {
         if (wordQty != currWordQty) {
-            LOG(FATAL) << "The # of vector elements (" << currWordQty << ")" <<
+            LOG(LIB_FATAL) << "The # of vector elements (" << currWordQty << ")" <<
                       " doesn't match the # of elements in previous lines. (" << wordQty << " )" <<
                       "Found mismatch in line: " << (linenum + 1) << " file: " << FileName;
         }
@@ -110,10 +110,10 @@ void SpaceBitHamming::ReadDataset(
       ++linenum;
       dataset.push_back(CreateObjFromVect(id, temp));
     }
-    LOG(INFO) << "Number of words per vector : " << wordQty;
+    LOG(LIB_INFO) << "Number of words per vector : " << wordQty;
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
+    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
   }
 }
 

@@ -56,8 +56,8 @@ PermutationIndexIncremental<dist_t, perm_func>::PermutationIndexIncremental(
     GetPermutation(pivot_, space, data[i], &permtable_[i]);
   }
 #endif
-  LOG(INFO) << "# pivots         = " << num_pivot;
-  LOG(INFO) << "db scan fraction = " << db_scan_frac_;
+  LOG(LIB_INFO) << "# pivots         = " << num_pivot;
+  LOG(LIB_INFO) << "db scan fraction = " << db_scan_frac_;
 }
     
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>

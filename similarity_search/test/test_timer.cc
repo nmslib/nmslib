@@ -57,7 +57,7 @@ void BurnCPU(size_t qty = 10000000000) {
     sum += i;
     sum *= qty;
   }
-  LOG(INFO) << "Ignore: " << sum;
+  LOG(LIB_INFO) << "Ignore: " << sum;
 }
 
 TEST(Timer) {
@@ -68,7 +68,7 @@ TEST(Timer) {
   oldz.split();
   z.split();
 
-  LOG(INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
+  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
   // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < 100, true);
 
@@ -76,7 +76,7 @@ TEST(Timer) {
   oldz.split();
   z.split();
 
-  LOG(INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
+  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
   // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < 100, true);
 
@@ -87,7 +87,7 @@ TEST(Timer) {
   oldz.split();
   z.split();
 
-  LOG(INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
+  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
   // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < 100, true);
 }

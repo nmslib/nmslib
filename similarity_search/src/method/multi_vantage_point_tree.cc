@@ -44,7 +44,7 @@ MultiVantagePointTree<dist_t>::MultiVantagePointTree(
 
 
   if (BucketSize_ < 2) {
-     LOG(FATAL) << "The bucket size should be at least 2 (multi vantage point tree)";
+     LOG(LIB_FATAL) << "The bucket size should be at least 2 (multi vantage point tree)";
   }
 
   Entries entries;

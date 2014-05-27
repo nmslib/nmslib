@@ -103,8 +103,8 @@ public:
                      const  std::vector<shared_ptr<IndexType>>& IndexPtrs,
                      const vector<shared_ptr<MethodWithParams>>& MethodsDesc) {
 
-    if (LogInfo) LOG(INFO) << ">>>> TestSetId: " << TestSetId;
-    if (LogInfo) LOG(INFO) << ">>>> Will use: "  << ThreadTestQty << " threads in efficiency testing";
+    if (LogInfo) LOG(LIB_INFO) << ">>>> TestSetId: " << TestSetId;
+    if (LogInfo) LOG(LIB_INFO) << ">>>> Will use: "  << ThreadTestQty << " threads in efficiency testing";
     if (LogInfo) config.PrintInfo();
 
     if (!config.GetRange().empty()) {
@@ -126,7 +126,7 @@ public:
                                               IndexPtrs, MethodsDesc);
       }
     }
-    if (LogInfo) LOG(INFO) << "experiment done at " << GetCurrentTime();
+    if (LogInfo) LOG(LIB_INFO) << "experiment done at " << LibGetCurrentTime();
 
   }
 
@@ -237,9 +237,9 @@ public:
        */
 
     // 1-st pass
-    if (LogInfo) LOG(INFO) << "##### Query type: " << QueryType::Type();
-    if (LogInfo) LOG(INFO) << ">>>> query params = "  << QueryCreator.ParamsForPrint();
-    if (LogInfo) LOG(INFO) << ">>>> Computing efficiency metrics ";
+    if (LogInfo) LOG(LIB_INFO) << "##### Query type: " << QueryType::Type();
+    if (LogInfo) LOG(LIB_INFO) << ">>>> query params = "  << QueryCreator.ParamsForPrint();
+    if (LogInfo) LOG(LIB_INFO) << ">>>> Computing efficiency metrics ";
 
     unsigned MethQty = IndexPtrs.size();
 
@@ -276,7 +276,7 @@ public:
       */
       Method.SetQueryTimeParams(tmpParamMngr);
 
-      if (LogInfo) LOG(INFO) << ">>>> Efficiency test for: "<< Method.ToString();
+      if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 
       WallClockTimer wtm;
 
@@ -336,7 +336,7 @@ public:
 
 
     // 2d pass
-    if (LogInfo) LOG(INFO) << ">>>> Computing effectiveness metrics " ;
+    if (LogInfo) LOG(LIB_INFO) << ">>>> Computing effectiveness metrics " ;
 
       
 
@@ -388,18 +388,18 @@ public:
       size_t MethNum = it - IndexPtrs.begin();
       Index<dist_t>& Method = **it;
       if (LogInfo) {
-        LOG(INFO) << "=========================================";
-        LOG(INFO) << ">>>> Index type is "<< Method.ToString();
-        LOG(INFO) << "=========================================";
-        LOG(INFO) << ">>>> max # results = " << max_result_size[MethNum];
-        LOG(INFO) << ">>>> avg # results = " << avg_result_size[MethNum];
-        LOG(INFO) << ">>>> # of distance computations = " << AvgNumDistComp[MethNum];
-        LOG(INFO) << ">>>> Impr in # of dist comp: " << ImprDistComp[MethNum];
-        LOG(INFO) << "=========================================";
-        LOG(INFO) << ">>>> Time elapsed:           " << (SearchTime[MethNum]/double(1e6)) << " sec";
-        LOG(INFO) << ">>>> Avg time per query:     " << (SearchTime[MethNum]/double(1e3)/numquery) << " msec";
-        LOG(INFO) << ">>>> System time elapsed:    " << (SystemTimeElapsed[MethNum]/double(1e6)) << " sec";
-        LOG(INFO) << "=========================================";
+        LOG(LIB_INFO) << "=========================================";
+        LOG(LIB_INFO) << ">>>> Index type is "<< Method.ToString();
+        LOG(LIB_INFO) << "=========================================";
+        LOG(LIB_INFO) << ">>>> max # results = " << max_result_size[MethNum];
+        LOG(LIB_INFO) << ">>>> avg # results = " << avg_result_size[MethNum];
+        LOG(LIB_INFO) << ">>>> # of distance computations = " << AvgNumDistComp[MethNum];
+        LOG(LIB_INFO) << ">>>> Impr in # of dist comp: " << ImprDistComp[MethNum];
+        LOG(LIB_INFO) << "=========================================";
+        LOG(LIB_INFO) << ">>>> Time elapsed:           " << (SearchTime[MethNum]/double(1e6)) << " sec";
+        LOG(LIB_INFO) << ">>>> Avg time per query:     " << (SearchTime[MethNum]/double(1e3)/numquery) << " msec";
+        LOG(LIB_INFO) << ">>>> System time elapsed:    " << (SystemTimeElapsed[MethNum]/double(1e6)) << " sec";
+        LOG(LIB_INFO) << "=========================================";
       }
 
       double  ImprEfficiency = static_cast<double>(SeqSearchTime)/SearchTime[MethNum];
@@ -412,17 +412,17 @@ public:
       PrecisionOfApprox[MethNum] /= static_cast<double>(numquery);
     
       if (LogInfo) {
-        LOG(INFO) << "=========================================";
-        LOG(INFO) << ">>>> Seq. search time elapsed:       " << (SeqSearchTime/double(1e6)) << " sec";
-        LOG(INFO) << ">>>> Avg Seq. search time per query: " << (SeqSearchTime/double(1e3)/numquery) << " msec";
-        LOG(INFO) << ">>>> Impr. in Efficiency = "  << ImprEfficiency;
-        LOG(INFO) << ">>>> Recall         = "       << Recall[MethNum];
-        LOG(INFO) << ">>>> RelPosError    = "       << exp(LogPosErr[MethNum]);
-        LOG(INFO) << ">>>> NumCloser = " << NumCloser[MethNum] << " PrecisionOfApprox = " << PrecisionOfApprox[MethNum];
+        LOG(LIB_INFO) << "=========================================";
+        LOG(LIB_INFO) << ">>>> Seq. search time elapsed:       " << (SeqSearchTime/double(1e6)) << " sec";
+        LOG(LIB_INFO) << ">>>> Avg Seq. search time per query: " << (SeqSearchTime/double(1e3)/numquery) << " msec";
+        LOG(LIB_INFO) << ">>>> Impr. in Efficiency = "  << ImprEfficiency;
+        LOG(LIB_INFO) << ">>>> Recall         = "       << Recall[MethNum];
+        LOG(LIB_INFO) << ">>>> RelPosError    = "       << exp(LogPosErr[MethNum]);
+        LOG(LIB_INFO) << ">>>> NumCloser = " << NumCloser[MethNum] << " PrecisionOfApprox = " << PrecisionOfApprox[MethNum];
       }
     }
 
-    if (LogInfo) LOG(INFO) << "#### Finished " << QueryType::Type() << " " << GetCurrentTime();
+    if (LogInfo) LOG(LIB_INFO) << "#### Finished " << QueryType::Type() << " " << LibGetCurrentTime();
   }
 };
 

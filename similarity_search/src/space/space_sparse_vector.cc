@@ -63,8 +63,8 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, vector<ElemType>
       }
     }
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
+    LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
   }
 }
 
@@ -99,8 +99,8 @@ void SpaceSparseVector<dist_t>::ReadDataset(
       dataset.push_back(CreateObjFromVect(id, temp));
     }
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
+    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
   }
 }
 

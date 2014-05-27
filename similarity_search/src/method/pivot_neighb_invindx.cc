@@ -147,7 +147,7 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   pmgr.GetParamOptional("indexThreadQty", index_thread_qty_);
 
   if (num_prefix_ > num_pivot_) {
-    LOG(FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix "
+    LOG(LIB_FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix "
                << "should be less than or equal to numPivot";
   }
 
@@ -156,11 +156,11 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   size_t indexQty = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
 
 
-  LOG(INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
-  LOG(INFO) << "# of index chunks  = " << indexQty;
-  LOG(INFO) << "# of indexing thread  = " << index_thread_qty_;
-  LOG(INFO) << "# pivots      = " << num_pivot_;
-  LOG(INFO) << "# prefix (K)  = " << num_prefix_;
+  LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
+  LOG(LIB_INFO) << "# of index chunks  = " << indexQty;
+  LOG(LIB_INFO) << "# of indexing thread  = " << index_thread_qty_;
+  LOG(LIB_INFO) << "# pivots      = " << num_pivot_;
+  LOG(LIB_INFO) << "# prefix (K)  = " << num_prefix_;
   
   SetQueryTimeParams(pmgr);
 
@@ -193,7 +193,7 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     }
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
-      LOG(INFO) << "Creating indexing thread: " << (i+1) << " out of " << index_thread_qty_;
+      LOG(LIB_INFO) << "Creating indexing thread: " << (i+1) << " out of " << index_thread_qty_;
       threads[i] = thread(IndexThreadPNII<dist_t>(), ref(*threadParams[i]));
     }
 
@@ -250,7 +250,7 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
   } else if (inv_proc_alg == PERM_PROC_MERGE) {
     inv_proc_alg_ = kMerge; 
   } else {
-    LOG(FATAL) << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
+    LOG(LIB_FATAL) << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
   } 
     
   ComputeDbScan(db_scan_frac);
@@ -347,7 +347,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
           }
         }
       } else {
-        LOG(FATAL) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        LOG(LIB_FATAL) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
       }
 
       IncrementalQuickSelect<IntInt> quick_select(candidates);
@@ -407,7 +407,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
           }
         }
       } else {
-        LOG(FATAL) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        LOG(LIB_FATAL) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
       }
     }
   }

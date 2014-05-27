@@ -49,7 +49,7 @@ Index<dist_t>* CreateLSHMultiprobe(bool PrintProgress,
     pmgr.GetParamOptional("tuneK",  LSH_TuneK);
     pmgr.GetParamOptional("desiredRecall",  DesiredRecall);
 
-    if (SpaceType != "l2") LOG(FATAL) << "Multiprobe LSH works only with L2";
+    if (SpaceType != "l2") LOG(LIB_FATAL) << "Multiprobe LSH works only with L2";
 
     // For FitData():
     // number of points to use
@@ -61,7 +61,7 @@ Index<dist_t>* CreateLSHMultiprobe(bool PrintProgress,
     // search for K neighbors neighbors
     unsigned K = LSH_TuneK;
 
-    LOG(INFO) << "lshTuneK: " << K;
+    LOG(LIB_INFO) << "lshTuneK: " << K;
     // divide the sample to F folds
     unsigned F = 10;
     // For MPLSHTune():

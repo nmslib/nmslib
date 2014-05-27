@@ -40,9 +40,9 @@ LSH<dist_t, lsh_t, paramcreator_t>::LSH(const Space<dist_t>* space,
   CHECK(P == 1 || P == 2);
   const size_t datalength = data[0]->datalength();
 
-  LOG(INFO) << "M (# of hash functions) : "  << M;
-  LOG(INFO) << "L (# of hash tables) :    "  << L;
-  LOG(INFO) << "H (# hash table size) :   "  << H;
+  LOG(LIB_INFO) << "M (# of hash functions) : "  << M;
+  LOG(LIB_INFO) << "L (# of hash tables) :    "  << L;
+  LOG(LIB_INFO) << "H (# hash table size) :   "  << H;
 
   const int dim = static_cast<int>(datalength / sizeof(float));
   matrix_ = new lshkit::FloatMatrix(dim, static_cast<int>(data.size()));
@@ -55,7 +55,7 @@ LSH<dist_t, lsh_t, paramcreator_t>::LSH(const Space<dist_t>* space,
     }
   }
 
-  LOG(INFO) << paramcreator_t::ToString();
+  LOG(LIB_INFO) << paramcreator_t::ToString();
   lshkit::FloatMatrix::Accessor accessor(*matrix_);
   lshkit::DefaultRng rng;
   index_ = new LshIndexType;
@@ -79,7 +79,7 @@ const std::string LSH<dist_t, lsh_t, paramcreator_t>::ToString() const {
 
 template <typename dist_t, typename lsh_t, typename paramcreator_t>
 void LSH<dist_t, lsh_t, paramcreator_t>::Search(RangeQuery<dist_t>* query) {
-  LOG(FATAL) << "Not applicable!";
+  LOG(LIB_FATAL) << "Not applicable!";
 }
 
 template <typename dist_t, typename lsh_t, typename paramcreator_t>

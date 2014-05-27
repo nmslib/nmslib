@@ -98,7 +98,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
 
   void ComputeDbScan(float db_scan_frac) {
     if (db_scan_frac < 0.0 || db_scan_frac > 1.0) {
-      LOG(FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that dbScanFrac is in the range [0,1]";
+      LOG(LIB_FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that dbScanFrac is in the range [0,1]";
     }    
     db_scan_ = std::max(size_t(1),static_cast<size_t>(db_scan_frac * data_.size()));
   }

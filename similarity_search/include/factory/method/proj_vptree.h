@@ -39,7 +39,7 @@ Index<dist_t>* CreateProjVPTree(bool PrintProgress,
         SpaceType != SPACE_SPARSE_ANGULAR_DISTANCE &&
         SpaceType != SPACE_SPARSE_COSINE_SIMILARITY_FAST &&
         SpaceType != SPACE_SPARSE_ANGULAR_DISTANCE_FAST 
-        ) LOG(FATAL) << "Unsupported space: " << SpaceType << " "
+        ) LOG(LIB_FATAL) << "Unsupported space: " << SpaceType << " "
                    << METH_PROJ_VPTREE << 
         " works only with one of the following spaces: " 
                     << SPACE_SPARSE_ANGULAR_DISTANCE  << ", "

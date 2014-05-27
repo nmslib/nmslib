@@ -52,7 +52,7 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
       VPTreeSpace_(new SpaceLp<float>(1))
 {
   if (!space_) {
-    LOG(FATAL) << METH_PROJ_VPTREE << " can work only with sparse vectors!";
+    LOG(LIB_FATAL) << METH_PROJ_VPTREE << " can work only with sparse vectors!";
   }
   AnyParamManager pmgr(AllParams);
 
@@ -60,7 +60,7 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
   pmgr.GetParamOptional("dbScanFrac", DbScanFrac);
 
   if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
-    LOG(FATAL) << METH_PROJ_VPTREE << " requires that dbScanFrac is in the range [0,1]";
+    LOG(LIB_FATAL) << METH_PROJ_VPTREE << " requires that dbScanFrac is in the range [0,1]";
   }
 
   size_t        ProjPivotQty  = 128;

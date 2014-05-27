@@ -152,7 +152,7 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
       std::ofstream  of(SaveHistFileName.c_str(), std::ios::trunc | std::ios::out); 
 
       if (!of) {
-        LOG(FATAL) << "Cannot open: " << SaveHistFileName << " for writing";
+        LOG(LIB_FATAL) << "Cannot open: " << SaveHistFileName << " for writing";
       }
       of << str.str();
     }

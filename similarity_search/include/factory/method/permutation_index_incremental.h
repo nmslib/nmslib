@@ -40,7 +40,7 @@ Index<dist_t>* CreatePermutationIndexIncremental(bool PrintProgress,
   pmgr.GetParamOptional("numPivot", NumPivot);
 
   if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
-    LOG(FATAL) << METH_PERMUTATION_INC_SORT << " requires that dbScanFrac is in the range [0,1]";
+    LOG(LIB_FATAL) << METH_PERMUTATION_INC_SORT << " requires that dbScanFrac is in the range [0,1]";
   }
 
   return new PermutationIndexIncremental<dist_t, SpearmanRhoSIMD>(

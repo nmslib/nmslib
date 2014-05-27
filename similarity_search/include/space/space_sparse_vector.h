@@ -68,6 +68,8 @@ ostream& operator<<(ostream& out, SparseVectElem<dist_t> e) {
 template <typename dist_t>
 class SpaceSparseVector : public Space<dist_t> {
  public:
+  typedef SparseVectElem<dist_t> ElemType;
+
   virtual ~SpaceSparseVector() {}
 
   virtual void ReadDataset(ObjectVector& dataset,
@@ -82,8 +84,8 @@ class SpaceSparseVector : public Space<dist_t> {
     return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjNormSP);
   }
 
+  virtual Object* CreateObjFromVect(size_t id, const vector<ElemType>& InpVect) const;
  protected:
-  typedef SparseVectElem<dist_t> ElemType;
 
   struct SpaceNormScalarProduct {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
@@ -92,7 +94,6 @@ class SpaceSparseVector : public Space<dist_t> {
   };
 
 
-  virtual Object* CreateObjFromVect(size_t id, const vector<ElemType>& InpVect) const;
   void ReadSparseVec(std::string line, std::vector<ElemType>& v) const;
   
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
@@ -169,9 +170,9 @@ class SpaceSparseVector : public Space<dist_t> {
       }
 
       if (qty > maxQty) {
-        LOG(ERROR) << qty1;
-        LOG(ERROR) << qty2;
-        LOG(ERROR) << qty;
+        LOG(LIB_ERROR) << qty1;
+        LOG(LIB_ERROR) << qty2;
+        LOG(LIB_ERROR) << qty;
       }
       CHECK(qty <= maxQty);
 

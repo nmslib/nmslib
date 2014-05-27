@@ -44,7 +44,7 @@ Index<dist_t>* CreateLSHCauchy(bool PrintProgress,
     pmgr.GetParamOptional("H",  LSH_H);
 
     int SpaceSelector = 1;
-    if (SpaceType != "l1") LOG(FATAL) << "LSH (Cauchy) works only with L1";
+    if (SpaceType != "l1") LOG(LIB_FATAL) << "LSH (Cauchy) works only with L1";
     return new LSHCauchy<dist_t>(
                       space,
                       DataObjects,
@@ -75,7 +75,7 @@ Index<dist_t>* CreateLSHGaussian(bool PrintProgress,
     pmgr.GetParamOptional("H",  LSH_H);
 
     int SpaceSelector = 2;
-    if (SpaceType != "l2") LOG(FATAL) << "LSH (Guassian) works only with L2";
+    if (SpaceType != "l2") LOG(LIB_FATAL) << "LSH (Guassian) works only with L2";
 
     return new LSHGaussian<dist_t>(
                       space,
@@ -105,7 +105,7 @@ Index<dist_t>* CreateLSHThreshold(bool PrintProgress,
     pmgr.GetParamOptional("H",  LSH_H);
 
     int SpaceSelector = 1;
-    if (SpaceType != "l1") LOG(FATAL) << "LSH (Threshold) works only with L1";
+    if (SpaceType != "l1") LOG(LIB_FATAL) << "LSH (Threshold) works only with L1";
     return new LSHThreshold<dist_t>(
                       space,
                       DataObjects,

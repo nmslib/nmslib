@@ -74,8 +74,8 @@ template <typename dist_t>
 class TriangIneqCreator {
 public:
   TriangIneqCreator(double alpha_left, double alpha_right) : alpha_left_(alpha_left), alpha_right_(alpha_right){
-    LOG(INFO) << "alphaLeft (left stretch coeff)= "   << alpha_left;
-    LOG(INFO) << "alphaRight (right stretch coeff)= " << alpha_right;
+    LOG(LIB_INFO) << "alphaLeft (left stretch coeff)= "   << alpha_left;
+    LOG(LIB_INFO) << "alphaRight (right stretch coeff)= " << alpha_right;
 
   }
   TriangIneq<dist_t>* Create(unsigned level, const Object* /*pivot_*/, const DistObjectPairVector<dist_t>& /*dists*/) const {
@@ -163,9 +163,9 @@ public:
                                           NumOfPseudoQueriesInQuantile_,
                                           DistLearnThreshold_);
       } catch (const std::exception& e) {
-        LOG(FATAL) << "Exception while creating sampling oracle: " << e.what();
+        LOG(LIB_FATAL) << "Exception while creating sampling oracle: " << e.what();
       } catch (...) {
-        LOG(FATAL) << "Unknown exception while creating sampling oracle";
+        LOG(LIB_FATAL) << "Unknown exception while creating sampling oracle";
       } 
       return NULL;
     }

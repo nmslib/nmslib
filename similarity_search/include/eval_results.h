@@ -246,11 +246,11 @@ private:
            */
           if (mx > 0 && (1- mn/mx) > epsRel && (mx - mn) > epsAbs) {
             for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxDists_.size()); ++i ) {
-              LOG(INFO) << "Ex: " << ExactDists_[i].first << 
+              LOG(LIB_INFO) << "Ex: " << ExactDists_[i].first << 
                            " -> Apr: " << ApproxDists_[i] << 
                            " 1 - ratio: " << (1 - mn/mx) << " diff: " << (mx - mn);
             }
-            LOG(FATAL) << "bug: the approximate query should not return objects "
+            LOG(LIB_FATAL) << "bug: the approximate query should not return objects "
                    << "that are closer to the query than object returned by "
                    << "(exact) sequential searching!"
                    << " Approx: " << ApproxDists_[k]
@@ -268,9 +268,9 @@ private:
         }
         if (p < k) {
           for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxDists_.size()); ++i ) {
-            LOG(INFO) << "E: " << ExactDists_[i].first << " -> " << ApproxDists_[i];
+            LOG(LIB_INFO) << "E: " << ExactDists_[i].first << " -> " << ApproxDists_[i];
           }
-          LOG(FATAL) << "bug: p = " << p << " k = " << k;
+          LOG(LIB_FATAL) << "bug: p = " << p << " k = " << k;
         }
         CHECK(p >= k);
         PrecisionOfApprox_ += static_cast<double>(k + 1) / (LastEqualP + 1);

@@ -44,12 +44,12 @@ Index<dist_t>* CreatePermutationPrefixIndex(bool PrintProgress,
   pmgr.GetParamOptional("chunkBucket", ChunkBucket);
 
   if (PrefixLength == 0 || PrefixLength > NumPivot) {
-    LOG(FATAL) << METH_PERMUTATION_PREFIX_IND
+    LOG(LIB_FATAL) << METH_PERMUTATION_PREFIX_IND
                << " requires that prefix length should lie in [1,"
                << NumPivot << "]";
   }
   if (MinCandidate == 0) {
-    LOG(FATAL) << METH_PERMUTATION_PREFIX_IND
+    LOG(LIB_FATAL) << METH_PERMUTATION_PREFIX_IND
                << " requires a min # of candidates should be > 0";
   }
 

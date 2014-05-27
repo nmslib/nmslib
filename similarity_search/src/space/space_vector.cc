@@ -43,8 +43,8 @@ void VectorSpace<dist_t>::ReadVec(std::string line, std::vector<dist_t>& v) cons
       v.push_back(val);
     }
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
+    LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
   }
 }
 
@@ -80,7 +80,7 @@ void VectorSpace<dist_t>::ReadDataset(
       if (!dim) dim = currDim;
       else {
         if (dim != currDim) {
-            LOG(FATAL) << "The # of vector elements (" << currDim << ")" <<
+            LOG(LIB_FATAL) << "The # of vector elements (" << currDim << ")" <<
                       " doesn't match the # of elements in previous lines. (" << dim << " )" <<
                       "Found mismatch in line: " << (linenum + 1) << " file: " << FileName;
         }
@@ -90,7 +90,7 @@ void VectorSpace<dist_t>::ReadDataset(
 
       if (config && config->GetDimension()) {
         if (config->GetDimension() > currDim) {
-          LOG(FATAL) << "The # of vector elements (" << currDim << ")" <<
+          LOG(LIB_FATAL) << "The # of vector elements (" << currDim << ")" <<
                       " is smaller than the requested # of dimensions. " <<
                       "Found mismatch in line: " << (linenum + 1) << " file: " << FileName;
         } else {
@@ -102,10 +102,10 @@ void VectorSpace<dist_t>::ReadDataset(
       ++linenum;
       dataset.push_back(CreateObjFromVect(id, temp));
     }
-    LOG(INFO) << "Actual dimensionality: " << actualDim;
+    LOG(LIB_INFO) << "Actual dimensionality: " << actualDim;
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
+    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
   }
 }
 

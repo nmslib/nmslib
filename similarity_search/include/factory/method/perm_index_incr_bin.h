@@ -48,7 +48,7 @@ Index<dist_t>* CreatePermutationIndexIncrementalBin(bool PrintProgress,
   pmgr.GetParamOptional("maxHammingDist", maxHammingDist);
 
   if (dbScanFrac < 0.0 || dbScanFrac > 1.0) {
-    LOG(FATAL) << METH_PERMUTATION_INC_SORT_BIN << " requires that dbScanFrac is in the range [0,1]";
+    LOG(LIB_FATAL) << METH_PERMUTATION_INC_SORT_BIN << " requires that dbScanFrac is in the range [0,1]";
   }
 
   return new PermutationIndexIncrementalBin<dist_t, SpearmanRhoSIMD>(

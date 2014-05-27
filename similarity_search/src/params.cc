@@ -114,7 +114,7 @@ void ParseCommandLine(int argc, char*argv[],
     po::notify(vm);
   } catch (const exception& e) {
     Usage(argv[0], ProgOptDesc);
-    LOG(FATAL) << e.what();
+    LOG(LIB_FATAL) << e.what();
   }
 
   eps = epsTmp;
@@ -131,14 +131,14 @@ void ParseCommandLine(int argc, char*argv[],
     vector<string> tmp;
     if (!SplitStr(SpaceType, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
       Usage(argv[0], ProgOptDesc);
-      LOG(FATAL) << "Wrong format of the space argument: '" << SpaceType;
+      LOG(LIB_FATAL) << "Wrong format of the space argument: '" << SpaceType;
     }
     SpaceType = tmp[0];
 
     vector<string> SpaceDesc;
     if (tmp.size() == 2) {
       if (!SplitStr(tmp[1], SpaceDesc, ',')) {
-        LOG(FATAL) << "Cannot split space arguments in: " << tmp[1];
+        LOG(LIB_FATAL) << "Cannot split space arguments in: " << tmp[1];
       }
     }
     SpaceParams = shared_ptr<AnyParams>(new AnyParams(SpaceDesc));
@@ -148,14 +148,14 @@ void ParseCommandLine(int argc, char*argv[],
     vector<string> tmp;
     if (!SplitStr(s, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
       Usage(argv[0], ProgOptDesc);
-      LOG(FATAL) << "Wrong format of the method argument: '" << s;
+      LOG(LIB_FATAL) << "Wrong format of the method argument: '" << s;
     }
     string         MethName = tmp[0];
 
     vector<string> MethodDesc;
     if (tmp.size() == 2) {
       if (!SplitStr(tmp[1], MethodDesc, ',')) {
-        LOG(FATAL) << "Cannot split method arguments in: " << tmp[1];
+        LOG(LIB_FATAL) << "Cannot split method arguments in: " << tmp[1];
       }
     }
 
@@ -164,24 +164,24 @@ void ParseCommandLine(int argc, char*argv[],
   if (vm.count("knn")) {
     if (!SplitStr(knnArg, knn, ',')) {
       Usage(argv[0], ProgOptDesc);
-      LOG(FATAL) << "Wrong format of the KNN argument: '" << knnArg;
+      LOG(LIB_FATAL) << "Wrong format of the KNN argument: '" << knnArg;
     }
   }
 
   if (DataFile.empty()) {
-    LOG(FATAL) << "data file is not specified!";
+    LOG(LIB_FATAL) << "data file is not specified!";
   }
 
   if (!IsFileExists(DataFile)) {
-    LOG(FATAL) << "data file " << DataFile << " doesn't exist";
+    LOG(LIB_FATAL) << "data file " << DataFile << " doesn't exist";
   }
 
   if (!QueryFile.empty() && !IsFileExists(QueryFile)) {
-    LOG(FATAL) << "query file " << QueryFile << " doesn't exist";
+    LOG(LIB_FATAL) << "query file " << QueryFile << " doesn't exist";
   }
 
   if (!MaxNumQuery && QueryFile.empty()) {
-    LOG(FATAL) << "Set a positive # of queries or specify a query file!"; 
+    LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
   }
 }
 

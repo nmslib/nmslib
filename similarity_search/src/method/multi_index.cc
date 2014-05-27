@@ -48,7 +48,7 @@ MultiIndex<dist_t>::MultiIndex(
 
 
   for (size_t i = 0; i < IndexQty_; ++i) {
-    LOG(INFO) << "Method: " << MethodName_ << " index # " << (i+1) << " out of " << IndexQty_;
+    LOG(LIB_INFO) << "Method: " << MethodName_ << " index # " << (i+1) << " out of " << IndexQty_;
     indices_.push_back(MethodFactoryRegistry<dist_t>::Instance().CreateMethod(PrintProgress, 
                                                                  MethodName_,
                                                                  SpaceType,

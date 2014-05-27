@@ -48,7 +48,7 @@ public:
   }
 
   void Register(const string& MethodName, CreateFuncPtr func) {
-    LOG(INFO) << "Registering at the factory, method: " << MethodName << " distance type: " << DistTypeName<dist_t>();
+    LOG(LIB_INFO) << "Registering at the factory, method: " << MethodName << " distance type: " << DistTypeName<dist_t>();
     Creators_[MethodName] = func;
   }
 
@@ -61,7 +61,7 @@ public:
     if (Creators_.count(MethName)) {
       return Creators_[MethName](PrintProgress, SpaceType, space, DataObjects, MethPars);
     } else {
-      LOG(FATAL) << "It looks like the method " << MethName << 
+      LOG(LIB_FATAL) << "It looks like the method " << MethName << 
                     " is not defined for the distance type : " << DistTypeName<dist_t>();
     }
     return NULL;

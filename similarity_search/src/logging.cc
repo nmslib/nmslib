@@ -38,7 +38,7 @@ std::ostream& Logger::stream() {
 }
 
 
-std::string GetCurrentTime() {
+std::string LibGetCurrentTime() {
   time_t now;
   time(&now);
   struct tm* timeinfo = localtime(&now);
@@ -54,13 +54,13 @@ Logger::Logger(LogSeverity severity, const std::string& _file, int line, const c
   if (n != std::string::npos) {
     file.erase(file.begin(), file.begin() + n + 1);
   }
-  stream() << GetCurrentTime() << " " << file << ":" << line
+  stream() << LibGetCurrentTime() << " " << file << ":" << line
            << " (" << function << ") [" << log_severity[severity] << "] ";
 }
 
 Logger::~Logger() {
   stream() << '\n';
-  if (severity_ == FATAL) {
+  if (severity_ == LIB_FATAL) {
     // stream() << std::flush;
     if (logfile_.is_open())
       logfile_.close();

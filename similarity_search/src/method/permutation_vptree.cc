@@ -52,7 +52,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
   pmgr.GetParamOptional("numPivot", NumPivot);
 
   if (db_scan_frac_< 0.0 || db_scan_frac_> 1.0) {
-    LOG(FATAL) << METH_PERMUTATION_VPTREE << " requires that dbScanFrac is in the range [0,1]";
+    LOG(LIB_FATAL) << METH_PERMUTATION_VPTREE << " requires that dbScanFrac is in the range [0,1]";
   }
 
   AnyParams RemainParams;

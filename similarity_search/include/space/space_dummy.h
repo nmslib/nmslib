@@ -46,7 +46,7 @@ class SpaceDummy : public Space<dist_t> {
  public:
   // A constructor can have arbitrary params
   explicit SpaceDummy(int param1, int param2) : param1_(param1), param2_(param2) {
-    LOG(INFO) << "Created " << ToString();
+    LOG(LIB_INFO) << "Created " << ToString();
   }
   virtual ~SpaceDummy() {}
 

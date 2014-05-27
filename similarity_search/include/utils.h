@@ -75,7 +75,6 @@ using std::mt19937;
 
 using namespace std;
 
-const char* CurrentTime();
 
 const char* GetFileName(const char* fullpath);
 

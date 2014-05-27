@@ -32,6 +32,10 @@
 
 #define REP_QTY 1000
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
+
 using namespace std;
 using namespace similarity;
 

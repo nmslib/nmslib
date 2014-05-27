@@ -44,12 +44,12 @@ SamplingOracleCreator<dist_t>::SamplingOracleCreator(
                        NumOfPseudoQueriesInQuantile_(NumOfPseudoQueriesInQuantile),
                        DistLearnThreshold_(DistLearnThreshold)
 {
-  LOG(INFO) << "MaxK              = " << MaxK;
-  LOG(INFO) << "DoRandSamp        = " << DoRandSample;
-  LOG(INFO) << "DistLearnThresh   = " << DistLearnThreshold;
-  LOG(INFO) << "QuantileStepPivot = " << QuantileStepPivot;
-  LOG(INFO) << "QuantileStepPseudoQuery       = " << QuantileStepPseudoQuery;
-  LOG(INFO) << "NumOfPseudoQueriesInQuantile  = " << NumOfPseudoQueriesInQuantile;
+  LOG(LIB_INFO) << "MaxK              = " << MaxK;
+  LOG(LIB_INFO) << "DoRandSamp        = " << DoRandSample;
+  LOG(LIB_INFO) << "DistLearnThresh   = " << DistLearnThreshold;
+  LOG(LIB_INFO) << "QuantileStepPivot = " << QuantileStepPivot;
+  LOG(LIB_INFO) << "QuantileStepPseudoQuery       = " << QuantileStepPseudoQuery;
+  LOG(LIB_INFO) << "NumOfPseudoQueriesInQuantile  = " << NumOfPseudoQueriesInQuantile;
 }
 
 template <typename dist_t>

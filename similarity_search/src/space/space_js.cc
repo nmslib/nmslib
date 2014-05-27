@@ -58,7 +58,7 @@ dist_t SpaceJSBase<dist_t>::JensenShannonFunc(const Object* obj1, const Object* 
     case kJSSlow:               val = JSStandard(x, y, length); break;
     case kJSFastPrecomp:        val = JSPrecomp(x, y, length); break;
     case kJSFastPrecompApprox:  val = JSPrecompSIMDApproxLog(x, y, length); break;
-    default: LOG(FATAL) << "Unknown JS function type code: " << type_ << endl;
+    default: LOG(LIB_FATAL) << "Unknown JS function type code: " << type_ << endl;
   }
 
   return val;

@@ -85,7 +85,7 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
   AnyParams  MethPars = pmgr.ExtractParametersExcept({"desiredRecall"});
 
   for (unsigned iter = 0; iter < MaxIter; ++iter) {
-    LOG(INFO) << "Iteration: " << iter << " StepFactor: " << StepFactor;
+    LOG(LIB_INFO) << "Iteration: " << iter << " StepFactor: " << StepFactor;
     double MinRecall = 1.0;
     double MaxRecall = 0;
       
@@ -94,7 +94,7 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
         MethPars.ChangeParam("alphaLeft", alpha_left_base * pow(StepFactor, left - StepN/2));
         MethPars.ChangeParam("alphaRight", alpha_right_base * pow(StepFactor, right - StepN/2));
 
-        LOG(INFO) << "left: " << (left - StepN/2) << " right: " << (right - StepN/2);
+        LOG(LIB_INFO) << "left: " << (left - StepN/2) << " right: " << (right - StepN/2);
 
         vector<vector<MetaAnalysis*>> ExpResRange(config.GetRange().size(),
                                                 vector<MetaAnalysis*>(1));
@@ -112,7 +112,7 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
         }
         for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
           config.SelectTestSet(TestSetId);
-          LOG(INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
+          LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
           std::shared_ptr<Index<dist_t>> MethodPtr( MethodFactoryRegistry<dist_t>::Instance().
                                            CreateMethod(false, 
                                                         METH_VPTREE, 
@@ -151,44 +151,44 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
             pmgr.GetParamRequired("alphaLeft", alpha_left_best);
             pmgr.GetParamRequired("alphaRight", alpha_right_best);
         }
-        LOG(INFO) << "Recall: " << Stat.GetRecallAvg() << " Query time: " << Stat.GetQueryTimeAvg();
+        LOG(LIB_INFO) << "Recall: " << Stat.GetRecallAvg() << " Query time: " << Stat.GetQueryTimeAvg();
         MinRecall = std::min(MinRecall, Stat.GetRecallAvg());
         MaxRecall = std::max(MaxRecall, Stat.GetRecallAvg());
       }
     }
-    LOG(INFO) << " MinRecall: " << MinRecall << " MaxRecall: " << MaxRecall << " BestTime: "<< time_best;;
+    LOG(LIB_INFO) << " MinRecall: " << MinRecall << " MaxRecall: " << MaxRecall << " BestTime: "<< time_best;;
     // Now let's see, if we need to increase/decrease base alpha levels
     if (MaxRecall < DesiredRecall) {
       if (ChangeAlphaState == 2) break; // We sufficiently increased alphas, now stop
       alpha_left_base /= FastIterFactor;
       alpha_right_base /= FastIterFactor;
       ChangeAlphaState = 1;
-      LOG(INFO) << "Decreasing alphas by " << FastIterFactor;
+      LOG(LIB_INFO) << "Decreasing alphas by " << FastIterFactor;
     } else if (MinRecall > DesiredRecall) {
       if (ChangeAlphaState == 1) break; // We sufficiently decreased alphas, now stop
       alpha_left_base  *= FastIterFactor;
       alpha_right_base *= FastIterFactor;
       ChangeAlphaState = 2;
-      LOG(INFO) << "Increasing alphas by " << FastIterFactor;
+      LOG(LIB_INFO) << "Increasing alphas by " << FastIterFactor;
     } else {
       CHECK(MaxRecall >= DesiredRecall && MinRecall <= DesiredRecall); 
       // Continue moving by at a slower pace
       if (ChangeAlphaState == 1) {
         alpha_left_base  /= SlowIterFactor;
         alpha_right_base /= SlowIterFactor;
-        LOG(INFO) << "Decreasing alphas by " << SlowIterFactor;
+        LOG(LIB_INFO) << "Decreasing alphas by " << SlowIterFactor;
       } else {
       // If previous 0 == ChangeAlphaState, we prefer to increase alphas 
         ChangeAlphaState = 2;
         alpha_left_base  *= SlowIterFactor;
         alpha_right_base *= SlowIterFactor;
-        LOG(INFO) << "Increasing alphas by " << SlowIterFactor;
+        LOG(LIB_INFO) << "Increasing alphas by " << SlowIterFactor;
       }
     }
   }
 
   if (recall < DesiredRecall) {
-    LOG(FATAL) << "Failed to get the desired recall using " << MaxIter << " iterations, try to choose different start values for AlphaLeft and AlphaRight";
+    LOG(LIB_FATAL) << "Failed to get the desired recall using " << MaxIter << " iterations, try to choose different start values for AlphaLeft and AlphaRight";
   }
 }
 
@@ -211,13 +211,13 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
 
   if (!RangeArg.empty()) {
     if (!SplitStr(RangeArg, rangeAll, ',')) {
-      LOG(FATAL) << "Wrong format of the range argument: '" << RangeArg << "' Should be a list of coma-separated values.";
+      LOG(LIB_FATAL) << "Wrong format of the range argument: '" << RangeArg << "' Should be a list of coma-separated values.";
     }
   }
 
   if (Methods.size() != 1 ||
       Methods[0]->methName_ != METH_VPTREE) {
-    LOG(FATAL) << "Should specify only the single method: " << METH_VPTREE;
+    LOG(LIB_FATAL) << "Should specify only the single method: " << METH_VPTREE;
   }
 
   const AnyParams& MethPars = Methods[0]->methPars_;
@@ -242,12 +242,12 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
       float recall, time_best, alpha_left, alpha_right;
       GetOptimalAlphas(config, SpaceType, MethPars, recall, time_best, alpha_left, alpha_right);
 
-      LOG(INFO) << "Optimization results";
-      LOG(INFO) << "Range: "  << rangeAll[i];
-      LOG(INFO) << "Recall: " << recall;
-      LOG(INFO) << "Best time: " << time_best;
-      LOG(INFO) << "alpha_left: " << alpha_left;
-      LOG(INFO) << "alpha_right: " << alpha_right;
+      LOG(LIB_INFO) << "Optimization results";
+      LOG(LIB_INFO) << "Range: "  << rangeAll[i];
+      LOG(LIB_INFO) << "Recall: " << recall;
+      LOG(LIB_INFO) << "Best time: " << time_best;
+      LOG(LIB_INFO) << "alpha_left: " << alpha_left;
+      LOG(LIB_INFO) << "alpha_right: " << alpha_right;
       
     }
 
@@ -269,18 +269,18 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
       float recall, time_best, alpha_left, alpha_right;
       GetOptimalAlphas(config, SpaceType, MethPars, recall, time_best, alpha_left, alpha_right);
 
-      LOG(INFO) << "Optimization results";
-      LOG(INFO) << "K: "  << knnAll[i];
-      LOG(INFO) << "Recall: " << recall;
-      LOG(INFO) << "Best time: " << time_best;
-      LOG(INFO) << "alpha_left: " << alpha_left;
-      LOG(INFO) << "alpha_right: " << alpha_right;
+      LOG(LIB_INFO) << "Optimization results";
+      LOG(LIB_INFO) << "K: "  << knnAll[i];
+      LOG(LIB_INFO) << "Recall: " << recall;
+      LOG(LIB_INFO) << "Best time: " << time_best;
+      LOG(LIB_INFO) << "alpha_left: " << alpha_left;
+      LOG(LIB_INFO) << "alpha_right: " << alpha_right;
     }
 
   } catch (const std::exception& e) {
-    LOG(FATAL) << "Exception: " << e.what();
+    LOG(LIB_FATAL) << "Exception: " << e.what();
   } catch (...) {
-    LOG(FATAL) << "Unknown exception";
+    LOG(LIB_FATAL) << "Unknown exception";
   }
 }
 
@@ -373,12 +373,12 @@ int main(int ac, char* av[]) {
                   RangeArg
                  );
   } else {
-    LOG(FATAL) << "Unknown distance value type: " << DistType;
+    LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
   }
 
   timer.split();
-  LOG(INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
-  LOG(INFO) << "Finished at " << GetCurrentTime();
+  LOG(LIB_INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
+  LOG(LIB_INFO) << "Finished at " << LibGetCurrentTime();
 
   return 0;
 }

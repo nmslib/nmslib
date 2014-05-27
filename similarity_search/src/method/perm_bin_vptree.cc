@@ -52,15 +52,15 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
   bin_perm_word_qty_ = (NumPivot + 31)/32;
 
   if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
-    LOG(FATAL) << METH_PERM_BIN_VPTREE << " requires that dbScanFrac is in the range [0,1]";
+    LOG(LIB_FATAL) << METH_PERM_BIN_VPTREE << " requires that dbScanFrac is in the range [0,1]";
   }
 
   AnyParams RemainParams;
 
-  LOG(INFO) << "# pivots                  = " << NumPivot;
-  LOG(INFO) << "# binarization threshold = "  << bin_threshold_;
-  LOG(INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
-  LOG(INFO) << "db scan fraction = " << DbScanFrac;
+  LOG(LIB_INFO) << "# pivots                  = " << NumPivot;
+  LOG(LIB_INFO) << "# binarization threshold = "  << bin_threshold_;
+  LOG(LIB_INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
+  LOG(LIB_INFO) << "db scan fraction = " << DbScanFrac;
 
   double AlphaLeft = 1.0, AlphaRight = 1.0;
 

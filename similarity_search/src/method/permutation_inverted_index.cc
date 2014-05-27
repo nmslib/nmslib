@@ -46,11 +46,11 @@ PermutationInvertedIndex<dist_t>::PermutationInvertedIndex(
   CHECK(num_pivot_search > 0);
   CHECK(num_pivot_search <= num_pivot_index);
   CHECK(num_pivot_index <= num_pivot);
-  LOG(INFO) << "# pivots             = " << num_pivot;
-  LOG(INFO) << "# pivots to index requested (ki)  = " << num_pivot_index;
-  LOG(INFO) << "# pivots to index effective (ki)  = " << num_pivot_index_;
-  LOG(INFO) << "# pivots search (ks) = " << num_pivot_search_;
-  LOG(INFO) << "# max position difference = " << max_pos_diff_;
+  LOG(LIB_INFO) << "# pivots             = " << num_pivot;
+  LOG(LIB_INFO) << "# pivots to index requested (ki)  = " << num_pivot_index;
+  LOG(LIB_INFO) << "# pivots to index effective (ki)  = " << num_pivot_index_;
+  LOG(LIB_INFO) << "# pivots search (ks) = " << num_pivot_search_;
+  LOG(LIB_INFO) << "# max position difference = " << max_pos_diff_;
 
   GetPermutationPivot(data, space, num_pivot, &pivot_);
 
@@ -110,7 +110,7 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 
   vector<IntInt> perm_dists;
 
-  //LOG(INFO) << "bUseMap: " << bUseMap << " maxScanQty: " << maxScanQty << " data.size() " << data_.size();
+  //LOG(LIB_INFO) << "bUseMap: " << bUseMap << " maxScanQty: " << maxScanQty << " data.size() " << data_.size();
 
   if (bUseMap) {
     unordered_map<int,int> perm_dists_set;

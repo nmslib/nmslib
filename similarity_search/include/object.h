@@ -88,7 +88,7 @@ class Object {
   inline size_t bufferlength() const { return ID_SIZE + DATALENGTH_SIZE + datalength(); }
 
   void Print() const {
-    LOG(INFO) << "id = " << id()
+    LOG(LIB_INFO) << "id = " << id()
         << "\tdatalength = " << datalength()
         << "\tbuffer = " << buffer()   // %p
         << "\tdata = " << data();  // %p
@@ -136,7 +136,7 @@ inline void CreateCacheOptimizedBucket(const ObjectVector& data,
      *           However, some methods, e.g., list of clusters
      *           with KLDiv may produce empty clusters.
      */
-    LOG(WARNING) << "Empty bucket!"; 
+    LOG(LIB_WARNING) << "Empty bucket!"; 
   }
   CacheOptimizedBucket = new char [TotalSpaceUsed(data)];
   char *p = CacheOptimizedBucket;

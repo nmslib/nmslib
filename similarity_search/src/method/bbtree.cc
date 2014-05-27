@@ -274,7 +274,7 @@ bool BBTree<dist_t>::BBNode::RecBinSearch(
     dist_t l, dist_t r, int depth) {
   // sanity checks
   if (depth >= 1e6) {    // something is wrong!
-    LOG(FATAL) << "Recursive depth exceeds " << depth << std::endl;
+    LOG(LIB_FATAL) << "Recursive depth exceeds " << depth << std::endl;
   }
   CHECK(query->QueryObject()->datalength() == center_gradf_->datalength());
 

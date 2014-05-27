@@ -47,17 +47,17 @@ Index<dist_t>* CreatePermInvertedIndex(
   pmgr.GetParamOptional("dbScanFrac", db_scan_frac);
 
   if (num_pivot_search > num_pivot_index) {
-    LOG(FATAL) << METH_PERM_INVERTED_INDEX << " requires that numPivotSearch "
+    LOG(LIB_FATAL) << METH_PERM_INVERTED_INDEX << " requires that numPivotSearch "
                << "should be less than or equal to numPivotIndex";
   }
 
   if (num_pivot_index > num_pivot) {
-    LOG(FATAL) << METH_PERM_INVERTED_INDEX << " requires that numPivotIndex "
+    LOG(LIB_FATAL) << METH_PERM_INVERTED_INDEX << " requires that numPivotIndex "
                << "should be less than or equal to numPivot";
   }
 
   if (db_scan_frac < 0.0 || db_scan_frac > 1.0) {
-    LOG(FATAL) << METH_PERM_INVERTED_INDEX << " requires that dbScanFrac is in the range [0,1]";
+    LOG(LIB_FATAL) << METH_PERM_INVERTED_INDEX << " requires that dbScanFrac is in the range [0,1]";
   }
 
   return new PermutationInvertedIndex<dist_t>(

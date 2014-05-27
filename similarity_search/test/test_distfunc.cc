@@ -103,7 +103,7 @@ using namespace std;
 
 TEST(set_intel) {
     vmlSetMode(VML_HA);
-    LOG(INFO) << "Set high-accuracy mode.";
+    LOG(LIB_INFO) << "Set high-accuracy mode.";
 }
 
 #endif
@@ -144,7 +144,7 @@ void TestSparsePackUnpack() {
     vector<SparseVectElem<dist_t>> source;
     GenSparseVectZipf(maxSize, source);
 
-    LOG(INFO) << "testing maxSize: " << maxSize << "\nqty: " <<  source.size()
+    LOG(LIB_INFO) << "testing maxSize: " << maxSize << "\nqty: " <<  source.size()
               << " maxId: " << source.back().id_;
 
     char*     pBuff = NULL; 
@@ -158,13 +158,13 @@ void TestSparsePackUnpack() {
     bool eqFlag = checkElemVectEq(source, target);
 
     if (!eqFlag) {
-      LOG(INFO) << "Different source and target, source.size(): " << source.size()
+      LOG(LIB_INFO) << "Different source and target, source.size(): " << source.size()
                 << " target.size(): " << target.size();
       // Let's print the first different in the case of equal # of elements
       size_t i = 0;
       for (; i < min(source.size(), target.size()); ++i) {
         if (!(source[i] == target[i])) {
-          LOG(INFO) << "First diff, i = " << i << " " << source[i] << " vs " << target[i];
+          LOG(LIB_INFO) << "First diff, i = " << i << " " << source[i] << " vs " << target[i];
           break;
         }
       }
@@ -544,7 +544,7 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
         }
     }
 
-    LOG(INFO) << typeid(T).name() << " JS approximation error: average absolute: " << Error / TotalQty << 
+    LOG(LIB_INFO) << typeid(T).name() << " JS approximation error: average absolute: " << Error / TotalQty << 
                                 " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
 
 
@@ -667,7 +667,7 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
     }
 
     if (power < 4) {
-      LOG(INFO) << typeid(T).name() << " LP approximation error: average absolute " << Error / TotalQty << " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
+      LOG(LIB_INFO) << typeid(T).name() << " LP approximation error: average absolute " << Error / TotalQty << " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
 
     }
 
@@ -785,13 +785,13 @@ TEST(TestAgree) {
      * 
      */
     for (unsigned dim = 1; dim <= 1024; dim+=2) {
-        LOG(INFO) << "Dim = " << dim;
+        LOG(LIB_INFO) << "Dim = " << dim;
 
         nFail += !TestBitHammingAgree(1000, dim, 1000);
     }
 
     for (unsigned dim = 1; dim <= 32; ++dim) {
-        LOG(INFO) << "Dim = " << dim;
+        LOG(LIB_INFO) << "Dim = " << dim;
 
         /* 
          * This is a costly check, we don't need to do it for large # dimensions.
@@ -850,7 +850,7 @@ TEST(TestAgree) {
         nFail += !TestItakuraSaitoAgree<double>(1024, dim, 10);
     }
 
-    LOG(INFO) << nTest << " (sub) tests performed " << nFail << " failed";
+    LOG(LIB_INFO) << nTest << " (sub) tests performed " << nFail << " failed";
 
     EXPECT_EQ(0, nFail);
 }
@@ -888,8 +888,8 @@ bool TestLInfNormStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard LInfs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard LInfs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -926,8 +926,8 @@ bool TestLInfNorm(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. LInfs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. LInfs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -964,8 +964,8 @@ bool TestLInfNormSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD LInfs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD LInfs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1003,8 +1003,8 @@ bool TestL1NormStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L1s per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L1s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1041,8 +1041,8 @@ bool TestL1Norm(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L1s per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L1s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1079,8 +1079,8 @@ bool TestL1NormSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L1s per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L1s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1117,8 +1117,8 @@ bool TestL2NormStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L2s per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard L2s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1155,8 +1155,8 @@ bool TestL2Norm(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L2s per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of optim. L2s per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1193,8 +1193,8 @@ bool TestL2NormSIMD(size_t N, size_t dim, size_t Rep) {
  
     uint64_t tDiff = t.split();
  
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L2s per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD L2s per second: " << (1e6/tDiff) * N * Rep ;
  
     delete [] pArr;
  
@@ -1233,8 +1233,8 @@ bool TestLPGeneric(size_t N, size_t dim, size_t Rep, T power) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Generic L" << power << " per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Generic L" << power << " per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1272,8 +1272,8 @@ bool TestLPGenericOptim(size_t N, size_t dim, size_t Rep, T power) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Optimized generic L" << power << " per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of Optimized generic L" << power << " per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1312,8 +1312,8 @@ bool TestItakuraSaitoPrecomp(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1352,8 +1352,8 @@ bool TestItakuraSaitoPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1391,8 +1391,8 @@ bool TestItakuraSaitoStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of ItakuraSaito per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1432,8 +1432,8 @@ bool TestKLPrecomp(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. KLs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1472,8 +1472,8 @@ bool TestKLPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. KLs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1511,8 +1511,8 @@ bool TestKLStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of KLs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1552,8 +1552,8 @@ bool TestKLGeneralPrecomp(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1592,8 +1592,8 @@ bool TestKLGeneralPrecompSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SIMD precomp. general. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1631,8 +1631,8 @@ bool TestKLGeneralStandard(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of general. KLs per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of general. KLs per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1672,8 +1672,8 @@ bool TestJSStandard(size_t N, size_t dim, size_t Rep, float pZero) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1713,8 +1713,8 @@ bool TestJSPrecomp(size_t N, size_t dim, size_t Rep, float pZero) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) (sparsity:" << pZero << ")  per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp) (sparsity:" << pZero << ")  per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1754,8 +1754,8 @@ bool TestJSPrecompApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1795,8 +1795,8 @@ bool TestJSPrecompSIMDApproxLog(size_t N, size_t dim, size_t Rep, float pZero) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of JSs (precomp, one log approx, SIMD) (sparsity:" << pZero << ") per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1833,8 +1833,8 @@ bool TestSpearmanRho(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanRho per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanRho per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1871,8 +1871,8 @@ bool TestSpearmanRhoSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanRhoSIMD per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanRhoSIMD per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1909,8 +1909,8 @@ bool TestSpearmanFootrule(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanFootrule per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard SpearmanFootrule per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1947,8 +1947,8 @@ bool TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanFootruleSIMD per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of SpearmanFootruleSIMD per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -1986,8 +1986,8 @@ bool TestSparseLp(size_t N, size_t Rep, T power) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << 
             " # of sparse LP (p=" << power << ") per second: " << (1e6/tDiff) * N * Rep ;
 
     return true;
@@ -2024,8 +2024,8 @@ bool TestSparseAngularDistance(const string& dataFile, size_t N, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " File: " << dataFile 
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile 
          << " Elapsed: " << tDiff / 1e3 << " ms " << 
             " # of sparse angular dist per second: " << (1e6/tDiff) * N * Rep ;
 
@@ -2064,8 +2064,8 @@ bool TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " File: " << dataFile << 
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile << 
             " Elapsed: " << tDiff / 1e3 << " ms " << 
             " # of (fast) sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep ;
 
@@ -2103,8 +2103,8 @@ bool TestSparseCosineSimilarity(const string& dataFile, size_t N, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " File: " << dataFile 
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile 
          << " Elapsed: " << tDiff / 1e3 << " ms " << 
             " # of sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep ;
 
@@ -2141,8 +2141,8 @@ bool TestCosineSimilarity(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard CosineSimilarity per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard CosineSimilarity per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -2179,8 +2179,8 @@ bool TestAngularDistance(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard AngularDistance per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of standard AngularDistance per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -2225,8 +2225,8 @@ bool TestBitHamming(size_t N, size_t dim, size_t Rep) {
 
     uint64_t tDiff = t.split();
 
-    LOG(INFO) << "Ignore: " << DiffSum;
-    LOG(INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of BitHamming per second: " << (1e6/tDiff) * N * Rep ;
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of BitHamming per second: " << (1e6/tDiff) * N * Rep ;
 
     delete [] pArr;
 
@@ -2296,7 +2296,7 @@ TEST(TestSpeed) {
 #endif
 
 
-    LOG(INFO) << "Single-precision (sparse) LP-distance tests";
+    LOG(LIB_INFO) << "Single-precision (sparse) LP-distance tests";
     nTest++;
     nFail += !TestSparseLp<float>(1000, 1000, -1);
     nTest++;
@@ -2313,10 +2313,10 @@ TEST(TestSpeed) {
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
-    LOG(INFO) << "========================================";
+    LOG(LIB_INFO) << "========================================";
 
 #if TEST_SPEED_DOUBLE
-    LOG(INFO) << "Double-precision (sparse) LP-distance tests";
+    LOG(LIB_INFO) << "Double-precision (sparse) LP-distance tests";
     nFail += !TestSparseLp<double>(1000, 1000, -1);
     nTest++;
     nFail += !TestSparseLp<double>(1000, 1000, 1/3.0);
@@ -2329,9 +2329,9 @@ TEST(TestSpeed) {
       if (power == 8) step = 0.5;
     }
 #endif
-    LOG(INFO) << "========================================";
+    LOG(LIB_INFO) << "========================================";
 
-    LOG(INFO) << "Single-precision LP-distance tests";
+    LOG(LIB_INFO) << "Single-precision LP-distance tests";
     for (float power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       nFail += !TestLPGeneric<float>(128, dim, 200, power);
@@ -2340,9 +2340,9 @@ TEST(TestSpeed) {
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
-    LOG(INFO) << "========================================";
+    LOG(LIB_INFO) << "========================================";
 #if TEST_SPEED_DOUBLE
-    LOG(INFO) << "Double-precision LP-distance tests";
+    LOG(LIB_INFO) << "Double-precision LP-distance tests";
     for (double power = delta, step = delta; power <= 24; power += step) {
       nTest++;
       nFail += !TestLPGeneric<double>(128, dim, 200, power);
@@ -2351,7 +2351,7 @@ TEST(TestSpeed) {
       if (power == 3) step = 0.125;
       if (power == 8) step = 0.5;
     }
-    LOG(INFO) << "========================================";
+    LOG(LIB_INFO) << "========================================";
 #endif
 #endif
 
@@ -2557,7 +2557,7 @@ TEST(TestSpeed) {
     nFail += !TestKLGeneralPrecompSIMD<double>(1024, dim, 2000);
 #endif
 
-    LOG(INFO) << "Dimensionality " << dim << " " << nTest << " tests performed " << nFail << " failed";
+    LOG(LIB_INFO) << "Dimensionality " << dim << " " << nTest << " tests performed " << nFail << " failed";
 
     EXPECT_EQ(0, nFail);
 }

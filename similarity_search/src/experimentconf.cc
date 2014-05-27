@@ -29,7 +29,7 @@ template <typename dist_t>
 void ExperimentConfig<dist_t>::SelectTestSet(int SetNum) {
   if (!NoQueryFile) return;
   if (SetNum <0 || static_cast<unsigned>(SetNum) >= TestSetQty) {
-    LOG(FATAL) << "Invalid test set #: " << SetNum;
+    LOG(LIB_FATAL) << "Invalid test set #: " << SetNum;
   }
   dataobjects.clear();
   queryobjects.clear();
@@ -72,7 +72,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     size_t OrigQty = OrigData.size();
     size_t MinOrigQty = (TestSetQty + 1) * MaxNumQuery;
     if (OrigQty < MinOrigQty) {
-      LOG(FATAL) << "The data set is too small, expecting at least: " << MinOrigQty << " data points. " <<
+      LOG(LIB_FATAL) << "The data set is too small, expecting at least: " << MinOrigQty << " data points. " <<
                     "Try to either increase the number of data points, or to decrease parameters: " <<
                     "testSetQty and/or maxNumQuery ";
     }
@@ -100,18 +100,18 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     }
   }
 
-  LOG(INFO) << "data & query .... ok!\n";
+  LOG(LIB_INFO) << "data & query .... ok!\n";
 }
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::PrintInfo() const {
   space->PrintInfo();
-  LOG(INFO) << "distance type         = " << DistTypeName<dist_t>();
-  LOG(INFO) << "data file             = " << datafile;
-  LOG(INFO) << "# of test sets        = " << GetTestSetQty();
-  LOG(INFO) << "Use held-out queries  = " << !NoQueryFile;
-  LOG(INFO) << "# of data points      = " << OrigData.size() - GetQueryQty();
-  LOG(INFO) << "# of query points     = " << GetQueryQty();
+  LOG(LIB_INFO) << "distance type         = " << DistTypeName<dist_t>();
+  LOG(LIB_INFO) << "data file             = " << datafile;
+  LOG(LIB_INFO) << "# of test sets        = " << GetTestSetQty();
+  LOG(LIB_INFO) << "Use held-out queries  = " << !NoQueryFile;
+  LOG(LIB_INFO) << "# of data points      = " << OrigData.size() - GetQueryQty();
+  LOG(LIB_INFO) << "# of query points     = " << GetQueryQty();
 }
 
 template class ExperimentConfig<float>;

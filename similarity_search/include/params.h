@@ -53,13 +53,13 @@ public:
       vector<string>  OneParamPair;
       if (!SplitStr(Desc[i], OneParamPair, '=') ||
           OneParamPair.size() != 2) {
-        LOG(FATAL) << "Wrong format of an argument: '" << Desc[i] << "' should be in the format: <Name>=<Value>";
+        LOG(LIB_FATAL) << "Wrong format of an argument: '" << Desc[i] << "' should be in the format: <Name>=<Value>";
       }
       const string& Name = OneParamPair[0];
       const string& sVal = OneParamPair[1];
 
       if (seen.count(Name)) {
-        LOG(FATAL) << "Duplicate parameter: " << Name;
+        LOG(LIB_FATAL) << "Duplicate parameter: " << Name;
       }
       seen.insert(Name);
 
@@ -127,7 +127,7 @@ public:
       ParamValues[i] = str.str();
       return;
     }
-    LOG(FATAL) << "Parameter not found: " << Name;
+    LOG(LIB_FATAL) << "Parameter not found: " << Name;
   } 
 
   AnyParams(){}
@@ -145,7 +145,7 @@ class AnyParamManager {
 public:
   AnyParamManager(const AnyParams& params) : params(params), seen() {
     if (params.ParamNames.size() != params.ParamValues.size()) {
-      LOG(FATAL) << "Bug: different # of parameters and values";
+      LOG(LIB_FATAL) << "Bug: different # of parameters and values";
     }
   }
 
@@ -194,10 +194,10 @@ public:
     bool bFail = false;
     for (const auto Name: params.ParamNames) 
     if (!seen.count(Name)) {
-      LOG(ERROR) << "Unknown parameter: " << Name;
+      LOG(LIB_ERROR) << "Unknown parameter: " << Name;
       bFail = true;
     }
-    if (bFail) LOG(FATAL) << "Unknown parameters found, aborting!";
+    if (bFail) LOG(LIB_FATAL) << "Unknown parameters found, aborting!";
   }
 private:
   const AnyParams&  params;
@@ -219,10 +219,10 @@ private:
     if (!bFound) {
       if (bRequired) {
         // Here the program terminates
-        LOG(FATAL) << "Mandatory parameter: " << Name << " is missing!";
+        LOG(LIB_FATAL) << "Mandatory parameter: " << Name << " is missing!";
       }
     }
-    //LOG(INFO) << "@@@ Parameter: " << Name << "=" << Value << " @@@";
+    //LOG(LIB_INFO) << "@@@ Parameter: " << Name << "=" << Value << " @@@";
     seen.insert(Name);
   }
 
@@ -236,7 +236,7 @@ inline void AnyParamManager::ConvertStrToValue(const string& s, ParamType& Value
   stringstream str(s);
 
   if (!(str>>Value) || !str.eof()) {
-    LOG(FATAL) << "Failed to convert value '" << s << "' from type: " << typeid(Value).name();
+    LOG(LIB_FATAL) << "Failed to convert value '" << s << "' from type: " << typeid(Value).name();
   }
 }
 

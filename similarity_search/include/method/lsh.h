@@ -46,7 +46,7 @@ class ParameterCreator {
   static typename lsh_t::Parameter GetParameter(
     const lshkit::FloatMatrix& matrix,
     unsigned H, unsigned M, float W) {
-    LOG(FATAL) << "not allowed dummy parameter creator";
+    LOG(LIB_FATAL) << "not allowed dummy parameter creator";
     return lsh_t::Parameter();
   }
 
@@ -73,7 +73,7 @@ class ParameterCreator<TailRepeatHashThreshold> {
         if (matrix[i][j] > param.max) param.max = matrix[i][j];
       }
     }
-    LOG(INFO) << "min  " << param.min << " max " << param.max;
+    LOG(LIB_INFO) << "min  " << param.min << " max " << param.max;
     return param;
   }
 
