@@ -192,22 +192,43 @@ int main(int argc, char* argv[]) {
 
   cout << "VP-tree index is created!" << endl;
 
+  Index<float>*   indexPerm = 
+                           MethodFactoryRegistry<float>::Instance().
+                                CreateMethod(false /* don't print progress */,
+                                        "perm_incsort",
+                                        "custom", &customSpace,
+                                        dataSet, 
+                                        AnyParams(
+                                                  {
+                                                  "dbScanFrac=0.2", // A fraction of the data set to scan
+                                                  "numPivot=16",   // Number of pivots (should be < the # of objects)
+                                                  }
+                                                  )
+                                        );
+
+  cout << "Permutation index is created!" << endl;
+
   /* Now let's try some searches */
   float radius = 0.12;
   RangeQuery<float>   rangeQ(&customSpace, queryObj, radius);
 
   //doSearch(indexSmallWorld, &rangeQ); not supported for small world method
   doSearch(indexVPTree, &rangeQ, REP_QTY);
+  doSearch(indexPerm, &rangeQ, REP_QTY);
 
   unsigned K = 5; // 10-NN query
   KNNQuery<float>   knnQ(&customSpace, queryObj, K);
 
   doSearch(indexSmallWorld, &knnQ, REP_QTY);
   doSearch(indexVPTree, &knnQ, REP_QTY);
+  doSearch(indexPerm, &knnQ, REP_QTY);
 
   delete indexSmallWorld;
   delete indexVPTree;
+  delete indexPerm;
+
   delete queryObj;
+
   for (const Object* obj: dataSet) delete obj;
 
   return 0;
