@@ -24,6 +24,7 @@ Related papers:
 * Boytsov, L., Bilegsaikhan. N., 2013. [Learning to Prune in Metric and Non-Metric Spaces.](http://boytsov.info/pubs/nips2013.pdf)   In Advances in Neural Information Processing Systems 2013. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/nips/BoytsovN13)      
 * L. Cayton. [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML), 2008. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
 
+* Krylov, V., Logvinov, A., Ponomarenko, A., & Ponomarev, D. (2008). [Metrized Small World Properties Based Data Structure.](http://www.researchgate.net/publication/228829307_Metrized_small_world_properties_based_data_structure/file/72e7e52a020d9c040a.pdf) In SEDE (pp. 203-208).
 
 To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13),   
 
@@ -31,11 +32,11 @@ To acknowledge the use of the library, you could provide a link to this reposito
 Prerequisites
 -----------------------
 
-1. G++ 4.7 or the Intel compiler version 14.
-2. **64-bit** Linux is recommended
-3. cmake (GNU make is also required)
-5. Boost (dev version)
-6. GNU scientific library (dev version)
+1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 4.2.1, or Visual Studio 12.
+2. **64-bit** Linux is recommended, but most our code builds on Windows as well.
+3. cmake (GNU make is also required) 
+5. Boost (dev version). For Windows, the core library and the standalone sample application do not require Boost.
+6. Only for Linux: GNU scientific library (dev version) 
 7. An Intel or AMD processor that supports SSE 4.2 is recommended
 
 
