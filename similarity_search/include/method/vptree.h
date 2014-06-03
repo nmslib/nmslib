@@ -49,7 +49,6 @@ class VPTree : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query);
 
  private:
-
   class VPNode {
    public:
     // We want trees to be balanced

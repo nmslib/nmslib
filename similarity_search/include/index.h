@@ -49,8 +49,17 @@ class Index {
    * the method can implement methods SetQueryTimeParams()
    * and GetQueryTimeParamNames() 
    */
-  virtual void SetQueryTimeParams(AnyParamManager& ) {}
   virtual vector<string> GetQueryTimeParamNames() const { return vector<string>(); }
+  /*
+   * Set query time paramters: note that we have to copy parameters here
+   */
+  virtual void SetQueryTimeParams(AnyParams params) {
+    AnyParamManager tmpParamMngr(params);
+    AnyParams       tmpParams = tmpParamMngr.ExtractParametersExcept(GetQueryTimeParamNames());
+    SetQueryTimeParamsInternal(tmpParamMngr);
+  }
+protected:
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& ) {}
 };
 
 }  // namespace similarity

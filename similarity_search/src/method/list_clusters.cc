@@ -42,7 +42,7 @@ struct DistDistObjectTupleAscComparator {
     
 template <typename dist_t>
 void 
-ListClusters<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
+ListClusters<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
 }
 
@@ -92,7 +92,7 @@ ListClusters<dist_t>::ListClusters(
   pmgr.GetParamOptional("radius", Radius_);
   pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
 
-  SetQueryTimeParams(pmgr);
+  SetQueryTimeParamsInternal(pmgr);
     
   // <distance to previous centers, object>
   DistObjectPairVector<dist_t> remaining;

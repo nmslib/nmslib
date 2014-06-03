@@ -46,10 +46,11 @@ class PermutationIndexIncremental : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
   
-  virtual void SetQueryTimeParams(AnyParamManager& );
   virtual vector<string> GetQueryTimeParamNames() const;
 
  private:
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+
   const ObjectVector&   data_;
   float					db_scan_frac_;
   size_t                db_scan_;

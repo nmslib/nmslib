@@ -16,6 +16,7 @@
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
+#include <sstream>
 
 #include "data.h"
 
@@ -221,7 +222,15 @@ int main(int argc, char* argv[]) {
 
   doSearch(indexSmallWorld, &knnQ, REP_QTY);
   doSearch(indexVPTree, &knnQ, REP_QTY);
+
+  cout << "Setting one value of a query-time param" << endl;
+  indexPerm->SetQueryTimeParams(AnyParams( { "dbScanFrac=0.05" }));
   doSearch(indexPerm, &knnQ, REP_QTY);
+  cout << "Setting another value of a query-time param" << endl;
+  indexPerm->SetQueryTimeParams(AnyParams( { "dbScanFrac=0.5" }));
+  doSearch(indexPerm, &knnQ, REP_QTY);
+
+  cout << "Deleting objects..." << endl;
 
   delete indexSmallWorld;
   delete indexVPTree;

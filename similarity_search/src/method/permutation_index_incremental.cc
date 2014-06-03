@@ -62,7 +62,7 @@ PermutationIndexIncremental<dist_t, perm_func>::PermutationIndexIncremental(
     
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 void 
-PermutationIndexIncremental<dist_t, perm_func>::SetQueryTimeParams(AnyParamManager& pmgr) {
+PermutationIndexIncremental<dist_t, perm_func>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);
   ComputeDbScan(db_scan_frac_);
 }

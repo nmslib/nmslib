@@ -45,7 +45,6 @@ class GHTree : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query);
 
  private:
-
   class GHNode {
    public:
     GHNode(const Space<dist_t>* space, ObjectVector& data,
@@ -57,6 +56,7 @@ class GHTree : public Index<dist_t> {
     void GenericSearch(QueryType* query, int& MaxLeavesToVisit);
 
    private:
+
     const Object* pivot1_;
     const Object* pivot2_;
     GHNode* left_child_;

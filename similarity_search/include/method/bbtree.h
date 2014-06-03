@@ -54,7 +54,6 @@ class BBTree : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query);
 
  private:
-
   class BBNode {
    public:
     BBNode(const BregmanDiv<dist_t>* div,

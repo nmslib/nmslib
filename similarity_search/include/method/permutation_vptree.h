@@ -61,10 +61,11 @@ class PermutationVPTree : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
   
-  void SetQueryTimeParams(AnyParamManager& );
   vector<string> GetQueryTimeParamNames() const;
 
  private:
+  void SetQueryTimeParamsInternal(AnyParamManager& );
+
   const Space<dist_t>*      space_;
   const ObjectVector&       data_;
   float                     db_scan_frac_;

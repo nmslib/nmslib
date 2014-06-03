@@ -267,14 +267,11 @@ public:
       size_t MethNum = it - IndexPtrs.begin();
       Index<dist_t>& Method = **it;
       
-      AnyParamManager tmpParamMngr(MethodsDesc[MethNum]->methPars_);
-      AnyParams       tmpParams = tmpParamMngr.ExtractParametersExcept(Method.GetQueryTimeParamNames());
-
      /* 
       * Reset the query-time parameters again,
       * because they could have been changed previously.
       */
-      Method.SetQueryTimeParams(tmpParamMngr);
+      Method.SetQueryTimeParams(MethodsDesc[MethNum]->methPars_);
 
       if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 
@@ -362,10 +359,7 @@ public:
          * another query during the effectiveness evaluation phase, i.e.,
          * for smaller values of the query id (q) in the loop (see on level up)
          */
-        AnyParamManager tmpParamMngr(MethodsDesc[MethNum]->methPars_);
-        AnyParams       tmpParams = tmpParamMngr.ExtractParametersExcept(Method.GetQueryTimeParamNames());
-
-        Method.SetQueryTimeParams(tmpParamMngr);
+        Method.SetQueryTimeParams(MethodsDesc[MethNum]->methPars_);
       
         unique_ptr<QueryType> query(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
         

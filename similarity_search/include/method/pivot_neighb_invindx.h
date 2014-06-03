@@ -71,11 +71,12 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
   
-  virtual void SetQueryTimeParams(AnyParamManager& );
   virtual vector<string> GetQueryTimeParamNames() const;
 
   void IndexChunk(size_t chunkId);
  private:
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+
   const   ObjectVector& data_;
   const   Space<dist_t>*  space_;
   size_t  chunk_index_size_;

@@ -46,7 +46,6 @@ class MultiVantagePointTree : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query);
 
  private:
-
   struct Entry;
 
   typedef std::vector<dist_t> Dists;

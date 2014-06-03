@@ -123,7 +123,7 @@ SmallWorldRand<dist_t>::SmallWorldRand(const Space<dist_t>* space,
 
 template <typename dist_t>
 void 
-SmallWorldRand<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
+SmallWorldRand<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
 }
 

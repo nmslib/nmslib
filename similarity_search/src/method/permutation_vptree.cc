@@ -156,7 +156,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
     
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 void 
-PermutationVPTree<dist_t, RankCorrelDistFunc>::SetQueryTimeParams(AnyParamManager& pmgr) {
+PermutationVPTree<dist_t, RankCorrelDistFunc>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);  
   ComputeDbScanQty(db_scan_frac_);
 }
