@@ -38,6 +38,8 @@ class VectorSpace : public Space<dist_t> {
                       const ExperimentConfig<dist_t>* config,
                       const char* inputfile,
                       const int MaxNumObjects) const;
+  virtual void WriteDataset(const ObjectVector& dataset,
+                            const char* outputfile) const;
   virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;

@@ -230,6 +230,10 @@ int main(int argc, char* argv[]) {
   indexPerm->SetQueryTimeParams(AnyParams( { "dbScanFrac=0.5" }));
   doSearch(indexPerm, &knnQ, REP_QTY);
 
+  cout << "Saving vectors to a file: " << endl;
+
+  customSpace.WriteDataset(dataSet, "testdataset.txt");
+
   cout << "Deleting objects..." << endl;
 
   delete indexSmallWorld;

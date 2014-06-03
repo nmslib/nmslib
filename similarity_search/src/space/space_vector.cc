@@ -48,6 +48,31 @@ void VectorSpace<dist_t>::ReadVec(std::string line, std::vector<dist_t>& v) cons
   }
 }
 
+template <typename dist_t>
+void VectorSpace<dist_t>::WriteDataset(const ObjectVector& dataset,
+                                       const char* outputfile) const {
+  std::ofstream outFile(outputfile, ostream::out | ostream::trunc);
+
+  if (!outFile) {
+    LOG(LIB_FATAL) << "Cannot open: '" << outFile << "' for writing!";
+  }
+
+  outFile.exceptions(std::ios::badbit | std::ios::failbit);
+
+  for (const Object* obj: dataset) {
+    CHECK(obj->datalength() > 0);
+    const dist_t* x = reinterpret_cast<const dist_t*>(obj->data());
+    const size_t length = obj->datalength() / sizeof(dist_t);
+
+    for (size_t i = 0; i < length; ++i) {
+      outFile << x[i];
+      if (i + 1 == length) outFile << std::endl; else outFile << "  ";
+    }
+    
+  }
+  outFile.close();
+}
+
 
 template <typename dist_t>
 void VectorSpace<dist_t>::ReadDataset(
