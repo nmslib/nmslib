@@ -22,5 +22,5 @@ clean:
 
 # Note -pthread: this enables threads!!!
 test_app: test_app.o data.o *.h makefile
-	$(CXX) -o$@ test_app.o data.o -l NonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread
+	$(CXX) -o$@ test_app.o data.o -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread
 

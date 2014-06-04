@@ -220,13 +220,19 @@ int main(int argc, char* argv[]) {
   unsigned K = 5; // 10-NN query
   KNNQuery<float>   knnQ(&customSpace, queryObj, K);
 
+  cout << "Setting one value of a query-time param (small  world)" << endl;
+  indexSmallWorld->SetQueryTimeParams(AnyParams({ "initSearchAttempts=3" }));
   doSearch(indexSmallWorld, &knnQ, REP_QTY);
+  cout << "Setting one value of a query-time param (small  world)" << endl;
+  indexSmallWorld->SetQueryTimeParams(AnyParams({ "initSearchAttempts=1" }));
+  doSearch(indexSmallWorld, &knnQ, REP_QTY);
+
   doSearch(indexVPTree, &knnQ, REP_QTY);
 
-  cout << "Setting one value of a query-time param" << endl;
+  cout << "Setting one value of a query-time param (permutation method)" << endl;
   indexPerm->SetQueryTimeParams(AnyParams( { "dbScanFrac=0.05" }));
   doSearch(indexPerm, &knnQ, REP_QTY);
-  cout << "Setting another value of a query-time param" << endl;
+  cout << "Setting another value of a query-time param (permutation method)" << endl;
   indexPerm->SetQueryTimeParams(AnyParams( { "dbScanFrac=0.5" }));
   doSearch(indexPerm, &knnQ, REP_QTY);
 
