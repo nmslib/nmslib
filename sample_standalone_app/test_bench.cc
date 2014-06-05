@@ -56,6 +56,8 @@ float compAvgDist(RangeQuery<float>* qobj) {
   const ObjectVector&    objs = *qobj->Result();
   const vector<float>&    dists = *qobj->ResultDists();
 
+  if (objs.empty()) return 0;
+
   float sum = 0;
 
   for (size_t i = 0; i < objs.size(); ++i) {
@@ -139,10 +141,10 @@ int main(int argc, char* argv[]) {
 
   cout << "SEQ-search index is created!" << endl;
 
-  Index<float>*methods[] = {indexSmallWorld, indexSeqSearch};
+  Index<float>*methodsKNN[] = {indexSmallWorld, indexSeqSearch};
 
 
-  for (Index<float>* method: methods) {
+  for (Index<float>* method: methodsKNN) {
     float res = 0;
     WallClockTimer timer;
 
@@ -154,6 +156,28 @@ int main(int argc, char* argv[]) {
     }
 
     timer.split();
+    cout << "KNN-search" << endl;
+    cout << "Method:       " << method->ToString() << endl;
+    cout << "Avg time:     " << timer.elapsed()/1000.0/querySet.size() << " ms" << endl;
+    cout << "Avg distance: " << res/querySet.size() << endl;
+  }
+
+  Index<float>*methodsRange[] = {indexSeqSearch};
+
+
+  for (Index<float>* method: methodsRange) {
+    float res = 0;
+    WallClockTimer timer;
+
+    for (const Object* queryObj: querySet) {
+      float R = 100.0;
+      RangeQuery<float>   knnQ(space, queryObj, R);
+
+      res += doSearch(method, &knnQ);
+    }
+
+    timer.split();
+    cout << "Range-search" << endl;
     cout << "Method:       " << method->ToString() << endl;
     cout << "Avg time:     " << timer.elapsed()/1000.0/querySet.size() << " ms" << endl;
     cout << "Avg distance: " << res/querySet.size() << endl;
