@@ -43,8 +43,8 @@ void VectorSpace<dist_t>::ReadVec(std::string line, std::vector<dist_t>& v) cons
       v.push_back(val);
     }
   } catch (const std::exception &e) {
-    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what();
+    LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'";
   }
 }
 
@@ -54,7 +54,7 @@ void VectorSpace<dist_t>::WriteDataset(const ObjectVector& dataset,
   std::ofstream outFile(outputfile, ostream::out | ostream::trunc);
 
   if (!outFile) {
-    LOG(LIB_FATAL) << "Cannot open: '" << outFile << "' for writing!";
+    LOG(LIB_FATAL) << "Cannot open: '" << outputfile << "' for writing!";
   }
 
   outFile.exceptions(std::ios::badbit | std::ios::failbit);
@@ -129,8 +129,8 @@ void VectorSpace<dist_t>::ReadDataset(
     }
     LOG(LIB_INFO) << "Actual dimensionality: " << actualDim;
   } catch (const std::exception &e) {
-    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what();
+    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'";
   }
 }
 
