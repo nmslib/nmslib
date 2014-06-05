@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
     // If the file is not specified, create the data set from a vector of vectors
     customSpace.CreateDataset(dataSet, rawData); 
   } else {
-    Usage(argv[1], "Wrong # of arguments");
+    Usage(argv[0], "Wrong # of arguments");
     return 1;
   } 
 
@@ -217,7 +217,7 @@ int main(int argc, char* argv[]) {
   doSearch(indexVPTree, &rangeQ, REP_QTY);
   doSearch(indexPerm, &rangeQ, REP_QTY);
 
-  unsigned K = 5; // 10-NN query
+  unsigned K = 5; // 5-NN query
   KNNQuery<float>   knnQ(&customSpace, queryObj, K);
 
   cout << "Setting one value of a query-time param (small  world)" << endl;

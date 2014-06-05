@@ -13,7 +13,7 @@ CXXFLAGS += -std=c++11
 #CXXFLAGS += -g
 CXXFLAGS += -g -O3
 
-BIN=test_app
+BIN=test_app test_bench
 
 all: $(BIN)
 
@@ -24,3 +24,5 @@ clean:
 test_app: test_app.o data.o *.h makefile
 	$(CXX) -o$@ test_app.o data.o -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread
 
+test_bench: test_bench.o  *.h makefile
+	$(CXX) -o$@ test_bench.o  -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread
