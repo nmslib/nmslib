@@ -87,6 +87,11 @@ void VectorSpace<dist_t>::ReadDataset(
   std::vector<dist_t>    temp;
 
   std::ifstream InFile(FileName);
+
+  if (!InFile) {
+      LOG(LIB_FATAL) << "Cannot open file: " << FileName;
+  }
+
   InFile.exceptions(std::ios::badbit);
 
   try {

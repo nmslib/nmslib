@@ -82,6 +82,11 @@ void SpaceSparseVector<dist_t>::ReadDataset(
   vector<ElemType>    temp;
 
   std::ifstream InFile(FileName);
+
+  if (!InFile) {
+      LOG(LIB_FATAL) << "Cannot open file: " << FileName;
+  }
+
   InFile.exceptions(std::ios::badbit);
 
   try {

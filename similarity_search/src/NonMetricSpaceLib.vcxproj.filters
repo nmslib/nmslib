@@ -336,6 +336,10 @@
     <ClInclude Include="..\include\space\space_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\space\space_vector_gen.h" />
+    <ClInclude Include="..\include\factory\space\space_savch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

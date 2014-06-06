@@ -722,6 +722,53 @@ bool TestBitHammingAgree(size_t N, size_t dim, size_t Rep) {
     return res;
 }
 
+
+bool TestSparseAngularDistanceAgree(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
+
+    unique_ptr<SpaceSparseAngularDistanceFast>     spaceFast(new SpaceSparseAngularDistanceFast());
+    unique_ptr<SpaceSparseAngularDistance<float>>  spaceReg(new SpaceSparseAngularDistance<T>());
+
+    ObjectVector                                 elemsFast;
+    ObjectVector                                 elemsReg;
+
+    spaceFast->ReadDataset(elemsFast, NULL, dataFile.c_str(), N);
+    spaceReg->ReadDataset(elemsReg, NULL, dataFile.c_str(), N);
+
+    CHECK(elemsFast.size() == elemsReg.size());
+
+    N = min(N, elemsReg.size());
+
+    bool bug = false;
+
+    float maxRelDiff = 2e-5f;
+    float maxAbsDiff = 1e-6f;
+
+    for (size_t j = Rep; j < N; ++j)
+        for (size_t k = j - Rep; k < j; ++k) {
+        float val1 = spaceFast->IndexTimeDistance(elemsFast[k], elemsFast[j]);
+        float val2 = spaceReg->IndexTimeDistance(elemsReg[k], elemsReg[j]);
+
+        float AbsDiff1 = fabs(val1 - val2);
+        float RelDiff1 = AbsDiff1 / max(max(fabs(val1), fabs(val2)), T(1e-18));
+
+        if (RelDiff1 > maxRelDiff && AbsDiff1 > maxAbsDiff) {
+            cerr << "Bug fast vs non-fast angular dist " <<
+                " val1 = " << val1 << " val2 = " << val2 <<
+                " Diff: " << (val1 - val2) <<
+                " RelDiff1: " << RelDiff1 <<
+                " AbsDiff1: " << AbsDiff1;
+            bug = true;
+        }
+
+        if (bug) return false;
+        }
+
+    return true;
+}
+
+
+
 bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Rep) {
     typedef float T;
 
@@ -772,11 +819,17 @@ TEST(TestAgree) {
     int nFail = 0;
 
     nTest++;
+    nFail += !TestSparseAngularDistanceAgree(sampleDataPrefix + "sparse_5K.txt", 1000, 200);
+
+    nTest++;
+    nFail += !TestSparseAngularDistanceAgree(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 200);
+
+    nTest++;
     nFail += !TestSparseCosineSimilarityAgree(sampleDataPrefix + "sparse_5K.txt", 1000, 200);
 
     nTest++;
     nFail += !TestSparseCosineSimilarityAgree(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 200);
-
+   
     /* 
      * 32 should be more than enough for almost all methods,
      * where loop-unrolling  includes at most 16 distance computations.
@@ -2067,10 +2120,51 @@ bool TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep
     LOG(LIB_INFO) << "Ignore: " << DiffSum;
     LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile << 
             " Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of (fast) sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep ;
+            " # of (fast) fast sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep ;
 
     return true;
 }
+
+bool TestSparseAngularDistanceFast(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
+
+    unique_ptr<SpaceSparseAngularDistanceFast>  space(new SpaceSparseAngularDistanceFast());
+    ObjectVector                                 elems;
+
+    space->ReadDataset(elems, NULL, dataFile.c_str(), N);
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1) / N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j - 1], elems[j]) / N;
+        }
+        /*
+        * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+        *
+        * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+        */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile <<
+        " Elapsed: " << tDiff / 1e3 << " ms " <<
+        " # of (fast) fast sparse angular dist second: " << (1e6 / tDiff) * N * Rep;
+
+    return true;
+}
+
 
 template <class T>
 bool TestSparseCosineSimilarity(const string& dataFile, size_t N, size_t Rep) {
@@ -2272,9 +2366,9 @@ TEST(TestSpeed) {
     nTest++;
     nFail += !TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
+    nFail += !TestSparseAngularDistanceFast(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
-    nFail += !TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+    nFail += !TestSparseAngularDistanceFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
 
     nTest++;
     nFail += !TestSparseCosineSimilarity<float>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);

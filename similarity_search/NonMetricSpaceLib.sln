@@ -24,7 +24,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tune_vptree", "src\tune_vpt
 		{08B5B5CC-2938-4C1C-B835-A3868076D791} = {08B5B5CC-2938-4C1C-B835-A3868076D791}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sample_standalone_app", "..\sample_standalone_app\sample_standalone_app.vcxproj", "{8B905A2B-88BF-4353-8BFD-167CA434D9C8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sample_standalone_app1", "..\sample_standalone_app\sample_standalone_app1.vcxproj", "{8B905A2B-88BF-4353-8BFD-167CA434D9C8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{08B5B5CC-2938-4C1C-B835-A3868076D791} = {08B5B5CC-2938-4C1C-B835-A3868076D791}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sample_standalone_app2", "..\sample_standalone_app\sample_standalone_app2.vcxproj", "{DC891FA8-20ED-4CFC-A146-390DC655F681}"
 	ProjectSection(ProjectDependencies) = postProject
 		{08B5B5CC-2938-4C1C-B835-A3868076D791} = {08B5B5CC-2938-4C1C-B835-A3868076D791}
 	EndProjectSection
@@ -72,6 +77,12 @@ Global
 		{8B905A2B-88BF-4353-8BFD-167CA434D9C8}.Release|x64.Build.0 = Release|x64
 		{8B905A2B-88BF-4353-8BFD-167CA434D9C8}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
 		{8B905A2B-88BF-4353-8BFD-167CA434D9C8}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
+		{DC891FA8-20ED-4CFC-A146-390DC655F681}.Debug|x64.ActiveCfg = Debug|x64
+		{DC891FA8-20ED-4CFC-A146-390DC655F681}.Debug|x64.Build.0 = Debug|x64
+		{DC891FA8-20ED-4CFC-A146-390DC655F681}.Release|x64.ActiveCfg = Release|x64
+		{DC891FA8-20ED-4CFC-A146-390DC655F681}.Release|x64.Build.0 = Release|x64
+		{DC891FA8-20ED-4CFC-A146-390DC655F681}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
+		{DC891FA8-20ED-4CFC-A146-390DC655F681}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
