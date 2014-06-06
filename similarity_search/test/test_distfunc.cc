@@ -741,7 +741,7 @@ bool TestSparseAngularDistanceAgree(const string& dataFile, size_t N, size_t Rep
 
     bool bug = false;
 
-    float maxRelDiff = 1e-6f;
+    float maxRelDiff = 2e-5f;
     float maxAbsDiff = 1e-6f;
 
     for (size_t j = Rep; j < N; ++j)
@@ -753,7 +753,7 @@ bool TestSparseAngularDistanceAgree(const string& dataFile, size_t N, size_t Rep
         float RelDiff1 = AbsDiff1 / max(max(fabs(val1), fabs(val2)), T(1e-18));
 
         if (RelDiff1 > maxRelDiff && AbsDiff1 > maxAbsDiff) {
-            cerr << "Bug fast vs non-fast cosine " <<
+            cerr << "Bug fast vs non-fast angular dist " <<
                 " val1 = " << val1 << " val2 = " << val2 <<
                 " Diff: " << (val1 - val2) <<
                 " RelDiff1: " << RelDiff1 <<
