@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -17,8 +17,8 @@
 #include <memory>
 
 #include "space/space_lp.h"
-#include "common.h"
 #include "bunit.h"
+#include "testdataset.h"
 
 namespace similarity {
 
@@ -39,7 +39,7 @@ class VectorDataset1 : public TestDataset {
     };
 
     for (int i = 0; i < 8; ++i) {
-      dataobjects_.push_back(new Object(i + 1, 5 * sizeof(FLOAT_TYPE), &arr[i]));
+      dataobjects_.push_back(new Object(i + 1, -1, 5 * sizeof(FLOAT_TYPE), &arr[i]));
     }
   }
 };

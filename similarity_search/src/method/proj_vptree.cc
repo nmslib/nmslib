@@ -39,7 +39,7 @@ ProjectionVPTree<dist_t>::ProjectOneVect(size_t id, const Object* sparseVect) co
     denseElem.push_back(space_->ScalarProduct(sparseVect, randProjPivots_[i]));
   }
 
-  return VPTreeSpace_->CreateObjFromVect(id, denseElem);
+  return VPTreeSpace_->CreateObjFromVect(id, -1, denseElem);
 };
 
 template <typename dist_t>

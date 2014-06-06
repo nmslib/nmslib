@@ -27,9 +27,9 @@
 namespace similarity {
 
 template <typename dist_t>
-Object* SpaceJSBase<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+Object* SpaceJSBase<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
   if (type_ == kJSSlow) {
-    return new Object(id, InpVect.size() * sizeof(dist_t), &InpVect[0]);
+    return new Object(id, label, InpVect.size() * sizeof(dist_t), &InpVect[0]);
   }
   std::vector<dist_t>   temp(InpVect);
 
@@ -37,7 +37,7 @@ Object* SpaceJSBase<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist
   temp.resize(2 * InpVect.size());
   // Compute logarithms
   PrecompLogarithms(&temp[0], InpVect.size());
-  return new Object(id, temp.size() * sizeof(dist_t), &temp[0]);
+  return new Object(id, label, temp.size() * sizeof(dist_t), &temp[0]);
 }
 
 

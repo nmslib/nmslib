@@ -17,40 +17,56 @@
 #ifndef _OBJECT_H_
 #define _OBJECT_H_
 
-#include <string.h>
-
+#include <cstring>
+#include <cctype>
+#include <string>
+#include <sstream>
 #include <vector>
 #include <list>
 #include <utility>
+#include <limits>
 
 #include "global.h"
 #include "logging.h"
 
 namespace similarity {
 
+using std::string;
+using std::stringstream;
+
+#define LABEL_PREFIX "label:"
+
 /* 
- * Structure of object: | id | datasize | data ........ |
+ * Structure of object: | 4-byte id | 4-byte label | 8-byte datasize | data ........ |
  * We need data to be aligned on 8-byte boundaries.
  * 
  * See: http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
  */
 
-typedef size_t IdType;
+/* 
+ * We are not gonna have billions of records or labels in the foreseeable future
+ * Negative values would represent missing labels and ids
+ */
+typedef int32_t IdType;
+typedef int32_t LabelType;
 
-const size_t ID_SIZE = sizeof(IdType);
+const size_t ID_SIZE         = sizeof(IdType);
+const size_t LABEL_SIZE      = sizeof(LabelType);
 const size_t DATALENGTH_SIZE = sizeof(size_t);
 
 class Object {
  public:
   explicit Object(char* buffer) : buffer_(buffer), memory_allocated_(false) {}
 
-  Object(IdType id, size_t datalength, const void* data) {
-    buffer_ = new char[ID_SIZE + DATALENGTH_SIZE + datalength];
+  Object(IdType id, LabelType label, size_t datalength, const void* data) {
+    buffer_ = new char[ID_SIZE + LABEL_SIZE + DATALENGTH_SIZE + datalength];
     CHECK(buffer_ != NULL);
     memory_allocated_ = true;
     char* ptr = buffer_;
     memcpy(ptr, &id, ID_SIZE);
     ptr += ID_SIZE;
+    memcpy(ptr, &label, LABEL_SIZE); 
+    ptr += LABEL_SIZE;
     memcpy(ptr, &datalength, DATALENGTH_SIZE);
     ptr += DATALENGTH_SIZE;
     if (data != NULL) {
@@ -66,37 +82,83 @@ class Object {
     }
   }
 
-  enum { kDummyId = -1 };
-
   static Object* CreateNewEmptyObject(size_t datalength) {
     // the caller is responsible for releasing the pointer
-    Object* empty_object = new Object(kDummyId, datalength, NULL);
+    Object* empty_object = new Object(-1, -1, datalength, NULL);
     CHECK(empty_object != NULL);
     return empty_object;
   }
 
   Object* Clone() const {
-    Object* clone = new Object(id(), datalength(), data());
+    Object* clone = new Object(id(), label(), datalength(), data());
     return clone;
   }
 
-  inline IdType id() const { return *(reinterpret_cast<IdType*>(buffer_)); }
-  inline const char* data() const { return buffer_ + ID_SIZE + DATALENGTH_SIZE; }
-  inline char* data()             { return buffer_ + ID_SIZE + DATALENGTH_SIZE; }
-  inline size_t datalength() const { return *(reinterpret_cast<size_t*>(buffer_ + ID_SIZE));}
-  inline const char* buffer() const { return buffer_; }
-  inline size_t bufferlength() const { return ID_SIZE + DATALENGTH_SIZE + datalength(); }
+  inline IdType    id()         const { return *(reinterpret_cast<IdType*>(buffer_)); }
+  inline LabelType label()      const { return *(reinterpret_cast<LabelType*>(buffer_ + LABEL_SIZE)); }
+  inline size_t datalength()    const { return *(reinterpret_cast<size_t*>(buffer_ + LABEL_SIZE + ID_SIZE));}
+  inline const char* data() const { return buffer_ + ID_SIZE + LABEL_SIZE+ DATALENGTH_SIZE; }
+  inline char* data()             { return buffer_ + ID_SIZE + LABEL_SIZE+ DATALENGTH_SIZE; }
+
+  inline const char* buffer()  const { return buffer_; }
+  inline size_t bufferlength() const { return ID_SIZE + LABEL_SIZE+ DATALENGTH_SIZE + datalength(); }
 
   void Print() const {
     LOG(LIB_INFO) << "id = " << id()
+        << "\tlabel = " << label()
         << "\tdatalength = " << datalength()
-        << "\tbuffer = " << buffer()   // %p
-        << "\tdata = " << data();  // %p
+        << "\tbuffer = " << buffer()
+        << "\tdata = " << data();
   }
 
+  /*
+   * Extracts label from the beginning of the input string and modifies the string by removing label information.
+   * If no label is present, the input string remains unchanged.
+   */
+  static LabelType extractLabel(string& fileLine) {
+    static string labelPrefix = LABEL_PREFIX; // thread-safe in C++11
+
+    LabelType res = -1;
+    if (fileLine.size() > labelPrefix.size() + 1 &&
+        fileLine.substr(0, labelPrefix.size()) == labelPrefix) {
+      int p = -1;
+
+      for (size_t i = labelPrefix.size(); i < fileLine.size(); ++i) {
+        if (isspace(fileLine[i])) {
+          p = i; 
+          break;
+        }
+      }
+      if (p >= 0) {
+        size_t j = p;
+        // j is the first non-white space char
+        while(j < fileLine.size() && isspace(fileLine[j])) ++j;
+
+        stringstream numstr(fileLine.substr(labelPrefix.size(), p - labelPrefix.size()));
+
+        if (!(numstr >> res) || !numstr.eof()) {
+          LOG(LIB_FATAL) << "Cannot extract label from the file line: '" << fileLine << "'";
+        }
+
+        fileLine = fileLine.substr(j);
+       
+      } else {
+        LOG(LIB_FATAL) << "No space is found after the label definition in the file line: '" << fileLine << "'";
+      }
+    }
+    return res;
+  }
+  /*
+   * Adds a label to the beginning of the string.
+   */
+  static void addLabel(string& fileLine, LabelType label) {
+    stringstream str;
+    str << LABEL_PREFIX << label << " ";
+    fileLine.insert(0, str.str()); 
+  }
  private:
   char* buffer_;
-  bool memory_allocated_;
+  bool  memory_allocated_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(Object);

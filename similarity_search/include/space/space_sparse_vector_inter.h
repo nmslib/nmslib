@@ -63,7 +63,7 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
     return ScalarProjectFast(obj1->data(), obj1->datalength(),
                              obj2->data(), obj2->datalength());
   }
-  virtual Object* CreateObjFromVect(size_t id, const vector<ElemType>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 };

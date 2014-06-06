@@ -198,7 +198,7 @@ float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qt
         tmpi    = _mm_cvttps_epi32(_mm_mul_ps(cmult, _mm_div_ps(minv, maxv)));
         sum     = _mm_add_ps(sum, _mm_add_ps(s1,s2));
 
-        _mm_store_si128((__m128i*)TmpRes, tmpi);
+        _mm_store_si128(reinterpret_cast<__m128i*>(TmpRes), tmpi);
 
         ltmp = _mm_set_ps(ltbl[TmpRes[3]], ltbl[TmpRes[2]], ltbl[TmpRes[1]], ltbl[TmpRes[0]]);
         __m128 d = _mm_sub_ps(_mm_add_ps(max_mod_logv, ltmp), clog2simd);
@@ -283,7 +283,7 @@ double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t
         sum     = _mm_add_pd(sum, _mm_add_pd(s1, s2));
         tmpi    = _mm_cvttpd_epi32(_mm_mul_pd(cmult, _mm_div_pd(minv, maxv)));
 
-        _mm_store_si128((__m128i*)TmpRes, tmpi);
+        _mm_store_si128(reinterpret_cast<__m128i*>(TmpRes), tmpi);
         ltmp = _mm_set_pd(ltbl[TmpRes[1]], ltbl[TmpRes[0]]);
         __m128d   d = _mm_sub_pd(_mm_add_pd(max_mod_logv, ltmp), clog2simd);
 

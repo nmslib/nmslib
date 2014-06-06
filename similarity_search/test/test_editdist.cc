@@ -2,22 +2,21 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
  * 
  * Copyright (c) 2014
  *
- * This code is released under the
- * Apache License Version 2.0 http://www.apache.org/licenses/.
+ * This code is released under the * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
 
 #include <string.h>
 #include "space.h"
-#include "common.h"
 #include "bunit.h"
+#include "testdataset.h"
 
 namespace similarity {
 
@@ -32,7 +31,7 @@ class StringDataset1 : public TestDataset {
     };
 
     for (int i = 0; i < 16; ++i) {
-      dataobjects_.push_back(new Object(i + 1, strlen(arr[i]), arr + i));
+      dataobjects_.push_back(new Object(i + 1, -1, strlen(arr[i]), arr + i));
     }
   }
 };

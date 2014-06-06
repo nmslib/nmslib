@@ -143,14 +143,14 @@ dist_t KLDivGenFast<dist_t>::HiddenDistance(const Object* obj1, const Object* ob
 }
 
 template <typename dist_t>
-Object* KLDivGenFast<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+Object* KLDivGenFast<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
   std::vector<dist_t>   temp(InpVect);
 
   // Reserve space to store logarithms
   temp.resize(2 * InpVect.size());
   // Compute logarithms
   PrecompLogarithms(&temp[0], InpVect.size());
-  return new Object(id, temp.size() * sizeof(dist_t), &temp[0]);
+  return new Object(id, label, temp.size() * sizeof(dist_t), &temp[0]);
 }
 
 
@@ -227,14 +227,14 @@ dist_t ItakuraSaitoFast<dist_t>::HiddenDistance(const Object* obj1, const Object
 }
 
 template <typename dist_t>
-Object* ItakuraSaitoFast<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+Object* ItakuraSaitoFast<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
   std::vector<dist_t>   temp(InpVect);
 
   // Reserve space to store logarithms
   temp.resize(2 * InpVect.size());
   // Compute logarithms
   PrecompLogarithms(&temp[0], InpVect.size());
-  return new Object(id, temp.size() * sizeof(dist_t), &temp[0]);
+  return new Object(id, label, temp.size() * sizeof(dist_t), &temp[0]);
 }
 
 //=============================================================
@@ -252,8 +252,8 @@ dist_t KLDivGenSlow<dist_t>::HiddenDistance(const Object* obj1, const Object* ob
 }
 
 template <typename dist_t>
-Object* KLDivGenSlow<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
-  return new Object(id, InpVect.size() * sizeof(dist_t), &InpVect[0]);
+Object* KLDivGenSlow<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
+  return new Object(id, label, InpVect.size() * sizeof(dist_t), &InpVect[0]);
 }
 
 template <typename dist_t>
@@ -269,14 +269,14 @@ dist_t KLDivGenFastRightQuery<dist_t>::HiddenDistance(const Object* obj1, const 
 }
 
 template <typename dist_t>
-Object* KLDivGenFastRightQuery<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+Object* KLDivGenFastRightQuery<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
   std::vector<dist_t>   temp(InpVect);
 
   // Reserve space to store logarithms
   temp.resize(2 * InpVect.size());
   // Compute logarithms
   PrecompLogarithms(&temp[0], InpVect.size());
-  return new Object(id, temp.size() * sizeof(dist_t), &temp[0]);
+  return new Object(id, label, temp.size() * sizeof(dist_t), &temp[0]);
 }
 
 //=============================================================
@@ -294,14 +294,14 @@ dist_t KLDivFast<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2)
 }
 
 template <typename dist_t>
-Object* KLDivFast<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+Object* KLDivFast<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
   std::vector<dist_t>   temp(InpVect);
 
   // Reserve space to store logarithms
   temp.resize(2 * InpVect.size());
   // Compute logarithms
   PrecompLogarithms(&temp[0], InpVect.size());
-  return new Object(id, temp.size() * sizeof(dist_t), &temp[0]);
+  return new Object(id, label, temp.size() * sizeof(dist_t), &temp[0]);
 }
 
 //=============================================================
@@ -319,14 +319,14 @@ dist_t KLDivFastRightQuery<dist_t>::HiddenDistance(const Object* obj1, const Obj
 }
 
 template <typename dist_t>
-Object* KLDivFastRightQuery<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
+Object* KLDivFastRightQuery<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
   std::vector<dist_t>   temp(InpVect);
 
   // Reserve space to store logarithms
   temp.resize(2 * InpVect.size());
   // Compute logarithms
   PrecompLogarithms(&temp[0], InpVect.size());
-  return new Object(id, temp.size() * sizeof(dist_t), &temp[0]);
+  return new Object(id, label, temp.size() * sizeof(dist_t), &temp[0]);
 }
 
 template class BregmanDiv<float>;

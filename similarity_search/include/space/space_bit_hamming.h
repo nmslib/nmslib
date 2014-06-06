@@ -40,11 +40,11 @@ class SpaceBitHamming : public Space<int> {
                       const ExperimentConfig<int>* config,
                       const char* inputfile,
                       const int MaxNumObjects) const;
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<uint32_t>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const;
   virtual std::string ToString() const { return "Hamming (bit-storage) space"; }
  protected:
   virtual int HiddenDistance(const Object* obj1, const Object* obj2) const;
-  void ReadVec(std::string line, std::vector<uint32_t>& v) const;
+  void ReadVec(std::string line, LabelType& label, std::vector<uint32_t>& v) const;
 };
 
 }  // namespace similarity

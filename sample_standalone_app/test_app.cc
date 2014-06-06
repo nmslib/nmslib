@@ -40,6 +40,8 @@
 using namespace std;
 using namespace similarity;
 
+#define LOG_OPTION 1
+
 void Usage(const char *pProg, const char* pErr) {
   cerr << pErr << endl;
   cerr << "Usage: " << pProg << " <test file> " << endl;
@@ -126,8 +128,14 @@ int main(int argc, char* argv[]) {
       return 1;
     }
   } else if (argc == 1) {
+    /* 
+     * labels to check the accuracy of classification.
+     */
+    
+    vector<LabelType> labels(rawData.size()); 
+
     // If the file is not specified, create the data set from a vector of vectors
-    customSpace.CreateDataset(dataSet, rawData); 
+    customSpace.CreateDataset(dataSet, rawData, labels); 
   } else {
     Usage(argv[0], "Wrong # of arguments");
     return 1;
@@ -155,9 +163,15 @@ int main(int argc, char* argv[]) {
 
   /* 
    * Init library, specify a log file
-   * If the logfile is NULL,  we print to STDERR.
    */
-  initLibrary("logfile.txt"); 
+  if (LOG_OPTION == 1)
+    initLibrary(LIB_LOGFILE, "logfile.txt"); 
+  // No logging 
+  if (LOG_OPTION == 2)
+    initLibrary(LIB_LOGNONE, NULL);
+  // Use STDOUT
+  if (LOG_OPTION == 3)
+    initLibrary(LIB_LOGSTDERR, NULL);
 
   Index<float>*   indexSmallWorld =  
                         MethodFactoryRegistry<float>::Instance().

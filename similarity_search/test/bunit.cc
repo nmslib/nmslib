@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -15,6 +15,8 @@
  */
 
 #include <stdlib.h>
+
+#include <string>
 
 #include "bunit.h"
 #include "init.h"
@@ -85,8 +87,10 @@ int TestRunner::RunAllTests() {
 
 }     // namespace similarity
 
-int main(int argc, char *pArgv[]) {
-  similarity::initLibrary(argc == 2 ? pArgv[1]:NULL);
+int main(int argc, char *argv[]) {
+  std::string LogFile;
+  if (argc == 2) LogFile = argv[1];
+  similarity::initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   return similarity::TestRunner::Instance().RunAllTests();
 }

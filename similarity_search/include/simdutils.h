@@ -14,7 +14,7 @@
  * which do understand __attribute__ ((aligned(16)))
  */
 
-#if defined(__GNUC__) 
+#if defined(__GNUC__)
 #define PORTABLE_ALIGN16 __attribute__((aligned(16)))
 #else
 #define PORTABLE_ALIGN16 __declspec(align(16))

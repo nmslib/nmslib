@@ -17,11 +17,22 @@
 #ifndef _TEST_DATASET_H_
 #define _TEST_DATASET_H_
 
-#include <string.h>
+#include "object.h"
 #include "space.h"
-#include "bunit.h"
+
+#include <string>
 
 namespace similarity {
+
+using std::string;
+
+#ifdef _MSC_VER
+const string sampleDataPrefix = string("..") + PATH_SEPARATOR +
+                                string("..") + PATH_SEPARATOR +
+                                string("..") + PATH_SEPARATOR + string("sample_data") + PATH_SEPARATOR;
+#else
+const string sampleDataPrefix = string("..") + PATH_SEPARATOR + string("sample_data") + PATH_SEPARATOR;
+#endif
 
 class TestDataset {
  public:

@@ -21,6 +21,7 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include <unordered_map>
 
 #include "utils.h"
 #include "space.h"
@@ -29,6 +30,30 @@
 #include "knnqueue.h"
 
 namespace similarity {
+
+using std::unordered_map;
+using std::vector;
+using std::pair;
+using std::sort;
+
+enum ClassResult {
+  kClassUnknown,
+  kClassCorrect,
+  kClassWrong,
+};
+
+template <class dist_t>
+struct ApproxResEntry {
+  IdType      mId;
+  LabelType   mLabel;
+  dist_t      mDist;
+  ApproxResEntry(IdType id = 0, LabelType label = 0, dist_t dist = 0) 
+                 : mId(id), mLabel(label), mDist(dist) {}
+  bool operator<(const ApproxResEntry& o) const {
+    if (mDist != o.mDist) return mDist < o.mDist;
+    return mId < o.mId;
+  }
+};
 
 template <class dist_t>
 class GoldStandard {
@@ -82,14 +107,14 @@ public:
                    const typename similarity::KNNQuery<dist_t>* query,
                    const GoldStandard<dist_t>& gs) : K_(0), ExactDists_(gs.GetExactDists()) {
     GetKNNData(query);
-    ComputeMetrics();
+    ComputeMetrics(query->QueryObject()->label());
   }
 
   EvalResults(const typename similarity::Space<dist_t>* space,
                    const typename similarity::RangeQuery<dist_t>* query,
                    const GoldStandard<dist_t>& gs) : K_(0), ExactDists_(gs.GetExactDists()) {
     GetRangeData(query);
-    ComputeMetrics();
+    ComputeMetrics(query->QueryObject()->label());
   }
 
   /* 
@@ -124,6 +149,10 @@ public:
      * Just the classic recall value
      */
   double GetRecall()          const { return Recall_; }
+    /*
+     * Classification correctness
+     */
+  ClassResult GetClassCorrect()          const { return ClassCorrect_; }
    /*
     * Proposed in:
     * Zezula, P., Savino, P., Amato, G., Rabitti, F., 
@@ -142,9 +171,6 @@ private:
     for (size_t i = 0; i < ExactDists_.size(); ++i) {
       /* 
        * TODO (@leo) are there situations where we need to compare distances approximately?
-       *             Probably not, if computation of distances is deterministic and exact,
-       *             i.e., given the query Q and the object X, we always get the same 
-       *             distance from Q to X, no matter which method returned X.
        */
 #if 0
       if (i < K_ || (i && ApproxEqual(ExactDists_[i].first, ExactDists_[i-1].first))) {
@@ -167,7 +193,8 @@ private:
        */
       if (ApproxResultSet_.find(ResObject->id()) == ApproxResultSet_.end()) {
         ApproxResultSet_.insert(ResObject->id());
-        ApproxDists_.insert(ApproxDists_.begin(), ResQ->TopDistance());
+        ApproxEntries_.insert(ApproxEntries_.begin(), 
+                              ApproxResEntry<dist_t>(ResObject->id(), ResObject->label(), ResQ->TopDistance()));
       }
       ResQ->Pop();
     }
@@ -190,22 +217,46 @@ private:
       // We should not have any duplicates!
       if (ApproxResultSet_.find(ResObject->id()) == ApproxResultSet_.end()) {
         ApproxResultSet_.insert(ResObject->id());
-        ApproxDists_.insert(ApproxDists_.begin(), ResQDists[i]);
+        ApproxEntries_.insert(ApproxEntries_.begin(), 
+                              ApproxResEntry<dist_t>(ResObject->id(), ResObject->label(), ResQDists[i]));
       }
     }
 
-    std::sort(ApproxDists_.begin(), ApproxDists_.end());
+    std::sort(ApproxEntries_.begin(), ApproxEntries_.end());
   }
 
-  void ComputeMetrics() {
+  void ComputeMetrics(LabelType queryLabel) {
+    ClassCorrect_      = kClassUnknown;
     Recall_            = 0.0;
     NumberCloser_      = 0.0;
     LogRelPosError_    = 0.0;
     PrecisionOfApprox_ = 0.0;
 
-    // 1. First let's do recall
+    // 1. First let's do recall 
     for (auto it = ApproxResultSet_.begin(); it != ApproxResultSet_.end(); ++it) {
       Recall_ += ExactResultSet_.count(*it);
+    }
+
+    // 2 Obtain class result
+    if (queryLabel >= 0) {
+      unordered_map<LabelType, int>  hClassQty;
+      vector<pair<int,LabelType>>    vClassQty;
+
+      for (size_t k = 0; k < ApproxEntries_.size(); ++k) {
+        hClassQty[ApproxEntries_[k].mLabel]++;
+      }
+      for (auto elem:hClassQty) {
+        /* 
+         * Revert here: qty now should go first:
+         * the minus sign will make sort put entries
+         * with the largest qty first.
+         */
+        vClassQty.push_back(make_pair(-elem.second, elem.first));
+      }
+      sort(vClassQty.begin(), vClassQty.end());
+      if (!vClassQty.empty()) {
+        ClassCorrect_ = vClassQty[0].second == queryLabel ? kClassCorrect : kClassWrong;
+      }
     }
 
     size_t ExactResultSize = K_ ? K_:ExactResultSet_.size();
@@ -219,56 +270,56 @@ private:
     else  Recall_ /= ExactResultSize;
 
 
-    if (ApproxDists_.size()) { 
+    if (ApproxEntries_.size()) { 
       // 2. Compute the number of points closer to the 1-NN then the first result.
-      CHECK(!ApproxDists_.empty());
+      CHECK(!ApproxEntries_.empty());
       for (size_t p = 0; p < ExactDists_.size(); ++p) {
-        if (ExactDists_[p].first >= ApproxDists_[0]) break;
+        if (ExactDists_[p].first >= ApproxEntries_[0].mDist) break;
         ++NumberCloser_;
       }
       // 3. Compute the relative position error and the precision of approximation
-      CHECK(ApproxDists_.size() <= ExactDists_.size());
+      CHECK(ApproxEntries_.size() <= ExactDists_.size());
 
-      for (size_t k = 0, p = 0; k < ApproxDists_.size(); ++k) {
-        if (ApproxDists_[k] -  ExactDists_[p].first < 0) {
-          double mx = std::abs(std::max(ApproxDists_[k], ExactDists_[p].first));
-          double mn = std::abs(std::min(ApproxDists_[k], ExactDists_[p].first));
+      for (size_t k = 0, p = 0; k < ApproxEntries_.size(); ++k) {
+        if (ApproxEntries_[k].mDist -  ExactDists_[p].first < 0) {
+          double mx = std::abs(std::max(ApproxEntries_[k].mDist, ExactDists_[p].first));
+          double mn = std::abs(std::min(ApproxEntries_[k].mDist, ExactDists_[p].first));
   
           const double epsRel = 2e-5;
           const double epsAbs = 5e-4;
           /*
            * TODO: @leo These eps are quite adhoc.
-           *            There can be a bug here (where approx is better than exact??), 
+           *            There may be a bug here (where approx is better than exact??), 
            *            to reproduce a situation when the below condition is triggered 
            *            for epsRel = 1e-5 use & epsAbs = 1-e5:
-           *            release/experiment  --dataFile ~/TextCollect/VectorSpaces/colors112.txt --knn 1 --testSetQty 1 --maxNumQuery 1000  --method vptree:alphaLeft=0.8,alphaRight=0.8  -s cosinesimi 
+           *            release/experiment  --dataFile ~/TextCollect/VectorSpaces/colors112.txt --knn 1 --testSetQty 1 --maxNumQuery 1000  --method vptree:alphaLeft=0.8,alphaRight=0.8  -s cosinesimil
            *
            */
           if (mx > 0 && (1- mn/mx) > epsRel && (mx - mn) > epsAbs) {
-            for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxDists_.size()); ++i ) {
+            for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxEntries_.size()); ++i ) {
               LOG(LIB_INFO) << "Ex: " << ExactDists_[i].first << 
-                           " -> Apr: " << ApproxDists_[i] << 
+                           " -> Apr: " << ApproxEntries_[i].mDist << 
                            " 1 - ratio: " << (1 - mn/mx) << " diff: " << (mx - mn);
             }
             LOG(LIB_FATAL) << "bug: the approximate query should not return objects "
                    << "that are closer to the query than object returned by "
                    << "(exact) sequential searching!"
-                   << " Approx: " << ApproxDists_[k]
+                   << " Approx: " << ApproxEntries_[k].mDist
                    << " Exact: "  << ExactDists_[p].first;
           }
         }
         size_t LastEqualP = p;
-        if (p < ExactDists_.size() && ApproxEqual(ExactDists_[p].first, ApproxDists_[k])) {
+        if (p < ExactDists_.size() && ApproxEqual(ExactDists_[p].first, ApproxEntries_[k].mDist)) {
           ++p;
         } else {
-          while (p < ExactDists_.size() && ExactDists_[p].first < ApproxDists_[k]) {
+          while (p < ExactDists_.size() && ExactDists_[p].first < ApproxEntries_[k].mDist) {
             ++p;
             ++LastEqualP;
           }
         }
         if (p < k) {
-          for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxDists_.size()); ++i ) {
-            LOG(LIB_INFO) << "E: " << ExactDists_[i].first << " -> " << ApproxDists_[i];
+          for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxEntries_.size()); ++i ) {
+            LOG(LIB_INFO) << "E: " << ExactDists_[i].first << " -> " << ApproxEntries_[i].mDist;
           }
           LOG(LIB_FATAL) << "bug: p = " << p << " k = " << k;
         }
@@ -276,8 +327,8 @@ private:
         PrecisionOfApprox_ += static_cast<double>(k + 1) / (LastEqualP + 1);
         LogRelPosError_    += log(static_cast<double>(LastEqualP + 1) / (k + 1));
       }
-      PrecisionOfApprox_  /= ApproxDists_.size();
-      LogRelPosError_     /= ApproxDists_.size();
+      PrecisionOfApprox_  /= ApproxEntries_.size();
+      LogRelPosError_     /= ApproxEntries_.size();
     } else {
       /* 
        * Let's assume that an empty result set has a zero degree of approximation.
@@ -295,9 +346,10 @@ private:
   double                              NumberCloser_;
   double                              LogRelPosError_;
   double                              Recall_;
+  ClassResult                         ClassCorrect_;
   double                              PrecisionOfApprox_;
 
-  std::vector<dist_t>                 ApproxDists_;
+  std::vector<ApproxResEntry<dist_t>> ApproxEntries_;
   std::set<IdType>                    ApproxResultSet_;
   std::set<IdType>                    ExactResultSet_;
 

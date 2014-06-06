@@ -106,7 +106,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
   for (size_t i = 0; i < data.size(); ++i) {
     Permutation OnePerm;
     GetPermutation(pivots_, space_, data[i], &OnePerm);
-    PermData_[i] = VPTreeSpace_->CreateObjFromVect(i, OnePerm);
+    PermData_[i] = VPTreeSpace_->CreateObjFromVect(i, -1, OnePerm);
   }
 
   ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, PermData_);
@@ -136,7 +136,7 @@ PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
     for (size_t j = 0;j < OnePerm.size(); ++j) {
       OnePermFloat[j] = OnePerm[j];
     }
-    PermData_[i] = VPTreeSpace_->CreateObjFromVect(i, OnePermFloat);
+    PermData_[i] = VPTreeSpace_->CreateObjFromVect(i, -1, OnePermFloat);
   }
   TriangIneqCreator<float> OracleCreator(AlphaLeft, AlphaRight);
 
@@ -190,7 +190,7 @@ void PermutationVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* q
   Permutation perm_q;
   GetPermutation(pivots_, query, &perm_q);
 #ifdef USE_VPTREE_SAMPLE
-  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_q));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, -1, perm_q));
 
   unique_ptr<KNNQuery<PivotIdType>> VPTreeQuery(new KNNQuery<PivotIdType>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 #else
@@ -199,7 +199,7 @@ void PermutationVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* q
     perm_qf[j] = perm_q[j];
   }
 
-  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_qf));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, -1, perm_qf));
 
   unique_ptr<KNNQuery<float>> VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 #endif
@@ -223,7 +223,7 @@ void PermutationVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* que
   Permutation perm_q;
   GetPermutation(pivots_, query, &perm_q);
 #ifdef USE_VPTREE_SAMPLE
-  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_q));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, -1, perm_q));
 
   unique_ptr<KNNQuery<PivotIdType>> VPTreeQuery(new KNNQuery<PivotIdType>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, query->GetEPS()));
 #else
@@ -232,7 +232,7 @@ void PermutationVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* que
     perm_qf[j] = perm_q[j];
   }
 
-  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, perm_qf));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, -1, perm_qf));
 
   unique_ptr<KNNQuery<float>> VPTreeQuery(new KNNQuery<float>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 #endif

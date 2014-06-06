@@ -18,26 +18,37 @@
 #define _LOGGING_H_
 
 #include <fstream>
+#include <iostream>
 #include <string>
 
-// write log to file
-void InitializeLogger(const char* logfile);
+using std::ostream;
+using std::ofstream;
+using std::cerr;
 
 enum LogSeverity {LIB_INFO, LIB_WARNING, LIB_ERROR, LIB_FATAL};
+enum LogChoice  {LIB_LOGNONE, LIB_LOGFILE, LIB_LOGSTDERR};
 
 std::string LibGetCurrentTime();
+
+// write log to file
+void InitializeLogger(LogChoice choice = LIB_LOGNONE, const char* logfile = NULL);
 
 class Logger {
  public:
   Logger(LogSeverity severity, const std::string& file, int line, const char* function);
   ~Logger();
 
-  static std::ostream& stream();
+  static std::ostream& stream() { return *currstrm_ ; }
 
  private:
   LogSeverity severity_;
-  static std::ofstream logfile_;
-  friend void InitializeLogger(const char* logfile);
+
+  static ofstream logfile_;
+
+  static ostream* currstrm_;
+
+  // If choice != LIB_LOGFILE the second argument is ignored
+  friend void InitializeLogger(LogChoice choice, const char* logfile);
 };
 
 

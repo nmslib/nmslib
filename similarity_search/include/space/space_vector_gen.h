@@ -35,6 +35,36 @@ class VectorSpaceGen : public VectorSpace<dist_t> {
 
   virtual void CreateDataset(ObjectVector& dataset, 
                             const vector<vector<dist_t>>& sourceData) {
+    fillDataSet(dataset, sourceData, NULL);
+  }
+
+  virtual void CreateDataset(ObjectVector& dataset, 
+                            const vector<vector<dist_t>>& sourceData,
+                            const vector<LabelType>& labels) {
+    fillDataSet(dataset, sourceData, &labels);
+  }
+  virtual std::string ToString() const {
+    return "custom space";
+  }
+  Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
+    return VectorSpace<dist_t>::CreateObjFromVect(id, label, InpVect);
+  };
+ protected:
+  DistObjType      distObj_;
+
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
+    CHECK(obj1->datalength() > 0);
+    CHECK(obj1->datalength() == obj2->datalength());
+    const dist_t* x = reinterpret_cast<const dist_t*>(obj1->data());
+    const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
+    const size_t length = obj1->datalength() / sizeof(dist_t);
+
+    return distObj_(x, y, length);
+  }
+  
+  void fillDataSet(ObjectVector& dataset, 
+                   const vector<vector<dist_t>>& sourceData,
+                   const vector<LabelType>* pLabels) {
     size_t dim = 0;
 
     for (size_t index = 0; index < sourceData.size(); ++index) {
@@ -50,26 +80,9 @@ class VectorSpaceGen : public VectorSpace<dist_t> {
                       "Found mismatch, index : " << (index + 1);
         }
       }
-      dataset.push_back(CreateObjFromVect(index, oneElem));
+      LabelType label = pLabels ? (*pLabels)[index] :  -1 ;
+      dataset.push_back(CreateObjFromVect(index, label, oneElem));
     }
-  }
-  virtual std::string ToString() const {
-    return "custom space";
-  }
-  Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
-    return VectorSpace<dist_t>::CreateObjFromVect(id, InpVect);
-  };
- protected:
-  DistObjType      distObj_;
-
-  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
-    CHECK(obj1->datalength() > 0);
-    CHECK(obj1->datalength() == obj2->datalength());
-    const dist_t* x = reinterpret_cast<const dist_t*>(obj1->data());
-    const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
-    const size_t length = obj1->datalength() / sizeof(dist_t);
-
-    return distObj_(x, y, length);
   }
 
 };

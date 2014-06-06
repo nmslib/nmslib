@@ -2,7 +2,7 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
@@ -17,8 +17,8 @@
 
 #include <sys/time.h>
 
+#include "logging.h"
 #include "ztimer.h"
-#include "common.h"
 #include "bunit.h"
 
 namespace similarity {
@@ -68,7 +68,7 @@ TEST(Timer) {
   oldz.split();
   z.split();
 
-  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
+  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed();
   // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < 100, true);
 
@@ -76,7 +76,7 @@ TEST(Timer) {
   oldz.split();
   z.split();
 
-  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
+  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed();
   // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < 100, true);
 
@@ -87,7 +87,7 @@ TEST(Timer) {
   oldz.split();
   z.split();
 
-  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed() << endl;
+  LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed();
   // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < 100, true);
 }

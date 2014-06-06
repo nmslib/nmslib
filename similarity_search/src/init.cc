@@ -30,8 +30,8 @@
 
 namespace similarity {
 
-void initLibrary(const char* pLogFile) {
-  if (pLogFile != NULL)  InitializeLogger(pLogFile);
+void initLibrary(LogChoice choice, const char* pLogFile) {
+  InitializeLogger(choice, pLogFile);
   initSpaces();
   initMethods();
 }

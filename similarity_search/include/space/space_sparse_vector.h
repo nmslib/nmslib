@@ -84,7 +84,7 @@ class SpaceSparseVector : public Space<dist_t> {
     return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjNormSP);
   }
 
-  virtual Object* CreateObjFromVect(size_t id, const vector<ElemType>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
  protected:
 
   struct SpaceNormScalarProduct {
@@ -94,7 +94,7 @@ class SpaceSparseVector : public Space<dist_t> {
   };
 
 
-  void ReadSparseVec(std::string line, std::vector<ElemType>& v) const;
+  void ReadSparseVec(std::string line, IdType& label, std::vector<ElemType>& v) const;
   
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 

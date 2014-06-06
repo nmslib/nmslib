@@ -117,6 +117,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Print << "# of queries: " << config.GetQueryQty() << std::endl;
   Print << "------------------------------------" << std::endl;
   Print << "Recall:         " << ExpRes.GetRecallAvg()              << " -> " << "[" << ExpRes.GetRecallConfMin() << " " << ExpRes.GetRecallConfMax() << "]" << std::endl;
+  Print << "ClassAccuracy:  " << ExpRes.GetClassAccuracyAvg() << " -> " << "[" << ExpRes.GetClassAccuracyConfMin() << " " << ExpRes.GetClassAccuracyConfMax() << "]" << std::endl;
   Print << "RelPosError:    " << round2(ExpRes.GetRelPosErrorAvg())  << " -> " << "[" << round2(ExpRes.GetRelPosErrorConfMin()) << " \t" << round2(ExpRes.GetRelPosErrorConfMax()) << "]" << std::endl;
   Print << "NumCloser:      " << round2(ExpRes.GetNumCloserAvg())    << " -> " << "[" << round2(ExpRes.GetNumCloserConfMin()) << " \t" << round2(ExpRes.GetNumCloserConfMax()) << "]" << std::endl;
   Print << "------------------------------------" << std::endl;
@@ -388,7 +389,7 @@ int main(int ac, char* av[]) {
                        RangeArg,
                        MethodsDesc);
 
-  initLibrary(LogFile.empty() ? NULL:LogFile.c_str());
+  initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   LOG(LIB_INFO) << "Program arguments are processed";
 

@@ -29,6 +29,8 @@
 #include "utils.h"
 #include "permutation_type.h"
 
+#define LABEL_PREFIX "label:"
+
 namespace similarity {
 
 using std::map;

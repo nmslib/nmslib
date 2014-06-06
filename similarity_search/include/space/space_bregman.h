@@ -92,7 +92,7 @@ class KLDivAbstract : public BregmanDiv<dist_t> {
   virtual Object* InverseGradientFunction(const Object* object) const;
 
   virtual std::string ToString() const = 0;
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const = 0;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const = 0;
   virtual size_t GetElemQty(const Object* object) const = 0;
  protected:
   // Should not be directly accessible
@@ -105,7 +105,7 @@ class KLDivGenSlow : public KLDivAbstract<dist_t> {
   virtual ~KLDivGenSlow() {}
 
   virtual std::string ToString() const { return "Generalized Kullback-Leibler divergence"; }
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
 
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t); }
  protected:
@@ -120,7 +120,7 @@ class KLDivGenFast : public KLDivAbstract<dist_t> {
 
   virtual Object* InverseGradientFunction(const Object* object) const;
   virtual std::string ToString() const { return "Generalized Kullback-Leibler divergence (precomputed logs)"; }
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
   virtual Object* Mean(const ObjectVector& data) const;
  protected:
@@ -138,7 +138,7 @@ class ItakuraSaitoFast : public BregmanDiv<dist_t> {
   virtual Object* GradientFunction(const Object* object) const;
 
   virtual std::string ToString() const { return "Itakura-Saito (precomputed logs)"; }
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
   virtual Object* Mean(const ObjectVector& data) const;
  protected:
@@ -152,7 +152,7 @@ class KLDivGenFastRightQuery : public VectorSpace<dist_t> {
   virtual ~KLDivGenFastRightQuery() {}
 
   virtual std::string ToString() const { return "Generalized Kullback-Leibler divergence, right queries (precomputed logs)"; }
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
   // Should not be directly accessible
@@ -165,7 +165,7 @@ class KLDivFast: public VectorSpace<dist_t> {
   virtual ~KLDivFast() {}
 
   virtual std::string ToString() const { return "Kullback-Leibler divergence (precomputed logs)"; }
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
   // Should not be directly accessible
@@ -178,7 +178,7 @@ class KLDivFastRightQuery: public VectorSpace<dist_t> {
   virtual ~KLDivFastRightQuery() {}
 
   virtual std::string ToString() const { return "Kullback-Leibler divergence, right queries (precomputed logs)"; }
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
   // Should not be directly accessible

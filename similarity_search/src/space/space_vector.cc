@@ -19,17 +19,21 @@
 #include <string>
 #include <sstream>
 
-#include "space/space_vector.h"
+#include "object.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"
+#include "space/space_vector.h"
 
 namespace similarity {
 
 template <typename dist_t>
-void VectorSpace<dist_t>::ReadVec(std::string line, std::vector<dist_t>& v) const
+void VectorSpace<dist_t>::ReadVec(std::string line, LabelType& label, std::vector<dist_t>& v) const
 {
   v.clear();
+
+  label = Object::extractLabel(line);
+
   std::stringstream str(line);
 
   str.exceptions(std::ios::badbit);
@@ -63,6 +67,8 @@ void VectorSpace<dist_t>::WriteDataset(const ObjectVector& dataset,
     CHECK(obj->datalength() > 0);
     const dist_t* x = reinterpret_cast<const dist_t*>(obj->data());
     const size_t length = obj->datalength() / sizeof(dist_t);
+
+    if (obj->label()>=0) outFile << LABEL_PREFIX << obj->label() << " ";
 
     for (size_t i = 0; i < length; ++i) {
       outFile << x[i];
@@ -100,12 +106,13 @@ void VectorSpace<dist_t>::ReadDataset(
 
     int linenum = 0;
     int id = linenum;
+    LabelType label = -1;
 
     int dim = 0;
     int actualDim = 0;
 
     while (getline(InFile, StrLine) && (!MaxNumObjects || linenum < MaxNumObjects)) {
-      ReadVec(StrLine, temp);
+      ReadVec(StrLine, label, temp);
       int currDim = static_cast<int>(temp.size());
       if (!dim) dim = currDim;
       else {
@@ -130,7 +137,7 @@ void VectorSpace<dist_t>::ReadDataset(
       temp.resize(actualDim);
       id = linenum;
       ++linenum;
-      dataset.push_back(CreateObjFromVect(id, temp));
+      dataset.push_back(CreateObjFromVect(id, label, temp));
     }
     LOG(LIB_INFO) << "Actual dimensionality: " << actualDim;
   } catch (const std::exception &e) {
@@ -140,8 +147,8 @@ void VectorSpace<dist_t>::ReadDataset(
 }
 
 template <typename dist_t>
-Object* VectorSpace<dist_t>::CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const {
-  return new Object(id, InpVect.size() * sizeof(dist_t), &InpVect[0]);
+Object* VectorSpace<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
+  return new Object(id, label, InpVect.size() * sizeof(dist_t), &InpVect[0]);
 };
 
 /* 

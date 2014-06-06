@@ -38,9 +38,12 @@ int SpaceBitHamming::HiddenDistance(const Object* obj1, const Object* obj2) cons
   return BitHamming(x, y, length);
 }
 
-void SpaceBitHamming::ReadVec(std::string line, std::vector<uint32_t>& binVect) const
+void SpaceBitHamming::ReadVec(std::string line, LabelType& label, std::vector<uint32_t>& binVect) const
 {
   binVect.clear();
+
+  label = Object::extractLabel(line);
+
   std::stringstream str(line);
 
   str.exceptions(std::ios::badbit);
@@ -91,11 +94,12 @@ void SpaceBitHamming::ReadDataset(
 
     int linenum = 0;
     int id = linenum;
+    LabelType label = -1;
 
     int wordQty = 0;
 
     while (getline(InFile, StrLine) && (!MaxNumObjects || linenum < MaxNumObjects)) {
-      ReadVec(StrLine, temp);
+      ReadVec(StrLine, label, temp);
       int currWordQty = static_cast<int>(temp.size());
       if (!wordQty) wordQty = currWordQty;
       else {
@@ -108,7 +112,7 @@ void SpaceBitHamming::ReadDataset(
 
       id = linenum;
       ++linenum;
-      dataset.push_back(CreateObjFromVect(id, temp));
+      dataset.push_back(CreateObjFromVect(id, label, temp));
     }
     LOG(LIB_INFO) << "Number of words per vector : " << wordQty;
   } catch (const std::exception &e) {
@@ -117,8 +121,8 @@ void SpaceBitHamming::ReadDataset(
   }
 }
 
-Object* SpaceBitHamming::CreateObjFromVect(size_t id, const std::vector<uint32_t>& InpVect) const {
-  return new Object(id, InpVect.size() * sizeof(uint32_t), &InpVect[0]);
+Object* SpaceBitHamming::CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const {
+  return new Object(id, label, InpVect.size() * sizeof(uint32_t), &InpVect[0]);
 };
 
 }  // namespace similarity

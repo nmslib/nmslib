@@ -33,10 +33,11 @@ const char* log_severity[] = {"INFO", "WARNING", "ERROR", "FATAL"};
 // allocate the static member
 std::ofstream Logger::logfile_;
 
-std::ostream& Logger::stream() {
-  return logfile_.is_open() ? logfile_ : std::cerr;
-}
-
+static struct voidstream : public ostream {
+  template <class T> ostream& operator<< (T) { return *this; }
+  template <class T> ostream& operator<< (T*) { return *this; }
+  template <class T> ostream& operator<< (T&) { return *this; }
+} voidstream_;
 
 std::string LibGetCurrentTime() {
   time_t now;
@@ -46,6 +47,8 @@ std::string LibGetCurrentTime() {
   strftime(time_string, sizeof(time_string), "%Y-%m-%d %H:%M:%S", timeinfo);
   return std::string(time_string);
 }
+
+ostream* Logger::currstrm_ = &cerr;
 
 Logger::Logger(LogSeverity severity, const std::string& _file, int line, const char* function)
     : severity_(severity) {
@@ -70,8 +73,19 @@ Logger::~Logger() {
   }
 }
 
-void InitializeLogger(const char* logfile) {
-  Logger::logfile_.open(logfile);
-  assert(Logger::logfile_.is_open());
+void InitializeLogger(LogChoice choice, const char* logfile) {
+  if (choice == LIB_LOGNONE) {
+    Logger::currstrm_ = &voidstream_;
+  }
+  if (choice == LIB_LOGFILE) {
+    Logger::logfile_.open(logfile);
+    if (!Logger::logfile_) {
+      LOG(LIB_FATAL) << "Can't open the logfile: '" << logfile << "'";
+    }
+    Logger::currstrm_ = &Logger::logfile_;
+  }
+  if (choice == LIB_LOGSTDERR) {
+    Logger::currstrm_ = &cerr;
+  }
 }
 

@@ -245,6 +245,7 @@ public:
 
     vector<uint64_t>  SearchTime(MethQty); 
 
+    vector<double>    ClassAccuracy(MethQty);
     vector<double>    Recall(MethQty);
     vector<double>    NumCloser(MethQty);
     vector<double>    LogPosErr(MethQty);
@@ -370,9 +371,12 @@ public:
         NumCloser[MethNum]    += Eval.GetNumCloser();
         LogPosErr[MethNum]    += Eval.GetLogRelPos();
         Recall[MethNum]       += Eval.GetRecall();
+        double addAccuracy = (Eval.GetClassCorrect() == kClassCorrect ? 1:0);
+        ClassAccuracy[MethNum]+= addAccuracy;
         PrecisionOfApprox[MethNum] += Eval.GetPrecisionOfApprox();
 
         ExpRes[MethNum]->AddRecall(TestSetId, Eval.GetRecall());
+        ExpRes[MethNum]->AddClassAccuracy(TestSetId, addAccuracy);
         ExpRes[MethNum]->AddLogRelPosError(TestSetId, Eval.GetLogRelPos());
         ExpRes[MethNum]->AddNumCloser(TestSetId, Eval.GetNumCloser());
       }
@@ -401,6 +405,7 @@ public:
       ExpRes[MethNum]->SetImprEfficiency(TestSetId, ImprEfficiency);
 
       Recall[MethNum]            /= static_cast<double>(numquery);
+      ClassAccuracy[MethNum]     /= static_cast<double>(numquery);
       NumCloser[MethNum]         /= static_cast<double>(numquery);
       LogPosErr[MethNum]         /= static_cast<double>(numquery);
       PrecisionOfApprox[MethNum] /= static_cast<double>(numquery);
@@ -410,9 +415,10 @@ public:
         LOG(LIB_INFO) << ">>>> Seq. search time elapsed:       " << (SeqSearchTime/double(1e6)) << " sec";
         LOG(LIB_INFO) << ">>>> Avg Seq. search time per query: " << (SeqSearchTime/double(1e3)/numquery) << " msec";
         LOG(LIB_INFO) << ">>>> Impr. in Efficiency = "  << ImprEfficiency;
-        LOG(LIB_INFO) << ">>>> Recall         = "       << Recall[MethNum];
-        LOG(LIB_INFO) << ">>>> RelPosError    = "       << exp(LogPosErr[MethNum]);
-        LOG(LIB_INFO) << ">>>> NumCloser = " << NumCloser[MethNum] << " PrecisionOfApprox = " << PrecisionOfApprox[MethNum];
+        LOG(LIB_INFO) << ">>>> Recall              = "       << Recall[MethNum];
+        LOG(LIB_INFO) << ">>>> RelPosError         = "       << exp(LogPosErr[MethNum]);
+        LOG(LIB_INFO) << ">>>> NumCloser           = " << NumCloser[MethNum] << " PrecisionOfApprox = " << PrecisionOfApprox[MethNum];
+        LOG(LIB_INFO) << ">>>> Class. accuracy     = "       << ClassAccuracy[MethNum];
       }
     }
 

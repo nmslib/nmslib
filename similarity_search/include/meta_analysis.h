@@ -31,6 +31,7 @@ class MetaAnalysis {
 public:
   MetaAnalysis(size_t TestSetQty, double zVal = 1.96) : zVal_(zVal) {
     Recall_         .resize(TestSetQty);
+    ClassAccuracy_  .resize(TestSetQty);
     LogRelPosError_ .resize(TestSetQty);
     NumCloser_      .resize(TestSetQty);
     QueryTime_      .resize(TestSetQty);
@@ -43,6 +44,9 @@ public:
   // Let's protect Add* functions, b/c them can be called from different threads  
   void AddRecall(size_t SetId, double Recall) {
     Recall_[SetId].push_back(Recall);
+  }
+  void AddClassAccuracy(size_t SetId, double ClassAccuracy) {
+    ClassAccuracy_[SetId].push_back(ClassAccuracy);
   }
   void AddLogRelPosError(size_t SetId, double LogRelPosError) {
     LogRelPosError_[SetId].push_back(LogRelPosError);
@@ -68,6 +72,7 @@ public:
 
   void ComputeAll() {
     ComputeOneSimple("Recall", Recall_, RecallAvg, RecallConfMin, RecallConfMax);
+    ComputeOneSimple("ClassAccuracy", ClassAccuracy_, ClassAccuracyAvg, ClassAccuracyConfMin, ClassAccuracyConfMax);
     ComputeOneSimple("LogRelPosError", LogRelPosError_, LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax);
     ComputeOneSimple("NumCloser", NumCloser_, NumCloserAvg, NumCloserConfMin, NumCloserConfMax);
     ComputeOneMeta("QueryTime", QueryTime_, QueryTimeAvg, QueryTimeConfMin, QueryTimeConfMax);
@@ -81,6 +86,10 @@ public:
   double GetRecallAvg() const { return RecallAvg;} 
   double GetRecallConfMin() const{return RecallConfMin;}; 
   double GetRecallConfMax() const { return RecallConfMax;}
+
+  double GetClassAccuracyAvg() const { return ClassAccuracyAvg;} 
+  double GetClassAccuracyConfMin() const{return ClassAccuracyConfMin;}; 
+  double GetClassAccuracyConfMax() const { return ClassAccuracyConfMax;}
 
   double GetRelPosErrorAvg() const { return exp(LogRelPosErrorAvg);} 
   double GetRelPosErrorConfMin() const{return exp(LogRelPosErrorConfMin);}; 
@@ -111,6 +120,7 @@ public:
   double GetDistCompConfMax() const { return DistCompConfMax;}
 private:
 double RecallAvg, RecallConfMin, RecallConfMax;
+double ClassAccuracyAvg, ClassAccuracyConfMin, ClassAccuracyConfMax;
 double LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax;
 double NumCloserAvg, NumCloserConfMin, NumCloserConfMax;
 double QueryTimeAvg, QueryTimeConfMin, QueryTimeConfMax;
@@ -121,6 +131,7 @@ double MemAvg, MemConfMin, MemConfMax;
 double zVal_;
 
 vector<vector<double>>   Recall_; 
+vector<vector<double>>   ClassAccuracy_; 
 vector<vector<double>>   LogRelPosError_; 
 vector<vector<double>>   NumCloser_; 
 vector<vector<double>>   QueryTime_; 

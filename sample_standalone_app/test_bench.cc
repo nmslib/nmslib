@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
    * Init library, specify a log file
    * If the logfile is NULL,  we print to STDERR.
    */
-  initLibrary(NULL);
+  initLibrary(LIB_LOGNONE, NULL);
 
   // Create an instance of our custom space that uses L2-distance
   AnyParams empty;

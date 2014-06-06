@@ -326,7 +326,7 @@ int main(int ac, char* av[]) {
                        RangeArg,
                        Methods);
 
-  initLibrary(LogFile.empty() ? NULL:LogFile.c_str());
+  initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   ToLower(DistType);
 

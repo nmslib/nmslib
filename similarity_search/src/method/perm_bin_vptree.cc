@@ -87,7 +87,7 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
     vector<uint32_t>  binPivot;
     Binarize(TmpPerm, bin_threshold_, binPivot);
     CHECK(binPivot.size() == bin_perm_word_qty_);
-    BinPermData_[i] = VPTreeSpace_->CreateObjFromVect(i, binPivot);
+    BinPermData_[i] = VPTreeSpace_->CreateObjFromVect(i, -1, binPivot);
   }
 
   TriangIneqCreator<int> OracleCreator(AlphaLeft, AlphaRight);
@@ -130,7 +130,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* query
   Binarize(perm_q, bin_threshold_, binPivot);
   CHECK(binPivot.size() == bin_perm_word_qty_);
 
-  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, binPivot));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, -1, binPivot));
 
   unique_ptr<KNNQuery<int>> VPTreeQuery(new KNNQuery<int>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 
@@ -154,7 +154,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* query) 
   Binarize(perm_q, bin_threshold_, binPivot);
   CHECK(binPivot.size() == bin_perm_word_qty_);
 
-  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, binPivot));
+  unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, -1, binPivot));
 
   unique_ptr<KNNQuery<int>> VPTreeQuery(new KNNQuery<int>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 

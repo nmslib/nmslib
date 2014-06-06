@@ -63,7 +63,7 @@ ListClusters<dist_t>::ListClusters(
                               Strategy_(ListClustersStrategy::kRandom),
                               UseBucketSize_(true),
                               BucketSize_(50),
-                              Radius_(0.1),
+                              Radius_(1),
                               MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT),
                               ChunkBucket_(true) {
   AnyParamManager pmgr(MethParams);

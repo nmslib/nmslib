@@ -22,13 +22,11 @@
  * but before actually using library functionality.
  */
 
+#include "logging.h"
+
 namespace similarity {
 
-
-  /*
-   *  If pLogFile is NULL, then stderr will be used
-   */
-  void initLibrary(const char*pLogFile);
+  void initLibrary(LogChoice choice = LIB_LOGNONE, const char*pLogFile = NULL);
 }
 
 #endif

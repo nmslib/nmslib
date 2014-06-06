@@ -28,13 +28,13 @@
 namespace similarity {
 
 template <typename dist_t>
-Object* SpaceSparseVectorInter<dist_t>::CreateObjFromVect(size_t id, const std::vector<ElemType>& InpVect) const {
+Object* SpaceSparseVectorInter<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<ElemType>& InpVect) const {
   char    *pData = NULL;
   size_t  dataLen = 0;
 
   try {
     PackSparseElements(InpVect, pData, dataLen);
-    return new Object(id, dataLen, pData);
+    return new Object(id, label, dataLen, pData);
   } catch (...) {
     delete [] pData;
     throw;

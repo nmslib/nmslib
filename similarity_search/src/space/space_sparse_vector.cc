@@ -21,6 +21,7 @@
 #include <random>
 
 #include "space/space_sparse_vector.h"
+#include "object.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"
@@ -28,7 +29,7 @@
 namespace similarity {
 
 template <typename dist_t>
-void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, vector<ElemType>& v) const
+void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, LabelType& label, vector<ElemType>& v) const
 {
   v.clear();
   std::stringstream str(line);
@@ -37,6 +38,8 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, vector<ElemType>
 
   uint32_t id;
   dist_t   val;
+
+  label = Object::extractLabel(line);
 
   ReplaceSomePunct(line); 
 
@@ -95,13 +98,14 @@ void SpaceSparseVector<dist_t>::ReadDataset(
 
     int linenum = 0;
     int id = linenum;
+    LabelType label = -1;
 
     while (getline(InFile, StrLine) && (!MaxNumObjects || linenum < MaxNumObjects)) {
       if (StrLine.empty()) continue;
-      ReadSparseVec(StrLine, temp);
+      ReadSparseVec(StrLine, label, temp);
       id = linenum;
       ++linenum;
-      dataset.push_back(CreateObjFromVect(id, temp));
+      dataset.push_back(CreateObjFromVect(id, label, temp));
     }
   } catch (const std::exception &e) {
     LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
@@ -110,8 +114,8 @@ void SpaceSparseVector<dist_t>::ReadDataset(
 }
 
 template <typename dist_t>
-Object* SpaceSparseVector<dist_t>::CreateObjFromVect(size_t id, const vector<ElemType>& InpVect) const {
-  return new Object(id, InpVect.size() * sizeof(ElemType), &InpVect[0]);
+Object* SpaceSparseVector<dist_t>::CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const {
+  return new Object(id, label, InpVect.size() * sizeof(ElemType), &InpVect[0]);
 };
 
 template <typename dist_t>
@@ -129,7 +133,7 @@ void SpaceSparseVector<dist_t>::GenRandProjPivots(ObjectVector& vDst, size_t Qty
     for (unsigned id = 0; id < MaxElem; ++id) {
       temp.push_back(ElemType(id, normGen(engine))); 
     }
-    vDst.push_back(CreateObjFromVect(i, temp));
+    vDst.push_back(CreateObjFromVect(i, -1, temp));
   }
 }
 

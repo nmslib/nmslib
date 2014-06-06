@@ -47,7 +47,7 @@ class SpaceJSBase : public VectorSpace<dist_t> {
   virtual ~SpaceJSBase() {}
 
   virtual std::string ToString() const = 0;
-  virtual Object* CreateObjFromVect(size_t id, const std::vector<dist_t>& InpVect) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
 
  protected:
   dist_t JensenShannonFunc(const Object* obj1, const Object* obj2) const;
