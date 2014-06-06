@@ -92,11 +92,8 @@ int main(int argc, char* argv[]) {
   const char *dataFile  = argv[2];
   const char *queryFile = argv[3];
 
-  /* 
-   * Init library, specify a log file
-   * If the logfile is NULL,  we print to STDERR.
-   */
-  initLibrary(LIB_LOGNONE, NULL);
+  
+  initLibrary(LIB_LOGSTDERR, NULL);
 
   // Create an instance of our custom space that uses L2-distance
   AnyParams empty;
