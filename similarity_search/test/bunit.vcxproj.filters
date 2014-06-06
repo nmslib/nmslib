@@ -16,6 +16,9 @@
     <ClCompile Include="test_timer.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_object.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

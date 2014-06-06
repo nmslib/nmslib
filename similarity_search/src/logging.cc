@@ -37,6 +37,7 @@ static struct voidstream : public ostream {
   template <class T> ostream& operator<< (T) { return *this; }
   template <class T> ostream& operator<< (T*) { return *this; }
   template <class T> ostream& operator<< (T&) { return *this; }
+  voidstream() : ostream(0) {}
 } voidstream_;
 
 std::string LibGetCurrentTime() {

@@ -25,6 +25,7 @@
 #include <list>
 #include <utility>
 #include <limits>
+#include <cstdint>
 
 #include "global.h"
 #include "logging.h"
