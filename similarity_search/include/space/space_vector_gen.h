@@ -35,8 +35,6 @@ class VectorSpaceGen : public VectorSpace<dist_t> {
 
   virtual void CreateDataset(ObjectVector& dataset, 
                             const vector<vector<dist_t>>& sourceData) {
-    size_t index = 0;
-
     size_t dim = 0;
 
     for (size_t index = 0; index < sourceData.size(); ++index) {

@@ -27,6 +27,8 @@
 #include "factory/space/space_sparse_lp.h"
 #include "factory/space/space_sparse_scalar.h"
 
+#include "factory/space/space_savch.h"
+
 namespace similarity {
 
 
@@ -102,6 +104,9 @@ inline void initSpaces() {
 
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_COSINE_SIMILARITY_FAST, CreateSparseCosineSimilarityFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_ANGULAR_DISTANCE_FAST, CreateSparseAngularDistanceFast)
+
+
+  REGISTER_SPACE_CREATOR(float,  "savch",  CreateSavch)
 }
 
 
