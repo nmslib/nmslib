@@ -12,9 +12,14 @@ include_directories (${NonMetricSpaceLib_SOURCE_DIR}/include ${NonMetricSpaceLib
 
 file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/test*.cc)
 
+list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/bunit.cc)
+list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/bench_distfunc.cc)
+
 add_executable (bunit bunit.cc ${TEST_SRC_FILES})
+add_executable (bench_distfunc bench_distfunc.cc)
 
 add_dependencies (bunit NonMetricSpaceLib)
+add_dependencies (bench_distfunc NonMetricSpaceLib)
 
 if (NOT WIN32)
   add_dependencies (bunit lshkit)
@@ -25,6 +30,7 @@ else()
 endif()
 
 target_link_libraries (bunit NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIBRARIES} )
+target_link_libraries (bench_distfunc NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIBRARIES} )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")
