@@ -40,7 +40,7 @@ Prerequisites
 6. An Intel or AMD processor that supports SSE 4.2 is recommended
 
 
-Quick start
+Quick start for Linux
 -----------------------
 
 To compile, go to the directory **similarity_search** and type:  
