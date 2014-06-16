@@ -23,7 +23,7 @@
 \newcommand{\todonote}[1]{\todo[color=red!40,caption={TODO}]{#1}}
 
 \newcommand{\ttt}[1]{\texttt{#1}}
-\newcommand{\knn}{$k$-NN}
+\newcommand{\knn}{$k$-NN }
 \newcommand{\ED}{\mbox{\rm ED}}
 \newcommand{\pos}{\mbox{\rm pos}}
 \newcommand{\rev}{\mbox{\rm rev}}
@@ -63,7 +63,7 @@ Trondheim, Norway\\
 Language Technologies Institute, \\
 Carnegie Mellon University,\\
 Pittsburgh, PA, USA\\
-\email{srchvrs@cmu.edu}\\
+\email{srchvrs@cs.cmu.edu}\\
 }
 
 %
@@ -84,54 +84,91 @@ Pittsburgh, PA, USA\\
 
 \begin{abstract}
 This document describes a library for similarity searching.
-Even though it contains a variety of metric-space access methods,
-our main focus is searching in non-metric spaces.
+Even though the library contains a variety of metric-space access methods,
+our main focus is on search methods for non-metric spaces.
 Because there are fewer exact solutions for non-metric spaces,
-many of our methods give only approximate answers and, thus,
+many of our methods give only approximate answers. 
+Thus, the methods
 are evaluated in terms of efficiency-effectiveness trade-offs
-rather than merely in terms of their run-time.
+rather than merely in terms of their efficiency.
 Our goal is, therefore, to provide
 not only state-of-the-art approximate search methods for 
 both non-metric and metric spaces,
 but also the tools to measure search quality.
-Another important goal is to provide efficient implementations,
-with run-times comparable to an optimized production system. 
 We concentrate on technical details, i.e., 
-how to compile the code, run the benchmarks, and evaluate results.
+how to compile the code, run the benchmarks, evaluate results,
+and use our code in other applications.
 Additionally, we explain how to extend the code by adding
 new search methods and spaces.
 \end{abstract}
 
-\section{History and Motivation}
-The Non-Metric Space Library was created in 2013.
-Most code was written by Bilegsaikhan Naidan and Leonid Boytsov.
-Leo(nid) Boytsov is a maintainer.
-The library is hosted in the \href{https://github.com/searchivarius/NonMetricSpaceLib}{GitHub repository of  the maintainer.} 
-We encourage potential users and contributors to use GitHub for bug reports.
-The code that was written entirely by the authors is distributed under the business-friendly \href{http://apache.org/licenses/LICENSE-2.0}{Apache License}. 
-The library contains additional contributions, which are sometimes licensed differently.
+\section{Introduction}
+\subsection{Motivation}
+The Non-Metric Space Library is a collection of
+similarity search methods and a toolkit for their evaluation.
+Our software suit can also be used as a standalone search library on Linux and Windows. 
+Most search methods were implemented by Bileg(saikhan) Naidan and Leo(nid) Boytsov.\footnote{Leo(nid) Boytsov is a maintainer.}
+Additional contributors are listed on the \href{https://github.com/searchivarius/NonMetricSpaceLib}{GitHub 
+page}.
+%We encourage potential users and contributors to use GitHub for bug reports.
+
+The code written by Bileg and Leo is distributed under the business-friendly \href{http://apache.org/licenses/LICENSE-2.0}{Apache License}. 
+Some contributions are licensed differently.
 For more information regarding licensing and acknowledging the use of the library
 resource, please refer to \S~\ref{SectionCredits}.
 
-The main motivation and methodology is described in our engineering paper \cite{Boytsov_and_Bilegsaikhan:sisap2013}.
-The experimental results obtained with the help of the library
-were published elsewhere \cite{Boytsov_and_Bilegsaikhan:nips2013}.
-This document focuses mostly on low-level implementation details. 
-Our design was influenced by and superficially resembles the design of the Metric Spaces Library \cite{LibMetricSpace},
-but our approach is different in many ways. 
-Most importantly, we focus on approximate search methods (which do not guarantee, e.g.,
-to return a true nearest-neighbor for all queries) and non-metric spaces.
-We also simplified the procedure to extend the code (see \S~\ref{SectionExtend} for details).
-Another important difference is our focus on efficiency:
-we aim to implement methods that have run-times comparable to an optimized production system. 
-We, therefore, make an effort to write efficient distance functions
-and provide capabilities for testing in both single- and multi-threaded modes.
-Last, but not least, we simplify processing of experimental results
+The design of the library was influenced by 
+and superficially resembles the design of the Metric Spaces Library \cite{LibMetricSpace}.
+Yet our approach is different in many ways:
+
+\begin{itemize}
+\item We focus on approximate\footnote{
+An approximate method may not
+return a true nearest-neighbor or
+ all the points within a given query ball.}
+  search methods and non-metric spaces.
+
+\item We simplify experimentation, in particular, 
 through automatically measuring and aggregating important parameters
-related to speed, accuracy, and memory consumption.
+related to speed and accuracy. 
+In addition, we provide capabilities for testing in both single- and multi-threaded modes
+to ensure that implemented solutions scale well with the number of available CPUs.
 
+\item We care about overall efficiency and
+aim to implement methods that have runtime comparable to an optimized production system. 
+\end{itemize}
 
-\section{Introduction}
+Search methods for non-metric spaces are especially interesting.
+This domain does not provide sufficiently generic \emph{exact} search methods.
+We may know very little about analytical properties of the distance
+or the analytical representation may not be available at all (e.g., if the 
+distance is computed by a black-box device \cite{Skopal:2007}).
+Hence, employing an approximate approach is virtually unavoidable.
+
+Our commitment to efficiency affected several design decisions:
+\begin{itemize}
+\item The library is implemented in C++;
+\item We focus on in-memory indices (see \S~\ref{SectionExtend} for details)
+and, thus, do not require our methods to materialize a disk-based version of an index
+(this also reduces programming effort).
+It is, nevertheless, possible to benchmark disk-based implementations as well (see \ref{SectionExtend} for details).
+
+\todonoteinline{Explain how it is possible to create a disk-based version}
+\item 
+We provide efficient implementations of many distance functions ,
+which rely on Single Instruction Multiple Data (SIMD) commands  and/or
+approximation of computationally intensive mathematical operations (see \S~\ref{SectionEfficiency}). 
+\end{itemize}
+
+It is often possible to demonstrate a substantial reduction in the number of distance computations
+compared to sequential searching.
+However, such reductions entail additional computations (i.e., extra book-keeping)
+and do not always lead to improved overall performance \cite{Boytsov_and_Bilegsaikhan:sisap2013}.
+To eliminate situations where book-keeping costs are ``masked''
+by inefficiencies of the distance function,
+we pay special attention to distance function efficiency.
+
+\subsection{Problem Formulation}
 Similarity search is an essential part of many applications,
 which include, among others,  
 content-based retrieval of multimedia  and statistical machine learning.
@@ -146,7 +183,7 @@ The distance can be asymmetric and does not necessarily satisfy the triangle ine
 Two retrieval tasks are typically considered: a nearest neighbor and a range search. 
 The nearest neighbor search aims to find the least dissimilar object,
 i.e., the object at the smallest distance from the query.
-Its direct generalization is the $k$-nearest neighbor (or the \knn) search,
+Its direct generalization is the $k$-nearest neighbor search (the \knn search),
 which looks for the $k$ most closest objects.
 Given a radius $r$, 
 the range query retrieves all objects within a query ball (centered at the query object $q$) with the radius $r$,
@@ -159,72 +196,89 @@ In a \emph{right} query, $q$ is the first argument and the object is the second,
 the right, argument.
 
 The queries can be answered either exactly, 
-i.e., by returning a complete result, or, 
+i.e., by returning a complete result set that does not contain erroneous elements, or, 
 approximately, e.g., by finding only some nearest neighbors.
-Search methods for non-metric spaces are especially interesting.
-This domain does not provide sufficiently generic \emph{exact} search methods.
-We may know very little about analytical properties of the distance
-or the analytical representation may not be available at all (e.g., if the 
-distance is computed by a black-box device \cite{Skopal:2007}).
-Hence, employing an approximate approach is virtually unavoidable.
+Thus, the methods are evaluated in terms of efficiency-effectiveness trade-offs
+rather than merely in terms of their efficiency.
+One common effectiveness metric is recall. In the case
+of the nearest neighbor search, it is computed as
+an average fraction of true neighbors returned by the method.
+If ground-truth judgements (produced by humans) are available,
+it is possible to compute accuracy
+of a \knn based classification
+(see \S~\ref{SectionEffect} for details).
 
-Approximate search methods are typically more efficient than exact ones.
-Yet, it is harder to evaluate them,
-because we need to measure retrieval speed at different levels of 
-rank approximation quality, recall, or any other effectiveness metric.
-Thus it is crucial to provide capabilities to measure search quality.
-
-As noted in our methodology paper \cite{Boytsov_and_Bilegsaikhan:sisap2013},
-we do optimize the code for speed and use efficient implementations of distance functions 
-(see \S \ref{SectionEfficiency} for details).
-Oftentimes, it is possible to demonstrate a substantial reduction in the number
-of distance computations. 
-Less frequently, however, such improvements result in improved performance.
-Note that  disk-based indices are typically
-slower than memory-based ones. 
-Because efficiency is an important goal,
-we originally provide only in-memory implementations,
-which can be tested in either single- or multi-threaded mode.
-This simplification reduces programming effort.
-It is, nevertheless, possible to benchmark disk-based implementations as well (see \ref{SectionExtend} for details).
 In the current release, we focus on vector-space implementations,
 (i.e., all the distance functions are defined over real-valued vectors). 
-Note that this is not a principal limitation as many methods do not access the objects
-directly and, instead, rely only on distance values.
+Note that this is not a principal limitation, 
+because most methods do not access the objects
+directly. 
+Instead, they rely only on distance values.
 In the future, we plan to add more complex spaces, in particular, string-based.
 
+\section{Getting Started}
+\subsection{Prerequisites}
+The Non-Metric Space Library was developed and tested on 64-bit Linux.
+Yet, almost all the code (except LSHKIT) can be built and run on 64-bit Windows.
+Building the code requires a modern C++ compiler that supports \mbox{C++11}.
+Currently, we support G++ ($\ge4.7$), Intel compiler ($\ge14$), 
+Clang ($\ge4.2.1$), 
+and Visual Studio ($\ge12$). 
+Under Linux, the build process relies on CMake. 
+For Visual Studio (i.e., under Windows),
+one can use Visual Studio projects to build library components.
 
-\section{Prerequisites}
-The Non-Metric Space Library was created primarily as a research project.
-This is why we did not mean to create truly portable code.
-Yet, it is probably possible to build it (with minimum modifications) 
-using any C++ compiler as long as it supports the new C++ 11 standard.
+%Note, however, that we do not have a portable code to measure memory consumption:
+%This part will work only for Linux. 
 
-Efficient implementations of many distance functions (see \S~\ref{SectionEfficiency})
-rely on Single Instruction Multiple Data (SIMD) instructions. 
-These instructions, available on most modern Intel and AMD processors, 
-operate on small vectors. 
-However, each distance function has a pure C++ implementation,
-which should be automatically selected on other platforms.
-Note, however, that we do not have a portable code to measure memory consumption:
-This part will work only for Linux. 
-
-More specifically, we require:
+More specifically, for Linux we require:
 \begin{enumerate}
-\item A \textbf{64-bit} Linux;
-\item A GNU C++ compiler, version 4.7 (or higher), or the Intel compiler version 11;
-\item cmake (GNU make is also required);
+\item A \textbf{64-bit} Linux (Ubuntu \textbf{LTS} is recommended);
+\item G++ ($\ge4.7$), Intel Compiler ($\ge14$), Clang ($\ge4.2.1$);
+\item Cmake (GNU make is also required);
 \item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev});
 \item GNU scientific library (dev version, Ubuntu package \ttt{libgsl0-dev}).
 \end{enumerate}
-One needs Python to generate vectors with element values drawn from $U[0,1]$.
-To plot the graphs you need Python, Latex, and PGF. 
-Most of the code was tested and run on Linux Ubuntu (Intel CPU), 
-but it should be possible to run the code on other (perhaps, even non-Unix) platforms.
-If you decide to use Ubuntu, please, download an \textbf{LTS} version.
 
-Installing GNU C++ version 4.7 compiler may be tricky, because it is not always provided as a standard package.
-On some Linux distributions with the Debian package management system, you can simply type:
+For Windows, we require:
+\begin{enumerate}
+\item A \textbf{64-bit} Windows distributive; 
+\item Visual Studio Express (or Professional) version 12 or later;
+\item Boost is not required to build the core library and unit tests, 
+but it is needed by the main testing binary (see \S~\ref{SectionBuildWindows} for details). 
+\end{enumerate}
+
+Efficient implementations of many distance functions (see \S~\ref{SectionEfficiency})
+rely on Single Instruction Multiple Data (SIMD) operations,
+which operate on small  vectors of integer of floating point numbers. 
+These instructions are available on most modern processors,
+but we support only SIMD operations available on recent Intel and AMD processors.   
+Each distance function has a pure C++ implementation,
+which can be less efficient.
+On Linux, SIMD-based implementations are activated automatically 
+for all sufficiently recent CPUs. On Windows, it is necessary to update
+project settings manually (see \S\ref{SectionBuildWindows}).
+
+Scripts to generate and process data sets are written in Python.
+We also provide sample Python scripts to plot performance graphs (e.g, \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/sample_scripts/nips2013/figures/genplots_nips2013.py}{this} and \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/sample_scripts/sisap2013/figures/genplots_sisap2013.py}{that}).
+In addition to Python, these plotting scripts require Latex and PGF. 
+
+\subsection{Installing C++11 Compilers}
+Despite the new C++11 standard was approved four years ago, 
+A default C++ compiler in some OS distributives does not support C++11.
+Installing C++11 compilers can be tricky, 
+because they are not always provided as a standard package.
+This is why we briefly review the installation process here. 
+
+It is, perhaps, the easiest to obtain Visual Studio 12 by simply downloading
+it from the \href{http://www.microsoft.com/en-us/download/details.aspx?id=40787}{Microsoft 
+web-page}.
+We were able to build and run the 64-bit code using the free distributive of Visual Studio Express 12 (also called 
+\texttt{Express 2013}). The professional (and expensive) version of Visual Studio is not required. 
+
+
+To install GNU C++ version 4.7 on some Linux distributions with the Debian package management system, 
+one can simply type:
 \begin{verbatim}
 sudo apt-get install gcc-4.7 g++-4.7
 \end{verbatim}
@@ -240,26 +294,54 @@ sudo apt-get install python-software-properties
 \end{verbatim}
 More details can be found on the \href{http://askubuntu.com/questions/113291/how-do-i-install-gcc-4-7}{AskUbuntu web-site.}
 
-One pitfall is that installing GCC 4.7 or the Intel compiler does not make them a default compiler (in most cases).
-Thus, one may need to set environment variables \ttt{CXX} and \ttt{CC}.
+Similarly to G++, to install a C++11 version of Clang, one may need to add a non-standard repository.
+For Debian and Ubuntu distributions, it is easiest to add repositories from \href{http://llvm.org/apt/}{
+the LLVM web-site}. For example, if you have Ubuntu 12 (Precise), you need to add repositories
+as follows:\footnote{Do not forget to remove \texttt{deb-src} for source repositories.
+See the discussion \href{http://askubuntu.com/questions/160511/why-does-add-apt-repository-fail-to-add-source-repositories}{here for more details.}}
+\begin{verbatim}
+sudo add-apt-repository \
+  "deb http://llvm.org/apt/precise/ llvm-toolchain-precise main"
+sudo add-apt-repository \
+  "http://llvm.org/apt/precise/ llvm-toolchain-precise main"
+sudo add-apt-repository \
+  "deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.4 main"
+sudo add-apt-repository \
+  "http://llvm.org/apt/precise/ llvm-toolchain-precise-3.4 main"
+sudo add-apt-repository \
+  "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu \
+                                                  precise main"
+\end{verbatim}
+Then, Clang 3.4 (and LLDB debugger) can be installed by typing:
+\begin{verbatim}
+sudo apt-get install clang-3.4 lldb-3.4
+\end{verbatim}
+
+The Intel compiler can be freely used for non-commerical purposes.
+It is a part of C++ Composer XE for Linux and can 
+be obtained \href{http://software.intel.com/en-us/non-commercial-software-development}{from the Intel web site}.
+After downloading and running the install script, one needs to set environment variables.
+If the compiler is installed to the folder \texttt{/opt/intel}, environment variables
+are set by a script as follows:
+\begin{verbatim}
+/opt/intel/bin/compilervars.sh intel64
+\end{verbatim}
+
+One pitfall is that the installing GNU, Intel, Clang compiler may not be sufficient to 
+make them default compilers.
+One way to make them default compilers is to set environment variables \ttt{CXX} and \ttt{CC}.
 For the GNU 4.7 compiler:
 \begin{verbatim}
 export CXX=g++-4.7 CC=gcc-4.7 
+\end{verbatim}
+For the Clang compiler:
+\begin{verbatim}
+export CXX=clang++ CC=clang
 \end{verbatim}
 For the Intel compiler:
 \begin{verbatim}
 export CXX=icc CC=icc 
 \end{verbatim}
-
-The Intel compiler has a powerful math library, 
-which allows one to efficiently compute several hard distances functions
-such as the KL-divergence, the Jensen-Shanon divergence/metric, 
-the $L_p$ spaces for non-integer values of $p$.
-Unlike our custom implementation, which is used for non-Intel compilers,
-the Intel math library does not rely on tricks like pre-computation of logarithms at index time and
-allows, therefore, to store data in less space. 
-The Intel provides the compiler for individual (i.e., non-commercial use for free).
-The details can be found \href{http://software.intel.com/en-us/non-commercial-software-development}{on the Intel web site}.
 
 
 \section{Quick start}
@@ -731,6 +813,7 @@ Memory used is computed by querying special file \ttt{/dev/<process id>/status}.
 This works only for Linux as we do not have a portable code to measure memory consumption of a process.
 
 \subsubsection{Effectiveness}
+\label{SectionEffect}
 
 Several effectiveness metrics are computed by the benchmarking utility:
 \begin{itemize}
@@ -1469,6 +1552,8 @@ This is done in three steps, which we only outline here.
 A more detailed description can be found in \S~\ref{SectionCreateSpace}
 and \S~\ref{SectionCreateMethod}.
 
+\todonoteinline{Important for VS you need to use angle brackets!!!}
+
 In the first step, the user writes the code that implements a
 functionality of a method or a space.
 In the second step, the user writes a special helper file  
@@ -1843,6 +1928,16 @@ target_link_libraries (dummy_app NonMetricSpaceLib lshkit
 \end{itemize}
 
 \section{Notes on Efficiency}\label{SectionEfficiency}
+\todonoteinline{Integrate this part}.
+
+The Intel compiler has a powerful math library, 
+which allows one to efficiently compute several hard distances functions
+such as the KL-divergence, the Jensen-Shanon divergence/metric, 
+the $L_p$ spaces for non-integer values of $p$.
+Unlike our custom implementation, which is used for non-Intel compilers,
+the Intel math library does not rely on tricks like pre-computation of logarithms at index time and
+allows, therefore, to store data in less space. 
+
 \subsection{Efficient of Distance Functions}
 Note that improvement in efficiency and in the number of distance computations
 obtained with slow distance functions can be overly optimistic.

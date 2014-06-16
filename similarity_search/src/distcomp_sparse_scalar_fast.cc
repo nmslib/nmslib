@@ -92,11 +92,11 @@ float ScalarProjectFast(const char* pData1, size_t len1,
   const char*     pBlockBeg1 = NULL; 
   const char*     pBlockBeg2 = NULL;
 
-  float						buf1[MAX_BUFFER_QTY];
-  float						buf2[MAX_BUFFER_QTY];
-  unique_ptr<float[]>		mem1;
-  unique_ptr<float[]>		mem2;
-  size_t					allocQty = 0;
+  float                        buf1[MAX_BUFFER_QTY];
+  float                        buf2[MAX_BUFFER_QTY];
+  unique_ptr<float[]>        mem1;
+  unique_ptr<float[]>        mem2;
+  size_t                    allocQty = 0;
 
   ParseSparseElementHeader(pData1, blockQty1, norm1, pBlockQtys1, pBlockOffs1, pBlockBeg1);
   ParseSparseElementHeader(pData2, blockQty2, norm2, pBlockQtys2, pBlockOffs2, pBlockBeg2);
@@ -119,23 +119,23 @@ float ScalarProjectFast(const char* pData1, size_t len1,
 
       size_t mx = max(qty1, qty2);
 
-	  float* val1 = buf1;
+      float* val1 = buf1;
       float* val2 = buf2;
 
-	  /* 
-	   * Let's do some flexible memory allocation. 
-	   * If there is enough space on stack, use the stack,
-	   * otherwise allocate a large chunk of memory	  
-	   */
-	  if (mx > MAX_BUFFER_QTY) {
-		  if (allocQty < mx) {
-			  mem1.reset(new float[mx]);
-			  mem2.reset(new float[mx]);
-			  allocQty = mx;
-		  }
-		  val1 = mem1.get();
-		  val2 = mem2.get();
-	  }
+      /* 
+       * Let's do some flexible memory allocation. 
+       * If there is enough space on stack, use the stack,
+       * otherwise allocate a large chunk of memory      
+       */
+      if (mx > MAX_BUFFER_QTY) {
+          if (allocQty < mx) {
+              mem1.reset(new float[mx]);
+              mem2.reset(new float[mx]);
+              allocQty = mx;
+          }
+          val1 = mem1.get();
+          val2 = mem2.get();
+      }
   
       float* pVal1 = val1;
       float* pVal2 = val2;
@@ -169,13 +169,13 @@ float ScalarProjectFast(const char* pData1, size_t len1,
 
             int r1 = r & 15;
             __m128i v = _mm_loadu_si128(reinterpret_cast<const __m128i *>(&pBlockVals1[i1]));
-			__m128  vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r1]));
+            __m128  vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r1]));
             _mm_storeu_ps(pVal1, vs);
             pVal1 += _mm_popcnt_u32(r1);
 
             int r2 = (r >> 4) & 15;
             v = _mm_loadu_si128(reinterpret_cast<const __m128i *>(&pBlockVals1[i1+4]));
-			vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r2]));
+            vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r2]));
             _mm_storeu_ps(pVal1, vs);
             pVal1 += _mm_popcnt_u32(r2);
 
@@ -188,13 +188,13 @@ float ScalarProjectFast(const char* pData1, size_t len1,
             r1 = r & 15;
 
             v = _mm_loadu_si128(reinterpret_cast<const __m128i *>(&pBlockVals2[i2]));
-			vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r1]));
+            vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r1]));
             _mm_storeu_ps(pVal2, vs);
             pVal2 += _mm_popcnt_u32(r1);
 
             r2 = (r >> 4) & 15;
             v = _mm_loadu_si128(reinterpret_cast<const __m128i *>(&pBlockVals2[i2+4]));
-			vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r2]));
+            vs = _mm_castsi128_ps(_mm_shuffle_epi8(v, shuffle_mask16[r2]));
             _mm_storeu_ps(pVal2, vs);
             pVal2 += _mm_popcnt_u32(r2);
           }
@@ -214,7 +214,7 @@ float ScalarProjectFast(const char* pData1, size_t len1,
       }
   scalar_inter:
 #else
-	#pragma message WARN("No SSE 4.2, defaulting to scalar implementation!")
+    #pragma message WARN("No SSE 4.2, defaulting to scalar implementation!")
 #endif
 
       while (i1 < qty1 && i2 < qty2) {
@@ -240,7 +240,7 @@ float ScalarProjectFast(const char* pData1, size_t len1,
       
 
 #ifdef PORTABLE_SSE4
-	  ssize_t resQty4 = resQty / 4 * 4;
+      ssize_t resQty4 = resQty / 4 * 4;
 
       if (resQty4) {
         __m128 sum128 = _mm_set1_ps(0);
@@ -257,11 +257,11 @@ float ScalarProjectFast(const char* pData1, size_t len1,
         sum += MM_EXTRACT_FLOAT(sum128, 3);
       }
 
-	  for (ssize_t k = resQty4; k < resQty; ++k)
-		  sum += val1[k] * val2[k];
+      for (ssize_t k = resQty4; k < resQty; ++k)
+          sum += val1[k] * val2[k];
 #else
-	  for (ssize_t k = 0; k < resQty; ++k)
-		  sum += val1[k] * val2[k];
+      for (ssize_t k = 0; k < resQty; ++k)
+          sum += val1[k] * val2[k];
 #endif
 
     } else if (pBlockOffs1[bid1] < pBlockOffs2[bid2]) {

@@ -13,24 +13,31 @@ include_directories (${NonMetricSpaceLib_SOURCE_DIR}/include ${NonMetricSpaceLib
 file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/test*.cc)
 
 list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/bunit.cc)
+list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/test_integr.cc)
 list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/bench_distfunc.cc)
 
 add_executable (bunit bunit.cc ${TEST_SRC_FILES})
 add_executable (bench_distfunc bench_distfunc.cc)
+add_executable (test_integr test_integr.cc)
 
+add_dependencies (test_integr NonMetricSpaceLib)
 add_dependencies (bunit NonMetricSpaceLib)
 add_dependencies (bench_distfunc NonMetricSpaceLib)
 
 if (NOT WIN32)
   add_dependencies (bunit lshkit)
+  add_dependencies (bench_distfunc lshkit)
   set(LSHKIT_LIB "lshkit")
+  set(GSL_LIB    ${GSL_LIBRARIES})
 else()
 # NO lshkit for Win32
   set(LSHKIT_LIB "")
+  set(GSL_LIB "")
 endif()
 
-target_link_libraries (bunit NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIBRARIES} )
-target_link_libraries (bench_distfunc NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIBRARIES} )
+target_link_libraries (bunit NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} )
+target_link_libraries (bench_distfunc NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} )
+target_link_libraries (test_integr NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")
