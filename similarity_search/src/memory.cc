@@ -15,6 +15,7 @@
 */
 
 #include "memory.h"
+#include "logging.h"
 
 
 #ifdef __linux
@@ -28,9 +29,8 @@
 
 #ifdef _MSC_VER
 
-#include<windows.h>
-#include<stdio.h>   
-#include<tchar.h>
+#include <windows.h>
+#include <Psapi.h>
 
 #endif
 
@@ -63,12 +63,12 @@ MemUsage::get_vmsize() {
     return vmsize / 1024.0;
 #endif
 #ifdef _MSC_VER
-    MEMORYSTATUSEX statex;
+    PROCESS_MEMORY_COUNTERS memCounter;
+    bool result = GetProcessMemoryInfo(GetCurrentProcess(),
+        &memCounter,
+        sizeof(memCounter));
 
-    statex.dwLength = sizeof(statex);
-
-    GlobalMemoryStatusEx(&statex);
-    return statex.ullAvailVirtual / 1024.0 / 1024.0;
+    return (memCounter.WorkingSetSize) / 1024.0 / 1024.0;
 #endif
     return -1.0;
 }
