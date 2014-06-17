@@ -25,4 +25,9 @@
       <UniqueIdentifier>{3EF538C7-CC7F-4CC0-AA2E-461C0B950388}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="testdataset.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

@@ -55,6 +55,18 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">NonMetricSpaceLib</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
