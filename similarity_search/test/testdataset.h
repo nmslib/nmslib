@@ -29,6 +29,7 @@ using std::string;
 #ifdef _MSC_VER
 const string sampleDataPrefix = string("..") + PATH_SEPARATOR +
                                 string("..") + PATH_SEPARATOR +
+                                string("..") + PATH_SEPARATOR +
                                 string("..") + PATH_SEPARATOR + string("sample_data") + PATH_SEPARATOR;
 #else
 const string sampleDataPrefix = string("..") + PATH_SEPARATOR + string("sample_data") + PATH_SEPARATOR;
