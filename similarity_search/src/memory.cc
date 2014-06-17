@@ -21,6 +21,8 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdio.h>   
 
 #endif
 
@@ -36,7 +38,7 @@ namespace similarity {
 
 MemUsage::MemUsage() {
 #ifdef __linux
-            int pid = getpid());
+            int pid = getpid();
             snprintf(status_file_, sizeof(status_file_),
                 "/proc/%d/status", pid);
 #endif
