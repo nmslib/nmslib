@@ -116,13 +116,13 @@ MultiVantagePointTree<dist_t>::BuildTree(
       pivot2 = Remove(elist2, RandomInt() % elist2.size()).object;
       for (size_t i = 0; i < elist1.size(); ++i) {
         elist1[i].d2 = space->IndexTimeDistance(pivot2, elist1[i].object);
-        if (elist1[i].path.size() + 1 < MaxPathLength_) {
+        if (elist1[i].path.size() < MaxPathLength_) {
           elist1[i].path.push_back(elist1[i].d2);
         }
       }
       for (size_t i = 0; i < elist2.size(); ++i) {
         elist2[i].d2 = space->IndexTimeDistance(pivot2, elist2[i].object);
-        if (elist2[i].path.size() + 1 < MaxPathLength_) {
+        if (elist2[i].path.size() < MaxPathLength_) {
           elist2[i].path.push_back(elist2[i].d2);
         }
       }
@@ -208,7 +208,7 @@ void MultiVantagePointTree<dist_t>::GenericSearch(
     if (exists_p1 && query_path_len < MaxPathLength_) {
       path[query_path_len++] = dp1;
     }
-    if (exists_p2 && query_path_len + 1 < MaxPathLength_) {
+    if (exists_p2 && query_path_len < MaxPathLength_) {
       path[query_path_len++] = dp2;
     }
 
