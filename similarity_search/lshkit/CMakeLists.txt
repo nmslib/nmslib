@@ -1,4 +1,4 @@
-include_directories(${PROJECT_SOURCE_DIR}/lshkit/include ${Boost_INCLUDE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/include ${Boost_INCLUDE_DIR})
 
 set(lshkit_SRCS
   src/mplsh.cpp

@@ -17,6 +17,8 @@
     along with LSHKIT.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "logging.h"
+
 #include <cmath>
 #include <boost/functional.hpp>
 #include <boost/math/special_functions/digamma.hpp>
@@ -139,7 +141,7 @@ static double recall (__MpLshMdlHlpr *param)
     I.function = recall_helper;
     //if (gsl_integration_qagiu(&I, 0.0, ABS_ERROR, REL_ERROR, LIMIT, workspace, &f, &error) != 0) f = 1.0;
     if (gsl_integration_qagiu(&I, 0.0, ABS_ERROR, REL_ERROR, LIMIT, workspace, &f, &error) != 0) {
-      std::cout << "The integral didn't converge, assuming the recall is zero." << std::endl;
+      LOG(LIB_INFO) << "The integral didn't converge, assuming the recall is zero.";
       f = 0.0;
     }
     return f;

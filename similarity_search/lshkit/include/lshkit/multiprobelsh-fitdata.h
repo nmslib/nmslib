@@ -48,6 +48,8 @@ Allowed options:
 #ifndef _MPLSH_FITDATA_H_
 #define _MPLSH_FITDATA_H_
 
+#include "logging.h"
+
 #include <cstdlib>
 #include <sstream>
 #include <gsl/gsl_multifit.h>
@@ -69,7 +71,7 @@ std::string FitData(const FloatMatrix& data,
                     unsigned F             // divide the sample to F folds
                    )
 {
-    std::cout << "started running FitData" << std::endl;
+    LOG(LIB_INFO) << "started running FitData" << std::endl;
 
     std::vector<unsigned> idx(data.getSize());
     for (size_t i = 0; i < idx.size(); ++i) idx[i] = i;
@@ -197,9 +199,8 @@ std::string FitData(const FloatMatrix& data,
     gsl_vector_free(yM);
     gsl_vector_free(yG);
 
-    std::cout << ss.str();
-
-    std::cout << "finished FitData" << std::endl;
+    LOG(LIB_INFO) << ss.str(); 
+    LOG(LIB_INFO) << "finished FitData";
 
     return ss.str();
 }

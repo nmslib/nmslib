@@ -138,6 +138,8 @@
 #ifndef _MPLSH_TUNE_H_
 #define _MPLSH_TUNE_H_
 
+#include "logging.h"
+
 #include <boost/format.hpp>
 #include <lshkit.h>
 #include <lshkit/tune.h>
@@ -219,7 +221,7 @@ void MPLSHTune(unsigned N,                    // dataset size
                //unsigned r                   // radius
               )
 {
-    std::cout << "started running MPLSHTune" << std::endl;
+    LOG(LIB_INFO) << "started running MPLSHTune" ;
     gsl_set_error_handler_off();
 
     // restore initial values
@@ -268,7 +270,7 @@ void MPLSHTune(unsigned N,                    // dataset size
     */
 
     if (L <= 0 || T <= 0) {
-        std::cout << "You need to specify L and T." << std::endl;
+        LOG(LIB_INFO) << "You need to specify L and T." ;
         exit(1);
     }
 
@@ -303,7 +305,7 @@ void MPLSHTune(unsigned N,                    // dataset size
     int begin_M = intervals[2].begin;
     int end_M = intervals[2].end;
 
-    std::cout << "iter limits: begin_M " << begin_M << " end_M " << end_M << std::endl;
+    LOG(LIB_INFO) << "iter limits: begin_M " << begin_M << " end_M " << end_M ;
 
     double best_recall = 0.0;
     double best_cost = 1.0;
@@ -324,12 +326,12 @@ void MPLSHTune(unsigned N,                    // dataset size
 
         if (ok) {
             double CurrCost = cost(input);
-            std::cout << "iter " << m << " "
+            LOG(LIB_INFO) << "iter " << m << " "
             << boost::format("L = %d\tT = %d\tM = %d\tW = %g\trecall = %g\tcost = %g")
             % input[0] % input[1] % (MAX_M - input[2]) % ((MIN_W + DELTA_W * input[3]) * sqrt(scale))
             % ( recall_K(input)) % CurrCost 
             //% (do_K ? recall_K(input) : recall_R(input)) % cost(input)
-            << std::endl;
+            ;
 
 
             double recall = recall_K(input);
@@ -344,19 +346,19 @@ void MPLSHTune(unsigned N,                    // dataset size
             }
 
         } else {
-          std::cout << "Failed. iter " << m << std::endl;
+          LOG(LIB_INFO) << "Failed. iter " << m ;
         }
     }
 
     if (found) {
-      std::cout << "best_recall = " << best_recall << " ";
-      std::cout << "best_cost   = " << best_cost << " ";
-      std::cout << "M = " << M << " W = " << W << std::endl;
+      LOG(LIB_INFO) << "best_recall = " << best_recall << " ";
+      LOG(LIB_INFO) << "best_cost   = " << best_cost << " ";
+      LOG(LIB_INFO) << "M = " << M << " W = " << W ;
     } else {
-      std::cout << "could not tune M & W" << std::endl;
+      LOG(LIB_INFO) << "could not tune M & W" ;
       exit(1);
     }
-    std::cout << "MPLSHTune finished." << std::endl;
+    LOG(LIB_INFO) << "MPLSHTune finished." ;
 }
 
 }     // namespace lshkit

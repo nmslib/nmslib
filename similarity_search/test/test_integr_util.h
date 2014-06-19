@@ -13,116 +13,175 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+#ifndef TEST_INTEGR_UTILS_H
+#define TEST_INTEGR_UTILS_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#include <cmath>
-#include <limits>
 #include <string>
 #include <sstream>
 #include <vector>
-#include <fstream>
+#include <algorithm>
 #include <map>
 
-#include "init.h"
-#include "global.h"
 #include "utils.h"
-#include "memory.h"
-#include "ztimer.h"
-#include "experiments.h"
-#include "experimentconf.h"
-#include "space.h"
-#include "spacefactory.h"
-#include "logging.h"
 #include "report.h"
-#include "methodfactory.h"
 
-#include "meta_analysis.h"
-#include "params.h"
-
-using namespace similarity;
-
+using std::set;
 using std::multimap;
 using std::vector;
+using std::copy;
 using std::string;
 using std::stringstream;
 
-void OutData(bool DoAppend, const string& FilePrefix,
-             const string& Print, const string& Header, const string& Data) {
-  string FileNameData = FilePrefix + ".dat";
-  string FileNameRep  = FilePrefix + ".rep";
+using namespace similarity;
 
-  LOG(LIB_INFO) << "DoAppend? " << DoAppend;
+/*
+ * A data structure that defines 
+ * 1) Search parameters
+ * 2) Method parameters
+ * 3) Search outcome (recall range, range for the improvement in distance computation)
+ */
+struct MethodTestCase {
+  string  mDistType;
+  string  mSpaceType;
+  string  mDataSet;
+  string  mMethodDesc;
+  float   mRecallMin;
+  float   mRecallMax;
+  float   mNumCloserMin;
+  float   mNumCloserMax;
+  float   mImprDistCompMin;
+  float   mImprDistCompMax;
 
-  std::ofstream   OutFileData(FileNameData.c_str(),
-                              (DoAppend ? std::ios::app : (std::ios::trunc | std::ios::out)));
+  unsigned   mKNN;
+  float      mRange;
 
-  if (!OutFileData) {
-    LOG(LIB_FATAL) << "Cannot create output file: '" << FileNameData << "'";
-  }
-  OutFileData.exceptions(std::ios::badbit);
-
-  std::ofstream   OutFileRep(FileNameRep.c_str(),
-                              (DoAppend ? std::ios::app : (std::ios::trunc | std::ios::out)));
-
-  if (!OutFileRep) {
-    LOG(LIB_FATAL) << "Cannot create output file: '" << FileNameRep << "'";
-  }
-  OutFileRep.exceptions(std::ios::badbit);
-
-  if (!DoAppend) {
-      OutFileData << Header;
-  }
-  OutFileData<< Data;
-  OutFileRep<< Print;
-
-  OutFileRep.close();
-  OutFileData.close();
-}
+  MethodTestCase(
+               string distType,
+               string spaceType,
+               string dataSet,
+               string methodDesc,
+               unsigned  knn,
+               float range, 
+               float recallMin = 0, 
+               float recallMax = 0,
+               float numCloserMin = 0, 
+               float numCloserMax = 0,
+               float imprDistCompMin = 0, 
+               float imprDistCompMax = 0) :
+                   mDistType(distType),
+                   mSpaceType(spaceType),
+                   mDataSet(dataSet),
+                   mMethodDesc(methodDesc),
+                   mRecallMin(recallMin),
+                   mRecallMax(recallMax),
+                   mNumCloserMin(numCloserMin),
+                   mNumCloserMax(numCloserMax),
+                   mImprDistCompMin(imprDistCompMin),
+                   mImprDistCompMax(imprDistCompMax),
+                   mKNN(knn), mRange(range)
+                {
+                  ToLower(mDistType);
+                  ToLower(spaceType);
+                }
+};
 
 template <typename dist_t>
-void ProcessResults(const ExperimentConfig<dist_t>& config,
+bool ProcessAndCheckResults(
+                    const string& cmdStr,
+                    const string& dataSet,
+                    const string& distType,
+                    const string& spaceType,
+                    const MethodTestCase& testCase,
+                    const ExperimentConfig<dist_t>& config,
                     MetaAnalysis& ExpRes,
                     const string& MethDescStr,
                     const string& MethParamStr,
-                    string& PrintStr, // For display
-                    string& HeaderStr,
-                    string& DataStr   /* to be processed by a script */) {
+                    string& PrintStr // For display
+                    ) {
   std::stringstream Print, Data, Header;
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tRelPosError\tNumCloser\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tMethodParams" << std::endl;
-
-  Data << "\"" << MethDescStr << "\"\t";
-  Data << ExpRes.GetRecallAvg() << "\t";
-  Data << ExpRes.GetRelPosErrorAvg() << "\t";
-  Data << ExpRes.GetNumCloserAvg() << "\t";
-  Data << ExpRes.GetQueryTimeAvg() << "\t";
-  Data << ExpRes.GetDistCompAvg() << "\t";
-  Data << ExpRes.GetImprEfficiencyAvg() << "\t";
-  Data << ExpRes.GetImprDistCompAvg() << "\t";
-  Data << size_t(ExpRes.GetMemAvg()) << "\t";
-  Data << "\"" << MethParamStr << "\"";
-  Data << std::endl;
-
   PrintStr  = produceHumanReadableReport(config, ExpRes, MethDescStr, MethParamStr);
 
-  DataStr   = Data.str();
-  HeaderStr = Header.str();
+  bool bFail = false;
+
+  if (ExpRes.GetRecallAvg() < testCase.mRecallMin) {
+    cerr << "Failed to meet min recall requirement, expect >= " << testCase.mRecallMin 
+         << " got " << ExpRes.GetRecallAvg() << endl 
+         << " method: " << MethDescStr << " ; "
+         << " data set: " << dataSet << " ; "
+         << " dist value  type: " << distType << " ; "
+         << " space type: " << spaceType << endl << cmdStr << endl;
+    bFail = true;
+  }
+
+  if (ExpRes.GetRecallAvg() > testCase.mRecallMax) {
+    cerr << "Failed to meet max recall requirement, expect <= " << testCase.mRecallMax 
+         << " got " << ExpRes.GetRecallAvg() << endl 
+         << " method: " << MethDescStr << " ; "
+         << " data set: " << dataSet << " ; "
+         << " dist value  type: " << distType << " ; "
+         << " space type: " << spaceType << endl << cmdStr << endl;
+    bFail = true;
+  }
+
+  if (ExpRes.GetNumCloserAvg() < testCase.mNumCloserMin) {
+    cerr << "Failed to meet min # of points closer requirement, expect >= " << testCase.mNumCloserMin 
+         << " got " << ExpRes.GetNumCloserAvg() << endl 
+         << " method: " << MethDescStr << " ; "
+         << " data set: " << dataSet << " ; "
+         << " dist value  type: " << distType << " ; "
+         << " space type: " << spaceType << endl << cmdStr << endl;
+    bFail = true;
+  }
+
+  if (ExpRes.GetNumCloserAvg() > testCase.mNumCloserMax) {
+    cerr << "Failed to meet max # of points closer requirement, expect <= " << testCase.mNumCloserMax 
+         << " got " << ExpRes.GetNumCloserAvg() << endl 
+         << " method: " << MethDescStr << " ; "
+         << " data set: " << dataSet << " ; "
+         << " dist value  type: " << distType << " ; "
+         << " space type: " << spaceType << endl << cmdStr << endl;
+    bFail = true;
+  }
+
+  if (ExpRes.GetImprDistCompAvg() < testCase.mImprDistCompMin) {
+    cerr << "Failed to meet min improvement requirement in the # of distance computations, expect >= "
+         << testCase.mImprDistCompMin << " got " << ExpRes.GetImprDistCompAvg() << endl 
+         << " method: " << MethDescStr << " ; "
+         << " data set: " << dataSet << " ; "
+         << " dist value  type: " << distType << " ; "
+         << " space type: " << spaceType << endl << cmdStr << endl;
+    bFail = true;
+  }
+
+  if (ExpRes.GetImprDistCompAvg() > testCase.mImprDistCompMax) {
+    cerr << "Failed to meet max improvement requirement in the # of distance computations, expect <= "
+         << testCase.mImprDistCompMax << " got " << ExpRes.GetImprDistCompAvg() << endl 
+         << " method: " << MethDescStr << " ; "
+         << " data set: " << dataSet << " ; "
+         << " dist value  type: " << distType << " ; "
+         << " space type: " << spaceType << endl << cmdStr << endl;
+    bFail = true;
+  }
+
+  return !bFail;
 };
 
+/*
+ * returns the # of failed tests
+ */
 template <typename dist_t>
-void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
-             const string                 SpaceType,
+size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
+             const string& cmdStr,
+             const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
+             const string&                DataSet,
+             const string&                DistType, 
+             const string&                SpaceType,
              const shared_ptr<AnyParams>& SpaceParams,
              unsigned                     dimension,
              unsigned                     ThreadTestQty,
-             bool                         DoAppend, 
-             const string&                ResFilePrefix,
              unsigned                     TestSetQty,
              const string&                DataFile,
              const string&                QueryFile,
@@ -133,11 +192,11 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
              const string&                RangeArg
 )
 {
-  LOG(LIB_INFO) << "### Append? : "       << DoAppend;
-  LOG(LIB_INFO) << "### OutFilePrefix : " << ResFilePrefix;
   vector<dist_t> range;
 
-  bool bFail = false;
+  CHECK(MethodsDesc.size() == vTestCases.size());
+
+  size_t nFail = 0;
 
 
   if (!RangeArg.empty()) {
@@ -187,6 +246,8 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
     ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
     vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
+
+    bool bFailDueExcept = false;
 
     try {
       
@@ -270,13 +331,13 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
     } catch (const std::exception& e) {
       LOG(LIB_ERROR) << "Exception: " << e.what();
-      bFail = true;
+      bFailDueExcept = true;
     } catch (...) {
       LOG(LIB_ERROR) << "Unknown exception";
-      bFail = true;
+      bFailDueExcept = true;
     }
 
-    if (bFail) {
+    if (bFailDueExcept) {
       LOG(LIB_FATAL) << "Failure due to an exception!";
     }
   }
@@ -284,24 +345,19 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
   for (auto it = MethDescStr.begin(); it != MethDescStr.end(); ++it) {
     size_t MethNum = it - MethDescStr.begin();
 
-    // Don't overwrite file after we output data at least for one method!
-    bool DoAppendHere = DoAppend || MethNum;
 
     string Print, Data, Header;
 
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       MetaAnalysis* res = ExpResRange[i][MethNum];
 
-      ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
+      if (!ProcessAndCheckResults(cmdStr, DataSet, DistType, SpaceType, 
+                                  vTestCases[MethNum], config, *res, MethDescStr[MethNum], MethParams[MethNum], Print)) {
+        nFail++;
+      }
       LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
       LOG(LIB_INFO) << Print;
       LOG(LIB_INFO) << "Data: " << Header << Data;
-
-      if (!ResFilePrefix.empty()) {
-        stringstream str;
-        str << ResFilePrefix << "_r=" << config.GetRange()[i];
-        OutData(DoAppendHere, str.str(), Print, Header, Data);
-      }
 
       delete res;
     }
@@ -309,54 +365,71 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
       MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-      ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
+      if (!ProcessAndCheckResults(cmdStr, DataSet, DistType, SpaceType, 
+                                  vTestCases[MethNum], config, *res, MethDescStr[MethNum], MethParams[MethNum], Print)) {
+        nFail++;
+      }
       LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
       LOG(LIB_INFO) << Print;
       LOG(LIB_INFO) << "Data: " << Header << Data;
 
-      if (!ResFilePrefix.empty()) {
-        stringstream str;
-        str << ResFilePrefix << "_K=" << config.GetKNN()[i];
-        OutData(DoAppendHere, str.str(), Print, Header, Data);
-      }
-
       delete res;
     }
   }
+
+  return nFail;
 }
 
-int main(int ac, char* av[]) {
-  // This should be the first function called before
+inline char * StrDupNew(const char *p, size_t len = 0) {
+  if (!len) len = strlen(p);
+  char *res = new char[len + 1];
+  copy(p, p + len + 1, res);
+  return res;
+};
 
-  WallClockTimer timer;
-  timer.reset();
+bool RunOneTest(size_t threadQty,
+                const vector<MethodTestCase>& vTestCases, 
+                const vector<string>& vArgv) {
+  vector<char *>   argv = {StrDupNew("experiment")}; // the first argument is a program's name
 
+  bool bTestRes = true;
 
-  string                LogFile;
+  stringstream cmd;
+
+  for (string s: vArgv)
+    cmd << s << " ";
+
+  cerr << endl << "Test arguments: " << cmd.str() << endl;
+
+  for (unsigned i = 0; i < vArgv.size(); ++i) argv.push_back(StrDupNew(vArgv[i].c_str()));
+
   string                DistType;
   string                SpaceType;
   shared_ptr<AnyParams> SpaceParams;
-  bool                  DoAppend;
+  bool                  DoAppend = false;
   string                ResFilePrefix;
-  unsigned              TestSetQty;
+  unsigned              TestSetQty = 10;
   string                DataFile;
   string                QueryFile;
-  unsigned              MaxNumData;
-  unsigned              MaxNumQuery;
+  unsigned              MaxNumData = 0;
+  unsigned              MaxNumQuery = 1000;
   vector<unsigned>      knn;
   string                RangeArg;
-  unsigned              dimension;
+  string                tmp1;
+  unsigned              tmp2;
+  unsigned              dimension = 0;
   float                 eps = 0.0;
-  unsigned              ThreadTestQty;
+
 
   vector<shared_ptr<MethodWithParams>>        MethodsDesc;
 
-  ParseCommandLine(ac, av, LogFile,
+ 
+  ParseCommandLine(argv.size(), &argv[0], tmp1,
                        DistType,
                        SpaceType,
                        SpaceParams,
                        dimension,
-                       ThreadTestQty,
+                       tmp2,
                        DoAppend, 
                        ResFilePrefix,
                        TestSetQty,
@@ -369,20 +442,19 @@ int main(int ac, char* av[]) {
                        RangeArg,
                        MethodsDesc);
 
-  initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
-
-  LOG(LIB_INFO) << "Program arguments are processed";
 
   ToLower(DistType);
 
   if ("int" == DistType) {
-    RunExper<int>(MethodsDesc,
+    bTestRes = RunTestExper<int>(vTestCases,
+                  cmd.str(),
+                  MethodsDesc,
+                  DataFile,
+                  DistType,
                   SpaceType,
                   SpaceParams,
                   dimension,
-                  ThreadTestQty,
-                  DoAppend, 
-                  ResFilePrefix,
+                  threadQty,
                   TestSetQty,
                   DataFile,
                   QueryFile,
@@ -393,13 +465,15 @@ int main(int ac, char* av[]) {
                   RangeArg
                  );
   } else if ("float" == DistType) {
-    RunExper<float>(MethodsDesc,
+    bTestRes = RunTestExper<float>(vTestCases,
+                  cmd.str(),
+                  MethodsDesc,
+                  DataFile,
+                  DistType,
                   SpaceType,
                   SpaceParams,
                   dimension,
-                  ThreadTestQty,
-                  DoAppend, 
-                  ResFilePrefix,
+                  threadQty,
                   TestSetQty,
                   DataFile,
                   QueryFile,
@@ -410,14 +484,16 @@ int main(int ac, char* av[]) {
                   RangeArg
                  );
   } else if ("double" == DistType) {
-    RunExper<double>(MethodsDesc,
+    bTestRes = RunTestExper<double>(vTestCases,
+                  cmd.str(),
+                  MethodsDesc,
+                  DataFile,
+                  DistType,
                   SpaceType,
                   SpaceParams,
                   dimension,
-                  ThreadTestQty,
+                  threadQty,
                   DoAppend, 
-                  ResFilePrefix,
-                  TestSetQty,
                   DataFile,
                   QueryFile,
                   MaxNumData,
@@ -430,9 +506,9 @@ int main(int ac, char* av[]) {
     LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
   }
 
-  timer.split();
-  LOG(LIB_INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
-  LOG(LIB_INFO) << "Finished at " << LibGetCurrentTime();
+  for (char *p: argv) delete [] p;
 
-  return 0;
-}
+  return bTestRes;
+};
+
+#endif

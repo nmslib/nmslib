@@ -27,6 +27,9 @@ namespace similarity {
 using std::vector;
 using std::string;
 
+/*
+ * A helper class to integrate results
+ */
 class MetaAnalysis {
 public:
   MetaAnalysis(size_t TestSetQty, double zVal = 1.96) : zVal_(zVal) {

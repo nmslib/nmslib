@@ -29,15 +29,17 @@ if (NOT WIN32)
   add_dependencies (bench_distfunc lshkit)
   set(LSHKIT_LIB "lshkit")
   set(GSL_LIB    ${GSL_LIBRARIES})
+  set(BOOST_LIB  ${Boost_LIBRARIES})
 else()
 # NO lshkit for Win32
   set(LSHKIT_LIB "")
   set(GSL_LIB "")
+  set(BOOST_LIB "")
 endif()
 
 target_link_libraries (bunit NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} )
 target_link_libraries (bench_distfunc NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} )
-target_link_libraries (test_integr NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} )
+target_link_libraries (test_integr NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")

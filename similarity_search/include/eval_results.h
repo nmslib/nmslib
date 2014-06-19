@@ -259,7 +259,11 @@ private:
       }
     }
 
-    size_t ExactResultSize = K_ ? K_:ExactResultSet_.size();
+    size_t ExactResultSize = K_ ? min(K_,ExactResultSet_.size()) /* If the data set is tiny
+                                                                    there may be less than K_
+                                                                    answers */
+                                  :
+                                  ExactResultSet_.size();
 
     if (ExactResultSet_.empty()) Recall_ = 1.0;
     /* 

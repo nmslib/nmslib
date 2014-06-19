@@ -100,12 +100,12 @@ public:
                      vals[1].begin(), vals[1].end(),
                      inter.begin()) - inter.begin();
     /*
-     * We compute the size of the intersection.
-     * If it is equal to the size of one of the original 
+     * We computed the size of the intersection.
+     * If it is equal to the size of either of the original 
      * param lists (entries in the exception lists are excluded
      * at this point), then both sets are equal.
      */
-    return qty == vals[0].size();    
+    return qty == vals[0].size() == vals[1].size();    
   }
 
   string ToString() const {
@@ -256,7 +256,7 @@ struct MethodWithParams {
 	                    methPars_(methPars) {}				
 };
 
-void ParseCommandLine(int argc, char*av[],
+void ParseCommandLine(int argc, char *av[],
                       string&                 LogFile,
                       string&                 DistType,
                       string&                 SpaceType,
