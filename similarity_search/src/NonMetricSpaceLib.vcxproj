@@ -252,6 +252,7 @@
     <ClCompile Include="init.cc" />
     <ClCompile Include="knnquery.cc" />
     <ClCompile Include="logging.cc" />
+    <ClCompile Include="memory.cc" />
     <ClCompile Include="query.cc" />
     <ClCompile Include="rangequery.cc" />
     <ClCompile Include="searchoracle.cc" />
