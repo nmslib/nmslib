@@ -75,6 +75,8 @@ MultiProbeLSH<dist_t>::MultiProbeLSH(const Space<dist_t>* space,
   LOG(LIB_INFO) << "W (width) :               "  << W;
   LOG(LIB_INFO) << "T (# of probes) :         "  << T;
   LOG(LIB_INFO) << "R (desired recall) :      "  << R;
+  LOG(LIB_INFO) << "P (# of sample pairs) :   "  << P;
+  LOG(LIB_INFO) << "Q (# of sample queries) : "  << Q;
 
   lshkit::FloatMatrix::Accessor accessor(*matrix_);
   LshIndexType::Parameter param;

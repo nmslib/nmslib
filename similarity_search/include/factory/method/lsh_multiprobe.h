@@ -61,6 +61,9 @@ Index<dist_t>* CreateLSHMultiprobe(bool PrintProgress,
     // search for K neighbors neighbors
     unsigned K = LSH_TuneK;
 
+    pmgr.GetParamOptional("numSamplePairs",  P);
+    pmgr.GetParamOptional("numSampleQueries",  Q);
+
     LOG(LIB_INFO) << "lshTuneK: " << K;
     // divide the sample to F folds
     unsigned F = 10;

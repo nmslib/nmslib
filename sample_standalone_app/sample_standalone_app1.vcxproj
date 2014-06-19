@@ -221,7 +221,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="test_app.cc" />
+    <ClCompile Include="sample_standalone_app1.cc" />
     <ClCompile Include="data.cc" />
   </ItemGroup>
   <ItemGroup>

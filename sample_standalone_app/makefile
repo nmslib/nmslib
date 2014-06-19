@@ -13,7 +13,7 @@ CXXFLAGS += -std=c++11
 #CXXFLAGS += -g
 CXXFLAGS += -g -O3
 
-BIN=test_app test_bench
+BIN=sample_standalone_app1 sample_standalone_app2
 
 all: $(BIN)
 
@@ -21,8 +21,8 @@ clean:
 	rm -f *.o $(BIN)
 
 # Note -pthread: this enables threads!!!
-test_app: test_app.o data.o *.h makefile
-	$(CXX) -o$@ test_app.o data.o -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread
+sample_standalone_app1: sample_standalone_app1.o data.o *.h makefile
+	$(CXX) -o$@ sample_standalone_app1.o data.o -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread
 
-test_bench: test_bench.o  *.h makefile
-	$(CXX) -o$@ test_bench.o  -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread
+sample_standalone_app2: sample_standalone_app2.o  *.h makefile
+	$(CXX) -o$@ sample_standalone_app2.o  -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread
