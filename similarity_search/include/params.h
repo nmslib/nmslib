@@ -105,7 +105,7 @@ public:
      * param lists (entries in the exception lists are excluded
      * at this point), then both sets are equal.
      */
-    return qty == vals[0].size() == vals[1].size();    
+    return qty == vals[0].size() && qty == vals[1].size();    
   }
 
   string ToString() const {

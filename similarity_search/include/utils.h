@@ -20,6 +20,7 @@
 #include <cctype>
 #include <cstddef>
 #include <cmath>
+#include <cstdint>
 #include <algorithm>
 #include <sstream>
 #include <string>
@@ -121,16 +122,14 @@ inline dist_t DistMax() {
   return std::numeric_limits<dist_t>::max() / 2;
 }
 
-template <typename T>
-inline bool ApproxEqual(const T& x, const T& y) {
-  // In C++ 11, std::abs is also defined for floating-point numbers
-  return std::abs(x - y) <= std::numeric_limits<T>::epsilon();
-}
+/* 
+ * For floating-point numbers let's consider numbers to be 
+ * equal if they are within 4 units in the last place (ULPs)
+ */
+#define MAX_ULPS 4
 
 template <typename T>
-inline bool ApproxLess(const T& x, const T& y) {
-  return x + std::numeric_limits<T>::epsilon() < y;
-}
+bool ApproxEqual(const T& x, const T& y, unsigned maxUlps = MAX_ULPS);
 
 inline double round1(double x) { return round(x*10.0)/10.0; }
 inline double round2(double x) { return round(x*100.0)/100.0; }

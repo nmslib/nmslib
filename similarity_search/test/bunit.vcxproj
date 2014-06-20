@@ -228,6 +228,7 @@
     <ClCompile Include="test_lpnorm.cc" />
     <ClCompile Include="test_object.cc" />
     <ClCompile Include="test_timer.cc" />
+    <ClCompile Include="test_fp.cc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)src\NonMetricSpaceLib.vcxproj">

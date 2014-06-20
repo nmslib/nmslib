@@ -53,8 +53,7 @@ using std::vector;
 using std::string;
 using std::stringstream;
 
-// Let's do it single-thread
-#define MAX_THREAD_QTY 1
+#define MAX_THREAD_QTY 4
 #define TEST_SET_QTY  "10"
 #define MAX_NUM_QUERY "100"
 
@@ -64,15 +63,15 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 55, 65),  
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10,alphaLeft=2,alphaRight=2", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.94, 0.97, 0.03, 0.09, 120, 160),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.93, 0.97, 0.03, 0.09, 120, 160),  
   MethodTestCase("float", "l2", "final128_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 1.5, 1.8),  
   MethodTestCase("float", "l2", "final128_10K.txt", "vptree:chunkBucket=1,bucketSize=10,alphaLeft=2,alphaRight=2", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.99, 0.999, 0.0, 0.01, 2.9, 3.4),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.98, 1.0, 0.0, 0.02, 2.8, 3.4),  
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 20, 24),  
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10,alphaLeft=2,alphaRight=2", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.94, 0.95, 0.0, 0.02, 56, 63),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.93, 0.96, 0.0, 0.02, 56, 63),  
   MethodTestCase("float", "l2", "final128_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 1.1, 1.3),  
   MethodTestCase("float", "l2", "final128_10K.txt", "vptree:chunkBucket=1,bucketSize=10,alphaLeft=2,alphaRight=2", 
@@ -155,8 +154,16 @@ int main(int ac, char* av[]) {
 
       if (!vTestCases.empty())  { // Not all combinations of spaces, data sets, and search types are non-empty
         for (size_t k = 1; k <= MAX_THREAD_QTY; ++k) {
+          vArgv.push_back("--threadTestQty");
+          stringstream cmn;
+          cmn << k;
+          vArgv.push_back(cmn.str());
+
           nTest += vTestCases.size();
-          nFail += RunOneTest(k, vTestCases, vArgv);
+          nFail += RunOneTest(vTestCases, vArgv);
+
+          vArgv.erase(vArgv.begin() + vArgv.size() - 1);
+          vArgv.erase(vArgv.begin() + vArgv.size() - 1);
         }
       }
     }
@@ -184,8 +191,16 @@ int main(int ac, char* av[]) {
 
       if (!vTestCases.empty())  { // Not all combinations of spaces, data sets, and search types are non-empty
         for (size_t k = 1; k <= MAX_THREAD_QTY; ++k) {
+          vArgv.push_back("--threadTestQty");
+          stringstream cmn;
+          cmn << k;
+          vArgv.push_back(cmn.str());
+
           nTest += vTestCases.size();
-          nFail += RunOneTest(k, vTestCases, vArgv);
+          nFail += RunOneTest(vTestCases, vArgv);
+
+          vArgv.erase(vArgv.begin() + vArgv.size() - 1);
+          vArgv.erase(vArgv.begin() + vArgv.size() - 1);
         }
       }
 

@@ -169,14 +169,7 @@ private:
   void GetKNNData(const KNNQuery<dist_t>* query) {
     K_ = query->GetK();
     for (size_t i = 0; i < ExactDists_.size(); ++i) {
-      /* 
-       * TODO (@leo) are there situations where we need to compare distances approximately?
-       */
-#if 0
-      if (i < K_ || (i && ApproxEqual(ExactDists_[i].first, ExactDists_[i-1].first))) {
-#else
       if (i < K_ || (i && ExactDists_[i].first == ExactDists_[i-1].first)) {
-#endif
         ExactResultSet_.insert(ExactDists_[i].second->id());
       }
       else break; // ExactDists are sorted by distance
@@ -285,42 +278,34 @@ private:
       CHECK(ApproxEntries_.size() <= ExactDists_.size());
 
       for (size_t k = 0, p = 0; k < ApproxEntries_.size(); ++k) {
-        if (ApproxEntries_[k].mDist -  ExactDists_[p].first < 0 
-            //&&
-            
-            //!ApproxEqual(ApproxEntries_[k].mDist, ExactDists_[p].first)
-          ) {
+        const auto& elemApprox = ApproxEntries_[k];
+        const auto& elemExact  = ExactDists_[p];
+        if (elemApprox.mDist -  elemExact.first < 0 
+            && elemApprox.mId != elemExact.second->id()
+            ) {
           double mx = std::abs(std::max(ApproxEntries_[k].mDist, ExactDists_[p].first));
           double mn = std::abs(std::min(ApproxEntries_[k].mDist, ExactDists_[p].first));
   
-          const double epsRel = 1e-8;
-          const double epsAbs = 1e-8;
-          /*
-           * TODO: @leo These eps are quite adhoc.
-           *            There may be a bug here (where approx is better than exact??), 
-           *            to reproduce a situation when the below condition is triggered 
-           *            for epsRel = 1e-5 use & epsAbs = 1-e5:
-           *            release/experiment  --dataFile ~/TextCollect/VectorSpaces/colors112.txt --knn 1 --testSetQty 1 --maxNumQuery 1000  --method vptree:alphaLeft=0.8,alphaRight=0.8  -s cosinesimil
-           *
-           */
-          if (mx > 0 && (1- mn/mx) > epsRel && (mx - mn) > epsAbs) {
-            for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxEntries_.size()); ++i ) {
-              LOG(LIB_INFO) << "Ex: " << ExactDists_[i].first << 
-                           " -> Apr: " << ApproxEntries_[i].mDist << 
-                           " 1 - ratio: " << (1 - mn/mx) << " diff: " << (mx - mn);
-            }
-            LOG(LIB_FATAL) << "bug: the approximate query should not return objects "
-                   << "that are closer to the query than object returned by "
-                   << "(exact) sequential searching!"
-                   << " Approx: " << ApproxEntries_[k].mDist
-                   << " Exact: "  << ExactDists_[p].first;
+          for (size_t i = 0; i < std::min(ExactDists_.size(), ApproxEntries_.size()); ++i ) {
+            LOG(LIB_INFO) << "Ex: " << ExactDists_[i].first << " id = " << ExactDists_[i].second->id() <<
+                         " -> Apr: "<< ApproxEntries_[i].mDist << " id = " << ApproxEntries_[i].mId << 
+                         " 1 - ratio: " << (1 - mn/mx) << " diff: " << (mx - mn);
           }
+          LOG(LIB_FATAL) << "bug: the approximate query should not return objects "
+                         << "that are closer to the query than object returned by "
+                         << "(exact) sequential searching!"
+                         << " Approx: " << elemApprox.mDist << " id = " << elemApprox.mId 
+                         << " Exact: "  << elemExact.first  << " id = " << elemExact.second->id();
         }
         size_t LastEqualP = p;
-        if (p < ExactDists_.size() && ApproxEqual(ExactDists_[p].first, ApproxEntries_[k].mDist)) {
+        if (p < ExactDists_.size() && 
+            (elemApprox.mDist ==  elemExact.first || elemApprox.mId == elemExact.second->id())) {
           ++p;
         } else {
-          while (p < ExactDists_.size() && ExactDists_[p].first < ApproxEntries_[k].mDist) {
+          while (p < ExactDists_.size() && 
+                 ExactDists_[p].first < ApproxEntries_[k].mDist &&
+                 ExactDists_[p].second->id() != ApproxEntries_[k].mId
+                ) {
             ++p;
             ++LastEqualP;
           }

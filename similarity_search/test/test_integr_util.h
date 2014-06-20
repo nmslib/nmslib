@@ -387,8 +387,7 @@ inline char * StrDupNew(const char *p, size_t len = 0) {
   return res;
 };
 
-bool RunOneTest(size_t threadQty,
-                const vector<MethodTestCase>& vTestCases, 
+bool RunOneTest(const vector<MethodTestCase>& vTestCases, 
                 const vector<string>& vArgv) {
   vector<char *>   argv = {StrDupNew("experiment")}; // the first argument is a program's name
 
@@ -403,6 +402,7 @@ bool RunOneTest(size_t threadQty,
 
   for (unsigned i = 0; i < vArgv.size(); ++i) argv.push_back(StrDupNew(vArgv[i].c_str()));
 
+  size_t                threadQty = 1;
   string                DistType;
   string                SpaceType;
   shared_ptr<AnyParams> SpaceParams;
