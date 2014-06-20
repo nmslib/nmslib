@@ -23,10 +23,17 @@
 
 namespace similarity {
 
+#ifdef __linux
 const std::string green = "\x1b[32m";
 const std::string red = "\x1b[31m";
 const std::string yellow = "\x1b[33m";
 const std::string no_color = "\x1b[0m";
+#else
+const std::string green;
+const std::string red;
+const std::string yellow;
+const std::string no_color;
+#endif
 
 TestRunner& TestRunner::Instance() {
   static TestRunner instance;
