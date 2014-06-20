@@ -9,7 +9,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bunit", "test\bunit.vcxproj
 		{08B5B5CC-2938-4C1C-B835-A3868076D791} = {08B5B5CC-2938-4C1C-B835-A3868076D791}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bunit", "test\bench_distfunc.vcxproj", "{3244B2CA-B3D3-41BC-BD55-D3C937D7D00B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bench_distfunc", "test\bench_distfunc.vcxproj", "{3244B2CA-B3D3-41BC-BD55-D3C937D7D00B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{08B5B5CC-2938-4C1C-B835-A3868076D791} = {08B5B5CC-2938-4C1C-B835-A3868076D791}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_integr", "test\test_integr.vcxproj", "{B078DA10-B28A-4CB8-B07E-61E93B100B1F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{08B5B5CC-2938-4C1C-B835-A3868076D791} = {08B5B5CC-2938-4C1C-B835-A3868076D791}
 	EndProjectSection
@@ -64,6 +69,12 @@ Global
 		{3244B2CA-B3D3-41BC-BD55-D3C937D7D00B}.Release|x64.Build.0 = Release|x64
 		{3244B2CA-B3D3-41BC-BD55-D3C937D7D00B}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
 		{3244B2CA-B3D3-41BC-BD55-D3C937D7D00B}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
+		{B078DA10-B28A-4CB8-B07E-61E93B100B1F}.Debug|x64.ActiveCfg = Debug|x64
+		{B078DA10-B28A-4CB8-B07E-61E93B100B1F}.Debug|x64.Build.0 = Debug|x64
+		{B078DA10-B28A-4CB8-B07E-61E93B100B1F}.Release|x64.ActiveCfg = Release|x64
+		{B078DA10-B28A-4CB8-B07E-61E93B100B1F}.Release|x64.Build.0 = Release|x64
+		{B078DA10-B28A-4CB8-B07E-61E93B100B1F}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
+		{B078DA10-B28A-4CB8-B07E-61E93B100B1F}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
 		{46643623-A4FA-4185-8DB2-61D4FAAF6A53}.Debug|x64.ActiveCfg = Debug|x64
 		{46643623-A4FA-4185-8DB2-61D4FAAF6A53}.Debug|x64.Build.0 = Debug|x64
 		{46643623-A4FA-4185-8DB2-61D4FAAF6A53}.Release|x64.ActiveCfg = Release|x64

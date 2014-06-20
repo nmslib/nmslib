@@ -68,7 +68,12 @@ MemUsage::get_vmsize() {
         &memCounter,
         sizeof(memCounter));
 
-    return (memCounter.WorkingSetSize) / 1024.0 / 1024.0;
+    /*
+     * This seems to be a decent estimates of currently used 
+     * RESIDENT memory size
+     * see, e.g., http://social.msdn.microsoft.com/Forums/vstudio/en-US/bda6a289-42e7-41f7-a42b-6a89b623c89c/process-ram-usage-in-visual-c?forum=vcgeneral
+     */
+    return memCounter.WorkingSetSize / 1024.0 / 1024.0;
 #endif
     return -1.0;
 }

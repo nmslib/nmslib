@@ -183,17 +183,17 @@ TEST(FP_LongDouble4) {
 }
 
 TEST(FP_NANFloat) {
-  static float __nan = 0.0f/0.0f; 
+  static float __nan = numeric_limits<float>::quiet_NaN();
   testNotEqualFP<float>(__nan, __nan);
 };
 
 TEST(FP_NANDouble) {
-  static double __nan = 0.0/0.0; 
+    static double __nan = numeric_limits<double>::quiet_NaN();
   testNotEqualFP<double>(__nan, __nan);
 };
 
 TEST(FP_NANLongDouble) {
-  static long double __nan = ((long double)0.0)/0.0; 
+  static long double __nan = numeric_limits<long double>::quiet_NaN();
   testNotEqualFP<long double>(__nan, __nan);
 };
 
