@@ -9,7 +9,7 @@ my $MaxNumQuery=1000;
 
 my $SpaceType = "L2"; 
 my $TestSetQty=1;
-my $NumPivot=128;
+my $NumPivot=32;
 my $BucketSize = 50;
 my $alphaLeft=3;
 my $alphaRight=3;
@@ -21,7 +21,8 @@ my $NumPivotNeighb=1024;
 my $ChunkIndexSize=32768;
 
 my @DataSet       = ("cophir", "sift_texmex_base1m", "final256", "unif64", "wikipedia_lsi128");
-my @MaxScanFracs  = (0.1     ,                 0.1,       0.1,        0.2,                0.1);
+my @MaxScanFracs  = (0.025   ,                0.025,       0.1,     0.05,                0.1);
+my @MaxLeavesLC   = (45,     ,                35,          25,        15,                  5);
 
 my %Use =           ( "cophir" => 1, "sift_texmex_base1m" => 1, "final256" => 0, "unif64" => 1, "wikipedia_lsi128" => 0);
 
@@ -122,13 +123,18 @@ sub RunTest {
       if (defined($MaxNumData)) { $cmd .= " --maxNumData $MaxNumData "; }
 
       for (my $i = 0; $i < $TestQty; ++$i) { 
-        my $DbScanFrac = $MaxDbScanFrac * ($TestQty - $i) / $TestQty;
+        my $DbScanFrac = $MaxDbScanFrac * ($TestQty - $i) / $TestQty / 2.0;
         $cmd .= " --method perm_incsort:numPivot=$NumPivot,dbScanFrac=$DbScanFrac";
       }
 
       for (my $i = 0; $i < $TestQty; ++$i) { 
         my $DbScanFrac = $MaxDbScanFrac * ($TestQty - $i) / $TestQty;
         $cmd .= " --method perm_vptree:numPivot=$NumPivot,dbScanFrac=$DbScanFrac,alphaLeft=$alphaLeft,alphaRight=$alphaRight";
+      }
+
+      for (my $i = 0; $i < $TestQty; ++$i) { 
+        my $maxLC = $MaxLeavesLC[$i];
+        $cmd .= " --method list_clusters:bucketSize=1000,maxLeavesToVisit=$maxLC";
       }
 
       for (my $i = 0; $i < $TestQty; ++$i) { 
@@ -142,7 +148,6 @@ sub RunTest {
       my @initSearchAttempt = (15,12,9,6,3,1);
 
       for (my $i = 0; $i < $TestQty; ++$i) { 
-        my $DbScanFrac = $MaxDbScanFrac * ($TestQty - $i) / $TestQty;
         my $ip1 = $i + 1;
   
         my $attempt = $initSearchAttempt[$i];
