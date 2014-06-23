@@ -22,7 +22,7 @@ my $ChunkIndexSize=32768;
 
 my @DataSet       = ("cophir", "sift_texmex_base1m", "final256", "unif64", "wikipedia_lsi128");
 my @MaxScanFracs  = (0.025   ,                0.025,       0.1,     0.05,                0.1);
-my @MaxLeavesLC   = (42,     ,                42,          42,        42,                  42);
+my @MaxLeavesLC   = (150     ,                 130,        100,      300,                100);
 
 my %Use =           ( "cophir" => 1, "sift_texmex_base1m" => 1, "final256" => 0, "unif64" => 1, "wikipedia_lsi128" => 0);
 
@@ -135,7 +135,7 @@ sub RunTest {
       for (my $i = 0; $i < $TestQty; ++$i) { 
         my $d = sprintf("%d", $MaxLeavesLC[$dc] / ($TestQty + 1));
         my $maxLC = $MaxLeavesLC[$dc] - $i * $d;
-        $cmd .= " --method list_clusters:bucketSize=1000,maxLeavesToVisit=$maxLC";
+        $cmd .= " --method list_clusters:bucketSize=250,maxLeavesToVisit=$maxLC";
       }
 
       for (my $i = 0; $i < $TestQty; ++$i) { 
