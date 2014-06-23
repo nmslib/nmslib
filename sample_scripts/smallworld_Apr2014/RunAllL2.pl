@@ -23,8 +23,10 @@ my $ChunkIndexSize=32768;
 my @DataSet       = ("cophir", "sift_texmex_base1m", "final256", "unif64", "wikipedia_lsi128");
 my @MaxScanFracs  = (0.025   ,                0.025,       0.1,     0.05,                0.1);
 my @MaxLeavesLC   = (150     ,                 130,        100,      300,                100);
+my @MinTimesMin   = (4       ,                   4,        4,          1,                  4);
 
 my %Use =           ( "cophir" => 1, "sift_texmex_base1m" => 1, "final256" => 0, "unif64" => 1, "wikipedia_lsi128" => 0);
+#my %Use =           ( "cophir" => 0, "sift_texmex_base1m" => 0, "final256" => 0, "unif64" => 1, "wikipedia_lsi128" => 0);
 
 #RunTest(1);
 RunTest(10);
@@ -158,9 +160,8 @@ sub RunTest {
 
       }
 
-      my @minTimes = (4, 6, 8, 10, 12, 14);
       for (my $i = 0; $i < $TestQty; ++$i) { 
-        my $mt = $minTimes[$i];
+        my $mt = $MinTimesMin + 2 * $i;
         $cmd .= " --method pivot_neighb_invindx:numPivot=$NumPivotNeighb,numPrefix=$NumPrefixNeighb,useSort=0,invProcAlg=scan,minTimes=$mt,indexThreadQty=$indexThreadQty,chunkIndexSize=$ChunkIndexSize ";
       }
 
