@@ -51,12 +51,6 @@ sub RunTest {
       if (defined($MaxNumData)) { $cmd .= " --maxNumData $MaxNumData "; }
 
       for (my $i = 0; $i < $TestQty; ++$i) { 
-        my $d = sprintf("%d", $MaxLeavesLC[$dc] / ($TestQty + 1));
-        my $maxLC = $MaxLeavesLC[$dc] - $i * $d;
-        $cmd .= " --method list_clusters:bucketSize=250,maxLeavesToVisit=$maxLC";
-      }
-
-      for (my $i = 0; $i < $TestQty; ++$i) { 
         my $DbScanFrac = $MaxDbScanFrac * ($TestQty - $i) / $TestQty;
         $cmd .= " --method perm_incsort:numPivot=$NumPivot,dbScanFrac=$DbScanFrac";
       }
