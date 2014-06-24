@@ -22,7 +22,7 @@ my $ChunkIndexSize=32768;
 
 my @DataSet       = ("cophir", "sift_texmex_base1m", "final256", "unif64", "wikipedia_lsi128");
 my @MaxScanFracs  = (0.025   ,                0.025,       0.1,     0.05,                0.1);
-my @MaxLeavesLC   = (150     ,                 130,        100,      300,                100);
+my @MaxLeavesLC   = (150     ,                 130,        100,      600,                100);
 my @MinTimesMin   = (4       ,                   4,        4,          1,                  4);
 
 my %Use =           ( "cophir" => 1, "sift_texmex_base1m" => 1, "final256" => 0, "unif64" => 1, "wikipedia_lsi128" => 0);
