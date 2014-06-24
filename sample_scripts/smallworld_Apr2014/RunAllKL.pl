@@ -8,7 +8,7 @@ my $MaxNumQuery=1000;
 
 
 my $SpaceType = "KLDivGenFast"; 
-my $TestSetQty=1;
+my $TestSetQty=5;
 my $NumPivot=128;
 my $BucketSize = 50;
 my $alphaLeft=3;
@@ -21,9 +21,10 @@ my $NumPivotNeighb=1024;
 my $ChunkIndexSize=32768;
 
 my @DataSet       = ("final16", "final64", "final256");
-my @MaxScanFracs  = (0.02      , 0.04      ,    0.05);
+my @MaxScanFracs  = (0.005    , 0.04     ,    0.05);
+my @MaxLeavesLC   = (150      , 150      ,    150);
 
-my %Use =           ( "final16" => 0, "final64" => 0, "final256" => 1);
+my %Use =           ( "final16" => 1, "final64" => 0, "final256" => 0);
 
 #RunTest(1);
 RunTest(10);
@@ -48,6 +49,12 @@ sub RunTest {
       my $DataFile = "$DataDir/$Name.txt";
       my $cmd = "../../similarity_search/release/experiment --dataFile $DataFile --maxNumQuery $MaxNumQuery --distType float --spaceType $SpaceType --knn $K --testSetQty $TestSetQty --outFilePrefix $OutFilePrefix ";
       if (defined($MaxNumData)) { $cmd .= " --maxNumData $MaxNumData "; }
+
+      for (my $i = 0; $i < $TestQty; ++$i) { 
+        my $d = sprintf("%d", $MaxLeavesLC[$dc] / ($TestQty + 1));
+        my $maxLC = $MaxLeavesLC[$dc] - $i * $d;
+        $cmd .= " --method list_clusters:bucketSize=250,maxLeavesToVisit=$maxLC";
+      }
 
       for (my $i = 0; $i < $TestQty; ++$i) { 
         my $DbScanFrac = $MaxDbScanFrac * ($TestQty - $i) / $TestQty;
