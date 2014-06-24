@@ -8,7 +8,7 @@ my $MaxNumQuery=1000;
 
 
 my $SpaceType = "L2"; 
-my $TestSetQty=1;
+my $TestSetQty=5;
 my $NumPivot=32;
 my $BucketSize = 50;
 my $alphaLeft=3;

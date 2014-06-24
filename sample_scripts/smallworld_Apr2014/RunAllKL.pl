@@ -8,7 +8,7 @@ my $MaxNumQuery=1000;
 
 
 my $SpaceType = "KLDivGenFast"; 
-my $TestSetQty=1;
+my $TestSetQty=5;
 my $NumPivot=128;
 my $BucketSize = 50;
 my $alphaLeft=3;
@@ -21,9 +21,10 @@ my $NumPivotNeighb=1024;
 my $ChunkIndexSize=32768;
 
 my @DataSet       = ("final16", "final64", "final256");
-my @MaxScanFracs  = (0.02      , 0.04      ,    0.05);
+my @MaxScanFracs  = (0.005    , 0.04     ,    0.05);
+my @MaxLeavesLC   = (150      , 150      ,    150);
 
-my %Use =           ( "final16" => 0, "final64" => 0, "final256" => 1);
+my %Use =           ( "final16" => 1, "final64" => 0, "final256" => 0);
 
 #RunTest(1);
 RunTest(10);
