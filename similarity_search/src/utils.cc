@@ -105,10 +105,24 @@ DECLARE_APPROX_EQUAL_INT(uint8_t)
 DECLARE_APPROX_EQUAL_INT(int8_t)
 DECLARE_APPROX_EQUAL_INT(char)
 
+template <typename T>
+bool ApproxEqualULP(const T& x, const T& y, unsigned maxUlps = MAX_ULPS);
+
+// This macro does two things: (a) specialization (b) instantiation
+#define DECLARE_APPROX_EQUAL_ULP_FLOAT(FLOAT_TYPE) \
+template <> bool ApproxEqualULP<FLOAT_TYPE>(const FLOAT_TYPE& x, const FLOAT_TYPE& y, unsigned maxUlps) {\
+  return FloatingPointDiff<FLOAT_TYPE>(x).AlmostEquals(FloatingPointDiff<FLOAT_TYPE>(y), maxUlps);\
+};\
+template bool ApproxEqualULP<FLOAT_TYPE>(const FLOAT_TYPE& x, const FLOAT_TYPE& y, unsigned maxUlps);
+
+DECLARE_APPROX_EQUAL_ULP_FLOAT(float)
+DECLARE_APPROX_EQUAL_ULP_FLOAT(double)
+
 // This macro does two things: (a) specialization (b) instantiation
 #define DECLARE_APPROX_EQUAL_FLOAT(FLOAT_TYPE) \
 template <> bool ApproxEqual<FLOAT_TYPE>(const FLOAT_TYPE& x, const FLOAT_TYPE& y, unsigned maxUlps) {\
-  return FloatingPointDiff<FLOAT_TYPE>(x).AlmostEquals(FloatingPointDiff<FLOAT_TYPE>(y), maxUlps);\
+  const FLOAT_TYPE thresh = 2*numeric_limits<FLOAT_TYPE>::min();\
+  return ApproxEqualULP<FLOAT_TYPE>(x, y, maxUlps) || (std::max(x,y) < thresh && std::min(x,y) > -thresh);\
 };\
 template bool ApproxEqual<FLOAT_TYPE>(const FLOAT_TYPE& x, const FLOAT_TYPE& y, unsigned maxUlps);
 
@@ -127,7 +141,8 @@ inline bool ApproxEqualOther(const T& x, const T& y, unsigned maxUlps) {
 }
 
 template <> bool ApproxEqual<long double>(const long double& x, const long double& y, unsigned maxUlps) {\
-  return ApproxEqualOther(x, y, maxUlps);
+  const long double thresh = 2*numeric_limits<long double>::min();\
+  return ApproxEqualOther(x, y, maxUlps) || (std::max(x,y) < thresh && std::min(x,y) > -thresh);\
 };\
 template bool ApproxEqual<long double>(const long double& x, const long double& y, unsigned maxUlps);
 

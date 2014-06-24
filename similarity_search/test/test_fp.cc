@@ -37,11 +37,13 @@ void testNotEqualInt(dist_t num1, dist_t num2) {
 template <class dist_t>
 void testEqualFP(dist_t baseNum, float epsFact) {
   EXPECT_TRUE(ApproxEqual(baseNum, baseNum * (1 + epsFact * numeric_limits<dist_t>::epsilon()), 4));
+  EXPECT_TRUE(ApproxEqual(-baseNum, -baseNum * (1 + epsFact * numeric_limits<dist_t>::epsilon()), 4));
 }
 
 template <class dist_t>
 void testNotEqualFP(dist_t baseNum, float epsFact) {
   EXPECT_FALSE(ApproxEqual(baseNum, baseNum * (1 + epsFact * numeric_limits<dist_t>::epsilon()), 4));
+  EXPECT_FALSE(ApproxEqual(-baseNum, -baseNum * (1 + epsFact * numeric_limits<dist_t>::epsilon()), 4));
 }
 
 TEST(FP_Char1) {
@@ -185,16 +187,49 @@ TEST(FP_LongDouble4) {
 TEST(FP_NANFloat) {
   static float __nan = numeric_limits<float>::quiet_NaN();
   testNotEqualFP<float>(__nan, __nan);
+  testNotEqualFP<float>(__nan, -__nan);
 };
 
 TEST(FP_NANDouble) {
     static double __nan = numeric_limits<double>::quiet_NaN();
   testNotEqualFP<double>(__nan, __nan);
+  testNotEqualFP<double>(__nan, -__nan);
 };
 
 TEST(FP_NANLongDouble) {
   static long double __nan = numeric_limits<long double>::quiet_NaN();
   testNotEqualFP<long double>(__nan, __nan);
+  testNotEqualFP<long double>(__nan, -__nan);
 };
+
+TEST(FP_ZEROFloat) {
+  EXPECT_TRUE(ApproxEqual(0.0f, -0.0f));
+  EXPECT_TRUE(ApproxEqual(0.0f, numeric_limits<float>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0f, 1.9f*numeric_limits<float>::min()));
+  EXPECT_FALSE(ApproxEqual(0.0f, 5000000.0f*numeric_limits<float>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0f, -numeric_limits<float>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0f, -1.9f*numeric_limits<float>::min()));
+  EXPECT_FALSE(ApproxEqual(0.0f, -5000000.0f*numeric_limits<float>::min()));
+}
+
+TEST(FP_ZERODouble) {
+  EXPECT_TRUE(ApproxEqual(0.0, -0.0));
+  EXPECT_TRUE(ApproxEqual(0.0, numeric_limits<double>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0, 1.9*numeric_limits<double>::min()));
+  EXPECT_FALSE(ApproxEqual(0.0, 2.1*numeric_limits<double>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0, -numeric_limits<double>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0, -1.9*numeric_limits<double>::min()));
+  EXPECT_FALSE(ApproxEqual(0.0, -2.1*numeric_limits<double>::min()));
+}
+
+TEST(FP_ZEROLongDouble) {
+  EXPECT_TRUE(ApproxEqual(0.0l, -0.0l));
+  EXPECT_TRUE(ApproxEqual(0.0l, numeric_limits<long double>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0l, 1.9*numeric_limits<long double>::min()));
+  EXPECT_FALSE(ApproxEqual(0.0l, 100.1*numeric_limits<long double>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0l, -numeric_limits<long double>::min()));
+  EXPECT_TRUE(ApproxEqual(0.0l, -1.9*numeric_limits<long double>::min()));
+  EXPECT_FALSE(ApproxEqual(0.0l, -10.1*numeric_limits<long double>::min()));
+}
 
 }

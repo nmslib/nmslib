@@ -123,8 +123,10 @@ inline dist_t DistMax() {
 }
 
 /* 
- * For floating-point numbers let's consider numbers to be 
+ * 1. For floating-point numbers let's consider numbers to be 
  * equal if they are within 4 units in the last place (ULPs)
+ * Or, if the numbers are smaller than 2*numeric_limits<T>::epsilon()
+ * 2. For integral types an approximate equality is the same as an exact equality.
  */
 #define MAX_ULPS 4
 
@@ -133,6 +135,7 @@ bool ApproxEqual(const T& x, const T& y, unsigned maxUlps = MAX_ULPS);
 
 inline double round1(double x) { return round(x*10.0)/10.0; }
 inline double round2(double x) { return round(x*100.0)/100.0; }
+inline double round3(double x) { return round(x*1000.0)/1000.0; }
 
 /*
  * This function will only work for strings without spaces

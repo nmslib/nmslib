@@ -44,18 +44,19 @@ namespace similarity {
     Print << "# of points: " << config.GetDataObjects().size() << std::endl;
     Print << "# of queries: " << config.GetQueryQty() << std::endl;
     Print << "------------------------------------" << std::endl;
-    Print << "Recall:         " << ExpRes.GetRecallAvg()              << " -> " << "[" << ExpRes.GetRecallConfMin() << " " << ExpRes.GetRecallConfMax() << "]" << std::endl;
-    Print << "ClassAccuracy:  " << ExpRes.GetClassAccuracyAvg() << " -> " << "[" << ExpRes.GetClassAccuracyConfMin() << " " << ExpRes.GetClassAccuracyConfMax() << "]" << std::endl;
-    Print << "RelPosError:    " << round2(ExpRes.GetRelPosErrorAvg())  << " -> " << "[" << round2(ExpRes.GetRelPosErrorConfMin()) << " \t" << round2(ExpRes.GetRelPosErrorConfMax()) << "]" << std::endl;
-    Print << "NumCloser:      " << round2(ExpRes.GetNumCloserAvg())    << " -> " << "[" << round2(ExpRes.GetNumCloserConfMin()) << " \t" << round2(ExpRes.GetNumCloserConfMax()) << "]" << std::endl;
+    Print << "Recall:            " << round3(ExpRes.GetRecallAvg())  << " -> " << "[" << round3(ExpRes.GetRecallConfMin()) << " " << round3(ExpRes.GetRecallConfMax()) << "]" << std::endl;
+    Print << "PrecisionOfApprox: " << round3(ExpRes.GetPrecisionOfApproxAvg())                << " -> " << "[" << round3(ExpRes.GetPrecisionOfApproxConfMin()) << " " << round3(ExpRes.GetPrecisionOfApproxConfMax()) << "]" << std::endl;
+    Print << "ClassAccuracy:     " << ExpRes.GetClassAccuracyAvg() << " -> " << "[" << ExpRes.GetClassAccuracyConfMin() << " " << ExpRes.GetClassAccuracyConfMax() << "]" << std::endl;
+    Print << "RelPosError:       " << round2(ExpRes.GetRelPosErrorAvg())  << " -> " << "[" << round2(ExpRes.GetRelPosErrorConfMin()) << " \t" << round2(ExpRes.GetRelPosErrorConfMax()) << "]" << std::endl;
+    Print << "NumCloser:         " << round2(ExpRes.GetNumCloserAvg())    << " -> " << "[" << round2(ExpRes.GetNumCloserConfMin()) << " \t" << round2(ExpRes.GetNumCloserConfMax()) << "]" << std::endl;
     Print << "------------------------------------" << std::endl;
-    Print << "QueryTime:      " << round2(ExpRes.GetQueryTimeAvg())    << " -> " << "[" << round2(ExpRes.GetQueryTimeConfMin()) << " \t" << round2(ExpRes.GetQueryTimeConfMax()) << "]" << std::endl;
-    Print << "DistComp:       " << round2(ExpRes.GetDistCompAvg())     << " -> " << "[" << round2(ExpRes.GetDistCompConfMin()) << " \t" << round2(ExpRes.GetDistCompConfMax()) << "]" << std::endl;
+    Print << "QueryTime:         " << round2(ExpRes.GetQueryTimeAvg())    << " -> " << "[" << round2(ExpRes.GetQueryTimeConfMin()) << " \t" << round2(ExpRes.GetQueryTimeConfMax()) << "]" << std::endl;
+    Print << "DistComp:          " << round2(ExpRes.GetDistCompAvg())     << " -> " << "[" << round2(ExpRes.GetDistCompConfMin()) << " \t" << round2(ExpRes.GetDistCompConfMax()) << "]" << std::endl;
     Print << "------------------------------------" << std::endl;
-    Print << "ImprEfficiency: " << round2(ExpRes.GetImprEfficiencyAvg()) << " -> " << "["  <<  round2(ExpRes.GetImprEfficiencyConfMin()) << " \t" << round2(ExpRes.GetImprEfficiencyConfMax()) << "]" << std::endl;
-    Print << "ImprDistComp:   " << round2(ExpRes.GetImprDistCompAvg()) << " -> " << "[" << round2(ExpRes.GetImprDistCompAvg()) << " \t"<< round2(ExpRes.GetImprDistCompConfMax()) << "]" << std::endl;
+    Print << "ImprEfficiency:    " << round2(ExpRes.GetImprEfficiencyAvg()) << " -> " << "["  <<  round2(ExpRes.GetImprEfficiencyConfMin()) << " \t" << round2(ExpRes.GetImprEfficiencyConfMax()) << "]" << std::endl;
+    Print << "ImprDistComp:      " << round2(ExpRes.GetImprDistCompAvg()) << " -> " << "[" << round2(ExpRes.GetImprDistCompAvg()) << " \t"<< round2(ExpRes.GetImprDistCompConfMax()) << "]" << std::endl;
     Print << "------------------------------------" << std::endl;
-    Print << "Memory Usage:   " << round2(ExpRes.GetMemAvg()) << " MB" << std::endl;
+    Print << "Memory Usage:      " << round2(ExpRes.GetMemAvg()) << " MB" << std::endl;
     Print << "------------------------------------" << std::endl;
     
     return Print.str();

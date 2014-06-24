@@ -375,6 +375,7 @@ public:
         ClassAccuracy[MethNum]+= addAccuracy;
         PrecisionOfApprox[MethNum] += Eval.GetPrecisionOfApprox();
 
+        ExpRes[MethNum]->AddPrecisionOfApprox(TestSetId, Eval.GetPrecisionOfApprox());
         ExpRes[MethNum]->AddRecall(TestSetId, Eval.GetRecall());
         ExpRes[MethNum]->AddClassAccuracy(TestSetId, addAccuracy);
         ExpRes[MethNum]->AddLogRelPosError(TestSetId, Eval.GetLogRelPos());
@@ -416,8 +417,9 @@ public:
         LOG(LIB_INFO) << ">>>> Avg Seq. search time per query: " << (SeqSearchTime/double(1e3)/numquery) << " msec";
         LOG(LIB_INFO) << ">>>> Impr. in Efficiency = "  << ImprEfficiency;
         LOG(LIB_INFO) << ">>>> Recall              = "       << Recall[MethNum];
+        LOG(LIB_INFO) << ">>>> PrecisionOfApprox   = "       << PrecisionOfApprox[MethNum];
         LOG(LIB_INFO) << ">>>> RelPosError         = "       << exp(LogPosErr[MethNum]);
-        LOG(LIB_INFO) << ">>>> NumCloser           = " << NumCloser[MethNum] << " PrecisionOfApprox = " << PrecisionOfApprox[MethNum];
+        LOG(LIB_INFO) << ">>>> NumCloser           = " << NumCloser[MethNum];
         LOG(LIB_INFO) << ">>>> Class. accuracy     = "       << ClassAccuracy[MethNum];
       }
     }

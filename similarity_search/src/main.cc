@@ -95,12 +95,14 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tRelPosError\tNumCloser\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tMethodParams" << std::endl;
+  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tMethodParams" << std::endl;
 
   Data << "\"" << MethDescStr << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
+  Data << ExpRes.GetPrecisionOfApproxAvg() << "\t";
   Data << ExpRes.GetRelPosErrorAvg() << "\t";
   Data << ExpRes.GetNumCloserAvg() << "\t";
+  Data << ExpRes.GetClassAccuracyAvg() << "\t";
   Data << ExpRes.GetQueryTimeAvg() << "\t";
   Data << ExpRes.GetDistCompAvg() << "\t";
   Data << ExpRes.GetImprEfficiencyAvg() << "\t";

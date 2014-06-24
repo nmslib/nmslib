@@ -33,6 +33,7 @@ using std::string;
 class MetaAnalysis {
 public:
   MetaAnalysis(size_t TestSetQty, double zVal = 1.96) : zVal_(zVal) {
+    PrecisionOfApprox_        .resize(TestSetQty);
     Recall_         .resize(TestSetQty);
     ClassAccuracy_  .resize(TestSetQty);
     LogRelPosError_ .resize(TestSetQty);
@@ -47,6 +48,9 @@ public:
   // Let's protect Add* functions, b/c them can be called from different threads  
   void AddRecall(size_t SetId, double Recall) {
     Recall_[SetId].push_back(Recall);
+  }
+  void AddPrecisionOfApprox(size_t SetId, double PrecisionOfApprox) {
+    PrecisionOfApprox_[SetId].push_back(PrecisionOfApprox);
   }
   void AddClassAccuracy(size_t SetId, double ClassAccuracy) {
     ClassAccuracy_[SetId].push_back(ClassAccuracy);
@@ -75,6 +79,7 @@ public:
 
   void ComputeAll() {
     ComputeOneSimple("Recall", Recall_, RecallAvg, RecallConfMin, RecallConfMax);
+    ComputeOneSimple("PrecisionOfApprox", PrecisionOfApprox_, PrecisionOfApproxAvg, PrecisionOfApproxConfMin, PrecisionOfApproxConfMax);
     ComputeOneSimple("ClassAccuracy", ClassAccuracy_, ClassAccuracyAvg, ClassAccuracyConfMin, ClassAccuracyConfMax);
     ComputeOneSimple("LogRelPosError", LogRelPosError_, LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax);
     ComputeOneSimple("NumCloser", NumCloser_, NumCloserAvg, NumCloserConfMin, NumCloserConfMax);
@@ -89,6 +94,10 @@ public:
   double GetRecallAvg() const { return RecallAvg;} 
   double GetRecallConfMin() const{return RecallConfMin;}; 
   double GetRecallConfMax() const { return RecallConfMax;}
+
+  double GetPrecisionOfApproxAvg() const { return PrecisionOfApproxAvg;} 
+  double GetPrecisionOfApproxConfMin() const{return PrecisionOfApproxConfMin;}; 
+  double GetPrecisionOfApproxConfMax() const { return PrecisionOfApproxConfMax;}
 
   double GetClassAccuracyAvg() const { return ClassAccuracyAvg;} 
   double GetClassAccuracyConfMin() const{return ClassAccuracyConfMin;}; 
@@ -123,6 +132,7 @@ public:
   double GetDistCompConfMax() const { return DistCompConfMax;}
 private:
 double RecallAvg, RecallConfMin, RecallConfMax;
+double PrecisionOfApproxAvg, PrecisionOfApproxConfMin, PrecisionOfApproxConfMax;
 double ClassAccuracyAvg, ClassAccuracyConfMin, ClassAccuracyConfMax;
 double LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax;
 double NumCloserAvg, NumCloserConfMin, NumCloserConfMax;
@@ -134,6 +144,7 @@ double MemAvg, MemConfMin, MemConfMax;
 double zVal_;
 
 vector<vector<double>>   Recall_; 
+vector<vector<double>>   PrecisionOfApprox_; 
 vector<vector<double>>   ClassAccuracy_; 
 vector<vector<double>>   LogRelPosError_; 
 vector<vector<double>>   NumCloser_; 
