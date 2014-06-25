@@ -22,12 +22,14 @@
 #include <iostream>
 #include <unordered_set>
 
+#include "object.h"
+
 namespace similarity {
 
 using std::vector;
 using std::sort;
 using std::ostream;
-using std::unordered_map;
+using std::unordered_set;
 
 template <class dist_t>
 struct ResultEntry {
@@ -48,50 +50,20 @@ ostream& operator<<(ostream& out, const ResultEntry<dist_t>& e) {
 }
 
 template <class dist_t>
-bool ApproxEqualElem(const ResultEntry<dist_t>& elemApprox, const ResultEntry<dist_t>& elemExact) {
-  return elemApprox.mId == elemExact.mId ||
-         ApproxEqual(elemApprox.mDist, elemExact.mDist);
+bool ApproxEqualElem(const ResultEntry<dist_t>& elem1, const ResultEntry<dist_t>& elem2) {
+  return elem1.mId == elem2.mId || ApproxEqual(elem1.mDist, elem2.mDist);
 }
 
 template <class dist_t>
-struct EvalMetrics {
-  /*
-   * A classic recall measure
-   */
-  static double Recall(double ExactResultSize,
+struct EvalMetricsBase {
+  virtual double operator()(double ExactResultSize,
                       const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
                       const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
-                      ) {
-    if (ExactResultIds.empty()) return 1.0;
-    double recall = 0.0;
-    for (auto it = ApproxResultIds.begin(); it != ApproxResultIds.end(); ++it) {
-      recall += ExactResultIds.count(*it);
-    }
-    return recall / ExactResultSize;
-  }
-  /*
-   * Number of the nearest neighbors or range search answers that are closer to the query
-   * than the closest element returned by the search.
+                      ) const = 0;
+  /* 
+   * An auxilliar function that aligns exact and approximate answers.
+   * It used to compute error approximation metrics.
    */
-  static double NumberCloser(double ExactResultSize,
-                      const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
-                      const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
-                      ) {
-    if (ExactEntries.empty()) return 1.0;
-    if (ApproxEntries.empty()) return ExactResultSize;
-    
-    double NumberCloser = 0;
-
-    // 2. Compute the number of points closer to the 1-NN then the first result.
-    CHECK(!ApproxEntries.empty());
-    for (size_t p = 0; p < ExactEntries.size(); ++p) {
-      if (ExactEntries[p].mDist >= ApproxEntries[0].mDist) break;
-      ++NumberCloser;
-    }
-
-    return NumberCloser;
-  }
-
   template <class AccumObj>
   static void iterate(AccumObj& obj,
                const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
@@ -106,8 +78,8 @@ struct EvalMetrics {
          * function twice with the same object pointers, but get slightly
          * different results.
          */
-        if (elemApprox.mDist -  elemExact.mDist < 0 &&
-            !ApproxEqualElem(elemApprox, elemExact)
+        if (elemApprox.mDist -  elemExact.mDist < 0
+           && !ApproxEqualElem(elemApprox, elemExact)
             ) {
           double mx = std::abs(std::max(ApproxEntries[k].mDist, ExactEntries[p].mDist));
           double mn = std::abs(std::min(ApproxEntries[k].mDist, ExactEntries[p].mDist));
@@ -148,7 +120,55 @@ struct EvalMetrics {
         obj(k, LastEqualP);
       }
     }
+};
 
+
+template <class dist_t>
+struct EvalRecall : public EvalMetricsBase<dist_t> {
+  /*
+   * A classic recall measure
+   */
+  double operator()(double ExactResultSize,
+                    const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                    const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
+                    ) const {
+    if (ExactResultIds.empty()) return 1.0;
+    double recall = 0.0;
+    for (auto it = ApproxResultIds.begin(); it != ApproxResultIds.end(); ++it) {
+      recall += ExactResultIds.count(*it);
+    }
+    return recall / ExactResultSize;
+  }
+};
+
+template <class dist_t>
+struct EvalNumberCloser : public EvalMetricsBase<dist_t> {
+  /*
+   * Number of the nearest neighbors or range search answers that are closer to the query
+   * than the closest element returned by the search.
+   */
+  double operator()(double ExactResultSize,
+                    const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                    const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
+                   ) const {
+    if (ExactEntries.empty()) return 0.0;
+    if (ApproxEntries.empty()) return min(ExactResultSize, static_cast<double>(ExactEntries.size()));
+    
+    double NumberCloser = 0;
+
+    // 2. Compute the number of points closer to the 1-NN then the first result.
+    CHECK(!ApproxEntries.empty());
+    for (size_t p = 0; p < ExactEntries.size(); ++p) {
+      if (ExactEntries[p].mDist >= ApproxEntries[0].mDist || ApproxEqualElem(ExactEntries[p], ApproxEntries[0])) break;
+      ++NumberCloser;
+    }
+
+    return NumberCloser;
+  }
+};
+
+template <class dist_t>
+struct EvalPrecisionOfApprox : public EvalMetricsBase<dist_t> {
    /*
     * Precision of approximation.
     *
@@ -167,20 +187,23 @@ struct EvalMetrics {
     }
   };
 
-  static double PrecisionOfApprox(double ExactResultSize,
-                      const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
-                      const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
-                      ) {
+  double operator()(double ExactResultSize,
+                    const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                    const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
+                    ) const {
     if (ExactEntries.empty()) return 1.0;
     if (ApproxEntries.empty()) return 0.0;
 
     AccumPrecisionOfApprox res;
 
-    iterate(res, ExactEntries, ExactResultIds, ApproxEntries, ApproxResultIds);
+    EvalMetricsBase<dist_t>::iterate(res, ExactEntries, ExactResultIds, ApproxEntries, ApproxResultIds);
     
     return res.PrecisionOfApprox_ / ApproxEntries.size();
   }
+};
 
+template <class dist_t>
+struct EvalLogRelPosError : public EvalMetricsBase<dist_t> {
   struct AccumLogRelPossError {
     double LogRelPosError_ = 0;
     void operator()(size_t k, size_t LastEqualP) {
@@ -188,16 +211,16 @@ struct EvalMetrics {
     }
   };
 
-  static double LogRelPosError(double ExactResultSize,
-                      const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
-                      const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
-                      ) {
-    if (ExactEntries.empty()) return 1.0;
-    if (ApproxEntries.empty()) return log(ExactResultSize);
+  double operator()(double ExactResultSize,
+                    const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                    const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
+                    ) const {
+    if (ExactEntries.empty()) return 0.0;
+    if (ApproxEntries.empty()) return log(min(ExactResultSize, static_cast<double>(ExactEntries.size())));
 
     AccumLogRelPossError res;
 
-    iterate(res, ExactEntries, ExactResultIds, ApproxEntries, ApproxResultIds);
+    EvalMetricsBase<dist_t>::iterate(res, ExactEntries, ExactResultIds, ApproxEntries, ApproxResultIds);
     
     return res.LogRelPosError_ / ApproxEntries.size();
   }
