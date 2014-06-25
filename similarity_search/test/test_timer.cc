@@ -60,6 +60,7 @@ void BurnCPU(size_t qty = 10000000000) {
   LOG(LIB_INFO) << "Ignore: " << sum;
 }
 
+//TEST(DISABLE_Timer) {
 TEST(Timer) {
   WallClockTimerBannister oldz;
   WallClockTimer          z;

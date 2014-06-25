@@ -176,6 +176,7 @@ TEST(BlockZeros) {
   }
 }
 
+//TEST(DISABLE_SparsePackUnpack) {
 TEST(SparsePackUnpack) {
   TestSparsePackUnpack<float>();
   TestSparsePackUnpack<double>();
@@ -806,6 +807,7 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
     return true;
 }
 
+//TEST(DISABLE_TestAgree) {
 TEST(TestAgree) {
     int nTest  = 0;
     int nFail = 0;

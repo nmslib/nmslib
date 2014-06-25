@@ -220,10 +220,10 @@ private:
                                   ExactResultIds_.size();
 
     ClassCorrect_      = kClassUnknown;
-    Recall_            = EvalMetrics<dist_t>::Recall(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    NumberCloser_      = EvalMetrics<dist_t>::NumberCloser(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    PrecisionOfApprox_ = EvalMetrics<dist_t>::PrecisionOfApprox(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    LogRelPosError_    = EvalMetrics<dist_t>::LogRelPosError(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    Recall_            = EvalRecall<dist_t>()(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
 
     // 2 Obtain class result
     if (queryLabel >= 0) {
