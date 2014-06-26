@@ -95,7 +95,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tMethodParams" << std::endl;
+  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tMethodParams\tNumData" << std::endl;
 
   Data << "\"" << MethDescStr << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
@@ -108,7 +108,8 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << ExpRes.GetImprEfficiencyAvg() << "\t";
   Data << ExpRes.GetImprDistCompAvg() << "\t";
   Data << size_t(ExpRes.GetMemAvg()) << "\t";
-  Data << "\"" << MethParamStr << "\"";
+  Data << "\"" << MethParamStr << "\"" << "\t";
+  Data << config.GetDataObjects().size() << "\t";
   Data << std::endl;
 
   PrintStr  = produceHumanReadableReport(config, ExpRes, MethDescStr, MethParamStr);
