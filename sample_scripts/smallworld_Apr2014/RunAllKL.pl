@@ -24,7 +24,7 @@ my @DataSet       = ("final16", "final64", "final256");
 my @MaxScanFracs  = (0.005    , 0.04     ,    0.05);
 my @MaxLeavesLC   = (150      , 150      ,    150);
 
-my %Use =           ( "final16" => 1, "final64" => 0, "final256" => 0);
+my %Use =           ( "final16" => 0, "final64" => 0, "final256" => 1);
 
 #RunTest(1);
 RunTest(10);
@@ -88,7 +88,7 @@ sub RunTest {
       }
 
       # 1 means that we append results to the previously created file
-      RunCmd(0, $cmd);
+      RunCmd(1, $cmd);
     }
   }
 }
