@@ -1,4 +1,4 @@
-MethodName	Recall	RelPosError	NumCloser	QueryTime	DistComp	ImprEfficiency	ImprDistComp	Mem	MethodParams
+MethodName	Recall	PrecisionOfApprox	RelPosError	NumCloser	ClassAccuracy	QueryTime	DistComp	ImprEfficiency	ImprDistComp	Mem	MethodParams
 "permutation (incr. sorting)"	0.94484	0.965131	1.04934	0.0252	0	28.0953	2623	0.412739	190.24	109	"numPivot=128,dbScanFrac=0.005"
 "permutation (incr. sorting)"	0.93304	0.956579	1.06295	0.0324	0	27.9346	2207	0.415116	226.099	60	"numPivot=128,dbScanFrac=0.00416666666666667"
 "permutation (incr. sorting)"	0.91672	0.944584	1.08295	0.0454	0	27.7695	1791	0.417582	278.615	60	"numPivot=128,dbScanFrac=0.00333333333333333"

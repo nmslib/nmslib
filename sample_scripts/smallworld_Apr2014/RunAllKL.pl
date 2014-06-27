@@ -88,7 +88,7 @@ sub RunTest {
       }
 
       # 1 means that we append results to the previously created file
-      RunCmd(1, $cmd);
+      RunCmd(0, $cmd);
     }
   }
 }
