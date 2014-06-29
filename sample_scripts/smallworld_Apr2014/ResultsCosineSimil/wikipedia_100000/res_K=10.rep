@@ -1,528 +1,660 @@
 
 ===================================
+list of clusters
+bucketSize=400,maxLeavesToVisit=500
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.958 -> [0.958 0.958]
+PrecisionOfApprox: 0.961 -> [0.961 0.961]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.1 -> [1.1 	1.1]
+NumCloser:         1.83 -> [1.83 	1.83]
+------------------------------------
+QueryTime:         79.12 -> [75.91 	82.34]
+DistComp:          85548 -> [83512.4 	87583.5]
+------------------------------------
+ImprEfficiency:    1.19 -> [1.19 	1.19]
+ImprDistComp:      1.16 -> [1.16 	1.16]
+------------------------------------
+Memory Usage:      454.42 MB
+------------------------------------
+
+===================================
+list of clusters
+bucketSize=400,maxLeavesToVisit=429
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.958 -> [0.958 0.958]
+PrecisionOfApprox: 0.961 -> [0.961 0.961]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.1 -> [1.1 	1.1]
+NumCloser:         1.83 -> [1.83 	1.83]
+------------------------------------
+QueryTime:         79.13 -> [75.91 	82.34]
+DistComp:          85548 -> [83512.4 	87583.5]
+------------------------------------
+ImprEfficiency:    1.19 -> [1.19 	1.19]
+ImprDistComp:      1.16 -> [1.16 	1.16]
+------------------------------------
+Memory Usage:      226.25 MB
+------------------------------------
+
+===================================
+list of clusters
+bucketSize=400,maxLeavesToVisit=358
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.958 -> [0.958 0.958]
+PrecisionOfApprox: 0.961 -> [0.961 0.961]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.1 -> [1.1 	1.1]
+NumCloser:         1.83 -> [1.83 	1.83]
+------------------------------------
+QueryTime:         79.13 -> [75.91 	82.34]
+DistComp:          85548 -> [83512.4 	87583.5]
+------------------------------------
+ImprEfficiency:    1.19 -> [1.19 	1.19]
+ImprDistComp:      1.16 -> [1.16 	1.16]
+------------------------------------
+Memory Usage:      226.25 MB
+------------------------------------
+
+===================================
+list of clusters
+bucketSize=400,maxLeavesToVisit=287
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.958 -> [0.958 0.958]
+PrecisionOfApprox: 0.961 -> [0.961 0.961]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.1 -> [1.1 	1.1]
+NumCloser:         1.83 -> [1.83 	1.83]
+------------------------------------
+QueryTime:         79.13 -> [75.91 	82.34]
+DistComp:          85548 -> [83512.4 	87583.5]
+------------------------------------
+ImprEfficiency:    1.19 -> [1.19 	1.19]
+ImprDistComp:      1.16 -> [1.16 	1.16]
+------------------------------------
+Memory Usage:      226.25 MB
+------------------------------------
+
+===================================
+list of clusters
+bucketSize=400,maxLeavesToVisit=216
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.931 -> [0.931 0.931]
+PrecisionOfApprox: 0.939 -> [0.939 0.939]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.13 -> [1.13 	1.13]
+NumCloser:         1.86 -> [1.86 	1.86]
+------------------------------------
+QueryTime:         69.95 -> [67.12 	72.78]
+DistComp:          74964.6 -> [73197.4 	76731.8]
+------------------------------------
+ImprEfficiency:    1.34 -> [1.34 	1.34]
+ImprDistComp:      1.32 -> [1.32 	1.32]
+------------------------------------
+Memory Usage:      226.25 MB
+------------------------------------
+
+===================================
+list of clusters
+bucketSize=400,maxLeavesToVisit=145
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.872 -> [0.872 0.872]
+PrecisionOfApprox: 0.888 -> [0.888 0.888]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.2 -> [1.2 	1.2]
+NumCloser:         1.95 -> [1.95 	1.95]
+------------------------------------
+QueryTime:         48 -> [46.05 	49.95]
+DistComp:          50664.8 -> [49512.7 	51817]
+------------------------------------
+ImprEfficiency:    1.96 -> [1.96 	1.96]
+ImprDistComp:      1.95 -> [1.95 	1.95]
+------------------------------------
+Memory Usage:      226.25 MB
+------------------------------------
+
+===================================
 permutation (vptree)
 numPivot=128,dbScanFrac=0.2,alphaLeft=3,alphaRight=3
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.798 -> [0.798 0.798]
-PrecisionOfApprox: 0.83 -> [0.83 0.83]
+Recall:            0.801 -> [0.801 0.801]
+PrecisionOfApprox: 0.834 -> [0.834 0.834]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.28 -> [1.28 	1.28]
-NumCloser:         0.32 -> [0.32 	0.32]
+RelPosError:       1.27 -> [1.27 	1.27]
+NumCloser:         0.44 -> [0.44 	0.44]
 ------------------------------------
-QueryTime:         71.1 -> [65.61 	76.58]
-DistComp:          20088 -> [20088 	20088]
+QueryTime:         40.15 -> [39.15 	41.15]
+DistComp:          19928 -> [19928 	19928]
 ------------------------------------
-ImprEfficiency:    3.48 -> [3.48 	3.48]
+ImprEfficiency:    2.34 -> [2.34 	2.34]
 ImprDistComp:      4.97 -> [4.97 	4.97]
 ------------------------------------
-Memory Usage:      412.48 MB
+Memory Usage:      340.44 MB
 ------------------------------------
 
 ===================================
 permutation (vptree)
 numPivot=128,dbScanFrac=0.166666666666667,alphaLeft=3,alphaRight=3
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.763 -> [0.763 0.763]
-PrecisionOfApprox: 0.801 -> [0.801 0.801]
+Recall:            0.776 -> [0.776 0.776]
+PrecisionOfApprox: 0.812 -> [0.812 0.812]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.35 -> [1.35 	1.35]
-NumCloser:         0.45 -> [0.45 	0.45]
+RelPosError:       1.32 -> [1.32 	1.32]
+NumCloser:         0.52 -> [0.52 	0.52]
 ------------------------------------
-QueryTime:         60.25 -> [55.58 	64.92]
-DistComp:          16761 -> [16761 	16761]
+QueryTime:         34.35 -> [33.48 	35.22]
+DistComp:          16628 -> [16628 	16628]
 ------------------------------------
-ImprEfficiency:    4.1 -> [4.1 	4.1]
+ImprEfficiency:    2.73 -> [2.73 	2.73]
 ImprDistComp:      5.95 -> [5.95 	5.95]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (vptree)
 numPivot=128,dbScanFrac=0.133333333333333,alphaLeft=3,alphaRight=3
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.733 -> [0.733 0.733]
-PrecisionOfApprox: 0.775 -> [0.775 0.775]
+Recall:            0.744 -> [0.744 0.744]
+PrecisionOfApprox: 0.784 -> [0.784 0.784]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.42 -> [1.42 	1.42]
+RelPosError:       1.39 -> [1.39 	1.39]
 NumCloser:         0.61 -> [0.61 	0.61]
 ------------------------------------
-QueryTime:         49.22 -> [45.37 	53.06]
-DistComp:          13434 -> [13434 	13434]
+QueryTime:         28.4 -> [27.67 	29.13]
+DistComp:          13328 -> [13328 	13328]
 ------------------------------------
-ImprEfficiency:    5.02 -> [5.02 	5.02]
+ImprEfficiency:    3.31 -> [3.31 	3.31]
 ImprDistComp:      7.43 -> [7.43 	7.43]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (vptree)
 numPivot=128,dbScanFrac=0.1,alphaLeft=3,alphaRight=3
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.689 -> [0.689 0.689]
-PrecisionOfApprox: 0.734 -> [0.734 0.734]
+Recall:            0.703 -> [0.703 0.703]
+PrecisionOfApprox: 0.749 -> [0.749 0.749]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.54 -> [1.54 	1.54]
-NumCloser:         0.88 -> [0.88 	0.88]
+RelPosError:       1.49 -> [1.49 	1.49]
+NumCloser:         0.75 -> [0.75 	0.75]
 ------------------------------------
-QueryTime:         38.18 -> [35.19 	41.18]
-DistComp:          10108 -> [10108 	10108]
+QueryTime:         22.23 -> [21.65 	22.81]
+DistComp:          10028 -> [10028 	10028]
 ------------------------------------
-ImprEfficiency:    6.47 -> [6.47 	6.47]
+ImprEfficiency:    4.22 -> [4.22 	4.22]
 ImprDistComp:      9.87 -> [9.87 	9.87]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (vptree)
 numPivot=128,dbScanFrac=0.0666666666666667,alphaLeft=3,alphaRight=3
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.643 -> [0.643 0.643]
-PrecisionOfApprox: 0.69 -> [0.69 0.69]
+Recall:            0.649 -> [0.649 0.649]
+PrecisionOfApprox: 0.699 -> [0.699 0.699]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.68 -> [1.68 	1.68]
-NumCloser:         1.08 -> [1.08 	1.08]
+RelPosError:       1.66 -> [1.66 	1.66]
+NumCloser:         1.18 -> [1.18 	1.18]
 ------------------------------------
-QueryTime:         26.76 -> [24.66 	28.87]
-DistComp:          6781 -> [6781 	6781]
+QueryTime:         15.91 -> [15.49 	16.33]
+DistComp:          6728 -> [6728 	6728]
 ------------------------------------
-ImprEfficiency:    9.23 -> [9.23 	9.23]
-ImprDistComp:      14.72 -> [14.72 	14.72]
+ImprEfficiency:    5.9 -> [5.9 	5.9]
+ImprDistComp:      14.71 -> [14.71 	14.71]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (vptree)
 numPivot=128,dbScanFrac=0.0333333333333333,alphaLeft=3,alphaRight=3
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.57 -> [0.57 0.57]
+Recall:            0.569 -> [0.569 0.569]
 PrecisionOfApprox: 0.619 -> [0.619 0.619]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.99 -> [1.99 	1.99]
-NumCloser:         1.89 -> [1.89 	1.89]
+RelPosError:       2.02 -> [2.02 	2.02]
+NumCloser:         1.95 -> [1.95 	1.95]
 ------------------------------------
-QueryTime:         14.9 -> [13.74 	16.05]
-DistComp:          3454 -> [3454 	3454]
+QueryTime:         9.28 -> [9.04 	9.52]
+DistComp:          3428 -> [3428 	3428]
 ------------------------------------
-ImprEfficiency:    16.59 -> [16.59 	16.59]
-ImprDistComp:      28.89 -> [28.89 	28.89]
+ImprEfficiency:    10.12 -> [10.12 	10.12]
+ImprDistComp:      28.88 -> [28.88 	28.88]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (incr. sorting)
 numPivot=128,dbScanFrac=0.2
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.826 -> [0.826 0.826]
-PrecisionOfApprox: 0.849 -> [0.849 0.849]
+Recall:            0.821 -> [0.821 0.821]
+PrecisionOfApprox: 0.848 -> [0.848 0.848]
 ClassAccuracy:     0 -> [0 0]
 RelPosError:       1.24 -> [1.24 	1.24]
-NumCloser:         0.31 -> [0.31 	0.31]
+NumCloser:         0.37 -> [0.37 	0.37]
 ------------------------------------
-QueryTime:         67.99 -> [62.17 	73.81]
-DistComp:          20088 -> [20088 	20088]
+QueryTime:         36.29 -> [35.37 	37.21]
+DistComp:          19928 -> [19928 	19928]
 ------------------------------------
-ImprEfficiency:    3.63 -> [3.63 	3.63]
+ImprEfficiency:    2.59 -> [2.59 	2.59]
 ImprDistComp:      4.97 -> [4.97 	4.97]
 ------------------------------------
-Memory Usage:      347.27 MB
+Memory Usage:      274.59 MB
 ------------------------------------
 
 ===================================
 permutation (incr. sorting)
 numPivot=128,dbScanFrac=0.166666666666667
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.803 -> [0.803 0.803]
-PrecisionOfApprox: 0.83 -> [0.83 0.83]
+Recall:            0.798 -> [0.798 0.798]
+PrecisionOfApprox: 0.828 -> [0.828 0.828]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.28 -> [1.28 	1.28]
-NumCloser:         0.35 -> [0.35 	0.35]
+RelPosError:       1.29 -> [1.29 	1.29]
+NumCloser:         0.42 -> [0.42 	0.42]
 ------------------------------------
-QueryTime:         58.48 -> [53.5 	63.47]
-DistComp:          16761 -> [16761 	16761]
+QueryTime:         31.56 -> [30.77 	32.35]
+DistComp:          16628 -> [16628 	16628]
 ------------------------------------
-ImprEfficiency:    4.23 -> [4.23 	4.23]
+ImprEfficiency:    2.98 -> [2.98 	2.98]
 ImprDistComp:      5.95 -> [5.95 	5.95]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (incr. sorting)
 numPivot=128,dbScanFrac=0.133333333333333
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.778 -> [0.778 0.778]
-PrecisionOfApprox: 0.811 -> [0.811 0.811]
+Recall:            0.774 -> [0.774 0.774]
+PrecisionOfApprox: 0.807 -> [0.807 0.807]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.32 -> [1.32 	1.32]
-NumCloser:         0.37 -> [0.37 	0.37]
+RelPosError:       1.34 -> [1.34 	1.34]
+NumCloser:         0.48 -> [0.48 	0.48]
 ------------------------------------
-QueryTime:         48.78 -> [44.66 	52.9]
-DistComp:          13434 -> [13434 	13434]
+QueryTime:         26.73 -> [26.07 	27.38]
+DistComp:          13328 -> [13328 	13328]
 ------------------------------------
-ImprEfficiency:    5.07 -> [5.07 	5.07]
+ImprEfficiency:    3.51 -> [3.51 	3.51]
 ImprDistComp:      7.43 -> [7.43 	7.43]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (incr. sorting)
 numPivot=128,dbScanFrac=0.1
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.747 -> [0.747 0.747]
-PrecisionOfApprox: 0.785 -> [0.785 0.785]
+Recall:            0.739 -> [0.739 0.739]
+PrecisionOfApprox: 0.778 -> [0.778 0.778]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.38 -> [1.38 	1.38]
-NumCloser:         0.43 -> [0.43 	0.43]
+RelPosError:       1.41 -> [1.41 	1.41]
+NumCloser:         0.67 -> [0.67 	0.67]
 ------------------------------------
-QueryTime:         38.81 -> [35.61 	42.02]
-DistComp:          10108 -> [10108 	10108]
+QueryTime:         21.78 -> [21.27 	22.29]
+DistComp:          10028 -> [10028 	10028]
 ------------------------------------
-ImprEfficiency:    6.37 -> [6.37 	6.37]
+ImprEfficiency:    4.31 -> [4.31 	4.31]
 ImprDistComp:      9.87 -> [9.87 	9.87]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (incr. sorting)
 numPivot=128,dbScanFrac=0.0666666666666667
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.707 -> [0.707 0.707]
-PrecisionOfApprox: 0.749 -> [0.749 0.749]
+Recall:            0.696 -> [0.696 0.696]
+PrecisionOfApprox: 0.737 -> [0.737 0.737]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.5 -> [1.5 	1.5]
-NumCloser:         0.54 -> [0.54 	0.54]
+RelPosError:       1.54 -> [1.54 	1.54]
+NumCloser:         0.95 -> [0.95 	0.95]
 ------------------------------------
-QueryTime:         28.46 -> [26.23 	30.68]
-DistComp:          6781 -> [6781 	6781]
+QueryTime:         16.65 -> [16.3 	17.01]
+DistComp:          6728 -> [6728 	6728]
 ------------------------------------
-ImprEfficiency:    8.68 -> [8.68 	8.68]
-ImprDistComp:      14.72 -> [14.72 	14.72]
+ImprEfficiency:    5.64 -> [5.64 	5.64]
+ImprDistComp:      14.71 -> [14.71 	14.71]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (incr. sorting)
 numPivot=128,dbScanFrac=0.0333333333333333
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.632 -> [0.632 0.632]
-PrecisionOfApprox: 0.68 -> [0.68 0.68]
+Recall:            0.62 -> [0.62 0.62]
+PrecisionOfApprox: 0.666 -> [0.666 0.666]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.76 -> [1.76 	1.76]
-NumCloser:         1.02 -> [1.02 	1.02]
+RelPosError:       1.84 -> [1.84 	1.84]
+NumCloser:         1.59 -> [1.59 	1.59]
 ------------------------------------
-QueryTime:         17.59 -> [16.4 	18.78]
-DistComp:          3454 -> [3454 	3454]
+QueryTime:         11.27 -> [11.08 	11.46]
+DistComp:          3428 -> [3428 	3428]
 ------------------------------------
-ImprEfficiency:    14.05 -> [14.05 	14.05]
-ImprDistComp:      28.89 -> [28.89 	28.89]
+ImprEfficiency:    8.33 -> [8.33 	8.33]
+ImprDistComp:      28.88 -> [28.88 	28.88]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 small_world_rand
-NN=15,initIndexAttempts=4,initSearchAttempts=23,indexThreadQty=6
+NN=15,initIndexAttempts=4,initSearchAttempts=23,indexThreadQty=4
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.947 -> [0.947 0.947]
-PrecisionOfApprox: 0.956 -> [0.956 0.956]
+Recall:            0.962 -> [0.962 0.962]
+PrecisionOfApprox: 0.97 -> [0.97 0.97]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.04 -> [1.04 	1.04]
+NumCloser:         0.06 -> [0.06 	0.06]
+------------------------------------
+QueryTime:         33.35 -> [32.71 	33.99]
+DistComp:          16759 -> [16496.9 	17021]
+------------------------------------
+ImprEfficiency:    2.81 -> [2.81 	2.81]
+ImprDistComp:      5.91 -> [5.91 	5.91]
+------------------------------------
+Memory Usage:      514.27 MB
+------------------------------------
+
+===================================
+small_world_rand
+NN=15,initIndexAttempts=4,initSearchAttempts=19,indexThreadQty=4
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.959 -> [0.959 0.959]
+PrecisionOfApprox: 0.966 -> [0.966 0.966]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.04 -> [1.04 	1.04]
+NumCloser:         0.06 -> [0.06 	0.06]
+------------------------------------
+QueryTime:         28.98 -> [28.4 	29.55]
+DistComp:          14674.2 -> [14425.5 	14922.8]
+------------------------------------
+ImprEfficiency:    3.24 -> [3.24 	3.24]
+ImprDistComp:      6.75 -> [6.75 	6.75]
+------------------------------------
+Memory Usage:      226.25 MB
+------------------------------------
+
+===================================
+small_world_rand
+NN=15,initIndexAttempts=4,initSearchAttempts=15,indexThreadQty=4
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.957 -> [0.957 0.957]
+PrecisionOfApprox: 0.965 -> [0.965 0.965]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.04 -> [1.04 	1.04]
+NumCloser:         0.05 -> [0.05 	0.05]
+------------------------------------
+QueryTime:         24.07 -> [23.59 	24.55]
+DistComp:          12366.2 -> [12127.4 	12605]
+------------------------------------
+ImprEfficiency:    3.9 -> [3.9 	3.9]
+ImprDistComp:      8.01 -> [8.01 	8.01]
+------------------------------------
+Memory Usage:      226.25 MB
+------------------------------------
+
+===================================
+small_world_rand
+NN=15,initIndexAttempts=4,initSearchAttempts=11,indexThreadQty=4
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.948 -> [0.948 0.948]
+PrecisionOfApprox: 0.958 -> [0.958 0.958]
 ClassAccuracy:     0 -> [0 0]
 RelPosError:       1.06 -> [1.06 	1.06]
 NumCloser:         0.08 -> [0.08 	0.08]
 ------------------------------------
-QueryTime:         58.42 -> [54.92 	61.91]
-DistComp:          17191.9 -> [16560.2 	17823.6]
+QueryTime:         18.71 -> [18.32 	19.1]
+DistComp:          9812.77 -> [9594.5 	10031]
 ------------------------------------
-ImprEfficiency:    4.23 -> [4.23 	4.23]
-ImprDistComp:      5.81 -> [5.81 	5.81]
+ImprEfficiency:    5.02 -> [5.02 	5.02]
+ImprDistComp:      10.09 -> [10.09 	10.09]
 ------------------------------------
-Memory Usage:      714.55 MB
-------------------------------------
-
-===================================
-small_world_rand
-NN=15,initIndexAttempts=4,initSearchAttempts=19,indexThreadQty=6
-===================================
-# of points: 99800
-# of queries: 200
-------------------------------------
-Recall:            0.937 -> [0.937 0.937]
-PrecisionOfApprox: 0.946 -> [0.946 0.946]
-ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.07 -> [1.07 	1.07]
-NumCloser:         0.14 -> [0.14 	0.14]
-------------------------------------
-QueryTime:         49.7 -> [46.59 	52.8]
-DistComp:          14824.1 -> [14225.5 	15422.7]
-------------------------------------
-ImprEfficiency:    4.97 -> [4.97 	4.97]
-ImprDistComp:      6.73 -> [6.73 	6.73]
-------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 small_world_rand
-NN=15,initIndexAttempts=4,initSearchAttempts=15,indexThreadQty=6
+NN=15,initIndexAttempts=4,initSearchAttempts=7,indexThreadQty=4
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.936 -> [0.936 0.936]
-PrecisionOfApprox: 0.947 -> [0.947 0.947]
-ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.07 -> [1.07 	1.07]
-NumCloser:         0.08 -> [0.08 	0.08]
-------------------------------------
-QueryTime:         41.56 -> [38.98 	44.13]
-DistComp:          12552.5 -> [11991 	13114]
-------------------------------------
-ImprEfficiency:    5.95 -> [5.95 	5.95]
-ImprDistComp:      7.95 -> [7.95 	7.95]
-------------------------------------
-Memory Usage:      298.54 MB
-------------------------------------
-
-===================================
-small_world_rand
-NN=15,initIndexAttempts=4,initSearchAttempts=11,indexThreadQty=6
-===================================
-# of points: 99800
-# of queries: 200
-------------------------------------
-Recall:            0.928 -> [0.928 0.928]
-PrecisionOfApprox: 0.937 -> [0.937 0.937]
+Recall:            0.933 -> [0.933 0.933]
+PrecisionOfApprox: 0.944 -> [0.944 0.944]
 ClassAccuracy:     0 -> [0 0]
 RelPosError:       1.08 -> [1.08 	1.08]
-NumCloser:         0.14 -> [0.14 	0.14]
+NumCloser:         0.15 -> [0.15 	0.15]
 ------------------------------------
-QueryTime:         32.44 -> [30.38 	34.5]
-DistComp:          10001.4 -> [9497.93 	10504.8]
+QueryTime:         12.98 -> [12.68 	13.28]
+DistComp:          6979.5 -> [6797.22 	7161.77]
 ------------------------------------
-ImprEfficiency:    7.62 -> [7.62 	7.62]
-ImprDistComp:      9.98 -> [9.98 	9.98]
+ImprEfficiency:    7.23 -> [7.23 	7.23]
+ImprDistComp:      14.18 -> [14.18 	14.18]
 ------------------------------------
-Memory Usage:      298.54 MB
-------------------------------------
-
-===================================
-small_world_rand
-NN=15,initIndexAttempts=4,initSearchAttempts=7,indexThreadQty=6
-===================================
-# of points: 99800
-# of queries: 200
-------------------------------------
-Recall:            0.917 -> [0.917 0.917]
-PrecisionOfApprox: 0.927 -> [0.927 0.927]
-ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.1 -> [1.1 	1.1]
-NumCloser:         0.19 -> [0.19 	0.19]
-------------------------------------
-QueryTime:         22.23 -> [20.85 	23.61]
-DistComp:          7134.91 -> [6710.1 	7559.72]
-------------------------------------
-ImprEfficiency:    11.11 -> [11.11 	11.11]
-ImprDistComp:      13.99 -> [13.99 	13.99]
-------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 small_world_rand
-NN=15,initIndexAttempts=4,initSearchAttempts=3,indexThreadQty=6
+NN=15,initIndexAttempts=4,initSearchAttempts=3,indexThreadQty=4
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.895 -> [0.895 0.895]
-PrecisionOfApprox: 0.903 -> [0.903 0.903]
+Recall:            0.89 -> [0.89 0.89]
+PrecisionOfApprox: 0.904 -> [0.904 0.904]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.14 -> [1.14 	1.14]
-NumCloser:         0.33 -> [0.33 	0.33]
+RelPosError:       1.16 -> [1.16 	1.16]
+NumCloser:         0.67 -> [0.67 	0.67]
 ------------------------------------
-QueryTime:         10.26 -> [9.56 	10.95]
-DistComp:          3548.71 -> [3260.53 	3836.88]
+QueryTime:         6.14 -> [5.97 	6.32]
+DistComp:          3459.43 -> [3344.03 	3574.82]
 ------------------------------------
-ImprEfficiency:    24.08 -> [24.08 	24.08]
-ImprDistComp:      28.12 -> [28.12 	28.12]
+ImprEfficiency:    15.27 -> [15.27 	15.27]
+ImprDistComp:      28.62 -> [28.62 	28.62]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (inverted index over neighboring pivots)
-numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=1,indexThreadQty=6,chunkIndexSize=32768
+numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=1,indexThreadQty=4,chunkIndexSize=32768
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.935 -> [0.935 0.935]
-PrecisionOfApprox: 0.948 -> [0.948 0.948]
+Recall:            0.941 -> [0.941 0.941]
+PrecisionOfApprox: 0.952 -> [0.952 0.952]
 ClassAccuracy:     0 -> [0 0]
 RelPosError:       1.07 -> [1.07 	1.07]
-NumCloser:         0.12 -> [0.12 	0.12]
+NumCloser:         0.1 -> [0.1 	0.1]
 ------------------------------------
-QueryTime:         66.96 -> [59.48 	74.43]
-DistComp:          22066.2 -> [20958.3 	23174.1]
+QueryTime:         28.72 -> [27.48 	29.97]
+DistComp:          22880.9 -> [22411.1 	23350.7]
 ------------------------------------
-ImprEfficiency:    3.69 -> [3.69 	3.69]
-ImprDistComp:      4.52 -> [4.52 	4.52]
+ImprEfficiency:    3.27 -> [3.27 	3.27]
+ImprDistComp:      4.33 -> [4.33 	4.33]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (inverted index over neighboring pivots)
-numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=2,indexThreadQty=6,chunkIndexSize=32768
+numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=2,indexThreadQty=4,chunkIndexSize=32768
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.889 -> [0.889 0.889]
+Recall:            0.891 -> [0.891 0.891]
 PrecisionOfApprox: 0.909 -> [0.909 0.909]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.13 -> [1.13 	1.13]
-NumCloser:         0.21 -> [0.21 	0.21]
+RelPosError:       1.14 -> [1.14 	1.14]
+NumCloser:         0.23 -> [0.23 	0.23]
 ------------------------------------
-QueryTime:         34.37 -> [30.53 	38.21]
-DistComp:          12186.6 -> [11481.1 	12892.2]
+QueryTime:         16.1 -> [15.41 	16.79]
+DistComp:          12972.6 -> [12603 	13342.3]
 ------------------------------------
-ImprEfficiency:    7.19 -> [7.19 	7.19]
-ImprDistComp:      8.19 -> [8.19 	8.19]
+ImprEfficiency:    5.83 -> [5.83 	5.83]
+ImprDistComp:      7.63 -> [7.63 	7.63]
 ------------------------------------
-Memory Usage:      298.54 MB
-------------------------------------
-
-===================================
-permutation (inverted index over neighboring pivots)
-numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=3,indexThreadQty=6,chunkIndexSize=32768
-===================================
-# of points: 99800
-# of queries: 200
-------------------------------------
-Recall:            0.848 -> [0.848 0.848]
-PrecisionOfApprox: 0.872 -> [0.872 0.872]
-ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.21 -> [1.21 	1.21]
-NumCloser:         0.35 -> [0.35 	0.35]
-------------------------------------
-QueryTime:         22 -> [19.59 	24.4]
-DistComp:          8482.22 -> [7815.71 	9148.73]
-------------------------------------
-ImprEfficiency:    11.24 -> [11.24 	11.24]
-ImprDistComp:      11.77 -> [11.77 	11.77]
-------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (inverted index over neighboring pivots)
-numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=4,indexThreadQty=6,chunkIndexSize=32768
+numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=3,indexThreadQty=4,chunkIndexSize=32768
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.807 -> [0.807 0.807]
-PrecisionOfApprox: 0.835 -> [0.835 0.835]
+Recall:            0.845 -> [0.845 0.845]
+PrecisionOfApprox: 0.868 -> [0.868 0.868]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.29 -> [1.29 	1.29]
-NumCloser:         0.52 -> [0.52 	0.52]
+RelPosError:       1.22 -> [1.22 	1.22]
+NumCloser:         0.4 -> [0.4 	0.4]
 ------------------------------------
-QueryTime:         15.83 -> [14.15 	17.51]
-DistComp:          6651.51 -> [5989.27 	7313.75]
+QueryTime:         10.62 -> [10.18 	11.05]
+DistComp:          9003.01 -> [8643.24 	9362.79]
 ------------------------------------
-ImprEfficiency:    15.61 -> [15.61 	15.61]
-ImprDistComp:      15 -> [15 	15]
+ImprEfficiency:    8.84 -> [8.84 	8.84]
+ImprDistComp:      11 -> [11 	11]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (inverted index over neighboring pivots)
-numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=5,indexThreadQty=6,chunkIndexSize=32768
+numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=4,indexThreadQty=4,chunkIndexSize=32768
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.768 -> [0.768 0.768]
-PrecisionOfApprox: 0.799 -> [0.799 0.799]
+Recall:            0.8 -> [0.8 0.8]
+PrecisionOfApprox: 0.83 -> [0.83 0.83]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.41 -> [1.41 	1.41]
-NumCloser:         0.83 -> [0.83 	0.83]
+RelPosError:       1.32 -> [1.32 	1.32]
+NumCloser:         0.71 -> [0.71 	0.71]
 ------------------------------------
-QueryTime:         12.17 -> [10.89 	13.44]
-DistComp:          5509.69 -> [4884.72 	6134.66]
+QueryTime:         7.74 -> [7.41 	8.06]
+DistComp:          6953.08 -> [6612.21 	7293.95]
 ------------------------------------
-ImprEfficiency:    20.31 -> [20.31 	20.31]
-ImprDistComp:      18.11 -> [18.11 	18.11]
+ImprEfficiency:    12.13 -> [12.13 	12.13]
+ImprDistComp:      14.24 -> [14.24 	14.24]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
 ------------------------------------
 
 ===================================
 permutation (inverted index over neighboring pivots)
-numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=6,indexThreadQty=6,chunkIndexSize=32768
+numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=5,indexThreadQty=4,chunkIndexSize=32768
 ===================================
-# of points: 99800
-# of queries: 200
+# of points: 99000
+# of queries: 1000
 ------------------------------------
-Recall:            0.737 -> [0.737 0.737]
-PrecisionOfApprox: 0.766 -> [0.766 0.766]
+Recall:            0.751 -> [0.751 0.751]
+PrecisionOfApprox: 0.785 -> [0.785 0.785]
 ClassAccuracy:     0 -> [0 0]
-RelPosError:       1.57 -> [1.57 	1.57]
-NumCloser:         1.95 -> [1.95 	1.95]
+RelPosError:       1.46 -> [1.46 	1.46]
+NumCloser:         1.18 -> [1.18 	1.18]
 ------------------------------------
-QueryTime:         9.78 -> [8.77 	10.79]
-DistComp:          4661.17 -> [4103.66 	5218.68]
+QueryTime:         6.03 -> [5.76 	6.3]
+DistComp:          5717.1 -> [5400.83 	6033.38]
 ------------------------------------
-ImprEfficiency:    25.27 -> [25.27 	25.27]
-ImprDistComp:      21.41 -> [21.41 	21.41]
+ImprEfficiency:    15.57 -> [15.57 	15.57]
+ImprDistComp:      17.32 -> [17.32 	17.32]
 ------------------------------------
-Memory Usage:      298.54 MB
+Memory Usage:      226.25 MB
+------------------------------------
+
+===================================
+permutation (inverted index over neighboring pivots)
+numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=6,indexThreadQty=4,chunkIndexSize=32768
+===================================
+# of points: 99000
+# of queries: 1000
+------------------------------------
+Recall:            0.705 -> [0.705 0.705]
+PrecisionOfApprox: 0.741 -> [0.741 0.741]
+ClassAccuracy:     0 -> [0 0]
+RelPosError:       1.67 -> [1.67 	1.67]
+NumCloser:         2.88 -> [2.88 	2.88]
+------------------------------------
+QueryTime:         4.86 -> [4.63 	5.1]
+DistComp:          4821.39 -> [4536.01 	5106.78]
+------------------------------------
+ImprEfficiency:    19.3 -> [19.3 	19.3]
+ImprDistComp:      20.53 -> [20.53 	20.53]
+------------------------------------
+Memory Usage:      226.25 MB
 ------------------------------------
