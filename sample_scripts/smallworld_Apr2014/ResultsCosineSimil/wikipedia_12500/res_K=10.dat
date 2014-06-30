@@ -1,3 +1,4 @@
+MethodName	Recall	PrecisionOfApprox	RelPosError	NumCloser	ClassAccuracy	QueryTime	DistComp	ImprEfficiency	ImprDistComp	Mem	MethodParams	NumData
 "list of clusters"	0.99945	0.999731	1.00029	0	0	18.2034	11340.3	1.06722	1.02116	67	"bucketSize=400,maxLeavesToVisit=500"	11500
 "list of clusters"	0.99945	0.999731	1.00029	0	0	18.2026	11340.3	1.06727	1.02116	45	"bucketSize=400,maxLeavesToVisit=429"	11500
 "list of clusters"	0.99945	0.999731	1.00029	0	0	18.2036	11340.3	1.06721	1.02116	45	"bucketSize=400,maxLeavesToVisit=358"	11500

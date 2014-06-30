@@ -1,10 +1,4 @@
 MethodName	Recall	PrecisionOfApprox	RelPosError	NumCloser	ClassAccuracy	QueryTime	DistComp	ImprEfficiency	ImprDistComp	Mem	MethodParams	NumData
-"list of clusters"	0.837	0.867937	1.23585	0.556	0	97.7279	196575	15.5701	16.2737	6445	"bucketSize=400,maxLeavesToVisit=500"	3199000
-"list of clusters"	0.8312	0.863442	1.24703	0.626	0	84.9652	169822	17.909	18.8374	3166	"bucketSize=400,maxLeavesToVisit=429"	3199000
-"list of clusters"	0.8237	0.856174	1.26593	0.775	0	72.2833	143069	21.0509	22.3598	3166	"bucketSize=400,maxLeavesToVisit=358"	3199000
-"list of clusters"	0.8133	0.846747	1.2894	0.834	0	59.5917	116316	25.534	27.5026	3166	"bucketSize=400,maxLeavesToVisit=287"	3199000
-"list of clusters"	0.8002	0.836157	1.31557	0.931	0	46.9011	89563.6	32.4427	35.7176	3166	"bucketSize=400,maxLeavesToVisit=216"	3199000
-"list of clusters"	0.7805	0.818351	1.36379	1.302	0	34.0906	62810.8	44.6332	50.9307	3166	"bucketSize=400,maxLeavesToVisit=145"	3199000
 "permutation (vptree)"	0.7745	0.817389	1.32028	0.489	0	1347.61	639928	1.12917	4.999	6760	"numPivot=128,dbScanFrac=0.2,alphaLeft=3,alphaRight=3"	3199000
 "permutation (vptree)"	0.7541	0.797517	1.37076	0.586	0	1171.43	533294	1.29899	5.99857	3166	"numPivot=128,dbScanFrac=0.166666666666667,alphaLeft=3,alphaRight=3"	3199000
 "permutation (vptree)"	0.727	0.773939	1.44119	0.715	0	987.815	426661	1.54045	7.49776	3166	"numPivot=128,dbScanFrac=0.133333333333333,alphaLeft=3,alphaRight=3"	3199000

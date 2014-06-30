@@ -109,7 +109,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << ExpRes.GetImprDistCompAvg() << "\t";
   Data << size_t(ExpRes.GetMemAvg()) << "\t";
   Data << "\"" << MethParamStr << "\"" << "\t";
-  Data << config.GetDataObjects().size() << "\t";
+  Data << config.GetDataObjects().size();
   Data << std::endl;
 
   PrintStr  = produceHumanReadableReport(config, ExpRes, MethDescStr, MethParamStr);

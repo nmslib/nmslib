@@ -1,0 +1,10 @@
+MethodName	Recall	PrecisionOfApprox	RelPosError	NumCloser	ClassAccuracy	QueryTime	DistComp	ImprEfficiency	ImprDistComp	Mem	MethodParams	NumData
+"small_world_rand"	0.9535	0.963836	1.04947	0.0675	0	4.62143	1699.36	4.19593	6.76744	45	"NN=15,initIndexAttempts=4,initSearchAttempts=3,indexThreadQty=4"	11500
+"small_world_rand"	0.94855	0.956425	1.05953	0.1455	0	5.15144	1938.42	7.07094	12.381	85	"NN=15,initIndexAttempts=4,initSearchAttempts=3,indexThreadQty=4"	24000
+"small_world_rand"	0.9251	0.937572	1.08802	0.178	0	5.47543	2264.25	11.4933	21.6407	146	"NN=15,initIndexAttempts=4,initSearchAttempts=3,indexThreadQty=4"	49000
+"small_world_rand"	0.8903	0.904349	1.16243	0.67	0	6.14223	3459.43	15.2663	28.6175	226	"NN=15,initIndexAttempts=4,initSearchAttempts=3,indexThreadQty=4"	99000
+"small_world_rand"	0.903	0.92035	1.11981	0.326	0	13.4174	6968.58	13.2035	28.5567	421	"NN=15,initIndexAttempts=4,initSearchAttempts=7,indexThreadQty=4"	199000
+"small_world_rand"	0.8978	0.915497	1.12999	0.357	0	19.8909	10437.3	14.9869	38.2282	706	"NN=15,initIndexAttempts=4,initSearchAttempts=11,indexThreadQty=4"	399000
+"small_world_rand"	0.9032	0.923026	1.11729	0.201	0	33.0662	18628.5	15.0045	42.8912	1146	"NN=15,initIndexAttempts=4,initSearchAttempts=19,indexThreadQty=4"	799000
+"small_world_rand"	0.8951	0.9165	1.14291	0.303	0	44.9487	26468.4	19.1453	60.4116	2669	"NN=15,initIndexAttempts=4,initSearchAttempts=23,indexThreadQty=4"	1599000
+"small_world_rand"	0.8819	0.904792	1.18127	0.7	0	54.4391	32757.8	27.9215	97.656	4766	"NN=15,initIndexAttempts=4,initSearchAttempts=23,indexThreadQty=4"	3199000

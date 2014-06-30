@@ -25,10 +25,10 @@ AXIS = {
     'NumCloser': 'Number closer',
     'QueryTime': 'Query time (ms)',
     'DistComp': 'Distance computations',
-    'ImprEfficiency': 'Improvement of efficiency',
-    'ImprDistComp': 'Improvement of dist. computations',
+    'ImprEfficiency': 'Improv. in efficiency',
+    'ImprDistComp': 'Reduction in dist. comput.',
     'Mem': 'Memory usage',
-    'NumData': '# of data objects'
+    'NumData': '\\# of data points'
     }
 
 AXIS_DESC = 'Three tilde separated values: (0|1);(norm|log);<metric name>, the first one is 1 if we need to print an axis, the second one chooses either a regular or a logarithmically transformed axis, the third one specifies the name of the metric, which is one of the following: ' + ','.join(AXIS.keys())
@@ -45,11 +45,13 @@ LATEX = """
 \\documentclass{article}
 \\usepackage{pgfplots}
 \\usepgfplotslibrary{external}
+\\tikzexternalize{%s}
 \\usetikzlibrary{plotmarks}
 
 \\begin{document}
 
   \\pgfplotsset{
+     title style={font=\\Large},
      %s
   }
 
@@ -133,17 +135,19 @@ def genPGFPlot(experiments, methStyles, outputFile, xAxisField, yAxisField, axis
 
 def parseHeader(row):
     h = {}
-    for index, field in enumerate(row.split('\t')):
-        assert field not in h
+    for index, field in enumerate(row.rstrip().split('\t')):
+        if field in h:
+          raise Exception("Probably corrupt input file, a duplicate field: '" + field + "'")
         if index == 0:    # methodName is first field
             assert 'MethodName' == field
         h[field] = index
     return h
 
-def parseExpr(row, header, xAxisField, yAxisField):
-    row = row.split('\t')
-    assert len(row) == len(header)
-    #  [MethodName, "X Y"]
+def parseExpr(inputFile, lineNumber, row, header, xAxisField, yAxisField):
+    row = row.rstrip().split('\t')
+    if len(row) != len(header):
+      raise Exception("The input file '" + inputFile + "' is probably corrupt, as the number of values  in line "+str(lineNumber+1)+ " doesn't match the number of fields, expected # of fields: " + str(len(header)) + " but got: " + str(len(row)))
+    
     props  = methodNameAndStyle(clear(row[0]))
     return [props[0], props[1], row[header[xAxisField]] + ' ' + row[header[yAxisField]]]
 
@@ -155,10 +159,12 @@ def genPlotLatex(inputFile, outputFile, xAxisField, yAxisField, axisType, noLege
     for lineNumber, row in enumerate(rows):
         if lineNumber == 0:   # header information
             header = parseHeader(row)
-            assert xAxisField in header
-            assert yAxisField in header
+            if xAxisField not in header:
+              raise Exception("You specified an invalid xAxis name '" + xAxisField + "', valid are: " + ','.join(header))
+            if yAxisField not in header:
+              raise Exception("You specified an invalid yAxis name '" + yAxisField + "', valid are: " + ','.join(header))
         else:
-            parsed = parseExpr(row, header, xAxisField, yAxisField)
+            parsed = parseExpr(inputFile, lineNumber, row, header, xAxisField, yAxisField)
             # group by method name
             methodName = parsed[0]
             methodData = parsed[2]
@@ -174,7 +180,7 @@ def genPlotLatex(inputFile, outputFile, xAxisField, yAxisField, axisType, noLege
 def genPlot(inputFile, outputFilePrefix, xAxisField, yAxisField, axisType, noLegend,legendNumColumn,legendRelative, legendPos, printXaxis, printYaxis, title):
     plots = genPlotLatex(inputFile, outputFilePrefix,  xAxisField, yAxisField, axisType, noLegend, printXaxis, printYaxis, title)
 
-    legendDesc=' legend style={font=\small} '
+    legendDesc=' legend style={font=\\small} '
 
     if not noLegend:
       legendDesc = 'legend style={font=\\small},legend columns=' + legendNumColumn
@@ -182,9 +188,9 @@ def genPlot(inputFile, outputFilePrefix, xAxisField, yAxisField, axisType, noLeg
         legendDesc += ',legend pos=' + legendPos
       else:
         legendDesc += ',legend style={at={('+legendPos+')}}'
-
-    fp = open(outputFilePrefix + '.tex', 'w')
-    latex = LATEX % (legendDesc,plots)
+    outputFileName = outputFilePrefix + '.tex'
+    fp = open(outputFileName, 'w')
+    latex = LATEX % (outputFileName,legendDesc,plots)
     fp.write(latex)
     fp.close()
 
@@ -218,7 +224,7 @@ def methodNameAndStyle(methodName):
     if methodName.find('small world rand') >= 0:
         return ('small world', 'mark=o')
     if methodName.find('permutation  inverted index over neighboring pivots') >= 0:
-        return ('perm. neighb. index','mark=triangle')
+        return ('pivot neighb. index','mark=triangle')
     if methodName.find('multiprobe lsh') >= 0:
         return ('multi-probe LSH', 'mark=triangle*')
     if methodName.find('sampling') >= 0:

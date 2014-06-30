@@ -6,7 +6,7 @@ defined($DataDir) or die("Define the environemnt variable DATA_DIR, which contai
 my $MaxNumQuery= 1000;
 
 #my @maxDataQty = (800000);
-my @maxDataQty = (50000, 100000, 200000, 400000, 800000, 1600000, 3200000);
+my @maxDataQty = (12500, 25000, 50000, 100000, 200000, 400000, 800000, 1600000, 3200000);
 
 my $SpaceType = "cosinesimil_sparse_fast"; 
 # Let it be just one

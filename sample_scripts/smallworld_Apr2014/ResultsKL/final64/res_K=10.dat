@@ -1,30 +1,31 @@
-"permutation (incr. sorting)"	0.9384	1.05462	0.024	52.2417	20088	1.01474	24.8407	487	"numPivot=128,dbScanFrac=0.04"
-"permutation (incr. sorting)"	0.9246	1.07022	0.043	50.5939	16761	1.04779	29.7715	243	"numPivot=128,dbScanFrac=0.0333333333333333"
-"permutation (incr. sorting)"	0.91	1.08876	0.057	48.9993	13434	1.08189	37.1446	243	"numPivot=128,dbScanFrac=0.0266666666666667"
-"permutation (incr. sorting)"	0.8849	1.12382	0.072	47.3957	10108	1.11849	49.3668	243	"numPivot=128,dbScanFrac=0.02"
-"permutation (incr. sorting)"	0.8488	1.18244	0.116	45.8409	6781	1.15642	73.588	243	"numPivot=128,dbScanFrac=0.0133333333333333"
-"permutation (incr. sorting)"	0.7776	1.32935	0.428	44.2764	3454	1.19729	144.47	243	"numPivot=128,dbScanFrac=0.00666666666666667"
-"permutation (vptree)"	0.8493	1.19154	0.262	34.9348	20088	1.51742	24.8407	811	"numPivot=128,dbScanFrac=0.04,alphaLeft=3,alphaRight=3"
-"permutation (vptree)"	0.8349	1.21442	0.391	31.1199	16761	1.70343	29.7715	243	"numPivot=128,dbScanFrac=0.0333333333333333,alphaLeft=3,alphaRight=3"
-"permutation (vptree)"	0.8191	1.24579	0.444	27.3021	13434	1.94162	37.1446	243	"numPivot=128,dbScanFrac=0.0266666666666667,alphaLeft=3,alphaRight=3"
-"permutation (vptree)"	0.797	1.291	0.522	22.9931	10108	2.30545	49.3668	243	"numPivot=128,dbScanFrac=0.02,alphaLeft=3,alphaRight=3"
-"permutation (vptree)"	0.7615	1.36393	0.621	18.433	6781	2.87574	73.588	243	"numPivot=128,dbScanFrac=0.0133333333333333,alphaLeft=3,alphaRight=3"
-"permutation (vptree)"	0.702	1.53385	1.013	13.2371	3454	4.00442	144.47	243	"numPivot=128,dbScanFrac=0.00666666666666667,alphaLeft=3,alphaRight=3"
-"vptree: triangle inequality"	0.9629	1.03655	0.095	39.0892	335481	1.35611	1.48742	509	"alphaLeft=0.13459,alphaRight=0.0552045,bucketSize=50"
-"vptree: triangle inequality"	0.5061	2.17972	2.064	1.36207	10787.5	38.8763	46.2571	509	"alphaLeft=0.594398,alphaRight=1.07672,bucketSize=50"
-"vptree: triangle inequality"	0.4273	2.74875	3.159	1.00947	7876.58	52.4443	63.3524	509	"alphaLeft=0.572731,alphaRight=1.87932,bucketSize=50"
-"vptree: triangle inequality"	0.3552	3.82024	4.395	0.557242	4307.47	94.9479	115.845	509	"alphaLeft=0.664442,alphaRight=2.93441,bucketSize=50"
-"vptree: triangle inequality"	0.3072	4.71375	8.874	0.416233	3164.82	127.08	157.671	509	"alphaLeft=0.770839,alphaRight=4.58184,bucketSize=50"
-"vptree: triangle inequality"	0.2446	8.10813	15.129	0.157314	1150.85	335.426	433.592	509	"alphaLeft=1.61993,alphaRight=5.31553,bucketSize=50"
-"small_world_rand"	0.9521	1.06982	0.003	5.96004	6093.08	8.88793	81.8962	659	"NN=21,initIndexAttempts=4,initSearchAttempts=8,indexThreadQty=6"
-"small_world_rand"	0.9505	1.07037	0.002	4.53726	4706.81	11.6654	106.017	243	"NN=21,initIndexAttempts=4,initSearchAttempts=6,indexThreadQty=6"
-"small_world_rand"	0.9473	1.08047	0.344	3.02983	3238.3	17.4859	154.093	243	"NN=21,initIndexAttempts=4,initSearchAttempts=4,indexThreadQty=6"
-"small_world_rand"	0.9382	1.10888	33.47	2.28147	2463.35	23.223	202.569	243	"NN=21,initIndexAttempts=4,initSearchAttempts=3,indexThreadQty=6"
-"small_world_rand"	0.9268	1.12448	51.078	1.54652	1704.99	34.2465	292.671	243	"NN=21,initIndexAttempts=4,initSearchAttempts=2,indexThreadQty=6"
-"small_world_rand"	0.8411	1.64274	602.292	0.778946	875.699	67.9945	569.831	243	"NN=21,initIndexAttempts=4,initSearchAttempts=1,indexThreadQty=6"
-"permutation (inverted index over neighboring pivots)"	0.9893	1.01269	0.011	7.67648	25790.9	6.90441	19.3479	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=4,indexThreadQty=6,chunkIndexSize=32768"
-"permutation (inverted index over neighboring pivots)"	0.9623	1.03947	0.053	5.40979	16312	9.79672	30.591	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=6,indexThreadQty=6,chunkIndexSize=32768"
-"permutation (inverted index over neighboring pivots)"	0.8988	1.17492	0.243	3.9979	10845.8	13.256	46.0087	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=8,indexThreadQty=6,chunkIndexSize=32768"
-"permutation (inverted index over neighboring pivots)"	0.793	1.58482	2.858	3.01234	7262.21	17.5922	68.7119	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=10,indexThreadQty=6,chunkIndexSize=32768"
-"permutation (inverted index over neighboring pivots)"	0.6494	2.51057	60.645	2.37334	4917.52	22.3279	101.474	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=12,indexThreadQty=6,chunkIndexSize=32768"
-"permutation (inverted index over neighboring pivots)"	0.464	3.85578	31.038	1.9781	3408.18	26.7886	146.412	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=14,indexThreadQty=6,chunkIndexSize=32768"
+MethodName	Recall	PrecisionOfApprox	RelPosError	NumCloser	ClassAccuracy	QueryTime	DistComp	ImprEfficiency	ImprDistComp	Mem	MethodParams	NumData
+"permutation (incr. sorting)"	0.92072	0.943867	1.08227	0.202	0	35.3255	20088	0.653774	24.8407	292	"numPivot=128,dbScanFrac=0.04"	499000
+"permutation (incr. sorting)"	0.9063	0.932533	1.10326	0.2204	0	32.579	16761	0.745517	29.7715	243	"numPivot=128,dbScanFrac=0.0333333333333333"	499000
+"permutation (incr. sorting)"	0.8882	0.918063	1.13032	0.2564	0	31.0063	13434	0.783327	37.1446	243	"numPivot=128,dbScanFrac=0.0266666666666667"	499000
+"permutation (incr. sorting)"	0.86222	0.896564	1.17251	0.3142	0	29.3951	10108	0.826186	49.3668	243	"numPivot=128,dbScanFrac=0.02"	499000
+"permutation (incr. sorting)"	0.82284	0.86272	1.24586	0.4248	0	27.7825	6781	0.874219	73.588	243	"numPivot=128,dbScanFrac=0.0133333333333333"	499000
+"permutation (incr. sorting)"	0.74896	0.796319	1.42179	0.757	0	26.1506	3454	0.92878	144.47	243	"numPivot=128,dbScanFrac=0.00666666666666667"	499000
+"permutation (vptree)"	0.79196	0.832677	1.30801	0.4608	0	27.2148	20088	0.904153	24.8407	357	"numPivot=128,dbScanFrac=0.04,alphaLeft=3,alphaRight=3"	499000
+"permutation (vptree)"	0.77912	0.821449	1.33664	0.5122	0	23.5551	16761	1.04482	29.7715	243	"numPivot=128,dbScanFrac=0.0333333333333333,alphaLeft=3,alphaRight=3"	499000
+"permutation (vptree)"	0.76194	0.806159	1.37647	0.5732	0	19.8796	13434	1.23798	37.1446	243	"numPivot=128,dbScanFrac=0.0266666666666667,alphaLeft=3,alphaRight=3"	499000
+"permutation (vptree)"	0.73812	0.784979	1.43679	0.7548	0	16.1384	10108	1.52475	49.3668	243	"numPivot=128,dbScanFrac=0.02,alphaLeft=3,alphaRight=3"	499000
+"permutation (vptree)"	0.70294	0.753741	1.53596	0.963	0	12.3663	6781	1.9886	73.588	243	"numPivot=128,dbScanFrac=0.0133333333333333,alphaLeft=3,alphaRight=3"	499000
+"permutation (vptree)"	0.64158	0.69484	1.76494	1.446	0	8.32752	3454	2.93627	144.47	243	"numPivot=128,dbScanFrac=0.00666666666666667,alphaLeft=3,alphaRight=3"	499000
+"vptree: triangle inequality"	0.96122	0.971846	1.03806	0.0386	0	23.5575	335267	1.03188	1.48922	296	"alphaLeft=0.13459,alphaRight=0.0552045,bucketSize=50"	499000
+"vptree: triangle inequality"	0.48946	0.550448	2.34687	2.2872	0	0.966023	11852.5	25.0958	42.068	296	"alphaLeft=0.594398,alphaRight=1.07672,bucketSize=50"	499000
+"vptree: triangle inequality"	0.41308	0.468467	2.97373	3.4736	0	0.617802	7452.05	39.1138	66.743	296	"alphaLeft=0.572731,alphaRight=1.87932,bucketSize=50"	499000
+"vptree: triangle inequality"	0.34562	0.391971	3.97765	5.702	0	0.376643	4407.22	63.719	112.042	296	"alphaLeft=0.664442,alphaRight=2.93441,bucketSize=50"	499000
+"vptree: triangle inequality"	0.30554	0.345361	5.03883	7.9886	0	0.264702	3004.73	91.3635	165.63	296	"alphaLeft=0.770839,alphaRight=4.58184,bucketSize=50"	499000
+"vptree: triangle inequality"	0.23508	0.260821	8.73599	21.885	0	0.106205	1113.26	226.519	445.613	344	"alphaLeft=1.61993,alphaRight=5.31553,bucketSize=50"	499000
+"small_world_rand"	0.9482	0.958462	1.08315	0.0016	0	4.63135	6159.3	5.24195	81.0156	557	"NN=21,initIndexAttempts=4,initSearchAttempts=8,indexThreadQty=6"	499000
+"small_world_rand"	0.9463	0.957042	1.08613	0.4046	0	3.49549	4722.19	6.94396	105.658	243	"NN=21,initIndexAttempts=4,initSearchAttempts=6,indexThreadQty=6"	499000
+"small_world_rand"	0.9405	0.952393	1.09585	0.3056	0	2.377	3279.67	10.2049	152.124	243	"NN=21,initIndexAttempts=4,initSearchAttempts=4,indexThreadQty=6"	499000
+"small_world_rand"	0.93524	0.948194	1.10632	1.3338	0	1.79944	2500.28	13.4951	199.561	243	"NN=21,initIndexAttempts=4,initSearchAttempts=3,indexThreadQty=6"	499000
+"small_world_rand"	0.91726	0.933312	1.16354	26.3262	0	1.22033	1717.11	19.8714	290.424	243	"NN=21,initIndexAttempts=4,initSearchAttempts=2,indexThreadQty=6"	499000
+"small_world_rand"	0.84428	0.867029	1.53934	389.644	0	0.618046	878.548	39.1962	567.357	243	"NN=21,initIndexAttempts=4,initSearchAttempts=1,indexThreadQty=6"	499000
+"permutation (inverted index over neighboring pivots)"	0.98732	0.991235	1.01293	0.0158	0	6.66051	25814.3	3.64585	19.3128	307	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=4,indexThreadQty=6,chunkIndexSize=32768"	499000
+"permutation (inverted index over neighboring pivots)"	0.95776	0.967798	1.05225	0.0724	0	4.55818	16416.7	5.31573	30.3321	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=6,indexThreadQty=6,chunkIndexSize=32768"	499000
+"permutation (inverted index over neighboring pivots)"	0.89456	0.912474	1.18834	7.3872	0	3.19016	10886.4	7.57741	45.7428	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=8,indexThreadQty=6,chunkIndexSize=32768"	499000
+"permutation (inverted index over neighboring pivots)"	0.78992	0.815689	1.62926	8.8554	0	2.27585	7290.2	10.6167	68.354	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=10,indexThreadQty=6,chunkIndexSize=32768"	499000
+"permutation (inverted index over neighboring pivots)"	0.63774	0.67728	2.48804	28.3698	0	1.67839	4959.42	14.4141	100.372	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=12,indexThreadQty=6,chunkIndexSize=32768"	499000
+"permutation (inverted index over neighboring pivots)"	0.46384	0.51944	4.04922	50.4292	0	1.29058	3372.49	18.7159	146.919	243	"numPivot=1024,numPrefix=18,useSort=0,invProcAlg=scan,minTimes=14,indexThreadQty=6,chunkIndexSize=32768"	499000
