@@ -203,15 +203,22 @@ def genPlot(inputFile, outputFilePrefix, xAxisField, yAxisField, axisType, noLeg
 # Marker types (note that the prefix * denotes a solid shape and cannot be applied to some of the markers such as 'x'). 
 # Note: Let's not use '|', because it is very similar to '+'
 # * x + - o
+# Also oplus* looks exactly as simply * 
+#
 # triangle square diamond pentagon 
 # triangle* square* diamond* pentagon*
-# oplus otimes
-# oplus* otimes*
+# oplus 
+# otimes otimes*
 # asterisk star 
+
+def startsWith(s, prefix):
+  if len(s) >= len(prefix):
+    return s[0:len(prefix)] == prefix
+  return False 
      
 def methodNameAndStyle(methodName):
-    methodName = methodName.strip()
-    if methodName.find('triangle inequality') >= 0:
+    methodName = methodName.strip().lower()
+    if startsWith(methodName, 'vptree'):
         return ('vp-tree', 'mark=*')
     if methodName.find('permutation  incr') >= 0:
         return ('permutation','mark=x')
@@ -233,6 +240,12 @@ def methodNameAndStyle(methodName):
         return (methodName.strip(), 'mark=square*')
     if methodName.find('list of clusters') >= 0:
         return ('list clust', 'mark=diamond')
+    if methodName == 'ghtree':
+        return ('gh-tree', 'mark=diamond*')
+    if methodName == 'mvp tree':
+        return ('mvp-tree', 'mark=oplus')
+    if methodName == 'satree':
+        return ('sa-tree', 'mark=otimes')
     print >> sys.stderr, "Does not know how to rename the method '" + methodName + "'"
     exit(1)
     #assert False

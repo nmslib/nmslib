@@ -23,6 +23,6 @@ cd figures
 ../../genplot.py -i ../ResultsCosineSimil/wikipedia_3200000/res_K\=10.dat -o wiki_all_eff  -x 1~norm~Recall -y 1~log~ImprEfficiency -l "2~(0.95,-.2)" -t ""
 ../../genplot.py -i ../ResultsCosineSimil/wikipedia_3200000/res_K\=10.dat -o wiki_all_dist -x 0~norm~Recall -y 1~log~ImprDistComp -l "none" -t "Wikipedia"
 
-../../genplot.py -i ../ResultsCosineSimil/sw_fixed_recall.dat -o wiki_sw -y 1~norm~DistComp -x 0~log~NumData -l "none" -t "Wikipedia"
-../../genplot.py -i ../ResultsCosineSimil/all_meth_fixed_recall.dat -o wiki_all -y 1~norm~DistComp -x 1~log~NumData -l "2~(0.95,-.2)" -t ""
+../../genplot.py -i ../ResultsCosineSimil/sw_fixed_recall.dat -o wiki_sw -y 1~norm~QueryTime -x 0~log~NumData -l "none" -t "Wikipedia"
+../../genplot.py -i ../ResultsCosineSimil/all_meth_fixed_recall.dat -o wiki_all -y 1~norm~QueryTime -x 1~norm~NumData -l "2~(0.95,-.2)" -t ""
 
