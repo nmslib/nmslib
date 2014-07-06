@@ -29,13 +29,24 @@ namespace similarity {
 template <class dist_t, class EvalObj>
 void testMetric(
           size_t ExactResultSize,
-          const vector<ResultEntry<dist_t>>& exactEntries,
-          const vector<ResultEntry<dist_t>>& approxEntries,
+          vector<ResultEntry<dist_t>> exactEntries,
+          vector<ResultEntry<dist_t>> approxEntries,
           const double expVal) {
   unordered_set<IdType> exactIds;
   unordered_set<IdType> approxIds;
 
-  for (const auto& e:exactEntries) exactIds.insert(e.mId);
+  // Let's sort the entries
+  std::sort(exactEntries.begin(), exactEntries.end());
+  std::sort(approxEntries.begin(), approxEntries.end());
+
+  {
+    size_t i = 0;
+    for (const auto& e:exactEntries) {
+      ++i;
+      if (i > ExactResultSize) break;
+      exactIds.insert(e.mId);
+    }
+  }
   for (const auto& e:approxEntries) approxIds.insert(e.mId);
 
   double val = EvalObj()(ExactResultSize, exactEntries, exactIds, approxEntries, approxIds);
@@ -79,6 +90,8 @@ TEST(TestRecallFloat) {
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
     testMetric<float,EvalRecall<float>>(KNN, exactEntries[i], approxEntries[i], expRecall[i]); 
+    // In a special case when there are no results recall should be equal to 1
+    testMetric<float,EvalRecall<float>>(0, exactEntries[i], approxEntries[i], 1.0);
   }
 }
 
@@ -110,6 +123,8 @@ TEST(TestRecallInt) {
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
     testMetric<int,EvalRecall<int>>(KNN, exactEntries[i], approxEntries[i], expRecall[i]); 
+    // In a special case when there are no results recall should be equal to 1
+    testMetric<int,EvalRecall<int>>(0, exactEntries[i], approxEntries[i], 1.0);
   }
 }
 
@@ -141,6 +156,8 @@ TEST(TestNumCloserFloat) {
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
     testMetric<float,EvalNumberCloser<float>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    // In a special case when there are no results the number of points that are closer is 0 
+    testMetric<float,EvalNumberCloser<float>>(0, exactEntries[i], approxEntries[i], 0.0); 
   }
 }
 
@@ -172,6 +189,8 @@ TEST(TestNumCloserInt) {
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
     testMetric<int,EvalNumberCloser<int>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    // In a special case when there are no results the number of points that are closer is 0 
+    testMetric<int,EvalNumberCloser<int>>(0, exactEntries[i], approxEntries[i], 0.0); 
   }
 }
 
@@ -203,6 +222,11 @@ TEST(TestRelPosErrorFloat) {
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
     testMetric<float,EvalLogRelPosError<float>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    /* 
+     * In a special case when there are no results the relative position error should be 1.0 and
+     * its logarithm should be zero
+     */
+    testMetric<float,EvalLogRelPosError<float>>(0, exactEntries[i], approxEntries[i], 0.0); 
   }
 }
 
@@ -231,6 +255,11 @@ TEST(TestRelPosErrorInt) {
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
     testMetric<int,EvalLogRelPosError<int>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    /* 
+     * In a special case when there are no results the relative position error should be 1.0 and
+     * its logarithm should be zero
+     */
+    testMetric<int,EvalLogRelPosError<int>>(0, exactEntries[i], approxEntries[i], 0.0); 
   }
 }
 
@@ -262,6 +291,8 @@ TEST(TestPrecisionOfApproxFloat) {
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
     testMetric<float,EvalPrecisionOfApprox<float>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    // In a special case when there are no results, the precision of approximation should be equal to 1.0
+    testMetric<float,EvalPrecisionOfApprox<float>>(0, exactEntries[i], approxEntries[i], 1.0); 
   }
 }
 
@@ -290,6 +321,8 @@ TEST(TestPrecisionOfApproxInt) {
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
     testMetric<int,EvalPrecisionOfApprox<int>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    // In a special case when there are no results, the precision of approximation should be equal to 1.0
+    testMetric<int,EvalPrecisionOfApprox<int>>(0, exactEntries[i], approxEntries[i], 1.0); 
   }
 }
 

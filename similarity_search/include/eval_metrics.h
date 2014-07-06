@@ -57,7 +57,7 @@ bool ApproxEqualElem(const ResultEntry<dist_t>& elem1, const ResultEntry<dist_t>
 template <class dist_t>
 struct EvalMetricsBase {
   virtual double operator()(double ExactResultSize,
-                      const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                      const vector<ResultEntry<dist_t>>& SortedAllEntries, const unordered_set<IdType>& ExactResultIds,
                       const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
                       ) const = 0;
   /* 
@@ -66,12 +66,12 @@ struct EvalMetricsBase {
    */
   template <class AccumObj>
   static void iterate(AccumObj& obj,
-               const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+               const vector<ResultEntry<dist_t>>& SortedAllEntries, const unordered_set<IdType>& ExactResultIds,
                const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
                ) {
       for (size_t k = 0, p = 0; k < ApproxEntries.size(); ++k) {
         const auto& elemApprox = ApproxEntries[k];
-        const auto& elemExact  = ExactEntries[p];
+        const auto& elemExact  = SortedAllEntries[p];
         /*
          * There is no guarantee that the floating point arithmetic
          * produces consistent results. For instance, we can call the distance
@@ -81,11 +81,11 @@ struct EvalMetricsBase {
         if (elemApprox.mDist -  elemExact.mDist < 0
            && !ApproxEqualElem(elemApprox, elemExact)
             ) {
-          double mx = std::abs(std::max(ApproxEntries[k].mDist, ExactEntries[p].mDist));
-          double mn = std::abs(std::min(ApproxEntries[k].mDist, ExactEntries[p].mDist));
+          double mx = std::abs(std::max(ApproxEntries[k].mDist, SortedAllEntries[p].mDist));
+          double mn = std::abs(std::min(ApproxEntries[k].mDist, SortedAllEntries[p].mDist));
   
-          for (size_t i = 0; i < std::min(ExactEntries.size(), ApproxEntries.size()); ++i ) {
-            LOG(LIB_INFO) << "Ex: " << ExactEntries[i].mDist << " id = " << ExactEntries[i].mId <<
+          for (size_t i = 0; i < std::min(SortedAllEntries.size(), ApproxEntries.size()); ++i ) {
+            LOG(LIB_INFO) << "Ex: " << SortedAllEntries[i].mDist << " id = " << SortedAllEntries[i].mId <<
                          " -> Apr: "<< ApproxEntries[i].mDist << " id = " << ApproxEntries[i].mId << 
                          " 1 - ratio: " << (1 - mn/mx) << " diff: " << (mx - mn);
           }
@@ -98,21 +98,21 @@ struct EvalMetricsBase {
         // At this point the distance to the true answer is either >= than the distance to the approximate answer,
         // or the distance to the true answer is slightly smaller due to floating point arithmetic inconsistency
         size_t LastEqualP = p;
-        if (p < ExactEntries.size() && 
+        if (p < SortedAllEntries.size() && 
             ApproxEqualElem(elemApprox, elemExact)) {
           ++p;
         } else {
-          while (p < ExactEntries.size() && 
-                 ExactEntries[p].mDist < ApproxEntries[k].mDist &&
-                 !ApproxEqualElem(ExactEntries[p], ApproxEntries[k]))
+          while (p < SortedAllEntries.size() && 
+                 SortedAllEntries[p].mDist < ApproxEntries[k].mDist &&
+                 !ApproxEqualElem(SortedAllEntries[p], ApproxEntries[k]))
                  {
             ++p;
             ++LastEqualP;
           }
         }
         if (p < k) {
-          for (size_t i = 0; i < std::min(ExactEntries.size(), ApproxEntries.size()); ++i ) {
-            LOG(LIB_INFO) << "E: " << ExactEntries[i].mDist << " -> " << ApproxEntries[i].mDist;
+          for (size_t i = 0; i < std::min(SortedAllEntries.size(), ApproxEntries.size()); ++i ) {
+            LOG(LIB_INFO) << "E: " << SortedAllEntries[i].mDist << " -> " << ApproxEntries[i].mDist;
           }
           LOG(LIB_FATAL) << "bug: p = " << p << " k = " << k;
         }
@@ -129,7 +129,7 @@ struct EvalRecall : public EvalMetricsBase<dist_t> {
    * A classic recall measure
    */
   double operator()(double ExactResultSize,
-                    const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                    const vector<ResultEntry<dist_t>>& SortedAllEntries, const unordered_set<IdType>& ExactResultIds,
                     const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
                     ) const {
     if (ExactResultIds.empty()) return 1.0;
@@ -148,18 +148,18 @@ struct EvalNumberCloser : public EvalMetricsBase<dist_t> {
    * than the closest element returned by the search.
    */
   double operator()(double ExactResultSize,
-                    const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                    const vector<ResultEntry<dist_t>>& SortedAllEntries, const unordered_set<IdType>& ExactResultIds,
                     const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
                    ) const {
-    if (ExactEntries.empty()) return 0.0;
-    if (ApproxEntries.empty()) return min(ExactResultSize, static_cast<double>(ExactEntries.size()));
+    if (ExactResultIds.empty()) return 0.0;
+    if (ApproxEntries.empty()) return min(ExactResultSize, static_cast<double>(SortedAllEntries.size()));
     
     double NumberCloser = 0;
 
     // 2. Compute the number of points closer to the 1-NN then the first result.
     CHECK(!ApproxEntries.empty());
-    for (size_t p = 0; p < ExactEntries.size(); ++p) {
-      if (ExactEntries[p].mDist >= ApproxEntries[0].mDist || ApproxEqualElem(ExactEntries[p], ApproxEntries[0])) break;
+    for (size_t p = 0; p < SortedAllEntries.size(); ++p) {
+      if (SortedAllEntries[p].mDist >= ApproxEntries[0].mDist || ApproxEqualElem(SortedAllEntries[p], ApproxEntries[0])) break;
       ++NumberCloser;
     }
 
@@ -188,15 +188,15 @@ struct EvalPrecisionOfApprox : public EvalMetricsBase<dist_t> {
   };
 
   double operator()(double ExactResultSize,
-                    const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                    const vector<ResultEntry<dist_t>>& SortedAllEntries, const unordered_set<IdType>& ExactResultIds,
                     const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
                     ) const {
-    if (ExactEntries.empty()) return 1.0;
+    if (ExactResultIds.empty()) return 1.0;
     if (ApproxEntries.empty()) return 0.0;
 
     AccumPrecisionOfApprox res;
 
-    EvalMetricsBase<dist_t>::iterate(res, ExactEntries, ExactResultIds, ApproxEntries, ApproxResultIds);
+    EvalMetricsBase<dist_t>::iterate(res, SortedAllEntries, ExactResultIds, ApproxEntries, ApproxResultIds);
     
     return res.PrecisionOfApprox_ / ApproxEntries.size();
   }
@@ -212,15 +212,15 @@ struct EvalLogRelPosError : public EvalMetricsBase<dist_t> {
   };
 
   double operator()(double ExactResultSize,
-                    const vector<ResultEntry<dist_t>>& ExactEntries, const unordered_set<IdType>& ExactResultIds,
+                    const vector<ResultEntry<dist_t>>& SortedAllEntries, const unordered_set<IdType>& ExactResultIds,
                     const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
                     ) const {
-    if (ExactEntries.empty()) return 0.0;
-    if (ApproxEntries.empty()) return log(min(ExactResultSize, static_cast<double>(ExactEntries.size())));
+    if (ExactResultIds.empty()) return 0.0;
+    if (ApproxEntries.empty()) return log(min(ExactResultSize, static_cast<double>(SortedAllEntries.size())));
 
     AccumLogRelPossError res;
 
-    EvalMetricsBase<dist_t>::iterate(res, ExactEntries, ExactResultIds, ApproxEntries, ApproxResultIds);
+    EvalMetricsBase<dist_t>::iterate(res, SortedAllEntries, ExactResultIds, ApproxEntries, ApproxResultIds);
     
     return res.LogRelPosError_ / ApproxEntries.size();
   }

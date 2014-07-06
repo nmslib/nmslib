@@ -60,7 +60,11 @@ public:
   }
   uint64_t GetSeqSearchTime()     const { return SeqSearchTime_; }
 
-  const vector<ResultEntry<dist_t>>&   GetExactEntries() const { return  ExactEntries_;}
+  /* 
+   * SortedAllEntries_ include all database entries sorted in the order
+   * of increasing distance from the query.
+   */
+  const vector<ResultEntry<dist_t>>&   GetSortedEntries() const { return  SortedAllEntries_;}
 private:
   void DoSeqSearch(const similarity::Space<dist_t>* space,
                    const ObjectVector&              datapoints,
@@ -69,23 +73,23 @@ private:
 
     wtm.reset();
 
-    ExactEntries_.resize(datapoints.size());
+    SortedAllEntries_.resize(datapoints.size());
 
     for (size_t i = 0; i < datapoints.size(); ++i) {
       // Distance can be asymmetric, but the query is always on the right side
-      ExactEntries_[i] = ResultEntry<dist_t>(datapoints[i]->id(), datapoints[i]->label(), space->IndexTimeDistance(datapoints[i], query));
+      SortedAllEntries_[i] = ResultEntry<dist_t>(datapoints[i]->id(), datapoints[i]->label(), space->IndexTimeDistance(datapoints[i], query));
     }
 
     wtm.split();
 
     SeqSearchTime_ = wtm.elapsed();
 
-    std::sort(ExactEntries_.begin(), ExactEntries_.end());
+    std::sort(SortedAllEntries_.begin(), SortedAllEntries_.end());
   }
 
   uint64_t                            SeqSearchTime_;
 
-  vector<ResultEntry<dist_t>>         ExactEntries_;
+  vector<ResultEntry<dist_t>>         SortedAllEntries_;
 };
 
 template <class dist_t>
@@ -93,14 +97,14 @@ class EvalResults {
 public:
   EvalResults(const typename similarity::Space<dist_t>* space,
                    const typename similarity::KNNQuery<dist_t>* query,
-                   const GoldStandard<dist_t>& gs) : K_(0), ExactEntries_(gs.GetExactEntries()) {
+                   const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
     GetKNNData(query);
     ComputeMetrics(query->QueryObject()->label());
   }
 
   EvalResults(const typename similarity::Space<dist_t>* space,
                    const typename similarity::RangeQuery<dist_t>* query,
-                   const GoldStandard<dist_t>& gs) : K_(0), ExactEntries_(gs.GetExactEntries()) {
+                   const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
     GetRangeData(query);
     ComputeMetrics(query->QueryObject()->label());
   }
@@ -162,11 +166,11 @@ private:
    */
   void GetKNNData(const KNNQuery<dist_t>* query) {
     K_ = query->GetK();
-    for (size_t i = 0; i < ExactEntries_.size(); ++i) {
-      if (i < K_ || (K_ && ApproxEqual(ExactEntries_[i].mDist,  ExactEntries_[K_-1].mDist))) {
-        ExactResultIds_.insert(ExactEntries_[i].mId);
+    for (size_t i = 0; i < SortedAllEntries_.size(); ++i) {
+      if (i < K_ || (K_ && ApproxEqual(SortedAllEntries_[i].mDist,  SortedAllEntries_[K_-1].mDist))) {
+        ExactResultIds_.insert(SortedAllEntries_[i].mId);
       }
-      else break; // ExactEntries_ are sorted by distance
+      else break; // SortedAllEntries_ are sorted by distance
     }
 
     unique_ptr<KNNQueue<dist_t>> ResQ(query->Result()->Clone());
@@ -185,12 +189,13 @@ private:
       }
       ResQ->Pop();
     }
+    // ApproxEntries_ should be sorted
   }
 
   void GetRangeData(const RangeQuery<dist_t>* query) {
-    for (size_t i = 0; i < ExactEntries_.size(); ++i) {
-      if (ExactEntries_[i].mDist <= query->Radius()) ExactResultIds_.insert(ExactEntries_[i].mId);
-      else break; // ExactEntries_ are sorted by distance
+    for (size_t i = 0; i < SortedAllEntries_.size(); ++i) {
+      if (SortedAllEntries_[i].mDist <= query->Radius()) ExactResultIds_.insert(SortedAllEntries_[i].mId);
+      else break; // SortedAllEntries_ are sorted by distance
     }
 
     const ObjectVector&         ResQ = *query->Result();
@@ -220,10 +225,10 @@ private:
                                   ExactResultIds_.size();
 
     ClassCorrect_      = kClassUnknown;
-    Recall_            = EvalRecall<dist_t>()(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, ExactEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    Recall_            = EvalRecall<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
 
     // 2 Obtain class result
     if (queryLabel >= 0) {
@@ -258,7 +263,12 @@ private:
   std::unordered_set<IdType>          ApproxResultIds_;
   std::unordered_set<IdType>          ExactResultIds_;
 
-  const std::vector<ResultEntry<dist_t>>& ExactEntries_;
+
+  /* 
+   * SortedAllEntries_ include all database entries sorted in the order
+   * of increasing distance from the query.
+   */
+  const std::vector<ResultEntry<dist_t>>& SortedAllEntries_;
 };
 
 }
