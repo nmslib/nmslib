@@ -53,13 +53,15 @@ using std::vector;
 using std::string;
 using std::stringstream;
 
-#define MAX_THREAD_QTY 4
+//#define MAX_THREAD_QTY 4
+#define MAX_THREAD_QTY 1
 #define TEST_SET_QTY  "10"
 #define MAX_NUM_QUERY "100"
 
 vector<MethodTestCase>    vTestCaseDesc = {
-#if 0
-#endif
+
+  // *************** VP-tree tests ******************** //
+  // knn
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 55, 65),  
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10,alphaLeft=2,alphaRight=2", 
@@ -76,6 +78,94 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 1.1, 1.3),  
   MethodTestCase("float", "l2", "final128_10K.txt", "vptree:chunkBucket=1,bucketSize=10,alphaLeft=2,alphaRight=2", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 0.999, 0.0, 0.01, 1.7, 1.9),  
+  // range
+  MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
+                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 23, 26),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
+                0 /* no KNN */, 0.5 /* range search radius 0.5 */ , 1.0, 1.0, 0.0, 0.0, 2.4, 3),  
+
+  // *************** MVP-tree tests ******************** //
+  // knn
+  MethodTestCase("float", "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10", 
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 120, 140),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10", 
+                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 50),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10,maxLeavesToVisit=10", 
+                1 /* KNN-1 */, 0 /* no range search */ , 0.82, 0.9, 0.2, 3, 230, 250),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10,maxLeavesToVisit=20", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.75, 0.82, 0.2, 1.0, 85, 100),  
+
+  // range
+  MethodTestCase("float", "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10", 
+                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 40, 55),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10", 
+                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 3, 4),  
+
+  // *************** GH-tree tests ******************** //
+  // knn
+  MethodTestCase("float", "l2", "final8_10K.txt", "ghtree:bucketSize=10", 
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 28, 35),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "ghtree:bucketSize=10", 
+                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 8, 10.2),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "ghtree:bucketSize=10,maxLeavesToVisit=10", 
+                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 0.87, 0.2, 1.5, 95, 115),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "ghtree:bucketSize=10,maxLeavesToVisit=20", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.75, 0.82, 0.1, 1.0, 52, 62),  
+  // range
+  MethodTestCase("float", "l2", "final8_10K.txt", "ghtree:bucketSize=10", 
+                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 10, 16),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "ghtree:bucketSize=10", 
+                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 1, 1.2),  
+
+  // *************** SA-tree tests ******************** //
+  // knn
+  MethodTestCase("float", "l2", "final8_10K.txt", "satree:bucketSize=10", 
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 25, 33),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "satree:bucketSize=10", 
+                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 15, 18),  
+  // range
+  MethodTestCase("float", "l2", "final8_10K.txt", "satree:bucketSize=10", 
+                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 14, 18),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "satree:bucketSize=10", 
+                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 2.8, 3.4),  
+
+  // *************** List of clusters tests ******************** //
+  // knn
+  MethodTestCase("float", "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=2147483647", 
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 9.5, 11.5),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=2147483647", 
+                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 7.5, 8.5),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=10", 
+                1 /* KNN-1 */, 0 /* no range search */ , 0.78, 0.85, 0.2, 1.5, 9.5, 11.5),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=20", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.05, 0.7, 8.5, 10.5),  
+  // range
+  MethodTestCase("float", "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=2147483647", 
+                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 8, 10),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=2147483647", 
+                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 2.4, 3.4),  
+
+  // *************** bbtree tests ******************** //
+  // knn
+  /* 
+   * TODO @leo 
+   *      bbtree seems to be a bit wacky (missing a tiny fraction of answers), 
+   *      need to debug it in the future.
+   *      Therefore, we expect a slightly imperfect recall sometimes.
+   */
+  MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "bbtree:bucketSize=10,maxLeavesToVisit=2147483647", 
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.0, 9.5, 11.5),  
+  MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "bbtree:bucketSize=10,maxLeavesToVisit=2147483647", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.0, 5.5, 8),  
+  MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "bbtree:bucketSize=10,maxLeavesToVisit=10", 
+                1 /* KNN-1 */, 0 /* no range search */ , 0.75, 0.85, 0.3, 1.5, 48, 52),  
+  MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "bbtree:bucketSize=10,maxLeavesToVisit=20", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.7, 0.78, 0.3, 1.6, 28, 37),  
+  // range
+  MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "bbtree:bucketSize=10,maxLeavesToVisit=2147483647", 
+                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 0.999, 1.0, 0.0, 0.0, 4.5, 6.5),  
+  MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "bbtree:bucketSize=10,maxLeavesToVisit=2147483647", 
+                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 0.999, 1.0, 0.0, 0.0, 1.2, 2.4),  
 
 };
 

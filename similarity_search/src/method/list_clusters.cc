@@ -44,6 +44,7 @@ template <typename dist_t>
 void 
 ListClusters<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
+  //LOG(LIB_INFO) << "MaxLeavesToVisit_ is now set to " << MaxLeavesToVisit_;
 }
 
 template <typename dist_t>
