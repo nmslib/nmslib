@@ -651,6 +651,9 @@ project settings for all three build configurations (\ttt{Release}, \ttt{Debug},
 \subsection{Testing the Correctness of Implementations}
 We have two main testing utilities \ttt{bunit} and \ttt{test\_integr} (\ttt{experiment.exe} and
 \ttt{test\_integr.exe} on Windows).
+Both utilities accept the single optional argument: the name of the log file.
+If the log file is not specified, a lot of informational messages are printed to the screen.
+
 The \ttt{bunit} verifies some basic functitionality akin to unit testing.
 In particular, it checks that an optimized version of, e.g., the Eucledian, distance
 returns results that are very similar to the results returned by unoptimized and simpler version.
@@ -659,7 +662,7 @@ The utility \ttt{bunit} is expected to always run without errors.
 The utility \ttt{test\_integr} runs complete implementations of many methods
 and checks if several effectiveness and efficiency characteristics
 meet the expectations.
-This information is encoded as an arrary of instances of the class \ttt{MethodTestCase}
+This information is encoded as an array of instances of the class \ttt{MethodTestCase}
 (see \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/test/test_integr.cc#L65}{the code here}).
 For example, we expect that the recall (see \S~\ref{SectionEffect})
 fall in a certain pre-recorded range.
@@ -916,7 +919,8 @@ We provide the Python script to generate performance graphs
 from tab-separated data file produced by the 
 benchmarking utility \ttt{experiment}. 
 The plotting script is \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py} (see \S~\ref{SectionGenPlot}).
-In addition to Python, this script requires Latex and PGF. 
+This script is supposed to run on Linux only.
+In addition to Python, it requires Latex and PGF. 
 
 Consider the following example of using \ttt{genplot.py}:
 \begin{verbatim}
@@ -949,7 +953,7 @@ The first entity gives the number of columns in the legend, while the second ent
 defines a position of the legend. The position can be either an explicity
 point (in round brackets) or one of the following descriptors of the
 relative position (quotes are for clarity only): ``north west'', ``north east'', ``south west'', ``south east''.
-If the relative position is specified, the legend is printed insided the main
+If the relative position is specified, the legend is printed inside the main
 plotting area, e.g.:
 \begin{verbatim}
 ../sample_scripts/genplot.py  \
@@ -1011,10 +1015,10 @@ we normalize vector elements so that they correspond a true discrete probability
 Sparse space distances were tested using sparse vectors from a small sample file in the
 \href{\replocfile sample_data/sparse_5K.txt}{sample\_data} directory.
 
-\hspace{-2em}\begin{table}
+\begin{table}
 \caption{Description of implemented spaces\label{TableSpaces}}
-\centering
-\begin{tabular}{l@{\hspace{2mm}}l@{\hspace{2mm}}l}
+%\centering
+\hspace{-0.6in}\begin{tabular}{l@{\hspace{2mm}}l@{\hspace{2mm}}l}
 \toprule
 \textbf{Space}& \textbf{Mnemonic Name \& Formula}   & \textbf{Efficiency} \\
               &                           & (million op/sec) \\
@@ -1834,7 +1838,7 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2
+  --method perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2,dbScanFrac=0.05
 \end{verbatim}
 }
 
@@ -2017,7 +2021,6 @@ in the inverted file \\
 \centering
 \begin{tabular}{l@{\hspace{2mm}}p{3.5in}}
 \toprule
-\cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{Brute-force search with incremental sorting for binarized permutations}}\\
 \multicolumn{2}{c}{ (\ttt{perm\_incsort\_bin})  \cite{tellez2009brief} }\\
 \cmidrule(l){1-2} 
@@ -2540,12 +2543,18 @@ this will be detected by \ttt{test\_integr}.
 
 To create a test case, the user needs to add one or more test cases 
 to the file
-\href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/test/test_integr.cc#L65}{test\_integr}. 
+\href{\replocfile similarity_search/test/test_integr.cc#L65}{test\_integr}. 
 A test case is an instance of the class \ttt{MethodTestCase}. 
 It encodes the range of plausible values
 for the following performance parameters: the recall,
 the number of points closer to the query than the nearest returned point,
 and the improvement in the number of distance computations.
+
+If you are using the script  \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py} (see \S~\ref{SectionGenPlot}) to plot performances graphs, you will need to modify it as well.
+The function \ttt{methodNameAndStyle} in this script defines a mapping from the method name
+to plot marker. Currently, we provide markers for all the implemented methods. 
+Yet, if you add a new one, you need to provide the mapping yourself (by modifying \ttt{methodNameAndStyle}).
+Note the name of the method is returned by the class member \ttt{ToString}.
 
 \subsection{Creating an application (inside the framework)}\label{SectionCreateApp}
 First, we create a hello-world source file 

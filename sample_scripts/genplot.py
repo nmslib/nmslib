@@ -205,11 +205,14 @@ def genPlot(inputFile, outputFilePrefix, xAxisField, yAxisField, axisType, noLeg
 # * x + - o
 # Also oplus* looks exactly as simply * 
 #
-# triangle square diamond pentagon 
-# triangle* square* diamond* pentagon*
+# triangle square diamond 
+# triangle* square* diamond* 
 # oplus 
 # otimes otimes*
-# asterisk star 
+# asterisk 
+# pentagon  pentagon*
+# text
+# star
 
 def startsWith(s, prefix):
   if len(s) >= len(prefix):
@@ -220,25 +223,25 @@ def methodNameAndStyle(methodName):
     methodName = methodName.strip().lower()
     if startsWith(methodName, 'vptree'):
         return ('vp-tree', 'mark=*')
-    if methodName.find('permutation  incr') >= 0:
-        return ('permutation','mark=x')
-    if methodName.find('PermutationPrefixIndex') >= 0:
-        return ('pref. index','mark=+' )
-    if methodName.find('permutation  pref') >= 0:
-        return ('pref. index','mark=-')
-    if methodName.find('permutation  vptree') >= 0:
+    if methodName == 'permutation  incr  sorting':
+        return ('permutation incr.','mark=x')
+    if methodName == 'binarized permutation  vptree':
+        return ('perm. bin. vptree','mark=+' )
+    if methodName == 'permutation  pref  index':
+        return ('pref. index','mark=text')
+    if methodName == 'permutation  vptree':
         return ('perm. vptree','mark=diamond*')
-    if methodName.find('small world rand') >= 0:
+    if methodName == 'small world rand':
         return ('small world', 'mark=o')
-    if methodName.find('permutation  inverted index over neighboring pivots') >= 0:
+    if methodName == 'permutation  inverted index over neighboring pivots':
         return ('pivot neighb. index','mark=triangle')
-    if methodName.find('multiprobe lsh') >= 0:
+    if methodName == 'multiprobe lsh':
         return ('multi-probe LSH', 'mark=triangle*')
-    if methodName.find('sampling') >= 0:
+    if methodName.find('copies of') >= 0:
         return (methodName.strip(), 'mark=square')
-    if methodName.find('bbtree') >= 0:
+    if methodName == 'bbtree':
         return (methodName.strip(), 'mark=square*')
-    if methodName.find('list of clusters') >= 0:
+    if methodName == 'list of clusters':
         return ('list clust', 'mark=diamond')
     if methodName == 'ghtree':
         return ('gh-tree', 'mark=diamond*')
@@ -248,6 +251,12 @@ def methodNameAndStyle(methodName):
         return ('sa-tree', 'mark=otimes')
     if methodName == 'lsh':
         return ('LSH', 'mark=otimes*')
+    if methodName == 'permutation  inverted index':
+        return ('perm inv index', 'mark=asterisk')
+    if methodName == 'permutation binarized  incr  sorting':
+        return ('perm bin incr', 'mark=pentagon')
+    if methodName == 'sequential search':
+        return ('brute force', 'mark=pentagon*')
     print >> sys.stderr, "Does not know how to rename the method '" + methodName + "'"
     exit(1)
     #assert False

@@ -191,6 +191,47 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase("float", "l1", "final8_10K.txt", "lsh_threshold:L=5,M=60,H=16535",
                 10 /* KNN-10 */, 0 /* no range search */ , 0.65, 0.85, 0.1, 50, 40, 70),  
 
+  // *************** permutation-based filtering method tests ******************** //
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_incsort:numPivot=4,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "permutation:numPivot=4,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase("float", "l2", "final8_10K.txt","perm_prefix:numPivot=4,prefixLength=4,minCandidate=10000",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_inv_indx:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=1.0",
+
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "pivot_neighb_invindx:numPivot=8,numPrefix=8,minTimes=8,chunkIndexSize=102",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_incsort_bin:numPivot=32,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_incsort:numPivot=4,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "permutation:numPivot=4,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
+  MethodTestCase("float", "l2", "final8_10K.txt","perm_prefix:numPivot=4,prefixLength=4,minCandidate=100",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 4, 6),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_inv_indx:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=0.1",
+
+                1 /* KNN-1 */, 0 /* no range search */ , 0.95, 1.0, 0, 0.5, 8, 12),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "pivot_neighb_invindx:numPivot=32,numPrefix=8,minTimes=8,chunkIndexSize=102",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 1, 4, 22, 35),
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_incsort_bin:numPivot=32,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.3, 8, 12),  
+
+  MethodTestCase("float", "l2", "final8_10K.txt", "perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.5, 8, 12),  
+
+
+
 };
 
 
