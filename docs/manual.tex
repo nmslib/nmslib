@@ -648,6 +648,26 @@ Should you install into a different folder,
 the location of Boost binaries and header file need to be specified in the 
 project settings for all three build configurations (\ttt{Release}, \ttt{Debug}, \ttt{RelWithDebInfo}). An example of specifying the location of Boost libraries (binaries) is given in Fig.~\ref{FigBoostSet}.
 
+\subsection{Testing the Correctness of Implementations}
+We have two main testing utilities \ttt{bunit} and \ttt{test\_integr} (\ttt{experiment.exe} and
+\ttt{test\_integr.exe} on Windows).
+The \ttt{bunit} verifies some basic functitionality akin to unit testing.
+In particular, it checks that an optimized version of, e.g., the Eucledian, distance
+returns results that are very similar to the results returned by unoptimized and simpler version.
+The utility \ttt{bunit} is expected to always run without errors.
+
+The utility \ttt{test\_integr} runs complete implementations of many methods
+and checks if several effectiveness and efficiency characteristics
+meet the expectations.
+This information is encoded as an arrary of instances of the class \ttt{MethodTestCase}
+(see \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/test/test_integr.cc#L65}{the code here}).
+For example, we expect that the recall (see \S~\ref{SectionEffect})
+fall in a certain pre-recorded range.
+Because almost all our methods are randomized, there is a great deal of variance
+in the observed performance characteristcs. Thus, some tests
+may fail infrequently, if e.g., the actuall recall value is slightly higher or larger
+than an expected minimum  or maximum.
+The exact search method, however, should always have an almost perfect recall.
 
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
 There are no major differences in benchmarking on Linux and Windows.
@@ -2104,8 +2124,7 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method small_world_rand:NN=25,initIndexAttempts=5,initSearchAttempts=1,\
-           indexThreadQty=4 
+  --method mult_index:methodName=vptree,indexQty=5,maxLeavesToVisit=2
 \end{verbatim}
 }
 
@@ -2513,6 +2532,21 @@ we only need the following line:
 REGISTER_METHOD_CREATOR(int,    METH_DUMMY, CreateDummy)
 \end{verbatim}
 
+When adding the method, please, consider expanding
+the test utility \ttt{test\_integr}.
+This is especially important if for some combination of parameters the method is expected
+to return all answers (and will have a perfect recall). Then, if we break the code in the future,
+this will be detected by \ttt{test\_integr}.
+
+To create a test case, the user needs to add one or more test cases 
+to the file
+\href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/test/test_integr.cc#L65}{test\_integr}. 
+A test case is an instance of the class \ttt{MethodTestCase}. 
+It encodes the range of plausible values
+for the following performance parameters: the recall,
+the number of points closer to the query than the nearest returned point,
+and the improvement in the number of distance computations.
+
 \subsection{Creating an application (inside the framework)}\label{SectionCreateApp}
 First, we create a hello-world source file 
 \href{\replocfile similarity_search/src/dummy_app.cc}{dummy\_app.cc}:
@@ -2603,6 +2637,21 @@ for sparse \emph{single-precision} floating point vectors.
 It relies on the all-against-all comparison SIMD instruction \texttt{\_mm\_cmpistrm}. 
 However, it requires keeping the data in a special format,
 which makes automatic vectorization nearly impossible.
+
+Intel SSE extensions that provide SIMD instructions are automatically detected
+by compilers except the Visual Studio.
+If these SSE extensions are not available, the compilation process will produce warnings like the
+following one:
+{
+\footnotesize
+\begin{verbatim}
+LInfNormSIMD: SSE2 is not available, defaulting to pure C++ implementation!
+\end{verbatim}
+}
+Because we do not know a good way to create/modify Visual Studio project files 
+that enable SSE extensions automatically (depending on whether hardware supports them),
+the user need to enable these extensions manually. 
+For the instructions, the user is referred to \S~\ref{SectionBuildWindows}.
 
 \subsection{Cache-friendly Data Layout}
 In our previous report \cite{Boytsov_and_Bilegsaikhan:sisap2013},
