@@ -246,6 +246,8 @@ def methodNameAndStyle(methodName):
         return ('mvp-tree', 'mark=oplus')
     if methodName == 'satree':
         return ('sa-tree', 'mark=otimes')
+    if methodName == 'lsh':
+        return ('LSH', 'mark=otimes*')
     print >> sys.stderr, "Does not know how to rename the method '" + methodName + "'"
     exit(1)
     #assert False

@@ -63,7 +63,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // *************** VP-tree tests ******************** //
   // knn
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 55, 65),  
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 70),  
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10,alphaLeft=2,alphaRight=2", 
                 1 /* KNN-1 */, 0 /* no range search */ , 0.93, 0.97, 0.03, 0.09, 120, 160),  
   MethodTestCase("float", "l2", "final128_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
@@ -77,7 +77,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase("float", "l2", "final128_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 1.1, 1.3),  
   MethodTestCase("float", "l2", "final128_10K.txt", "vptree:chunkBucket=1,bucketSize=10,alphaLeft=2,alphaRight=2", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.99, 0.999, 0.0, 0.01, 1.7, 1.9),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.99, 0.999, 0.0, 0.01, 1.5, 2.5),  
   // range
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
                 0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 23, 26),  
@@ -122,7 +122,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase("float", "l2", "final8_10K.txt", "satree:bucketSize=10", 
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 25, 33),  
   MethodTestCase("float", "l2", "final8_10K.txt", "satree:bucketSize=10", 
-                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 15, 18),  
+                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 10, 25),  
   // range
   MethodTestCase("float", "l2", "final8_10K.txt", "satree:bucketSize=10", 
                 0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 14, 18),  
@@ -166,6 +166,30 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 0.999, 1.0, 0.0, 0.0, 4.5, 6.5),  
   MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "bbtree:bucketSize=10,maxLeavesToVisit=2147483647", 
                 0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 0.999, 1.0, 0.0, 0.0, 1.2, 2.4),  
+
+  // *************** multi-probe LSH tests ******************** //
+  // knn
+  MethodTestCase("float", "l2", "final8_10K.txt", "lsh_multiprobe:desiredRecall=0.5,tuneK=1,T=5,L=25,H=16535",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.45, 0.6, 55, 75, 90, 130),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "lsh_multiprobe:desiredRecall=0.5,tuneK=10,T=5,L=25,H=16535",
+                10 /* KNN-10 */, 0 /* no range search */ , 0.45, 0.6, 10, 40, 80, 120),  
+  // *************** Guassian LSH tests ******************** //
+  MethodTestCase("float", "l2", "final8_10K.txt", "lsh_gaussian:W=2,L=5,M=40,H=16535",
+
+                1 /* KNN-1 */, 0 /* no range search */ , 0.85, 0.95, 0.1, 40, 90, 130),  
+  MethodTestCase("float", "l2", "final8_10K.txt", "lsh_gaussian:W=2,L=5,M=40,H=16535",
+
+                10 /* KNN-10 */, 0 /* no range search */ , 0.68, 0.82, 0.1, 50, 80, 120),  
+  // *************** Cauchy LSH tests ******************** //
+  MethodTestCase("float", "l1", "final8_10K.txt", "lsh_cauchy:W=2,L=5,M=10,H=16535",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.9, 0.1, 50, 90, 130),  
+  MethodTestCase("float", "l1", "final8_10K.txt", "lsh_cauchy:W=2,L=5,M=10,H=16535",
+                10 /* KNN-10 */, 0 /* no range search */ , 0.5, 0.8, 0.1, 50, 80, 120),  
+  // *************** Thresholding LSH tests ******************** //
+  MethodTestCase("float", "l1", "final8_10K.txt", "lsh_threshold:L=5,M=60,H=16535",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 0.99, 0.1, 50, 40, 70),  
+  MethodTestCase("float", "l1", "final8_10K.txt", "lsh_threshold:L=5,M=60,H=16535",
+                10 /* KNN-10 */, 0 /* no range search */ , 0.65, 0.85, 0.1, 50, 40, 70),  
 
 };
 
