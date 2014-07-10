@@ -1244,16 +1244,16 @@ The spaces that implement this functionality contain the substring \ttt{fast} in
 Implemented search methods can be broadly divided into the following 
 categories:
 \begin{itemize}
-\item Space Partitioning methods (including a specialized method bbtree for Bregman divergences) \S~\ref{SectionSpacePartMeth};
+\item Space partitioning methods (including a specialized method bbtree for Bregman divergences) \S~\ref{SectionSpacePartMeth};
 \item Locality Sensitive Hashing (LSH) methods \S~\ref{SectionLSH};
 \item Filtering methods based on permutations \S~\ref{SectionPermMethod};
 %\item Filtering methods based on random projections;
-\item \knn graphs \S~\ref{SectionKNNGraph};
+\item Miscellaneous methods \S~\ref{SectionMiscMeth}, which also include a \knn graph implementation \S~\ref{SectionKNNGraph};
 \end{itemize}
 
 In the following subsections (\S~\ref{SectionSpacePartMeth}-\ref{SectionMiscMeth}),
-we list all implemented methods and their parameters as well as examples
-of their use in the benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows).
+we describe implemented methods, explain their parameters,
+and provide examples of their use via the benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows).
 For the description of the utility \ttt{experiment} see \S~\ref{SectionRunBenchmark}.
 
 \subsection{Space Partitioning Methods} \label{SectionSpacePartMeth} 
@@ -1262,7 +1262,7 @@ Most of these methods are hierarchical partitioning methods.
 
 Hierarchical space partitioning methods create a hierarchical decomposition of the space
 (often in a recursive fashion),
-which is best presented by a tree (or a forest). 
+which is best represented by a tree (or a forest). 
 There are two main partitioning approaches: 
 pivoting and compact partitioning schemes  \cite{Chavez_et_al:2001a}.
 
@@ -1275,7 +1275,7 @@ That is, the $L_{\infty}$ distance in the target vector space is a lower bound f
 
 Hierarchical partitions produced by pivoting methods lack locality: a single partition can contain
 not-so-close data points. In contrast, compact partitioning schemes exploit locality.
-They either divide the data into clusters or use a Voronoi partitioning (or its approximation).
+They either divide the data into clusters or create, possibly approximate, Voronoi partitions.
 In the latter case, for example, we can select several centers/pivots $\pi_i$ and associate 
 data points with the closest center.
 
@@ -1284,14 +1284,14 @@ we stop partitioning of the space and place all elements
 belonging to the current partition into a single bucket. 
 If, in addition, the value of the parameter \ttt{chunkBucket} is set to one,
 we allocate a new chunk of memory that contains a copy of all bucket vectors.
-This method often halves the retrieval time, 
+This method often halves retrieval time
 at the expense of extra memory consumed by a testing utility (e.g., \ttt{experiment}) as it does not deallocate memory occupied by the original vectors. \footnote{Keeping original vectors simplifies the testing workflow.
 However, this is not necessary for a real production system.
 Hence, storing bucket vectors at contiguous memory locations does not have to result in a larger memory footprint.}
 
 Classic hierarchical space partitioning methods are exact. 
 It is possible to make them approximate via an early termination technique,
-where we terminate the search after exploring a pre-specified number of data points.
+where we terminate the search after exploring a pre-specified number of partitions.
 To implement this strategy, we define an order of visiting partitions.
 In the case of clustering methods, we first visit partitions that are closer to a query point.
 In the case of hierarchical space partitioning methods such as the VP-tree,
@@ -1300,13 +1300,13 @@ we greedily explore partitions containing the query.
 In the \nonmetrlib, the early termination condition is defined in terms of 
 the maximum number of buckets (parameter \ttt{maxLeavesToVisit})
 to visit before terminating the search procedure.
-By default, the parameter \ttt{maxLeavesToVisit} is set to a very large number, i.e., no early termination is employed.
+By default, the parameter \ttt{maxLeavesToVisit} is set to a large number (2147483647), 
+which means that no early termination is employed.
 
 \subsubsection{VP-tree}\label{SectionVPtree}
-A VP-tree \cite{Uhlmann:1991,Yianilos:1993},
-which is also known is ball-tree,
+A VP-tree \cite{Uhlmann:1991,Yianilos:1993} (also known as a ball-tree)
 is a pivoting method.
-During indexing, a (random) pivot is selected and data objects is divided into
+During indexing, a (random) pivot is selected and a set of data objects is divided into
 two parts based on the distance to the pivot.
 If the distance is smaller than the median distance, the objects are placed into
 one (inner) partition. If the distance is larger than the median,
@@ -1330,17 +1330,19 @@ are in the same partition as $q$. Thus, to guarantee retrieval of all answers,
 we need to visit both partitions.
 
 The pruning condition based on the triangle inequality can be overly pessimistic.
-By selecting some $\alpha > 1$ and pruning when $r \le \alpha |R - d(\pi, q)|$,
-we improve search performance at the expense of missing some valid answers.
+By selecting some $\alpha > 1$ and opting to prune when $r \le \alpha |R - d(\pi, q)|$,
+we can improve search performance at the expense of missing some valid answers.
 The efficiency-effectiveness trade-off is affected by the choice of $\alpha$:
-Note that for some (especially low-dimensional) data sets, an almost negligible 
-loss in recall (by 1-5\%) can lead to an order of magnitude faster retrieval.
-Besides that the triangle inequality can be overly pessimistic in metric spaces, 
-it often fails to capture the geometry of non-metric spaces.
+Note that for some (especially low-dimensional) data sets, a modest
+loss in recall (e.g., by 1-5\%) can lead to an order of magnitude faster retrieval.
+Not only the triangle inequality can be overly pessimistic in metric spaces, 
+but it often fails to capture the geometry of non-metric spaces.
 As a result, if the metric space method is applied to a non-metric space,
-the recall can be too low or retrieval time be too long.
+the recall can be too low or retrieval time can be too long.
 
-Yet, it is often possible to searching using a relaxed version, with $\alpha$ possibly smaller than one \cite{Boytsov_and_Bilegsaikhan:nips2013}.
+Yet, in non-metric spaces, 
+it is often possible to answer queries, 
+when using $\alpha$ possibly smaller than one \cite{Boytsov_and_Bilegsaikhan:nips2013}.
 In this version, we would use different $\alpha$ for different partitions.
 More generally, we assume that there exists an unknown decision/pruning function $D(R, d(\pi, q))$ and
 that pruning is done when $r \le D(R, d(\pi, q))$.
@@ -1382,7 +1384,7 @@ release/experiment \
 It is possible to have more than one pivot per tree level.
 In the binary version of the multi-vantage point tree (MVP-tree),
 which is implemented in \nonmetrlib,
-we have two pivots.
+there are two pivots.
 Thus, each partition divides the space into four parts,
 which are similar to partitions created by two levels of the VP-tree.
 The difference is that the VP-tree employs three pivots
@@ -1515,7 +1517,7 @@ The search process stops after vising a \ttt{maxLeavesToVisit} clusters.
 Our version is supposed to work for metric spaces (and symmetric distance functions),
 but it can also be used with mildly-nonmetric symmetric distances such as the cosine similarity.
 
-An example of testing the list of clusters using the \ttt{bucketSize} as parameter to define
+An example of testing the list of clusters using the \ttt{bucketSize} as a parameter to define
 the size of the cluster:
 {
 \footnotesize
@@ -1528,7 +1530,7 @@ release/experiment \
                            maxLeavesToVisit=5,strategy=random
 \end{verbatim}
 }
-An example of testing the list of clusters using the \ttt{radius} as parameter to define
+An example of testing the list of clusters using the \ttt{radius} as a parameter to define
 the size of the cluster:
 {
 \footnotesize
@@ -1561,7 +1563,7 @@ Otherwise, the point is added to the nearest cluster from the list.
 After the cluster centers are selected, each of them is indexed recursively using the already described
 algorithm. Before this, however, we check  if there are points that need to be reassigned to a different cluster.
 Indeed, because the list of clusters keeps growing, we may miss the nearest cluster not yet
-added to the list. To avoid this, we need  to compute distances among every cluster point
+added to the list. To fix this, we need  to compute distances among every cluster point
 and cluster centers that were not selected at the moment of the point's assignment to the cluster.
 
 Currently, the SA-tree is an exact search method for metric spaces without any parameters.
@@ -1585,21 +1587,21 @@ and recursively repeats this procedure for each cluster until the number of data
 in a cluster falls below \ttt{bucketSize}. Then, such clusters are stored as a single bucket.
 
 At search time, the method relies on properties of Bregman divergences 
-to compute the shortest distances to covering balls. 
-This can be an expensive iterative procedure that 
+to compute the shortest distance to a covering ball. 
+This is a rather expensive iterative procedure that 
 may require several computations of direct and inverse gradients,
 as well as of several distances.
+
+Additionally, Cayton  \cite{Cayton2008} employed an early termination method:
+The algorithm  can be told to stop after processing
+a \ttt{maxLeavesToVisit} buckets.
+The resulting method is an approximate search procedure.
 
 Our implementation of the bbtree uses the same code to carry
 out the nearest-neighbor and
 the range searching. 
 Such an implementation of the range searching is somewhat suboptimal
 and a better approach exists \cite{cayton2009efficient}.
-
-Additionally, Cayton  \cite{Cayton2008} employed an early termination method:
-The algorithm  can be told to stop after processing
-a \ttt{maxLeavesToVisit} buckets.
-The resulting method is an approximate search procedure.
 
 The following is an example of testing the bbtree with the benchmarking utility \ttt{experiment}:
 {
@@ -1669,7 +1671,8 @@ function value $h(x)$.
 Pointers to objects with equal hash values (modulo \texttt{H})
 are stored  in same cells of the hash table (of the size \texttt{H}).
 If we used only one hash table, the probability of collision for two similar objects
-would be too low. This is why, data point pointers are stored in multiple hash tables.
+would be too low. 
+To increase the probability of finding a similar object multiple hash tables are used.
 In that, we use a separate (randomly selected) hash function for each hash table.
 
 To generate binary hash functions we first select a parameter \texttt{W} (called a \emph{width}).
@@ -1683,7 +1686,7 @@ where $\lfloor x \rfloor$  is the \texttt{floor} function
 and $x \cdot y$ denotes the scalar product of $x$ and $y$.
 
 For the $L_2$ a standard Guassian distribution is $p$-stable, while for $L_1$ distance one can generate hash functions using a Cauchy distribution \cite{datar2004locality}.
-For $L_1$, the LSHKIT defines another ``thresholding'' approach based on sampling.
+For $L_1$, the LSHKIT defines another (``thresholding'') approach based on sampling.
 It is supposed to work best for data points enclosed in  a cube $[a,b]^d$.
 We omit the description here and refer the reader to the papers that introduced this method \cite{wang2007sizing,lv2004image}.
 
@@ -1760,16 +1763,18 @@ For each data point $x$,
 we can arrange pivots $\pi$ in the order of increasing distances from $x$ (for
 simplicity we assume that there are no ties).
 This arrangement is called a \emph{permutation}.
-The permutation is essential a vector whose \mbox{$i$-th}
+The permutation is essentially a vector whose \mbox{$i$-th}
 element keeps an (ordinal) position of the \mbox{$i$-th} pivot (in the set of pivots
 sorted by a distance from $x$).
 
 Computation of the permutation
 is a mapping from a source vector space with real coordinates to a target vector space with integer coordinates. 
+In our library, the distance between permutations is defined as either $L_1$ or $L_2$.
 Values of the distance in the source space often correlates well with the distance in the target space
 of permutations.
 This property is exploited in permutation methods.
-In our library, when the distance between permutations is computed mostly using either $L_1$ or $L_2$.
+An advantage of permutation methods is that they are not relying on metric properties of the original distance 
+and can be successfully applied to non-metric spaces \cite{Boytsov_and_Bilegsaikhan:nips2013}.
 
 Note that there is no simple relationship between the distance in the target space
 and the distance in the source space. In particular, the distance in the target space is neither a lower nor an upper bound
@@ -1780,8 +1785,6 @@ to the permutation of the query vector.
 For these candidate data points, we compute an actual distance to the query, using the original distance function.
 For almost all implemented permutation methods, 
 the number of candidate records can be controlled by a parameter \ttt{dbScanFrac} or \ttt{minCandidate}.
-An advantage of permutation methods is that they are not relying on metric properties of the original distance 
-and can be successfully applied to non-metric spaces \cite{Boytsov_and_Bilegsaikhan:nips2013}.
 
 
 Permutation methods differ in how they index and process permutations.
@@ -1791,14 +1794,15 @@ Parameters of these methods are summarized in Tables~\ref{TablePermMethodParams}
 \subsubsection{Sequential permutation search}
 In the sequential search (i.e., brute-force) approach, we scan the list of permutation methods and compute the distance
 between the permutation of the query and a permutation of every data point.
-Then, we sort all data points in the order of increased distance to the query permutation.
+Then, we sort all data points in the order of increasing distance to the query permutation.
 A fraction (\ttt{dbScanFrac}) of data points is compared directly against the query.
 The mnemonic code of this method is \ttt{permutation}.
 Instead of computing the complete ordering of permutations, 
 one can resort to incremental sorting \cite{Chavez2008incsort}. 
+The mnemonic code of this (faster) modification is \ttt{perm\_incsort}.
 
 
-The following is an example of testing the incremental-sorting permutation method with the benchmarking utility \ttt{experiment}.
+The following is an example of testing the incremental-sort permutation method with the benchmarking utility \ttt{experiment}:
 {
 \footnotesize
 \begin{verbatim}
@@ -1813,7 +1817,8 @@ release/experiment \
 \subsubsection{Permutation Prefix Index  (PP-Index)}
 In a permutation prefix index (PP-index),
  permutation are stored in a prefix tree 
-of limited depth \cite{Esuli:2012} (parameter \ttt{prefixLength}).
+of limited depth \cite{Esuli:2012}. A parameter \ttt{prefixLength}
+defines the depth.
 The filtering phase aims to find \ttt{minCandidate} candidate data points.
 To this end, it first retrieves the data points whose permutation prefix is exactly the same
 as that of the query. If we do not get enough candidate records, we shorten the prefix
@@ -1860,14 +1865,16 @@ Using these pivots, we compute a permutation for every data point.
 Then, \ttt{numPivotIndex} most closest pivots are memorized in a data file. 
 If a pivot number $i$ is the \mbox{$pos$-th} most distant pivot for the object $x$,
 we add the pair $(pos,x)$ to the posting list number $i$.
-All posting lists are kept sorted in the order of the increasing first element (
-equal to the ordinal position of the pivot in a permutation).
+All posting lists are kept sorted in the order of the increasing first element 
+(equal to the ordinal position of the pivot in a permutation).
 
 During searching, we compute the permutation of the query and select
 posting lists corresponding to \ttt{numPivotSearch} most closest pivots.
 These posting lists are processed as follows: Imagine that we 
 selected posting list $i$ and the position of pivot $i$ in the permutation
-of the query is $pos$. Then, we retrieve all candidate records
+of the query is $pos$. Then, 
+using the posting list $i$,
+we retrieve all candidate records
 for which the position of the pivot $i$ in their respective permutations
 is from 
 $pos - \mbox{maxPosDiff}$ 
@@ -1875,7 +1882,7 @@ to
 $pos + \mbox{maxPosDiff}$.
 This allows us to update the estimate for the $L_1$ distance between retrieved
 candidate records' permutations and the permutation of the query (see \cite{amato2008approximate}
-for details).
+for more details).
 
 Finally, we select at most $\mbox{dbScanFrac} \cdot N$ objects ($N$ is the total
 number of indexed objects) with the smallest
@@ -1911,13 +1918,13 @@ Note that our implementation is different from that of Tellez~\cite{tellez2013su
 First, we do not use a succinct inverted index. Second, we use a simple posting merging algorithm
 based on counting (a \emph{ScanCount} algorithm}). 
 Before a query is processed, we zero-initialize an array that keeps one
-counter for every data point. As traverse a posting and encounter an entry corresponding to object
+counter for every data point. As we traverse a posting list and encounter an entry corresponding to object
 $i$, we increment a counter number $i$.
 The ScanCount is known to be efficient \cite{li2008efficient}.
 
 We also divide the index in chunks each accounting for at most \ttt{chunkIndexSize} data points.
 The search algorithm processes one chunk at a time. The idea is to make a chunk sufficiently small
-so that all intermediate data structure fit into L1 or L2  cache.
+so that counters fit into L1 or L2  cache.
 
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
@@ -1937,10 +1944,10 @@ Instead of computing the $L_2$ distance between two permutations,
 we can binarize permutations and computed the Hamming distance between
 binarized permutations. 
 To this end, we select an adhoc binarization threshold \texttt{binThreshold}.
-All integer values small than \texttt{binThreshold} become zeros,
+All integer values smaller than \texttt{binThreshold} become zeros,
 and values larger than or equal to \texttt{binThreshold} become ones.
 
-An advantage is that the Hamming distance can be computed much faster than $L_2$ or $L_1$ (see Table~\ref{TableSpaces}). However, it appears to be a worse proxy for the original distance than $L_2$ or $L_1$.
+On a plus side, the Hamming distance between binarized permutations can be computed much faster than $L_2$ or $L_1$ (see Table~\ref{TableSpaces}). This comes at a cost though, as the Hamming distance appears to be a worse proxy for the original distance than $L_2$ or $L_1$.
 
 The binarized permutation can be search sequentially. 
 An example of testing such a method using the utility \texttt{experiment} is as follows:
@@ -1957,7 +1964,8 @@ release/experiment \
 }
 
 Alternatively, binarized permutations can be indexed using the VP-tree.
-This approach is usually more efficient, but one needs to tune additional parameters.
+This approach is usually more efficient than searching binarized permutations sequentially,
+ but one needs to tune additional parameters.
 An example of testing such a method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -2062,9 +2070,6 @@ Parameters of miscellaneous methods are summarized in Table~\ref{TableMiscMethPa
 One efficient and effective approach
 relies on a graph, where objects are graph nodes and edges connect sufficiently close objects.
 When edges connect mostly near neighbors, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
-We have one implementation of the graph-based approach, which in many practical cases exhibits 
-a small world behavior. That is, if we randomly select two nodes (objects), in  most cases, 
-they are separated by a small number of edges (e.g., logarithmic in terms of the overall number of objects).
 This method implements only the nearest-neighbor, but not the range search.
 
 A search process is a series of sub-searches with 
@@ -2074,18 +2079,18 @@ that are closer than already found \ttt{NN} nearest points (\ttt{NN} is a search
 Note that the greedy search is only approximate and does not necessarily return all \ttt{NN} nearest neighbors.
 
 Indexing is a bottom-up procedure that relies on the previously described greedy search algorithm.  
-The number of restarts, though, defined by a different parameter, i.e., \ttt{initIndexAttempts}.
+The number of restarts, though, is defined by a different parameter, i.e., \ttt{initIndexAttempts}.
 We add points one by one. For each data point, 
 we find \ttt{NN} closest points using an already constructed index.
 Then, we create an edge between a new graph node (representing a new point) 
 and nodes that represent \ttt{NN} closest points found by the greedy search. 
-Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges.
-In that the number of edges is typically logarithmic in the size of the data set \cite{malkov2012scalable}.
+Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
 
-The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads (the number of threads is defined by the parameter \ttt{indexThreadQty}.
+The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads. The number of threads is defined by the parameter \ttt{indexThreadQty}.
 The graph updates are synchronized: If a thread  needs to add edges to a node or obtain
 the list of node edges, it first locks a node-specific mutex.
-Because, different threads rarely update the same node, such synchronization creates little contention and, consequently,
+Because different threads rarely update and/or access the same node simultaneously,
+such synchronization creates little contention and, consequently,
 our parallelization approach is efficient.
 It is also necessary to synchronize updates for the list of graph nodes, 
 but this operation takes little time compared to searching for \ttt{NN} neighboring points.
@@ -2127,9 +2132,9 @@ release/experiment \
 \subsubsection{\textbf{Several copies of the same index type}}
 It is possible to generate several copies of the same index using a
 meta method \ttt{mult\_indx}.
-This makes sense for randomized indexing methods, e.g., the VP-tree
-or the PP-index. In fact, all of the methods except for the sequential, i.e.,
-brute force search are randomized. 
+This makes sense for randomized indexing methods, e.g., for the VP-tree
+or the PP-index.\footnote{In fact, all of the methods except for the sequential, i.e.,
+brute force, search are randomized.}
 
 {
 \footnotesize
