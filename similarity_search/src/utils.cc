@@ -140,7 +140,8 @@ inline bool ApproxEqualOther(const T& x, const T& y, unsigned maxUlps) {
                             std::min(std::abs(x), std::abs(y));
 }
 
-template <> bool ApproxEqual<long double>(const long double& x, const long double& y, unsigned maxUlps) {\
+template <> bool ApproxEqual<long double>(const long double& x, const long double& y, unsigned maxUlps) {
+  if (ISNAN(x) || ISNAN(y)) return false;\
   const long double thresh = 2*numeric_limits<long double>::min();\
   return ApproxEqualOther(x, y, maxUlps) || (std::max(x,y) < thresh && std::min(x,y) > -thresh);\
 };\

@@ -167,6 +167,8 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "bbtree:bucketSize=10,maxLeavesToVisit=2147483647", 
                 0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 0.999, 1.0, 0.0, 0.0, 1.2, 2.4),  
 
+#ifndef _MSC_VER
+  // no LSH for Windows
   // *************** multi-probe LSH tests ******************** //
   // knn
   MethodTestCase("float", "l2", "final8_10K.txt", "lsh_multiprobe:desiredRecall=0.5,tuneK=1,T=5,L=25,H=16535",
@@ -190,6 +192,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 1 /* KNN-1 */, 0 /* no range search */ , 0.8, 0.99, 0.1, 50, 40, 70),  
   MethodTestCase("float", "l1", "final8_10K.txt", "lsh_threshold:L=5,M=60,H=16535",
                 10 /* KNN-10 */, 0 /* no range search */ , 0.65, 0.85, 0.1, 50, 40, 70),  
+#endif
 
   // *************** permutation-based filtering method tests ******************** //
   MethodTestCase("float", "l2", "final8_10K.txt", "perm_incsort:numPivot=4,dbScanFrac=1.0",
@@ -216,7 +219,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase("float", "l2", "final8_10K.txt", "permutation:numPivot=4,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
   MethodTestCase("float", "l2", "final8_10K.txt","perm_prefix:numPivot=4,prefixLength=4,minCandidate=100",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 4, 6),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 3, 8),  
   MethodTestCase("float", "l2", "final8_10K.txt", "perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
   MethodTestCase("float", "l2", "final8_10K.txt", "perm_inv_indx:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=0.1",
