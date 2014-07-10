@@ -219,7 +219,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase("float", "l2", "final8_10K.txt", "permutation:numPivot=4,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
   MethodTestCase("float", "l2", "final8_10K.txt","perm_prefix:numPivot=4,prefixLength=4,minCandidate=100",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 4, 6),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 3, 8),  
   MethodTestCase("float", "l2", "final8_10K.txt", "perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
   MethodTestCase("float", "l2", "final8_10K.txt", "perm_inv_indx:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=0.1",
