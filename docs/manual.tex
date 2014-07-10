@@ -163,7 +163,7 @@ Our commitment to efficiency affected several design decisions:
 \item We focus on in-memory indices 
 and, thus, do not require our methods to materialize a disk-based version of an index
 (this also reduces programming effort).
-It is, nevertheless, possible to benchmark disk-based implementations as well (see \ref{SectionWorkflow}).
+%It is, nevertheless, possible to benchmark disk-based implementations as well (see \ref{SectionWorkflow}).
 
 \item 
 We provide efficient implementations of many distance functions,
@@ -667,14 +667,14 @@ This information is encoded as an array of instances of the class \ttt{MethodTes
 For example, we expect that the recall (see \S~\ref{SectionEffect})
 fall in a certain pre-recorded range.
 Because almost all our methods are randomized, there is a great deal of variance
-in the observed performance characteristcs. Thus, some tests
-may fail infrequently, if e.g., the actuall recall value is slightly higher or larger
+in the observed performance characteristics. Thus, some tests
+may fail infrequently, if e.g., the actual recall value is slightly higher or larger
 than an expected minimum  or maximum.
 The exact search method, however, should always have an almost perfect recall.
 
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
 There are no major differences in benchmarking on Linux and Windows.
-There is a one \ttt{single} benchmarking utility 
+There is a \ttt{single} benchmarking utility 
 \ttt{experiment} (\ttt{experiment.exe} on Windows) that includes implementation of all methods.
 It has multiple options, which specify, among others, 
 a space, a data set, a type of search, and a list of methods to test (with parameters).
@@ -808,10 +808,11 @@ The sequential search baseline processes \emph{all the objects}.
 
 The amount of memory consumed by a search method is measured indirectly: 
 We record the overall memory usage of a benchmarking process before and after creation of the index. Then, we add the amount of memory used by the data.
-Memory used is computed by querying special file \ttt{/dev/<process id>/status}. 
-This works only for recent Linux distributives 
-as we do not have a portable code to measure memory consumption of a process
-(that can be used on other platforms).
+On Linux,  we query a special file \ttt{/dev/<process id>/status},
+which might not work for all Linux distributives.
+Under Windows, we retrieve the working set size using the function
+\ttt{GetProcessMemoryInfo}.
+Note that we do not have  a truly portable code to measure memory consumption of a process.
 
 \subsubsection{Effectiveness}
 \label{SectionEffect}
@@ -822,7 +823,8 @@ Several effectiveness metrics are computed by the benchmarking utility:
 \item  A \emph{number of points closer} to the query than the nearest returned point.
 Let $\pos(o_i)$ represent a positional distance from $o_i$ to the query, 
 i.e., the number of objects closer to the query than $o_i$ plus one.
-In the case of ties, we assume that the object with a smaller index is closer to the query.
+Among several objects with identical distances, 
+we select the object with the smallest index.
 Note that $\pos(o_i) \ge i$.
 \item A \emph{relative position} error is equal to $\pos(o_i)/i$;
 \item \emph{Recall},  which is is equal to the fraction of all correct answers retrieved.
@@ -869,7 +871,7 @@ Memory Usage:   5.8 MB
 Recall is a classic metric. 
 It was argued, however, 
 that recall does not account for position information of returned objects
-and is, therefore, inferior to rank error metrics \cite{Amato_et_al:2003,Cayton:2008}.
+and is, therefore, inferior to rank error metrics \cite{Amato_et_al:2003,Cayton2008}.
 
 If we specify ground-truth object classes (see \S~\ref{SectionDatasets} 
 for the description of data set formats), 
@@ -877,8 +879,7 @@ it is possible to compute an accuracy of \knn based classification procedure.
 The class of the element is predicted to be most frequent class label among $k$ closest objects
 returned by the method (in the case of ties the class label with the smallest id is chosen).
 
-If we had ground-truth queries and relevance judgements from human assessors (e.g.,
-if a vector represents an image, it is similar to the query image?),
+If we had ground-truth queries and relevance judgements from human assessors,
 we could in principle compute other realistic effectiveness metrics 
 such as the mean average precision,
 or the normalized discounted cumulative gain.
@@ -890,7 +891,7 @@ the benchmarking results are stored to the file system.
 A prefix of result files is defined by the parameter \ttt{--outFilePrefix}
 while the suffix is defined by a type of the search procedure (\knn or range)
 as well as by search parameters (e.g., the range search radius).
-For each type of search two files are generated:
+For each type of search, two files are generated:
 a report in a human-readable format,
 and a tab-separated data file intended for automatic processing.
 The data file contains only the average values,
@@ -908,7 +909,7 @@ this is done via a classic fixed-effect model adopted in meta analysis \cite{Hed
 When dealing with other performance metrics, 
 we employ a simplistic approach of averaging split-specific values
 and computing the sample variance over spit-specific averages.\footnote{The distribution
-of many metric values was not normal. There are approaches to resolve this issue (e.g., apply a transformation),
+of many metric values is not normal. There are approaches to resolve this issue (e.g., apply a transformation),
 but an additional investigation is needed to understand which approaches work best.}
 Note for all metrics, except relative position error, an average is computed using an arithmetic mean.
 For the relative error, however, we use the geometric mean  \cite{king:1986}.
@@ -918,9 +919,9 @@ For the relative error, however, we use the geometric mean  \cite{king:1986}.
 We provide the Python script to generate performance graphs 
 from tab-separated data file produced by the 
 benchmarking utility \ttt{experiment}. 
-The plotting script is \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py} (see \S~\ref{SectionGenPlot}).
-This script is supposed to run on Linux only.
+The plotting script is \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py}.
 In addition to Python, it requires Latex and PGF. 
+This script is supposed to run only on Linux.
 
 Consider the following example of using \ttt{genplot.py}:
 \begin{verbatim}
@@ -939,20 +940,22 @@ Note that one should not explicitly specify the extension of the output file (as
 
 Parameters \ttt{-x} and \ttt{-y} define  X and Y axis and have the same format.
 Each parameter has three tilda-separated entities. The first should
-be 0 or 1. Specify 0, only if do not want to print the axis label.
-The second entitity is either \ttt{norm} or \ttt{log}, 
+be 0 or 1. Specify 0, only if you do not want to print the axis label.
+The second entity is either \ttt{norm} or \ttt{log}, 
 which stands for a normal or logarithmic scale, respectively.
 The last entity defines a metric that we want to visualize:
-It should one of the names that appear in the first row of the output data file.
+The metric should be one of the names that appear in the header row of the output data file.
 The title of the plot is defind by \ttt{-t}.
+
 The parameter \ttt{-l} defines a plot legend.
 It is either a string \ttt{none} (to hide the legend) 
 or  it contains two tilda-separated entities.
-
 The first entity gives the number of columns in the legend, while the second entity
-defines a position of the legend. The position can be either an explicity
-point (in round brackets) or one of the following descriptors of the
-relative position (quotes are for clarity only): ``north west'', ``north east'', ``south west'', ``south east''.
+defines a position of the legend. The position can be either 
+absolute or relative.
+An absolute position is defined by a pair of coordinates (in round brackets).
+A relative position is defined by one of the following descriptors 
+(quotes are for clarity only): ``north west'', ``north east'', ``south west'', ``south east''.
 If the relative position is specified, the legend is printed inside the main
 plotting area, e.g.:
 \begin{verbatim}
@@ -971,7 +974,7 @@ but this is not a principal limitation.
 The input files can come in either regular, i.e., dense,
 or sparse variant (see \S~\ref{SectionDatasets}). 
 
-For a detailed list of spaces, their parameters, 
+A detailed list of spaces, their parameters, 
 and performance characteristics is given in Table~\ref{TableSpaces}.
 The mnemonic name of the space is passed to the benchmarking utility (see \S~\ref{SectionRunBenchmark}).
 There can be more than one version of a distance function,
@@ -987,15 +990,17 @@ Straightforward slow implementations of the distance functions may have the subs
 in their names, while faster versions contain the substring \ttt{fast}.
 Fast functions that involve approximate computations contain additionally the substring \ttt{approx}.
 For non-symmetric distance function, a space may have two variants: one variant is for left
-queries (the query object is the first argument of the distance function) 
-and another is for right queries (the query object is the second argument).
+queries (the data object is the first, i.e., left, argument of the distance function 
+while the query object
+is the second argument) 
+and another is for right queries (the data object is the second argument and the query object is the first argument).
 In the latter case the name of the space ends on \ttt{rq}.
 Separating spaces by query types, might not be the best approach.
 Yet, it seems to be unavoidable, because, in many cases,
-we need separate indices for left and right queries.
+we need separate indices to support left and right queries \cite{Cayton2008}.
 
 Distance computation efficiency was evaluated on a Core i7 laptop (3.4 Ghz peak frequency)
-in a single-threaded mode (by the utility \href{\replocfile similarity_search/test/bunit.cc}{bunit}).
+in a single-threaded mode (by the utility \href{\replocfile similarity_search/test/bench_distfunc.cc}{bench\_distfunc}).
 It is measured in millions of computations per second for single-precision
 floating pointer numbers (double precision computations are, of course, more costly). 
 The code was computed using the GNU compiler. 
@@ -1012,8 +1017,14 @@ For the Jensen-Shannon divergence, we first generate elements randomly,
 and next we randomly select elements that are set to zero (approximately half). 
 Additionally, for KL-divergences and the JS-divergence,
 we normalize vector elements so that they correspond a true discrete probability distribution. 
-Sparse space distances were tested using sparse vectors from a small sample file in the
-\href{\replocfile sample_data/sparse_5K.txt}{sample\_data} directory.
+
+Sparse space distances were tested using sparse vectors from two sample files in the
+\href{\replocfile sample_data}{sample\_data} directory.
+Sparse vectors in 
+\href{\replocfile sample_data/sparse_5K.txt}{the first} 
+and
+\href{\replocfile sample_data/sparse_wiki_5K.txt}{the second file} on average contain
+about 100 and 600 non-zero elements, respectively.
 
 \begin{table}
 \caption{Description of implemented spaces\label{TableSpaces}}
@@ -1199,7 +1210,7 @@ this method is still relatively slow (it takes almost 20 CPU cycles per log),
 \subsection{Bregman Divergences}\label{SectionBregman}
 Bregman divergences are typically non-metric distance functions,
 which are equal to a difference between some convex differentiable function $f$
-and its first-order Taylor expansion \cite{Bregman:1967,Cayton:2008}. 
+and its first-order Taylor expansion \cite{Bregman:1967,Cayton2008}. 
 More formally, given the convex and differentiable function $f$
 (of many variables), its
 corresponding Bregman divergence $d_f(x,y)$ is equal to:
@@ -1441,7 +1452,7 @@ to data objects in the leaves \\
 \cmidrule(l){1-2} 
                    & No parameters \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{bbtree} (\ttt{bbtree})  \cite{Cayton:2008}}   \\
+\multicolumn{2}{c}{\textbf{bbtree} (\ttt{bbtree})  \cite{Cayton2008}}   \\
 \cmidrule(l){1-2} 
                    & Common parameters \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
 \bottomrule
@@ -1568,7 +1579,7 @@ release/experiment \
  
 
 \subsubsection{bbtree}
-A Bregman ball tree (bbtree) is an exact search method for Bregman divergences \cite{Cayton:2008}.
+A Bregman ball tree (bbtree) is an exact search method for Bregman divergences \cite{Cayton2008}.
 The bbtree divides data into two clusters (each covered by a Bregman ball)
 and recursively repeats this procedure for each cluster until the number of data points
 in a cluster falls below \ttt{bucketSize}. Then, such clusters are stored as a single bucket.
@@ -1585,7 +1596,7 @@ the range searching.
 Such an implementation of the range searching is somewhat suboptimal
 and a better approach exists \cite{cayton2009efficient}.
 
-Additionally, Cayton  \cite{Cayton:2008} employed an early termination method:
+Additionally, Cayton  \cite{Cayton2008} employed an early termination method:
 The algorithm  can be told to stop after processing
 a \ttt{maxLeavesToVisit} buckets.
 The resulting method is an approximate search procedure.
@@ -2220,25 +2231,27 @@ The main benchmarking utility \ttt{experiment} parses command line parameters.
 Then, it creates a space and all required search methods using
 the space and the method factories.
 Thus, when we create a class representing a search method,
-the constructor of this class has to create an index in the memory
-or open a disk-based one.
+the constructor of this class has to create an index in the memory.
+%Thus, when we create a class representing a search method,
+%the constructor of this class has to create an index in the memory
+%or open a disk-based one.
 Both search method and spaces can have parameters,
 which are passed to the method/space in an instance
 of the class \ttt{AnyParams}.
 We consider this in detail in \S~\ref{SectionCreateSpace} and \S~\ref{SectionCreateMethod}.
 
-In our library, we implemented only in-memory indices.
-It is, nevertheless, possible to test disk-based indices as well.
-For example, a method can accept to parameters: \ttt{saveFileName}
-and \ttt{readFileName}.
-If the user invokes \ttt{experiment} without arguments \ttt{--knn} 
-or \ttt{--range} and specifies the parameter \ttt{saveFileName},
-the method constructor reads the data set and creates and index. Then,
-this index can be saved to the faile \ttt{saveFileName}.
-If the user invokes \ttt{experiment} with an argument \ttt{--knn} 
-or \ttt{--range} and specifies the parameter \ttt{readFileName},
-the method constructor will open the disk-based index, whose location
-is defined by the parameter \ttt{readFileName}.
+%In our library, we implemented only in-memory indices.
+%It is, nevertheless, possible to test disk-based indices as well.
+%For example, a method can accept to parameters: \ttt{saveFileName}
+%and \ttt{readFileName}.
+%If the user invokes \ttt{experiment} without arguments \ttt{--knn} 
+%or \ttt{--range} and specifies the parameter \ttt{saveFileName},
+%the method constructor reads the data set and creates and index. Then,
+%this index can be saved to the faile \ttt{saveFileName}.
+%If the user invokes \ttt{experiment} with an argument \ttt{--knn} 
+%or \ttt{--range} and specifies the parameter \ttt{readFileName},
+%the method constructor will open the disk-based index, whose location
+%is defined by the parameter \ttt{readFileName}.
 
 Depending on parameters, two test scenarios are possible.
 In the first scenario, the user specifies separate data and test files.
@@ -2797,7 +2810,7 @@ an exact search method for Bregman divergences,
 is also based on the code of Cayton.
 If you use any of these, please, consider citing:
 \begin{verbatim}
-@inproceedings{cayton:2008,
+@inproceedings{cayton2008,
   title=     {Fast nearest neighbor retrieval for bregman divergences},
   author=    {Cayton, Lawrence},
   booktitle= {Proceedings of the 25th international conference on 
