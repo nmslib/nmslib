@@ -11,7 +11,9 @@ Leo(nid) Boytsov is a maintainer.
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf). Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/downloads/moreinfo/c.php). A basic description of how to import the project into and debug it from Eclipse is given in the manual. Currently the manual is **slightly out of date**, Leo will update the manual quite soon.
+A detailed description is given [in the manual](docs/manual.pdf).  The manual also conains instructions for building under Windows, as well as instructions for extending the library.
+
+Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/downloads/moreinfo/c.php). A basic description of how to import the project into and debug it from Eclipse is given in the manual.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
