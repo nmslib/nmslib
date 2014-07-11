@@ -2503,8 +2503,9 @@ REGISTER_SPACE_CREATOR(double, SPACE_DUMMY,  CreateDummy)
 This macro should be placed into the function \ttt{initSpaces} in the 
 file 
 \href{\replocfile similarity_search/include/factory/init\_spaces.h}{init\_spaces.h}.
-Last, but not least we need to include the helper function, which creates
-the class into file \ttt{init\_spaces.h} as follows:
+Last, but not least we need to add the include-directive
+for the helper function, which creates
+the class, to the file \ttt{init\_spaces.h} as follows:
 \begin{verbatim}
 #include "factory/space/space_dummy.h"
 \end{verbatim}
@@ -2553,9 +2554,20 @@ class DummyMethod : public Index<dist_t> {
 Note that it is the constructor that creates a search index (or calls a function to create it)!
 Here it accepts the pointer to a space,
 a reference to an array of data objects, 
-and an additional parameter.
-When this parameter is true, our dummy method will carry out a sequential search.
+and a parameter manager.
+The parameter manager is used to retrieve too parameters:
+\ttt{doSeqSearch}, and \ttt{dummyParam} (the second one is a query time parameter).
+When the first parameter is true, our dummy method will carry out a sequential search.
 Otherwise, it does nothing useful.
+
+Query time parameters can be changed
+without rebuilding the index.
+The function \ttt{GetQueryTimeParamNames} returns the list of 
+names of such parameters.
+If this list is non-empty and the method is supposed to support
+query time modification of some parameters,
+these modifications are carried out inside the function  
+\ttt{SetQueryTimeParamsInternal}.
 
 The space object is typically used to compute the distance by calling
 the function \ttt{IndexTimeDistance}.
@@ -2568,15 +2580,6 @@ the distance was computed for each query. This allows us to estimate the varianc
 Hence, during the testing phase, the distance function should be invoked only through
 a query object.}
 
-
-A method can have query time parameters, which can be changed
-without rebuilding the index.
-The function \ttt{GetQueryTimeParamNames} returns the list of 
-names of such parameters.
-If this list is non-empty and the method is supposed to support
-query time modification of some parameters,
-these modifications are carried out inside the function  
-\ttt{SetQueryTimeParamsInternal}.
 
 Finally, we need to ``tell'' the library about the method,
 by registering the method in the method factory,
@@ -2608,15 +2611,6 @@ the creation function, which uses angle brackets.
 As explained previously, if you opt to using quotes (in the include-directive),
 the code may not compile under the Visual Studio.
 
-Note that, similarly to the dummy space example,
-we use a parameter extraction class \ttt{AnyParamManager}.
-The only difference, is that we retrieve an optional parameter \ttt{doSeqSearch}.
-If this parameter is not present in the command line,
-the code uses an old value of the variable \ttt{bDoSeqSearch}
-(which was set to false before we called \ttt{GetParamOptional}). 
-An example of such function for the method \ttt{MethodDummy}
-is given in the file \href{\replocfile similarity_search/include/factory/method/dummy.h}{dummy.h}.
-
 Again, similarly to the case of the space, 
 the method-creating function \ttt{CreateDummy} needs
 to be registered in the method factory in two steps.
@@ -2646,20 +2640,20 @@ this will be detected by \ttt{test\_integr}.
 
 To create a test case, the user needs to add one or more test cases 
 to the file
-\href{\replocfile similarity_search/test/test_integr.cc#L65}{test\_integr}. 
+\href{\replocfile similarity_search/test/test_integr.cc#L65}{test\_integr.cc}. 
 A test case is an instance of the class \ttt{MethodTestCase}. 
 It encodes the range of plausible values
 for the following performance parameters: the recall,
 the number of points closer to the query than the nearest returned point,
 and the improvement in the number of distance computations.
 
-If you are using the script  \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py} (see \S~\ref{SectionGenPlot}) to plot performances graphs, you will need to modify it as well.
+If you are using the script  \href{\replocfile sample_scripts/genplot.py#L222}{genplot.py} (see \S~\ref{SectionGenPlot}) to plot performances graphs, you will need to modify it as well.
 The function \ttt{methodNameAndStyle} in this script defines a mapping from the method name
-to plot marker. Currently, we provide markers for all the implemented methods. 
+to a plot marker. Currently, we provide markers for all the implemented methods. 
 Yet, if you add a new one, you need to provide the mapping yourself (by modifying \ttt{methodNameAndStyle}).
 Note the name of the method is returned by the class member \ttt{ToString}.
 
-\subsection{Creating an application (inside the framework)}\label{SectionCreateApp}
+\subsection{Creating an application on Linux (inside the framework)}\label{SectionCreateAppLinux}
 First, we create a hello-world source file 
 \href{\replocfile similarity_search/src/dummy_app.cc}{dummy\_app.cc}:
 \begin{verbatim}
@@ -2694,6 +2688,22 @@ target_link_libraries (dummy_app NonMetricSpaceLib lshkit
                       ${Boost_LIBRARIES} ${GSL_LIBRARIES} 
                       ${CMAKE_THREAD_LIBS_INIT})
 \end{verbatim}
+\end{itemize}
+
+\subsection{Creating an application on Windows (inside the framework)}\label{SectionCreateAppWindows}
+Creating a new sub-project in the Visual Studio is straightforward.
+
+In addition, one can use a provided sample project file \href{\replocfile similarity_search/src/dummy_app.vcxproj}{dummy\_app.vcxproj} as template.
+To this end, one needs to to create a copy of this sample project file and subsequently edit it. 
+One needs to do the following:
+\begin{itemize}
+\item Obtain a new value of the project GUI and put it between the tags \newline \ttt{<ProjectGUID>...</ProjectGUID>};
+\item Add/delete new files; 
+\item Add/delete/change references to the boost directories (both header files and libraries);
+\item If the CPU has AVX extension, it may be necessary to enable them
+as explained in \S~\ref{SectionBuildWindows}.
+\item Finally, one may manually add an entry to the main project
+file \href{\replocfile similarity_search/NonMetricSpaceLib.sln}{NonMetricSpaceLib.sln}.
 \end{itemize}
 
 \section{Notes on Efficiency}\label{SectionEfficiency}
