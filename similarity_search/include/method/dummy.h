@@ -39,18 +39,24 @@ class DummyMethod : public Index<dist_t> {
   /*
    * The constructor here accepts a pointer to the space, 
    * a reference to an array of data objects,
-   * and an additional parameter.
+   * and a reference to the parameter manager,
+   * which is used to retrieve parameters.
    *
    * The constructor creates a search index (or calls a function to create it)!
    * However, in this simple case, it simply memorizes a reference to the 
    * array of data objects, which is guaranteed to exist through the complete
    * test cycle.
    *
+   * Note that we have a query time parameter here.
+   *
    */
   DummyMethod(const Space<dist_t>* space, 
               const ObjectVector& data, 
-              bool bDoSeqSearch) 
-              : data_(data), bDoSeqSearch_(bDoSeqSearch) {}
+              AnyParamManager& pmgr) 
+              : data_(data) {
+    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch_);
+    SetQueryTimeParamsInternal(pmgr);
+  }
   ~DummyMethod(){};
 
   /* 
@@ -68,7 +74,11 @@ class DummyMethod : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
+  virtual vector<string> GetQueryTimeParamNames() const;
+
  private:
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+
   const ObjectVector&     data_;
   bool                    bDoSeqSearch_;
   // disable copy and assign

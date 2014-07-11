@@ -1511,17 +1511,17 @@ int main(int argc, char* argv[]) {
     int dim = 128;
 
     nTest++;
-    TestBitHamming(1000, 32, 1000);
+    TestBitHamming(1000, 32, 50000);
     nTest++;
-    TestBitHamming(1000, 64, 1000);
+    TestBitHamming(1000, 64, 25000);
     nTest++;
-    TestBitHamming(1000, 128, 1000);
+    TestBitHamming(1000, 128, 12000);
     nTest++;
-    TestBitHamming(1000, 256, 1000);
+    TestBitHamming(1000, 256, 6000);
     nTest++;
-    TestBitHamming(1000, 512, 1000);
+    TestBitHamming(1000, 512, 3000);
     nTest++;
-    TestBitHamming(1000, 1024, 1000);
+    TestBitHamming(1000, 1024, 1500);
 
     float pZero1 = 0.5f;
     float pZero2 = 0.25f;

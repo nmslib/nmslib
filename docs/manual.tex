@@ -188,7 +188,8 @@ using a search query $q$ and a dissimilarity measure.
 The dissimilarity measure is typically represented by a distance function $d(o_i, q)$. 
 The ultimate goal is to answer a query by retrieving a subset of database objects sufficiently similar to the query $q$.
 These objects will be called \ttt{answers}.
-Note that we use the terms \ttt{distance} and the \ttt{distance function} in a broader sense:
+Note that we use the terms \ttt{distance} and the \ttt{distance function} in a broader sense than
+usually:
 We do not assume that the distance is a true metric distance. 
 The distance can be asymmetric and is not constrained to be metric (i.e., 
 it may not satisfy the triangle inequality).
@@ -235,9 +236,9 @@ Yet, almost all the code (except LSHKIT) can be built and run on 64-bit Windows.
 Building the code requires a modern C++ compiler that supports \mbox{C++11}.
 Currently, we support GNU C++ ($\ge4.7$), Intel compiler ($\ge14$), 
 Clang ($\ge4.2.1$), 
-and Visual Studio ($\ge12$). 
+and Visual Studio ($\ge12$; note that you can use the free express version).
 Under Linux, the build process relies on CMake. 
-Under Windows, one can use Visual Studio projects stored in the repository.
+Under Windows, one should use Visual Studio projects stored in the repository.
 
 Note, however, that we do not have a portable code to measure memory consumption:
 This part will work only for Linux (with \href{https://en.wikipedia.org/wiki/Procfs}{PROCFS})
@@ -256,13 +257,13 @@ For Windows, we require:
 \begin{enumerate}
 \item A \textbf{64-bit} distributive (we tested on Windows 8); 
 \item Visual Studio Express (or Professional) version 12 or later;
-\item Boost is not required to build the core library and unit tests, 
-but it is needed by the main testing binary (see \S~\ref{SectionBuildWindows}). 
+\item Boost is not required to build the core library and test utilities, 
+but it is needed by the main testing binary \ttt{experiment.exe} (see \S~\ref{SectionBuildWindows}). 
 \end{enumerate}
 
 Efficient implementations of many distance functions (see \S~\ref{SectionEfficiency})
 rely on SIMD instructions,
-which operate on small  vectors of integer of floating point numbers. 
+which operate on small  vectors of integer or floating point numbers. 
 These instructions are available on most modern processors,
 but we support only SIMD instructions available on recent Intel and AMD processors.   
 Each distance function has a pure C++ implementation,
@@ -305,8 +306,8 @@ sudo apt-get install python-software-properties
 More details can be found on the \href{http://askubuntu.com/questions/113291/how-do-i-install-gcc-4-7}{AskUbuntu web-site.}
 
 Similarly to the GNU C++ compiler, to install a C++11 version of Clang, one may need to add a non-standard repository.
-For Debian and Ubuntu distributions, it is easiest to add repositories from \href{http://llvm.org/apt/}{
-the LLVM web-site}. For example, if you have Ubuntu 12 (Precise), you need to add repositories
+For Debian and Ubuntu distributions, it is easiest to add repositories from \href{http://llvm.org/apt/}{the LLVM web-site}. 
+For example, if you have Ubuntu 12 (Precise), you need to add repositories
 as follows:\footnote{Do not forget to remove \ttt{deb-src} for source repositories.
 See the discussion \href{http://askubuntu.com/questions/160511/why-does-add-apt-repository-fail-to-add-source-repositories}{here for more details.}}
 \begin{verbatim}
@@ -361,8 +362,9 @@ cmake .
 make   
 \end{verbatim}
 This creates several binaries in the directory \ttt{similarity\_search/release}, 
-most importantly, a semi unit test utiltity \ttt{bunit}
-and a benchmarking utility \ttt{experiment}, which carries out experiments.
+most importantly, 
+a benchmarking utility \ttt{experiment}, which carries out experiments,
+and testing utilities \ttt{bunit}, \ttt{test\_integer}, and \ttt{bench\_distfunc}.
 Examples of using this benchmarking utility can be found in the directory \href{\replocdir sample_scripts}{sample\_scripts}. 
 Please, check the script \href{\replocfile sample_scripts/sample_run.sh}{sample\_run.sh}. 
 
@@ -375,10 +377,11 @@ solution file}.
 The solution file references several project (*.vcxproj) files: 
 \href{\replocfile similarity_search/src/NonMetricSpaceLib.vcxproj}{NonMetricSpaceLib.vcxproj}
 is the main project file that is used to build the library itself.
-The core library, the semi unit test binary (\ttt{bunit}),
+The output is stored in the folder \ttt{similarity\_search\textbackslash x64}.
+Note that the core library, the test utilities,
  as well as examples of the standalone applications (projects \ttt{sample\_standalone\_app1}
 and \ttt{sample\_standalone\_app2})
-can be built without installing Boost. The output is stored in the folder \ttt{similarity\_search\textbackslash x64}.
+can be built without installing Boost. 
 
 A more detailed description of the build process on Windows is given in \S~\ref{SectionBuildWindows}.
 
@@ -392,7 +395,7 @@ which can be used in external applications;
 \item The main benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows) 
 that carries out experiments and saves evaluation results;
 \item A tuning utility \ttt{tune\_vptree} (\ttt{tune\_vptree.exe} on Windows) 
-that finds optimal VP-tree parameters (see our paper for details \cite{Boytsov_and_Bilegsaikhan:nips2013});
+that finds optimal VP-tree parameters (see \S~\ref{SectionVPtree} and our paper for details \cite{Boytsov_and_Bilegsaikhan:nips2013});
 \item A semi unit test utility \ttt{bunit} (\ttt{bunit.exe} on Windows);
 \item A utility \ttt{bench\_distfunc} that carries out integration tests (\ttt{bench\_distfunc.exe} on  Windows);
 \end{itemize}
@@ -431,7 +434,7 @@ When makefiles are created, just type:
 \begin{verbatim}
 make
 \end{verbatim}
-If the compiler complains about the wrong version of the GCC, 
+If \ttt{cmake} complains about the wrong version of the GCC, 
 it is most likely that you forgot to set the environment variables \ttt{CXX} and \ttt{CC} (as described above).
 If this is the case, make these variables point to the correction version of the compiler.
 \textbf{Important note:} 
@@ -534,8 +537,8 @@ You can now finalize the import by pressing the button \ttt{Finish}.
 
 Next, we need to set some useful settings.
 Most importantly, we need to enable indexing of source files.
-This would allow us to browse class hierarchies, find declarations
-of variables, and classes.
+This would allow us to browse class hierarchies, as well as find declarations
+of variables or classes.
 To this end, go to the menu \ttt{Window}, sub-menu \ttt{Preferences}
 and select a category \ttt{C++/indexing} (see Fig.~\ref{FigEclipse3}).
 Then, check the box \ttt{Index all files}.
@@ -571,6 +574,8 @@ project folder \ttt{launches}.
 Right click on the item \ttt{sample.launch},
 choose the option \ttt{Debug as} (in the drop-down menu),
 and click on \ttt{sample} (in the pop-up menu).
+Note that you may need to edit command line arguments.
+
 After switching to a debug perspective,
 the Eclipse may stop the debugger in 
 the file \ttt{dl-debug.c} as shown in Fig.~\ref{FigDebug}.
@@ -590,7 +595,7 @@ The respective screenshot is shown in Fig.~\ref{FigDebugConf}.
 \end{figure}
 
 
-Note that this manual contains only a basic introduction.
+Note that this manual contains only a basic introduction to Eclipse.
 If the user is new to Eclipse, we recommend reading
 additional \href{http://www.eclipse.org/downloads/moreinfo/c.php}{documentation available online}.
 
@@ -599,7 +604,7 @@ additional \href{http://www.eclipse.org/downloads/moreinfo/c.php}{documentation 
 
 \begin{figure}
 \centering
-\caption{\label{FigAVXSet}Specifying Location of Boost libraries}
+\caption{\label{FigAVXSet}Enabling SIMD Instructions in the Visual Studio}
 \includegraphics[width=0.9\textwidth]{figures/SettingAVXinVS2012.pdf}
 \end{figure}
 
@@ -629,6 +634,7 @@ The corresponding output files are placed into the subdirectories:
 \end{verbatim}
 
 If the user's CPU supports \href{https://en.wikipedia.org/wiki/Advanced_Vector_Extensions}{AVX extensions}, it is recommended to modify code generation settings as shown in the screenshot in Fig.~\ref{FigAVXSet}.
+This should be done for all sub-projects.
 Unlike other compilers, there seems to be no way to detect the CPU type in the Visual Studio automatically.\footnote{It is not also possible to opt for using \href{http://en.wikipedia.org/wiki/SSE4}{only SSE4}.}
 
 \begin{figure}
@@ -662,14 +668,16 @@ The utility \ttt{bunit} is expected to always run without errors.
 The utility \ttt{test\_integr} runs complete implementations of many methods
 and checks if several effectiveness and efficiency characteristics
 meet the expectations.
-This information is encoded as an array of instances of the class \ttt{MethodTestCase}
+The expectations are encoded as an array of instances of the class \ttt{MethodTestCase}
 (see \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/test/test_integr.cc#L65}{the code here}).
 For example, we expect that the recall (see \S~\ref{SectionEffect})
 fall in a certain pre-recorded range.
 Because almost all our methods are randomized, there is a great deal of variance
 in the observed performance characteristics. Thus, some tests
-may fail infrequently, if e.g., the actual recall value is slightly higher or larger
+may fail infrequently, if e.g., the actual recall value is slightly lower or higher 
 than an expected minimum  or maximum.
+From an error message, it should be clear if the discrepancy is substantial, i.e.,
+something went wrong, or not, i.e., we observe an unlikely outcome due to randomization.
 The exact search method, however, should always have an almost perfect recall.
 
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
@@ -705,7 +713,7 @@ For real-valued distance functions, one can use either single- or double-precisi
 type. Single-precision is a recommended default.\footnote{It is not clear yet,
 if having double-precision distance functions is essential. Yet, we decided
 to keep them. Thanks to C++ templates, it requires very little additional effort.}
-We do not have a space with integer-valued distance function, but we
+We do not have a space with integer-valued distance function yet, but we
 plan to implement an edit distance in the nearest future.
 
 \subsubsection{Input Data/Test Set}
@@ -750,8 +758,9 @@ mode. The number of test threads are specified as follows:
 Our framework supports the \knn and the range search.
 The user can request to run both types of queries:
 \begin{verbatim}
-  -k [ --knn ] arg         comma-separated Ks for k-NN search
-  -r [ --range ] arg       comma-separated values for range search
+  -k [ --knn ] arg         comma-separated values of k 
+                           for the k-NN search
+  -r [ --range ] arg       comma-separated radii for range search
 \end{verbatim}
 For example, by specifying the options 
 \begin{verbatim}
@@ -796,15 +805,51 @@ to a log-file:
 \end{verbatim}
 The default behavior is to send all messages to the standard error stream.
 
+\subsubsection{Efficiency of Testing}\label{SectionBenchEfficiency}
+Except for  measuring methods' performance, 
+two expensive operations are computing ground truth answers
+and indexing.
+Currently, we recompute ground truth data every time we benchmark, which may take long time.
+However, substantial time savings can be achieved by benchmarking several methods
+using a single invocation of the binary \ttt{experiment}. In this case,
+ground truth data is computed once for all tested methods.
+To do this one simply needs to provide several arguments \ttt{--method} with different method
+names and/or parameters.
+
+The disadvantage, of course, is that the test binary \ttt{experiment} will use
+more memory (as it has to keep several indices), which limits the size of the data set that can be tested. 
+In future versions, we plan to address this issue and to compute ground truth data before any experimentation begins 
+(and save it to a file).
+
+Additional time savings can be achieved by testing copies of the same method
+that differ only in one or more \emph{query time} parameter.
+In this case, we do not need to recreate the index before each new test,
+but rather just change query time parameters.
+
+There are couple of gotchas here. 
+First, all method descriptions (parameter \ttt{--method}) that correspond
+to the same method should be adjacent in the command line. 
+Second, one needs to explicitly specify all default values.
+Currently, (though this needs to be fixed in the future)
+the main benchmarking utility knows nothing about the default parameter
+values and cannot, therefore, set them. If a default parameter is omitted,
+the system simply uses an arbitrary explicitly specified value of the parameter.
+
+In particular, for the list of clusters method \S~\ref{SectionListClust},
+specifying the default value (2147483647) for the parameter \ttt{maxLeavesToVisit} is
+ especially important as the method uses a different (a special exact search
+algorithm) when \ttt{maxLeavesToVisit} is equal to the default value.
+
 \subsection{Measuring Performance and Interpreting Results}\label{SectionMeasurePerf}
 \subsubsection{Efficiency}
 Three types of efficiency indicators are used: query runtime, the number of distance computations,
 and the amount of memory used by the index \emph{and} the data.
 We also measure the improvement in runtime (improvement in efficiency) 
 with respect to a single-thread sequential search (i.e., brute force) approach
-and in the number of distance computations compared to a sequential scan method. 
-For each query, this method reads compares data objects against the query.
-The sequential search baseline processes \emph{all the objects}. 
+as well as an improvement in the number of distance computations. 
+A good method should
+carry out fewer distance computations and be faster than the brute-force search,
+which compares \emph{all the objects} directly with the query. 
 
 The amount of memory consumed by a search method is measured indirectly: 
 We record the overall memory usage of a benchmarking process before and after creation of the index. Then, we add the amount of memory used by the data.
@@ -817,26 +862,30 @@ Note that we do not have  a truly portable code to measure memory consumption of
 \subsubsection{Effectiveness}
 \label{SectionEffect}
 
-Several effectiveness metrics are computed by the benchmarking utility:
+In the following description, we assume that a method returns 
+a set of points/objects $\{o_i\}$.
+The value of $\pos(o_i)$ represents a positional distance from $o_i$ to the query, 
+i.e., the number of database objects closer to the query than $o_i$ plus one.
+Among objects with identical distances to the query, 
+the object with the smallest index is considered to be the closest.
+Note that $\pos(o_i) \ge i$.
 
+Several effectiveness metrics are computed by the benchmarking utility:
 \begin{itemize}
 \item  A \emph{number of points closer} to the query than the nearest returned point.
-Let $\pos(o_i)$ represent a positional distance from $o_i$ to the query, 
-i.e., the number of objects closer to the query than $o_i$ plus one.
-Among several objects with identical distances, 
-we select the object with the smallest index.
-Note that $\pos(o_i) \ge i$.
-\item A \emph{relative position} error is equal to $\pos(o_i)/i$;
+This metric is equal $\pos(o_1)$ minus one. If $o_1$ is always the true nearest object,
+its positional distance is one and, thus, the \emph{number of points closer} is always equal to zero.
+\item A \emph{relative position} error for point $o_i$ is equal to $\pos(o_i)/i$,
+an aggregate value is obtained by computing the geometric mean over all returned $o_i$;
 \item \emph{Recall},  which is is equal to the fraction of all correct answers retrieved.
-\item \emph{Classification accuracy}, which is equal to the fraction of classed correctly
+\item \emph{Classification accuracy}, which is equal to the fraction of labels correctly
 predicted by a \knn based classification procedure.
 \end{itemize}
 
-The first two metrics represent a so-called rank (approximation) error:
-if we sort (i.e., rank) all the data objects with respect to their distances to the query,
-where do we place objects returned by the search method?
-The closer the returned objects are to the beginning of the list (i.e., 
-the closer they are to to the query object), the better is the quality of the search response.
+The first two metrics represent a so-called rank (approximation) error.
+The closer the returned objects are to the query object, 
+the better is the quality of the search response and the lower is the rank 
+approximation error.
 
 \begin{wraptable}{R}{0.52\textwidth}
 \caption{An example of a human-readable report 
@@ -864,19 +913,19 @@ Memory Usage:   5.8 MB
 ------------------------------------
 \end{verbatim}
 \textbf{Note:} \emph{confidence intervals} are in brackets
-\vspace{-4em}
+%\vspace{-4em}
 \end{wraptable}
 
 
 Recall is a classic metric. 
 It was argued, however, 
 that recall does not account for position information of returned objects
-and is, therefore, inferior to rank error metrics \cite{Amato_et_al:2003,Cayton2008}.
+and is, therefore, inferior to rank approximation error metrics \cite{Amato_et_al:2003,Cayton2008}.
 
 If we specify ground-truth object classes (see \S~\ref{SectionDatasets} 
 for the description of data set formats), 
-it is possible to compute an accuracy of \knn based classification procedure.
-The class of the element is predicted to be most frequent class label among $k$ closest objects
+it is possible to compute an accuracy of a \knn based classification procedure.
+The label of an element is selected as the most frequent class label among $k$ closest objects
 returned by the method (in the case of ties the class label with the smallest id is chosen).
 
 If we had ground-truth queries and relevance judgements from human assessors,
@@ -885,11 +934,15 @@ such as the mean average precision,
 or the normalized discounted cumulative gain.
 This remains for the future work.
 
+Note that it is pointless to compute the mean average precision
+when human judgments are not available, \href{http://searchivarius.org/blog/when-average-precision-equal-recall}{as the mean average precision
+is identical to the recall in this case}.
+
 \subsection{Interpreting and Processing Benchmark Results}
 If the user specifies the option \ttt{--outFilePrefix},
 the benchmarking results are stored to the file system.
 A prefix of result files is defined by the parameter \ttt{--outFilePrefix}
-while the suffix is defined by a type of the search procedure (\knn or range)
+while the suffix is defined by a type of the search procedure (the \knn or the range search)
 as well as by search parameters (e.g., the range search radius).
 For each type of search, two files are generated:
 a report in a human-readable format,
@@ -897,8 +950,6 @@ and a tab-separated data file intended for automatic processing.
 The data file contains only the average values,
 which can be used to, e.g., produce efficiency-effectiveness plots
 as described in \S~\ref{SectionGenPlot}.
-
-%\todonoteinline{Gotchas with specifying the query-time parameters}
 
 An example of human readable report (\emph{confidence intervals} are in square brackets)
 is given in Table~\ref{TableHRep}.
@@ -933,24 +984,26 @@ Consider the following example of using \ttt{genplot.py}:
            -t "ImprEfficiency  vs Recall"
 \end{verbatim}
 
-It aims to process the output tab-separated data file \ttt{result\_K=1.dat},
+It aims to process the tab-separated data file \ttt{result\_K=1.dat},
 which was generated for 1-NN search, and save the plot to the file \ttt{plot\_1nn.pdf}.
 Note that one should not explicitly specify the extension of the output file (as
 \ttt{.pdf} is always implied).
 
-Parameters \ttt{-x} and \ttt{-y} define  X and Y axis and have the same format.
-Each parameter has three tilda-separated entities. The first should
+Parameters \ttt{-x} and \ttt{-y} define  X and Y axis.
+Parameter values have the same format.
+Each parameter has three tilda-separated values. The first should
 be 0 or 1. Specify 0, only if you do not want to print the axis label.
-The second entity is either \ttt{norm} or \ttt{log}, 
+The second value is either \ttt{norm} or \ttt{log}, 
 which stands for a normal or logarithmic scale, respectively.
-The last entity defines a metric that we want to visualize:
+The last value defines a metric that we want to visualize:
 The metric should be one of the names that appear in the header row of the output data file.
-The title of the plot is defind by \ttt{-t}.
+The title of the plot is defind by \ttt{-t} (specify \ttt{-t ""} if you do not want
+to print the title).
 
 The parameter \ttt{-l} defines a plot legend.
 It is either a string \ttt{none} (to hide the legend) 
-or  it contains two tilda-separated entities.
-The first entity gives the number of columns in the legend, while the second entity
+or  it contains two tilda-separated values.
+The first value gives the number of columns in the legend, while the second value
 defines a position of the legend. The position can be either 
 absolute or relative.
 An absolute position is defined by a pair of coordinates (in round brackets).
@@ -980,7 +1033,8 @@ The mnemonic name of the space is passed to the benchmarking utility (see \S~\re
 There can be more than one version of a distance function,
 which have different space-performance trade-off.
 In particular, for distances that require computation of logarithms 
-we can achieve an order of magnitude improvement (for the GNU C++) by precomputing
+we can achieve an order of magnitude improvement (e.g., for the GNU C++
+and Clang) by pre-computing
 logarithms at index time. This comes at a price of extra storage. 
 In the case of Jensen-Shannon distance functions, we can pre-compute some 
 of the logarithms and accurately approximate those we cannot pre-compute.
@@ -1003,8 +1057,9 @@ Distance computation efficiency was evaluated on a Core i7 laptop (3.4 Ghz peak 
 in a single-threaded mode (by the utility \href{\replocfile similarity_search/test/bench_distfunc.cc}{bench\_distfunc}).
 It is measured in millions of computations per second for single-precision
 floating pointer numbers (double precision computations are, of course, more costly). 
-The code was computed using the GNU compiler. 
-Somewhat higher efficiency numbers can be obtained by using the Intel compiler.
+The code was compiled using the GNU compiler. 
+Somewhat higher efficiency numbers can be obtained by using the Intel compiler
+or the Visual Studio (Clang seems to be equally efficient).
 In fact, performance is much better for distances relying on ``heavy'' math functions:
 slow versions of KL- and Jensen-Shannon divergences and Jensen-Shannon metrics, 
 as well as for $L_p$ spaces,
@@ -1070,11 +1125,11 @@ Cosine similarity & \ttt{cosinesimil}, \ttt{cosinesimil\_sparse}, \ttt{cosinesim
 \toprule
 \multicolumn{3}{c}{\textbf{Non-metric spaces (non-symmetric distance)}}  \\
 \toprule
-regular KL-div. & left queries: \ttt{kldivfast}       & 0.5, 27 \\
+Regular KL-div. & left queries: \ttt{kldivfast}       & 0.5, 27 \\
                        & right queries: \ttt{kldivfastrq}    &  \\
                        & $\sum_{i=1}^n   x_i \log \frac{x_i}{y_i}$  & \\ 
 \cmidrule(l){1-3} 
-generalized KL-div. & left queries: \ttt{kldivgenslow}, \ttt{kldivgenfast} & 0.5, 27    \\
+Generalized KL-div. & left queries: \ttt{kldivgenslow}, \ttt{kldivgenfast} & 0.5, 27    \\
                            & right queries: \ttt{kldivgenfastrq} & 27    \\
                            & $\sum_{i=1}^n \left[  x_i \log \frac{x_i}{y_i} -   x_i +   y_i \right]$   &   \\
 \cmidrule(l){1-3} 
@@ -1108,7 +1163,7 @@ we have reasonably efficient implementations
 for $L_p$ distances where $p$ is either integer or infinity. 
 The most efficient implementations are for $L_1$ (Manhattan),
 $L_2$ (Euclidean), and $L_{\infty}$ (Chebyshev).
-As explained in Leo's blog,
+As explained in the author's blog,
 \href{http://searchivarius.org/blog/efficient-exponentiation-square-rooting}{we compute exponents through square rooting}. 
 This works best when the number of digits (after the binary digit) is small, e.g., if $p=0.125$.
 
@@ -1119,7 +1174,7 @@ For instance \ttt{l1} and \ttt{l1\_sparse} are both $L_1$ spaces,
 but the former is dense and the latter is sparse.
 The mnemonic names of $L_1$, $L_2$, and $L_\infty$ spaces (passed to the benchmarking utility) are
 \ttt{l1}, \ttt{l2}, and \ttt{linf}, respectively.
-Other generic $L_p$ have the name $lp$, which is used in combination with a parameter.
+Other generic $L_p$ have the name \ttt{lp}, which is used in combination with a parameter.
 For instance, $L_3$ is denoted as \ttt{lp:p=3}.
 
 Distance functions for sparse-vector spaces are far less efficient, 
@@ -1153,9 +1208,9 @@ For \emph{single-precision} floating point vector elements,
 we provide a more efficient implementation that relies on the 
 all-against-all comparison SIMD instruction \texttt{\_mm\_cmpistrm}.
 This implementation  (inspired by the set intersection algorithm of Schlegel~et~al.~\cite{schlegel2011fast})
-is about 2.5 times faster than a pure C++ implementation based on the merge-sort approach.
+is about 2.5-3 times faster than a pure C++ implementation based on the merge-sort approach.
 
-\subsubsection{Jensen-Shannon divergence}\label{SectionJS}
+\subsection{Jensen-Shannon divergence}\label{SectionJS}
 \emph{Jensen-Shannon} divergence is a symmetrized and smoothed KL-divergence:
 \begin{equation}\label{EqJS}
 \frac{1}{2}\sum_{i=1}^n\left[ x_i \log x_i + y_i \log y_i  -(x_i+y_i)\log \frac{x_i +y_i}{2}\right]
@@ -1182,7 +1237,7 @@ it needs to be computed in points that are not known until we see the query vect
 
 However, it is possible to approximate it with a very good precision,
 which should be sufficient for the purpose of approximate searching.
-To this end, we rewrite Equation \ref{EqJS} as follows:
+Let us rewrite Equation \ref{EqJS} as follows:
 $$
 \frac{1}{2}\sum_{i=1}^n\left[ x_i \log x_i + y_i \log y_i  -(x_i+y_i)\log \frac{x_i +y_i}{2}\right]=
 $$
@@ -1236,7 +1291,7 @@ $$
 $$
 
 Computing logarithms is costly: We can considerably improve efficiency of 
-evaluation Itakura-Saito divergence and KL-divergence by pre-computing logarithms at index time.
+Itakura-Saito divergence and KL-divergence by pre-computing logarithms at index time.
 The spaces that implement this functionality contain the substring \ttt{fast} in their mnemonic names (see also Table~\ref{TableSpaces}).
 
 
@@ -1254,6 +1309,8 @@ categories:
 In the following subsections (\S~\ref{SectionSpacePartMeth}-\ref{SectionMiscMeth}),
 we describe implemented methods, explain their parameters,
 and provide examples of their use via the benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows).
+Note that a few parameters are query time parameters, which means that they 
+can be changed without rebuilding the index see \S~\ref{SectionBenchEfficiency}.
 For the description of the utility \ttt{experiment} see \S~\ref{SectionRunBenchmark}.
 
 \subsection{Space Partitioning Methods} \label{SectionSpacePartMeth} 
@@ -1424,7 +1481,7 @@ the parameter \ttt{maxLeavesToVisit}). Yet, this implementation should be used o
 \cmidrule(l){1-2} 
 \ttt{bucketSize}    & A maximum number of elements in a bucket/leaf.    \\
 \ttt{chunkBucket}   & Indicates if bucket elements should be stored contiguously in memory (1 by default).  \\
-\ttt{maxLeavesToVisit}  & An early termination parameter equal to the maximum number of buckets (tree leaves) visited by a search algorithm. \\
+\ttt{maxLeavesToVisit}  & An early termination parameter equal to the maximum number of buckets (tree leaves) visited by a search algorithm (2147483647 by default). \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{VP-tree} (\ttt{vptree}) \cite{Uhlmann:1991,Yianilos:1993}  } 
 \\
@@ -1445,7 +1502,7 @@ to data objects in the leaves \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{List of clusters} (\ttt{list\_clusters})  \cite{chavez2005compact}}   \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
+                   & Common parameters \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit}. Note \ttt{maxLeavesToVisit} is a \textbf{query time} parameter. \\
 \ttt{useBucketSize} & If equal to one, we use the parameter \ttt{bucketSize} to determine the number of points in the cluster. Otherwise, the size of the cluster is defined by the parameter \ttt{radius}. \\
 \ttt{radius}        & The maximum radius of a cluster (used when \ttt{useBucketSize} is set to zero). \\
 \ttt{strategy}      & A cluster selection strategy. It is one of the following: \ttt{random}, \ttt{closestPrevCenter}, \ttt{farthestPrevCenter}, \ttt{minSumDistPrevCenters}, \ttt{maxSumDistPrevCenters}. \\ 
@@ -1484,7 +1541,7 @@ release/experiment \
 Our implementation of the GH-tree permits to answer queries both exactly and approximately (by specifying
 the parameter \ttt{maxLeavesToVisit}). Yet, this implementation should be used only with metric spaces.
 
-\subsubsection{List of Clusters}
+\subsubsection{List of Clusters}\label{SectionListClust}
 The list of clusters \cite{chavez2005compact} is an exact search method for metric spaces,
 which relies on flat (i.e., non-hierarchical) clustering.
 Clusters are created sequentially starting by randomly selecting the first cluster center.
@@ -2002,7 +2059,8 @@ value is above, the value is converted to 1.
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{Brute-force permutation search with incremental sorting} (\ttt{perm\_incsort})  \cite{Chavez2008incsort} }\\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{numPivot} and \ttt{dbScanFrac}. \\
+                   & Common parameters \ttt{numPivot} and \ttt{dbScanFrac}. 
+Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{PP-index} (\ttt{perm\_prefix}) \cite{Esuli:2012}  }\\
 \cmidrule(l){1-2} 
@@ -2029,7 +2087,8 @@ in the inverted file \\
 \ttt{chunkIndexSize} & A number of documents in one index chunk. Select a small value (in the order of several thousands) for better cache utilization. \\
 \ttt{indexThreadQty} & A number of indexhing threads. \\
 \ttt{minPrefix}      & A number of most closest pivots to be indexed. \\
-\ttt{minTimes}       & A candidate entry should share this number of pivots with the query. \\
+\ttt{minTimes}       & A candidate entry should share this number of pivots with the query. 
+This is a \textbf{query time} parameter. \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -2055,7 +2114,8 @@ an approximate search in the VP-tree. }  \\
 \multicolumn{2}{c}{ Similar to \cite{figueroa2009speeding}, but uses
 an approximate search in the VP-tree. }  \\
 \cmidrule(l){1-2} 
-                     & Common parameters \ttt{numPivot} and \ttt{dbScanFrac}. \\
+                     & Common parameters \ttt{numPivot} and \ttt{dbScanFrac}. 
+Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
  \ttt{alphaLeft}   & A stretching coefficient $\alpha_{left}$ in Equation~(\ref{EqDecFunc}) \\
  \ttt{alphaRight}  & A stretching coefficient $\alpha_{right}$ in Equation~(\ref{EqDecFunc}) \\
 \bottomrule
@@ -2156,10 +2216,10 @@ release/experiment \
 \multicolumn{2}{c}{\textbf{\knn graph (bottom-up and greedy index creation)} (\ttt{small\_world\_rand})
 \cite{malkov2012scalable}} \\
 \cmidrule(l){1-2} 
- \ttt{NN}                  & A number of close entries returned by one sub-search            \\
- \ttt{initSearchAttempts}  & A number of sub-searches to answer one query                    \\
- \ttt{initIndexAttempts}   & A number of sub-searches to add one data point during indexing  \\
- \ttt{indexThreadQty}      & A number of indexing threads                                    \\
+ \ttt{NN}                  & A number of close entries returned by one sub-search.           \\
+ \ttt{initSearchAttempts}  & A number of sub-searches to answer one query. This is a \textbf{query time} parameter.                   \\
+ \ttt{initIndexAttempts}   & A number of sub-searches to add one data point during indexing.  \\
+ \ttt{indexThreadQty}      & A number of indexing threads. \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{Several copies of the same index type} (\ttt{mult\_index})} \\
 \cmidrule(l){1-2} 
@@ -2189,13 +2249,13 @@ In the second step, the user writes a special helper file
 containing methods that creates a class or a method.
 In this helper file, it is normally necessary to include
 the method/space header. 
+Please, use the \textbf{angle brackets} in this include-directive here.
 
 Because we tend to give the helper file the same name
 as the name of header for a specific method/space,
 we should not include method/space headers using quotes.
 Such code fails to compile under the Visual Studio. 
-Instead, one should use angle brackets
-as in the following example:
+Here is an example of a proper include-directive:
 \begin{verbatim}
 #include <method/vptree.h>
 \end{verbatim}
@@ -2220,9 +2280,12 @@ a single-precision (\ttt{float}), or a double-precision (\ttt{double}) real valu
 The user may choose to provide specializations for all possible
 distance values or decide to focus, e.g., only on integer-valued distances.
 
-The user can also add new applications.
+The user can also add new applications, which are meant to be 
+a part of the testing framework/library.
 However, adding new applications does require minor editing of the meta-makefile \ttt{CMakeLists.txt} 
 (and re-running \ttt{cmake} \S~\ref{SectionBuildLinux}).
+It is also possible to create standalone applications that use the library.
+Please, see \S~\ref{SectionBuildLinux} and \S~\ref{SectionBuildWindows} for details.
 
 In the following subsections, 
 we consider extension tasks in more detail.
@@ -2278,13 +2341,13 @@ and the functions \ttt{CheckAndAddToResult}.
 In the case of the range query, the radius of a query is constant.
 However, in the case of the nearest-neighbor query,
 the radius typically decreases as we compare the query
-with new data objects (by calling the function \ttt{CheckAndAddToResult}).
+with previously unseen data objects (by calling the function \ttt{CheckAndAddToResult}).
 In both cases, the value of the function \ttt{Radius} is used to prune unpromising
 partitions and data points.
 
 This commonality between the \ttt{RangeQuery} and \ttt{KNNQuery}
 allows us in many cases to carry out a nearest-neighbor query 
-using an algorithm designed for range queries.
+using an algorithm designed to answer range queries.
 Thus, only a single implementation of a search method--that answers queries of both types--can be used in many cases.
 
 A query object proxies distance computations during the testing phase.
@@ -2313,7 +2376,7 @@ The functionality of this class is limited to
 creating new objects and/or their copies as well providing
 access to the raw (i.e., unstructured) representation of the data
 (through functions \ttt{data} and \ttt{datalength}).
-We would re-iterate that currently (though this is likely to change in the future),
+We would re-iterate that currently (though this may change in the future releases),
 \ttt{Object} is a very basic class that only keeps a blob of data and blob's size.
 For example, the \ttt{Object} can store an array of single-precision floating point
 numbers, but it has no function to obtain the number of elements.
@@ -2465,17 +2528,22 @@ a template class, which is parameterized by the distance function value:
 template <typename dist_t>
 class DummyMethod : public Index<dist_t> {
  public:
-  DummyMethod(const Space<dist_t>* space,
+  DummyMethod(const Space<dist_t>* space, 
               const ObjectVector& data, 
-              bool bDoSeqSearch)
-              : data_(data), bDoSeqSearch_(bDoSeqSearch) {}
+              AnyParamManager& pmgr) 
+              : data_(data) {
+    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch_);
+    SetQueryTimeParamsInternal(pmgr);
+  }
   ~DummyMethod(){};
   const std::string ToString() const;
    
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
- private:
+  virtual vector<string> GetQueryTimeParamNames() const;
+ private: 
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
   const ObjectVector&     data_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(DummyMethod);
@@ -2501,6 +2569,15 @@ Hence, during the testing phase, the distance function should be invoked only th
 a query object.}
 
 
+A method can have query time parameters, which can be changed
+without rebuilding the index.
+The function \ttt{GetQueryTimeParamNames} returns the list of 
+names of such parameters.
+If this list is non-empty and the method is supposed to support
+query time modification of some parameters,
+these modifications are carried out inside the function  
+\ttt{SetQueryTimeParamsInternal}.
+
 Finally, we need to ``tell'' the library about the method,
 by registering the method in the method factory,
 similarly to registering a space.
@@ -2510,19 +2587,27 @@ One parameter is a reference to an object of the type \ttt{AllParams}.
 In our case, the function name is \ttt{CreateDummy}:
 
 \begin{verbatim}
+#include <method/dummy.h>
+
+namespace similarity {
+
 template <typename dist_t>
-Index<dist_t>* CreateDummy(bool PrintProgress,
+  Index<dist_t>* CreateDummy(bool PrintProgress,
                            const string& SpaceType,
                            const Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
     AnyParamManager pmgr(AllParams);
-    bool bDoSeqSearch = false;
-    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch);
 
-    return new DummyMethod<dist_t>(space, DataObjects, bDoSeqSearch);
+    return new DummyMethod<dist_t>(space, DataObjects, pmgr);
+  }
 }
 \end{verbatim}
+There is an include-directive preceding
+the creation function, which uses angle brackets.
+As explained previously, if you opt to using quotes (in the include-directive),
+the code may not compile under the Visual Studio.
+
 Note that, similarly to the dummy space example,
 we use a parameter extraction class \ttt{AnyParamManager}.
 The only difference, is that we retrieve an optional parameter \ttt{doSeqSearch}.
@@ -2618,6 +2703,8 @@ Note that improvement in efficiency and in the number of distance computations
 obtained with slow distance functions can be overly optimistic.
 That is, when a slow distance function is replaced with a more efficient version,
 the improvements over sequential search may become far less impressive.
+In some cases, the search method can become even slower than the brute-force
+comparison against every data point.
 This is why we believe that optimizing  computation of a distance function 
 is equally important (and sometimes even more important) 
 than designing better search methods.
@@ -2633,18 +2720,26 @@ especially non-metric functions that involve computations of logarithms.
 %where computation of a logarithm takes dozens of CPU cycles.
 An order of magnitude improvement can be achieved by pre-computing 
 logarithms at index time and by approximating those logarithms that are not possible
-to pre-compute (see \S~\ref{SectionBregman} for more details).
+to pre-compute (see \S~\ref{SectionJS} and \S~\ref{SectionBregman} for more details).
 Yet, this doubles the size of an index.
 
 The Intel compiler has a powerful math library, 
 which allows one to efficiently compute several hard distance functions
 such as the KL-divergence, the Jensen-Shanon divergence/metric, and
-the $L_p$ spaces for non-integer values of $p$.
-Unlike our custom implementation, which is used for non-Intel compilers,
-the Intel math library does not rely on tricks like pre-computation of logarithms at index time and
-allows, therefore, to store data in less space. 
-In the case of the Visual Studio, we opt for using  the fast math mode.
-Thus, computation of hard distances normally takes less time than in the case of GNU C++.
+the $L_p$ spaces for non-integer values of $p$ more efficiently than in the case of GNU C++
+and Clang.
+In the Visual Studio's fast math mode (which is enabled in the provided project files)
+it is also possible to compute some hard distances several times faster compared to GNU C++ and Clang.
+Yet, our custom implementations seems to be always twice as fast. 
+For example, in the case of the Intel compiler,
+the custom implementation of the KL-divergence is 10 times faster 
+than the standard one while
+the custom implementation of the JS-divergence is two times faster.
+In the case of the Visual studio, the custom KL-divergence is 
+7 times as fast as the standard one, while the custom JS-divergence is 10 times faster.
+Therefore,
+doubling the size of the data set by storing pre-computed logarithms seems to be worthwhile.
+
 
 Efficient implementations of some other distance functions 
 rely on SIMD instructions. 
@@ -2653,12 +2748,12 @@ operate on small vectors.
 Some C++ implementations can be efficiently vectorized by both the GNU and Intel compilers.
 That is, instead of the scalar operations the compiler would generate
 more efficient SIMD instructions.
-Yet, the code is not always vectorized by the Clang or the Visual Studio.
+Yet, the code is not always vectorized by the Clang.
 And even the Intel compiler, fails to efficiently vectorize 
-computation of the KL-divergence (with precomputed logarithms).
+computation of the KL-divergence (with pre-computed logarithms).
 
 There are also situations when we efficient automatic vectorization
-is hard possible. For instance,
+is hardly possible. For instance,
 we provide an efficient implementation of the scalar product
 for sparse \emph{single-precision} floating point vectors.
 It relies on the all-against-all comparison SIMD instruction \texttt{\_mm\_cmpistrm}. 
@@ -2666,7 +2761,7 @@ However, it requires keeping the data in a special format,
 which makes automatic vectorization nearly impossible.
 
 Intel SSE extensions that provide SIMD instructions are automatically detected
-by compilers except the Visual Studio.
+by compilers but the Visual Studio.
 If these SSE extensions are not available, the compilation process will produce warnings like the
 following one:
 {
@@ -2684,23 +2779,23 @@ For the instructions, the user is referred to \S~\ref{SectionBuildWindows}.
 In our previous report \cite{Boytsov_and_Bilegsaikhan:sisap2013},
 we underestimated a cost of a random memory access.
 A more careful analysis showed that, 
-on the author's laptop (Core i7, DDR3), 
+on a recent laptop (Core i7, DDR3), 
 a truly random access \href{http://searchivarius.org/blog/main-memory-similar-hard-drive}{``costs'' about 200 CPU cycles},
-which may be 2-3 times longer than a single distance computation.
+which may be 2-3 times longer than a computation of a cheap distance such as $L_2$.
 
 Many implemented methods use some form of bucketing.
-For example, in the VP-tree we recursively decompose the space
-until partitions become sufficiently small.
+For example, in the VP-tree or bbtree we recursively decompose the space
+until a partition contains at most \ttt{bucketSize} elements.
 The buckets are searched sequentially,
-which can be done much faster, if bucket objects are stored
+which could be done much faster, if bucket objects were stored
 in contiguous memory regions.
-Thus, to check elements in a bucket we need only one random memory access.
+Thus, to check elements in a bucket we would need only one random memory access.
 
 A number of methods support this optimized storage model.
 It is activated by setting a parameter \ttt{chunkBucket} to 1.
 If \ttt{chunkBucket} is set to 1, indexing is carried out in two stages.
-At the first stage, a method creates unoptimized buckets:
-A bucket is an array of pointers to data objects.
+At the first stage, a method creates unoptimized buckets,
+each of which is an array of pointers to data objects.
 Thus, objects are not necessarily contiguous in memory.
 In the second stage, the method iterates over buckets,
 allocates a contiguous chunk of memory,
@@ -2730,7 +2825,7 @@ Aside from the prefix, the sparse and dense vectors are stored in a different fo
 In the dense-vector format, each row
 contains the same number of vector elements, one per each dimension.
 The values can be separated by spaces or commas/columns.
-In the sparse format, each vector elements is preceded
+In the sparse format, each vector element is preceded
 by a \emph{zero-based} vector element id. 
 The ids can be unsorted, but they should not repeat.
 For example, the following line
@@ -2742,11 +2837,11 @@ which represent vector elements 0, 25, and 257:
 
 The vectors are sparse and most values are not specified.
 It is up to a designer of the space to decide on the default value for an unspecified vector element.
-All the current implementations choose the \emph{zero} default value.
+All existing implementations use \emph{zero} as the default value.
 Again, elements can be separated by spaces or commas/columns instead of spaces.
 
 In addition, the directory \ttt{sample\_scripts} contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results \cite{Boytsov_and_Bilegsaikhan:sisap2013,Boytsov_and_Bilegsaikhan:nips2013}.
-This includes the software to generate plots (see \S~\ref{SectionGenPlot}). 
+This includes the software to generate plots (see also \S~\ref{SectionGenPlot}). 
 Additionally, to reproduce our previous results, one needs to obtain a data set using the script 
 \href{\replocfile data/get_data_nips2013.sh}{data/get\_data\_nips2013.sh}. 
 To get all data set sets available, please, use the script

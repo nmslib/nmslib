@@ -32,10 +32,8 @@ Index<dist_t>* CreateDummy(bool PrintProgress,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
     AnyParamManager pmgr(AllParams);
-    bool bDoSeqSearch = false;
-    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch);
     
-    return new DummyMethod<dist_t>(space, DataObjects, bDoSeqSearch);
+    return new DummyMethod<dist_t>(space, DataObjects, pmgr);
 }
 
 /*

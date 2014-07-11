@@ -91,9 +91,9 @@ void ParseCommandLine(int argc, char*argv[],
                         "# of test sets obtained by bootstrapping;"
                         " ignored if queryFile is specified")
     ("knn,k",           po::value< string>(&knnArg),
-                        "comma-separated Ks for the k-NN searches")
+                        "comma-separated values of K for the k-NN search")
     ("range,r",         po::value<string>(&RangeArg),
-                        "comma-separated values for the range searches")
+                        "comma-separated radii for the range searches")
     ("eps",             po::value<double>(&epsTmp)->default_value(0.0),
                         "the parameter for the eps-approximate k-NN search.")
     ("method,m",        po::value< vector<string> >(&methParams)->required(),

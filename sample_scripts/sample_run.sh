@@ -6,7 +6,7 @@ LogFile="log"
 
 # If you have python, latex, and PGF install, 
 # you can set the following variable to 1 to generate a performance plot.
-GEN_PLOT=1
+GEN_PLOT=0
 
 # An example of running the 1-nn search
 
