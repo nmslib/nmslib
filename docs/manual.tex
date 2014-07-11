@@ -1255,12 +1255,14 @@ $$
 We can pre-compute all the logarithms in Eq.~\ref{Eq1} except for $\log \left(1 + \frac{\min(x_i,y_i)}{\max(x_i,y_i)}\right) $. However, its argument value is in a small range: from one to two.
 We can discretize the range, compute logarithms in many intermediate points and save the computed values in a table.
 Finally, we employ the SIMD instructions to implement this approach. 
-As our tests show, this is a very efficient approach, which results in a very little (around $10^{-6}$ on average) relative error for the value of the Jensen-Shannon divergence.
+This is a very efficient approach, which results in a very little (around $10^{-6}$ on average) relative error for the value of the Jensen-Shannon divergence.
 
-Another possible approach is use \href{http://fastapprox.googlecode.com/svn/trunk/fastapprox/src/fastonebigheader.h}{an efficient approximation for logarithm computation}.
-However, \href{https://github.com/searchivarius/BlogCode/tree/master/2013/12/26}{as our tests show},
-this method is still relatively slow (it takes almost 20 CPU cycles per log),
- while the relative error is as high as $3 \cdot 10^{-4}$ for logarithm arguments smaller than 2.
+Another possible approach is to use \href{http://fastapprox.googlecode.com/svn/trunk/fastapprox/src/fastonebigheader.h}{an efficient approximation for logarithm computation}.
+\href{https://github.com/searchivarius/BlogCode/tree/master/2013/12/26}{As our tests show},
+this method is about 1.5x times faster (1.5 vs 1.0 billions of logarithms per second),
+but for the logarithms in the range $[1,2]$,
+ the relative error is one order magnitude higher (i.e., around $3 \cdot 10^{-4}$)
+than for the table-based discretization approach.
 
 \subsection{Bregman Divergences}\label{SectionBregman}
 Bregman divergences are typically non-metric distance functions,
@@ -2691,9 +2693,9 @@ target_link_libraries (dummy_app NonMetricSpaceLib lshkit
 \end{itemize}
 
 \subsection{Creating an application on Windows (inside the framework)}\label{SectionCreateAppWindows}
-Creating a new sub-project in the Visual Studio is straightforward.
+Creating a new sub-project in the Visual Studio is rather straightforward.
 
-In addition, one can use a provided sample project file \href{\replocfile similarity_search/src/dummy_app.vcxproj}{dummy\_app.vcxproj} as template.
+In addition, one can use a provided sample project file \href{\replocfile similarity_search/src/dummy_app.vcxproj}{dummy\_app.vcxproj} as a template.
 To this end, one needs to to create a copy of this sample project file and subsequently edit it. 
 One needs to do the following:
 \begin{itemize}
