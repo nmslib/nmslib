@@ -11,7 +11,7 @@ Leo(nid) Boytsov is a maintainer.
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf).  The manual also conains instructions for building under Windows, as well as instructions for extending the library.
+A detailed description is given [in the manual](docs/manual.pdf).  The manual also contains instructions for building under Windows, as well as instructions for extending the library.
 
 Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/downloads/moreinfo/c.php). A basic description of how to import the project into and debug it from Eclipse is given in the manual.
 
