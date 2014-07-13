@@ -1676,10 +1676,13 @@ release/experiment \
 }
 
 \subsection{Locality-sensitive Hashing Methods} \label{SectionLSH}
-Locality Sensitive Hashing (LSH) is a class of methods employing hash functions that tend to have the same hash values for close points and different hash values for distant points. It is a probabilistic method in which the probability of having the same hash value is a monotonically decreasing function of the distance between two points (that we compare). A hash function that possesses this property is called locality sensitive. The first LSH method was proposed by Indyk and Motwani in \cite{indyk1998approximate}. 
+Locality Sensitive Hashing (LSH) \cite{indyk1998approximate} is a class of methods employing hash functions that tend to have the same hash values for close points and different hash values for distant points. It is a probabilistic method in which the probability of having the same hash value is a monotonically decreasing function of the distance between two points (that we compare). A hash function that possesses this property is called locality sensitive. 
+%The first LSH method was proposed by Indyk and Motwani in \cite{indyk1998approximate}. 
+
 Our library embeds the LSHKIT which provides locality sensitive hash functions in $L_1$ and $L_2$.
 It supports only the nearest-neighbor (but not the range) search.
 Parameters of LSH methods are summarized in Table~\ref{TableLSHParams}.
+The LSH methods are not available under Windows.
 
 \begin{table}[t!]
 \caption{Parameters of LSH methods\label{TableLSHParams}}
