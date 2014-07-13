@@ -1,6 +1,6 @@
 Non-Metric Space Library
 =================
-A similarity search library and a toolkit for evaluation of similarity search methods.
+A cross-platform similarity search library and a toolkit for evaluation of similarity search methods.
 
 **Contributors**: Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
@@ -11,9 +11,7 @@ Leo(nid) Boytsov is a maintainer.
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf).  The manual also contains instructions for building under Windows, as well as instructions for extending the library.
-
-Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/downloads/moreinfo/c.php). A basic description of how to import the project into and debug it from Eclipse is given in the manual.
+A detailed description is given [in the manual](docs/manual.pdf).  The manual also contains instructions for building under Windows, extending the library, and debugging the code using Eclipse.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -51,8 +49,7 @@ cmake .
 make  
 ```
 
-
-A more detailed description is given in [in the manual](docs/manual.pdf).  
+Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/downloads/moreinfo/c.php).  A more detailed description is given in [in the manual](docs/manual.pdf).  
 
 Examples of using the software can be found in the directory sample_scripts. A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small data sets stored in this repository. The complete data set can be obtained using the script [data/get_all_data.sh](data/get_all_data.sh). Beware: it is more than 5 GBs compressed! The Wikipedia datasets (sparse and dense vectors) is the largest part occupying 5 GB and 3GB, respectively. The Cayton collection is about 500 MB.
 
@@ -62,9 +59,21 @@ The downloaded data needs to be decompressed (use 7z  and gzip). Then, copy data
 export DATA_DIR=[path to the chosen directory with data files]
 ```
 
-
 Sample scripts to tune the decision function for the VP-tree are in the directory [sample_scripts/nips2013/tunning](sample_scripts/nips2013/tunning).   
 In addition, the directory [sample_scripts](sample_scripts) contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we also provide software to generate plots (which requires Python, Latex, and PGF).   
+
+Quick start for Windows
+-----------------------
+Building on Windows is straightforward:
+One can simply use the provided  [Visual Studio solution file](similarity_search/NonMetricSpaceLib.sln).
+The solution file references several project (*.vcxproj) files: 
+[NonMetricSpaceLib.vcxproj](similarity_search/src/NonMetricSpaceLib.vcxproj)
+is the main project file that is used to build the library itself.
+The output is stored in the folder **similarity_search\x64**.
+Note that the core library, the test utilities,
+ as well as examples of the standalone applications (projects **sample_standalone_app1**
+and **sample_standalone_app2**)
+can be built without installing Boost. 
 
 
 Data sets
