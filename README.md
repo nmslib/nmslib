@@ -11,7 +11,7 @@ Leo(nid) Boytsov is a maintainer.
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf).  The manual also contains instructions for building under Windows, extending the library, and debugging the code using Eclipse.
+A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, and debugging the code using Eclipse.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -40,7 +40,7 @@ Prerequisites
 6. An Intel or AMD processor that supports SSE 4.2 is recommended
 
 
-Quick start for Linux
+Quick start on Linux
 -----------------------
 
 To compile, go to the directory **similarity_search** and type:  
@@ -62,11 +62,11 @@ export DATA_DIR=[path to the chosen directory with data files]
 Sample scripts to tune the decision function for the VP-tree are in the directory [sample_scripts/nips2013/tunning](sample_scripts/nips2013/tunning).   
 In addition, the directory [sample_scripts](sample_scripts) contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results.  Note that we also provide software to generate plots (which requires Python, Latex, and PGF).   
 
-Quick start for Windows
+Quick start on Windows
 -----------------------
 Building on Windows is straightforward:
 One can simply use the provided  [Visual Studio solution file](similarity_search/NonMetricSpaceLib.sln).
-The solution file references several project (*.vcxproj) files: 
+The solution file references several project (\*.vcxproj) files: 
 [NonMetricSpaceLib.vcxproj](similarity_search/src/NonMetricSpaceLib.vcxproj)
 is the main project file that is used to build the library itself.
 The output is stored in the folder **similarity_search\x64**.
