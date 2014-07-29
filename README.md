@@ -5,7 +5,7 @@ A cross-platform similarity search library and a toolkit for evaluation of simil
 **Contributors**: Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
 
-Leo(nid) Boytsov is a maintainer. **Should you decide to modify the library (and, perhaps, create a pull request), use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. 
+Leo(nid) Boytsov is a maintainer. **Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. 
 
 
 General information
