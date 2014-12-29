@@ -4,7 +4,7 @@ A cross-platform similarity search library and a toolkit for evaluation of simil
 
 **Contributors**: Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
-Leo(nid) Boytsov is a maintainer. 
+Leo(nid) Boytsov is a maintainer.
 
 **Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. 
 
@@ -19,7 +19,7 @@ Apache License Version 2.0 http://www.apache.org/licenses/.
 
 The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
 
-Related papers:
+Related papers are cited below. We **are** aware of other (numerous) papers on building and querying proximity (knn) graphs. However, we have not adopted any of them yet. In our library, we are currently using only the greedy construction algorithm published by Krylov et al in 2008 (see below).
 
 * Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)
 * Boytsov, L., Bilegsaikhan, N., 2013. [Engineering Efficient and Effective Non-Metric Space Library.](http://boytsov.info/pubs/sisap2013.pdf)   In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13)  
