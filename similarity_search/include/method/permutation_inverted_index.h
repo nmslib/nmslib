@@ -33,18 +33,6 @@ namespace similarity {
  * Infoscale (2008)
  */
 
-struct ObjectInvEntry {
-  IdType    id_;
-  int       pos_;
-  ObjectInvEntry(IdType id, int pos) : id_(id), pos_(pos) {} 
-  bool operator<(const ObjectInvEntry& o) const { 
-    if (pos_ != o.pos_) return pos_ < o.pos_; 
-    return id_ < o.id_;
-  };
-};
-
-typedef std::vector<ObjectInvEntry> PostingList;
-
 template <typename dist_t>
 class PermutationInvertedIndex : public Index<dist_t> {
  public:
@@ -68,6 +56,18 @@ class PermutationInvertedIndex : public Index<dist_t> {
   const int num_pivot_search_;     // ks in the original paper
   const int max_pos_diff_;
   ObjectVector pivot_;
+
+  struct ObjectInvEntry {
+    IdType    id_;
+    int       pos_;
+    ObjectInvEntry(IdType id, int pos) : id_(id), pos_(pos) {} 
+    bool operator<(const ObjectInvEntry& o) const { 
+      if (pos_ != o.pos_) return pos_ < o.pos_; 
+      return id_ < o.id_;
+    };
+  };
+
+  typedef std::vector<ObjectInvEntry> PostingList;
 
   std::vector<PostingList> posting_lists_;
 
