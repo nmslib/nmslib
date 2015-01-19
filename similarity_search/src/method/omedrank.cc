@@ -71,9 +71,8 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
 
   ObjectInvEntry  e(IdType(0), 0); 
 
-  size_t                          scannedQty = 0;
-  size_t                          minMatchPivotQty = max(size_t(1), static_cast<size_t>(min_freq_ * num_pivot));
   unordered_map<IdType, unsigned> visited;
+
 
   for (size_t i = 0 ; i < num_pivot; ++i) {
     // Again, pivot is the left argument, see the comment in the constructor
@@ -86,9 +85,13 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
     CHECK(highIndx[i] >= 0);
   }
 
-  bool eof = false;
 
-  while (scannedQty < db_scan_frac_ && !eof) {
+  bool      eof = false;
+  size_t    totOp = 0;
+  size_t    scannedQty = 0;
+  size_t    minMatchPivotQty = max(size_t(1), static_cast<size_t>(min_freq_ * num_pivot));
+
+  while (scannedQty < db_scan_ && !eof) {
     eof = true;
     for (size_t i = 0 ; i < num_pivot; ++i) {
       IdType    indx[2];
@@ -104,10 +107,13 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
       }
 
       for (int k = 0; k < iQty; ++k) {
+        ++totOp;
         IdType objId = posting_lists_[i][indx[k]].id_;
         unsigned freq = 1;
         auto it = visited.find(objId);
-        if (it != visited.end()) freq = it -> second + 1;
+        if (it != visited.end()) {
+          freq = it -> second + 1;
+        }
         visited[objId] = freq;
         if (freq >= minMatchPivotQty && freq < minMatchPivotQty + 1) { // Add only the first time when we exceeded the threshold!
           ++scannedQty;
@@ -135,10 +141,10 @@ void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);
   CHECK(db_scan_frac_ > 0.0);
   CHECK(db_scan_frac_ <= 1.0);
+  ComputeDbScan(db_scan_frac_);
   pmgr.GetParamOptional("minFreq", min_freq_);
   CHECK(min_freq_ > 0.0);
   CHECK(min_freq_ <= 1.0);
-  ComputeDbScan(db_scan_frac_);
 }
 
 template <typename dist_t>
