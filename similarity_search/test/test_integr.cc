@@ -238,8 +238,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase("float", "l2", "final8_10K.txt", "perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.5, 8, 12),  
 
-
-
 };
 
 
