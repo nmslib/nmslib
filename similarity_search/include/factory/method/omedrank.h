@@ -33,13 +33,8 @@ Index<dist_t>* CreateOMedRank(bool PrintProgress,
                            const AnyParams& AllParams) {
   AnyParamManager pmgr(AllParams);
 
-  size_t    NumPivot   = 16;
-
-  pmgr.GetParamOptional("numPivot", NumPivot);
-
   return new OMedRank<dist_t>(space,
                               DataObjects,
-                              NumPivot,
                               pmgr);
 
 }

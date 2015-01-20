@@ -20,6 +20,7 @@
 
 #include <unordered_map>
 #include <algorithm>
+#include <cmath>
 
 #include "space.h"
 #include "permutation_utils.h"
@@ -33,32 +34,40 @@ template <typename dist_t>
 OMedRank<dist_t>::OMedRank(
     const Space<dist_t>* space,
     const ObjectVector& data,
-    const size_t num_pivot,
     AnyParamManager &pmgr) 
-	: data_(data)  /* reference */ {
+	: data_(data),  /* reference */
+    space_(space), /* pointer */
+    num_pivot_(8),
+    chunk_index_size_(65536),
+    index_qty_(0), // If ComputeDbScan is called before index_qty_ is computed, it will see this zero
+    skip_check_(false)
+ {
+
+  pmgr.GetParamOptional("numPivot", num_pivot_);
+  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
+
+  index_qty_ = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
+  // Call this function AFTER the index size is computed!
   SetQueryTimeParamsInternal(pmgr);
-  LOG(LIB_INFO) << "# pivots         = " << num_pivot;
+
+  LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
+  LOG(LIB_INFO) << "# of index chunks  = " << index_qty_;
+  LOG(LIB_INFO) << "# pivots         = " << num_pivot_;
   LOG(LIB_INFO) << "db scan fraction = " << db_scan_frac_;
   LOG(LIB_INFO) << "min freq = "         << min_freq_;
-  CHECK(data_.size() > num_pivot);
 
-  GetPermutationPivot(data, space, num_pivot, &pivot_);
+  CHECK(data_.size() > num_pivot_);
 
-  posting_lists_.resize(num_pivot);
+  GetPermutationPivot(data, space, num_pivot_, &pivot_);
 
-  for (size_t id = 0; id < data.size(); ++id) {
-    for (size_t j = 0; j < num_pivot; ++j) {
-      /* 
-       * Object (in this case pivot) is the left argument.
-       * At search time, the right argument of the distance will be the query point
-       * and pivot again will be the left argument.
-       */
-      dist_t leftObjDst = space->IndexTimeDistance(pivot_[j], data[id]);
-      posting_lists_[j].push_back(ObjectInvEntry(id, leftObjDst));
-    }
+  posting_lists_.resize(index_qty_);
+
+  for (size_t chunkId = 0; chunkId < index_qty_; ++chunkId) {
+    posting_lists_[chunkId] = shared_ptr<vector<PostingList>>(new vector<PostingList>());
   }
-  for (size_t j = 0; j < posting_lists_.size(); ++j) {
-    sort(posting_lists_[j].begin(), posting_lists_[j].end());
+
+  for (size_t chunkId = 0; chunkId < index_qty_; ++chunkId) {
+    IndexChunk(chunkId);
   }
 }
 
@@ -71,55 +80,62 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
 
   ObjectInvEntry  e(IdType(0), 0); 
 
-  unordered_map<IdType, unsigned> visited;
+  vector<unsigned>  counter(chunk_index_size_);
 
+  for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {
+    const auto & chunkPostLists = *posting_lists_[chunkId];
 
-  for (size_t i = 0 ; i < num_pivot; ++i) {
-    // Again, pivot is the left argument, see the comment in the constructor
-    e.pivot_dist_ = query->DistanceObjLeft(pivot_[i]); 
-    lowIndx[i] = (lower_bound(posting_lists_[i].begin(), posting_lists_[i].end(), e) - posting_lists_[i].begin());;
-    --lowIndx[i]; // Can become less than zero
-    highIndx[i] = lowIndx[i] + 1;
-    CHECK(posting_lists_[i].size() > 0);
-    CHECK(lowIndx[i] < posting_lists_[i].size());
-    CHECK(highIndx[i] >= 0);
-  }
+    if (chunkId != 0)
+      memset(&counter[0], 0, sizeof(counter[0])*counter.size());
 
-
-  bool      eof = false;
-  size_t    totOp = 0;
-  size_t    scannedQty = 0;
-  size_t    minMatchPivotQty = max(size_t(1), static_cast<size_t>(min_freq_ * num_pivot));
-
-  while (scannedQty < db_scan_ && !eof) {
-    eof = true;
     for (size_t i = 0 ; i < num_pivot; ++i) {
-      IdType    indx[2];
-      unsigned  iQty = 0;
+      // Again, pivot is the left argument, see the comment in the constructor
+      e.pivot_dist_ = query->DistanceObjLeft(pivot_[i]); 
+      lowIndx[i] = (lower_bound(chunkPostLists[i].begin(), chunkPostLists[i].end(), e) - chunkPostLists[i].begin());;
+      --lowIndx[i]; // Can become less than zero
+      highIndx[i] = lowIndx[i] + 1;
+      CHECK(chunkPostLists[i].size() > 0);
+      CHECK(lowIndx[i] < 0 || static_cast<size_t>(lowIndx[i]) < chunkPostLists[i].size());
+      CHECK(highIndx[i] >= 0);
+    }
 
-      if (lowIndx[i] >= 0) {
-        indx[iQty++]=lowIndx[i];
-        --lowIndx[i];
-      }
-      if (highIndx[i] < posting_lists_[i].size()) {
-        indx[iQty++]=highIndx[i];
-        ++highIndx[i];
-      }
+    bool      eof = false;
+    size_t    totOp = 0;
+    size_t    scannedQty = 0;
+    size_t    minMatchPivotQty = max(size_t(1), static_cast<size_t>(round(min_freq_ * num_pivot)));
 
-      for (int k = 0; k < iQty; ++k) {
-        ++totOp;
-        IdType objId = posting_lists_[i][indx[k]].id_;
-        unsigned freq = 1;
-        auto it = visited.find(objId);
-        if (it != visited.end()) {
-          freq = it -> second + 1;
+    size_t minId = chunkId * chunk_index_size_;
+    size_t maxId = min(data_.size(), minId + chunk_index_size_);
+    size_t chunkQty = (maxId - minId);
+
+    CHECK(chunkQty <= chunk_index_size_);
+
+    while (scannedQty < min(db_scan_, chunkQty) && !eof) {
+      eof = true;
+      for (size_t i = 0 ; i < num_pivot; ++i) {
+        IdType    indx[2];
+        unsigned  iQty = 0;
+
+        if (lowIndx[i] >= 0) {
+          indx[iQty++]=lowIndx[i];
+          --lowIndx[i];
         }
-        visited[objId] = freq;
-        if (freq >= minMatchPivotQty && freq < minMatchPivotQty + 1) { // Add only the first time when we exceeded the threshold!
-          ++scannedQty;
-          query->CheckAndAddToResult(data_[objId]);
-        } 
-        eof = false;
+        if (static_cast<size_t>(highIndx[i]) < chunkPostLists[i].size()) {
+          indx[iQty++]=highIndx[i];
+          ++highIndx[i];
+        }
+
+        for (unsigned k = 0; k < iQty; ++k) {
+          ++totOp;
+          IdType objIdDiff = chunkPostLists[i][indx[k]].id_;
+          unsigned freq = counter[objIdDiff]++;
+
+          if (freq == minMatchPivotQty) { // Add only the first time when we exceeded the threshold!
+            ++scannedQty;
+            if (!skip_check_) query->CheckAndAddToResult(data_[objIdDiff + minId]);
+          } 
+          eof = false;
+        }
       }
     }
   }
@@ -138,10 +154,11 @@ void OMedRank<dist_t>::Search(KNNQuery<dist_t>* query) {
 
 template <typename dist_t>
 void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+  pmgr.GetParamOptional("skipChecking", skip_check_);
   pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);
   CHECK(db_scan_frac_ > 0.0);
   CHECK(db_scan_frac_ <= 1.0);
-  ComputeDbScan(db_scan_frac_);
+  ComputeDbScan(db_scan_frac_, index_qty_);
   pmgr.GetParamOptional("minFreq", min_freq_);
   CHECK(min_freq_ > 0.0);
   CHECK(min_freq_ <= 1.0);
@@ -154,6 +171,32 @@ OMedRank<dist_t>::GetQueryTimeParamNames() const {
   names.push_back("dbScanFrac");
   names.push_back("minFreq");
   return names;
+}
+
+template <typename dist_t>
+void OMedRank<dist_t>::IndexChunk(size_t chunkId) {
+  size_t minId = chunkId * chunk_index_size_;
+  size_t maxId = min(data_.size(), minId + chunk_index_size_);
+
+  auto & chunkPostLists = *posting_lists_[chunkId];
+  chunkPostLists.resize(num_pivot_);
+
+  for (size_t i = 0; i < maxId - minId; ++i) {
+    IdType id = minId + i;
+
+    for (size_t j = 0; j < num_pivot_; ++j) {
+      /* 
+       * Object (in this case pivot) is the left argument.
+       * At search time, the right argument of the distance will be the query point
+       * and pivot again will be the left argument.
+       */
+      dist_t leftObjDst = space_->IndexTimeDistance(pivot_[j], data_[id]);
+      chunkPostLists[j].push_back(ObjectInvEntry(id - minId, leftObjDst));
+    }
+  }
+  for (size_t j = 0; j < num_pivot_; ++j) {
+    sort(chunkPostLists[j].begin(), chunkPostLists[j].end());
+  }
 }
 
 template class OMedRank<float>;

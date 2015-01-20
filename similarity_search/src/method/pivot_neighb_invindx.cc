@@ -40,26 +40,6 @@ struct IdCount {
 
 typedef vector<IdCount> VectIdCount;
 
-/*
- * 
- * TODO: @Leo. This function isn't helping performance much
- *             Need to make more thorough tests at some point.
- *
- */
-/*
-void fastMemSet(uint32_t* ptr, size_t qty) {
-  size_t qty4 = qty / 4;
-  
-  __m128i zero = _mm_set1_epi32(0);
-  __m128i* ptr128 = reinterpret_cast<__m128i*>(ptr);
-  __m128i* ptr128end = ptr128 + qty4;
-  while (ptr128 < ptr128end)
-    _mm_storeu_si128(ptr128++, zero);
-  for (size_t i = 4*qty4; i < qty; ++i)
-    ptr[i] = 0;
-}
-*/
-
 template <typename dist_t>
 struct IndexThreadParamsPNII {
   PivotNeighbInvertedIndex<dist_t>&           index_;
@@ -380,7 +360,6 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
         }
       } else if (inv_proc_alg_ == kScan) {
         if (chunkId) {
-          //fastMemSet(&counter[0], counter.size());
           memset(&counter[0], 0, sizeof(counter[0])*counter.size());
         }
         for (size_t i = 0; i < num_prefix_; ++i) {
