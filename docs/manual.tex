@@ -1742,7 +1742,7 @@ Next, for every binary hash function, we draw a value $a_i$ from a $p$-stable di
 and a value $b_i$ from the uniform distribution with the support $[0, W]$.
 Finally, we define $h_i(x)$ as:
 $$
-h_i(x) = \left\lfloor \frac{ x \cdot v_i + a_i  }{W}\right\rfloor,
+h_i(x) = \left\lfloor \frac{ a_i \cdot x + b_i  }{W}\right\rfloor,
 $$
 where $\lfloor x \rfloor$  is the \texttt{floor} function
 and $x \cdot y$ denotes the scalar product of $x$ and $y$.
