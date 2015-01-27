@@ -41,36 +41,33 @@ std::pair<std::string, bool> GetNext() {
   return std::make_pair(filename, true);
 }
 
-void Run(std::string outdir, int num_clusters) {
+void Run(int num_clusters,
+         int num_rand_pixels,
+         FileWriter* writer) {
   for (;;) {
     auto next = GetNext();
     if (!next.second) {
       return;
     }
     try {
-      FeatureExtractor feature_extractor(outdir, next.first, num_clusters);
-      feature_extractor.Extract();
-      feature_extractor.Print();
+      FeatureExtractor extractor(
+          next.first, num_clusters, num_rand_pixels);
+      extractor.Extract();
+      writer->Write(next.first, extractor.GetClusters());
     } catch (ExtractorException& ex) {
       LogPrint("FAILED: %s", ex.what());
     }
   }
 }
 
-void RunParallel(std::string indir, std::string outdir, int num_clusters) {
+void RunParallel(int num_clusters,
+                 int num_rand_pixels,
+                 FileWriter* writer) {
   size_t n = std::thread::hardware_concurrency() >= 4 ?
       std::thread::hardware_concurrency() - 1 : 1;
-  std::cout << "n " << n << std::endl;
-  if (!IsDirectoryExists(outdir)) {
-    MakeDirectory(outdir);
-  }
-  auto filenames = GetImageFiles(indir);
-  for (auto f : filenames) {
-    remaining.push(f);
-  }
   std::vector<std::thread> threads;
   for (size_t i = 0; i < n; ++i) {
-    threads.emplace_back(Run, outdir, num_clusters);
+    threads.emplace_back(Run, num_clusters, num_rand_pixels, writer);
   }
   for (auto& thread : threads) {
     thread.join();
@@ -87,9 +84,6 @@ void DistExampleFromPaper() {
   VRR co = {{4,7}, {9,5}, {8,1}};
   VR wo = {0.5, 0.25, 0.25};
   auto o = FeatureSignaturePtr(new FeatureSignature(co, wo));
-
-  //q->Print();
-  //o->Print();
 
   float d = SQFD(simfunc, q, o);   // it gives 0.652 not 0.808
   if (fabs(d - 0.652) > kEPS) {
@@ -111,33 +105,21 @@ void DistExampleFromPaper() {
   */
 }
 
-void DistSample(const std::string dirn) {
-  std::vector<std::string> files;
-  std::vector<FeatureSignaturePtr> feats;
-
-  for (auto filename : GetAllFiles(dirn)) {
-    if (Endswith(filename, ".feat")) {
-      files.push_back(filename);
-      feats.push_back(readFeature(filename));
-    }
+int main(int argc, char* argv[]) {
+  if (argc != 5) {
+    std::cout << "usage: " << argv[0] << " "
+              << "<num_clusters> <num_rand_pixels> "
+              << "<image_lists_file> <output_file>" << std::endl;
+    exit(1);
   }
-
-  std::cout << "read " << feats.size() << " features" << std::endl;
-
-  //std::shared_ptr<SimilarityFunction> simfunc(new HeuristicFunction(2.0));
-  std::shared_ptr<SimilarityFunction> simfunc(new GaussianFunction(1.0));
-
-  for (size_t i = 0; i < feats.size(); ++i) {
-    for (size_t j = i + 1; j < feats.size(); ++j) {
-      std::cout << files[i] << " "
-                << files[j] << " "
-                << SQFD(simfunc, feats[i], feats[j]) << std::endl;
-    }
+  int num_clusters = atoi(argv[1]);
+  int num_rand_pixels = atoi(argv[2]);
+  std::ifstream listfile(argv[3]);
+  std::string line;
+  while (std::getline(listfile, line)) {
+    remaining.push(line);
   }
-}
-
-int main() {
-  DistExampleFromPaper();
-  RunParallel("sample", "sample/feat", 100);
-  DistSample("sample/feat");
+  listfile.close();
+  FileWriter writer(argv[4], num_clusters, num_rand_pixels);
+  RunParallel(num_clusters, num_rand_pixels, &writer);
 }

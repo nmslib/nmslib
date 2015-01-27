@@ -107,10 +107,12 @@ std::string GetBasename(std::string filename) {
   if (pos != std::string::npos) {
     filename = filename.substr(pos + 1);
   }
+  /*
   pos = filename.rfind(".");
   if (pos != std::string::npos) {
     filename = filename.substr(0, pos);
   }
+  */
   return filename;
 }
 

@@ -24,25 +24,14 @@ std::mt19937 rnd;
 std::uniform_int_distribution<unsigned> dist;
 
 FeatureExtractor::FeatureExtractor(
-    const std::string& outdir,
-    const std::string& filename,
-    const int num_clusters) {
-  feature_dir_ = outdir;
-  if (feature_dir_[feature_dir_.size() - 1] != '/') {
-    feature_dir_ += "/";
-  }
-  feature_file_  = feature_dir_ + GetBasename(filename) + "_" +
-      ToString(num_clusters) + ".feat";
-  num_clusters_ = num_clusters;
-  if (IsFileExists(feature_file_)) {
-    std::stringstream ss;
-    ss << "feature file " << filename << " already exists";
-    throw ExtractorException(ss.str());
-  }
-  cv::Mat img = cv::imread(filename.c_str(), CV_LOAD_IMAGE_COLOR);
+    const std::string& image_file,
+    const int num_clusters,
+    const int num_rand_pixels)
+  : num_clusters_(num_clusters) {
+  cv::Mat img = cv::imread(image_file.c_str(), CV_LOAD_IMAGE_COLOR);
   if (!img.data) {
     std::stringstream ss;
-    ss << "failed to load image file " << filename;
+    ss << "failed to load image file " << image_file;
     throw ExtractorException(ss.str());
   }
   assert(img.type() == CV_8UC3);
@@ -51,13 +40,13 @@ FeatureExtractor::FeatureExtractor(
   rows_ = img.rows;
   cols_ = img.cols;
   const int total_pixels = rows_ * cols_;
-  if (total_pixels < kSelectRandPixels) {
+  if (total_pixels < num_rand_pixels) {
     std::stringstream ss;
-    ss << "too small image " << filename;
+    ss << "too small image " << image_file;
     throw ExtractorException(ss.str());
   }
   std::unordered_set<PairII, PairIIHash, PairIIEqual> selected_positions;
-  for (int i = 0; i < kSelectRandPixels; ++i) {
+  for (int i = 0; i < num_rand_pixels; ++i) {
     for (;;) {
       int r = dist(rnd) % rows_;
       int c = dist(rnd) % cols_;
@@ -70,6 +59,8 @@ FeatureExtractor::FeatureExtractor(
   }
   for (auto p : selected_positions) {
     auto pixel = img.at<cv::Vec3b>(p.first, p.second);
+    // http://docs.opencv.org/doc/tutorials/introduction/load_save_image/load_save_image.html
+    // imread has BGR default channel order in case of color images
     float b = pixel[0];
     float g = pixel[1];
     float r = pixel[2];
@@ -104,6 +95,10 @@ FeatureExtractor::FeatureExtractor(
 FeatureExtractor::~FeatureExtractor() {
 }
 
+const std::vector<Cluster>& FeatureExtractor::GetClusters() const {
+  return clusters_;
+}
+
 void FeatureExtractor::Extract() {
   // k-means
   float error = 1e8;
@@ -127,7 +122,7 @@ void FeatureExtractor::Extract() {
       error += sqr(min_dist);
     }
     for (auto& c : clusters_) {
-      c.Update();
+      c.Update(features_.size());
     }
     if (fabs(prev_error - error) <= kEPS) {
       break;
@@ -135,27 +130,13 @@ void FeatureExtractor::Extract() {
   }
 }
 
-void FeatureExtractor::Print() {
-  LogPrint("feature file %s", feature_file_.c_str());
-  std::ofstream out;
-  out.open(feature_file_);
-  out << clusters_.size() << " " << kFeatureDims << std::endl;
-  for (const auto& c : clusters_) {
-    c.Print(out);
-  }
-  out.close();
-}
-
-void FeatureExtractor::Visualize(int bubble_radius) {
+void FeatureExtractor::Visualize(
+    std::string output_file, int bubble_radius) {
   std::vector<Cluster> clusters(clusters_);
   std::sort(clusters.begin(), clusters.end(),
             [](const Cluster& x, const Cluster& y) {
-              return x.weight() > y.weight();
+              return x.weight > y.weight;
             });
-
-  for (auto& c : clusters) {
-    c.Print();
-  }
   cv::Mat feature_img(rows_, cols_, CV_8UC3);
   feature_img.setTo(cv::Scalar(255,255,255));
   for (auto& c : clusters) {
@@ -170,15 +151,41 @@ void FeatureExtractor::Visualize(int bubble_radius) {
     int red = rgb[0];
     int green = rgb[1];
     int blue = rgb[2];
-    int radius = c.weight() * bubble_radius;
+    int radius = c.weight * bubble_radius;
     cv::circle(feature_img, cv::Point(c.col(), c.row()), radius,
                cv::Scalar(blue, green, red), CV_FILLED);
     cv::circle(feature_img, cv::Point(c.col(), c.row()), radius,
                cv::Scalar(0,0,0));
   }
-  std::string outfile = feature_file_ + ".jpg";
-  LogPrint("%s", outfile.c_str());
-  cv::imwrite(outfile.c_str(), feature_img);
+  LogPrint("%s", output_file.c_str());
+  cv::imwrite(output_file.c_str(), feature_img);
+}
+
+FileWriter::FileWriter(
+    const std::string& output_file,
+    const int num_clusters,
+    const int num_rand_pixels) {
+  out_.open(output_file);
+  out_ << num_clusters << " "
+       << kFeatureDims << " "
+       << num_rand_pixels << std::endl << std::endl;
+}
+
+FileWriter::~FileWriter() {
+  out_.close();
+}
+
+void FileWriter::Write(const std::string& image_file,
+                       const std::vector<Cluster>& clusters) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  out_ << GetBasename(image_file) << std::endl;
+  for (const auto& c : clusters) {
+    for (int i = 0; i < kFeatureDims; ++i) {
+      out_ << c.center[i] << " ";
+    }
+    out_ << c.weight << std::endl;
+  }
+  out_ << std::endl;
 }
 
 }

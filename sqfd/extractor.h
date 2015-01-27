@@ -25,19 +25,22 @@ struct Cluster {
   //  0,1,2, 3,  4,    5,       6
   // <L,a,b,row,col,contrast,coarseness>
   int num_points;
+  float weight;
   Feature center;
   Feature coords_sum;
 
   Cluster(const Feature& f) {
+    num_points = 0;
+    weight = 0.0;
     for (int i = 0; i < kFeatureDims; ++i) {
       center[i] = f[i];
       coords_sum[i] = 0;
     }
-    num_points = 0;
   }
 
   void Clear() {
     num_points = 0;
+    weight = 0.0;
     for (int i = 0; i < kFeatureDims; ++i) {
       coords_sum[i] = 0;
     }
@@ -50,32 +53,13 @@ struct Cluster {
     }
   }
 
-  void Update() {
+  void Update(size_t tot_points) {
     if (num_points > 0) {
       for (int i = 0; i < kFeatureDims; ++i) {
         center[i] = coords_sum[i] / num_points;
       }
+      weight = static_cast<float>(num_points) / tot_points;
     }
-  }
-
-  void Print() const {
-    std::cout << num_points << "\t";
-    for (int i = 0; i < kFeatureDims; ++i) {
-      std::cout << center[i] << " ";
-    }
-    std::cout << " weight=" << weight() << std::endl;
-  }
-
-  void Print(std::ofstream& out) const {
-    for (int i = 0; i < kFeatureDims; ++i) {
-      if (i) out << " ";
-      out << center[i];
-    }
-    out << "\t" << weight() << std::endl;
-  }
-
-  inline float weight(int norm_val = kSelectRandPixels) const {
-    return static_cast<float>(num_points) / norm_val;
   }
 
   Float3 asLab() { return Float3{{center[0], center[1], center[2]}}; }
@@ -83,20 +67,29 @@ struct Cluster {
   float col() { return center[4]; }
 };
 
+class FileWriter {
+ public:
+  FileWriter(const std::string& output_file,
+             const int num_clusters,
+             const int num_rand_pixels);
+  ~FileWriter();
+  void Write(const std::string& image_file,
+             const std::vector<Cluster>& clusters);
+ private:
+  std::ofstream out_;
+  std::mutex mutex_;
+};
+
 class FeatureExtractor {
  public:
-  FeatureExtractor(const std::string& outdir,
-                   const std::string& filename,
-                   const int num_clusters);
+  FeatureExtractor(const std::string& image_file,
+                   const int num_clusters,
+                   const int num_rand_pixels);
   ~FeatureExtractor();
-
+  const std::vector<Cluster>& GetClusters() const;
   void Extract();
-  void Print();
-  void Visualize(int bubble_radius);
-
+  void Visualize(std::string output_file, int bubble_radius);
  private:
-  std::string feature_dir_;
-  std::string feature_file_;
   int num_clusters_;
   int rows_;
   int cols_;

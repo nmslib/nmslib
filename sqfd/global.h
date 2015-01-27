@@ -40,9 +40,8 @@
 namespace sqfd {
 
 const int kFeatureDims = 7;   // <L,a,b,row,col,contrast,coarseness>
-const int kSelectRandPixels = 40000;
 const int kWindowSize = 5;
-const int kMaxIter = 500;
+const int kMaxIter = 100;
 const float kEPS = 1e-3;
 
 const float kMinL = 0.0;
