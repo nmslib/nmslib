@@ -91,6 +91,13 @@ if (NOT WIN32)
   add_subdirectory (lshkit)
 endif()
 
+find_package(Eigen3 3.1.2 REQUIRED)
+if (EIGEN3_FOUND)
+  message (STATUS "Found Eigen3.")
+  include_directories (${EIGEN3_INCLUDE_DIR})
+else ()
+  message (FATAL_ERROR "Could not locate Eigen3.")
+endif ()
 
 # Can be used to hardwire boost location.
 #set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
