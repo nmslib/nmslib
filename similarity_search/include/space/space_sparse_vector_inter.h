@@ -60,7 +60,7 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
     CHECK(obj1->datalength() > 0);
     CHECK(obj2->datalength() > 0);
 
-    return ScalarProjectFast(obj1->data(), obj1->datalength(),
+    return ScalarProductFast(obj1->data(), obj1->datalength(),
                              obj2->data(), obj2->datalength());
   }
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
