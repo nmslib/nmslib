@@ -31,6 +31,7 @@
 #include "space/space_scalar.h"
 #include "testdataset.h"
 #include "distcomp.h"
+#include "genrand_vect.h"
 #include "permutation_utils.h"
 #include "ztimer.h"
 #include "pow.h"
@@ -43,45 +44,6 @@ namespace similarity {
 using std::unique_ptr;
 using std::vector;
 
-
-template <class T> 
-inline void Normalize(T* pVect, size_t qty) {
-  T sum = 0;
-  for (size_t i = 0; i < qty; ++i) {
-    sum += pVect[i];
-  }
-  if (sum != 0) {
-    for (size_t i = 0; i < qty; ++i) {
-      pVect[i] /= sum;
-    }
-  }
-}
-
-
-template <class T> 
-inline void GenRandVect(T* pVect, size_t qty, T MinElem = T(0), T MaxElem = T(1), bool DoNormalize = false) {
-  T sum = 0;
-  for (size_t i = 0; i < qty; ++i) {
-    pVect[i] = MinElem + (MaxElem - MinElem) * RandomReal<T>();
-    sum += fabs(pVect[i]);
-  }
-  if (DoNormalize && sum != 0) {
-    for (size_t i = 0; i < qty; ++i) {
-      pVect[i] /= sum;
-    }
-  }
-}
-
-inline void GenRandIntVect(int* pVect, size_t qty) {
-  for (size_t i = 0; i < qty; ++i) {
-    pVect[i] = RandomInt();
-  }
-}
-
-template <class T> 
-inline void SetRandZeros(T* pVect, size_t qty, double pZero) {
-    for (size_t j = 0; j < qty; ++j) if (RandomReal<T>() < pZero) pVect[j] = T(0);
-}
 
 using namespace std;
 
@@ -213,8 +175,9 @@ TEST(TestEfficientFract) {
 
 template <class T>
 bool TestScalarProductAgree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     float maxRelDiff = 1e-6f;
     float maxAbsDiff = 1e-6f;
@@ -239,17 +202,15 @@ bool TestScalarProductAgree(size_t N, size_t dim, size_t Rep) {
         }
     }
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 // Agreement test functions
 template <class T>
 bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -275,16 +236,14 @@ bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 template <class T>
 bool TestL1Agree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -309,17 +268,14 @@ bool TestL1Agree(size_t N, size_t dim, size_t Rep) {
         }
     }
 
-
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 template <class T>
 bool TestL2Agree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -345,18 +301,17 @@ bool TestL2Agree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 template <class T>
 bool TestItakuraSaitoAgree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
-    T* pPrecompVect1 = new T[dim * 2];
-    T* pPrecompVect2 = new T[dim * 2];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+    vector<T> precompVect1(dim *2), precompVect2(dim * 2);
+    T* pPrecompVect1 = &precompVect1[0];
+    T* pPrecompVect2 = &precompVect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -395,20 +350,17 @@ bool TestItakuraSaitoAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-    delete [] pPrecompVect1;
-    delete [] pPrecompVect2;
-
     return true;
 }
 
 template <class T>
 bool TestKLAgree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
-    T* pPrecompVect1 = new T[dim * 2];
-    T* pPrecompVect2 = new T[dim * 2];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+    vector<T> precompVect1(dim *2), precompVect2(dim * 2);
+    T* pPrecompVect1 = &precompVect1[0];
+    T* pPrecompVect2 = &precompVect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -460,11 +412,6 @@ bool TestKLAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-    delete [] pPrecompVect1;
-    delete [] pPrecompVect2;
-
     return true;
 }
 
@@ -511,20 +458,17 @@ bool TestKLGeneralAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-    delete [] pPrecompVect1;
-    delete [] pPrecompVect2;
-
     return true;
 }
 
 template <class T>
 bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
-    T* pPrecompVect1 = new T[dim * 2];
-    T* pPrecompVect2 = new T[dim * 2];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+    vector<T> precompVect1(dim *2), precompVect2(dim * 2);
+    T* pPrecompVect1 = &precompVect1[0];
+    T* pPrecompVect2 = &precompVect2[0];
 
     T Dist = 0;
     T Error = 0;
@@ -589,17 +533,13 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
                                 " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-    delete [] pPrecompVect1;
-    delete [] pPrecompVect2;
-
     return true;
 }
 
 bool TestSpearmanFootruleAgree(size_t N, size_t dim, size_t Rep) {
-    int* pVect1 = new int[dim];
-    int* pVect2 = new int[dim];
+    vector<PivotIdType> vect1(dim), vect2(dim);
+    PivotIdType* pVect1 = &vect1[0]; 
+    PivotIdType* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -622,15 +562,13 @@ bool TestSpearmanFootruleAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 bool TestSpearmanRhoAgree(size_t N, size_t dim, size_t Rep) {
-    int* pVect1 = new int[dim];
-    int* pVect2 = new int[dim];
+    vector<PivotIdType> vect1(dim), vect2(dim);
+    PivotIdType* pVect1 = &vect1[0]; 
+    PivotIdType* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -653,16 +591,14 @@ bool TestSpearmanRhoAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 template <class T>
 bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     T  TotalQty = 0, Error = 0, Dist = 0;
 
@@ -712,15 +648,13 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
 
     }
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 bool TestBitHammingAgree(size_t N, size_t dim, size_t Rep) {
     size_t WordQty = (dim + 31)/32; 
-    uint32_t* pArr = new uint32_t[N * WordQty];
+    vector<uint32_t> arr(N * WordQty);
+    uint32_t*        pArr = &arr[0];
 
     uint32_t *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= WordQty) {
@@ -757,8 +691,6 @@ bool TestBitHammingAgree(size_t N, size_t dim, size_t Rep) {
           break;
         }
     }
-
-    delete [] pArr;
 
     return res;
 }

@@ -18,6 +18,7 @@
 
 #include "spacefactory.h"
 
+#include "factory/space/space_edist.h"
 #include "factory/space/space_bit_hamming.h"
 #include "factory/space/space_bregman.h"
 #include "factory/space/space_dummy.h"
@@ -40,6 +41,9 @@ inline void initSpaces() {
 
   // Registering binary/bit Hamming
   REGISTER_SPACE_CREATOR(int,  SPACE_BIT_HAMMING,  CreateBitHamming)
+
+  // Registering the Levensthein-distance
+  REGISTER_SPACE_CREATOR(int,  SPACE_LEVENSHTEIN,  CreateLevenshtein)
 
   // Registering Bregman divergences
   REGISTER_SPACE_CREATOR(float,  SPACE_KLDIV_FAST, CreateKLDivFast)
