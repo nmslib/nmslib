@@ -18,6 +18,7 @@
 
 #include "init.h"
 #include "space.h"
+#include "space/space_leven.h"
 #include "space/space_sparse_lp.h"
 #include "space/space_sparse_scalar.h"
 #include "space/space_sparse_vector_inter.h"
@@ -1186,6 +1187,42 @@ void TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 
 }
 
+void TestLevenshtein(size_t N, size_t Rep) {
+    unique_ptr<SpaceLevenshtein>  space(new SpaceLevenshtein);
+    ObjectVector                  elems;
+
+    space->ReadDataset(elems, NULL, (sampleDataPrefix + "dna32_10K.txt").c_str(), N); 
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    float DiffSum = 0;
+
+    float fract = 1.0f/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << " Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of unoptimized unweighted Levenshtein distances per second: " << (1e6/tDiff) * N * Rep ;
+
+}
+
 template <class T>
 void TestSparseLp(size_t N, size_t Rep, T power) {
     unique_ptr<SpaceSparseLp<T>>  space(new SpaceSparseLp<T>(power));
@@ -1583,6 +1620,9 @@ int main(int argc, char* argv[]) {
     int nTest  = 0;
 
     int dim = 128;
+
+    nTest++;
+    TestLevenshtein(10000, 50);
 
     nTest++;
     TestBitHamming(1000, 32, 50000);
