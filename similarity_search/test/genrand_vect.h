@@ -16,6 +16,8 @@
 #ifndef GENRAND_VECT_HPP
 #define GENRAND_VECT_HPP
 
+#include "space/space_sparse_vector.h"
+
 namespace similarity {
 
 template <class T> 
@@ -56,6 +58,18 @@ template <class T>
 inline void SetRandZeros(T* pVect, size_t qty, double pZero) {
     for (size_t j = 0; j < qty; ++j) if (RandomReal<T>() < pZero) pVect[j] = T(0);
 }
+
+template <typename dist_t>
+void GenSparseVectZipf(size_t maxSize, vector<SparseVectElem<dist_t>>& res) {
+  maxSize = max(maxSize, (size_t)1);
+
+  for (size_t i = 1; i < maxSize; ++i) {
+    float f = RandomReal<float>();
+    if (f <= sqrt((float)i)/i) { // This is a bit ad hoc, but is ok for testing purposes
+      res.push_back(SparseVectElem<dist_t>(i, RandomReal<float>()));
+    }
+  }
+};
 
 }
 

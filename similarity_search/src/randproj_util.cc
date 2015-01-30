@@ -26,7 +26,7 @@ namespace similarity {
 
 using namespace std;
 
-template <class dist_t> void initRandProj(size_t nVect, size_t nElem,
+template <class dist_t> void initRandProj(size_t nSrcDim, size_t nDstDim,
                                          bool bDoOrth,
                                          vector<vector<dist_t>>& projMatr) {
   // Static is thread-safe in C++-11
@@ -35,65 +35,68 @@ template <class dist_t> void initRandProj(size_t nVect, size_t nElem,
   static  std::normal_distribution<>  normGen(0.0f, 1.0f);
 
   // 1. Create normally distributed vectors
-  projMatr.resize(nVect);
-  for (size_t i = 0; i < nVect; ++i) {
-    projMatr[i].resize(nElem);
-    for (size_t j = 0; j < nElem; ++j)
+  projMatr.resize(nDstDim);
+  for (size_t i = 0; i < nDstDim; ++i) {
+    projMatr[i].resize(nSrcDim);
+    for (size_t j = 0; j < nSrcDim; ++j)
       projMatr[i][j] = normGen(engine);
   }
   /* 
-   * 2. If bDoOrth == true, normalize the basis using the Gram–Schmidt process.
+   * 2. If bDoOrth == true, normalize the basis using the numerically stable
+        variant of the Gram–Schmidt process (see Wikipedia for details 
+        http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process#Algorithm).
    *    Otherwise, just divide each vector by its norm. 
    */
-  for (size_t i = 0; i < nVect; ++i) {
+  for (size_t i = 0; i < nDstDim; ++i) {
     if (bDoOrth) {
-      for (size_t k = 0; k < i; ++k) {
-        dist_t coeff = ScalarProductSIMD(&projMatr[i][0], &projMatr[k][0], nElem);
+      // Normalize the outcome (in particular, to ensure the above mentioned invariant is true)
+      dist_t normCoeff = sqrt(ScalarProductSIMD(&projMatr[i][0], &projMatr[i][0], nSrcDim));
+      for (size_t n = 0; n < nSrcDim; ++n) projMatr[i][n] /= normCoeff;
+
+      for (size_t k = i + 1; k < nDstDim; ++k) {
+        dist_t coeff = ScalarProductSIMD(&projMatr[i][0], &projMatr[k][0], nSrcDim);
       /* 
        * Invariant the all previously processed vectors have been normalized.
        * Therefore, we we subtract the projection to a previous vector u,
        * we don't divide elements by the norm of the vector u
        */
-        for (size_t n = 0; n < nElem; ++n) projMatr[i][n] -= coeff * projMatr[k][n];
+        for (size_t n = 0; n < nSrcDim; ++n) projMatr[k][n] -= coeff * projMatr[i][n];
       }
     }
-    // Normalize the outcome (in particular, to ensure the above mentioned invariant is true)
-    dist_t normCoeff = ScalarProductSIMD(&projMatr[i][0], &projMatr[i][0], nElem);
-    for (size_t n = 0; n < nElem; ++n) projMatr[i][n] /= normCoeff;
   }
 }
 
-template void initRandProj<float>(size_t nVect, size_t nElem,
+template void initRandProj<float>(size_t nSrcDim, size_t nDstDim,
                                   bool bDoOrth,
                                   vector<vector<float>>& projMatr);
-template void initRandProj<double>(size_t nVect, size_t nElem,
+template void initRandProj<double>(size_t nSrcDim, size_t nDstDim,
                                   bool bDoOrth,
                                   vector<vector<double>>& projMatr);
 
 template <class dist_t> void compProj(const vector<vector<dist_t>>& projMatr, 
-                                      const dist_t* pSrcVect, size_t nSrcQty,
-                                      dist_t* pDstVect, size_t nDstQty) {
+                                      const dist_t* pSrcVect, size_t nSrcDim,
+                                      dist_t* pDstVect, size_t nDstDim) {
   if (projMatr.empty()) LOG(LIB_FATAL) << "Bug: empty projection matrix";
-  if (projMatr.size() != nDstQty) 
+  if (projMatr.size() != nDstDim) 
     LOG(LIB_FATAL) << "Bug: the # of rows in the projection matrix (" << projMatr.size() << ")"
                << " isn't equal to the number of vector elements in the target space "
-               << "(" << nDstQty << ")";
+               << "(" << nDstDim << ")";
 
-  for (size_t i = 0; i < nDstQty; ++i) {
-    if (projMatr[i].size() != nSrcQty) {
+  for (size_t i = 0; i < nDstDim; ++i) {
+    if (projMatr[i].size() != nSrcDim) {
       LOG(LIB_FATAL) << "Bug: row index " << i << " the number of columns "
                  << "(" << projMatr[i].size() << ")"
                  << " isn't equal to the number of vector elements in the source space "
-                 << "(" << nSrcQty << ")";
+                 << "(" << nSrcDim << ")";
     }
-    pDstVect[i] = ScalarProductSIMD(&projMatr[i][0], pSrcVect, nSrcQty);
+    pDstVect[i] = ScalarProductSIMD(&projMatr[i][0], pSrcVect, nSrcDim);
   }
 }
 
 template void compProj<float>(const vector<vector<float>>& projMatr,
-                              const float* pSrcVect, size_t nSrcQty,
+                              const float* pSrcVect, size_t nSrcDim,
                               float* pDstVect, size_t nDstQty);
 template void compProj<double>(const vector<vector<double>>& projMatr,
-                              const double* pSrcVect, size_t nSrcQty,
+                              const double* pSrcVect, size_t nSrcDim,
                               double* pDstVect, size_t nDstQty);
 }

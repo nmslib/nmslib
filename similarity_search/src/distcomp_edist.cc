@@ -23,21 +23,10 @@
 
 namespace similarity {
 
-/* 
- * The maximum number of elements that will be kept on the stack
- * by the function levenshtein. 
- *
- * TODO:@leo If there are too many threads, we might run out stack memory.
- *           but it is probably extremely unlikely with the buffer of this size.
- *
- */
-
-#define MAX_BUFFER_QTY  512
-
 using namespace std;
 
 template <class T> int levenshtein(const T* p1, size_t len1, const T* p2, size_t len2) {
-  int aStackBuf[2 * MAX_BUFFER_QTY];
+  int aStackBuf[2 * MAX_LEVEN_BUFFER_QTY];
   int *pMemBuf = NULL;
   int *pBuff;
 
@@ -50,7 +39,7 @@ template <class T> int levenshtein(const T* p1, size_t len1, const T* p2, size_t
 
   if (!nr || !nc) return nr + nc;
 
-  if (nr + 1 > MAX_BUFFER_QTY) {
+  if (nr + 1 > MAX_LEVEN_BUFFER_QTY) {
     pBuff = pMemBuf = new int[2 * (nr + 1)];
   } else {
     pBuff = aStackBuf;

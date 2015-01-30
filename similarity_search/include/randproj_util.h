@@ -25,11 +25,11 @@ namespace similarity {
 
 using std::vector;
 
-template <class dist_t> void initRandProj(size_t nVect, size_t nElem, 
+template <class dist_t> void initRandProj(size_t nSrcDim, size_t nDstDim,
                                           bool bDoOrth, vector<vector<dist_t>>& projMatr);
 template <class dist_t> void compProj(const vector<vector<dist_t>>& projMatr, 
-                                      const dist_t* pSrcVect, size_t nSourceQty,
-                                      dist_t* pDstVect, size_t nDstQty);
+                                      const dist_t* pSrcVect, size_t nSrcDim,
+                                      dist_t* pDstVect, size_t nDstDim);
 
 
 }

@@ -41,10 +41,6 @@
 
 namespace similarity {
 
-using std::unique_ptr;
-using std::vector;
-
-
 using namespace std;
 
 
@@ -69,18 +65,6 @@ TEST(set_intel) {
 TEST(Platform64) {
   EXPECT_EQ(8 == sizeof(size_t), true);
 }
-
-template <typename dist_t>
-void GenSparseVectZipf(size_t maxSize, vector<SparseVectElem<dist_t>>& res) {
-  maxSize = max(maxSize, (size_t)1);
-
-  for (size_t i = 1; i < maxSize; ++i) {
-    float f = RandomReal<float>();
-    if (f <= sqrt((float)i)/i) { // This is a bit ad hoc, but is ok for testing purposes
-      res.push_back(SparseVectElem<dist_t>(i, RandomReal<float>()));
-    }
-  }
-};
 
 template <typename dist_t>
 bool checkElemVectEq(const vector<SparseVectElem<dist_t>>& source,
@@ -138,8 +122,11 @@ TEST(BlockZeros) {
   }
 }
 
-//TEST(DISABLE_SparsePackUnpack) {
+#ifdef DISABLE_LONG_TESTS
+TEST(DISABLE_SparsePackUnpack) {
+#else
 TEST(SparsePackUnpack) {
+#endif
   TestSparsePackUnpack<float>();
   TestSparsePackUnpack<double>();
 }
@@ -786,8 +773,11 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
     return true;
 }
 
-//TEST(DISABLE_TestAgree) {
+#ifdef DISABLE_LONG_TESTS
+TEST(DISABLE_TestAgree) {
+#else
 TEST(TestAgree) {
+#endif
     int nTest  = 0;
     int nFail = 0;
 

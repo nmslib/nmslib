@@ -60,8 +60,11 @@ void BurnCPU(size_t qty = 10000000000) {
   LOG(LIB_INFO) << "Ignore: " << sum;
 }
 
-//TEST(DISABLE_TestTimer) {
+#ifdef DISABLE_LONG_TESTS
+TEST(DISABLE_TestTimer) {
+#else
 TEST(TestTimer) {
+#endif
   WallClockTimerBannister oldz;
   WallClockTimer          z;
 

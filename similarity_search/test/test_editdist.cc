@@ -17,37 +17,38 @@
 #include <string>
 
 #include "space/space_leven.h"
+#include "distcomp_edist.h"
 #include "bunit.h"
 #include "testdataset.h"
 
 namespace similarity {
 
-const size_t NUM_TEST = 16;
+const size_t NUM_TEST_SHORT_STR = 16;
 
 using namespace std;
 
-const char* pTestArr[NUM_TEST] = {
+const char* pTestArr[NUM_TEST_SHORT_STR] = {
   "xyz", "beagcfa", "cea", "cb",
   "d", "c", "bdaf", "ddcd",
   "egbfa", "a", "fba", "bcccfe",
   "ab", "bfgbfdc", "bcbbgf", "bfbb"
 };
 
-class StringDataset1 : public TestDataset {
+class ShortStringDataSet : public TestDataset {
  public:
-  StringDataset1(SpaceLevenshtein& space) {
+  ShortStringDataSet(SpaceLevenshtein& space) {
 
-    for (int i = 0; i < NUM_TEST; ++i) {
+    for (int i = 0; i < NUM_TEST_SHORT_STR; ++i) {
       dataobjects_.push_back(space.CreateObjFromStr(i, -1, pTestArr[i]));
     }
   }
 };
 
 
-TEST(EditDistance) {
+TEST(EditDistanceShort) {
   unique_ptr<SpaceLevenshtein> space(new SpaceLevenshtein());
 
-  StringDataset1 dataset(*space);
+  ShortStringDataSet dataset(*space);
   const ObjectVector& dataobjects = dataset.GetDataObjects();
 
   const int expected[16][16] = {
@@ -68,8 +69,8 @@ TEST(EditDistance) {
     {6, 5, 5, 4, 6, 5, 4, 6, 5, 6, 5, 4, 5, 5, 0, 3},
     {4, 6, 4, 3, 4, 4, 3, 4, 4, 4, 2, 5, 3, 4, 3, 0} };
 
-  for (size_t i = 0; i < NUM_TEST; ++i) {
-    for (size_t j = 0; j < NUM_TEST; ++j) {
+  for (size_t i = 0; i < NUM_TEST_SHORT_STR; ++i) {
+    for (size_t j = 0; j < NUM_TEST_SHORT_STR; ++j) {
       const int d = space->IndexTimeDistance(dataobjects[i], dataobjects[j]);
       if (expected[i][j] != d) {
         LOG(LIB_ERROR) << "Bug, expected: " << expected[i][j] << " got " << d
@@ -78,6 +79,41 @@ TEST(EditDistance) {
       EXPECT_EQ(expected[i][j], d);
     }
   }
+}
+
+/*
+ * This test is needed to merely verify the correctness
+ * of the hybrid memory allocation strategy:
+ * relatively short strings will use stack memory,
+ * for longer ones we use malloc-based methods.
+ */
+
+string str1, str2;
+
+class LongStringDataSet : public TestDataset {
+ public:
+  LongStringDataSet(SpaceLevenshtein& space) {
+
+    str1 = string(MAX_LEVEN_BUFFER_QTY + 1, 'a');
+    str2 = string(MAX_LEVEN_BUFFER_QTY, 'c') + str1 + string(MAX_LEVEN_BUFFER_QTY, 'b');
+
+    dataobjects_.push_back(space.CreateObjFromStr(0, -1, str1));
+    dataobjects_.push_back(space.CreateObjFromStr(0, -1, str2));
+  }
+};
+
+
+TEST(EditDistanceLong) {
+  unique_ptr<SpaceLevenshtein> space(new SpaceLevenshtein());
+
+  LongStringDataSet dataset(*space);
+  const ObjectVector& dataobjects = dataset.GetDataObjects();
+
+  int d = space->IndexTimeDistance(dataobjects[0], dataobjects[1]);
+  EXPECT_EQ(2 * MAX_LEVEN_BUFFER_QTY, d);
+  d = space->IndexTimeDistance(dataobjects[1], dataobjects[0]);
+  EXPECT_EQ(2 * MAX_LEVEN_BUFFER_QTY, d);
+
 }
 
 }  // namespace similarity

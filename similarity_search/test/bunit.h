@@ -27,6 +27,9 @@
 #include <cmath>
 #include <exception>
 
+// Uncomment this to disable tests taking long time
+#define DISABLE_LONG_TESTS
+
 namespace similarity {
 
 using TestFunc = std::function<void()>;
