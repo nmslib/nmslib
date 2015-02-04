@@ -23,8 +23,10 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <memory>
 
 #include "index.h"
+#include "projection.h"
 
 #define METH_OMEDRANK             "omedrank"
 
@@ -35,8 +37,9 @@ using std::vector;
 
 /*
  * This is an implementation of Fagin's OMEDRANK method for arbitrary spaces.
- * The main difference is that instead of projections, we use a distance to randomly
- * selected pivots.
+ * The main difference is that we allow the user to select several types of
+ * projections, while the original Fagin's OMEDRANK relies only on the random
+ * projections.
  *
  * Patent: 
  *    Efficient similarity search and classification via rank aggregation
@@ -66,7 +69,7 @@ class OMedRank : public Index<dist_t> {
   OMedRank(const Space<dist_t>* space,
            const ObjectVector& data,
            AnyParamManager &pmgr);
-  ~OMedRank(){};
+  virtual ~OMedRank(){};
 
   const std::string ToString() const { return "omedrank" ; }
   void Search(RangeQuery<dist_t>* query);
@@ -87,11 +90,13 @@ class OMedRank : public Index<dist_t> {
   float                   min_freq_;
   size_t                  db_scan_;
   bool                    skip_check_;
-  ObjectVector            pivot_;
+  string                  proj_type_;
+  size_t                  proj_dim_; // used only for sparse vector spaces
+  std::unique_ptr<Projection<dist_t>>  projection_;
 
   struct ObjectInvEntry {
     IdType    id_;
-    dist_t    pivot_dist_;
+    float     pivot_dist_;
     ObjectInvEntry(IdType id, dist_t pivot_dist) : id_(id), pivot_dist_(pivot_dist) {} 
     bool operator<(const ObjectInvEntry& o) const { 
       if (pivot_dist_ != o.pivot_dist_) return pivot_dist_ < o.pivot_dist_; 

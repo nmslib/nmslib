@@ -29,6 +29,8 @@
 
 namespace similarity {
 
+using std::string;
+
 /*
  * TODO: @leo/@bileg Currently we support only char, but need to support char32_t and UTF-8 as well. 
  */
@@ -49,6 +51,13 @@ class StringSpace : public Space<dist_t> {
   virtual Object* CreateObjFromStr(IdType id, LabelType label, const char *pStr, size_t len) const {
     return new Object(id, label, len * sizeof(char), pStr);
   }
+
+  virtual string ToString() const = 0;
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                 size_t nElem) const {
+    throw runtime_error("Cannot create vector for the space: " + ToString());
+  }
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
   void ReadStr(std::string line, LabelType& label, std::string& str) const;

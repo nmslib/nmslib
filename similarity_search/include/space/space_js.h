@@ -49,6 +49,16 @@ class SpaceJSBase : public VectorSpace<dist_t> {
   virtual std::string ToString() const = 0;
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
 
+  virtual size_t GetElemQty(const Object* object) const {
+    size_t tmp = object->datalength()/ sizeof(dist_t);
+    return (type_ == kJSSlow) ? tmp : tmp / 2;
+  }
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+                                 size_t nElem) const {
+    return VectorSpace<dist_t>::
+                CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
+
+  }
  protected:
   dist_t JensenShannonFunc(const Object* obj1, const Object* obj2) const;
   JSType  GetType() const { return type_; }

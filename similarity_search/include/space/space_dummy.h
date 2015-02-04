@@ -66,6 +66,15 @@ class SpaceDummy : public Space<dist_t> {
                       const char* inputfile,
                       const int MaxNumObjects) const;
 
+  /*
+   * CreateVectFromObj and GetElemQty() are only needed, if
+   * one wants to use methods with random projections.
+   */
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                   size_t nElem) const {
+    throw runtime_error("Cannot create vector for the space: " + ToString());
+  }
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
  /*
   * This function should always be protected.

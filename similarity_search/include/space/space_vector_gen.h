@@ -29,7 +29,7 @@ namespace similarity {
  * an arbitrary distance function.
  */ 
 template <typename dist_t, typename DistObjType>
-class VectorSpaceGen : public VectorSpace<dist_t> {
+class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
  public:
   virtual ~VectorSpaceGen() {}
 

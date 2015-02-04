@@ -38,7 +38,7 @@ using std::vector;
 
 /*
  *
- * This helper base class is different from the SpaceSparseVector class 
+ * This helper base class is different from the SpaceSparseVectorSimpleStorage class
  * in that it stores sparse vectors in a special format (divided into blocks).
  *
  * This makes it possible to quickly compute distances, 
@@ -52,9 +52,10 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
  public:
   typedef SparseVectElem<dist_t> ElemType;
 
-
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                 size_t nElem) const;
   /*
-   * Need to override the function from the base class
+   * Overriding the function from the base class
    */
   virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);

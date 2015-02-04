@@ -36,7 +36,7 @@ class Query {
 
   void ResetStats();
   virtual dist_t Distance(const Object* object1, const Object* object2);
-  // Distance can be assymetric!
+  // Distance can be asymmetric!
   virtual dist_t DistanceObjLeft(const Object* object);
   virtual dist_t DistanceObjRight(const Object* object);
 

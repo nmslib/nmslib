@@ -42,6 +42,11 @@ class SpaceBitHamming : public Space<int> {
                       const int MaxNumObjects) const;
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const;
   virtual std::string ToString() const { return "Hamming (bit-storage) space"; }
+  virtual void CreateVectFromObj(const Object* obj, int* pVect,
+                                 size_t nElem) const {
+    throw runtime_error("Cannot create vector for the space: " + ToString());
+  }
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
   virtual int HiddenDistance(const Object* obj1, const Object* obj2) const;
   void ReadVec(std::string line, LabelType& label, std::vector<uint32_t>& v) const;

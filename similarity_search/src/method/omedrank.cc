@@ -38,13 +38,30 @@ OMedRank<dist_t>::OMedRank(
 	: data_(data),  /* reference */
     space_(space), /* pointer */
     num_pivot_(8),
-    chunk_index_size_(65536),
+    chunk_index_size_(16536),
     index_qty_(0), // If ComputeDbScan is called before index_qty_ is computed, it will see this zero
-    skip_check_(false)
+    skip_check_(false),
+    proj_dim_(0)
  {
 
+  pmgr.GetParamOptional("projType", proj_type_);
+  if (proj_type_.empty()) proj_type_ = PROJ_TYPE_RAND;
+  pmgr.GetParamOptional("projDim", proj_dim_);
   pmgr.GetParamOptional("numPivot", num_pivot_);
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
+
+  projection_.reset(Projection<dist_t>::createProjection(
+                                                      space_,
+                                                      data_,
+                                                      proj_type_,
+                                                      proj_dim_,
+                                                      num_pivot_));
+
+  if (projection_.get() == NULL) {
+    throw runtime_error("Cannot create projection class '" + proj_type_ + "'" +
+                        " for the space: '" + space_->ToString() +"' " +
+                        " distance value type: '" + DistTypeName<dist_t>() + "'");
+  }
 
   index_qty_ = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
   // Call this function AFTER the index size is computed!
@@ -52,13 +69,11 @@ OMedRank<dist_t>::OMedRank(
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
   LOG(LIB_INFO) << "# of index chunks  = " << index_qty_;
+  LOG(LIB_INFO) << "projection type:   " << proj_type_;
+  LOG(LIB_INFO) << "projection dim:    " << proj_dim_;
   LOG(LIB_INFO) << "# pivots         = " << num_pivot_;
   LOG(LIB_INFO) << "db scan fraction = " << db_scan_frac_;
   LOG(LIB_INFO) << "min freq = "         << min_freq_;
-
-  CHECK(data_.size() > num_pivot_);
-
-  GetPermutationPivot(data, space, num_pivot_, &pivot_);
 
   posting_lists_.resize(index_qty_);
 
@@ -74,13 +89,15 @@ OMedRank<dist_t>::OMedRank(
 template <typename dist_t> 
 template <typename QueryType> 
 void OMedRank<dist_t>::GenSearch(QueryType* query) {
-  size_t num_pivot = pivot_.size();
-  vector<ssize_t> lowIndx(num_pivot);
-  vector<ssize_t> highIndx(num_pivot);
+  vector<ssize_t> lowIndx(num_pivot_);
+  vector<ssize_t> highIndx(num_pivot_);
 
   ObjectInvEntry  e(IdType(0), 0); 
 
   vector<unsigned>  counter(chunk_index_size_);
+  vector<float>     projDists(num_pivot_);
+
+  projection_->compProj(query, NULL, &projDists[0]);
 
   for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {
     const auto & chunkPostLists = *posting_lists_[chunkId];
@@ -88,9 +105,9 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
     if (chunkId != 0)
       memset(&counter[0], 0, sizeof(counter[0])*counter.size());
 
-    for (size_t i = 0 ; i < num_pivot; ++i) {
+    for (size_t i = 0 ; i < num_pivot_; ++i) {
       // Again, pivot is the left argument, see the comment in the constructor
-      e.pivot_dist_ = query->DistanceObjLeft(pivot_[i]); 
+      e.pivot_dist_ = projDists[i];
       lowIndx[i] = (lower_bound(chunkPostLists[i].begin(), chunkPostLists[i].end(), e) - chunkPostLists[i].begin());;
       --lowIndx[i]; // Can become less than zero
       highIndx[i] = lowIndx[i] + 1;
@@ -102,7 +119,7 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
     bool      eof = false;
     size_t    totOp = 0;
     size_t    scannedQty = 0;
-    size_t    minMatchPivotQty = max(size_t(1), static_cast<size_t>(round(min_freq_ * num_pivot)));
+    size_t    minMatchPivotQty = max(size_t(1), static_cast<size_t>(round(min_freq_ * num_pivot_)));
 
     size_t minId = chunkId * chunk_index_size_;
     size_t maxId = min(data_.size(), minId + chunk_index_size_);
@@ -112,7 +129,7 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
 
     while (scannedQty < min(db_scan_, chunkQty) && !eof) {
       eof = true;
-      for (size_t i = 0 ; i < num_pivot; ++i) {
+      for (size_t i = 0 ; i < num_pivot_; ++i) {
         IdType    indx[2];
         unsigned  iQty = 0;
 
@@ -181,8 +198,13 @@ void OMedRank<dist_t>::IndexChunk(size_t chunkId) {
   auto & chunkPostLists = *posting_lists_[chunkId];
   chunkPostLists.resize(num_pivot_);
 
+  vector<float>     projDists(num_pivot_);
+
+
   for (size_t i = 0; i < maxId - minId; ++i) {
     IdType id = minId + i;
+
+    projection_->compProj(NULL, data_[id], &projDists[0]);
 
     for (size_t j = 0; j < num_pivot_; ++j) {
       /* 
@@ -190,7 +212,7 @@ void OMedRank<dist_t>::IndexChunk(size_t chunkId) {
        * At search time, the right argument of the distance will be the query point
        * and pivot again will be the left argument.
        */
-      dist_t leftObjDst = space_->IndexTimeDistance(pivot_[j], data_[id]);
+      dist_t leftObjDst = projDists[j];
       chunkPostLists[j].push_back(ObjectInvEntry(id - minId, leftObjDst));
     }
   }

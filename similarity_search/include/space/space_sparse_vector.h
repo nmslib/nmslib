@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <ostream>
+#include <functional>
 
 #include <string.h>
 #include "global.h"
@@ -33,6 +34,7 @@
 namespace similarity {
 
 using std::vector;
+using std::fill;
 
 template <typename dist_t>
 struct SparseVectElem {  
@@ -67,7 +69,7 @@ ostream& operator<<(ostream& out, SparseVectElem<dist_t> e) {
 
 template <typename dist_t>
 class SpaceSparseVector : public Space<dist_t> {
- public:
+public:
   typedef SparseVectElem<dist_t> ElemType;
 
   virtual ~SpaceSparseVector() {}
@@ -79,13 +81,42 @@ class SpaceSparseVector : public Space<dist_t> {
 
   void GenRandProjPivots(ObjectVector& vDst, size_t Qty, size_t MaxElem) const;
 
-  virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
-    SpaceNormScalarProduct distObjNormSP;
-    return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjNormSP);
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
+  // Sparse vectors have no fixed dimensionality
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                   size_t nElem) const = 0;
+
+  virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const = 0;
+protected:
+  void ReadSparseVec(std::string line, IdType& label, std::vector<ElemType>& v) const;
+};
+
+template <typename dist_t>
+class SpaceSparseVectorSimpleStorage : public SpaceSparseVector<dist_t> {
+public:
+  typedef SparseVectElem<dist_t> ElemType;
+
+  virtual ~SpaceSparseVectorSimpleStorage() {}
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                 size_t nElem) const {
+    static std::hash<size_t>   indexHash;
+    fill(pVect, pVect + nElem, static_cast<dist_t>(0));
+    const ElemType* beg = reinterpret_cast<const ElemType*>(obj->data());
+    const ElemType* const end =
+        reinterpret_cast<const ElemType*>(obj->data() + obj->datalength());
+    for (;beg < end;++beg) {
+      size_t idx = indexHash(beg->id_) % nElem;
+      pVect[idx] += beg->val_;
+    }
   }
 
-  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
- protected:
+  virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
+    SpaceNormScalarProduct distObjNormSP;
+    return SpaceSparseVectorSimpleStorage<dist_t>::
+                            ComputeDistanceHelper(obj1, obj2, distObjNormSP);
+  }
+protected:
 
   struct SpaceNormScalarProduct {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
@@ -93,13 +124,13 @@ class SpaceSparseVector : public Space<dist_t> {
     }
   };
 
-
-  void ReadSparseVec(std::string line, IdType& label, std::vector<ElemType>& v) const;
   
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 
   /* 
    * This helper function converts a dense vector to a sparse one and then calls a generic distance function.
+   * It can be used only with simple-storage sparse vector spaces, not with
+   * children of SpaceSparseVectorInter.
    */
   template <typename DistObjType> 
   static dist_t ComputeDistanceHelper(const Object* obj1, const Object* obj2,  

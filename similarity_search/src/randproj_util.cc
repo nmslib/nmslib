@@ -66,6 +66,12 @@ template <class dist_t> void initRandProj(size_t nSrcDim, size_t nDstDim,
   }
 }
 
+template <> void  initRandProj<int>(size_t nSrcDim, size_t nDstDim,
+                                bool bDoOrth,
+                                vector<vector<int>>& projMatr) {
+  throw runtime_error("random projections are not supported for integer-valued distances!");
+}
+
 template void initRandProj<float>(size_t nSrcDim, size_t nDstDim,
                                   bool bDoOrth,
                                   vector<vector<float>>& projMatr);
@@ -73,7 +79,7 @@ template void initRandProj<double>(size_t nSrcDim, size_t nDstDim,
                                   bool bDoOrth,
                                   vector<vector<double>>& projMatr);
 
-template <class dist_t> void compProj(const vector<vector<dist_t>>& projMatr, 
+template <class dist_t> void compRandProj(const vector<vector<dist_t>>& projMatr, 
                                       const dist_t* pSrcVect, size_t nSrcDim,
                                       dist_t* pDstVect, size_t nDstDim) {
   if (projMatr.empty()) LOG(LIB_FATAL) << "Bug: empty projection matrix";
@@ -93,10 +99,16 @@ template <class dist_t> void compProj(const vector<vector<dist_t>>& projMatr,
   }
 }
 
-template void compProj<float>(const vector<vector<float>>& projMatr,
+template <> void compRandProj<int>(const vector<vector<int>>& projMatr,
+                              const int* pSrcVect, size_t nSrcDim,
+                              int* pDstVect, size_t nDstQty) {
+  throw runtime_error("random projections are not supported for integer-valued distances!");
+}
+
+template void compRandProj<float>(const vector<vector<float>>& projMatr,
                               const float* pSrcVect, size_t nSrcDim,
                               float* pDstVect, size_t nDstQty);
-template void compProj<double>(const vector<vector<double>>& projMatr,
+template void compRandProj<double>(const vector<vector<double>>& projMatr,
                               const double* pSrcVect, size_t nSrcDim,
                               double* pDstVect, size_t nDstQty);
 }

@@ -37,7 +37,7 @@
 namespace similarity {
 
 template <typename dist_t>
-class SpaceSparseLp : public SpaceSparseVector<dist_t> {
+class SpaceSparseLp : public SpaceSparseVectorSimpleStorage<dist_t> {
  public:
   explicit SpaceSparseLp(dist_t p) : distObj_(p) {}
   virtual ~SpaceSparseLp() {}

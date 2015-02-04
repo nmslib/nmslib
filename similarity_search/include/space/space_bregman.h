@@ -20,6 +20,7 @@
 #include <string>
 #include <map>
 #include <stdexcept>
+#include <sstream>
 
 #include <string.h>
 #include "global.h"
@@ -62,6 +63,18 @@ class BregmanDiv : public VectorSpace<dist_t> {
    * logarithms
    */
   virtual size_t GetElemQty(const Object* object) const = 0;
+
+  /*
+   * However, all the Bregman divergences have similar storage scheme:
+   * The original values of the vectors are stored in the begining
+   * of the object. Thus, known the number of elements one can always
+   * extract them.
+   */
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+                                 size_t nElem) const {
+    return VectorSpace<dist_t>::
+                CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
+  }
 
   virtual Object* Mean(const ObjectVector& data) const;
 
@@ -151,6 +164,12 @@ class KLDivGenFastRightQuery : public VectorSpace<dist_t> {
  public:
   virtual ~KLDivGenFastRightQuery() {}
 
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+                                 size_t nElem) const {
+    return VectorSpace<dist_t>::
+                CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
+  }
+
   virtual std::string ToString() const { return "Generalized Kullback-Leibler divergence, right queries (precomputed logs)"; }
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
@@ -164,6 +183,12 @@ class KLDivFast: public VectorSpace<dist_t> {
  public:
   virtual ~KLDivFast() {}
 
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+                                 size_t nElem) const {
+    return VectorSpace<dist_t>::
+                CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
+  }
+
   virtual std::string ToString() const { return "Kullback-Leibler divergence (precomputed logs)"; }
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
@@ -176,6 +201,12 @@ template <typename dist_t>
 class KLDivFastRightQuery: public VectorSpace<dist_t> {
  public:
   virtual ~KLDivFastRightQuery() {}
+
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+                                 size_t nElem) const {
+    return VectorSpace<dist_t>::
+                CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
+  }
 
   virtual std::string ToString() const { return "Kullback-Leibler divergence, right queries (precomputed logs)"; }
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;

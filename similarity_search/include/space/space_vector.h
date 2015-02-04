@@ -20,6 +20,7 @@
 #include <string>
 #include <map>
 #include <stdexcept>
+#include <sstream>
 
 #include <string.h>
 #include "global.h"
@@ -41,9 +42,39 @@ class VectorSpace : public Space<dist_t> {
   virtual void WriteDataset(const ObjectVector& dataset,
                             const char* outputfile) const;
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
+  virtual size_t GetElemQty(const Object* object) const = 0;
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                 size_t nElem) const = 0;
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
   void ReadVec(std::string line, LabelType& label, std::vector<dist_t>& v) const;
+  void CreateVectFromObjSimpleStorage(const char *pFuncName,
+                                 const Object* obj, dist_t* pDstVect,
+                                 size_t nElem) const {
+    const dist_t* pSrcVec = reinterpret_cast<const dist_t*>(obj->data());
+    const size_t len = GetElemQty(obj);
+    if (nElem > len) {
+      std::stringstream err;
+      err << pFuncName << " The number of requested elements "
+          << nElem << " is larger than the actual number of elements " << len;
+      throw runtime_error(err.str());
+    }
+    for (size_t i = 0; i < nElem; ++i) pDstVect[i]=pSrcVec[i];
+  }
+};
+
+template <typename dist_t>
+class VectorSpaceSimpleStorage : public VectorSpace<dist_t> {
+ public:
+  virtual ~VectorSpaceSimpleStorage() {}
+  virtual size_t GetElemQty(const Object* object) const {
+    return object->datalength()/ sizeof(dist_t);
+  }
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+                                 size_t nElem) const {
+    return VectorSpace<dist_t>::
+                CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
+  }
 };
 
 }  // namespace similarity

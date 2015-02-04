@@ -25,9 +25,20 @@ namespace similarity {
 
 using std::vector;
 
+/*
+ * These are the classic random projections that rely on random normal numbers.
+ * Vectors are subsequently normalized using the Gram-Schmidt algorithm (therefore,
+ * nDstDim should be <= nSrcDim). 
+ * For a more detailed discussion see, e.g.:
+ *
+ * Dasgupta, Sanjoy. "Experiments with random projection." 
+ * Proceedings of the Sixteenth conference on Uncertainty in artificial intelligence. 2000.
+ *
+ */ 
+
 template <class dist_t> void initRandProj(size_t nSrcDim, size_t nDstDim,
                                           bool bDoOrth, vector<vector<dist_t>>& projMatr);
-template <class dist_t> void compProj(const vector<vector<dist_t>>& projMatr, 
+template <class dist_t> void compRandProj(const vector<vector<dist_t>>& projMatr,
                                       const dist_t* pSrcVect, size_t nSrcDim,
                                       dist_t* pDstVect, size_t nDstDim);
 
