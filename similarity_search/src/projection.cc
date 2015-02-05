@@ -41,6 +41,7 @@ public:
   virtual void compProj(Query<dist_t>* pQuery,
                         const Object* pObj,
                         float* pDstVect) const {
+    if (NULL == pObj) pObj = pQuery->QueryObject();
     vector<dist_t> intermBuffer(dstDim_);
     Projection<dist_t>::fillIntermBuffer(space_,
                                          pObj,
@@ -74,21 +75,22 @@ public:
                         float* pDstVect) const {
     if (NULL == pObj) pObj = pQuery->QueryObject();
     /*
-     * For dense vector spaces, we ignore the specified source
-     * dimensionality. For sparse vector spaces, we obtain
-     * an intermediate dense vector having srcDim_ elements.
+     * For dense vector spaces, we ignore the specified "projection"
+     * dimensionality and use an actual number of vector elements. 
+     * For sparse vector spaces, we obtain an intermediate dense vector 
+     * with projDim elements.
      */
     size_t nDim = space_->GetElemQty(pObj);
-    if (!nDim) nDim = srcDim_;
+    if (!nDim) nDim = projDim_;
     vector<dist_t> intermBuffer(nDim);
     Projection<dist_t>::fillIntermBuffer(space_,
                                          pObj,
-                                         srcDim_,
+                                         nDim,
                                          intermBuffer);
 
     vector<dist_t> dstBuffer(dstDim_);
     compRandProj<dist_t>(_projMatr, &intermBuffer[0],
-                         srcDim_,
+                         nDim,
                          &dstBuffer[0],
                          dstDim_);
     for (size_t i = 0; i < dstDim_; ++i)
@@ -97,16 +99,30 @@ public:
 
   friend class Projection<dist_t>;
 private:
-  ProjectionRand(const Space<dist_t>* space,
-                 size_t nSrcDim, size_t nDstDim, bool bDoOrth) :
-    space_(space), srcDim_(nSrcDim), dstDim_(nDstDim) {
+  ProjectionRand(const Space<dist_t>* space, const ObjectVector& data,
+                 size_t nProjDim, size_t nDstDim, bool bDoOrth) :
+    space_(space), projDim_(nProjDim), dstDim_(nDstDim) {
+    if (data.empty()) {
+      stringstream err;
+      err << "Cannot initialize projection type '" <<
+             PROJ_TYPE_RAND << "'" <<
+             " without a single data point";
+      throw runtime_error(err.str());
+    }
+    size_t nDim = space->GetElemQty(data[0]);
+    if (nDim > 0) projDim_ = nDim;
+    else {
+      if (projDim_) {
+        throw runtime_error("Specify a non-zero value for the projective dimensionaity.");
+      }
+    }
 
-    initRandProj(srcDim_, dstDim_, bDoOrth, _projMatr);
+    initRandProj(projDim_, dstDim_, bDoOrth, _projMatr);
   }
 
   vector<vector<dist_t>>    _projMatr;
   const Space<dist_t>* space_;
-  size_t srcDim_;
+  size_t projDim_;
   size_t dstDim_;
 
 };
@@ -272,12 +288,12 @@ Projection<dist_t>*
 Projection<dist_t>::createProjection(const Space<dist_t>* space,
                                      const ObjectVector& data,
                                      string projType,
-                                     size_t nSrcDim,
+                                     size_t nProjDim,
                                      size_t nDstDim) {
   ToLower(projType);
 
   if (PROJ_TYPE_RAND == projType) {
-    return new ProjectionRand<dist_t>(space, nSrcDim, nDstDim, true);
+    return new ProjectionRand<dist_t>(space, data, nProjDim, nDstDim, true);
   } else if (PROJ_TYPE_RAND_REF_POINT == projType) {
     return new ProjectionRandRefPoint<dist_t>(space, data, nDstDim);
   } else if (PROJ_TYPE_PERM == projType) {

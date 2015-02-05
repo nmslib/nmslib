@@ -17,6 +17,8 @@
 #include <cmath>
 #include <random>
 #include <vector>
+#include <sstream>
+#include <stdexcept>
 
 #include "randproj_util.h"
 #include "distcomp.h"
@@ -82,18 +84,23 @@ template void initRandProj<double>(size_t nSrcDim, size_t nDstDim,
 template <class dist_t> void compRandProj(const vector<vector<dist_t>>& projMatr, 
                                       const dist_t* pSrcVect, size_t nSrcDim,
                                       dist_t* pDstVect, size_t nDstDim) {
-  if (projMatr.empty()) LOG(LIB_FATAL) << "Bug: empty projection matrix";
-  if (projMatr.size() != nDstDim) 
-    LOG(LIB_FATAL) << "Bug: the # of rows in the projection matrix (" << projMatr.size() << ")"
+  if (projMatr.empty()) throw runtime_error("Bug: empty projection matrix");
+  if (projMatr.size() != nDstDim) { 
+    stringstream err;
+    err << "Bug: the # of rows in the projection matrix (" << projMatr.size() << ")"
                << " isn't equal to the number of vector elements in the target space "
                << "(" << nDstDim << ")";
+    throw runtime_error(err.str());
+  }
 
   for (size_t i = 0; i < nDstDim; ++i) {
     if (projMatr[i].size() != nSrcDim) {
-      LOG(LIB_FATAL) << "Bug: row index " << i << " the number of columns "
-                 << "(" << projMatr[i].size() << ")"
-                 << " isn't equal to the number of vector elements in the source space "
-                 << "(" << nSrcDim << ")";
+      stringstream err;
+      err << "Bug: row index " << i << " the number of columns "
+          << "(" << projMatr[i].size() << ")"
+          << " isn't equal to the number of vector elements in the source space "
+          << "(" << nSrcDim << ")";
+      throw runtime_error(err.str());
     }
     pDstVect[i] = ScalarProductSIMD(&projMatr[i][0], pSrcVect, nSrcDim);
   }

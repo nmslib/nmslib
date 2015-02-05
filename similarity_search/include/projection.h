@@ -24,10 +24,15 @@
 #include <string>
 #include <cstddef>
 
-#define PROJ_TYPE_RAND            "rand"
-#define PROJ_TYPE_RAND_REF_POINT  "randrefpt"
-#define PROJ_TYPE_FAST_MAP        "fastmap"
+// Classic random projections using random orthonormal vectors
+#define PROJ_TYPE_RAND            "rand"          
+// Distance to random reference points
+#define PROJ_TYPE_RAND_REF_POINT  "randrefpt"     
+// FastMap (project on lines defined by two randomly selected points)
+#define PROJ_TYPE_FAST_MAP        "fastmap"       
+// Integer value permutations
 #define PROJ_TYPE_PERM            "perm"
+// Dense vectors remain unchanged, sparsed vectors are "hashed" into dense ones
 #define PROJ_TYPE_VECTOR_DENSE    "densevect"
 
 namespace similarity {
@@ -41,13 +46,16 @@ public:
   static Projection* createProjection(const Space<dist_t>* space,
                         const ObjectVector& data,
                         std::string projType,
-                        size_t nSrcDim,
+                        size_t nProjDim,
                           /*
                              For sparse vector spaces and random projections
                              is used to create an intermediate dense vector representations.
-                             It can be set to zero (or otherwise) for FastMap,
-                             random reference points,
-                             and permutations.
+                             It can be set to zero (or otherwise) if
+                              1) The source space is a dense vector space
+                              2) A projection is of the following type:
+                                i)   FastMap;
+                                ii)  Random reference points;
+                                iii) Permutations.
                         */
                         size_t nDstDim);
   /*
