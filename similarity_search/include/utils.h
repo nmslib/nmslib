@@ -115,6 +115,13 @@ double Variance(const double* array, const unsigned size, const double mean);
 double StdDev(const double* array, const unsigned size);
 
 /*
+ * A maximum number of random operations (e.g. while searching
+ * for a pivot with given properties) before giving up and firing
+ * an exception.
+ */
+#define MAX_RAND_ITER_BEFORE_GIVE_UP 100000
+
+/*
  * We want to avoid an overflow in the case when the distance is an integer type.
  */
 template <typename dist_t>

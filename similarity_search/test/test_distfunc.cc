@@ -31,6 +31,7 @@
 #include "space/space_scalar.h"
 #include "testdataset.h"
 #include "distcomp.h"
+#include "genrand_vect.h"
 #include "permutation_utils.h"
 #include "ztimer.h"
 #include "pow.h"
@@ -39,49 +40,6 @@
 #define RANGE_SMALL    1e-6f
 
 namespace similarity {
-
-using std::unique_ptr;
-using std::vector;
-
-
-template <class T> 
-inline void Normalize(T* pVect, size_t qty) {
-  T sum = 0;
-  for (size_t i = 0; i < qty; ++i) {
-    sum += pVect[i];
-  }
-  if (sum != 0) {
-    for (size_t i = 0; i < qty; ++i) {
-      pVect[i] /= sum;
-    }
-  }
-}
-
-
-template <class T> 
-inline void GenRandVect(T* pVect, size_t qty, T MinElem = T(0), T MaxElem = T(1), bool DoNormalize = false) {
-  T sum = 0;
-  for (size_t i = 0; i < qty; ++i) {
-    pVect[i] = MinElem + (MaxElem - MinElem) * RandomReal<T>();
-    sum += fabs(pVect[i]);
-  }
-  if (DoNormalize && sum != 0) {
-    for (size_t i = 0; i < qty; ++i) {
-      pVect[i] /= sum;
-    }
-  }
-}
-
-inline void GenRandIntVect(int* pVect, size_t qty) {
-  for (size_t i = 0; i < qty; ++i) {
-    pVect[i] = RandomInt();
-  }
-}
-
-template <class T> 
-inline void SetRandZeros(T* pVect, size_t qty, double pZero) {
-    for (size_t j = 0; j < qty; ++j) if (RandomReal<T>() < pZero) pVect[j] = T(0);
-}
 
 using namespace std;
 
@@ -107,18 +65,6 @@ TEST(set_intel) {
 TEST(Platform64) {
   EXPECT_EQ(8 == sizeof(size_t), true);
 }
-
-template <typename dist_t>
-void GenSparseVectZipf(size_t maxSize, vector<SparseVectElem<dist_t>>& res) {
-  maxSize = max(maxSize, (size_t)1);
-
-  for (size_t i = 1; i < maxSize; ++i) {
-    float f = RandomReal<float>();
-    if (f <= sqrt((float)i)/i) { // This is a bit ad hoc, but is ok for testing purposes
-      res.push_back(SparseVectElem<dist_t>(i, RandomReal<float>()));
-    }
-  }
-};
 
 template <typename dist_t>
 bool checkElemVectEq(const vector<SparseVectElem<dist_t>>& source,
@@ -176,8 +122,11 @@ TEST(BlockZeros) {
   }
 }
 
-//TEST(DISABLE_SparsePackUnpack) {
+#ifdef DISABLE_LONG_TESTS
+TEST(DISABLE_SparsePackUnpack) {
+#else
 TEST(SparsePackUnpack) {
+#endif
   TestSparsePackUnpack<float>();
   TestSparsePackUnpack<double>();
 }
@@ -211,11 +160,44 @@ TEST(TestEfficientFract) {
   }  
 }
 
+template <class T>
+bool TestScalarProductAgree(size_t N, size_t dim, size_t Rep) {
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+
+    float maxRelDiff = 1e-6f;
+    float maxAbsDiff = 1e-6f;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim, T(1), T(2), true /* do normalize */);
+            GenRandVect(pVect2, dim, T(1), T(2), true /* do normalize */);
+
+            T val1 = ScalarProduct(pVect1, pVect2, dim);
+            T val2 = ScalarProductSIMD(pVect1, pVect2, dim);
+
+            bool bug = false;
+            T diff = fabs(val1 - val2);
+            T diffRel = diff/max(max(fabs(val1),fabs(val2)),T(1e-18));
+            if (diffRel > maxRelDiff && diff > maxAbsDiff) {
+                bug = true;
+                cerr << "Bug ScalarProduct !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 <<  " diff=" << diff << " diffRel=" << diffRel << endl;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+    return true;
+}
+
 // Agreement test functions
 template <class T>
 bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -229,26 +211,26 @@ bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
             bool bug = false;
 
             if (fabs(val1 - val2)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug LInf !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2;
+                cerr << "Bug LInf !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << endl;
+                bug = true;
             }
             if (fabs(val1 - val3)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug LInf !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3;
+                cerr << "Bug LInf !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3 << endl;
+                bug = true;
             }
             if (bug) return false;
         }
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 template <class T>
 bool TestL1Agree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -262,26 +244,25 @@ bool TestL1Agree(size_t N, size_t dim, size_t Rep) {
             bool bug = false;
 
             if (fabs(val1 - val2)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug L1 !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2;
+                cerr << "Bug L1 !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << endl;
+                bug = true;
             }
             if (fabs(val1 - val3)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug L1 !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3;
+                cerr << "Bug L1 !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3 << endl;
+                bug = true;
             }
             if (bug) return false;
         }
     }
-
-
-    delete [] pVect1;
-    delete [] pVect2;
 
     return true;
 }
 
 template <class T>
 bool TestL2Agree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -295,28 +276,29 @@ bool TestL2Agree(size_t N, size_t dim, size_t Rep) {
             bool bug = false;
 
             if (fabs(val1 - val2)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug L2 !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2;
+                cerr << "Bug L2 !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << endl;
+                bug = true;
             }
             if (fabs(val1 - val3)/max(max(val1,val2),T(1e-18)) > 1e-6) {
-                cerr << "Bug L2 !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3;
+                cerr << "Bug L2 !!! Dim = " << dim << " val1 = " << val1 << " val3 = " << val3 << endl;
+                bug = true;
             }
             if (bug) return false;
         }
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 template <class T>
 bool TestItakuraSaitoAgree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
-    T* pPrecompVect1 = new T[dim * 2];
-    T* pPrecompVect2 = new T[dim * 2];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+    vector<T> precompVect1(dim *2), precompVect2(dim * 2);
+    T* pPrecompVect1 = &precompVect1[0];
+    T* pPrecompVect2 = &precompVect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -339,13 +321,15 @@ bool TestItakuraSaitoAgree(size_t N, size_t dim, size_t Rep) {
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
 
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val0 = " << val0 << " Diff: " << (val1 - val0) << " RelDiff1: " << RelDiff1 << " << AbsDiff1: " << AbsDiff1;
+                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val0 = " << val0 << " Diff: " << (val1 - val0) << " RelDiff1: " << RelDiff1 << " << AbsDiff1: " << AbsDiff1 << endl;
+                bug = true;
             }
 
             T AbsDiff2 = fabs(val1 - val2);
             T RelDiff2 = AbsDiff2/max(max(fabs(val1),fabs(val2)),T(1e-18));
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2;
+                cerr << "Bug ItakuraSaito !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl;
+                bug = true;
             }
 
             if (bug) return false;
@@ -353,20 +337,17 @@ bool TestItakuraSaitoAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-    delete [] pPrecompVect1;
-    delete [] pPrecompVect2;
-
     return true;
 }
 
 template <class T>
 bool TestKLAgree(size_t N, size_t dim, size_t Rep) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
-    T* pPrecompVect1 = new T[dim * 2];
-    T* pPrecompVect2 = new T[dim * 2];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+    vector<T> precompVect1(dim *2), precompVect2(dim * 2);
+    T* pPrecompVect1 = &precompVect1[0];
+    T* pPrecompVect2 = &precompVect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -395,30 +376,28 @@ bool TestKLAgree(size_t N, size_t dim, size_t Rep) {
             T AbsDiff1 = fabs(val1 - val0);
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1;
+                cerr << "Bug KL !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl;
+                bug = true;
             }
 
             T AbsDiff2 = fabs(val1 - val2);
             T RelDiff2 = AbsDiff2/max(max(fabs(val1),fabs(val2)),T(1e-18));
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val2 = " << val2 << " val1 = " << val1 << " Diff: " << (val2 - val1) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2;
+                cerr << "Bug KL !!! Dim = " << dim << " val2 = " << val2 << " val1 = " << val1 << " Diff: " << (val2 - val1) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl;
+                bug = true;
             }
 
             T AbsDiff3 = fabs(val1 - val3);
             T RelDiff3 = AbsDiff3/max(max(fabs(val1),fabs(val3)),T(1e-18));
             if (RelDiff3 > 1e-5 && AbsDiff3 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val3 = " << val3 << " val1 = " << val1 << " Diff: " << (val3 - val1) << " RelDiff3: " << RelDiff3 << " AbsDiff3: " << AbsDiff3;
+                cerr << "Bug KL !!! Dim = " << dim << " val3 = " << val3 << " val1 = " << val1 << " Diff: " << (val3 - val1) << " RelDiff3: " << RelDiff3 << " AbsDiff3: " << AbsDiff3 << endl;
+                bug = true;
             }
 
             if (bug) return false;
         }
     }
 
-
-    delete [] pVect1;
-    delete [] pVect2;
-    delete [] pPrecompVect1;
-    delete [] pPrecompVect2;
 
     return true;
 }
@@ -450,13 +429,15 @@ bool TestKLGeneralAgree(size_t N, size_t dim, size_t Rep) {
             T AbsDiff1 = fabs(val2 - val0);
             T RelDiff1 = AbsDiff1/max(max(fabs(val2),fabs(val0)),T(1e-18));
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val0 = " << val0 << " val2 = " << val2 << " Diff: " << (val0 - val2) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1;
+                cerr << "Bug KL !!! Dim = " << dim << " val0 = " << val0 << " val2 = " << val2 << " Diff: " << (val0 - val2) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl;
+                bug = true;
             }
 
             T AbsDiff2 = fabs(val3 - val2);
             T RelDiff2 = AbsDiff2/max(max(fabs(val3),fabs(val2)),T(1e-18));
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug KL !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2;
+                cerr << "Bug KL !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl;
+                bug = true;
             }
 
             if (bug) return false;
@@ -464,20 +445,17 @@ bool TestKLGeneralAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-    delete [] pPrecompVect1;
-    delete [] pPrecompVect2;
-
     return true;
 }
 
 template <class T>
 bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
-    T* pPrecompVect1 = new T[dim * 2];
-    T* pPrecompVect2 = new T[dim * 2];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+    vector<T> precompVect1(dim *2), precompVect2(dim * 2);
+    T* pPrecompVect1 = &precompVect1[0];
+    T* pPrecompVect2 = &precompVect2[0];
 
     T Dist = 0;
     T Error = 0;
@@ -507,7 +485,7 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
 
             if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
-                cerr << "Bug JS (1) " << typeid(T).name() << " !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1;
+                cerr << "Bug JS (1) " << typeid(T).name() << " !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 << " AbsDiff1: " << AbsDiff1 << endl;
                 bug = true;
             }
 
@@ -518,7 +496,7 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
             T RelDiff2 = AbsDiff2/max(max(fabs(val2),fabs(val3)),T(1e-18));
 
             if (RelDiff2 > 1e-5 && AbsDiff2 > 1e-5) {
-                cerr << "Bug JS (2) " << typeid(T).name() << " !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2;
+                cerr << "Bug JS (2) " << typeid(T).name() << " !!! Dim = " << dim << " val2 = " << val2 << " val3 = " << val3 << " Diff: " << (val2 - val3) << " RelDiff2: " << RelDiff2 << " AbsDiff2: " << AbsDiff2 << endl;
                 bug = true;
             }
 
@@ -530,7 +508,7 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
             ++TotalQty;
 
             if (RelDiff3 > 1e-4 && AbsDiff3 > 1e-4) {
-                cerr << "Bug JS (3) " << typeid(T).name() << " !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff3: " << RelDiff3 << " AbsDiff2: " << AbsDiff3;
+                cerr << "Bug JS (3) " << typeid(T).name() << " !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << " Diff: " << (val1 - val2) << " RelDiff3: " << RelDiff3 << " AbsDiff2: " << AbsDiff3 << endl;
                 bug = true;
             }
 
@@ -542,17 +520,13 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
                                 " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-    delete [] pPrecompVect1;
-    delete [] pPrecompVect2;
-
     return true;
 }
 
 bool TestSpearmanFootruleAgree(size_t N, size_t dim, size_t Rep) {
-    int* pVect1 = new int[dim];
-    int* pVect2 = new int[dim];
+    vector<PivotIdType> vect1(dim), vect2(dim);
+    PivotIdType* pVect1 = &vect1[0]; 
+    PivotIdType* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -566,7 +540,7 @@ bool TestSpearmanFootruleAgree(size_t N, size_t dim, size_t Rep) {
 
 
             if (val0 != val1) {
-                cerr << "Bug SpearmanFootrule  !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 ;
+                cerr << "Bug SpearmanFootrule  !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1  << endl;
                 bug = true;
             }
 
@@ -575,15 +549,13 @@ bool TestSpearmanFootruleAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 bool TestSpearmanRhoAgree(size_t N, size_t dim, size_t Rep) {
-    int* pVect1 = new int[dim];
-    int* pVect2 = new int[dim];
+    vector<PivotIdType> vect1(dim), vect2(dim);
+    PivotIdType* pVect1 = &vect1[0]; 
+    PivotIdType* pVect2 = &vect2[0];
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -597,7 +569,7 @@ bool TestSpearmanRhoAgree(size_t N, size_t dim, size_t Rep) {
 
 
             if (val0 != val1) {
-                cerr << "Bug SpearmanRho !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1);
+                cerr << "Bug SpearmanRho !!! Dim = " << dim << " val0 = " << val0 << " val1 = " << val1 << " Diff: " << (val0 - val1) << endl;
                 bug = true;
             }
 
@@ -606,16 +578,14 @@ bool TestSpearmanRhoAgree(size_t N, size_t dim, size_t Rep) {
     }
 
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 template <class T>
 bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
-    T* pVect1 = new T[dim];
-    T* pVect2 = new T[dim];
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
 
     T  TotalQty = 0, Error = 0, Dist = 0;
 
@@ -653,7 +623,7 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
                 " Diff: " << (val1 - val0) << 
                 " RelDiff1: " << RelDiff1 << 
                 " (max for this power: " << maxRelDiff << ")  " <<
-                " AbsDiff1: " << AbsDiff1 << " (max for this power: " << maxAbsDiff << ")";
+                " AbsDiff1: " << AbsDiff1 << " (max for this power: " << maxAbsDiff << ")" << endl;
             }
 
             if (bug) return false;
@@ -665,15 +635,13 @@ bool TestLPGenericAgree(size_t N, size_t dim, size_t Rep, T power) {
 
     }
 
-    delete [] pVect1;
-    delete [] pVect2;
-
     return true;
 }
 
 bool TestBitHammingAgree(size_t N, size_t dim, size_t Rep) {
     size_t WordQty = (dim + 31)/32; 
-    uint32_t* pArr = new uint32_t[N * WordQty];
+    vector<uint32_t> arr(N * WordQty);
+    uint32_t*        pArr = &arr[0];
 
     uint32_t *p = pArr;
     for (size_t i = 0; i < N; ++i, p+= WordQty) {
@@ -705,13 +673,11 @@ bool TestBitHammingAgree(size_t N, size_t dim, size_t Rep) {
           }
         }
         if (d1 != d2) {
-          cerr << "Bug bit hamming, WordQty = " << WordQty << " d1 = " << d1 << " d2 = " << d2;
+          cerr << "Bug bit hamming, WordQty = " << WordQty << " d1 = " << d1 << " d2 = " << d2 << endl;
           res = false;
           break;
         }
     }
-
-    delete [] pArr;
 
     return res;
 }
@@ -751,7 +717,7 @@ bool TestSparseAngularDistanceAgree(const string& dataFile, size_t N, size_t Rep
                 " val1 = " << val1 << " val2 = " << val2 <<
                 " Diff: " << (val1 - val2) <<
                 " RelDiff1: " << RelDiff1 <<
-                " AbsDiff1: " << AbsDiff1;
+                " AbsDiff1: " << AbsDiff1 << endl;
             bug = true;
         }
 
@@ -797,7 +763,7 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
             " val1 = " << val1 << " val2 = " << val2 << 
             " Diff: " << (val1 - val2) << 
             " RelDiff1: " << RelDiff1 << 
-            " AbsDiff1: " << AbsDiff1;
+            " AbsDiff1: " << AbsDiff1 << endl;
             bug = true;
         }
 
@@ -807,8 +773,11 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
     return true;
 }
 
-//TEST(DISABLE_TestAgree) {
+#ifdef DISABLE_LONG_TESTS
+TEST(DISABLE_TestAgree) {
+#else
 TEST(TestAgree) {
+#endif
     int nTest  = 0;
     int nFail = 0;
 
@@ -854,6 +823,11 @@ TEST(TestAgree) {
             TestLPGenericAgree(1024, dim, 10, power);
           }
         }
+
+        nTest++;
+        nFail += !TestScalarProductAgree<float>(1024, dim, 10);
+        nTest++;
+        nFail += !TestScalarProductAgree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestSpearmanFootruleAgree(1024, dim, 10);

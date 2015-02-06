@@ -38,7 +38,7 @@ using std::vector;
 
 /*
  *
- * This helper base class is different from the SpaceSparseVector class 
+ * This helper base class is different from the SpaceSparseVectorSimpleStorage class
  * in that it stores sparse vectors in a special format (divided into blocks).
  *
  * This makes it possible to quickly compute distances, 
@@ -52,15 +52,16 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
  public:
   typedef SparseVectElem<dist_t> ElemType;
 
-
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                 size_t nElem) const;
   /*
-   * Need to override the function from the base class
+   * Overriding the function from the base class
    */
   virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
     CHECK(obj2->datalength() > 0);
 
-    return ScalarProjectFast(obj1->data(), obj1->datalength(),
+    return ScalarProductFast(obj1->data(), obj1->datalength(),
                              obj2->data(), obj2->datalength());
   }
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
@@ -84,7 +85,31 @@ inline  size_t removeBlockZeros(size_t id) {
 
 /* 
  * A conversion that reverts removeBlockZeros
- * It works only for the numbers where id % 65536 == 0
+ * It works only for the numbers where id % 65536 != 0,
+ * which makes sense as removeBlockZeros can't produce a multiple of 65536.
+ *
+ *
+ * One may doubt if this reverse conversion actually works (we 
+ * do have a unit test to verify this). However, it's not 
+ * hard to see why the conversion is correct using basic
+ * modulo and integer division arithmetic (see below).
+ *
+ * Note 1:
+ * One way to represent id produced by removeBlockZeros(origId):
+ * id = (origId / 65535) * 65536 + term_smaller_than_65536
+ * Therefore: origId / 65536 is equal to  id / 65536
+ * This deletion clearly "removes" the term smaller than 65536.
+ * 
+ * Note 2:
+ * Another way to represent id obtained as removeBlockZeros(origId):
+ * id = a_multiple_of_65536 + (origId % 65535) + 1
+ * Note that the sum of second and the third terms is smaller than 65536.
+ * Therefore id % 65536 = (origId % 65535) + 1
+ *
+ * Combining Note 1 & 2, we obtain that:
+ * addBlockZeros(id) = (origId / 65535) + origId % 65535 = origId
+ * 
+ * Q.E.D.
  */
 inline size_t addBlockZeros(size_t id) {
   return (id / 65536) * 65535 + (id % 65536) - 1;

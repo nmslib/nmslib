@@ -43,6 +43,7 @@
 #include "factory/method/small_world_rand.h"
 #include "factory/method/spatial_approx_tree.h"
 #include "factory/method/vptree.h"
+#include "factory/method/omedrank.h"
 
 namespace similarity {
 
@@ -122,6 +123,11 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
+
+  // Rank aggregation approach (omedrank) by Fagin et al
+  REGISTER_METHOD_CREATOR(float,  METH_OMEDRANK, CreateOMedRank)
+  REGISTER_METHOD_CREATOR(double, METH_OMEDRANK, CreateOMedRank)
+  REGISTER_METHOD_CREATOR(int,    METH_OMEDRANK, CreateOMedRank)
 
   // VP-tree built over projections
   REGISTER_METHOD_CREATOR(float,  METH_PROJ_VPTREE, CreateProjVPTree)

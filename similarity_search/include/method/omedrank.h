@@ -1,0 +1,126 @@
+/**
+ * Non-metric Space Library
+ *
+ * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+ *
+ * For the complete list of contributors and further details see:
+ * https://github.com/searchivarius/NonMetricSpaceLib 
+ * 
+ * Copyright (c) 2014
+ *
+ * Patent ALERT: even though the code is released under the liberal Apache 2 license,
+ * the underlying search method is patented. Therefore, it's free to use in research,
+ * but may be problematic in a production setting.
+ *
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
+#ifndef _OMEDRANK_METHOD_H_
+#define _OMEDRANK_METHOD_H_
+
+#include <string>
+#include <vector>
+#include <sstream>
+#include <memory>
+
+#include "index.h"
+#include "projection.h"
+
+#define METH_OMEDRANK             "omedrank"
+
+namespace similarity {
+
+using std::string;
+using std::vector;
+
+/*
+ * This is an implementation of Fagin's OMEDRANK method for arbitrary spaces.
+ * The main difference is that we allow the user to select several types of
+ * projections, while the original Fagin's OMEDRANK relies only on the random
+ * projections.
+ *
+ * Patent: 
+ *    Efficient similarity search and classification via rank aggregation
+ *    United States Patent Application 20040249831
+ *
+ * Paper: 
+ *    Fagin, Ronald, Ravi Kumar, and Dandapani Sivakumar. 
+ *    "Efficient similarity search and classification via rank aggregation." 
+ *    Proceedings of the 2003 ACM SIGMOD international conference on Management of data. ACM, 2003.
+ *
+ * In this implementation, we introduce several modifications:
+ * 1) Book-keeping (i.e., counting the number of occurrences) relies on a well-known ScanCount algorithm.
+ * 2) The inverted file is split into small parts. In doing so, we aim to
+ *    achieve better caching properties of the counter array used in ScanCount.
+ *    
+ *  For an example of using ScanCount see, e.g.:
+ *
+ *        Li, Chen, Jiaheng Lu, and Yiming Lu. 
+ *       "Efficient merging and filtering algorithms for approximate string searches." 
+ *        In Data Engineering, 2008. ICDE 2008. 
+ *        IEEE 24th International Conference on, pp. 257-266. IEEE, 2008.
+ */
+
+template <typename dist_t>
+class OMedRank : public Index<dist_t> {
+ public:
+  OMedRank(const Space<dist_t>* space,
+           const ObjectVector& data,
+           AnyParamManager &pmgr);
+  virtual ~OMedRank(){};
+
+  const std::string ToString() const { return "omedrank" ; }
+  void Search(RangeQuery<dist_t>* query);
+  void Search(KNNQuery<dist_t>* query);
+
+  virtual vector<string> GetQueryTimeParamNames() const;
+
+ private:
+  void IndexChunk(size_t chunkId);
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+
+  const ObjectVector&     data_;
+  const Space<dist_t>*    space_;
+  size_t                  num_pivot_;
+  size_t                  chunk_index_size_;
+  size_t                  index_qty_;
+  float					          db_scan_frac_;
+  float                   min_freq_;
+  size_t                  db_scan_;
+  bool                    skip_check_;
+  string                  proj_type_;
+  size_t                  proj_dim_; // used only for sparse vector spaces
+  std::unique_ptr<Projection<dist_t>>  projection_;
+
+  struct ObjectInvEntry {
+    IdType    id_;
+    float     pivot_dist_;
+    ObjectInvEntry(IdType id, dist_t pivot_dist) : id_(id), pivot_dist_(pivot_dist) {} 
+    bool operator<(const ObjectInvEntry& o) const { 
+      if (pivot_dist_ != o.pivot_dist_) return pivot_dist_ < o.pivot_dist_; 
+      return id_ < o.id_;
+    };
+  };
+
+  typedef vector<ObjectInvEntry> PostingList;
+
+  vector<shared_ptr<vector<PostingList>>> posting_lists_;
+  
+  // Heuristics: try to read db_scan_fraction/index_qty entries from each index part
+  void ComputeDbScan(float db_scan_fraction, size_t index_qty) {
+    CHECK(index_qty != 0);
+    db_scan_ = max(size_t(1), static_cast<size_t>(db_scan_fraction * data_.size()/index_qty));
+    //LOG(LIB_INFO) << "Scan at most: " << db_scan_ << " items in each of the " << index_qty << " index shard";
+  }
+
+  template <typename QueryType> void GenSearch(QueryType* query);
+
+  // disable copy and assign
+  DISABLE_COPY_AND_ASSIGN(OMedRank);
+};
+
+}   // namespace similarity
+
+#endif     // _OMEDRANK_METHOD_H_

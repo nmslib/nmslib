@@ -87,4 +87,4 @@ class DummyMethod : public Index<dist_t> {
 
 }   // namespace similarity
 
-#endif     // _DUMMY_SPACE_H_
+#endif     // _DUMMY_METHOD_H_

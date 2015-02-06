@@ -34,7 +34,7 @@ SpaceSparseCosineSimilarityFast::HiddenDistance(const Object* obj1, const Object
   CHECK(obj1->datalength() > 0);
   CHECK(obj2->datalength() > 0);
 
-  float val = 1 - ScalarProjectFast(obj1->data(), obj1->datalength(),
+  float val = 1 - ScalarProductFast(obj1->data(), obj1->datalength(),
                                     obj2->data(), obj2->datalength());
 
   return max(val, float(0));
@@ -45,7 +45,7 @@ SpaceSparseAngularDistanceFast::HiddenDistance(const Object* obj1, const Object*
   CHECK(obj1->datalength() > 0);
   CHECK(obj2->datalength() > 0);
 
-  return acos(ScalarProjectFast(obj1->data(), obj1->datalength(),
+  return acos(ScalarProductFast(obj1->data(), obj1->datalength(),
                                 obj2->data(), obj2->datalength()));
 }
 

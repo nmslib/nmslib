@@ -15,21 +15,29 @@ file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/test*.cc)
 list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/bunit.cc)
 list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/test_integr.cc)
 list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/bench_distfunc.cc)
+list(REMOVE_ITEM TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/bench_projection.cc)
 
 add_executable (bunit bunit.cc ${TEST_SRC_FILES})
 add_executable (bench_distfunc bench_distfunc.cc)
 add_executable (test_integr test_integr.cc)
-
 add_dependencies (test_integr NonMetricSpaceLib)
 add_dependencies (bunit NonMetricSpaceLib)
 add_dependencies (bench_distfunc NonMetricSpaceLib)
+add_dependencies (test_integr NonMetricSpaceLib)
+add_dependencies (bunit NonMetricSpaceLib)
 
 if (NOT WIN32)
+  add_executable (bench_projection bench_projection.cc)
+
   add_dependencies (bunit lshkit)
   add_dependencies (bench_distfunc lshkit)
+  add_dependencies (bench_projection NonMetricSpaceLib)
+
   set(LSHKIT_LIB "lshkit")
   set(GSL_LIB    ${GSL_LIBRARIES})
   set(BOOST_LIB  ${Boost_LIBRARIES})
+
+  target_link_libraries (bench_projection NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
 else()
 # NO lshkit for Win32
   set(LSHKIT_LIB "")

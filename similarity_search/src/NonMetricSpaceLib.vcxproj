@@ -177,6 +177,7 @@
     <ClInclude Include="..\include\eval_results.h" />
     <ClInclude Include="..\include\experimentconf.h" />
     <ClInclude Include="..\include\experiments.h" />
+    <ClInclude Include="..\include\factory\method\omedrank.h" />
     <ClInclude Include="..\include\factory\space\space_savch.h" />
     <ClInclude Include="..\include\global.h" />
     <ClInclude Include="..\include\incremental_quick_select.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="..\include\memory.h" />
     <ClInclude Include="..\include\meta_analysis.h" />
     <ClInclude Include="..\include\methodfactory.h" />
+    <ClInclude Include="..\include\method\omedrank.h" />
     <ClInclude Include="..\include\object.h" />
     <ClInclude Include="..\include\params.h" />
     <ClInclude Include="..\include\permutation_type.h" />
@@ -253,6 +255,7 @@
     <ClCompile Include="knnquery.cc" />
     <ClCompile Include="logging.cc" />
     <ClCompile Include="memory.cc" />
+    <ClCompile Include="method\omedrank.cc" />
     <ClCompile Include="query.cc" />
     <ClCompile Include="rangequery.cc" />
     <ClCompile Include="searchoracle.cc" />

@@ -36,7 +36,7 @@
 namespace similarity {
 
 template <typename dist_t>
-class SpaceSparseAngularDistance : public SpaceSparseVector<dist_t> {
+class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t> {
  public:
   explicit SpaceSparseAngularDistance() {}
   virtual ~SpaceSparseAngularDistance() {}
@@ -47,7 +47,8 @@ class SpaceSparseAngularDistance : public SpaceSparseVector<dist_t> {
 
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
-    return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjAngular_);
+    return SpaceSparseVectorSimpleStorage<dist_t>::
+                        ComputeDistanceHelper(obj1, obj2, distObjAngular_);
   }
  private:
   struct SpaceAngularDist {
@@ -62,7 +63,7 @@ class SpaceSparseAngularDistance : public SpaceSparseVector<dist_t> {
 };
 
 template <typename dist_t>
-class SpaceSparseCosineSimilarity : public SpaceSparseVector<dist_t> {
+class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t> {
  public:
   explicit SpaceSparseCosineSimilarity() {}
   virtual ~SpaceSparseCosineSimilarity() {}
@@ -73,7 +74,8 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVector<dist_t> {
 
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
-    return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObjCosineSimilarity_);
+    return SpaceSparseVectorSimpleStorage<dist_t>::
+                  ComputeDistanceHelper(obj1, obj2, distObjCosineSimilarity_);
   }
  private:
   struct SpaceCosineSimilarityDist {

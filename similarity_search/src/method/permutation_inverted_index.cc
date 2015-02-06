@@ -87,8 +87,8 @@ template <typename QueryType>
 void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
   Permutation perm_q;
   GetPermutation(pivot_, query, &perm_q);
-  vector<vector<ObjectInvEntry>::iterator>  iterBegs;
-  vector<vector<ObjectInvEntry>::iterator>  iterEnds;
+  vector<typename vector<typename PermutationInvertedIndex<dist_t>::ObjectInvEntry>::iterator>  iterBegs;
+  vector<typename vector<typename PermutationInvertedIndex<dist_t>::ObjectInvEntry>::iterator>  iterEnds;
 
   size_t maxScanQty = 0;
 

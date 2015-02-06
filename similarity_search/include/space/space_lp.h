@@ -76,13 +76,12 @@ private:
 };
 
 template <typename dist_t>
-class SpaceLp : public VectorSpace<dist_t> {
+class SpaceLp : public VectorSpaceSimpleStorage<dist_t> {
  public:
   explicit SpaceLp(dist_t p) : distObj_(p) {}
   virtual ~SpaceLp() {}
 
   virtual std::string ToString() const;
-
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
  private:

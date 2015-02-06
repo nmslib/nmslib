@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef _SPACE_BIT_HAMMING_H_
-#define _SPACE_BIT_HAMMING_H_
+#ifndef _SPACE_STRING_H_
+#define _SPACE_STRING_H_
 
 #include <string>
 #include <map>
@@ -26,30 +26,41 @@
 #include "object.h"
 #include "utils.h"
 #include "space.h"
-#include "distcomp.h"
-
-#define SPACE_BIT_HAMMING "bit_hamming"
 
 namespace similarity {
 
-class SpaceBitHamming : public Space<int> {
+using std::string;
+
+/*
+ * TODO: @leo/@bileg Currently we support only char, but need to support char32_t and UTF-8 as well. 
+ */
+template <typename dist_t>
+class StringSpace : public Space<dist_t> {
  public:
-  virtual ~SpaceBitHamming() {}
+  virtual ~StringSpace() {}
 
   virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<int>* config,
+                      const ExperimentConfig<dist_t>* config,
                       const char* inputfile,
                       const int MaxNumObjects) const;
-  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const;
-  virtual std::string ToString() const { return "Hamming (bit-storage) space"; }
-  virtual void CreateVectFromObj(const Object* obj, int* pVect,
+  virtual void WriteDataset(const ObjectVector& dataset,
+                            const char* outputfile) const;
+  Object* CreateObjFromStr(IdType id, LabelType label, const string& s) const {
+    return CreateObjFromStr(id, label, s.data(), s.size()); 
+  }
+  virtual Object* CreateObjFromStr(IdType id, LabelType label, const char *pStr, size_t len) const {
+    return new Object(id, label, len * sizeof(char), pStr);
+  }
+
+  virtual string ToString() const = 0;
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const {
     throw runtime_error("Cannot create vector for the space: " + ToString());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
-  virtual int HiddenDistance(const Object* obj1, const Object* obj2) const;
-  void ReadVec(std::string line, LabelType& label, std::vector<uint32_t>& v) const;
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
+  void ReadStr(std::string line, LabelType& label, std::string& str) const;
 };
 
 }  // namespace similarity

@@ -14,6 +14,7 @@
  *
  */
 
+
 #ifndef _BUNIT_H_
 #define _BUNIT_H_
 
@@ -26,6 +27,9 @@
 #include <tuple>
 #include <cmath>
 #include <exception>
+
+// Uncomment this to disable tests taking long time
+//#define DISABLE_LONG_TESTS
 
 namespace similarity {
 

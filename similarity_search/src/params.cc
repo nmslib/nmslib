@@ -40,6 +40,39 @@ static void Usage(const char *prog,
               << desc << std::endl;
 }
 
+void ParseSpaceArg(const string& descStr, string& SpaceType, vector<string>& SpaceDesc) {
+  vector<string> tmp;
+  if (!SplitStr(descStr, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
+    throw runtime_error("Wrong format of the space argument: '" + descStr + "'");
+  }
+
+  SpaceType = tmp[0];
+  SpaceDesc.clear();
+
+  if (tmp.size() == 2) {
+    if (!SplitStr(tmp[1], SpaceDesc, ',')) {
+      throw runtime_error("Cannot split space arguments in: '" + tmp[1] + "'");
+    }
+  }
+}
+
+void ParseMethodArg(const string& descStr, string& MethName, vector<string>& MethodDesc) {
+
+  vector<string> tmp;
+  if (!SplitStr(descStr, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
+    throw runtime_error("Wrong format of the method argument: '" + descStr + "'");
+  }
+
+  MethName = tmp[0];
+
+  MethodDesc.clear();
+  if (tmp.size() == 2) {
+    if (!SplitStr(tmp[1], MethodDesc, ',')) {
+      throw runtime_error("Cannot split method arguments in: '" + tmp[1] + "'");
+    }
+  }
+}
+
 void ParseCommandLine(int argc, char*argv[],
                       string&                 LogFile,
                       string&                 DistType,
@@ -127,61 +160,44 @@ void ParseCommandLine(int argc, char*argv[],
   ToLower(DistType);
   ToLower(SpaceType);
   
-  {
-    vector<string> tmp;
-    if (!SplitStr(SpaceType, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
-      Usage(argv[0], ProgOptDesc);
-      LOG(LIB_FATAL) << "Wrong format of the space argument: '" << SpaceType;
+  try {
+    {
+      vector<string> SpaceDesc;
+      string str = SpaceType;
+      ParseSpaceArg(str, SpaceType, SpaceDesc);
+      SpaceParams = shared_ptr<AnyParams>(new AnyParams(SpaceDesc));
     }
-    SpaceType = tmp[0];
 
-    vector<string> SpaceDesc;
-    if (tmp.size() == 2) {
-      if (!SplitStr(tmp[1], SpaceDesc, ',')) {
-        LOG(LIB_FATAL) << "Cannot split space arguments in: " << tmp[1];
-      }
+    for(const auto s: methParams) {
+      string         MethName;
+      vector<string> MethodDesc;
+      ParseMethodArg(s, MethName, MethodDesc);
+      pars.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(MethName, MethodDesc)));
     }
-    SpaceParams = shared_ptr<AnyParams>(new AnyParams(SpaceDesc));
-  }
-
-  for(const auto s: methParams) {
-    vector<string> tmp;
-    if (!SplitStr(s, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
-      Usage(argv[0], ProgOptDesc);
-      LOG(LIB_FATAL) << "Wrong format of the method argument: '" << s;
-    }
-    string         MethName = tmp[0];
-
-    vector<string> MethodDesc;
-    if (tmp.size() == 2) {
-      if (!SplitStr(tmp[1], MethodDesc, ',')) {
-        LOG(LIB_FATAL) << "Cannot split method arguments in: " << tmp[1];
+    if (vm.count("knn")) {
+      if (!SplitStr(knnArg, knn, ',')) {
+        Usage(argv[0], ProgOptDesc);
+        LOG(LIB_FATAL) << "Wrong format of the KNN argument: '" << knnArg;
       }
     }
 
-    pars.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(MethName, MethodDesc)));
-  }
-  if (vm.count("knn")) {
-    if (!SplitStr(knnArg, knn, ',')) {
-      Usage(argv[0], ProgOptDesc);
-      LOG(LIB_FATAL) << "Wrong format of the KNN argument: '" << knnArg;
+    if (DataFile.empty()) {
+      LOG(LIB_FATAL) << "data file is not specified!";
     }
-  }
 
-  if (DataFile.empty()) {
-    LOG(LIB_FATAL) << "data file is not specified!";
-  }
+    if (!IsFileExists(DataFile)) {
+      LOG(LIB_FATAL) << "data file " << DataFile << " doesn't exist";
+    }
 
-  if (!IsFileExists(DataFile)) {
-    LOG(LIB_FATAL) << "data file " << DataFile << " doesn't exist";
-  }
+    if (!QueryFile.empty() && !IsFileExists(QueryFile)) {
+      LOG(LIB_FATAL) << "query file " << QueryFile << " doesn't exist";
+    }
 
-  if (!QueryFile.empty() && !IsFileExists(QueryFile)) {
-    LOG(LIB_FATAL) << "query file " << QueryFile << " doesn't exist";
-  }
-
-  if (!MaxNumQuery && QueryFile.empty()) {
-    LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
+    if (!MaxNumQuery && QueryFile.empty()) {
+      LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
+    }
+  } catch (const exception& e) {
+    LOG(LIB_FATAL) << "Exception: " << e.what();
   }
 }
 

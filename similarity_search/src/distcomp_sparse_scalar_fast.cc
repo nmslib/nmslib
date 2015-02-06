@@ -81,7 +81,7 @@ const static __m128i shuffle_mask16[16] = {
  *    version of the _mm_cmpistrm.
  *
  */
-float ScalarProjectFast(const char* pData1, size_t len1,
+float ScalarProductFast(const char* pData1, size_t len1,
                         const char* pData2, size_t len2) {
   float           norm1 = 0, norm2 = 0;
   size_t          blockQty1 = 0, blockQty2 = 0;

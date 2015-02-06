@@ -37,7 +37,7 @@
 namespace similarity {
 
 template <typename dist_t>
-class SpaceCosineSimilarity : public VectorSpace<dist_t> {
+class SpaceCosineSimilarity : public VectorSpaceSimpleStorage<dist_t> {
 public:
   virtual std::string ToString() const {
     return "CosineSimilarity";
@@ -47,11 +47,20 @@ protected:
 };
 
 template <typename dist_t>
-class SpaceAngularDistance : public VectorSpace<dist_t> {
+class SpaceAngularDistance : public VectorSpaceSimpleStorage<dist_t> {
 public:
   virtual std::string ToString() const {
     return "AngularDistance";
   }
+  virtual size_t GetElemQty(const Object* object) const {
+    return object->datalength()/ sizeof(dist_t);
+  }
+  virtual void createVectFromObj(const Object* obj, dist_t* pDstVect,
+                                 size_t nElem) const {
+    return VectorSpace<dist_t>::
+                CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
+  }
+
 protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
 };
