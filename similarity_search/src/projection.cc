@@ -110,14 +110,14 @@ private:
       throw runtime_error(err.str());
     }
     size_t nDim = space->GetElemQty(data[0]);
-    if (nDim > 0) projDim_ = nDim;
-    else {
-      if (projDim_) {
+    if (nDim == 0) {
+      if (!projDim_) {
         throw runtime_error("Specify a non-zero value for the projective dimensionaity.");
       }
+      nDim = projDim_;
     }
 
-    initRandProj(projDim_, dstDim_, bDoOrth, _projMatr);
+    initRandProj(nDim, dstDim_, bDoOrth, _projMatr);
   }
 
   vector<vector<dist_t>>    _projMatr;

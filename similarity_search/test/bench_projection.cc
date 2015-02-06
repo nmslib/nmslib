@@ -18,6 +18,8 @@
 
 #include <boost/program_options.hpp>
 
+#include "knnquery.h"
+#include "knnqueue.h"
 #include "space.h"
 #include "params.h"
 #include "projection.h"
@@ -38,11 +40,11 @@ static void Usage(const char *prog,
 template <class dist_t>
 void benchProjection(string spaceType,
                      string inFile, string outFile,
-                     string projType, string projSpaceType,
+                     string projType, unsigned knn, string projSpaceType,
                      unsigned nIntermDim,
                      unsigned nDstDim,
                      unsigned maxNumData,
-                     unsigned sampleQty) {
+                     unsigned sampleRandPairQty, unsigned sampleKNNQueryQty, unsigned sampleKNNTotalQty) {
   ToLower(spaceType);
   vector<string> spaceDesc;
 
@@ -84,9 +86,11 @@ void benchProjection(string spaceType,
   }
 
   ObjectVector data;
+  LOG(LIB_INFO) << "maxNumData=" << maxNumData;
   space->ReadDataset(data, NULL, inFile.c_str(), maxNumData);
 
   size_t N = data.size();
+
 
   unique_ptr<Projection<dist_t> > projObj(
       Projection<dist_t>::createProjection(
@@ -99,23 +103,80 @@ void benchProjection(string spaceType,
   ofstream out(outFile);
 
   if (N > 0) {
-    vector<float> v1(nDstDim), v2(nDstDim);
+    vector<float>   v1(nDstDim), v2(nDstDim);
 
-    for (size_t i = 0; i < sampleQty; ++i) {
+    vector<IdType>  vId1, vId2;
+    vector<dist_t>  vOrigDist;
+
+    for (size_t i = 0; i < sampleRandPairQty; ++i) {
       IdType id1 = RandomInt() % N;
       IdType id2 = RandomInt() % N;
+      vId1.push_back(id1);
+      vId2.push_back(id2);
+      vOrigDist.push_back(space->IndexTimeDistance(data[id1], data[id2]));
+    }
 
-      dist_t origDist = space->IndexTimeDistance(data[id1], data[id2]);
+    CHECK(vId1.size() == vId2.size());
+    CHECK(vId1.size() == vOrigDist.size());
+  
 
-      projObj->compProj(NULL, data[id1], &v1[0]);
-      projObj->compProj(NULL, data[id2], &v2[0]);
+    size_t iter = 0;
+    size_t startId = vOrigDist.size();
+
+    LOG(LIB_INFO) << "sampleRandPairQty=" << sampleRandPairQty;
+    LOG(LIB_INFO) << "sampleKNNQueryQty=" << sampleKNNQueryQty;
+    LOG(LIB_INFO) << "sampleKNNTotalQty=" << sampleKNNTotalQty;
+
+    for (size_t i = 0; i < sampleKNNQueryQty; ++i) {
+      IdType id1 = RandomInt() % N;
+
+      KNNQuery<dist_t> query(space.get(), data[id1], knn);
+
+      // Brute force search
+      for (size_t i = 0; i < N; ++i) {
+        query.CheckAndAddToResult(data[i]);
+      }
+
+      unique_ptr<KNNQueue<dist_t>> knnQ(query.Result()->Clone());
+
+      // Extracting results
+      while (!knnQ->Empty()) {
+        // Reservoir sampling
+        int selectIndex = -1;
+        ++iter;
+        if (iter > sampleKNNTotalQty) {
+          selectIndex = RandomInt() % iter; // from 0 to iter
+        } else {
+          vOrigDist.push_back(-1);
+          vId1.push_back(-1);
+          vId2.push_back(-1);
+          selectIndex = vOrigDist.size() - 1 - startId;
+        }
+
+        if (selectIndex >= 0 && selectIndex < vOrigDist.size() - startId) {
+          size_t replIndex = selectIndex + startId;
+          vOrigDist[replIndex] = knnQ->TopDistance(); 
+          vId1[replIndex] = id1;
+          vId2[replIndex] = knnQ->TopObject()->id();
+        }
+
+        knnQ->Pop(); 
+      }
+    }
+
+    for (size_t i = 0; i < vOrigDist.size(); ++i) {
+      projObj->compProj(NULL, data[vId1[i]], &v1[0]);
+      projObj->compProj(NULL, data[vId2[i]], &v2[0]);
+
+      CHECK(vId1[i] >= 0);
+      CHECK(vId2[i] >= 0);
 
       unique_ptr<Object> obj1(ps->CreateObjFromVect(-1, -1, v1));
       unique_ptr<Object> obj2(ps->CreateObjFromVect(-1, -1, v2));
 
       float projDist = ps->IndexTimeDistance(obj1.get(), obj2.get());
 
-      out << origDist << "\t" << projDist << endl;
+      out << vOrigDist[i] << "\t" << projDist << endl;
     }
   }
 }
@@ -125,10 +186,13 @@ int main(int argc, char *argv[]) {
   string      inFile, outFile;
   string      projType;
   string      logFile;
-  unsigned    maxNumData;
-  unsigned    sampleQty;
+  unsigned    maxNumData = 0;
+  unsigned    sampleRandPairQty = 0;
+  unsigned    sampleKNNQueryQty = 0;
+  unsigned    sampleKNNTotalQty = 0;
   unsigned    nIntermDim = 0;
   unsigned    nDstDim;
+  unsigned    knn = 0;
 
 
   po::options_description ProgOptDesc("Allowed options");
@@ -147,8 +211,14 @@ int main(int argc, char *argv[]) {
                         "output data file")
     ("projType,p",      po::value<string>(&projType)->required(),
                         "projection type")
-    ("sampleQty,q",     po::value<unsigned>(&sampleQty)->required(),
-                        "number of samples")
+    ("sampleRandPairQty",po::value<unsigned>(&sampleRandPairQty)->default_value(0),
+                        "number of randomly selected pairs")
+    ("sampleKNNQueryQty",po::value<unsigned>(&sampleKNNQueryQty)->default_value(0),
+                        "number of randomly selected queries")
+    ("sampleKNNTotalQty",po::value<unsigned>(&sampleKNNTotalQty)->default_value(0),
+                        "a total number of randomly selected queries' nearest neighbors (should be >= sampleKNNQueryQty)")
+    ("knn,k",           po::value<unsigned>(&knn)->default_value(0),
+                        "use this number of nearest neighbors (should be > 0 if sampleKNNQueryQty > 0)")
     ("intermDim",       po::value<unsigned>(&nIntermDim)->default_value(0),
                         "intermediate dimensionality, used only for sparse vector spaces")
     ("projDim",          po::value<unsigned>(&nDstDim)->required(),
@@ -183,18 +253,24 @@ int main(int argc, char *argv[]) {
 
 
   try {
+    if (sampleKNNQueryQty) {
+      if (!knn) LOG(LIB_FATAL) << "Please, specify knn > 0";
+      if (sampleKNNTotalQty < sampleKNNQueryQty) {
+        LOG(LIB_FATAL) << "sampleKNNTotalQty should be at least as large as sampleKNNQueryQty";
+      }
+    }
     if (distType == "float") {
       benchProjection<float>(spaceType, inFile, outFile,
-                             projType, projSpaceType,
+                             projType, knn, projSpaceType,
                              nIntermDim, nDstDim,
                              maxNumData,
-                             sampleQty);
+                             sampleRandPairQty, sampleKNNQueryQty, sampleKNNTotalQty);
     } else if (distType == "double") {
       benchProjection<float>(spaceType, inFile, outFile,
-                             projType, projSpaceType,
+                             projType, knn, projSpaceType,
                              nIntermDim, nDstDim,
                              maxNumData,
-                             sampleQty);
+                             sampleRandPairQty, sampleKNNQueryQty, sampleKNNTotalQty);
     } else {
       LOG(LIB_FATAL) << "Unsupported distance type: '" << distType << "'";
     }
