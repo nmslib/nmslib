@@ -98,6 +98,15 @@ class SpaceSqfd : public Space<dist_t> {
       const ExperimentConfig<dist_t>* config,
       const char* inputfile,
       const int MaxNumObjects) const;
+  /*
+   * CreateVectFromObj and GetElemQty() are only needed, if
+   * one wants to use methods with random projections.
+   */
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                   size_t nElem) const {
+    throw runtime_error("Cannot create vector for the space: " + ToString());
+  }
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
   dist_t HiddenDistance(
       const Object* obj1,

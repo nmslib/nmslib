@@ -187,7 +187,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
     LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
 
-    ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
+    //ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
     vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
 
