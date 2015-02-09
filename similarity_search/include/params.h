@@ -24,6 +24,7 @@
 #include <memory>
 #include <sstream>
 #include <algorithm>
+#include <stdexcept>
 
 #include "logging.h"
 #include "utils.h"
