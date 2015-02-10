@@ -38,12 +38,11 @@
 #include "experimentconf.h"
 #include "space.h"
 #include "index.h"
-#include "rangequery.h"
-#include "knnquery.h"
 #include "logging.h"
 #include "methodfactory.h"
 #include "eval_results.h"
 #include "meta_analysis.h"
+#include "query_creator.h"
 
 namespace similarity {
 
@@ -62,38 +61,6 @@ class Experiments {
 public:
   typedef Index<dist_t> IndexType;
 
-  class RangeCreator {
-  public:
-    RangeCreator(dist_t radius) : radius_(radius){}
-    RangeQuery<dist_t>* operator()(const Space<dist_t>* space,
-                                   const Object* query_object) const {
-      return new RangeQuery<dist_t>(space, query_object, radius_);
-    }
-    std::string ParamsForPrint() const {
-      std::stringstream str;
-      str << "Radius = " << radius_;
-      return str.str();
-    }
-    dist_t radius_;
-  };
-
-  class KNNCreator {
-  public:
-    KNNCreator(size_t K, float eps) : K_(K), eps_(eps) {}
-    KNNQuery<dist_t>* operator()(const Space<dist_t>* space,
-                                 const Object* query_object) const {
-      return new KNNQuery<dist_t>(space, query_object, K_, eps_);
-    }
-
-    std::string ParamsForPrint() const {
-      std::stringstream str;
-      str << "K = " << K_ << " Epsilon = " << eps_;
-      return str.str();
-    }
-    dist_t K_;
-    float  eps_;
-  };
-
   static void RunAll(bool LogInfo, 
                      unsigned ThreadTestQty, 
                      size_t TestSetId, 
@@ -110,8 +77,8 @@ public:
     if (!config.GetRange().empty()) {
       for (size_t i = 0; i < config.GetRange().size(); ++i) {
         const dist_t radius = config.GetRange()[i];
-        RangeCreator  cr(radius);
-        Execute<RangeQuery<dist_t>, RangeCreator>(LogInfo, ThreadTestQty, TestSetId, 
+        RangeCreator<dist_t>  cr(radius);
+        Execute<RangeQuery<dist_t>, RangeCreator<dist_t>>(LogInfo, ThreadTestQty, TestSetId,
                                                   ExpResRange[i], config, cr, 
                                                   IndexPtrs, MethodsDesc);
       }
@@ -120,8 +87,8 @@ public:
     if (!config.GetKNN().empty()) {
       for (size_t i = 0; i < config.GetKNN().size(); ++i) {
         const size_t K = config.GetKNN()[i];
-        KNNCreator  cr(K, config.GetEPS());
-        Execute<KNNQuery<dist_t>, KNNCreator>(LogInfo, ThreadTestQty, TestSetId, 
+        KNNCreator<dist_t>  cr(K, config.GetEPS());
+        Execute<KNNQuery<dist_t>, KNNCreator<dist_t>>(LogInfo, ThreadTestQty, TestSetId,
                                               ExpResKNN[i], config, cr, 
                                               IndexPtrs, MethodsDesc);
       }
@@ -342,7 +309,7 @@ public:
       unique_ptr<QueryType> queryGS(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
 
       /* 
-       * We compute gold stanard once for each query.
+       * We compute gold standard once for each query.
        * Note that GS uses a lot of space, b/c we need to compute the distance
        * from the query to every data point.
        */

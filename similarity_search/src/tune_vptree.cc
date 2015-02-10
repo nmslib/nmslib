@@ -297,6 +297,7 @@ int main(int ac, char* av[]) {
   unsigned                TestSetQty;
   string                  DataFile;
   string                  QueryFile;
+  string                  CacheGSFilePrefix;
   unsigned                MaxNumData;
   unsigned                MaxNumQuery;
   vector<unsigned>        knn;
@@ -319,12 +320,18 @@ int main(int ac, char* av[]) {
                        TestSetQty,
                        DataFile,
                        QueryFile,
+                       CacheGSFilePrefix,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
                        eps,
                        RangeArg,
                        Methods);
+
+  if (!CacheGSFilePrefix.empty()) {
+    LOG(LIB_FATAL) << "Caching of gold standard data is not yet implemented for this utility";
+  }
+
 
   initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 

@@ -411,6 +411,7 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
   unsigned              TestSetQty = 10;
   string                DataFile;
   string                QueryFile;
+  string                CacheGSFilePrefix;
   unsigned              MaxNumData = 0;
   unsigned              MaxNumQuery = 1000;
   vector<unsigned>      knn;
@@ -423,6 +424,9 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
 
   vector<shared_ptr<MethodWithParams>>        MethodsDesc;
 
+  if (!CacheGSFilePrefix.empty()) {
+    LOG(LIB_FATAL) << "Caching of gold standard data is not yet implemented for this utility";
+  }
  
   ParseCommandLine(argv.size(), &argv[0], tmp1,
                        DistType,
@@ -435,12 +439,14 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                        TestSetQty,
                        DataFile,
                        QueryFile,
+                       CacheGSFilePrefix,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
                        eps,
                        RangeArg,
                        MethodsDesc);
+
 
 
   ToLower(DistType);

@@ -129,6 +129,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
              unsigned                     TestSetQty,
              const string&                DataFile,
              const string&                QueryFile,
+             const string&                CacheGSFilePrefix,
              unsigned                     MaxNumData,
              unsigned                     MaxNumQuery,
              const                        vector<unsigned>& knn,
@@ -140,8 +141,13 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
   LOG(LIB_INFO) << "### OutFilePrefix : " << ResFilePrefix;
   vector<dist_t> range;
 
+  bool bWriteGSCache = false;
+  bool bReadGSCache = false;
   bool bFail = false;
+  bool bCacheGS = !CacheGSFilePrefix.empty();
 
+  unique_ptr<fstream>      cacheGSControl;
+  unique_ptr<fstream>      cacheGSBinary;
 
   if (!RangeArg.empty()) {
     if (!SplitStr(RangeArg, range, ',')) {
@@ -156,7 +162,55 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
                                   MaxNumData, MaxNumQuery,
                                   dimension, knn, eps, range);
 
+  if (bCacheGS) {
+    const string& cacheGSControlName = CacheGSFilePrefix + "_ctrl.txt";
+    const string& cacheGSBinaryName  = CacheGSFilePrefix + "_data.bin";
+
+    if (DoesFileExist(cacheGSControlName)) {
+    // Cache exists => reuse it
+      if (!DoesFileExist(cacheGSBinaryName)) {
+        throw runtime_error("Inconsistent cache state, there is a text control file: '" +
+                            cacheGSControlName + "' but no binary data file: '" +
+                            cacheGSBinaryName + "'");
+      }
+      cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
+                                        std::ios::in));
+      cacheGSBinary.reset(new fstream(cacheGSBinaryName.c_str(),
+                                        std::ios::in));
+
+      bReadGSCache = true;
+    } else {
+    // No cache => create new file
+      cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
+                                        std::ios::trunc | std::ios::out));
+      cacheGSBinary.reset(new fstream(cacheGSBinaryName.c_str(),
+                                        std::ios::trunc | std::ios::out));
+      bWriteGSCache = true;
+    }
+
+    cacheGSControl->exceptions(std::ios::badbit);
+    cacheGSBinary->exceptions(std::ios::badbit);
+
+    /*
+     * If the cache exists, it should be read before ReadData() is called.
+     */
+    if (!bWriteGSCache) {
+      config.Read(*cacheGSControl, *cacheGSBinary);
+    }
+  }
+
   config.ReadDataset();
+
+  /*
+   * Yet, if we need to create a new cache file, we must write the cache
+   * after reading the data set.
+   */
+  if (bWriteGSCache) {
+    config.Write(*cacheGSControl, *cacheGSBinary);
+  }
+
+
+
   MemUsage  mem_usage_measure;
 
 
@@ -344,6 +398,7 @@ int main(int ac, char* av[]) {
   unsigned              TestSetQty;
   string                DataFile;
   string                QueryFile;
+  string                CacheGSFilePrefix;
   unsigned              MaxNumData;
   unsigned              MaxNumQuery;
   vector<unsigned>      knn;
@@ -365,6 +420,7 @@ int main(int ac, char* av[]) {
                        TestSetQty,
                        DataFile,
                        QueryFile,
+                       CacheGSFilePrefix,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
@@ -389,6 +445,7 @@ int main(int ac, char* av[]) {
                   TestSetQty,
                   DataFile,
                   QueryFile,
+                  CacheGSFilePrefix,
                   MaxNumData,
                   MaxNumQuery,
                   knn,
@@ -406,6 +463,7 @@ int main(int ac, char* av[]) {
                   TestSetQty,
                   DataFile,
                   QueryFile,
+                  CacheGSFilePrefix,
                   MaxNumData,
                   MaxNumQuery,
                   knn,
@@ -423,6 +481,7 @@ int main(int ac, char* av[]) {
                   TestSetQty,
                   DataFile,
                   QueryFile,
+                  CacheGSFilePrefix,
                   MaxNumData,
                   MaxNumQuery,
                   knn,
