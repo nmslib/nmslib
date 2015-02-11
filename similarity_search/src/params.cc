@@ -136,7 +136,7 @@ void ParseCommandLine(int argc, char*argv[],
                         "comma-separated radii for the range searches")
     ("eps",             po::value<double>(&epsTmp)->default_value(0.0),
                         "the parameter for the eps-approximate k-NN search.")
-    ("method,m",        po::value< vector<string> >(&methParams)->required(),
+    ("method,m",        po::value< vector<string> >(&methParams)->multitoken()->zero_tokens(),
                         "list of method(s) with comma-separated parameters in the format:\n"
                         "<method name>:<param1>,<param2>,...,<paramK>")
     ("threadTestQty",   po::value<unsigned>(&ThreadTestQty)->default_value(1),

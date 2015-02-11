@@ -182,6 +182,11 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
       bReadGSCache = true;
     } else {
+      if (DoesFileExist(cacheGSBinaryName)) {
+        throw runtime_error("Inconsistent cache state, there is no text control file: '" +
+                            cacheGSControlName + "' but there is binary data file: '" +
+                            cacheGSBinaryName + "'");
+      }
     // No cache => create new file
       cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
                                         std::ios::trunc | std::ios::out));
