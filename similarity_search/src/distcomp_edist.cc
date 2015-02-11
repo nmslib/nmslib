@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <stdexcept>
 
 #include "distcomp.h"
 #include "string.h"

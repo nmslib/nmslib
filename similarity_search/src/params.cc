@@ -17,6 +17,7 @@
 #include <map>
 #include <limits>
 #include <iostream>
+#include <stdexcept>
 
 #include "utils.h"
 #include "params.h"

@@ -30,6 +30,7 @@
 #include <typeinfo>
 #include <random>
 #include <climits>
+#include <stdexcept>
 
 // compiler_warning.h
 #define STRINGISE_IMPL(x) #x
