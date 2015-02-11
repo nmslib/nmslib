@@ -57,20 +57,20 @@ TEST(Sqfd_From_Article) {
 
   /*
   >>> import numpy as np
+  >>> import math
   >>> w = np.array([0.5,0.5,-0.5,-0.25,-0.25])
   >>> a = np.array([[1.0, 0.135, 0.195, 0.137, 0.157],
                     [0.135, 1.0, 0.2, 0.309, 0.143],
                     [0.195, 0.2, 1.0, 0.157, 0.122],
                     [0.137, 0.309, 0.157, 1.0, 0.195],
                     [0.157, 0.143, 0.122, 0.195, 1.0]])
-  >>> w.dot(a).dot(w.transpose())
-  0.652625
+  >>> math.sqrt(w.dot(a).dot(w.transpose()))
+  0.807
   */
 
-  float d = space->IndexTimeDistance(q, o);  // it gives 0.652 not 0.808
-  CHECK(fabs(d - 0.652) <= 0.001);
+  float d = space->IndexTimeDistance(q, o);
+  EXPECT_EQ_EPS(d, 0.808f, 0.01f);
 
-  delete f;
   delete space;
   delete q;
   delete o;
@@ -111,9 +111,8 @@ TEST(Sqfd) {
   Space<float>* space = new SpaceSqfd<float>(f);
 
   float d = space->IndexTimeDistance(q, o);
-  CHECK(fabs(d - 0.0461) <= 0.001);
+  EXPECT_EQ_EPS(d, 0.214f, 0.01f);
 
-  delete f;
   delete space;
   delete q;
   delete o;
