@@ -84,6 +84,9 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
 
   AnyParams  MethPars = pmgr.ExtractParametersExcept({"desiredRecall"});
 
+  vector<shared_ptr<GoldStandardManager<dist_t>>>  vManagerGS(config.GetTestSetQty());
+  vector<shared_ptr<Index<dist_t>>>                vIndexFollAllSetsPtrs(config.GetTestSetQty());
+
   for (unsigned iter = 0; iter < MaxIter; ++iter) {
     LOG(LIB_INFO) << "Iteration: " << iter << " StepFactor: " << StepFactor;
     double MinRecall = 1.0;
@@ -113,12 +116,26 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
         for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
           config.SelectTestSet(TestSetId);
           LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
-          std::shared_ptr<Index<dist_t>> MethodPtr( MethodFactoryRegistry<dist_t>::Instance().
+          if (!vManagerGS[TestSetId].get()) {
+            vManagerGS[TestSetId].reset(new GoldStandardManager<dist_t>(config));
+            vManagerGS[TestSetId]->Compute();
+          } else {
+            LOG(LIB_INFO) << "Using existing GS for test set id: " << TestSetId;
+          }
+
+          std::shared_ptr<Index<dist_t>> MethodPtr = vIndexFollAllSetsPtrs[TestSetId];
+          if (!MethodPtr.get()) {
+            LOG(LIB_INFO) << "Creating a new index";
+            MethodPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
                                            CreateMethod(false, 
                                                         METH_VPTREE, 
                                                         SpaceType, config.GetSpace(), 
                                                         config.GetDataObjects(), 
                                                         MethPars) );
+            vIndexFollAllSetsPtrs[TestSetId] = MethodPtr;
+          } else {
+            LOG(LIB_INFO) << "Reusing an existing index";
+          }
 
           vector<shared_ptr<Index<dist_t>>>          IndexPtrs;
           vector<shared_ptr<MethodWithParams>>       MethodsDesc;
@@ -128,11 +145,11 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
 
           Experiments<dist_t>::RunAll(false /* don't print info */, 1 /* thread */,
                                       TestSetId,
+                                      *vManagerGS[TestSetId],
                                       ExpResRange, ExpResKNN,
                                       config, 
                                       IndexPtrs,
                                       MethodsDesc);
-
         }
         Stat.ComputeAll();
         if (Stat.GetRecallAvg() >= DesiredRecall &&
@@ -297,6 +314,8 @@ int main(int ac, char* av[]) {
   unsigned                TestSetQty;
   string                  DataFile;
   string                  QueryFile;
+  string                  CacheGSFilePrefix;
+  size_t                  MaxCacheGSQty;
   unsigned                MaxNumData;
   unsigned                MaxNumQuery;
   vector<unsigned>        knn;
@@ -305,7 +324,6 @@ int main(int ac, char* av[]) {
   unsigned                ThreadTestQty;
   float                   eps;
   vector<shared_ptr<MethodWithParams>> Methods;
-
 
 
   ParseCommandLine(ac, av, LogFile,
@@ -319,12 +337,19 @@ int main(int ac, char* av[]) {
                        TestSetQty,
                        DataFile,
                        QueryFile,
+                       CacheGSFilePrefix,
+                       MaxCacheGSQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
                        eps,
                        RangeArg,
                        Methods);
+
+  if (!CacheGSFilePrefix.empty()) {
+    LOG(LIB_FATAL) << "Caching of gold standard data is not yet implemented for this utility";
+  }
+
 
   initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 

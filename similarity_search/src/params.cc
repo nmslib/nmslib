@@ -85,6 +85,8 @@ void ParseCommandLine(int argc, char*argv[],
                       unsigned&               TestSetQty,
                       string&                 DataFile,
                       string&                 QueryFile,
+                      string&                 CacheGSFilePrefix,
+                      size_t&                 maxCacheGSQty,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,
@@ -115,9 +117,13 @@ void ParseCommandLine(int argc, char*argv[],
                         "optional dimensionality")
     ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
                         "query file")
+    ("cachePrefixGS",   po::value<string>(&CacheGSFilePrefix)->default_value(""),
+                        "a prefix of gold standard cache files")
+    ("maxCacheGSQty",   po::value<size_t>(&maxCacheGSQty)->default_value(1000),
+                       "a maximum number of gold standard entries to cache")
     ("logFile,l",       po::value<string>(&LogFile)->default_value(""),
                         "log file")
-    ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(1000),
+    ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(0),
                         "if non-zero, use maxNumQuery query elements"
                         "(required in the case of bootstrapping)")
     ("testSetQty,b",    po::value<unsigned>(&TestSetQty)->default_value(0),
@@ -185,11 +191,11 @@ void ParseCommandLine(int argc, char*argv[],
       LOG(LIB_FATAL) << "data file is not specified!";
     }
 
-    if (!IsFileExists(DataFile)) {
+    if (!DoesFileExist(DataFile)) {
       LOG(LIB_FATAL) << "data file " << DataFile << " doesn't exist";
     }
 
-    if (!QueryFile.empty() && !IsFileExists(QueryFile)) {
+    if (!QueryFile.empty() && !DoesFileExist(QueryFile)) {
       LOG(LIB_FATAL) << "query file " << QueryFile << " doesn't exist";
     }
 

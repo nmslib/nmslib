@@ -321,9 +321,13 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
         }
       }
 
+      GoldStandardManager<dist_t> managerGS(config);
+      managerGS.Compute();
+
       Experiments<dist_t>::RunAll(true /* print info */, 
-                                      ThreadTestQty, 
+                                      ThreadTestQty,
                                       TestSetId,
+                                      managerGS,
                                       ExpResRange, ExpResKNN,
                                       config, 
                                       IndexPtrs, MethodsDesc);
@@ -411,6 +415,8 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
   unsigned              TestSetQty = 10;
   string                DataFile;
   string                QueryFile;
+  string                CacheGSFilePrefix;
+  size_t                MaxCacheGSQty;
   unsigned              MaxNumData = 0;
   unsigned              MaxNumQuery = 1000;
   vector<unsigned>      knn;
@@ -423,6 +429,9 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
 
   vector<shared_ptr<MethodWithParams>>        MethodsDesc;
 
+  if (!CacheGSFilePrefix.empty()) {
+    LOG(LIB_FATAL) << "Caching of gold standard data is not yet implemented for this utility";
+  }
  
   ParseCommandLine(argv.size(), &argv[0], tmp1,
                        DistType,
@@ -435,12 +444,15 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                        TestSetQty,
                        DataFile,
                        QueryFile,
+                       CacheGSFilePrefix,
+                       MaxCacheGSQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
                        eps,
                        RangeArg,
                        MethodsDesc);
+
 
 
   ToLower(DistType);

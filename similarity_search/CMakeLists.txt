@@ -91,7 +91,7 @@ if (NOT WIN32)
   add_subdirectory (lshkit)
 endif()
 
-find_package(Eigen3 3.1.2 REQUIRED)
+find_package(Eigen3 3 REQUIRED)
 if (EIGEN3_FOUND)
   message (STATUS "Found Eigen3.")
   include_directories (${EIGEN3_INCLUDE_DIR})
