@@ -160,7 +160,7 @@ dist_t SpaceSqfd<dist_t>::HiddenDistance(
     }
   }
   auto res = W.transpose() * A * W;
-  return res(0,0);
+  return sqrt(res(0,0));
 }
 
 template <typename dist_t>
