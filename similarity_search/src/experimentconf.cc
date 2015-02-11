@@ -141,10 +141,11 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
 
   for (size_t i = 0; i < knn_.size(); ++i) {
     binaryStream.read(reinterpret_cast<char*>(&kVal), sizeof kVal);
-    if (kVal != knn_[i]) { 
+    // We can use a smaller KNN value, but not the other way around!
+    if (kVal < knn_[i]) {
       stringstream err;
       err << "The specified KNN value #" << (i+1) << " (" << knn_[i] << ") "
-          << " isn't equal to the value (" << kVal << ") "
+          << " isn't >= than the value (" << kVal << ") "
           << " in the gold standard cache.";
       throw runtime_error(err.str());
     }

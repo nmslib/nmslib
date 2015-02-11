@@ -315,6 +315,7 @@ int main(int ac, char* av[]) {
   string                  DataFile;
   string                  QueryFile;
   string                  CacheGSFilePrefix;
+  size_t                  MaxCacheGSQty;
   unsigned                MaxNumData;
   unsigned                MaxNumQuery;
   vector<unsigned>        knn;
@@ -323,7 +324,6 @@ int main(int ac, char* av[]) {
   unsigned                ThreadTestQty;
   float                   eps;
   vector<shared_ptr<MethodWithParams>> Methods;
-
 
 
   ParseCommandLine(ac, av, LogFile,
@@ -338,6 +338,7 @@ int main(int ac, char* av[]) {
                        DataFile,
                        QueryFile,
                        CacheGSFilePrefix,
+                       MaxCacheGSQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,

@@ -86,6 +86,7 @@ void ParseCommandLine(int argc, char*argv[],
                       string&                 DataFile,
                       string&                 QueryFile,
                       string&                 CacheGSFilePrefix,
+                      size_t&                 maxCacheGSQty,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,
@@ -118,6 +119,8 @@ void ParseCommandLine(int argc, char*argv[],
                         "query file")
     ("cachePrefixGS",   po::value<string>(&CacheGSFilePrefix)->default_value(""),
                         "a prefix of gold standard cache files")
+    ("maxCacheGSQty",   po::value<size_t>(&maxCacheGSQty)->default_value(1000),
+                       "a maximum number of gold standard entries to cache")
     ("logFile,l",       po::value<string>(&LogFile)->default_value(""),
                         "log file")
     ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(0),

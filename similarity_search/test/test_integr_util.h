@@ -416,6 +416,7 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
   string                DataFile;
   string                QueryFile;
   string                CacheGSFilePrefix;
+  size_t                MaxCacheGSQty;
   unsigned              MaxNumData = 0;
   unsigned              MaxNumQuery = 1000;
   vector<unsigned>      knn;
@@ -444,6 +445,7 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                        DataFile,
                        QueryFile,
                        CacheGSFilePrefix,
+                       MaxCacheGSQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,

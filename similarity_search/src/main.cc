@@ -130,6 +130,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
              const string&                DataFile,
              const string&                QueryFile,
              const string&                CacheGSFilePrefix,
+             size_t                       MaxCacheGSQty,
              unsigned                     MaxNumData,
              unsigned                     MaxNumQuery,
              const                        vector<unsigned>& knn,
@@ -269,7 +270,10 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
       }
     } else {
       managerGS.Compute();
-      if (bWriteGSCache) managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId);
+      if (bWriteGSCache) {
+        LOG(LIB_INFO) << "Saving the cache, at most: " << MaxCacheGSQty << " entries";
+        managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId, MaxCacheGSQty);
+      }
     }
 
     LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
@@ -433,6 +437,7 @@ int main(int ac, char* av[]) {
   string                DataFile;
   string                QueryFile;
   string                CacheGSFilePrefix;
+  size_t                MaxCacheGSQty;
   unsigned              MaxNumData;
   unsigned              MaxNumQuery;
   vector<unsigned>      knn;
@@ -455,6 +460,7 @@ int main(int ac, char* av[]) {
                        DataFile,
                        QueryFile,
                        CacheGSFilePrefix,
+                       MaxCacheGSQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
@@ -480,6 +486,7 @@ int main(int ac, char* av[]) {
                   DataFile,
                   QueryFile,
                   CacheGSFilePrefix,
+                  MaxCacheGSQty,
                   MaxNumData,
                   MaxNumQuery,
                   knn,
@@ -498,6 +505,7 @@ int main(int ac, char* av[]) {
                   DataFile,
                   QueryFile,
                   CacheGSFilePrefix,
+                  MaxCacheGSQty,
                   MaxNumData,
                   MaxNumQuery,
                   knn,
@@ -516,6 +524,7 @@ int main(int ac, char* av[]) {
                   DataFile,
                   QueryFile,
                   CacheGSFilePrefix,
+                  MaxCacheGSQty,
                   MaxNumData,
                   MaxNumQuery,
                   knn,

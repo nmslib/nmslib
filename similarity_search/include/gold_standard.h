@@ -96,11 +96,14 @@ public:
   /*
    * See the endianness comment.
    */
-  void Write(ostream& controlStream, ostream& binaryStream) const {
+  void Write(ostream& controlStream, ostream& binaryStream,
+             size_t MaxCacheGSQty) const {
+    size_t qty = min(MaxCacheGSQty, SortedAllEntries_.size());
     WriteField(controlStream, SEQ_SEARCH_TIME, ConvertToString(SeqSearchTime_));
-    WriteField(controlStream, SEQ_GS_QTY, ConvertToString(SortedAllEntries_.size()));
-    for (const ResultEntry<dist_t>& e: SortedAllEntries_) {
-      e.writeBinary(binaryStream);
+    WriteField(controlStream, SEQ_GS_QTY, ConvertToString(qty));
+    for (size_t i = 0; i < qty; // Note that qty <= SortedAllEntries_.size()
+         ++i) {
+      SortedAllEntries_[i].writeBinary(binaryStream);
     }
   }
 
@@ -196,19 +199,21 @@ public:
     }
   }
   void Write(ostream& controlStream, ostream& binaryStream,
-             size_t testSetId) {
+             size_t testSetId, size_t MaxCacheGSQty) {
     WriteField(controlStream, GS_TEST_SET_ID, ConvertToString(testSetId));
     // GS_NOTE_FIELD & GS_TEST_SET_ID are for informational purposes only
     for (size_t i = 0; i < vvGoldStandardRange_.size(); ++i) {
       WriteField(controlStream, GS_NOTE_FIELD,
                 "range radius=" + ConvertToString(config_.GetRange()[i]));
-      writeOneGS(controlStream, binaryStream, vvGoldStandardRange_[i]);
+      writeOneGS(controlStream, binaryStream,
+                 vvGoldStandardRange_[i], MaxCacheGSQty);
     }
     for (size_t i = 0; i < vvGoldStandardKNN_.size(); ++i) {
       WriteField(controlStream, GS_NOTE_FIELD,
                 "k=" + ConvertToString(config_.GetKNN()[i]) +
                 "eps=" + ConvertToString(config_.GetEPS()));
-      writeOneGS(controlStream, binaryStream, vvGoldStandardKNN_[i]);
+      writeOneGS(controlStream, binaryStream,
+                 vvGoldStandardKNN_[i], MaxCacheGSQty);
     }
   }
   const vector<GoldStandard<dist_t>> &GetRangeGS(size_t i) const {
@@ -223,9 +228,10 @@ private:
   vector<vector<GoldStandard<dist_t>>>    vvGoldStandardKNN_;
 
   void writeOneGS(ostream& controlStream, ostream& binaryStream,
-                  const vector<GoldStandard<dist_t>>& oneGS) {
+                  const vector<GoldStandard<dist_t>>& oneGS,
+                  size_t MaxCacheGSQty) {
     for(const GoldStandard<dist_t>& obj : oneGS) {
-      obj.Write(controlStream, binaryStream);
+      obj.Write(controlStream, binaryStream, MaxCacheGSQty);
     }
   }
 
