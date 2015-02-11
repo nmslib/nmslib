@@ -60,6 +60,13 @@ using std::stringstream;
 
 vector<MethodTestCase>    vTestCaseDesc = {
 
+  // *************** omedrank tests ******************** //
+
+  MethodTestCase("float", "l2", "final8_10K.txt", "omedrank:numPivot=4,dbScanFrac=0.01,minFreq=0.5,chunkIndexSize=102",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.9, 0.2, 1.5, 60, 90),  
+  MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "omedrank:numPivot=4,dbScanFrac=0.01,minFreq=0.5,chunkIndexSize=102",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 0.5, 3, 60, 90),  
+
   // *************** VP-tree tests ******************** //
   // knn
   MethodTestCase("float", "l2", "final8_10K.txt", "vptree:chunkBucket=1,bucketSize=10", 
@@ -210,11 +217,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
   MethodTestCase("float", "l2", "final8_10K.txt", "perm_incsort_bin:numPivot=32,dbScanFrac=1.0",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-
-  MethodTestCase("float", "l2", "final8_10K.txt", "omedrank:numPivot=4,dbScanFrac=0.01,minFreq=0.5,chunkIndexSize=102",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.55, 0.75, 0.5, 1.5, 15, 25),  
-  MethodTestCase("float", "kldivgenfast", "final8_10K.txt", "omedrank:numPivot=4,dbScanFrac=0.01,minFreq=0.5,chunkIndexSize=102",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.6, 3.5, 5, 15, 25),  
 
   MethodTestCase("float", "l2", "final8_10K.txt", "perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
