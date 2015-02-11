@@ -28,8 +28,10 @@
 #include "utils.h"
 #include "ztimer.h"
 
-#define SEQ_SEARCH_TIME_PREFIX "seqSearchTime"
-#define SEQ_GS_QTY_PREFIX      "qty"
+#define SEQ_SEARCH_TIME        "SeqSearchTime"
+#define SEQ_GS_QTY             "GoldStandQty"
+#define GS_NOTE_FIELD          "Note"
+#define GS_TEST_SET_ID         "TestSetId"
 
 namespace similarity {
 
@@ -59,7 +61,7 @@ struct ResultEntry {
    * Saves entry in the binary format, see the comment
    * on the endianness above.
    */
-  void writeBinary(ostream& out) {
+  void writeBinary(ostream& out) const {
     out.write(reinterpret_cast<const char*>(&mId),    sizeof mId);
     out.write(reinterpret_cast<const char*>(&mLabel), sizeof mLabel);
     out.write(reinterpret_cast<const char*>(&mDist),  sizeof mDist);
@@ -87,54 +89,28 @@ public:
   GoldStandard(){}
   GoldStandard(const typename similarity::Space<dist_t>* space,
               const ObjectVector& datapoints,
-              const typename similarity::KNNQuery<dist_t>* query
-              ) {
-    DoSeqSearch(space, datapoints, query->QueryObject());
-  }
-  GoldStandard(const typename similarity::Space<dist_t>* space,
-              const ObjectVector& datapoints,
-              const typename similarity::RangeQuery<dist_t>* query
+              const typename similarity::Query<dist_t>* query
               ) {
     DoSeqSearch(space, datapoints, query->QueryObject());
   }
   /*
    * See the endianness comment.
    */
-  void Write(ostream& controlStream, ostream& binaryStream) {
-    controlStream << SEQ_SEARCH_TIME_PREFIX << FIELD_DELIMITER << SeqSearchTime_
-                  << " " << SEQ_GS_QTY_PREFIX << FIELD_DELIMITER << SortedAllEntries_.size() << endl;
-    for (const ResultEntry<dist_t> e: SortedAllEntries_) e.writeBinary(binaryStream);
+  void Write(ostream& controlStream, ostream& binaryStream) const {
+    WriteField(controlStream, SEQ_SEARCH_TIME, ConvertToString(SeqSearchTime_));
+    WriteField(controlStream, SEQ_GS_QTY, ConvertToString(SortedAllEntries_.size()));
+    for (const ResultEntry<dist_t>& e: SortedAllEntries_) {
+      e.writeBinary(binaryStream);
+    }
   }
 
   void Read(istream& controlStream, istream& binaryStream) {
-    string line;
-    getline(controlStream, line);
-    stringstream str(line);
-    string  s1, s2, s;
-    if (!(str >> s1) || !(str >> s2)) {
-      throw runtime_error("Wrong format of the control string: '" + line + "'");
-    }
-    ReplaceSomePunct(s1);
-    stringstream str1(s1);
-    if (!(str1 >> s) || !(str1 >> SeqSearchTime_)) {
-      throw runtime_error("Wrong format of the control string: '" + line +
-                          "' can't read sequential search time.");
-    }
-    if (s != SEQ_SEARCH_TIME_PREFIX) {
-      throw runtime_error("Wrong format of the control string: '" + line +
-                          "' can't find sequential search time prefix.");
-    }
-    ReplaceSomePunct(s2);
-    stringstream str2(s2);
-    size_t qty;
-    if (!(str2 >> s) || (!str2 >> qty)) {
-      throw runtime_error("Wrong format of the control string: '" + line +
-                          "' can't read the number of entries.");
-    }
-    if (s != SEQ_GS_QTY_PREFIX) {
-      throw runtime_error("Wrong format of the control string: '" + line +
-                          "' can't find the prefix for the number of entries.");
-    }
+    string s;
+    ReadField(controlStream, SEQ_SEARCH_TIME, s);
+    ConvertFromString(s, SeqSearchTime_);
+    ReadField(controlStream, SEQ_GS_QTY, s);
+    size_t qty = 0;
+    ConvertFromString(s, qty);
     SortedAllEntries_.resize(qty);
     for (size_t i = 0; i < qty; ++i)
       SortedAllEntries_[i].readBinary(binaryStream);
@@ -179,47 +155,89 @@ private:
 template <class dist_t>
 class GoldStandardManager {
 public:
-  GoldStandardManager(const Space<dist_t>* space,
-                      const ExperimentConfig<dist_t>&  config) :
-                      space_(space),
+  GoldStandardManager(const ExperimentConfig<dist_t>&  config) :
                       config_(config),
-                      vvGoldStandard_(config_.GetRange().size() +
-                                      config_.GetKNN().size()) {}
+                      vvGoldStandardRange_(config_.GetRange().size()),
+                      vvGoldStandardKNN_(config_.GetKNN().size()) {}
+  // Both read and Compute can be called multiple times
   void Compute() {
-    size_t gsIndx = 0;
-
+    LOG(LIB_INFO) << "Computing gold standard data";
     for (size_t i = 0; i < config_.GetRange().size(); ++i) {
+      vvGoldStandardRange_[i].clear();
       const dist_t radius = config_.GetRange()[i];
       RangeCreator<dist_t>  cr(radius);
-      procOneSet(cr, vvGoldStandard_[gsIndx++]);
+      procOneSet(cr, vvGoldStandardRange_[i]);
     }
-
-
     for (size_t i = 0; i < config_.GetKNN().size(); ++i) {
+      vvGoldStandardKNN_[i].clear();
       const size_t K = config_.GetKNN()[i];
       KNNCreator<dist_t>  cr(K, config_.GetEPS());
-      procOneSet(cr, vvGoldStandard_[gsIndx++]);
+      procOneSet(cr, vvGoldStandardKNN_[i]);
     }
-
   }
   void Read(istream& controlStream, istream& binaryStream,
-            size_t queryQty) {
-    for (size_t i = 0; i < vvGoldStandard_.size(); ++i) {
-      for (size_t k = 0; k < queryQty; ++k) {
-        GoldStandard<dist_t>  gs;
-        gs.Read(controlStream, binaryStream);
-        vvGoldStandard_[i].push_back(gs);
-      }
+            size_t queryQty,
+            size_t& testSetId) {
+    LOG(LIB_INFO) << "Reading gold standard data from cache";
+    string s;
+    ReadField(controlStream, GS_TEST_SET_ID, s);
+    ConvertFromString(s, testSetId);
+    for (size_t i = 0; i < vvGoldStandardRange_.size(); ++i) {
+      ReadField(controlStream, GS_NOTE_FIELD, s);
+      vvGoldStandardRange_[i].clear();
+      readOneGS(controlStream, binaryStream,
+                queryQty, vvGoldStandardRange_[i]);
+    }
+    for (size_t i = 0; i < vvGoldStandardKNN_.size(); ++i) {
+      ReadField(controlStream, GS_NOTE_FIELD, s);
+      vvGoldStandardKNN_[i].clear();
+      readOneGS(controlStream, binaryStream,
+                queryQty, vvGoldStandardKNN_[i]);
     }
   }
-  void Write(ostream& controlStream, ostream& binaryStream) {
-    for (size_t i = 0; i < vvGoldStandard_.size(); ++i)
-      for (auto obj : vvGoldStandard_[i]) obj.Write(controlStream, binaryStream);
+  void Write(ostream& controlStream, ostream& binaryStream,
+             size_t testSetId) {
+    WriteField(controlStream, GS_TEST_SET_ID, ConvertToString(testSetId));
+    // GS_NOTE_FIELD & GS_TEST_SET_ID are for informational purposes only
+    for (size_t i = 0; i < vvGoldStandardRange_.size(); ++i) {
+      WriteField(controlStream, GS_NOTE_FIELD,
+                "range radius=" + ConvertToString(config_.GetRange()[i]));
+      writeOneGS(controlStream, binaryStream, vvGoldStandardRange_[i]);
+    }
+    for (size_t i = 0; i < vvGoldStandardKNN_.size(); ++i) {
+      WriteField(controlStream, GS_NOTE_FIELD,
+                "k=" + ConvertToString(config_.GetKNN()[i]) +
+                "eps=" + ConvertToString(config_.GetEPS()));
+      writeOneGS(controlStream, binaryStream, vvGoldStandardKNN_[i]);
+    }
+  }
+  const vector<GoldStandard<dist_t>> &GetRangeGS(size_t i) const {
+    return vvGoldStandardRange_[i];
+  }
+  const vector<GoldStandard<dist_t>> &GetKNNGS(size_t i) const {
+    return vvGoldStandardKNN_[i];
   }
 private:
-  const Space<dist_t>*                    space_;
   const ExperimentConfig<dist_t>&         config_;
-  vector<vector<GoldStandard<dist_t>>>    vvGoldStandard_;
+  vector<vector<GoldStandard<dist_t>>>    vvGoldStandardRange_;
+  vector<vector<GoldStandard<dist_t>>>    vvGoldStandardKNN_;
+
+  void writeOneGS(ostream& controlStream, ostream& binaryStream,
+                  const vector<GoldStandard<dist_t>>& oneGS) {
+    for(const GoldStandard<dist_t>& obj : oneGS) {
+      obj.Write(controlStream, binaryStream);
+    }
+  }
+
+  void readOneGS(istream& controlStream, istream& binaryStream,
+                 size_t queryQty,
+                 vector<GoldStandard<dist_t>>& oneGS) {
+    for (size_t k = 0; k < queryQty; ++k) {
+      GoldStandard<dist_t>  gs;
+      gs.Read(controlStream, binaryStream);
+      oneGS.push_back(gs);
+    }
+  }
 
   template <typename QueryCreatorType>
   void procOneSet(const QueryCreatorType&       QueryCreator,

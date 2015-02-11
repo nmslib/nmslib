@@ -42,7 +42,7 @@ namespace similarity {
     Print << MethParamStr << std::endl;
     Print << "===================================" << std::endl;
     Print << "# of points: " << config.GetDataObjects().size() << std::endl;
-    Print << "# of queries: " << config.GetQueryQty() << std::endl;
+    Print << "# of queries: " << config.GetQueryToRunQty() << std::endl;
     Print << "------------------------------------" << std::endl;
     Print << "Recall:            " << round3(ExpRes.GetRecallAvg())  << " -> " << "[" << round3(ExpRes.GetRecallConfMin()) << " " << round3(ExpRes.GetRecallConfMax()) << "]" << std::endl;
     Print << "PrecisionOfApprox: " << round3(ExpRes.GetPrecisionOfApproxAvg())                << " -> " << "[" << round3(ExpRes.GetPrecisionOfApproxConfMin()) << " " << round3(ExpRes.GetPrecisionOfApproxConfMax()) << "]" << std::endl;

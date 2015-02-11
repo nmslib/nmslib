@@ -42,7 +42,7 @@ public:
                    const string& queryfile,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
                    unsigned MaxNumData,
-                   unsigned MaxNumQuery,
+                   unsigned MaxNumQueryToRun,
                    unsigned dimension,
                    const typename std::vector<unsigned>& knn,
                    float eps,
@@ -53,8 +53,8 @@ public:
         noQueryFile_(queryfile.empty()),
         testSetQty_(TestSetQty),
         maxNumData_(MaxNumData),
-        maxNumQuery_(MaxNumQuery),
-        maxNumQueryToRun_(MaxNumQuery),
+        maxNumQuery_(MaxNumQueryToRun),
+        maxNumQueryToRun_(MaxNumQueryToRun),
         dimension_(dimension),
         range_(range),
         knn_(knn),
@@ -86,6 +86,7 @@ public:
     if (!noQueryFile_) return 1;
     return testSetQty_;
   }
+  size_t GetOrigDataQty() const { return origData_.size(); }
   const Space<dist_t>*  GetSpace() const { return space_; }
   const ObjectVector& GetDataObjects() const { return dataobjects_; }
   const ObjectVector& GetQueryObjects() const { return queryobjects_; }
@@ -93,13 +94,20 @@ public:
   float GetEPS() const { return eps_; }
   const typename std::vector<dist_t>& GetRange() const { return range_; }
   int   GetDimension() const { return dimension_; }
-  int   GetQueryQty() const { return noQueryFile_ ? maxNumQuery_ : static_cast<unsigned>(origQuery_.size()); }
+  int   GetQueryToRunQty() const {
+    return noQueryFile_ ? maxNumQueryToRun_ :
+                          static_cast<unsigned>(origQuery_.size());
+  }
+  int   GetTotalQueryQty() const {
+    return noQueryFile_ ? maxNumQuery_:
+                          static_cast<unsigned>(origQuery_.size());
+  }
 
   /*
    * Read/Write : save/retrieve some of the config information.
    */
   void Write(ostream& controlStream, ostream& binaryStream);
-  void Read(istream& controlStream, istream& binaryStream);
+  void Read(istream& controlStream, istream& binaryStream, size_t& cacheDataSetQty);
 
 private:
   Space<dist_t>*    space_;
@@ -118,37 +126,9 @@ private:
   unsigned          maxNumQueryToRun_;
   unsigned          dimension_;
 
-  const typename std::vector<dist_t>&   range_;  // range search parameter
-  const typename std::vector<unsigned>& knn_;    // knn search parameters
-  float                                 eps_;    // knn search parameter
-
-  /*
-   * "fields" each occupy a single line, they are in the format:
-   * fieldName:fieldValue.
-   */
-
-  // Returns false if the line is empty
-  bool ReadField(istream &in, const string& fieldName, string& fieldValue) {
-    string s;
-    if (getline(in, s)) throw runtime_error("Error reading a field value");
-    if (s.empty()) return false;
-    string::size_type p = s.find(FIELD_DELIMITER);
-    if (string::npos == p)
-      throw runtime_error("Wrong field format, no delimiter: '" + s + "'");
-    string gotFieldName = s.substr(0, p);
-    if (gotFieldName != fieldName) {
-      throw runtime_error("Expected field '" + fieldName + "' but got: '"
-                          + gotFieldName + "'");
-    }
-    fieldValue = s.substr(p + 1);
-    return true;
-  }
-  void WriteField(ostream& out, const string& fieldName, const string& fieldValue) {
-    if (!(out << fieldName << ":" << fieldValue << std::endl)) {
-      throw
-        runtime_error("Error writing to an output stream, field name: " + fieldName);
-    }
-  }
+  vector<dist_t>    range_;  // range search parameter
+  vector<unsigned>  knn_;    // knn search parameters
+  float             eps_;    // knn search parameter
 
 };
 

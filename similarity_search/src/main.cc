@@ -162,6 +162,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
                                   MaxNumData, MaxNumQuery,
                                   dimension, knn, eps, range);
 
+  size_t cacheDataSetQty = 0;
   if (bCacheGS) {
     const string& cacheGSControlName = CacheGSFilePrefix + "_ctrl.txt";
     const string& cacheGSBinaryName  = CacheGSFilePrefix + "_data.bin";
@@ -195,11 +196,23 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
      * If the cache exists, it should be read before ReadData() is called.
      */
     if (!bWriteGSCache) {
-      config.Read(*cacheGSControl, *cacheGSBinary);
+      config.Read(*cacheGSControl, *cacheGSBinary, cacheDataSetQty);
     }
   }
 
   config.ReadDataset();
+
+  if (bReadGSCache) {
+    // Let's check the number of data entries, must exactly coincide with
+    // what was used to create the cache!
+    if (config.GetOrigDataQty() != cacheDataSetQty) {
+      stringstream err;
+      err << "The number of entries in the file, or the maximum number "
+          << "of data elements don't match the value in the cache file: "
+          << cacheDataSetQty;
+      throw runtime_error(err.str());
+    }
+  }
 
   /*
    * Yet, if we need to create a new cache file, we must write the cache
@@ -223,10 +236,13 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
   vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
                                               vector<MetaAnalysis*>(MethodsDesc.size()));
 
+  GoldStandardManager<dist_t> managerGS(config);
+
+
+
   size_t MethNum = 0;
 
   for (auto it = MethodsDesc.begin(); it != MethodsDesc.end(); ++it, ++MethNum) {
-
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetQty());
     }
@@ -235,9 +251,26 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
     }
   }
 
-
   for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
+
+    // SelectTestSet must go before managerGS.Compute()!!!
+
+    if (bReadGSCache) {
+      size_t cacheTestId = 0;
+      managerGS.Read(*cacheGSControl, *cacheGSBinary,
+                     config.GetTotalQueryQty(), cacheTestId);
+      if (cacheTestId != TestSetId) {
+        stringstream err;
+        err << "Perhaps, the input file is corrput (or is incompatible with "
+            << "program parameters), expect test set id=" << TestSetId
+            << "but obtained " << cacheTestId;
+        throw runtime_error(err.str());
+      }
+    } else {
+      managerGS.Compute();
+      if (bWriteGSCache) managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId);
+    }
 
     LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
 
@@ -317,9 +350,10 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
         }
       }
 
-      Experiments<dist_t>::RunAll(true /* print info */, 
+      Experiments<dist_t>::RunAll(true /* print info */,
                                       ThreadTestQty, 
                                       TestSetId,
+                                      managerGS,
                                       ExpResRange, ExpResKNN,
                                       config, 
                                       IndexPtrs, MethodsDesc);

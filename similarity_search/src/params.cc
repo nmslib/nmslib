@@ -116,8 +116,8 @@ void ParseCommandLine(int argc, char*argv[],
                         "optional dimensionality")
     ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
                         "query file")
-    ("cacheGSPrefix,q", po::value<string>(&CacheGSFilePrefix)->default_value(""),
-                        "query file")
+    ("cachePrefixGS",   po::value<string>(&CacheGSFilePrefix)->default_value(""),
+                        "a prefix of gold standard cache files")
     ("logFile,l",       po::value<string>(&LogFile)->default_value(""),
                         "log file")
     ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(0),

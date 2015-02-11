@@ -27,6 +27,7 @@
 
 
 #define DATA_FILE         "DataFile"
+#define DATA_FILE_QTY     "DataFileQty"
 
 // The query file can be empty
 #define QUERY_FILE        "QueryFile"
@@ -43,7 +44,9 @@ namespace similarity {
 using namespace std;
 
 template <typename dist_t>
-void ExperimentConfig<dist_t>::Read(istream& controlStream, istream& binaryStream) {
+void ExperimentConfig<dist_t>::Read(istream& controlStream,
+                                    istream& binaryStream,
+                                    size_t& dataFileQty) {
   string s;
   size_t i;
 
@@ -56,6 +59,9 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream, istream& binaryStrea
         << s << ") in the gold standard cache (must be char-by-char equal).";
     throw runtime_error(err.str());
   }
+
+  ReadField(controlStream, DATA_FILE_QTY, s);
+  ConvertFromString(s, dataFileQty);
 
   ReadField(controlStream, QUERY_FILE, s);
 
@@ -99,6 +105,7 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream, istream& binaryStrea
         << " in the gold standard cache.";
     throw runtime_error(err.str());
   }
+
   dist_t val;
   for (size_t i = 0; i < range_.size(); ++i) {
     binaryStream.read(reinterpret_cast<char*>(&val), sizeof val);
@@ -110,6 +117,7 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream, istream& binaryStrea
       throw runtime_error(err.str());
     }
   }
+
   // Note that the type of eps_ is not necessarily dist_t!!!
   decltype(eps_) epsVal;
 
@@ -121,43 +129,55 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream, istream& binaryStrea
         << " in the gold standard cache.";
     throw runtime_error(err.str());
   }
+
+  unsigned kVal;
+
+  if (sizeof(kVal)!=sizeof(knn_[0])) {
+    stringstream err;
+    err << "Bug: types apparently changed, sizeof(kVal) = " << sizeof(kVal) <<
+           " which is different from sizeof(knn_[0]) = " << sizeof(knn_[0]);
+    throw runtime_error(err.str());
+  }
+
   for (size_t i = 0; i < knn_.size(); ++i) {
-    binaryStream.read(reinterpret_cast<char*>(&val), sizeof val);
-    if (!ApproxEqual<dist_t>(knn_[i], val)) {
+    binaryStream.read(reinterpret_cast<char*>(&kVal), sizeof kVal);
+    if (kVal != knn_[i]) { 
       stringstream err;
       err << "The specified KNN value #" << (i+1) << " (" << knn_[i] << ") "
-          << " isn't equal to the value (" << val << ") "
+          << " isn't equal to the value (" << kVal << ") "
           << " in the gold standard cache.";
       throw runtime_error(err.str());
     }
   }
-  ReadField(controlStream, QUERY_QTY, s);
-  ConvertFromString(s, i);
 
-  if (i >= maxNumQuery_) {
+  ReadField(controlStream, QUERY_QTY, s);
+  ConvertFromString(s, maxNumQuery_);
+
+  /*
+   * The number of queries specified by the user can be smaller than
+   * the number of GS entries in the file, but not the other
+   * way around.
+   */
+
+  if (maxNumQuery_ < maxNumQueryToRun_) {
     stringstream err;
-    err << "The specified # queries (" << maxNumQuery_ << ") "
-        << " exceeds the value (" << i << ") "
+    err << "The specified # queries (" << maxNumQueryToRun_ << ") "
+        << " exceeds the value (" << maxNumQuery_ << ") "
         << " in the gold standard cache.";
     throw runtime_error(err.str());
   }
-  /*
-   * The number of queries specified by the user can be smaller than
-   * the number of GS entries in the file.
-   */
-  maxNumQueryToRun_ = i;
-
-  getline(controlStream, s);
-
-  if (!s.empty()) throw runtime_error("Bad format, expecting an empty line");
 
   if (noQueryFile_) {
     for (size_t TestSetId = 0; TestSetId < testSetQty_; ++TestSetId) {
       vector<int> vTmp;
-      getline(controlStream, s);
+      if (!getline(controlStream, s)) {
+        throw runtime_error("Error reading from the control/text cache file!");
+      }
+
       SplitStr(s, vTmp, ' ');
-      for (int id : vTmp)
+      for (int id : vTmp) {
         cachedDataAssignment_.insert(make_pair(id, TestSetId));
+      }
     }
   }
 }
@@ -165,6 +185,7 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream, istream& binaryStrea
 template <typename dist_t>
 void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStream) {
   WriteField(controlStream, DATA_FILE, datafile_);
+  WriteField(controlStream, DATA_FILE_QTY, ConvertToString(origData_.size()));
   WriteField(controlStream, QUERY_FILE, queryfile_);
   WriteField(controlStream, TEST_SET_QTY, ConvertToString(testSetQty_));
   WriteField(controlStream, RANGE_QTY, ConvertToString(range_.size()));
@@ -178,9 +199,6 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
   for (size_t i = 0; i < knn_.size(); ++i) {
     binaryStream.write(reinterpret_cast<const char*>(&knn_[i]), sizeof knn_[i]);
   }
-
-  controlStream << endl; // A delimiting line
-
   unsigned queryQty = origQuery_.size();
 
   if (noQueryFile_) {
@@ -231,14 +249,13 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
         int dst = origDataAssignment_[i];
 
         if (dst == SetNum) {
-          if (bFirst) line << " ";
+          if (!bFirst) line << " ";
           bFirst = false;
           line << i;
         }
       }
       controlStream << line.str() << endl;
     }
-    controlStream << endl;
   }
 
 }
@@ -300,15 +317,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
    */
   if (!noQueryFile_) {
     dataobjects_ = origData_;
-    /*
-     * There can be more queries than we need to run.
-     * One typical scenario: the user saves cache for 1000 queries,
-     * next time she runs a test using the saved cache she asks
-     * to evaluate using only 100 queries.
-     *
-     * Thereofore, we don't read maxNumQuery_ but rather maxNumQueryToRun_ queries.
-     */
-    space_->ReadDataset(queryobjects_, this, queryfile_.c_str(), maxNumQueryToRun_);
+    space_->ReadDataset(queryobjects_, this, queryfile_.c_str(), maxNumQuery_);
     origQuery_ = queryobjects_;
   } else {
     size_t OrigQty = origData_.size();
@@ -359,8 +368,8 @@ void ExperimentConfig<dist_t>::PrintInfo() const {
   LOG(LIB_INFO) << "data file             = " << datafile_;
   LOG(LIB_INFO) << "# of test sets        = " << GetTestSetQty();
   LOG(LIB_INFO) << "Use held-out queries  = " << !noQueryFile_;
-  LOG(LIB_INFO) << "# of data points      = " << origData_.size() - GetQueryQty();
-  LOG(LIB_INFO) << "# of query points     = " << GetQueryQty();
+  LOG(LIB_INFO) << "# of data points      = " << origData_.size() - GetQueryToRunQty();
+  LOG(LIB_INFO) << "# of query points     = " << GetQueryToRunQty();
 }
 
 template class ExperimentConfig<float>;

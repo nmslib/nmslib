@@ -62,8 +62,9 @@ public:
   typedef Index<dist_t> IndexType;
 
   static void RunAll(bool LogInfo, 
-                     unsigned ThreadTestQty, 
-                     size_t TestSetId, 
+                     unsigned ThreadTestQty,
+                     size_t TestSetId,
+                     const GoldStandardManager<dist_t>& managerGS,
                      vector<vector<MetaAnalysis*>>&   ExpResRange,
                      vector<vector<MetaAnalysis*>>&   ExpResKNN,
                      const ExperimentConfig<dist_t>&  config,
@@ -78,7 +79,9 @@ public:
       for (size_t i = 0; i < config.GetRange().size(); ++i) {
         const dist_t radius = config.GetRange()[i];
         RangeCreator<dist_t>  cr(radius);
-        Execute<RangeQuery<dist_t>, RangeCreator<dist_t>>(LogInfo, ThreadTestQty, TestSetId,
+        Execute<RangeQuery<dist_t>, RangeCreator<dist_t>>(LogInfo,
+                                                  ThreadTestQty, TestSetId,
+                                                  managerGS.GetRangeGS(i),
                                                   ExpResRange[i], config, cr, 
                                                   IndexPtrs, MethodsDesc);
       }
@@ -88,7 +91,9 @@ public:
       for (size_t i = 0; i < config.GetKNN().size(); ++i) {
         const size_t K = config.GetKNN()[i];
         KNNCreator<dist_t>  cr(K, config.GetEPS());
-        Execute<KNNQuery<dist_t>, KNNCreator<dist_t>>(LogInfo, ThreadTestQty, TestSetId,
+        Execute<KNNQuery<dist_t>, KNNCreator<dist_t>>(LogInfo,
+                                              ThreadTestQty, TestSetId,
+                                              managerGS.GetKNNGS(i),
                                               ExpResKNN[i], config, cr, 
                                               IndexPtrs, MethodsDesc);
       }
@@ -189,7 +194,8 @@ public:
   };
 
   template <typename QueryType, typename QueryCreatorType>
-  static void Execute(bool LogInfo, unsigned ThreadTestQty, size_t TestSetId, 
+  static void Execute(bool LogInfo, unsigned ThreadTestQty, size_t TestSetId,
+                     const vector<GoldStandard<dist_t>> &         goldStand,
                      std::vector<MetaAnalysis*>&                  ExpRes,
                      const ExperimentConfig<dist_t>&              config,
                      const QueryCreatorType&                      QueryCreator,
@@ -308,12 +314,17 @@ public:
     for (int q = 0; q < numquery; ++q) {
       unique_ptr<QueryType> queryGS(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
 
+#ifdef COMPUTE_GS_ONLINE
+
       /* 
        * We compute gold standard once for each query.
        * Note that GS uses a lot of space, b/c we need to compute the distance
        * from the query to every data point.
        */
       GoldStandard<dist_t>  QueryGS(config.GetSpace(), config.GetDataObjects(), queryGS.get());
+#else
+      const GoldStandard<dist_t>&  QueryGS = goldStand[q];
+#endif
 
       SeqSearchTime     += QueryGS.GetSeqSearchTime();
 

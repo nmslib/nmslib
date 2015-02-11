@@ -176,6 +176,36 @@ inline bool SplitStr(const std::string& str_, vector<ElemType>& res, const char 
   return true;
 }
 
+  /*
+   * "fields" each occupy a single line, they are in the format:
+   * fieldName:fieldValue.
+   */
+
+// Returns false if the line is empty
+inline void ReadField(istream &in, const string& fieldName, string& fieldValue) {
+  string s;
+  if (!getline(in, s)) throw runtime_error("Error reading a field value");
+  if (s.empty()) {
+    throw runtime_error("Empty field!");
+  }
+  string::size_type p = s.find(FIELD_DELIMITER);
+  if (string::npos == p)
+    throw runtime_error("Wrong field format, no delimiter: '" + s + "'");
+  string gotFieldName = s.substr(0, p);
+  if (gotFieldName != fieldName) {
+    throw runtime_error("Expected field '" + fieldName + "' but got: '"
+                        + gotFieldName + "'");
+  }
+  fieldValue = s.substr(p + 1);
+}
+
+inline void WriteField(ostream& out, const string& fieldName, const string& fieldValue) {
+  if (!(out << fieldName << ":" << fieldValue << std::endl)) {
+    throw
+      runtime_error("Error writing to an output stream, field name: " + fieldName);
+  }
+}
+
 template <typename obj_type>
 string ConvertToString(const obj_type& o) {
   std::stringstream str;
@@ -184,7 +214,7 @@ string ConvertToString(const obj_type& o) {
 }
 
 template <typename obj_type>
-string ConvertFromString(const string& s, obj_type& o) {
+void ConvertFromString(const string& s, obj_type& o) {
   std::stringstream str(s);
   if (!(str >> o) || !str.eof()) {
     throw runtime_error("Cannot convert '" + s +
