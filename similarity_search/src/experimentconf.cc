@@ -25,6 +25,7 @@
 #include "experimentconf.h"
 
 
+#define SPACE             "Space"
 
 #define DATA_FILE         "DataFile"
 #define DATA_FILE_QTY     "DataFileQty"
@@ -49,6 +50,16 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
                                     size_t& dataFileQty) {
   string s;
   size_t i;
+
+  ReadField(controlStream, SPACE, s);
+
+  if (s != space_->ToString()) {
+    stringstream err;
+    err << "The specified space ('" << space_->ToString() << "' "
+        << " doesn't match the space ('"
+        << s << ") in the gold standard cache (must be char-by-char equal).";
+    throw runtime_error(err.str());
+  }
 
   ReadField(controlStream, DATA_FILE, s);
 
@@ -185,6 +196,7 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStream) {
+  WriteField(controlStream, SPACE, space_->ToString());
   WriteField(controlStream, DATA_FILE, datafile_);
   WriteField(controlStream, DATA_FILE_QTY, ConvertToString(origData_.size()));
   WriteField(controlStream, QUERY_FILE, queryfile_);
