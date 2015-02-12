@@ -124,7 +124,11 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
           }
 
           std::shared_ptr<Index<dist_t>> MethodPtr = vIndexFollAllSetsPtrs[TestSetId];
-          if (!MethodPtr.get()) {
+          // TODO unfortunately currently we are bound to recreate
+          // VP-tree index, because it doesn't have an option to 
+          // change alphaLeft and alphaRight on the fly (at query time).
+          // However, this is in principle possible and should be done someday.
+          if (true || !MethodPtr.get()) {
             LOG(LIB_INFO) << "Creating a new index";
             MethodPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
                                            CreateMethod(false, 
