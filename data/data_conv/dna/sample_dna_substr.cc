@@ -152,7 +152,32 @@ int main(int argc, char* argv[]) {
 
     inp.exceptions(ios::badbit);
     while (getline(inp, line)) {
-    // 1. Add strings to the stack at randomly selected starting positions
+      // 1. Try to extend strings that were already on the stack or
+      //    were added to the stack in the current iteration
+      for (size_t i = 0; i < seqStack.size(); ) {
+        string& cs = seqStack[i];
+        if (cs.length() > seqStackExpLen[i]) {
+          cerr << "Bug: the length of the string on the stack (" << cs.length() << ") "
+              << " is already > seqStackExpLen[i] " << endl;
+          return 1;
+        }
+        size_t diff = min(seqStackExpLen[i] - cs.length(), line.length());
+        //cout << "DIFF=" << diff << endl;
+        cs += line.substr(0, diff);
+        if (cs.length() == seqStackExpLen[i]) {
+          outp << COMMON_PREFIX << toUpper(cs) << endl;
+          /*
+           * Let's delete from the stack, this is rather expensive but this
+           * is not going to happen very often: don't increase the
+           * loop counter in this case though!
+           */
+          seqStack.erase(seqStack.begin() + i);
+          seqStackExpLen.erase(seqStackExpLen.begin() + i);
+          if (++genQty >= nQty) goto finish;
+        } else ++i;
+      }
+
+      // 2. Add strings to the stack at randomly selected starting positions
       for (size_t i = 0; i < line.size(); ++i) {
         if (randGenUniform(randEngine) < probSelect) {
         // Ok, now select the length randomly
@@ -162,31 +187,9 @@ int main(int argc, char* argv[]) {
                                                     randGenNormal(randEngine))));
 
           //cout << "Pos: " << i << " len: " << len << endl;
-          seqStack.push_back("");
+          size_t diff = min(len, line.length() - i);
+          seqStack.push_back(line.substr(i, diff));
           seqStackExpLen.push_back(len);
-        }
-        // 2. Try to extend strings that were already on the stack or
-        //    were added to the stack in the current iteration
-        for (size_t i = 0; i < seqStack.size(); ) {
-          string& cs = seqStack[i];
-          if (cs.length() >= seqStackExpLen[i]) {
-            cerr << "Bug: the length of the string on the stack (" << cs.length() << ") "
-                << " is already >= seqStackExpLen[i] " << endl;
-            return 1;
-          }
-          size_t diff = min(seqStackExpLen[i] - cs.length(), line.length());
-          cs += line.substr(0, diff);
-          if (cs.length() == seqStackExpLen[i]) {
-            outp << COMMON_PREFIX << toUpper(cs) << endl;
-            /*
-             * Let's delete from the stack, this is rather expensive but this
-             * is not going to happen very often: don't increase the
-             * loop counter in this case though!
-             */
-            seqStack.erase(seqStack.begin() + i);
-            seqStackExpLen.erase(seqStackExpLen.begin() + i);
-            if (++genQty >= nQty) goto finish;
-          } else ++i;
         }
       }
     }
