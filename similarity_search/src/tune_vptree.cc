@@ -176,7 +176,10 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
             pmgr.GetParamRequired("alphaLeft", alpha_left_best);
             pmgr.GetParamRequired("alphaRight", alpha_right_best);
         }
-        LOG(LIB_INFO) << "Recall: " << Stat.GetRecallAvg() << " Query time: " << Stat.GetQueryTimeAvg();
+        LOG(LIB_INFO) << "Recall: " << Stat.GetRecallAvg();
+        LOG(LIB_INFO) << "Query time: " << Stat.GetQueryTimeAvg();
+        LOG(LIB_INFO) << "Impr. in efficiency: " << Stat.GetImprEfficiencyAvg();
+        LOG(LIB_INFO) << "Impr. in dist comp: " << Stat.GetImprDistCompAvg();
         MinRecall = std::min(MinRecall, Stat.GetRecallAvg());
         MaxRecall = std::max(MaxRecall, Stat.GetRecallAvg());
       }
