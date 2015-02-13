@@ -38,6 +38,9 @@
 #include "space.h"
 #include "index.h"
 #include "method/vptree.h"
+#include "method/proj_vptree.h"
+#include "method/permutation_vptree.h"
+#include "method/perm_bin_vptree.h"
 #include "logging.h"
 #include "spacefactory.h"
 #include "methodfactory.h"
@@ -61,6 +64,7 @@ const float    SlowIterFactor      = sqrt(FastIterFactor);
 template <typename dist_t>
 void GetOptimalAlphas(ExperimentConfig<dist_t>& config, 
                       const string& SpaceType,
+                      const string& methodName,
                       AnyParams AllParams, 
                       float& recall, float& time_best, float& alpha_left_best, float& alpha_right_best) {
   time_best = std::numeric_limits<float>::max();
@@ -132,7 +136,7 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
             LOG(LIB_INFO) << "Creating a new index";
             MethodPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
                                            CreateMethod(false, 
-                                                        METH_VPTREE, 
+                                                        methodName,
                                                         SpaceType, config.GetSpace(), 
                                                         config.GetDataObjects(), 
                                                         MethPars) );
@@ -145,7 +149,7 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
           vector<shared_ptr<MethodWithParams>>       MethodsDesc;
           
           IndexPtrs.push_back(MethodPtr);
-          MethodsDesc.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(METH_VPTREE, MethPars)));
+          MethodsDesc.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(methodName, MethPars)));
 
           Experiments<dist_t>::RunAll(false /* don't print info */, 1 /* thread */,
                                       TestSetId,
@@ -236,9 +240,28 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
     }
   }
 
-  if (Methods.size() != 1 ||
-      Methods[0]->methName_ != METH_VPTREE) {
-    LOG(LIB_FATAL) << "Should specify only the single method: " << METH_VPTREE;
+  vector<string>  vAllowedMeth = {METH_VPTREE, METH_PROJ_VPTREE, METH_PERMUTATION_VPTREE, METH_PERM_BIN_VPTREE};
+  string          allowedMethList;
+
+  for (string s: vAllowedMeth) allowedMethList += s + " ";
+
+  if (Methods.size() != 1) {
+    LOG(LIB_FATAL) << "Should specify only a single method from the list: " << allowedMethList;
+  }
+
+  const string methodName = Methods[0]->methName_;
+
+  bool ok = false;
+  for (string s: vAllowedMeth) {
+    if (methodName  == s) {
+      ok = true;
+      break;
+    }
+  }
+
+  if (!ok) {
+    LOG(LIB_FATAL) << "Wrong method name, " << 
+                      "you should specify only a single method from the list: " << allowedMethList;
   }
 
   const AnyParams& MethPars = Methods[0]->methPars_;
@@ -261,7 +284,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
       config.ReadDataset();
 
       float recall, time_best, alpha_left, alpha_right;
-      GetOptimalAlphas(config, SpaceType, MethPars, recall, time_best, alpha_left, alpha_right);
+      GetOptimalAlphas(config, SpaceType, methodName, MethPars, recall, time_best, alpha_left, alpha_right);
 
       LOG(LIB_INFO) << "Optimization results";
       LOG(LIB_INFO) << "Range: "  << rangeAll[i];
@@ -288,7 +311,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
       config.ReadDataset();
 
       float recall, time_best, alpha_left, alpha_right;
-      GetOptimalAlphas(config, SpaceType, MethPars, recall, time_best, alpha_left, alpha_right);
+      GetOptimalAlphas(config, SpaceType, methodName, MethPars, recall, time_best, alpha_left, alpha_right);
 
       LOG(LIB_INFO) << "Optimization results";
       LOG(LIB_INFO) << "K: "  << knnAll[i];

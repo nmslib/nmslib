@@ -381,7 +381,7 @@ void ExperimentConfig<dist_t>::PrintInfo() const {
   LOG(LIB_INFO) << "data file             = " << datafile_;
   LOG(LIB_INFO) << "# of test sets        = " << GetTestSetQty();
   LOG(LIB_INFO) << "Use held-out queries  = " << !noQueryFile_;
-  LOG(LIB_INFO) << "# of data points      = " << origData_.size() - GetQueryToRunQty();
+  LOG(LIB_INFO) << "# of data points      = " << origData_.size() - (noQueryFile_ ? GetQueryToRunQty():0);
   LOG(LIB_INFO) << "# of query points     = " << GetQueryToRunQty();
 }
 
