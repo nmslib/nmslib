@@ -32,6 +32,8 @@
 #define PROJ_TYPE_FAST_MAP        "fastmap"       
 // Integer value permutations
 #define PROJ_TYPE_PERM            "perm"
+// Binarized permutations: note that the result is nevertheless saved as floating-point vector
+#define PROJ_TYPE_PERM_BIN        "permbin"
 // Dense vectors remain unchanged, sparsed vectors are "hashed" into dense ones
 #define PROJ_TYPE_VECTOR_DENSE    "densevect"
 
@@ -57,7 +59,8 @@ public:
                                 ii)  Random reference points;
                                 iii) Permutations.
                         */
-                        size_t nDstDim);
+                        size_t nDstDim,
+                        unsigned binThreshold);
   /*
    * A function to create a projection. It should be implemented in child classes.
    * Note that the following:

@@ -206,6 +206,47 @@ private:
   size_t dstDim_;
 };
 
+// Binarized permutations
+template <typename dist_t>
+class ProjectionPermutationBin : public Projection<dist_t> {
+public:
+  virtual void compProj(Query<dist_t>* pQuery,
+                        const Object* pObj,
+                        float* pDstVect) const {
+    Permutation perm;
+
+    if (NULL == pQuery) {
+      GetPermutation(ref_pts_, space_, pObj, &perm);
+    } else {
+      GetPermutation(ref_pts_, pQuery, &perm);
+    }
+
+    for (size_t i = 0; i < dstDim_; ++i) {
+      // See also the function binarize
+      pDstVect[i] = static_cast<float>(perm[i] >= binThreshold_ ? 1:0);
+    }
+
+  }
+
+  friend class Projection<dist_t>;
+
+private:
+  ProjectionPermutationBin(const Space<dist_t>* space,
+                         const ObjectVector& data,
+                         size_t nDstDim,
+                         unsigned binThreshold)
+                                          : space_(space), data_(data),
+                                           dstDim_(nDstDim),
+                                           binThreshold_(binThreshold) {
+    GetPermutationPivot(data_, space_, nDstDim, &ref_pts_);
+  }
+  const Space<dist_t>*        space_;
+  const ObjectVector&         data_;
+  ObjectVector                ref_pts_;
+  size_t dstDim_;
+  unsigned binThreshold_;
+};
+
 /*
  * FastMap, see.
  *
@@ -289,7 +330,8 @@ Projection<dist_t>::createProjection(const Space<dist_t>* space,
                                      const ObjectVector& data,
                                      string projType,
                                      size_t nProjDim,
-                                     size_t nDstDim) {
+                                     size_t nDstDim,
+                                     unsigned binThreshold) {
   ToLower(projType);
 
   if (PROJ_TYPE_RAND == projType) {
@@ -298,6 +340,8 @@ Projection<dist_t>::createProjection(const Space<dist_t>* space,
     return new ProjectionRandRefPoint<dist_t>(space, data, nDstDim);
   } else if (PROJ_TYPE_PERM == projType) {
     return new ProjectionPermutation<dist_t>(space, data, nDstDim);
+  } else if (PROJ_TYPE_PERM_BIN == projType) {
+    return new ProjectionPermutationBin<dist_t>(space, data, nDstDim, binThreshold);
   } else if (PROJ_TYPE_VECTOR_DENSE == projType) {
     return new ProjectionVectDense<dist_t>(space, nDstDim);
   } else if (PROJ_TYPE_FAST_MAP == projType) {

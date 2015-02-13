@@ -43,6 +43,7 @@ void benchProjection(string spaceType,
                      string projType, unsigned knn, string projSpaceType,
                      unsigned nIntermDim,
                      unsigned nDstDim,
+                     unsigned binThreshold,
                      unsigned maxNumData,
                      unsigned sampleRandPairQty, unsigned sampleKNNQueryQty, unsigned sampleKNNTotalQty) {
   ToLower(spaceType);
@@ -98,7 +99,8 @@ void benchProjection(string spaceType,
                         data,
                         projType,
                         nIntermDim,
-                        nDstDim));
+                        nDstDim,
+                        binThreshold));
 
   ofstream out(outFile);
 
@@ -190,7 +192,8 @@ int main(int argc, char *argv[]) {
   unsigned    sampleRandPairQty = 0;
   unsigned    sampleKNNQueryQty = 0;
   unsigned    sampleKNNTotalQty = 0;
-  unsigned    nIntermDim = 0;
+  unsigned    nIntermDim   = 0;
+  unsigned    binThreshold = 0;
   unsigned    nDstDim;
   unsigned    knn = 0;
 
@@ -223,6 +226,8 @@ int main(int argc, char *argv[]) {
                         "intermediate dimensionality, used only for sparse vector spaces")
     ("projDim",          po::value<unsigned>(&nDstDim)->required(),
                         "dimensionality in the target space (where we project to)")
+    ("binThreshold",    po::value<unsigned>(&binThreshold)->default_value(0),
+                        "binarization threshold, used only for permutations")
     ("maxNumData",      po::value<unsigned>(&maxNumData)->default_value(0),
                         "if non-zero, only the first maxNumData elements are used")
     ("logFile,l",       po::value<string>(&logFile)->default_value(""),
@@ -262,13 +267,13 @@ int main(int argc, char *argv[]) {
     if (distType == "float") {
       benchProjection<float>(spaceType, inFile, outFile,
                              projType, knn, projSpaceType,
-                             nIntermDim, nDstDim,
+                             nIntermDim, nDstDim, binThreshold,
                              maxNumData,
                              sampleRandPairQty, sampleKNNQueryQty, sampleKNNTotalQty);
     } else if (distType == "double") {
       benchProjection<float>(spaceType, inFile, outFile,
                              projType, knn, projSpaceType,
-                             nIntermDim, nDstDim,
+                             nIntermDim, nDstDim, binThreshold,
                              maxNumData,
                              sampleRandPairQty, sampleKNNQueryQty, sampleKNNTotalQty);
     } else {

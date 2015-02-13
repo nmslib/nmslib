@@ -50,12 +50,17 @@ OMedRank<dist_t>::OMedRank(
   pmgr.GetParamOptional("numPivot", num_pivot_);
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
 
+  ToLower(proj_type_);
+  if (PROJ_TYPE_PERM_BIN == proj_type_)
+    throw runtime_error("This method cannot be used with binarized permutations!");
+
   projection_.reset(Projection<dist_t>::createProjection(
                                                       space_,
                                                       data_,
                                                       proj_type_,
                                                       proj_dim_,
-                                                      num_pivot_));
+                                                      num_pivot_,
+                                                      0 /* can't be used with binarized permutations */));
 
   if (projection_.get() == NULL) {
     throw runtime_error("Cannot create projection class '" + proj_type_ + "'" +
