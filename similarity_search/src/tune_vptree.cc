@@ -122,7 +122,7 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
           LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
           if (!vManagerGS[TestSetId].get()) {
             vManagerGS[TestSetId].reset(new GoldStandardManager<dist_t>(config));
-            vManagerGS[TestSetId]->Compute();
+            vManagerGS[TestSetId]->Compute(0); // TODO zero means that we keep every GS entry, which may be too much
           } else {
             LOG(LIB_INFO) << "Using existing GS for test set id: " << TestSetId;
           }

@@ -89,9 +89,16 @@ public:
   GoldStandard(){}
   GoldStandard(const typename similarity::Space<dist_t>* space,
               const ObjectVector& datapoints,
-              const typename similarity::Query<dist_t>* query
+              const typename similarity::Query<dist_t>* query,
+              size_t maxKeepEntryQty
               ) {
     DoSeqSearch(space, datapoints, query->QueryObject());
+    if (maxKeepEntryQty != 0) {
+      if (SortedAllEntries_.size() > maxKeepEntryQty) {
+        SortedAllEntries_.erase(SortedAllEntries_.begin() + maxKeepEntryQty,
+                                SortedAllEntries_.end());
+      }
+    }
   }
   /*
    * See the endianness comment.
@@ -163,19 +170,20 @@ public:
                       vvGoldStandardRange_(config_.GetRange().size()),
                       vvGoldStandardKNN_(config_.GetKNN().size()) {}
   // Both read and Compute can be called multiple times
-  void Compute() {
+  // if maxKeepEntryQty is non-zero, we keep only maxKeepEntryQty GS entries
+  void Compute(size_t maxKeepEntryQty) {
     LOG(LIB_INFO) << "Computing gold standard data";
     for (size_t i = 0; i < config_.GetRange().size(); ++i) {
       vvGoldStandardRange_[i].clear();
       const dist_t radius = config_.GetRange()[i];
       RangeCreator<dist_t>  cr(radius);
-      procOneSet(cr, vvGoldStandardRange_[i]);
+      procOneSet(cr, vvGoldStandardRange_[i], maxKeepEntryQty);
     }
     for (size_t i = 0; i < config_.GetKNN().size(); ++i) {
       vvGoldStandardKNN_[i].clear();
       const size_t K = config_.GetKNN()[i];
       KNNCreator<dist_t>  cr(K, config_.GetEPS());
-      procOneSet(cr, vvGoldStandardKNN_[i]);
+      procOneSet(cr, vvGoldStandardKNN_[i], maxKeepEntryQty);
     }
   }
   void Read(istream& controlStream, istream& binaryStream,
@@ -247,13 +255,15 @@ private:
 
   template <typename QueryCreatorType>
   void procOneSet(const QueryCreatorType&       QueryCreator,
-                  vector<GoldStandard<dist_t>>& vGoldStand) {
+                  vector<GoldStandard<dist_t>>& vGoldStand,
+                  size_t maxKeepEntryQty) {
     for (size_t q = 0; q < config_.GetQueryObjects().size(); ++q) {
       unique_ptr<Query<dist_t>> query(QueryCreator(config_.GetSpace(),
                                       config_.GetQueryObjects()[q]));
       vGoldStand.push_back(GoldStandard<dist_t>(config_.GetSpace(),
                                                 config_.GetDataObjects(),
-                                                query.get()));
+                                                query.get(),
+                                                maxKeepEntryQty));
     }
 
   }

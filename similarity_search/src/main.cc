@@ -274,7 +274,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
         throw runtime_error(err.str());
       }
     } else {
-      managerGS.Compute();
+      managerGS.Compute(MaxCacheGSQty);
       if (bWriteGSCache) {
         LOG(LIB_INFO) << "Saving the cache, at most: " << MaxCacheGSQty << " entries";
         managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId, MaxCacheGSQty);

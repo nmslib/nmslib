@@ -322,7 +322,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
       }
 
       GoldStandardManager<dist_t> managerGS(config);
-      managerGS.Compute();
+      managerGS.Compute(0); // Keeping all GS entries, should be Ok here because our data sets are smallish
 
       Experiments<dist_t>::RunAll(true /* print info */, 
                                       ThreadTestQty,
