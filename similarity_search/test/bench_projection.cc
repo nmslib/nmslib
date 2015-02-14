@@ -38,7 +38,8 @@ static void Usage(const char *prog,
 }
 
 template <class dist_t>
-void benchProjection(string spaceType,
+void benchProjection(size_t repeatQty,
+                     string spaceType,
                      string inFile, string outFile,
                      string projType, unsigned knn, string projSpaceType,
                      unsigned nIntermDim,
@@ -93,7 +94,18 @@ void benchProjection(string spaceType,
   size_t N = data.size();
 
 
-  unique_ptr<Projection<dist_t> > projObj(
+  unique_ptr<Projection<dist_t> > projObj;
+
+  ofstream out(outFile);
+
+  LOG(LIB_INFO) << "sampleRandPairQty=" << sampleRandPairQty;
+  LOG(LIB_INFO) << "sampleKNNQueryQty=" << sampleKNNQueryQty;
+  LOG(LIB_INFO) << "sampleKNNTotalQty=" << sampleKNNTotalQty;
+  LOG(LIB_INFO) << "recreating projections #times=" << repeatQty;
+
+  if (N > 0) 
+  for (size_t rr = 0; rr < repeatQty; ++rr) {
+    probObj.reset(
       Projection<dist_t>::createProjection(
                         space.get(),
                         data,
@@ -102,9 +114,6 @@ void benchProjection(string spaceType,
                         nDstDim,
                         binThreshold));
 
-  ofstream out(outFile);
-
-  if (N > 0) {
     vector<float>   v1(nDstDim), v2(nDstDim);
 
     vector<IdType>  vId1, vId2;
@@ -124,10 +133,6 @@ void benchProjection(string spaceType,
 
     size_t iter = 0;
     size_t startId = vOrigDist.size();
-
-    LOG(LIB_INFO) << "sampleRandPairQty=" << sampleRandPairQty;
-    LOG(LIB_INFO) << "sampleKNNQueryQty=" << sampleKNNQueryQty;
-    LOG(LIB_INFO) << "sampleKNNTotalQty=" << sampleKNNTotalQty;
 
     for (size_t i = 0; i < sampleKNNQueryQty; ++i) {
       IdType id1 = RandomInt() % N;
@@ -196,6 +201,7 @@ int main(int argc, char *argv[]) {
   unsigned    binThreshold = 0;
   unsigned    nDstDim;
   unsigned    knn = 0;
+  unsigned    repeatQty = 1;
 
 
   po::options_description ProgOptDesc("Allowed options");
@@ -222,6 +228,8 @@ int main(int argc, char *argv[]) {
                         "a total number of randomly selected queries' nearest neighbors (should be >= sampleKNNQueryQty)")
     ("knn,k",           po::value<unsigned>(&knn)->default_value(0),
                         "use this number of nearest neighbors (should be > 0 if sampleKNNQueryQty > 0)")
+    ("repeat,r",        po::value<unsigned>(&repeatQty)->default_value(10),
+                        "recreate projections this number of times")
     ("intermDim",       po::value<unsigned>(&nIntermDim)->default_value(0),
                         "intermediate dimensionality, used only for sparse vector spaces")
     ("projDim",          po::value<unsigned>(&nDstDim)->required(),
@@ -265,13 +273,13 @@ int main(int argc, char *argv[]) {
       }
     }
     if (distType == "float") {
-      benchProjection<float>(spaceType, inFile, outFile,
+      benchProjection<float>(repeatQty, spaceType, inFile, outFile,
                              projType, knn, projSpaceType,
                              nIntermDim, nDstDim, binThreshold,
                              maxNumData,
                              sampleRandPairQty, sampleKNNQueryQty, sampleKNNTotalQty);
     } else if (distType == "double") {
-      benchProjection<float>(spaceType, inFile, outFile,
+      benchProjection<float>(repeatQty, spaceType, inFile, outFile,
                              projType, knn, projSpaceType,
                              nIntermDim, nDstDim, binThreshold,
                              maxNumData,
