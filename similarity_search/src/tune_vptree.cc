@@ -80,16 +80,16 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
   float alpha_right_base = 0;
   float DesiredRecall = 0;
 
+  pmgr.GetParamRequired("desiredRecall", DesiredRecall);
   pmgr.GetParamRequired("alphaLeft", alpha_left_base); 
   pmgr.GetParamRequired("alphaRight", alpha_right_base); 
-  pmgr.GetParamRequired("desiredRecall", DesiredRecall);
 
   unsigned ChangeAlphaState = 0;
 
   AnyParams  MethPars = pmgr.ExtractParametersExcept({"desiredRecall"});
 
-  vector<shared_ptr<GoldStandardManager<dist_t>>>  vManagerGS(config.GetTestSetQty());
-  vector<shared_ptr<Index<dist_t>>>                vIndexFollAllSetsPtrs(config.GetTestSetQty());
+  vector<shared_ptr<GoldStandardManager<dist_t>>>  vManagerGS(config.GetTestSetToRunQty());
+  vector<shared_ptr<Index<dist_t>>>                vIndexFollAllSetsPtrs(config.GetTestSetToRunQty());
 
   for (unsigned iter = 0; iter < MaxIter; ++iter) {
     LOG(LIB_INFO) << "Iteration: " << iter << " StepFactor: " << StepFactor;
@@ -108,7 +108,7 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
         vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
                                               vector<MetaAnalysis*>(1));
 
-        MetaAnalysis    Stat(config.GetTestSetQty());
+        MetaAnalysis    Stat(config.GetTestSetToRunQty());
 
         // Stat is used exactly only once: for one GetRange() or one GetKNN() (but not both)
         for (size_t i = 0; i < config.GetRange().size(); ++i) {
@@ -117,9 +117,9 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
         for (size_t i = 0; i < config.GetKNN().size(); ++i) {
           ExpResKNN[i][0] = &Stat;
         }
-        for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
+        for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
           config.SelectTestSet(TestSetId);
-          LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
+          LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
           if (!vManagerGS[TestSetId].get()) {
             vManagerGS[TestSetId].reset(new GoldStandardManager<dist_t>(config));
             vManagerGS[TestSetId]->Compute(0); // TODO zero means that we keep every GS entry, which may be too much
@@ -266,6 +266,8 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
     LOG(LIB_FATAL) << "Wrong method name, " << 
                       "you should specify only a single method from the list: " << allowedMethList;
   }
+
+  LOG(LIB_INFO) << "We are going to tune parameters for " << methodName;
 
   const AnyParams& MethPars = Methods[0]->methPars_;
 

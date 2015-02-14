@@ -85,7 +85,7 @@ void GetPermutation(const ObjectVector& pivot, const Space<dist_t>* space,
 
 template <typename dist_t>
 void GetPermutation(const ObjectVector& pivot,
-                    Query<dist_t>* query,
+                    const Query<dist_t>* query,
                     Permutation* p) {
   std::vector<DistInt<dist_t>> dists;
   for (size_t i = 0; i < pivot.size(); ++i) {

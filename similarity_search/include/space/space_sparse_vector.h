@@ -79,8 +79,6 @@ public:
                       const char* inputfile,
                       const int MaxNumObjects) const;
 
-  void GenRandProjPivots(ObjectVector& vDst, size_t Qty, size_t MaxElem) const;
-
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
   // Sparse vectors have no fixed dimensionality
   virtual size_t GetElemQty(const Object* object) const {return 0;}

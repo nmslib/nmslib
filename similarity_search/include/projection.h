@@ -77,13 +77,13 @@ public:
    *       index time) and the pQuery (at search time).
    *
    */
-  virtual void  compProj(Query<dist_t>* pQuery,
+  virtual void  compProj(const Query<dist_t>* pQuery,
                          const Object* pObj,
                          float* pDstVect) const = 0;
 
 protected:
   static dist_t DistanceObjLeft(const Space<dist_t>* pSpace,
-                                Query<dist_t>* pQuery,
+                                const Query<dist_t>* pQuery,
                                 const Object* pRefObj, // reference object
                                 const Object* pObj // the object to project
                                 ) {

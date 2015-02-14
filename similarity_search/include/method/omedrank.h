@@ -91,7 +91,7 @@ class OMedRank : public Index<dist_t> {
   size_t                  db_scan_;
   bool                    skip_check_;
   string                  proj_type_;
-  size_t                  proj_dim_; // used only for sparse vector spaces
+  size_t                  interm_dim_; // used only for sparse vector spaces
   std::unique_ptr<Projection<dist_t>>  projection_;
 
   struct ObjectInvEntry {

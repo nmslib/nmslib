@@ -85,12 +85,12 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
   }
 
   ReadField(controlStream, TEST_SET_QTY, s);
-  ConvertFromString(s, i);
+  ConvertFromString(s, testSetQty_);
 
-  if (i != testSetQty_) {
+  if (testSetQty_ < testSetToRunQty_) {
     stringstream err;
-    err << "The specified # of test sets (" << testSetQty_ << ") "
-        << " doesn't match the value (" << i << ") "
+    err << "The specified # of test sets (" << testSetToRunQty_ << ") "
+        << " is larger than the value (" << testSetQty_ << ") "
         << " in the gold standard cache.";
     throw runtime_error(err.str());
   }
@@ -215,7 +215,7 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
   unsigned queryQty = origQuery_.size();
 
   if (noQueryFile_) {
-    if (!testSetQty_) {
+    if (!testSetToRunQty_) {
       throw runtime_error("Bug: zero number of test sets!");
     }
     /*
@@ -239,7 +239,7 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
     if (!queryQty) {
       throw runtime_error("Bug: zero number of queries!");
     }
-    for (size_t i = 1; i < testSetQty_; ++i)
+    for (size_t i = 1; i < testSetToRunQty_; ++i)
     if (qtys[i] != queryQty) {
       stringstream err;
       err << "Bug, different # of queries in the subsets, " <<
@@ -270,13 +270,12 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
       controlStream << line.str() << endl;
     }
   }
-
 }
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::SelectTestSet(int SetNum) {
   if (!noQueryFile_) return;
-  if (SetNum <0 || static_cast<unsigned>(SetNum) >= testSetQty_) {
+  if (SetNum <0 || static_cast<unsigned>(SetNum) >= testSetToRunQty_) {
     stringstream err;
     err << "Invalid test set #: " << SetNum;
     throw runtime_error(err.str());
@@ -379,7 +378,8 @@ void ExperimentConfig<dist_t>::PrintInfo() const {
   space_->PrintInfo();
   LOG(LIB_INFO) << "distance type         = " << DistTypeName<dist_t>();
   LOG(LIB_INFO) << "data file             = " << datafile_;
-  LOG(LIB_INFO) << "# of test sets        = " << GetTestSetQty();
+  LOG(LIB_INFO) << "# of test sets        = " << GetTestSetTotalQty();
+  LOG(LIB_INFO) << "# of test sets to run = " << GetTestSetToRunQty();
   LOG(LIB_INFO) << "Use held-out queries  = " << !noQueryFile_;
   LOG(LIB_INFO) << "# of data points      = " << origData_.size() - (noQueryFile_ ? GetQueryToRunQty():0);
   LOG(LIB_INFO) << "# of query points     = " << GetQueryToRunQty();

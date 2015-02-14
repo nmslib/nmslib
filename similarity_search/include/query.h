@@ -35,10 +35,10 @@ class Query {
   void AddDistanceComputations(uint64_t DistComp) { distance_computations_ += DistComp; }
 
   void ResetStats();
-  virtual dist_t Distance(const Object* object1, const Object* object2);
+  virtual dist_t Distance(const Object* object1, const Object* object2) const;
   // Distance can be asymmetric!
-  virtual dist_t DistanceObjLeft(const Object* object);
-  virtual dist_t DistanceObjRight(const Object* object);
+  virtual dist_t DistanceObjLeft(const Object* object) const;
+  virtual dist_t DistanceObjRight(const Object* object) const;
 
   virtual void Reset() = 0;
   virtual dist_t Radius() const = 0;
@@ -48,7 +48,7 @@ class Query {
  protected:
   const Space<dist_t>* space_;
   const Object* query_object_;
-  uint64_t distance_computations_;
+  mutable uint64_t distance_computations_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(Query);

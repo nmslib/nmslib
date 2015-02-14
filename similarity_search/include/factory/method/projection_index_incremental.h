@@ -14,12 +14,10 @@
  *
  */
 
-#ifndef _FACTORY_PROJ_VPTREE_H
-#define _FACTORY_PROJ_VPTREE_H
+#ifndef _FACTORY_PROJ_INDEX_INCR_H_
+#define _FACTORY_PROJ_INDEX_INCR_H_
 
-#include <method/proj_vptree.h>
-#include <space/space_sparse_scalar.h>
-#include <space/space_sparse_scalar_fast.h>
+#include <method/projection_index_incremental.h>
 
 namespace similarity {
 
@@ -28,12 +26,15 @@ namespace similarity {
  */
 
 template <typename dist_t>
-Index<dist_t>* CreateProjVPTree(bool PrintProgress,
+Index<dist_t>* CreateProjectionIndexIncremental(bool PrintProgress,
                            const string& SpaceType,
                            const Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
-    return new ProjectionVPTree<dist_t>(space, DataObjects, AllParams);
+  return new ProjectionIndexIncremental<dist_t>(space,
+                                                DataObjects,
+                                                AllParams);
+
 }
 
 /*

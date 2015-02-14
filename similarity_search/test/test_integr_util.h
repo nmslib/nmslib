@@ -230,18 +230,18 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
   for (auto it = MethodsDesc.begin(); it != MethodsDesc.end(); ++it, ++MethNum) {
 
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetQty());
+      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetQty());
+      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
   }
 
 
-  for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
+  for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
 
-    LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
+    LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
 
     ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 

@@ -105,7 +105,8 @@ void benchProjection(size_t repeatQty,
 
   if (N > 0) 
   for (size_t rr = 0; rr < repeatQty; ++rr) {
-    probObj.reset(
+    LOG(LIB_INFO) << "Creating projection object set " << (rr + 1) << " out of " << repeatQty;
+    projObj.reset(
       Projection<dist_t>::createProjection(
                         space.get(),
                         data,

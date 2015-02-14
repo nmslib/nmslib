@@ -38,7 +38,7 @@ using namespace std;
 template <class dist_t>
 class ProjectionVectDense : public Projection<dist_t> {
 public:
-  virtual void compProj(Query<dist_t>* pQuery,
+  virtual void compProj(const Query<dist_t>* pQuery,
                         const Object* pObj,
                         float* pDstVect) const {
     if (NULL == pObj) pObj = pQuery->QueryObject();
@@ -70,7 +70,7 @@ private:
 template <class dist_t>
 class ProjectionRand : public Projection<dist_t> {
 public:
-  virtual void compProj(Query<dist_t>* pQuery,
+  virtual void compProj(const Query<dist_t>* pQuery,
                         const Object* pObj,
                         float* pDstVect) const {
     if (NULL == pObj) pObj = pQuery->QueryObject();
@@ -112,7 +112,7 @@ private:
     size_t nDim = space->GetElemQty(data[0]);
     if (nDim == 0) {
       if (!projDim_) {
-        throw runtime_error("Specify a non-zero value for the projective dimensionaity.");
+        throw runtime_error("Specify a non-zero value for the intermediate dimensionaity.");
       }
       nDim = projDim_;
     }
@@ -133,7 +133,7 @@ private:
 template <class dist_t>
 class ProjectionRandRefPoint : public Projection<dist_t> {
 public:
-  virtual void compProj(Query<dist_t>* pQuery,
+  virtual void compProj(const Query<dist_t>* pQuery,
                         const Object* pObj,
                         float* pDstVect) const {
     for (size_t i = 0; i < dstDim_; ++i) {
@@ -174,7 +174,7 @@ private:
 template <typename dist_t>
 class ProjectionPermutation : public Projection<dist_t> {
 public:
-  virtual void compProj(Query<dist_t>* pQuery,
+  virtual void compProj(const Query<dist_t>* pQuery,
                         const Object* pObj,
                         float* pDstVect) const {
     Permutation perm;
@@ -210,7 +210,7 @@ private:
 template <typename dist_t>
 class ProjectionPermutationBin : public Projection<dist_t> {
 public:
-  virtual void compProj(Query<dist_t>* pQuery,
+  virtual void compProj(const Query<dist_t>* pQuery,
                         const Object* pObj,
                         float* pDstVect) const {
     Permutation perm;
@@ -258,7 +258,7 @@ private:
 template <typename dist_t>
 class ProjectionFastMap : public Projection<dist_t> {
 public:
-  virtual void compProj(Query<dist_t>* pQuery,
+  virtual void compProj(const Query<dist_t>* pQuery,
                         const Object* pObj,
                         float* pDstVect) const {
 
@@ -347,6 +347,8 @@ Projection<dist_t>::createProjection(const Space<dist_t>* space,
   } else if (PROJ_TYPE_FAST_MAP == projType) {
     return new ProjectionFastMap<dist_t>(space, data, nDstDim);
   }
+
+  throw runtime_error("Unknown projection type '" + projType + "'");
 
   return NULL;
 }

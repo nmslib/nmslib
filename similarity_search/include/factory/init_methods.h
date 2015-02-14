@@ -39,6 +39,7 @@
 #include "factory/method/permutation_vptree.h"
 #include "factory/method/pivot_neighb_invindx.h"
 #include "factory/method/proj_vptree.h"
+#include "factory/method/projection_index_incremental.h"
 #include "factory/method/seqsearch.h"
 #include "factory/method/small_world_rand.h"
 #include "factory/method/spatial_approx_tree.h"
@@ -132,6 +133,14 @@ inline void initMethods() {
   // VP-tree built over projections
   REGISTER_METHOD_CREATOR(float,  METH_PROJ_VPTREE, CreateProjVPTree)
   REGISTER_METHOD_CREATOR(double, METH_PROJ_VPTREE, CreateProjVPTree)
+  REGISTER_METHOD_CREATOR(int,    METH_PROJ_VPTREE, CreateProjVPTree)
+
+  
+  // Sequential-search projection index with incremental sorting
+  REGISTER_METHOD_CREATOR(float,  METH_PROJECTION_INC_SORT, CreateProjectionIndexIncremental)
+  REGISTER_METHOD_CREATOR(double, METH_PROJECTION_INC_SORT, CreateProjectionIndexIncremental)
+  REGISTER_METHOD_CREATOR(int,    METH_PROJECTION_INC_SORT, CreateProjectionIndexIncremental)
+
 
   // Just sequential searching
   REGISTER_METHOD_CREATOR(float,  METH_SEQ_SEARCH, CreateSeqSearch)

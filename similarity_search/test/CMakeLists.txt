@@ -45,8 +45,8 @@ else()
   set(BOOST_LIB "")
 endif()
 
-target_link_libraries (bunit NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} )
-target_link_libraries (bench_distfunc NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} )
+target_link_libraries (bunit NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
+target_link_libraries (bench_distfunc NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
 target_link_libraries (test_integr NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")

@@ -21,9 +21,10 @@
 
 #include "index.h"
 #include "space/space_lp.h"
-#include "space/space_sparse_vector.h"
+#include "space/space_vector.h"
 #include "method/vptree.h"
 #include "params.h"
+#include "projection.h"
 #include "searchoracle.h"
 
 #define METH_PROJ_VPTREE     "proj_vptree"
@@ -51,17 +52,19 @@ class ProjectionVPTree : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query);
 
  private:
-  const SpaceSparseVector<dist_t>*  space_;
+  const Space<dist_t>*              space_;
   const ObjectVector&               data_;
   size_t                            db_scan_qty_;
-  ObjectVector                      randProjPivots_;
+  unique_ptr<Projection<dist_t> >   projObj_;
   ObjectVector                      projData_;
+  size_t                            projDim_;
 
-  // Convert a sparse vector into a dense one
-  Object*                           ProjectOneVect(size_t id, const Object* sparseVect) const;
+  Object*                           ProjectOneVect(size_t targSpaceId,
+                                                   const Query<dist_t>* pQuery,
+                                                   const Object* pSrcObj) const;
 
   VPTree<float, TriangIneq<float>, TriangIneqCreator<float> >*   VPTreeIndex_;
-  const SpaceLp<float>*                                          VPTreeSpace_;
+  unique_ptr<const VectorSpaceSimpleStorage<float>>              VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(ProjectionVPTree);

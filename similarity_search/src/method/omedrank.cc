@@ -41,12 +41,12 @@ OMedRank<dist_t>::OMedRank(
     chunk_index_size_(16536),
     index_qty_(0), // If ComputeDbScan is called before index_qty_ is computed, it will see this zero
     skip_check_(false),
-    proj_dim_(0)
+    interm_dim_(0)
  {
 
   pmgr.GetParamOptional("projType", proj_type_);
   if (proj_type_.empty()) proj_type_ = PROJ_TYPE_RAND;
-  pmgr.GetParamOptional("projDim", proj_dim_);
+  pmgr.GetParamOptional("intermDim", interm_dim_);
   pmgr.GetParamOptional("numPivot", num_pivot_);
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
 
@@ -58,7 +58,7 @@ OMedRank<dist_t>::OMedRank(
                                                       space_,
                                                       data_,
                                                       proj_type_,
-                                                      proj_dim_,
+                                                      interm_dim_,
                                                       num_pivot_,
                                                       0 /* can't be used with binarized permutations */));
 
@@ -74,11 +74,11 @@ OMedRank<dist_t>::OMedRank(
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
   LOG(LIB_INFO) << "# of index chunks  = " << index_qty_;
-  LOG(LIB_INFO) << "projection type:   " << proj_type_;
-  LOG(LIB_INFO) << "projection dim:    " << proj_dim_;
-  LOG(LIB_INFO) << "# pivots         = " << num_pivot_;
-  LOG(LIB_INFO) << "db scan fraction = " << db_scan_frac_;
-  LOG(LIB_INFO) << "min freq = "         << min_freq_;
+  LOG(LIB_INFO) << "projection type:     " << proj_type_;
+  LOG(LIB_INFO) << "intermediate dim:    " << interm_dim_;
+  LOG(LIB_INFO) << "# pivots/target dim  " << num_pivot_;
+  LOG(LIB_INFO) << "db scan fraction =   " << db_scan_frac_;
+  LOG(LIB_INFO) << "min freq =           " << min_freq_;
 
   posting_lists_.resize(index_qty_);
 

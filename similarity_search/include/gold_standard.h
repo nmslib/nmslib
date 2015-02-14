@@ -93,7 +93,7 @@ public:
               size_t maxKeepEntryQty
               ) {
     DoSeqSearch(space, datapoints, query->QueryObject());
-    if (maxKeepEntryQty != 0) {
+    if (maxKeepEntryQty != 0 && maxKeepEntryQty < SortedAllEntries_.size()) {
       vector<ResultEntry<dist_t>>         tmp(SortedAllEntries_.begin(),
                                              SortedAllEntries_.begin() + maxKeepEntryQty);
       /* 

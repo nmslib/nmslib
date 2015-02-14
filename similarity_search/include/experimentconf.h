@@ -51,6 +51,7 @@ public:
         datafile_(datafile),
         queryfile_(queryfile),
         noQueryFile_(queryfile.empty()),
+        testSetToRunQty_(TestSetQty),
         testSetQty_(TestSetQty),
         maxNumData_(MaxNumData),
         maxNumQuery_(MaxNumQueryToRun),
@@ -60,7 +61,7 @@ public:
         knn_(knn),
         eps_(eps) {
     if (noQueryFile_) {
-      if (!testSetQty_) {
+      if (!testSetToRunQty_) {
         throw runtime_error(
             "Bad configuration. One should either specify a query file, "
             " or the number of test sets obtained by bootstrapping "
@@ -82,7 +83,11 @@ public:
   void ReadDataset();
   void PrintInfo() const;
   void SelectTestSet(int SetNum);
-  int GetTestSetQty() const {
+  int GetTestSetToRunQty() const {
+    if (!noQueryFile_) return 1;
+    return testSetToRunQty_;
+  }
+  int GetTestSetTotalQty() const {
     if (!noQueryFile_) return 1;
     return testSetQty_;
   }
@@ -120,6 +125,7 @@ private:
   string            datafile_;
   string            queryfile_;
   bool              noQueryFile_;
+  unsigned          testSetToRunQty_;
   unsigned          testSetQty_;
   unsigned          maxNumData_;
   unsigned          maxNumQuery_;
