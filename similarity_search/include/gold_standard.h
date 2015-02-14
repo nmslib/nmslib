@@ -94,10 +94,13 @@ public:
               ) {
     DoSeqSearch(space, datapoints, query->QueryObject());
     if (maxKeepEntryQty != 0) {
-      if (SortedAllEntries_.size() > maxKeepEntryQty) {
-        SortedAllEntries_.erase(SortedAllEntries_.begin() + maxKeepEntryQty,
-                                SortedAllEntries_.end());
-      }
+      vector<ResultEntry<dist_t>>         tmp(SortedAllEntries_.begin(),
+                                             SortedAllEntries_.begin() + maxKeepEntryQty);
+      /* 
+       * The swap trick actually leads to memory being freed.
+       * If we simply erase the extra entries, vector still keeps the memory!
+       */
+      SortedAllEntries_.swap(tmp);
     }
   }
   /*
@@ -172,7 +175,7 @@ public:
   // Both read and Compute can be called multiple times
   // if maxKeepEntryQty is non-zero, we keep only maxKeepEntryQty GS entries
   void Compute(size_t maxKeepEntryQty) {
-    LOG(LIB_INFO) << "Computing gold standard data";
+    LOG(LIB_INFO) << "Computing gold standard data, at most " << maxKeepEntryQty << " entries";;
     for (size_t i = 0; i < config_.GetRange().size(); ++i) {
       vvGoldStandardRange_[i].clear();
       const dist_t radius = config_.GetRange()[i];
