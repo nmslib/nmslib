@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Converting fvec-files from the texmex collection:
+# Converting bvec-files from the texmex collection:
 # http://corpus-texmex.irisa.fr/
 # Should be run on an Intel (little-endian) machine
 
@@ -19,7 +19,7 @@ fin = open(ifile, 'rb')
 
 dim = struct.unpack('i', fin.read(4))[0]
 
-if fsize % (4*(dim + 1)) != 0:
+if fsize % (dim + 4) != 0:
   raise Exception("File: " + ifile + " has the wrong format, expected dim = " + str(dim))
 
 fin.close()
@@ -39,7 +39,7 @@ for i in range(0,rowQty):
   if tmpd != dim:
     raise Exception("Wrong format, got wrong dimension: " + str(tmpd) + " expect: " + str(dim) + " row " + str(i+1))
 
-  vec = array.array('f')
+  vec = array.array('B')
   
   vec.read(fin, dim)
   out = ''
