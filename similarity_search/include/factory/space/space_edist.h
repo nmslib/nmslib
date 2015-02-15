@@ -25,9 +25,12 @@ namespace similarity {
  * Creating functions.
  */
 
-template <typename dist_t>
-Space<dist_t>* CreateLevenshtein(const AnyParams& AllParams) {
+Space<int>* CreateLevenshtein(const AnyParams& AllParams) {
   return new SpaceLevenshtein();
+}
+
+Space<float>* CreateLevenshteinNormalized(const AnyParams& AllParams) {
+  return new SpaceLevenshteinNormalized();
 }
 
 /*

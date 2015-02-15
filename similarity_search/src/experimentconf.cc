@@ -156,7 +156,7 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
     if (kVal < knn_[i]) {
       stringstream err;
       err << "The specified KNN value #" << (i+1) << " (" << knn_[i] << ") "
-          << " isn't >= than the value (" << kVal << ") "
+          << " is greater than the value (" << kVal << ") "
           << " in the gold standard cache.";
       throw runtime_error(err.str());
     }

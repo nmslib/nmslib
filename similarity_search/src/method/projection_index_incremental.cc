@@ -20,6 +20,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <limits>
+#include <queue>
 
 #include "distcomp.h"
 #include "space.h"
@@ -42,7 +43,8 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
     const Space<dist_t>*  space,
     const ObjectVector&   data,
     const AnyParams&      AllParams)
-	: space_(space), data_(data) /* reference */ {
+	: space_(space), data_(data) /* reference */,
+	  use_priority_queue_(false) {
 
   AnyParamManager pmgr(AllParams);
 
@@ -54,6 +56,8 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
                         " requires that dbScanFrac is in the range [0,1]");
   }
   
+  pmgr.GetParamOptional("useQueue", use_priority_queue_);
+
   max_proj_dist_ = numeric_limits<float>::max();
   pmgr.GetParamOptional("maxProjDist", max_proj_dist_);
 
@@ -76,6 +80,7 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
   LOG(LIB_INFO) << "binThreshold = " << binThreshold;
   LOG(LIB_INFO) << "dbDscanFrac  = " << DbScanFrac;
   LOG(LIB_INFO) << "maxProjDist  = " << max_proj_dist_;
+  LOG(LIB_INFO) << "useQueue     = " << use_priority_queue_;
 
 
   /*
@@ -155,31 +160,52 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query) {
   vector<float>     QueryVect(proj_dim_);
   proj_obj_->compProj(query, query->QueryObject(), &QueryVect[0]);
 
-  std::vector<FloatInt> proj_dists;
-  proj_dists.reserve(data_.size());
+  if (!use_priority_queue_) {
+    std::vector<FloatInt> proj_dists;
+    proj_dists.reserve(data_.size());
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
-  for (size_t i = 0, start = 0; i < data_.size(); ++i, start += proj_dim_) {
-    float projDist = L2NormSIMD(&proj_vects_[start], &QueryVect[0], proj_dim_);
-    if (projDist <= max_proj_dist_)
-      proj_dists.push_back(std::make_pair(projDist, i));
-  }
+    for (size_t i = 0, start = 0; i < data_.size(); ++i, start += proj_dim_) {
+      float projDist = L2NormSIMD(&proj_vects_[start], &QueryVect[0], proj_dim_);
 #else
-  for (size_t i = 0; i < proj_vects_.size(); ++i) {
-    float projDist = L2NormSIMD(&proj_vects_[i][0], &QueryVect[0], proj_dim_);
-    if (projDist <= max_proj_dist_)
-      proj_dists.push_back(std::make_pair(projDist, i));
-
-  }
+    for (size_t i = 0; i < proj_vects_.size(); ++i) {
+      float projDist = L2SqrSIMD(&proj_vects_[i][0], &QueryVect[0], proj_dim_);
 #endif
-  IncrementalQuickSelect<FloatInt> quick_select(proj_dists);
+      if (projDist <= max_proj_dist_)
+        proj_dists.push_back(std::make_pair(projDist, i));
+    }
 
-  size_t scan_qty = min(db_scan_, proj_dists.size());
+    IncrementalQuickSelect<FloatInt> quick_select(proj_dists);
 
-  for (size_t i = 0; i < scan_qty; ++i) {
-    const size_t idx = quick_select.GetNext().second;
-    quick_select.Next();
-    query->CheckAndAddToResult(data_[idx]);
+    size_t scan_qty = min(db_scan_, proj_dists.size());
+
+    for (size_t i = 0; i < scan_qty; ++i) {
+      const size_t idx = quick_select.GetNext().second;
+      quick_select.Next();
+      query->CheckAndAddToResult(data_[idx]);
+    }
+  } else {
+    priority_queue<FloatInt> filterQueue;
+
+#ifdef PROJ_CONTIGUOUS_STORAGE
+    for (size_t i = 0, start = 0; i < data_.size(); ++i, start += proj_dim_) {
+      float projDist = L2NormSIMD(&proj_vects_[start], &QueryVect[0], proj_dim_);
+#else
+    for (size_t i = 0; i < proj_vects_.size(); ++i) {
+      float projDist = L2NormSIMD(&proj_vects_[i][0], &QueryVect[0], proj_dim_);
+#endif
+      if (projDist <= max_proj_dist_) {
+        filterQueue.push(std::make_pair(projDist, i));
+        if (filterQueue.size() > db_scan_) filterQueue.pop();
+      }
+    }
+
+    while (filterQueue.size() > db_scan_) filterQueue.pop();
+    while (!filterQueue.empty()) {
+      const size_t idx = filterQueue.top().second;
+      query->CheckAndAddToResult(data_[idx]);
+      filterQueue.pop();
+    }
   }
 }
 

@@ -68,6 +68,7 @@ class ProjectionIndexIncremental : public Index<dist_t> {
   size_t                                                proj_dim_;
   string                                                proj_descr_;
   unique_ptr<Projection<dist_t> >                       proj_obj_;
+  bool                                                  use_priority_queue_;
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
   std::vector<float>            proj_vects_;

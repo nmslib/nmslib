@@ -42,8 +42,9 @@ inline void initSpaces() {
   // Registering binary/bit Hamming
   REGISTER_SPACE_CREATOR(int,  SPACE_BIT_HAMMING,  CreateBitHamming)
 
-  // Registering the Levensthein-distance
-  REGISTER_SPACE_CREATOR(int,  SPACE_LEVENSHTEIN,  CreateLevenshtein)
+  // Registering the Levensthein-distance: regular and normalized
+  REGISTER_SPACE_CREATOR(int,   SPACE_LEVENSHTEIN,  CreateLevenshtein)
+  REGISTER_SPACE_CREATOR(float, SPACE_LEVENSHTEIN_NORM,  CreateLevenshteinNormalized)
 
   // Registering Bregman divergences
   REGISTER_SPACE_CREATOR(float,  SPACE_KLDIV_FAST, CreateKLDivFast)
