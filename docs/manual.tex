@@ -2020,7 +2020,7 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_incsort_bin:numPivot=32,\
+  --method perm_incsort_bin:numPivot=32,binThreshold=16,\
            dbScanFrac=0.05
 \end{verbatim}
 }

@@ -205,14 +205,10 @@ public:
   * and spaces.
   */
   ~AnyParamManager() {
-    bool bFail = false;
-
     for (const auto Name: params.ParamNames) 
     if (!seen.count(Name)) {
-      LOG(LIB_ERROR) << "Unknown parameter: " << Name;
-      bFail = true;
+      LOG(LIB_FATAL) << "Unknown parameter: " << Name;
     }
-    if (bFail) LOG(LIB_FATAL) << "Unknown parameters found, aborting!";
   }
 private:
   const AnyParams&  params;

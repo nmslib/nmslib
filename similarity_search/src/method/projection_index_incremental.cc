@@ -50,12 +50,6 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
 
   double    DbScanFrac = 0.05;
   pmgr.GetParamOptional("dbScanFrac", DbScanFrac);
-
-  if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
-    throw runtime_error(string(METH_PROJECTION_INC_SORT) +  
-                        " requires that dbScanFrac is in the range [0,1]");
-  }
-  
   pmgr.GetParamOptional("useQueue", use_priority_queue_);
 
   max_proj_dist_ = numeric_limits<float>::max();
@@ -71,6 +65,17 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
   pmgr.GetParamRequired("projDim",        proj_dim_);
   pmgr.GetParamRequired("projType",       proj_descr_);
   pmgr.GetParamOptional("binThreshold",   binThreshold);
+
+  /* 
+   * Until all parameters are retrieved don't do any methods that
+   * throw an exception.
+   */
+
+  if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
+    throw runtime_error(string(METH_PROJECTION_INC_SORT) +  
+                        " requires that dbScanFrac is in the range [0,1]");
+  }
+  
 
   ComputeDbScan(db_scan_frac_);
 
