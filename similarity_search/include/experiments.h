@@ -320,6 +320,9 @@ public:
        * We compute gold standard once for each query.
        * Note that GS uses a lot of space, b/c we need to compute the distance
        * from the query to every data point.
+       *
+       * TODO make it parameterized: i.e., a parameter in the command line
+       *      to turn it. Might partially resolve issue #35.
        */
       GoldStandard<dist_t>  QueryGS(config.GetSpace(), config.GetDataObjects(), queryGS.get());
 #else

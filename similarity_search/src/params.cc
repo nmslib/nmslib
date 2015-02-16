@@ -22,6 +22,7 @@
 #include "utils.h"
 #include "params.h"
 #include "logging.h"
+#include "space.h"
 
 #include <cmath>
 #include <boost/program_options.hpp>
@@ -108,7 +109,7 @@ void ParseCommandLine(int argc, char*argv[],
     ("help,h", "produce help message")
     ("spaceType,s",     po::value<string>(&SpaceType)->required(),
                         "space type, e.g., l1, l2, lp:p=0.5")
-    ("distType",        po::value<string>(&DistType)->default_value("float"),
+    ("distType",        po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT),
                         "distance value type: int, float, double")
     ("dataFile,i",      po::value<string>(&DataFile)->required(),
                         "input data file")

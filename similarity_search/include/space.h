@@ -31,6 +31,10 @@
 
 #define LABEL_PREFIX "label:"
 
+#define DIST_TYPE_INT      "int"
+#define DIST_TYPE_FLOAT    "float"
+#define DIST_TYPE_DOUBLE   "double"
+
 namespace similarity {
 
 using std::map;

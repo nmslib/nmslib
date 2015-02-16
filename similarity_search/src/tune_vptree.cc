@@ -387,7 +387,7 @@ int main(int ac, char* av[]) {
 
   ToLower(DistType);
 
-  if ("int" == DistType) {
+  if (DIST_TYPE_INT == DistType) {
     RunExper<int>(Methods,
                   SpaceType,
                   SpaceParams,
@@ -401,7 +401,7 @@ int main(int ac, char* av[]) {
                   eps,
                   RangeArg
                  );
-  } else if ("float" == DistType) {
+  } else if (DIST_TYPE_FLOAT == DistType) {
     RunExper<float>(Methods,
                   SpaceType,
                   SpaceParams,
@@ -415,7 +415,7 @@ int main(int ac, char* av[]) {
                   eps,
                   RangeArg
                  );
-  } else if ("double" == DistType) {
+  } else if (DIST_TYPE_DOUBLE == DistType) {
     RunExper<double>(Methods,
                   SpaceType,
                   SpaceParams,

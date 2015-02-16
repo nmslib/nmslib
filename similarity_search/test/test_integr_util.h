@@ -457,7 +457,7 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
 
   ToLower(DistType);
 
-  if ("int" == DistType) {
+  if (DIST_TYPE_INT == DistType) {
     bTestRes = RunTestExper<int>(vTestCases,
                   cmd.str(),
                   MethodsDesc,
@@ -476,7 +476,7 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else if ("float" == DistType) {
+  } else if (DIST_TYPE_FLOAT == DistType) {
     bTestRes = RunTestExper<float>(vTestCases,
                   cmd.str(),
                   MethodsDesc,
@@ -495,7 +495,7 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else if ("double" == DistType) {
+  } else if (DIST_TYPE_DOUBLE == DistType) {
     bTestRes = RunTestExper<double>(vTestCases,
                   cmd.str(),
                   MethodsDesc,

@@ -71,7 +71,7 @@ void benchProjection(size_t repeatQty,
   unique_ptr<AnyParams> projSpaceParams =
             unique_ptr<AnyParams>(new AnyParams(projSpaceDesc));
 
-  unique_ptr<Space<float>> projSpace(SpaceFactoryRegistry<dist_t>::
+  unique_ptr<Space<float>> projSpace(SpaceFactoryRegistry<float>::
                                 Instance().CreateSpace(projSpaceType, *projSpaceParams));
 
   if (NULL == projSpace.get()) {
@@ -213,8 +213,8 @@ int main(int argc, char *argv[]) {
     ("projSpaceType",   po::value<string>(&projSpaceType)->default_value("l2"),
                         "space type in the projection space, e.g., l1, l2, lp:p=0.5. "
                         "should be a dense vector space!")
-    ("distType",        po::value<string>(&distType)->default_value("float"),
-                        "distance value type: int, float, double")
+    ("distType",        po::value<string>(&distType)->default_value(DIST_TYPE_FLOAT),
+                        "distance value type: float, double")
     ("inFile,i",        po::value<string>(&inFile)->required(),
                         "input data file")
     ("outFile,o",       po::value<string>(&outFile)->required(),
@@ -273,14 +273,14 @@ int main(int argc, char *argv[]) {
         LOG(LIB_FATAL) << "sampleKNNTotalQty should be at least as large as sampleKNNQueryQty";
       }
     }
-    if (distType == "float") {
+    if (distType == DIST_TYPE_FLOAT) {
       benchProjection<float>(repeatQty, spaceType, inFile, outFile,
                              projType, knn, projSpaceType,
                              nIntermDim, nDstDim, binThreshold,
                              maxNumData,
                              sampleRandPairQty, sampleKNNQueryQty, sampleKNNTotalQty);
-    } else if (distType == "double") {
-      benchProjection<float>(repeatQty, spaceType, inFile, outFile,
+    } else if (distType == DIST_TYPE_DOUBLE) {
+      benchProjection<double>(repeatQty, spaceType, inFile, outFile,
                              projType, knn, projSpaceType,
                              nIntermDim, nDstDim, binThreshold,
                              maxNumData,
