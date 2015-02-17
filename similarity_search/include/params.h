@@ -56,13 +56,16 @@ public:
           OneParamPair.size() != 2) {
         stringstream err;
         err << "Wrong format of an argument: '" << Desc[i] << "' should be in the format: <Name>=<Value>";
+        LOG(LIB_ERROR)  << err.str();
         throw runtime_error(err.str());
       }
       const string& Name = OneParamPair[0];
       const string& sVal = OneParamPair[1];
 
       if (seen.count(Name)) {
-        throw runtime_error("Duplicate parameter: " + Name);
+        string err = "Duplicate parameter: " + Name;
+        LOG(LIB_ERROR)  << err;
+        throw runtime_error(err);
       }
       seen.insert(Name);
 
@@ -130,7 +133,9 @@ public:
       ParamValues[i] = str.str();
       return;
     }
-    throw runtime_error("Parameter not found: " + Name);
+    string err = "Parameter not found: " + Name;
+    LOG(LIB_ERROR)  << err;
+    throw runtime_error(err);
   } 
 
   AnyParams(){}
@@ -148,7 +153,9 @@ class AnyParamManager {
 public:
   AnyParamManager(const AnyParams& params) : params(params), seen() {
     if (params.ParamNames.size() != params.ParamValues.size()) {
-      throw runtime_error("Bug: different # of parameters and values");
+      string err = "Bug: different # of parameters and values";
+      LOG(LIB_ERROR) << err;
+      throw runtime_error(err);
     }
   }
 
@@ -193,23 +200,6 @@ public:
     return AnyParams(names, values);
   }
 
- /* 
-  * TODO @leo
-  * Related to Issue #33
-  * Unfortunately, it is not so easy to get rid of LOG(LIB_FATAL) here.
-  * We shouldn't throw an exception in the destructor.
-  * Therefore, we need to manually check for wrong parameter names
-  * before the parameter managing object is destroyed.
-  * In particular, this entails a change in the factory/space
-  * creation routine. It is not hard, but it will affect all the methods
-  * and spaces.
-  */
-  ~AnyParamManager() {
-    for (const auto Name: params.ParamNames) 
-    if (!seen.count(Name)) {
-      LOG(LIB_FATAL) << "Unknown parameter: " << Name;
-    }
-  }
 private:
   const AnyParams&  params;
   set<string>       seen;
@@ -229,7 +219,10 @@ private:
 
     if (!bFound) {
       if (bRequired) {
-        throw runtime_error("Mandatory parameter: '" + Name + "' is missing!");
+        stringstream err;
+        err <<  "Mandatory parameter: '" << Name << "' is missing!";
+        LOG(LIB_ERROR) << err.str();
+        throw runtime_error(err.str());
       }
     }
     //LOG(LIB_INFO) << "@@@ Parameter: " << Name << "=" << Value << " @@@";
@@ -248,6 +241,7 @@ inline void AnyParamManager::ConvertStrToValue(const string& s, ParamType& Value
   if (!(str>>Value) || !str.eof()) {
     stringstream err;
     err << "Failed to convert value '" << s << "' from type: " << typeid(Value).name();
+    LOG(LIB_ERROR) << err.str();
     throw runtime_error(err.str());
   }
 }

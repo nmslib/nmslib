@@ -42,7 +42,10 @@ using std::numeric_limits;
  * Structure of object: | 4-byte id | 4-byte label | 8-byte datasize | data ........ |
  * We need data to be aligned on 8-byte boundaries.
  * 
- * See: http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
+ * TODO this all apparenlty hinges on the assumption that malloc() gives addresses
+ *      that are 8-bye aligned. So, this is related to issue #9
+ *
+ * See also http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
  */
 
 /* 
