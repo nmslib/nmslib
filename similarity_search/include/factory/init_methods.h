@@ -45,6 +45,7 @@
 #include "factory/method/spatial_approx_tree.h"
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
+#include "factory/method/nndes.h"
 
 namespace similarity {
 
@@ -147,10 +148,15 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_SEQ_SEARCH, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(int,    METH_SEQ_SEARCH, CreateSeqSearch)
 
-  // Small-word with randomly generated neighborhood-networks
+  // Small-word (KNN-graph) with randomly generated neighborhood-networks
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
+
+  // Another KNN-graph, which is computed via NN-descent
+  REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)
+  REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
+  REGISTER_METHOD_CREATOR(int,    METH_NNDES, CreateNNDescent)
 
   // SA-tree
   REGISTER_METHOD_CREATOR(float,  METH_SATREE, CreateSATree)
