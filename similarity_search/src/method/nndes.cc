@@ -77,6 +77,8 @@ NNDescentMethod<dist_t>::NNDescentMethod(
   LOG(LIB_INFO) <<  "rho          = " << rho_;
   LOG(LIB_INFO) <<  "delta        = " << delta_;
 
+  LOG(LIB_INFO) <<  "initSearchAttempts= " << initSearchAttempts_;
+
   SetQueryTimeParamsInternal(pmgr);
 
   LOG(LIB_INFO) << "Starting NN-Descent...";
@@ -137,11 +139,13 @@ void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
       // Iterate over neighbors
       for (const KNNEntry&e: nn[currOld]) {
         IdType currNew = e.key;
-        dist_t currDistNew = query->DistanceObjLeft(data_[currNew]);
-        query->CheckAndAddToResult(currDistNew, data_[currNew]);
-        if (currDistNew < currDist) {
-          curr = currNew;
-          currDist = currDistNew;
+        if (currNew != KNNEntry::BAD) {
+          dist_t currDistNew = query->DistanceObjLeft(data_[currNew]);
+          query->CheckAndAddToResult(currDistNew, data_[currNew]);
+          if (currDistNew < currDist) {
+            curr = currNew;
+            currDist = currDistNew;
+          }
         }
       }
     } while (currOld != curr);
