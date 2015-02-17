@@ -60,7 +60,8 @@ NNDescentMethod<dist_t>::NNDescentMethod(
       iterationQty_(100), // default value from Wei Dong's code
       rho_(1.0), // default value from Wei Dong's code
       delta_(0.001), // default value from Wei Dong's code
-      nndesOracle_(space, data)
+      nndesOracle_(space, data),
+      initSearchAttempts_(10)
 {
   AnyParamManager pmgr(AllParams);
 
@@ -129,9 +130,10 @@ void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
     query->CheckAndAddToResult(currDist, data_[curr]);
 
 
-    IdType currOld = curr;
+    IdType currOld;
 
     do {
+      currOld = curr;
       // Iterate over neighbors
       for (const KNNEntry&e: nn[currOld]) {
         IdType currNew = e.key;

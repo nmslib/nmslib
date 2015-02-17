@@ -82,7 +82,6 @@ class NNDescentMethod : public Index<dist_t> {
 
   const Space<dist_t>*    space_;
   const ObjectVector&     data_;
-  size_t                  initSearchAttempts_;
   size_t                  NN_; // K in the original Wei Dong's code nndes.cpp
   size_t                  controlQty_; // control in the original Wei Dong's code nndes.cpp
   size_t                  iterationQty_; // iteration in the original Wei Dong's code nndes.cpp
@@ -91,6 +90,8 @@ class NNDescentMethod : public Index<dist_t> {
 
   SpaceOracle                        nndesOracle_;
   unique_ptr<NNDescent<SpaceOracle>> nndesObj_;
+
+  size_t                  initSearchAttempts_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(NNDescentMethod);
 };
