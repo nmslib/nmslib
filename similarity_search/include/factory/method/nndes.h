@@ -32,7 +32,8 @@ Index<dist_t>* CreateNNDescent(bool PrintProgress,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
 
-    return new NNDescentMethod<dist_t>(space, DataObjects, AllParams);
+    return new NNDescentMethod<dist_t>(PrintProgress,
+                                       space, DataObjects, AllParams);
 }
 
 /*

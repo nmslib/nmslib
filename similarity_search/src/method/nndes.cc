@@ -62,6 +62,7 @@ namespace similarity {
 
 template <typename dist_t>
 NNDescentMethod<dist_t>::NNDescentMethod(
+    bool  PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
     const AnyParams& AllParams) : 
@@ -111,7 +112,7 @@ NNDescentMethod<dist_t>::NNDescentMethod(
     cout.precision(5);
     cout.setf(ios::fixed);
     for (int it = 0; it < iterationQty_; ++it) {
-        int t = nndesObj_->iterate();
+        int t = nndesObj_->iterate(PrintProgress);
         float rate = float(t) / (NN_ * data_.size());
 
 // TODO @leo computation of recall needs to be re-written, can't use original Wei Dong's code

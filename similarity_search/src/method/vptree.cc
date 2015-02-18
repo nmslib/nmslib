@@ -55,16 +55,21 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPTree(
   pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
   pmgr.GetParamOptional("saveHistFileName", SaveHistFileName_);
 
-  size_t IndexedQty = 0;
-  
-  root_ = new VPNode(
-                     PrintProgress, 0,
-                     data.size(), IndexedQty,
+  unique_ptr<ProgressDisplay>   progress_bar(PrintProgress ? 
+                                              new ProgressDisplay(data.size(), cout):
+                                              NULL);
+
+  root_ = new VPNode(0,
+                     progress_bar.get(), 
                      OracleCreator, space,
                      const_cast<ObjectVector&>(data),
                      BucketSize_, ChunkBucket_,
                      SaveHistFileName_,
                      use_random_center, true);
+
+  if (progress_bar) { // make it 100%
+    (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
+  }
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
@@ -92,24 +97,20 @@ void VPTree<dist_t, SearchOracle, SearchOracleCreator>::Search(KNNQuery<dist_t>*
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
 void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::CreateBucket(bool ChunkBucket, 
                                                                              const ObjectVector& data, 
-                                                                             bool PrintProgress,
-                                                                             size_t&  IndexedQty,
-                                                                             size_t   TotalQty) {
+                                                                             ProgressDisplay* progress_bar
+                                                                             ) {
     if (ChunkBucket) {
       CreateCacheOptimizedBucket(data, CacheOptimizedBucket_, bucket_);
     } else {
       bucket_ = new ObjectVector(data);
     }
-    IndexedQty += data.size();
-    if (PrintProgress) std::cout << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bBuilding an index: " << std::round(1000.0 * IndexedQty / TotalQty)/10.0 << "% done     \r"; // Note the trailing spaces - they are to compensate differences in output length.
+    if (progress_bar) (*progress_bar) += data.size();
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
 VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
-                               bool     PrintProgress,
                                unsigned level,
-                               size_t   TotalQty,
-                               size_t&  IndexedQty,
+                               ProgressDisplay* progress_bar,
                                const SearchOracleCreator& OracleCreator,
                                const Space<dist_t>* space, const ObjectVector& data,
                                size_t BucketSize, bool ChunkBucket,
@@ -122,7 +123,7 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
   CHECK(!data.empty());
 
   if (!data.empty() && data.size() <= BucketSize) {
-    CreateBucket(ChunkBucket, data, PrintProgress, IndexedQty, TotalQty);
+    CreateBucket(ChunkBucket, data, progress_bar);
     return;
   }
 
@@ -209,16 +210,16 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
     size_t LeastSize = dp.size() / BalanceConst;
 
     if (left.size() < LeastSize || right.size() < LeastSize) {
-        CreateBucket(ChunkBucket, data, PrintProgress, IndexedQty, TotalQty);
+        CreateBucket(ChunkBucket, data, progress_bar);
         return;
     }
 
     if (!left.empty()) {
-      left_child_ = new VPNode(PrintProgress, level + 1, TotalQty, IndexedQty, OracleCreator, space, left, BucketSize, ChunkBucket, "", use_random_center, false);
+      left_child_ = new VPNode(level + 1, progress_bar, OracleCreator, space, left, BucketSize, ChunkBucket, "", use_random_center, false);
     }
 
     if (!right.empty()) {
-      right_child_ = new VPNode(PrintProgress, level + 1, TotalQty, IndexedQty, OracleCreator, space, right, BucketSize, ChunkBucket, "", use_random_center, false);
+      right_child_ = new VPNode(level + 1, progress_bar, OracleCreator, space, right, BucketSize, ChunkBucket, "", use_random_center, false);
     }
   }
 }

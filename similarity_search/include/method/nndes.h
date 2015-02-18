@@ -47,7 +47,8 @@ using std::string;
 template <typename dist_t>
 class NNDescentMethod : public Index<dist_t> {
  public:
-  NNDescentMethod(const Space<dist_t>* space, 
+  NNDescentMethod(bool PrintProgress,
+                  const Space<dist_t>* space, 
                   const ObjectVector& data, 
                   const AnyParams& AllParams);
   ~NNDescentMethod(){};

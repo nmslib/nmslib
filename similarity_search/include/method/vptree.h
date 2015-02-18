@@ -17,9 +17,11 @@
 #define _VPTREE_H_
 
 #include <string>
+#include <memory>
 
 #include "index.h"
 #include "params.h"
+#include "ported_boost_progress.h"
 
 #define METH_VPTREE          "vptree"
 #define METH_VPTREE_SAMPLE   "vptree_sample"
@@ -27,6 +29,7 @@
 namespace similarity {
 
 using std::string;
+using std::unique_ptr;
 
 // Vantage point tree
 
@@ -54,10 +57,8 @@ class VPTree : public Index<dist_t> {
     // We want trees to be balanced
     const size_t BalanceConst = 4; 
 
-    VPNode(bool     PrintProgress,
-           unsigned level,
-           size_t   TotalQty,
-           size_t&  IndexedQty,
+    VPNode(unsigned level,
+           ProgressDisplay* progress_bar,
            const SearchOracleCreator& OracleCreator,
            const Space<dist_t>* space, const ObjectVector& data,
            size_t BucketSize, bool ChunkBucket,
@@ -70,8 +71,7 @@ class VPTree : public Index<dist_t> {
 
    private:
     void CreateBucket(bool ChunkBucket, const ObjectVector& data, 
-                      bool PrintProgress,
-                      size_t&  IndexedQty, size_t   TotalQty);
+                      ProgressDisplay* progress_bar);
     const Object* pivot_;
     /* 
      * Even if dist_t is double, or long double

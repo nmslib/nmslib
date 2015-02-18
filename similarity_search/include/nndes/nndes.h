@@ -13,13 +13,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define WDONG_NNDESCENT
 
 #include "nndes-common.h"
+#include "ported_boost_progress.h"
 
 namespace similarity {
 
-    using std::cerr;
+    using std::cout;
+    using std::unique_ptr;
     using std::vector;
     using std::swap;
-    using boost::progress_display;
 
 #ifndef NNDES_SHOW_PROGRESS
 #define NNDES_SHOW_PROGRESS 1
@@ -114,10 +115,11 @@ namespace similarity {
         // An iteration contains two parts:
         //      local join
         //      identify the newly detected NNs.
-        int iterate () {
+        int iterate (bool PrintProgress) {
 
 #if NNDES_SHOW_PROGRESS
-            progress_display progress(N, cerr);
+            unique_ptr<ProgressDisplay>  progress(
+                    PrintProgress? new ProgressDisplay(N, cout): NULL);
 #endif
 
             long long int cc = 0;
@@ -168,7 +170,7 @@ namespace similarity {
 
 #if NNDES_SHOW_PROGRESS
 #pragma omp critical 
-                ++progress;
+                if (progress) ++(*progress);
 #endif
             }
 
