@@ -55,7 +55,7 @@ using std::map;
 using std::string;
 using std::stringstream;
 
-const unsigned MaxIter             = 20;
+const unsigned MaxIter             = 50;
 const int      StepN               = 7;
 const float    FullFactor          = 8.0;
 const float    FastIterFactor      = sqrt(sqrt(FullFactor));
@@ -66,8 +66,10 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
                       const string& SpaceType,
                       const string& methodName,
                       AnyParams AllParams, 
-                      float& recall, float& time_best, float& alpha_left_best, float& alpha_right_best) {
+                      float& recall, float& time_best, float& impr_best,
+                      float& alpha_left_best, float& alpha_right_best) {
   time_best = std::numeric_limits<float>::max();
+  impr_best = 0;
   alpha_left_best = 0;
   alpha_right_best = 0;
   recall = 0;
@@ -161,9 +163,10 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
         }
         Stat.ComputeAll();
         if (Stat.GetRecallAvg() >= DesiredRecall &&
-            Stat.GetQueryTimeAvg() < time_best) {
+            Stat.GetImprEfficiencyAvg() > impr_best) {
             recall =    Stat.GetRecallAvg();
             time_best = Stat.GetQueryTimeAvg();
+            impr_best = Stat.GetImprEfficiencyAvg();
 
             AnyParamManager pmgr(MethPars);
 
@@ -184,7 +187,8 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
         MaxRecall = std::max(MaxRecall, Stat.GetRecallAvg());
       }
     }
-    LOG(LIB_INFO) << " MinRecall: " << MinRecall << " MaxRecall: " << MaxRecall << " BestTime: "<< time_best;;
+    LOG(LIB_INFO) << " MinRecall: " << MinRecall << " MaxRecall: " << MaxRecall 
+                  << " Best impr. in efficiency: " << impr_best << " Time: "<< time_best;
     // Now let's see, if we need to increase/decrease base alpha levels
     if (MaxRecall < DesiredRecall) {
       if (ChangeAlphaState == 2) break; // We sufficiently increased alphas, now stop
@@ -288,13 +292,18 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
 
       config.ReadDataset();
 
-      float recall, time_best, alpha_left, alpha_right;
-      GetOptimalAlphas(config, SpaceType, methodName, MethPars, recall, time_best, alpha_left, alpha_right);
+      float recall, time_best, impr_best, alpha_left, alpha_right;
+
+      GetOptimalAlphas(config, SpaceType, methodName, MethPars, 
+                       recall, 
+                       time_best, impr_best,
+                       alpha_left, alpha_right);
 
       LOG(LIB_INFO) << "Optimization results";
       LOG(LIB_INFO) << "Range: "  << rangeAll[i];
       LOG(LIB_INFO) << "Recall: " << recall;
       LOG(LIB_INFO) << "Best time: " << time_best;
+      LOG(LIB_INFO) << "Best impr. eff.: " << impr_best;
       LOG(LIB_INFO) << "alpha_left: " << alpha_left;
       LOG(LIB_INFO) << "alpha_right: " << alpha_right;
       
@@ -315,13 +324,16 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
 
       config.ReadDataset();
 
-      float recall, time_best, alpha_left, alpha_right;
-      GetOptimalAlphas(config, SpaceType, methodName, MethPars, recall, time_best, alpha_left, alpha_right);
+      float recall, time_best, impr_best, alpha_left, alpha_right;
+      GetOptimalAlphas(config, SpaceType, methodName, MethPars, 
+                       recall, time_best, impr_best,
+                       alpha_left, alpha_right);
 
       LOG(LIB_INFO) << "Optimization results";
       LOG(LIB_INFO) << "K: "  << knnAll[i];
       LOG(LIB_INFO) << "Recall: " << recall;
       LOG(LIB_INFO) << "Best time: " << time_best;
+      LOG(LIB_INFO) << "Best impr. eff.: " << impr_best;
       LOG(LIB_INFO) << "alpha_left: " << alpha_left;
       LOG(LIB_INFO) << "alpha_right: " << alpha_right;
     }

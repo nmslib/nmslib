@@ -38,6 +38,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 */
 
 #include <iomanip>
+#include <map>
+#include <unordered_set>
+#include <queue>
+
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 
@@ -56,6 +60,7 @@ NNDescentMethod<dist_t>::NNDescentMethod(
     const AnyParams& AllParams) : 
       space_(space), data_(data),   // reference
       NN_(20), // default value from Wei Dong's code
+      searchNN_(20),
       controlQty_(0), // default value from Wei Dong's code
       iterationQty_(100), // default value from Wei Dong's code
       rho_(1.0), // default value from Wei Dong's code
@@ -66,6 +71,7 @@ NNDescentMethod<dist_t>::NNDescentMethod(
   AnyParamManager pmgr(AllParams);
 
   pmgr.GetParamOptional("NN", NN_);
+  searchNN_ = NN_;
   //pmgr.GetParamOptional("controlQty", controlQty_);
   pmgr.GetParamOptional("iterationQty", iterationQty_);
   pmgr.GetParamOptional("rho", rho_); // Fast rho is 0.5
@@ -80,6 +86,8 @@ NNDescentMethod<dist_t>::NNDescentMethod(
   LOG(LIB_INFO) <<  "initSearchAttempts= " << initSearchAttempts_;
 
   SetQueryTimeParamsInternal(pmgr);
+
+  LOG(LIB_INFO) <<  "(initial) searchNN = " << searchNN_;
 
   LOG(LIB_INFO) << "Starting NN-Descent...";
 
@@ -124,6 +132,7 @@ void NNDescentMethod<dist_t>::Search(RangeQuery<dist_t>* query) {
 template <typename dist_t>
 void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
   const vector<KNN> &nn = nndesObj_->getNN();
+#ifdef GREEDY_LOCAL
 
   for (size_t i=0; i < initSearchAttempts_; i++) {
     IdType curr = RandomInt() % data_.size();
@@ -150,12 +159,80 @@ void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
       }
     } while (currOld != curr);
   }
+#else
+  typedef pair<dist_t, IdType>      EvaluatedNode;
+
+  size_t k = query->GetK();
+  set <EvaluatedNode>               resultSet;
+  unordered_set <IdType>            visitedNodes;
+
+  for (size_t i=0; i < initSearchAttempts_; i++) {
+  /**
+   * Search of most k-closest elements to the query.
+   */
+    IdType randPoint = RandomInt() % data_.size();
+
+    priority_queue <dist_t>             closestDistQueue; //The set of all elements which distance was calculated
+    priority_queue <EvaluatedNode>      candidateSet; //the set of elements which we can use to evaluate
+
+    dist_t         d = query->DistanceObjLeft(data_[randPoint]);
+    EvaluatedNode  ev(-d, randPoint);
+
+    candidateSet.push(ev);
+    closestDistQueue.push(d);
+    visitedNodes.insert(randPoint);
+    resultSet.insert(ev);
+
+    while(!candidateSet.empty()){
+      const EvaluatedNode& currEv = candidateSet.top();
+      dist_t lowerBound = closestDistQueue.top();
+
+      // Did we reach a local minimum?
+      if ((-currEv.first) > lowerBound) {
+        break;
+      }
+
+      IdType currEvId = currEv.second;
+
+      // Can't access curEv anymore! The reference would become invalid
+      candidateSet.pop();
+
+      //calculate distance to each neighbor
+      for (const KNNEntry& e: nn[currEvId]) {
+        IdType currNew = e.key;
+        if (currNew == KNNEntry::BAD) continue;
+
+        if (visitedNodes.find(currNew) == visitedNodes.end()){
+            d = query->DistanceObjLeft(data_[currNew]);
+            EvaluatedNode  evE1(-d, currNew);
+
+            visitedNodes.insert(currNew);
+            closestDistQueue.push(d);
+            if (closestDistQueue.size() > searchNN_) { 
+              closestDistQueue.pop(); 
+            }
+            candidateSet.push(evE1);
+            resultSet.insert(evE1);
+          }
+      }
+    }
+  }
+
+  auto iter = resultSet.rbegin();
+
+  while(k && iter != resultSet.rend()) {
+    query->CheckAndAddToResult(-iter->first, data_[iter->second]);
+    iter++;
+    k--;
+  }
+#endif
 }
 
 template <typename dist_t>
 void 
 NNDescentMethod<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
+  pmgr.GetParamOptional("searchNN", searchNN_);
 }
 
 template <typename dist_t>
@@ -163,6 +240,7 @@ vector<string>
 NNDescentMethod<dist_t>::GetQueryTimeParamNames() const {
   vector<string> names;
   names.push_back("initSearchAttempts");
+  names.push_back("searchNN");
   return names;
 }
 
