@@ -38,7 +38,8 @@ namespace similarity {
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 class PermutationIndexIncrementalBin : public Index<dist_t> {
  public:
-  PermutationIndexIncrementalBin(const Space<dist_t>* space,
+  PermutationIndexIncrementalBin(bool PrintProgress,
+                              const Space<dist_t>* space,
                               const ObjectVector& data,
                               const size_t num_pivot,
                               const size_t bin_threshold,

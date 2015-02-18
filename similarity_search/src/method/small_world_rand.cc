@@ -73,23 +73,22 @@ struct IndexThreadSW {
     /* 
      * Skip the first element, it was added already
      */
-    if (progress_bar) {
-      unique_lock<mutex> lock(display_mutex);
-      ++(*progress_bar);
-    }
+    size_t nextQty = prm.progress_update_qty_;
     for (size_t i = 1; i < prm.data_.size(); ++i) {
       if (prm.index_every_ == i % prm.out_of_) {
         MSWNode* node = new MSWNode(prm.data_[i]);
         prm.index_.add(prm.space_, node);
       
-        if (progress_bar && 
-            (progress_bar->count() + prm.progress_update_qty_ >= i ||
-             i + 1 >= prm.data_.size())
-        ) {
-        unique_lock<mutex> lock(display_mutex);
-        ++(*progress_bar);
+        if ((i + 1 >= min(prm.data_.size(), nextQty)) && progress_bar) {
+          unique_lock<mutex> lock(display_mutex);
+          (*progress_bar) += (nextQty - progress_bar->count());
+          nextQty += prm.progress_update_qty_;
         }
       }
+    }
+    if (progress_bar) {
+      unique_lock<mutex> lock(display_mutex);
+      (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
     }
   }
 };
@@ -122,7 +121,7 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
   ElList_.push_back(new MSWNode(data[0]));
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
-                                new ProgressDisplay(data.size(), cout)
+                                new ProgressDisplay(data.size(), cerr)
                                 :NULL);
 
   if (indexThreadQty_ <= 1) {
@@ -141,7 +140,7 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
                               new IndexThreadParamsSW<dist_t>(space, *this, data, i, indexThreadQty_,
-                                                              progress_bar.get(), progressBarMutex, 1000)));
+                                                              progress_bar.get(), progressBarMutex, 200)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));

@@ -16,8 +16,10 @@
 
 #include <algorithm>
 #include <sstream>
+#include <memory>
 
 #include "space.h"
+#include "ported_boost_progress.h"
 #include "rangequery.h"
 #include "knnquery.h"
 #include "incremental_quick_select.h"
@@ -28,6 +30,7 @@ namespace similarity {
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBin(
+    bool PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
     const size_t num_pivot,
@@ -50,6 +53,10 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBi
 
   permtable_.resize(data.size() * bin_perm_word_qty_);
 
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+                                new ProgressDisplay(data.size(), cerr)
+                                :NULL);
+
   for (size_t i = 0, start = 0; i < data.size(); ++i, start += bin_perm_word_qty_) {
     Permutation TmpPerm;
     GetPermutation(pivot_, space, data[i], &TmpPerm);
@@ -58,6 +65,7 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBi
     Binarize(TmpPerm, bin_threshold_, binPivot);
     CHECK(binPivot.size() == bin_perm_word_qty_);
     memcpy(&permtable_[start], &binPivot[0], bin_perm_word_qty_ * sizeof(binPivot[0]));
+    if (progress_bar) ++(*progress_bar);
   }
 
   LOG(LIB_INFO) << "# pivots                  = " << num_pivot;

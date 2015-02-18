@@ -34,6 +34,7 @@ using std::string;
 using std::stringstream;
 using std::endl;
 using std::cout;
+using std::cerr;
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
 VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPTree(
@@ -56,7 +57,7 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPTree(
   pmgr.GetParamOptional("saveHistFileName", SaveHistFileName_);
 
   unique_ptr<ProgressDisplay>   progress_bar(PrintProgress ? 
-                                              new ProgressDisplay(data.size(), cout):
+                                              new ProgressDisplay(data.size(), cerr):
                                               NULL);
 
   root_ = new VPNode(0,

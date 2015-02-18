@@ -119,7 +119,7 @@ namespace similarity {
 
 #if NNDES_SHOW_PROGRESS
             unique_ptr<ProgressDisplay>  progress(
-                    PrintProgress? new ProgressDisplay(N, cout): NULL);
+                    PrintProgress? new ProgressDisplay(N, cerr): NULL);
 #endif
 
             long long int cc = 0;

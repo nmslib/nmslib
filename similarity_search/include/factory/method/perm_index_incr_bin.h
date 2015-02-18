@@ -52,6 +52,7 @@ Index<dist_t>* CreatePermutationIndexIncrementalBin(bool PrintProgress,
   }
 
   return new PermutationIndexIncrementalBin<dist_t, SpearmanRhoSIMD>(
+                                                       PrintProgress,
                                                        space,
                                                        dataObjects,
                                                        numPivot,

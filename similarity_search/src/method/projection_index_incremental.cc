@@ -116,7 +116,7 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
             unique_ptr<AnyParams>(new AnyParams(projSpaceDesc));
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
-                                new ProgressDisplay(data.size(), cout)
+                                new ProgressDisplay(data.size(), cerr)
                                 :NULL);
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
