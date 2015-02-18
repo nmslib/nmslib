@@ -9,8 +9,11 @@
  * 
  * This is a wrapper class for the Wei Dong implementation of https://code.google.com/p/nndes/,
  * which also contains some of the original code from Wei Dong's repository.  
- * Wei Dong implemented only the graph construction algorithm [1], a search algorithm
- * is a greedy walk that starts from a random point and always proceeds to the closest neighbor [2].
+ * Wei Dong implemented only the graph construction algorithm [1]. 
+ * We implemented two search algorithms
+ * i)  A greedy walk that starts from a random point and always proceeds to the closest neighbor [2].
+ * ii) A priority queue based procedure where the queue may contain more distance not necessarily
+ *     adjacent nodes [3]
  *
  * 1. Wei Dong, Charikar Moses, and Kai Li. 2011. 
  *    Efficient k-nearest neighbor graph construction for generic similarity measures. 
@@ -21,6 +24,10 @@
  *    Fast approximate nearest-neighbor search with k-nearest neighbor graph. 
  *    In IJCAI Proceedings-International Joint Conference on Artificial Intelligence, 
  *    volume 22, page 1312, 2011
+ *
+ * 3. Krylov, V., Logvinov, A., Ponomarenko, A., Ponomarev, D., 2008. 
+ *    Metrized Small World Properties Based Data Structure. 
+ *    In SEDE (pp. 203-208).
  * 
  * The Wei Dong's code (to construct the knn-graph) can be redistributed given 
  * that the license (see below) is retained in the source code.
@@ -66,7 +73,8 @@ NNDescentMethod<dist_t>::NNDescentMethod(
       rho_(1.0), // default value from Wei Dong's code
       delta_(0.001), // default value from Wei Dong's code
       nndesOracle_(space, data),
-      initSearchAttempts_(10)
+      initSearchAttempts_(10),
+      greedy_(false)
 {
   AnyParamManager pmgr(AllParams);
 
@@ -76,6 +84,9 @@ NNDescentMethod<dist_t>::NNDescentMethod(
   pmgr.GetParamOptional("iterationQty", iterationQty_);
   pmgr.GetParamOptional("rho", rho_); // Fast rho is 0.5
   pmgr.GetParamOptional("delta", delta_);
+  pmgr.GetParamOptional("greedy", greedy_);
+
+  SetQueryTimeParamsInternal(pmgr);
 
   LOG(LIB_INFO) <<  "NN           = " << NN_;
   //LOG(LIB_INFO) <<  "controlQty   = " << controlQty_;
@@ -83,9 +94,9 @@ NNDescentMethod<dist_t>::NNDescentMethod(
   LOG(LIB_INFO) <<  "rho          = " << rho_;
   LOG(LIB_INFO) <<  "delta        = " << delta_;
 
-  LOG(LIB_INFO) <<  "initSearchAttempts= " << initSearchAttempts_;
+  LOG(LIB_INFO) <<  "(initial) initSearchAttempts= " << initSearchAttempts_;
+  LOG(LIB_INFO) <<  "(initial) greedy       = " << greedy_;
 
-  SetQueryTimeParamsInternal(pmgr);
 
   LOG(LIB_INFO) <<  "(initial) searchNN = " << searchNN_;
 
@@ -131,36 +142,12 @@ void NNDescentMethod<dist_t>::Search(RangeQuery<dist_t>* query) {
 
 template <typename dist_t>
 void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
+  greedy_ ? SearchGreedy(query) : SearchSmallWorld(query);
+}
+
+template <typename dist_t>
+void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
   const vector<KNN> &nn = nndesObj_->getNN();
-#ifdef GREEDY_LOCAL
-
-  for (size_t i=0; i < initSearchAttempts_; i++) {
-    IdType curr = RandomInt() % data_.size();
-
-    dist_t currDist = query->DistanceObjLeft(data_[curr]);
-    query->CheckAndAddToResult(currDist, data_[curr]);
-
-
-    IdType currOld;
-
-    do {
-      currOld = curr;
-      // Iterate over neighbors
-      for (const KNNEntry&e: nn[currOld]) {
-        IdType currNew = e.key;
-        if (currNew != KNNEntry::BAD) {
-          dist_t currDistNew = query->DistanceObjLeft(data_[currNew]);
-          query->CheckAndAddToResult(currDistNew, data_[currNew]);
-          if (currDistNew < currDist) {
-            curr = currNew;
-            currDist = currDistNew;
-          }
-        }
-      }
-    } while (currOld != curr);
-  }
-#else
-  typedef pair<dist_t, IdType>      EvaluatedNode;
 
   size_t k = query->GetK();
   set <EvaluatedNode>               resultSet;
@@ -225,7 +212,38 @@ void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
     iter++;
     k--;
   }
-#endif
+}
+
+
+template <typename dist_t>
+void NNDescentMethod<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) {
+  const vector<KNN> &nn = nndesObj_->getNN();
+
+  for (size_t i=0; i < initSearchAttempts_; i++) {
+    IdType curr = RandomInt() % data_.size();
+
+    dist_t currDist = query->DistanceObjLeft(data_[curr]);
+    query->CheckAndAddToResult(currDist, data_[curr]);
+
+
+    IdType currOld;
+
+    do {
+      currOld = curr;
+      // Iterate over neighbors
+      for (const KNNEntry&e: nn[currOld]) {
+        IdType currNew = e.key;
+        if (currNew != KNNEntry::BAD) {
+          dist_t currDistNew = query->DistanceObjLeft(data_[currNew]);
+          query->CheckAndAddToResult(currDistNew, data_[currNew]);
+          if (currDistNew < currDist) {
+            curr = currNew;
+            currDist = currDistNew;
+          }
+        }
+      }
+    } while (currOld != curr);
+  }
 }
 
 template <typename dist_t>
@@ -233,6 +251,7 @@ void
 NNDescentMethod<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
   pmgr.GetParamOptional("searchNN", searchNN_);
+  pmgr.GetParamOptional("greedy", greedy_);
 }
 
 template <typename dist_t>
@@ -241,6 +260,7 @@ NNDescentMethod<dist_t>::GetQueryTimeParamNames() const {
   vector<string> names;
   names.push_back("initSearchAttempts");
   names.push_back("searchNN");
+  names.push_back("greedy");
   return names;
 }
 

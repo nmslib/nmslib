@@ -78,6 +78,11 @@ class NNDescentMethod : public Index<dist_t> {
     const ObjectVector&     data_;
   };
  private:
+  void SearchGreedy(KNNQuery<dist_t>* query);
+  void SearchSmallWorld(KNNQuery<dist_t>* query);
+
+  typedef pair<dist_t, IdType>      EvaluatedNode;
+
   virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
   const Space<dist_t>*    space_;
@@ -93,6 +98,7 @@ class NNDescentMethod : public Index<dist_t> {
   unique_ptr<NNDescent<SpaceOracle>> nndesObj_;
 
   size_t                  initSearchAttempts_;
+  bool                    greedy_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(NNDescentMethod);
 };
