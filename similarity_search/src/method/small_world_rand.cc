@@ -141,7 +141,7 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
                               new IndexThreadParamsSW<dist_t>(space, *this, data, i, indexThreadQty_,
-                                                              progress_bar.get(), progressBarMutex, 10000)));
+                                                              progress_bar.get(), progressBarMutex, 1000)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));

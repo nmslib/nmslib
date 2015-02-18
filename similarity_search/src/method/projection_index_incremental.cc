@@ -25,6 +25,7 @@
 #include "distcomp.h"
 #include "space.h"
 #include "rangequery.h"
+#include "ported_boost_progress.h"
 #include "knnquery.h"
 #include "incremental_quick_select.h"
 #include "method/projection_index_incremental.h"
@@ -40,6 +41,7 @@ namespace similarity {
 
 template <typename dist_t>
 ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
+    bool  PrintProgress,
     const Space<dist_t>*  space,
     const ObjectVector&   data,
     const AnyParams&      AllParams)
@@ -113,6 +115,10 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
   unique_ptr<AnyParams> projSpaceParams =
             unique_ptr<AnyParams>(new AnyParams(projSpaceDesc));
 
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+                                new ProgressDisplay(data.size(), cout)
+                                :NULL);
+
 #ifdef PROJ_CONTIGUOUS_STORAGE
   proj_vects_.resize(data.size() * proj_dim_);
   vector<float> TmpVect(proj_dim_);
@@ -120,12 +126,14 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
   for (size_t i = 0, start = 0; i < data.size(); ++i, start += proj_dim_) {
     proj_obj_->compProj(NULL, data_[i], &TmpVect[0]);
     memcpy(&proj_vects_[start], &TmpVect[0], sizeof(proj_vects_[0])*proj_dim_); 
+    if (progress_bar) ++(*progress_bar);
   }
 #else
   proj_vects_.resize(data.size());
   for (size_t i = 0; i < data.size(); ++i) {
     proj_vects_[i].resize(proj_dim_);
     proj_obj_->compProj(NULL, data_[i], &proj_vects_[i][0]);
+    if (progress_bar) ++(*progress_bar);
   }
 #endif
 }

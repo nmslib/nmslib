@@ -46,7 +46,8 @@ namespace similarity {
 template <typename dist_t>
 class ProjectionIndexIncremental : public Index<dist_t> {
  public:
-  ProjectionIndexIncremental(const Space<dist_t>* space,
+  ProjectionIndexIncremental(bool PrintProgress,
+                             const Space<dist_t>* space,
                              const ObjectVector& data,
                              const AnyParams& AllParams);
   ~ProjectionIndexIncremental();

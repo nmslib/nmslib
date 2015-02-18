@@ -31,7 +31,8 @@ Index<dist_t>* CreateProjectionIndexIncremental(bool PrintProgress,
                            const Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
-  return new ProjectionIndexIncremental<dist_t>(space,
+  return new ProjectionIndexIncremental<dist_t>(PrintProgress,
+                                                space,
                                                 DataObjects,
                                                 AllParams);
 
