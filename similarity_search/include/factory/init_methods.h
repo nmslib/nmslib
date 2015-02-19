@@ -32,6 +32,7 @@
 #include "factory/method/multi_vantage_point_tree.h"
 #include "factory/method/perm_bin_vptree.h"
 #include "factory/method/perm_index_incr_bin.h"
+#include "factory/method/perm_lsh_bin.h"
 #include "factory/method/permutation_index.h"
 #include "factory/method/permutation_index_incremental.h"
 #include "factory/method/permutation_inverted_index.h"
@@ -95,6 +96,11 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
   REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
   REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
+
+  // LSH based on binarized permutations
+  REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)
+  REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)
+  REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)
 
   // Sequential-search permutation index without incremental sorting
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION, CreatePermutationIndex)
