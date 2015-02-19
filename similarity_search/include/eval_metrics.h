@@ -52,7 +52,7 @@ struct EvalMetricsBase {
                const vector<ResultEntry<dist_t>>& SortedAllEntries, const unordered_set<IdType>& ExactResultIds,
                const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
                ) {
-      for (size_t k = 0, p = 0; k < ApproxEntries.size(); ++k) {
+      for (size_t k = 0, p = 0; k < ApproxEntries.size() && p < SortedAllEntries.size(); ++k) {
         const auto& elemApprox = ApproxEntries[k];
         const auto& elemExact  = SortedAllEntries[p];
         /*
