@@ -27,8 +27,8 @@
 
 namespace similarity {
 
-template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
-PermutationIndexLSHBin<dist_t, perm_func>::PermutationIndexLSHBin(
+template <typename dist_t>
+PermutationIndexLSHBin<dist_t>::PermutationIndexLSHBin(
     bool PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
@@ -46,11 +46,6 @@ PermutationIndexLSHBin<dist_t, perm_func>::PermutationIndexLSHBin(
   pmgr.GetParamOptional("binThreshold", bin_threshold_);
   pmgr.GetParamOptional("bitSampleQty", bit_sample_qty_);
   pmgr.GetParamOptional("L",            num_hash_);
-  
-  LOG(LIB_INFO) << "# of hashes      = " << num_hash_;
-  LOG(LIB_INFO) << "# pivots         = " << num_pivot_;
-  LOG(LIB_INFO) << "bin threshold    = " << bin_threshold_;
-  LOG(LIB_INFO) << "bit sample qty   = " << bit_sample_qty_;
 
   if (!bit_sample_qty_) {
     throw runtime_error("bitSampleQty should be non-zero");
@@ -63,6 +58,12 @@ PermutationIndexLSHBin<dist_t, perm_func>::PermutationIndexLSHBin(
   }
 
   hash_table_size_ = 1 << bit_sample_qty_;
+  
+  LOG(LIB_INFO) << "# of hashes      = " << num_hash_;
+  LOG(LIB_INFO) << "hashe table size = " << hash_table_size_;
+  LOG(LIB_INFO) << "# pivots         = " << num_pivot_;
+  LOG(LIB_INFO) << "bin threshold    = " << bin_threshold_;
+  LOG(LIB_INFO) << "bit sample qty   = " << bit_sample_qty_;
 
   pivots_.resize(num_hash_);
   bit_sample_flags_.resize(num_hash_);
@@ -128,39 +129,40 @@ PermutationIndexLSHBin<dist_t, perm_func>::PermutationIndexLSHBin(
   }
 }
 
-template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
-PermutationIndexLSHBin<dist_t, perm_func>::~PermutationIndexLSHBin() { 
+template <typename dist_t>
+PermutationIndexLSHBin<dist_t>::~PermutationIndexLSHBin() { 
   for (size_t hashId = 0; hashId < num_hash_; ++hashId) {
     for (auto e: hash_tables_[hashId]) delete e;
   }
 }
 
-template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)> 
+template <typename dist_t>
 template <typename QueryType>
-void PermutationIndexLSHBin<dist_t, perm_func>::GenSearch(QueryType* query) {
+void PermutationIndexLSHBin<dist_t>::GenSearch(QueryType* query) {
+  std::unordered_set<IdType> found;
+
   for (size_t hashId = 0; hashId < num_hash_; ++hashId) {
     size_t val = computeHashValue(hashId, NULL, query); // Already <= hash_table_size_;
 
     vector<IdType>* pObjIds = hash_tables_[hashId][val]; 
     if (pObjIds) {
       for (IdType id : *pObjIds)
+      /*  
+       * It's essential to check for previously added entries.
+       * If we don't do this, the same close entry may be added multiple
+       * times. At the same time, other relevant entries will be removed!
+       */
+      if (!found.count(id)) {
         query->CheckAndAddToResult(data_[id]);
+        found.insert(id);
+      }
     }
   }
 }
 
-template class PermutationIndexLSHBin<float,SpearmanRho>;
-template class PermutationIndexLSHBin<double,SpearmanRho>;
-template class PermutationIndexLSHBin<int,SpearmanRho>;
-template class PermutationIndexLSHBin<float,SpearmanFootrule>;
-template class PermutationIndexLSHBin<double,SpearmanFootrule>;
-template class PermutationIndexLSHBin<int,SpearmanFootrule>;
-template class PermutationIndexLSHBin<float,SpearmanRhoSIMD>;
-template class PermutationIndexLSHBin<double,SpearmanRhoSIMD>;
-template class PermutationIndexLSHBin<int,SpearmanRhoSIMD>;
-template class PermutationIndexLSHBin<float,SpearmanFootruleSIMD>;
-template class PermutationIndexLSHBin<double,SpearmanFootruleSIMD>;
-template class PermutationIndexLSHBin<int,SpearmanFootruleSIMD>;
+template class PermutationIndexLSHBin<float>;
+template class PermutationIndexLSHBin<double>;
+template class PermutationIndexLSHBin<int>;
 
 }  // namespace similarity
 

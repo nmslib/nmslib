@@ -115,6 +115,11 @@ void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
     while(!ResQ->Empty()) {
       const Object* obj = reinterpret_cast<const Object*>(ResQ->TopObject());
 
+      /*  
+       * It's essential to check for previously added entries.
+       * If we don't do this, the same close entry may be added multiple
+       * times. At the same time, other relevant entries will be removed!
+       */
       if (!found.count(obj->id())) {
         query->CheckAndAddToResult(ResQ->TopDistance(), obj);
         found.insert(obj->id());

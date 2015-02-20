@@ -31,11 +31,10 @@ Index<dist_t>* CreatePermutationIndexLSHBin(bool PrintProgress,
                            const Space<dist_t>* space,
                            const ObjectVector& dataObjects,
                            const AnyParams& allParams) {
-  return new PermutationIndexLSHBin<dist_t, SpearmanRhoSIMD>(
-                                                       PrintProgress,
-                                                       space,
-                                                       dataObjects,
-                                                       allParams);
+  return new PermutationIndexLSHBin<dist_t>(PrintProgress,
+                                            space,
+                                            dataObjects,
+                                            allParams);
 
 }
 

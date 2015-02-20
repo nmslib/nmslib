@@ -29,10 +29,12 @@ namespace similarity {
 /* 
  * A simplified version of the LSH based on binarized permutations.
  * 
- * On Locality Sensitive Hashing in Metric Spaces. Tellez & Chavez.
+ * Tellez, Eric Sadit, and Edgar Chavez. 
+ * "On locality sensitive hashing in metric spaces." 
+ * Proceedings of the SISAP 2010.
  */
 
-template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
+template <typename dist_t>
 class PermutationIndexLSHBin : public Index<dist_t> {
  public:
   PermutationIndexLSHBin(
