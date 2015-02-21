@@ -162,12 +162,8 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
 
   ReportIntrinsicDimensionality("Set of projections" , *VPTreeSpace_, projData_);
 
-  TriangIneqCreator<float> OracleCreator(AlphaLeft, AlphaRight);
-
-  VPTreeIndex_ = new VPTree<float, TriangIneq<float>,
-                            TriangIneqCreator<float> >(
+  VPTreeIndex_ = new VPTree<float, PolynomialPruner<float>>(
                                           true,
-                                          OracleCreator,
                                           VPTreeSpace_.get(),
                                           projData_,
                                           RemainParams

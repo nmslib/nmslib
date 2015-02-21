@@ -32,7 +32,7 @@ Index<dist_t>* CreatePermutationVPTree(bool PrintProgress,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
 
-    return new PermutationVPTree<dist_t, SpearmanRhoSIMD>(space, DataObjects, AllParams);
+    return new PermutationVPTree<dist_t, SpearmanRhoSIMD>(PrintProgress, space, DataObjects, AllParams);
 }
 
 /*

@@ -51,7 +51,15 @@ class ProjectionVPTree : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
+  vector<string> GetQueryTimeParamNames() const { return VPTreeIndex_->GetQueryTimeParamNames();}
  private:
+  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+    AnyParams params;
+    pmgr.ExtractParametersExcept({});
+    VPTreeIndex_->SetQueryTimeParams(params);
+  }
+
+
   const Space<dist_t>*              space_;
   const ObjectVector&               data_;
   size_t                            db_scan_qty_;
@@ -63,8 +71,8 @@ class ProjectionVPTree : public Index<dist_t> {
                                                    const Query<dist_t>* pQuery,
                                                    const Object* pSrcObj) const;
 
-  VPTree<float, TriangIneq<float>, TriangIneqCreator<float> >*   VPTreeIndex_;
-  unique_ptr<const VectorSpaceSimpleStorage<float>>              VPTreeSpace_;
+  VPTree<float, PolynomialPruner<float>>*             VPTreeIndex_;
+  unique_ptr<const VectorSpaceSimpleStorage<float>>   VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(ProjectionVPTree);

@@ -90,15 +90,9 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
     BinPermData_[i] = VPTreeSpace_->CreateObjFromVect(i, -1, binPivot);
   }
 
-  TriangIneqCreator<int> OracleCreator(AlphaLeft, AlphaRight);
-
   ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, BinPermData_);
-
-
-  VPTreeIndex_ = new VPTree<int, TriangIneq<int>,
-                            TriangIneqCreator<int> >(
+  VPTreeIndex_ = new VPTree<int, PolynomialPruner<int>>(
                                           true,
-                                          OracleCreator,
                                           VPTreeSpace_,
                                           BinPermData_,
                                           RemainParams

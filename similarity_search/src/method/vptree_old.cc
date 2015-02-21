@@ -24,7 +24,7 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "searchoracle.h"
-#include "method/vptree.h"
+#include "method/vptree_old.h"
 #include "method/vptree_utils.h"
 #include "methodfactory.h"
 
@@ -37,7 +37,7 @@ using std::cout;
 using std::cerr;
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPTree(
+VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::VPTreeOld(
                        bool  PrintProgress,
                        const SearchOracleCreator& OracleCreator,
                        const Space<dist_t>* space,
@@ -74,29 +74,29 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPTree(
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-VPTree<dist_t, SearchOracle, SearchOracleCreator>::~VPTree() {
+VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::~VPTreeOld() {
   delete root_;
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-const std::string VPTree<dist_t, SearchOracle, SearchOracleCreator>::ToString() const {
-  return "vptree: " + SearchOracle::GetName();
+const std::string VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::ToString() const {
+  return "vptree old: " + SearchOracle::GetName();
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-void VPTree<dist_t, SearchOracle, SearchOracleCreator>::Search(RangeQuery<dist_t>* query) {
+void VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::Search(RangeQuery<dist_t>* query) {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-void VPTree<dist_t, SearchOracle, SearchOracleCreator>::Search(KNNQuery<dist_t>* query) {
+void VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::Search(KNNQuery<dist_t>* query) {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::CreateBucket(bool ChunkBucket, 
+void VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::VPNode::CreateBucket(bool ChunkBucket, 
                                                                              const ObjectVector& data, 
                                                                              ProgressDisplay* progress_bar
                                                                              ) {
@@ -109,7 +109,7 @@ void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::CreateBucket(boo
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
+VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
                                unsigned level,
                                ProgressDisplay* progress_bar,
                                const SearchOracleCreator& OracleCreator,
@@ -226,7 +226,7 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
 }
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::~VPNode() {
+VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::VPNode::~VPNode() {
   delete left_child_;
   delete right_child_;
   delete oracle_;
@@ -235,7 +235,7 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::~VPNode() {
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
 template <typename QueryType>
-void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::GenericSearch(QueryType* query,
+void VPTreeOld<dist_t, SearchOracle, SearchOracleCreator>::VPNode::GenericSearch(QueryType* query,
                                                                           int& MaxLeavesToVisit) {
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (bucket_) {
@@ -272,13 +272,13 @@ void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::GenericSearch(Qu
   }
 }
 
-template class VPTree<float, TriangIneq<float>, TriangIneqCreator<float> >;
-template class VPTree<double, TriangIneq<double>, TriangIneqCreator<double> >;
-template class VPTree<int, TriangIneq<int>, TriangIneqCreator<int> >;
+template class VPTreeOld<float, TriangIneq<float>, TriangIneqCreator<float> >;
+template class VPTreeOld<double, TriangIneq<double>, TriangIneqCreator<double> >;
+template class VPTreeOld<int, TriangIneq<int>, TriangIneqCreator<int> >;
 
-template class VPTree<float, SamplingOracle<float>, SamplingOracleCreator<float> >;
-template class VPTree<double, SamplingOracle<double>, SamplingOracleCreator<double> >;
-template class VPTree<int, SamplingOracle<int>, SamplingOracleCreator<int> >;
+template class VPTreeOld<float, SamplingOracle<float>, SamplingOracleCreator<float> >;
+template class VPTreeOld<double, SamplingOracle<double>, SamplingOracleCreator<double> >;
+template class VPTreeOld<int, SamplingOracle<int>, SamplingOracleCreator<int> >;
 
 }   // namespace similarity
 

@@ -59,7 +59,7 @@ class Index {
     SetQueryTimeParamsInternal(tmpParamMngr);
   }
 protected:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& ) {}
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& pmgr) {}
 };
 
 }  // namespace similarity

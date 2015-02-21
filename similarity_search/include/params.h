@@ -138,6 +138,21 @@ public:
     throw runtime_error(err);
   } 
 
+  template <typename ParamType> 
+  void AddChangeParam(const string& Name, const ParamType& Value) {
+    stringstream str;
+    str << Value;
+  
+    for (unsigned i = 0; i < ParamNames.size(); ++i) 
+    if (Name == ParamNames[i]) {
+      ParamValues[i] = str.str();
+      return;
+    }
+
+    ParamNames.push_back(Name);
+    ParamValues.push_back(str.str());
+  }
+
   AnyParams(){}
   AnyParams(const vector<string>& Names, const vector<string>& Values) 
             : ParamNames(Names), ParamValues(Values) {}

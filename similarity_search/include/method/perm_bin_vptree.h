@@ -54,7 +54,14 @@ class PermBinVPTree : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
+  vector<string> GetQueryTimeParamNames() const { return VPTreeIndex_->GetQueryTimeParamNames(); }
  private:
+  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+    AnyParams params;
+    pmgr.ExtractParametersExcept({});
+    VPTreeIndex_->SetQueryTimeParams(params);
+  }
+
   const Space<dist_t>*      space_;
   const ObjectVector&       data_;
   size_t                    bin_threshold_;
@@ -63,8 +70,10 @@ class PermBinVPTree : public Index<dist_t> {
   ObjectVector              pivots_;
   ObjectVector              BinPermData_;
 
-  VPTree<int, TriangIneq<int>, TriangIneqCreator<int> >*   VPTreeIndex_;
-  const SpaceBitHamming*                                   VPTreeSpace_;
+  VPTree<int, PolynomialPruner<int>>*   VPTreeIndex_;
+  const SpaceBitHamming*                VPTreeSpace_;
+
+  void SetQueryTimeParamsInternal(AnyParams params) { VPTreeIndex_->SetQueryTimeParams(params); }
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermBinVPTree);

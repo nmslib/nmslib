@@ -13,8 +13,8 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
-#ifndef _VPTREE_H_
-#define _VPTREE_H_
+#ifndef _VPTREE_OLD_H_
+#define _VPTREE_OLD_H_
 
 #include <string>
 #include <memory>
@@ -23,8 +23,8 @@
 #include "params.h"
 #include "ported_boost_progress.h"
 
-#define METH_VPTREE          "vptree"
-#define METH_VPTREE_SAMPLE   "vptree_sample"
+#define METH_VPTREE_OLD          "vptree_old"
+#define METH_VPTREE_OLD_SAMPLE   "vptree_old_sample"
 
 namespace similarity {
 
@@ -36,15 +36,15 @@ using std::unique_ptr;
 template <typename dist_t> class Space;
 
 template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-class VPTree : public Index<dist_t> {
+class VPTreeOld : public Index<dist_t> {
  public:
-  VPTree(bool  PrintProgress,
+  VPTreeOld(bool  PrintProgress,
          const SearchOracleCreator& OracleCreator,
          const Space<dist_t>* space,
          const ObjectVector& data,
          const AnyParams& MethParams,
          bool use_random_center = true);
-  ~VPTree();
+  ~VPTreeOld();
 
   const std::string ToString() const;
 
@@ -85,7 +85,7 @@ class VPTree : public Index<dist_t> {
     ObjectVector* bucket_;
     char*         CacheOptimizedBucket_;
 
-    friend class VPTree;
+    friend class VPTreeOld;
   };
 
   VPNode* root_;
@@ -94,10 +94,10 @@ class VPTree : public Index<dist_t> {
   bool    ChunkBucket_;
   string  SaveHistFileName_;
   // disable copy and assign
-  DISABLE_COPY_AND_ASSIGN(VPTree);
+  DISABLE_COPY_AND_ASSIGN(VPTreeOld);
 };
 
 
 }   // namespace similarity
 
-#endif     // _VPTREE_H_
+#endif

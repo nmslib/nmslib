@@ -48,6 +48,9 @@
 #include "meta_analysis.h"
 #include "params.h"
 
+// TODO make it a program parameter
+#define MAX_EXP 2
+
 using namespace similarity;
 
 using std::vector;
@@ -67,12 +70,16 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
                       const string& methodName,
                       AnyParams AllParams, 
                       float& recall, float& time_best, float& impr_best,
-                      float& alpha_left_best, float& alpha_right_best) {
+                      float& alpha_left_best, unsigned exp_left,
+                      float& alpha_right_best, unsigned exp_right) {
   time_best = std::numeric_limits<float>::max();
   impr_best = 0;
   alpha_left_best = 0;
   alpha_right_best = 0;
   recall = 0;
+
+  AllParams.AddChangeParam("expLeft", exp_left);
+  AllParams.AddChangeParam("expRight", exp_left);
 
   AnyParamManager pmgr(AllParams);
 
@@ -130,11 +137,8 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
           }
 
           std::shared_ptr<Index<dist_t>> MethodPtr = vIndexFollAllSetsPtrs[TestSetId];
-          // TODO unfortunately currently we are bound to recreate
-          // VP-tree index, because it doesn't have an option to 
-          // change alphaLeft and alphaRight on the fly (at query time).
-          // However, this is in principle possible and should be done someday.
-          if (true || !MethodPtr.get()) {
+          
+          if (!MethodPtr.get()) {
             LOG(LIB_INFO) << "Creating a new index";
             MethodPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
                                            CreateMethod(false, 
@@ -144,7 +148,8 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
                                                         MethPars) );
             vIndexFollAllSetsPtrs[TestSetId] = MethodPtr;
           } else {
-            LOG(LIB_INFO) << "Reusing an existing index";
+            LOG(LIB_INFO) << "Reusing an existing index, only reseting params";
+            MethodPtr->SetQueryTimeParams(MethPars);
           }
 
           vector<shared_ptr<Index<dist_t>>>          IndexPtrs;
@@ -179,6 +184,8 @@ void GetOptimalAlphas(ExperimentConfig<dist_t>& config,
             pmgr.GetParamRequired("alphaLeft", alpha_left_best);
             pmgr.GetParamRequired("alphaRight", alpha_right_best);
         }
+        LOG(LIB_INFO) << "alphaLeft=" << alpha_left_base << " expleft=" << exp_left << 
+                         " AlphaRight=" << alpha_right_base << " expRight=" << exp_right;
         LOG(LIB_INFO) << "Recall: " << Stat.GetRecallAvg();
         LOG(LIB_INFO) << "Query time: " << Stat.GetQueryTimeAvg();
         LOG(LIB_INFO) << "Impr. in efficiency: " << Stat.GetImprEfficiencyAvg();
@@ -236,7 +243,8 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
              unsigned                       MaxNumQuery,
              vector<unsigned>               knnAll,
              float                          eps,
-             const string&                  RangeArg
+             const string&                  RangeArg,
+             size_t                         maxExp
 )
 {
   vector<dist_t> rangeAll;
@@ -292,12 +300,28 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
 
       config.ReadDataset();
 
-      float recall, time_best, impr_best, alpha_left, alpha_right;
+      float recall = 0, time_best = 0, impr_best = -1, alpha_left = 0, alpha_right = 0; 
+      unsigned exp_left = 0, exp_right = 0;
 
-      GetOptimalAlphas(config, SpaceType, methodName, MethPars, 
-                       recall, 
-                       time_best, impr_best,
-                       alpha_left, alpha_right);
+      for (unsigned expLeft = 1; expLeft <= maxExp; ++expLeft) 
+      for (unsigned expRight = 1; expRight <= maxExp; ++expRight) {
+        float recall_loc, time_best_loc, impr_best_loc, alpha_left_loc, alpha_right_loc;
+
+        GetOptimalAlphas(config, SpaceType, methodName, MethPars, 
+                       recall_loc, 
+                       time_best_loc, impr_best_loc,
+                       alpha_left_loc, expLeft, alpha_right_loc, expRight);
+
+        if (impr_best_loc > impr_best) {
+          recall = recall_loc; 
+          time_best = time_best_loc; 
+          impr_best = impr_best_loc;
+          alpha_left = alpha_left_loc; 
+          alpha_right = alpha_right_loc;
+          exp_left = expLeft;
+          exp_right = expRight;
+        }
+      }
 
       LOG(LIB_INFO) << "Optimization results";
       LOG(LIB_INFO) << "Range: "  << rangeAll[i];
@@ -305,7 +329,9 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
       LOG(LIB_INFO) << "Best time: " << time_best;
       LOG(LIB_INFO) << "Best impr. eff.: " << impr_best;
       LOG(LIB_INFO) << "alpha_left: " << alpha_left;
+      LOG(LIB_INFO) << "exp_left: " << exp_left;
       LOG(LIB_INFO) << "alpha_right: " << alpha_right;
+      LOG(LIB_INFO) << "exp_right: " << exp_right;
       
     }
 
@@ -324,10 +350,28 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
 
       config.ReadDataset();
 
-      float recall, time_best, impr_best, alpha_left, alpha_right;
-      GetOptimalAlphas(config, SpaceType, methodName, MethPars, 
-                       recall, time_best, impr_best,
-                       alpha_left, alpha_right);
+      float recall, time_best, impr_best = -1, alpha_left, alpha_right;
+      unsigned exp_left = 0, exp_right = 0;
+
+      for (unsigned expLeft = 1; expLeft <= maxExp; ++expLeft) 
+      for (unsigned expRight = 1; expRight <= maxExp; ++expRight) {
+        float recall_loc, time_best_loc, impr_best_loc, alpha_left_loc, alpha_right_loc;
+
+        GetOptimalAlphas(config, SpaceType, methodName, MethPars, 
+                       recall_loc, 
+                       time_best_loc, impr_best_loc,
+                       alpha_left_loc, expLeft, alpha_right_loc, expRight);
+
+        if (impr_best_loc > impr_best) {
+          recall = recall_loc; 
+          time_best = time_best_loc; 
+          impr_best = impr_best_loc;
+          alpha_left = alpha_left_loc; 
+          alpha_right = alpha_right_loc;
+          exp_left = expLeft;
+          exp_right = expRight;
+        }
+      }
 
       LOG(LIB_INFO) << "Optimization results";
       LOG(LIB_INFO) << "K: "  << knnAll[i];
@@ -335,7 +379,9 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& Methods,
       LOG(LIB_INFO) << "Best time: " << time_best;
       LOG(LIB_INFO) << "Best impr. eff.: " << impr_best;
       LOG(LIB_INFO) << "alpha_left: " << alpha_left;
+      LOG(LIB_INFO) << "exp_left: " << exp_left;
       LOG(LIB_INFO) << "alpha_right: " << alpha_right;
+      LOG(LIB_INFO) << "exp_right: " << exp_right;
     }
 
   } catch (const std::exception& e) {
@@ -411,7 +457,8 @@ int main(int ac, char* av[]) {
                   MaxNumQuery,
                   knn,
                   eps,
-                  RangeArg
+                  RangeArg,
+                  MAX_EXP
                  );
   } else if (DIST_TYPE_FLOAT == DistType) {
     RunExper<float>(Methods,
@@ -425,7 +472,8 @@ int main(int ac, char* av[]) {
                   MaxNumQuery,
                   knn,
                   eps,
-                  RangeArg
+                  RangeArg,
+                  MAX_EXP
                  );
   } else if (DIST_TYPE_DOUBLE == DistType) {
     RunExper<double>(Methods,
@@ -439,7 +487,8 @@ int main(int ac, char* av[]) {
                   MaxNumQuery,
                   knn,
                   eps,
-                  RangeArg
+                  RangeArg,
+                  MAX_EXP
                  );
   } else {
     LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;

@@ -169,15 +169,20 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_SATREE, CreateSATree)
   REGISTER_METHOD_CREATOR(int,    METH_SATREE, CreateSATree)
 
-  // VP-tree, piecewise-linear approximation of the decision rule
-  REGISTER_METHOD_CREATOR(int,    METH_VPTREE, CreateVPTreeTriang)
-  REGISTER_METHOD_CREATOR(float,  METH_VPTREE, CreateVPTreeTriang)
-  REGISTER_METHOD_CREATOR(double, METH_VPTREE, CreateVPTreeTriang)
+  // VP-tree, piecewise-polynomial approximation of the decision rule
+  REGISTER_METHOD_CREATOR(int,    METH_VPTREE, CreateVPTree)
+  REGISTER_METHOD_CREATOR(float,  METH_VPTREE, CreateVPTree)
+  REGISTER_METHOD_CREATOR(double, METH_VPTREE, CreateVPTree)
 
-  // VP-tree, sampling-based (not so good yet) approximation of the decision rule
-  REGISTER_METHOD_CREATOR(int,    METH_VPTREE_SAMPLE, CreateVPTreeSample)
-  REGISTER_METHOD_CREATOR(float,  METH_VPTREE_SAMPLE, CreateVPTreeSample)
-  REGISTER_METHOD_CREATOR(double, METH_VPTREE_SAMPLE, CreateVPTreeSample)
+  // VP-tree (old version), piecewise-linear approximation of the decision rule
+  REGISTER_METHOD_CREATOR(int,    METH_VPTREE_OLD, CreateVPTreeOldTriang)
+  REGISTER_METHOD_CREATOR(float,  METH_VPTREE_OLD, CreateVPTreeOldTriang)
+  REGISTER_METHOD_CREATOR(double, METH_VPTREE_OLD, CreateVPTreeOldTriang)
+
+  // VP-tree (old version), sampling-based (not so good yet) approximation of the decision rule
+  REGISTER_METHOD_CREATOR(int,    METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
+  REGISTER_METHOD_CREATOR(float,  METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
+  REGISTER_METHOD_CREATOR(double, METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
 
   // A multi-index combination
   REGISTER_METHOD_CREATOR(float,  METH_MULT_INDEX, CreateMultiIndex)
