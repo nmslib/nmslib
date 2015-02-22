@@ -329,6 +329,7 @@ void RunExper(unsigned AddRestartQty,
              float                          eps,
              const string&                  RangeArg,
              const string&                  ResFile,
+             unsigned                       MinExp,
              unsigned                       MaxExp,
              unsigned                       MaxIter,
              unsigned                       MaxRecDepth,
@@ -382,6 +383,7 @@ void RunExper(unsigned AddRestartQty,
   try {
 
     if (!MaxExp) throw runtime_error("MaxExp can't be zero!");
+    if (MaxExp < MinExp) throw runtime_error("MaxExp can't be < MinExp!");
 
     if (rangeAll.size() + knnAll.size() != 1) {
       LOG(LIB_FATAL) << "You need to specify exactly one range or one knn search!";
@@ -424,7 +426,7 @@ void RunExper(unsigned AddRestartQty,
     float recall = 0, time_best = 0, impr_best = -1, alpha_left = 0, alpha_right = 0; 
     unsigned exp_left = 0, exp_right = 0;
 
-    for (unsigned ce = 1; ce <= MaxExp; ++ce)
+    for (unsigned ce = MinExp; ce <= MaxExp; ++ce)
     for (unsigned k = 0; k < 1 + AddRestartQty; ++k) {
       unsigned expLeft = ce, expRight = ce;
       float recall_loc, time_best_loc, impr_best_loc, 
@@ -510,6 +512,7 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                       vector<unsigned>&       knn,
                       float&                  eps,
                       string&                 RangeArg,
+                      unsigned&               MinExp,   
                       unsigned&               MaxExp,   
                       unsigned&               MaxIter,   
                       unsigned&               MaxRecDepth,
@@ -560,6 +563,8 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                         "<method name>:<param1>,<param2>,...,<paramK>")
     ("outFile,o",       po::value<string>(&ResFile)->default_value(""),
                         "output file")
+    ("minExp",      po::value<unsigned>(&MinExp)->default_value(1),
+                    "the minimum exponent in the pruning oracle.")
     ("maxExp",      po::value<unsigned>(&MaxExp)->default_value(2),
                     "the maximum exponent in the pruning oracle.")
     ("maxIter",     po::value<unsigned>(&MaxIter)->default_value(10),
@@ -654,6 +659,7 @@ int main(int ac, char* av[]) {
   float                   eps;
   shared_ptr<MethodWithParams> Method;
 
+  unsigned MinExp;
   unsigned MaxExp;
   unsigned MaxIter;
   unsigned MaxRecDepth;
@@ -676,6 +682,7 @@ int main(int ac, char* av[]) {
                        knn,
                        eps,
                        RangeArg,
+                       MinExp,
                        MaxExp,
                        MaxIter,
                        MaxRecDepth,
@@ -701,6 +708,7 @@ int main(int ac, char* av[]) {
                   eps,
                   RangeArg,
                   ResFile,
+                  MinExp,
                   MaxExp,
                   MaxIter,
                   MaxRecDepth,
@@ -721,6 +729,7 @@ int main(int ac, char* av[]) {
                   eps,
                   RangeArg,
                   ResFile,
+                  MinExp,
                   MaxExp,
                   MaxIter,
                   MaxRecDepth,
@@ -741,6 +750,7 @@ int main(int ac, char* av[]) {
                   eps,
                   RangeArg,
                   ResFile,
+                  MinExp,
                   MaxExp,
                   MaxIter,
                   MaxRecDepth,
