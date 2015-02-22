@@ -76,8 +76,8 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
 
   double AlphaLeft = 1.0, AlphaRight = 1.0;
 
-  pmgr.GetParamOptional("alphaLeft",  AlphaLeft);
-  pmgr.GetParamOptional("alphaRight", AlphaRight);
+  pmgr.GetParamOptional(ALPHA_LEFT_PARAM,  AlphaLeft);
+  pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, AlphaRight);
 
   /*
    * Let's extract all parameters before doing
@@ -108,8 +108,8 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
                          "binThreshold",
                          "projSpaceType",
 
-                         "alphaLeft", 
-                         "alphaRight"
+                         ALPHA_LEFT_PARAM, 
+                         ALPHA_RIGHT_PARAM
                         });
 
   LOG(LIB_INFO) << "projType     = " << projType;
@@ -118,8 +118,8 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
   LOG(LIB_INFO) << "intermDim    = " << intermDim;
   LOG(LIB_INFO) << "binThreshold = " << binThreshold;
   LOG(LIB_INFO) << "dbDscanFrac  = " << DbScanFrac;
-  LOG(LIB_INFO) << "alphaLeft    = " << AlphaLeft;
-  LOG(LIB_INFO) << "alphaRight   = " << AlphaRight;
+  LOG(LIB_INFO) << ALPHA_LEFT_PARAM  << " = " << AlphaLeft;
+  LOG(LIB_INFO) << ALPHA_RIGHT_PARAM << " = " << AlphaRight;
 
   const string   projDescStr = projSpaceType;
   vector<string> projSpaceDesc;

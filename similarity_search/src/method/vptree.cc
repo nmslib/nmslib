@@ -52,12 +52,15 @@ VPTree<dist_t, SearchOracle>::VPTree(
 
   pmgr.GetParamOptional("bucketSize", BucketSize_);
   pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
 
-  VPTree<dist_t,SearchOracle>::SetQueryTimeParams(
-                              pmgr.ExtractParametersExcept({"bucketSize",
-                                                        "chunkBucket",
-                                                        "maxLeavesToVisit"}));
+  LOG(LIB_INFO) << "bucketSize  = " << BucketSize_;
+  LOG(LIB_INFO) << "chunkBucket = " << ChunkBucket_;
+
+  VPTree<dist_t,SearchOracle>::SetQueryTimeParamsInternal(pmgr);
+
+  LOG(LIB_INFO) << "Initial parameters of the oracle: ";
+
+  pmgr.CheckUnused();
 
   oracle_.LogParams();
 

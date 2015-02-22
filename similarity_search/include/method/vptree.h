@@ -54,7 +54,10 @@ class VPTree : public Index<dist_t> {
   vector<string> GetQueryTimeParamNames() const { return oracle_.GetParams(); }
 
  private:
-  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) { oracle_.SetParams(pmgr); }
+  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) { 
+    oracle_.SetParams(pmgr); 
+    pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
+  }
 
   class VPNode {
    public:
@@ -89,7 +92,7 @@ class VPTree : public Index<dist_t> {
     ObjectVector* bucket_;
     char*         CacheOptimizedBucket_;
 
-    friend class VPTreeOld;
+    friend class VPTree;
   };
 
   SearchOracle    oracle_;

@@ -215,6 +215,18 @@ public:
     return AnyParams(names, values);
   }
 
+  void CheckUnused() {
+    bool bFail = false;
+    for (size_t i = 0; i < params.ParamNames.size(); ++i) {
+      const string& name = params.ParamNames[i];
+      if (seen.count(name) == 0) {
+        bFail = true;
+        LOG(LIB_ERROR) << "Unknown parameter: '" << name << "'";
+      }
+    }
+    if (bFail) throw runtime_error("Unknown parameters found!"); 
+  }
+
 private:
   const AnyParams&  params;
   set<string>       seen;

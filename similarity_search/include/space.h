@@ -27,6 +27,7 @@
 #include "global.h"
 #include "object.h"
 #include "utils.h"
+#include "logging.h"
 #include "permutation_type.h"
 
 #define LABEL_PREFIX "label:"
@@ -38,7 +39,10 @@
 namespace similarity {
 
 using std::map;
+using std::pair;
+using std::make_pair;
 using std::runtime_error;
+using std::hash;
 
 template <typename dist_t>
 class ExperimentConfig;
@@ -122,6 +126,7 @@ class Space {
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
  private:
   bool mutable bIndexPhase = true;
+
 };
 
 /*

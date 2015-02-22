@@ -28,6 +28,11 @@
 #include "experimentconf.h"
 #include "logging.h"
 
+#define EXP_LEFT_PARAM  "expLeft"
+#define EXP_RIGHT_PARAM "expRight"
+#define ALPHA_LEFT_PARAM  "alphaLeft"
+#define ALPHA_RIGHT_PARAM "alphaRight"
+
 namespace similarity {
 
 /*
@@ -94,20 +99,20 @@ public:
     exp_left_    = 1;
     alpha_right_ = 1.0;
     exp_right_   = 1;
-    pmgr.GetParamOptional("alphaLeft", alpha_left_);
-    pmgr.GetParamOptional("alphaRight", alpha_right_);
-    pmgr.GetParamOptional("expLeft", exp_left_);
-    pmgr.GetParamOptional("expRight", exp_right_);
+    pmgr.GetParamOptional(ALPHA_LEFT_PARAM, alpha_left_);
+    pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, alpha_right_);
+    pmgr.GetParamOptional(EXP_LEFT_PARAM, exp_left_);
+    pmgr.GetParamOptional(EXP_RIGHT_PARAM, exp_right_);
   }
 
   vector<string> GetParams() const {
-    vector<string> res = {"alphaLeft", "expLeft", "alphaRight", "expRight"};
+    vector<string> res = {ALPHA_LEFT_PARAM, EXP_LEFT_PARAM, ALPHA_RIGHT_PARAM, EXP_RIGHT_PARAM};
     return res;
   }
   
   void LogParams() {
-    LOG(LIB_INFO) << "alphaLeft = "   << alpha_left_ << " expLeft = " << exp_left_;
-    LOG(LIB_INFO) << "alphaRight = " << alpha_right_ << " expRight = " << exp_right_;
+    LOG(LIB_INFO) << ALPHA_LEFT_PARAM << " = "   << alpha_left_ << " " << EXP_LEFT_PARAM << " = " << exp_left_;
+    LOG(LIB_INFO) << ALPHA_RIGHT_PARAM << " = " << alpha_right_ << " " << EXP_RIGHT_PARAM << " = " << exp_right_;
   }
 
   inline VPTreeVisitDecision Classify(dist_t distQueryPivot, dist_t MaxDist, dist_t MedianDist) const {
@@ -137,8 +142,8 @@ public:
   string Dump() { 
     stringstream str;
 
-    str << "AlphaLeft: " << alpha_left_ << " ExponentLeft: " << exp_left_ << 
-           " AlphaRight: " << alpha_right_ << " ExponentRight: " << exp_right_ ;
+    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << " ExponentLeft: " << exp_left_ << 
+           ALPHA_RIGHT_PARAM << ": " << alpha_right_ << " ExponentRight: " << exp_right_ ;
     return str.str();
   }
 private:
@@ -172,7 +177,7 @@ public:
   string Dump() { 
     stringstream str;
 
-    str << "AlphaLeft: " << alpha_left_ << " AlphaRight: " << alpha_right_;
+    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << ALPHA_RIGHT_PARAM << ": " << alpha_right_;
     return str.str();
   }
 private:
@@ -184,9 +189,8 @@ template <typename dist_t>
 class TriangIneqCreator {
 public:
   TriangIneqCreator(double alpha_left, double alpha_right) : alpha_left_(alpha_left), alpha_right_(alpha_right){
-    LOG(LIB_INFO) << "alphaLeft (left stretch coeff)= "   << alpha_left;
-    LOG(LIB_INFO) << "alphaRight (right stretch coeff)= " << alpha_right;
-
+    LOG(LIB_INFO) << ALPHA_LEFT_PARAM << " (left stretch coeff)= "   << alpha_left;
+    LOG(LIB_INFO) << ALPHA_RIGHT_PARAM << " (right stretch coeff)= " << alpha_right;
   }
   TriangIneq<dist_t>* Create(unsigned level, const Object* /*pivot_*/, const DistObjectPairVector<dist_t>& /*dists*/) const {
     return new TriangIneq<dist_t>(alpha_left_, alpha_right_);
