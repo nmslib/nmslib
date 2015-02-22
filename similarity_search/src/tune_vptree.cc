@@ -569,7 +569,7 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                     "the maximum exponent in the pruning oracle.")
     ("maxIter",     po::value<unsigned>(&MaxIter)->default_value(10),
                     "the maximum number of iteration while we are looking for a point where a desired recall can be achieved.")
-    ("maxRecDepth", po::value<unsigned>(&MaxRecDepth)->default_value(10),
+    ("maxRecDepth", po::value<unsigned>(&MaxRecDepth)->default_value(6),
                     "the maximum recursion in the maximization algorithm (each recursion leads to decrease in the grid search step).")
     ("stepN",       po::value<unsigned>(&StepN)->default_value(2),
                     "each local step of the grid search involves (2StepN+1)^2 mini-iterations.")
