@@ -86,12 +86,12 @@ class OMedRank : public Index<dist_t> {
   size_t                  num_pivot_;
   size_t                  chunk_index_size_;
   size_t                  index_qty_;
-  float					          db_scan_frac_;
-  float                   min_freq_;
   size_t                  db_scan_;
   bool                    skip_check_;
   string                  proj_type_;
   size_t                  interm_dim_; // used only for sparse vector spaces
+  float					          db_scan_frac_;
+  float                   min_freq_;
   std::unique_ptr<Projection<dist_t>>  projection_;
 
   struct ObjectInvEntry {

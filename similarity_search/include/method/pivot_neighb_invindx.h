@@ -21,7 +21,8 @@
 #include "index.h"
 #include "permutation_utils.h"
 
-#define METH_PIVOT_NEIGHB_INVINDEX   "pivot_neighb_invindx"
+#define METH_PIVOT_NEIGHB_INVINDEX      "pivot_neighb_invindx"
+#define METH_PIVOT_NEIGHB_INVINDEX_SYN  "napp"
 
 #define PERM_PROC_FAST_SCAN       "scan"
 #define PERM_PROC_MAP             "map"

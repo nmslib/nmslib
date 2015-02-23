@@ -230,7 +230,9 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pm
   } else if (inv_proc_alg == PERM_PROC_MERGE) {
     inv_proc_alg_ = kMerge; 
   } else {
-    LOG(LIB_FATAL) << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
+    stringstream err;
+    err << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
+    throw runtime_error(err.str());
   } 
     
   ComputeDbScan(db_scan_frac);

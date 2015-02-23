@@ -41,7 +41,9 @@ OMedRank<dist_t>::OMedRank(
     chunk_index_size_(16536),
     index_qty_(0), // If ComputeDbScan is called before index_qty_ is computed, it will see this zero
     skip_check_(false),
-    interm_dim_(0)
+    interm_dim_(0),
+    db_scan_frac_(0.05),
+    min_freq_(0.5)
  {
 
   pmgr.GetParamOptional("projType", proj_type_);
@@ -71,6 +73,8 @@ OMedRank<dist_t>::OMedRank(
   index_qty_ = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
   // Call this function AFTER the index size is computed!
   SetQueryTimeParamsInternal(pmgr);
+
+  pmgr.CheckUnused();
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
   LOG(LIB_INFO) << "# of index chunks  = " << index_qty_;
@@ -178,12 +182,13 @@ template <typename dist_t>
 void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("skipChecking", skip_check_);
   pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);
-  CHECK(db_scan_frac_ > 0.0);
-  CHECK(db_scan_frac_ <= 1.0);
   ComputeDbScan(db_scan_frac_, index_qty_);
   pmgr.GetParamOptional("minFreq", min_freq_);
-  CHECK(min_freq_ > 0.0);
-  CHECK(min_freq_ <= 1.0);
+
+  if (db_scan_frac_ <= 0.0 || db_scan_frac_ > 1.0)
+    throw runtime_error("dbScanFrac must be >0 and <= 1.0");
+  if (min_freq_ <= 0.0 || min_freq_ > 1.0)
+    throw runtime_error("minFreq must be >0 and <= 1.0");
 }
 
 template <typename dist_t>

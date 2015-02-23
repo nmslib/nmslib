@@ -38,23 +38,25 @@ class PermutationInvertedIndex : public Index<dist_t> {
  public:
   PermutationInvertedIndex(const Space<dist_t>* space,
                 const ObjectVector& data,
-                const size_t num_pivot,
-                const size_t num_pivot_index,
-                const size_t num_pivot_search,
-                const size_t max_pos_diff,
-                const double db_scan_fraction);
+                AnyParams params);
   ~PermutationInvertedIndex();
 
   const std::string ToString() const;
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
+  virtual vector<string> GetQueryTimeParamNames() const;
+
  private:
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+
   const ObjectVector& data_;
-  const size_t db_scan_;
-  const int num_pivot_index_;      // ki in the original paper
-  const int num_pivot_search_;     // ks in the original paper
-  const int max_pos_diff_;
+  float  db_scan_frac_;
+  size_t db_scan_;
+  size_t num_pivot_;            // overall number of pivots
+  size_t num_pivot_index_;      // ki in the original paper
+  size_t num_pivot_search_;     // ks in the original paper
+  size_t max_pos_diff_;
   ObjectVector pivot_;
 
   struct ObjectInvEntry {
