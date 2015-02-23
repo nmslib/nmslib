@@ -116,11 +116,17 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
   REGISTER_METHOD_CREATOR(double, METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_PERM_INVERTED_INDEX_SYN, CreatePermInvertedIndex)
+  REGISTER_METHOD_CREATOR(double, METH_PERM_INVERTED_INDEX_SYN, CreatePermInvertedIndex)
+  REGISTER_METHOD_CREATOR(int,    METH_PERM_INVERTED_INDEX_SYN, CreatePermInvertedIndex)
 
   // Prefix index over permutations
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_PREFIX_IND, CreatePermutationPrefixIndex)
   REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_PREFIX_IND, CreatePermutationPrefixIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_PREFIX_IND, CreatePermutationPrefixIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_PREFIX_IND_SYN, CreatePermutationPrefixIndex)
+  REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_PREFIX_IND_SYN, CreatePermutationPrefixIndex)
+  REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_PREFIX_IND_SYN, CreatePermutationPrefixIndex)
 
   // VP-tree built over permutations
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_VPTREE, CreatePermutationVPTree)

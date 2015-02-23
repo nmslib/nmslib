@@ -21,7 +21,8 @@
 #include "index.h"
 #include "permutation_utils.h"
 
-#define METH_PERM_INVERTED_INDEX   "perm_inv_indx"
+#define METH_PERM_INVERTED_INDEX       "perm_inv_indx"
+#define METH_PERM_INVERTED_INDEX_SYN   "mi-file"
 
 #define USE_MAP_THRESHOLD 0.01
 
@@ -31,6 +32,8 @@ namespace similarity {
  * Giuseppe Amato and Pasquale Savino,
  * Approximate Similarity Search in Metric Spaces Using Inverted Files,
  * Infoscale (2008)
+ *
+ * Later dubbed as MI-File (metric inverted file).
  */
 
 template <typename dist_t>

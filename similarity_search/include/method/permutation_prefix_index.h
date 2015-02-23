@@ -21,7 +21,8 @@
 #include "index.h"
 #include "permutation_utils.h"
 
-#define METH_PERMUTATION_PREFIX_IND "perm_prefix"
+#define METH_PERMUTATION_PREFIX_IND     "perm_prefix"
+#define METH_PERMUTATION_PREFIX_IND_SYN "pp-index"
 
 namespace similarity {
 
