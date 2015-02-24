@@ -49,13 +49,15 @@ template <class dist_t> void initRandProj(size_t nSrcDim, size_t nDstDim,
         http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process#Algorithm).
    *    Otherwise, just divide each vector by its norm. 
    */
+  size_t maxNormDim = min(nDstDim, nSrcDim);
+
   for (size_t i = 0; i < nDstDim; ++i) {
     if (bDoOrth) {
       // Normalize the outcome (in particular, to ensure the above mentioned invariant is true)
       dist_t normCoeff = sqrt(ScalarProductSIMD(&projMatr[i][0], &projMatr[i][0], nSrcDim));
       for (size_t n = 0; n < nSrcDim; ++n) projMatr[i][n] /= normCoeff;
 
-      for (size_t k = i + 1; k < nDstDim; ++k) {
+      for (size_t k = i + 1; k < maxNormDim; ++k) {
         dist_t coeff = ScalarProductSIMD(&projMatr[i][0], &projMatr[k][0], nSrcDim);
       /* 
        * Invariant the all previously processed vectors have been normalized.
