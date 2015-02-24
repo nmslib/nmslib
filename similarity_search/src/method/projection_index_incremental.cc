@@ -46,16 +46,17 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
     const ObjectVector&   data,
     const AnyParams&      AllParams)
 	: space_(space), data_(data) /* reference */,
-	  use_priority_queue_(false) {
+	  use_priority_queue_(false) ,
+    K_(0),
+    knn_amp_(0),
+    db_scan_frac_(0)
+{
 
   AnyParamManager pmgr(AllParams);
 
-  double    DbScanFrac = 0.05;
-  pmgr.GetParamOptional("dbScanFrac", DbScanFrac);
   pmgr.GetParamOptional("useQueue", use_priority_queue_);
 
   max_proj_dist_ = numeric_limits<float>::max();
-  pmgr.GetParamOptional("maxProjDist", max_proj_dist_);
 
   size_t        intermDim = 0;
 
@@ -68,24 +69,17 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
   pmgr.GetParamRequired("projType",       proj_descr_);
   pmgr.GetParamOptional("binThreshold",   binThreshold);
 
-  /* 
-   * Until all parameters are retrieved don't do any methods that
-   * throw an exception.
-   */
+  SetQueryTimeParamsInternal(pmgr);
 
-  if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
-    throw runtime_error(string(METH_PROJECTION_INC_SORT) +  
-                        " requires that dbScanFrac is in the range [0,1]");
-  }
-  
+  pmgr.CheckUnused();
 
-  ComputeDbScan(db_scan_frac_);
 
   LOG(LIB_INFO) << "projType     = " << proj_descr_;
   LOG(LIB_INFO) << "projDim      = " << proj_dim_;
   LOG(LIB_INFO) << "intermDim    = " << intermDim;
   LOG(LIB_INFO) << "binThreshold = " << binThreshold;
-  LOG(LIB_INFO) << "dbDscanFrac  = " << DbScanFrac;
+  LOG(LIB_INFO) << "dbDscanFrac  = " << db_scan_frac_;
+  LOG(LIB_INFO) << "knnAmp       = " << knn_amp_;
   LOG(LIB_INFO) << "maxProjDist  = " << max_proj_dist_;
   LOG(LIB_INFO) << "useQueue     = " << use_priority_queue_;
 
@@ -141,9 +135,22 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
 template <typename dist_t>
 void 
 ProjectionIndexIncremental<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  pmgr.GetParamOptional("dbScanFrac",  db_scan_frac_);
   pmgr.GetParamOptional("maxProjDist", max_proj_dist_);
-  ComputeDbScan(db_scan_frac_);
+    
+  if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
+    throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
+  }
+  if (pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+  } else {
+    knn_amp_ = 0;
+  }
+  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+    knn_amp_ = 0;
+  }
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
+  pmgr.GetParamOptional("knnAmp",  knn_amp_);
 }
 
 template <typename dist_t>
@@ -151,6 +158,7 @@ vector<string>
 ProjectionIndexIncremental<dist_t>::GetQueryTimeParamNames() const {
   vector<string> names;
   names.push_back("dbScanFrac");
+  names.push_back("knnAmp");
   names.push_back("maxProjDist");
   return names;
 }    
@@ -169,7 +177,20 @@ const std::string ProjectionIndexIncremental<dist_t>::ToString() const {
 
 template <typename dist_t> 
 template <typename QueryType>
-void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query) {
+void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query, size_t K) {
+  // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
+  // a strange error message that says: dbScanFrac should be in the range [0,1].
+  if (!knn_amp_) {
+    if (db_scan_frac_ < 0.0 || db_scan_frac_ > 1.0) {
+      stringstream err;
+      err << METH_PROJECTION_INC_SORT << " requires that dbScanFrac is in the range [0,1]";
+      throw runtime_error(err.str());
+    }
+  }
+
+  size_t db_scan = computeDbScan(K);
+
+
   vector<float>     QueryVect(proj_dim_);
   proj_obj_->compProj(query, query->QueryObject(), &QueryVect[0]);
 
@@ -190,7 +211,7 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query) {
 
     IncrementalQuickSelect<FloatInt> quick_select(proj_dists);
 
-    size_t scan_qty = min(db_scan_, proj_dists.size());
+    size_t scan_qty = min(db_scan, proj_dists.size());
 
     for (size_t i = 0; i < scan_qty; ++i) {
       const size_t idx = quick_select.GetNext().second;
@@ -209,11 +230,11 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query) {
 #endif
       if (projDist <= max_proj_dist_) {
         filterQueue.push(std::make_pair(projDist, i));
-        if (filterQueue.size() > db_scan_) filterQueue.pop();
+        if (filterQueue.size() > db_scan) filterQueue.pop();
       }
     }
 
-    while (filterQueue.size() > db_scan_) filterQueue.pop();
+    while (filterQueue.size() > db_scan) filterQueue.pop();
     while (!filterQueue.empty()) {
       const size_t idx = filterQueue.top().second;
       query->CheckAndAddToResult(data_[idx]);
@@ -225,13 +246,13 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query) {
 template <typename dist_t>
 void ProjectionIndexIncremental<dist_t>::Search(
     RangeQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, 0);
 }
 
 template <typename dist_t>
 void ProjectionIndexIncremental<dist_t>::Search(
     KNNQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, query->GetK());
 }
 
 

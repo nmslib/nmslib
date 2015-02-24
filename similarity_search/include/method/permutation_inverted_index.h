@@ -39,7 +39,9 @@ namespace similarity {
 template <typename dist_t>
 class PermutationInvertedIndex : public Index<dist_t> {
  public:
-  PermutationInvertedIndex(const Space<dist_t>* space,
+  PermutationInvertedIndex(
+                bool  PrintProgress,
+                const Space<dist_t>* space,
                 const ObjectVector& data,
                 AnyParams params);
   ~PermutationInvertedIndex();
@@ -55,12 +57,17 @@ class PermutationInvertedIndex : public Index<dist_t> {
 
   const ObjectVector& data_;
   float  db_scan_frac_;
-  size_t db_scan_;
   size_t num_pivot_;            // overall number of pivots
   size_t num_pivot_index_;      // ki in the original paper
   size_t num_pivot_search_;     // ks in the original paper
   size_t max_pos_diff_;
+  size_t knn_amp_;
   ObjectVector pivot_;
+
+  size_t computeDbScan(size_t K) {
+    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * data_.size());
+  }
 
   struct ObjectInvEntry {
     IdType    id_;
@@ -76,7 +83,8 @@ class PermutationInvertedIndex : public Index<dist_t> {
 
   std::vector<PostingList> posting_lists_;
 
-  template <typename QueryType> void GenSearch(QueryType* query);
+  // K==0 for range search
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationInvertedIndex);

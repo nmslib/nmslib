@@ -34,6 +34,7 @@ Index<dist_t>* CreatePivotNeighbInvertedIndex(
     const AnyParams& AllParams) {
   
   return new PivotNeighbInvertedIndex<dist_t>(
+      PrintProgress,
       space,
       DataObjects,
       AllParams

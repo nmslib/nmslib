@@ -215,6 +215,12 @@ public:
     return AnyParams(names, values);
   }
 
+  bool hasParam(const string& name) {
+    for (const string& s: params.ParamNames)
+    if (s == name) return true;
+    return false;
+  };
+
   void CheckUnused() {
     bool bFail = false;
     for (size_t i = 0; i < params.ParamNames.size(); ++i) {

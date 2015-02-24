@@ -33,6 +33,7 @@ Index<dist_t>* CreatePermInvertedIndex(
     const ObjectVector& DataObjects,
     const AnyParams& AllParams) {
   return new PermutationInvertedIndex<dist_t>(
+      PrintProgress,
       space,
       DataObjects,
       AllParams

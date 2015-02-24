@@ -18,8 +18,11 @@
 #define _PIVOT_NEIGHBORHOOD_INVINDEX_H
 
 #include <vector>
+#include <mutex>
+
 #include "index.h"
 #include "permutation_utils.h"
+#include "ported_boost_progress.h"
 
 #define METH_PIVOT_NEIGHB_INVINDEX      "pivot_neighb_invindx"
 #define METH_PIVOT_NEIGHB_INVINDEX_SYN  "napp"
@@ -31,6 +34,7 @@
 namespace similarity {
 
 using std::vector;
+using std::mutex;
 
 /*
  * The main idea of the method (indexing K most closest pivots using an inverted file)
@@ -63,7 +67,8 @@ typedef vector<int> PostingListInt;
 template <typename dist_t>
 class PivotNeighbInvertedIndex : public Index<dist_t> {
  public:
-  PivotNeighbInvertedIndex(const Space<dist_t>* space,
+  PivotNeighbInvertedIndex(bool PrintProgress,
+                           const Space<dist_t>* space,
                            const ObjectVector& data,
                            const AnyParams& AllParams);
 
@@ -75,14 +80,16 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   
   virtual vector<string> GetQueryTimeParamNames() const;
 
-  void IndexChunk(size_t chunkId);
+  void IndexChunk(size_t chunkId, ProgressDisplay*, mutex&);
  private:
   virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
   const   ObjectVector& data_;
   const   Space<dist_t>*  space_;
   size_t  chunk_index_size_;
-  size_t  db_scan_;
+  size_t  K_;
+  size_t  knn_amp_;
+  size_t  db_scan_frac_;
   size_t  num_prefix_;       // K in the original paper
   size_t  min_times_;        // t in the original paper
   bool    use_sort_;
@@ -99,16 +106,14 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
 
   ObjectVector pivot_;
 
-  void ComputeDbScan(float db_scan_frac) {
-    if (db_scan_frac < 0.0 || db_scan_frac > 1.0) {
-      LOG(LIB_FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that dbScanFrac is in the range [0,1]";
-    }    
-    db_scan_ = std::max(size_t(1),static_cast<size_t>(db_scan_frac * data_.size()));
+  size_t computeDbScan(size_t K) {
+    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
   
   vector<shared_ptr<vector<PostingListInt>>> posting_lists_;
 
-  template <typename QueryType> void GenSearch(QueryType* query);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PivotNeighbInvertedIndex);

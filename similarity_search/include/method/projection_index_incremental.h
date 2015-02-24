@@ -64,12 +64,14 @@ class ProjectionIndexIncremental : public Index<dist_t> {
   const Space<dist_t>*                                  space_;
   const ObjectVector&                                   data_;
   float                                                 max_proj_dist_;
+  bool                                                  use_priority_queue_;
+  size_t                                                K_;
+  size_t                                                knn_amp_;
   float					                                        db_scan_frac_;
   size_t                                                db_scan_;
   size_t                                                proj_dim_;
   string                                                proj_descr_;
   unique_ptr<Projection<dist_t> >                       proj_obj_;
-  bool                                                  use_priority_queue_;
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
   std::vector<float>            proj_vects_;
@@ -77,11 +79,12 @@ class ProjectionIndexIncremental : public Index<dist_t> {
   std::vector<vector<float>>    proj_vects_;
 #endif
   
-  void ComputeDbScan(float db_scan_fraction) {
-    db_scan_ = max(size_t(1), static_cast<size_t>(db_scan_fraction * data_.size()));
+  size_t computeDbScan(size_t K) {
+    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
 
-  template <typename QueryType> void GenSearch(QueryType* query);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(ProjectionIndexIncremental);
