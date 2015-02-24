@@ -75,7 +75,7 @@ PermutationInvertedIndex<dist_t>::PermutationInvertedIndex(
     const ObjectVector& data,
     AnyParams params)
     : data_(data) {
-  db_scan_frac_     = -1;
+  db_scan_frac_     = 0;
   knn_amp_          = 0;
   num_pivot_        = 512;
   num_pivot_index_  = 32;

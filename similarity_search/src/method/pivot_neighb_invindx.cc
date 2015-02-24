@@ -189,6 +189,10 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
       IndexChunk(chunkId, progress_bar.get(), progressBarMutex);
     }
+
+    if (progress_bar) {
+      (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
+    }
   } else {
     vector<thread>                                      threads(index_thread_qty_);
     vector<shared_ptr<IndexThreadParamsPNII<dist_t>>>   threadParams;
@@ -211,6 +215,10 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
       threads[i].join();
+    }
+
+    if (progress_bar) {
+      (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
     }
   }
 }
@@ -241,11 +249,6 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* pr
   // Sorting is essential for merging algos
   for (auto & p:chunkPostLists) {
     sort(p.begin(), p.end());
-  }
-
-  if (progress_bar) {
-    unique_lock<mutex> lock(display_mutex);
-    (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
   }
 }
     
