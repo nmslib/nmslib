@@ -68,7 +68,6 @@ class ProjectionIndexIncremental : public Index<dist_t> {
   size_t                                                K_;
   size_t                                                knn_amp_;
   float					                                        db_scan_frac_;
-  size_t                                                db_scan_;
   size_t                                                proj_dim_;
   string                                                proj_descr_;
   unique_ptr<Projection<dist_t> >                       proj_obj_;

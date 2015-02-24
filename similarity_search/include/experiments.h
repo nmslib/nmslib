@@ -341,6 +341,12 @@ public:
          * another query during the effectiveness evaluation phase, i.e.,
          * for smaller values of the query id (q) in the loop (see on level up)
          */
+        /*
+         * !!!! NOTE !!!!! If we ever make effectiveness testing multi-threaded,
+         *                 setting of parameters must be removed from here, b/c
+         *                 it's NOT THREAD-SAFE. See, how it's done in the 
+         *                 efficiency testing phase.
+         */
         Method.SetQueryTimeParams(MethodsDesc[MethNum]->methPars_);
       
         unique_ptr<QueryType> query(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));

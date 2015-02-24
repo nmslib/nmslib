@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <cmath>
+#include <queue>
 
 #include "space.h"
 #include "permutation_utils.h"
@@ -30,6 +31,8 @@
 
 namespace similarity {
 
+using namespace std;
+
 template <typename dist_t>
 OMedRank<dist_t>::OMedRank(
     const Space<dist_t>* space,
@@ -38,6 +41,7 @@ OMedRank<dist_t>::OMedRank(
 	: data_(data),  /* reference */
     space_(space), /* pointer */
     num_pivot_(8),
+    num_pivot_search_(8),
     chunk_index_size_(16536),
     index_qty_(0), // If ComputeDbScan is called before index_qty_ is computed, it will see this zero
     skip_check_(false),
@@ -50,6 +54,7 @@ OMedRank<dist_t>::OMedRank(
   if (proj_type_.empty()) proj_type_ = PROJ_TYPE_RAND;
   pmgr.GetParamOptional("intermDim", interm_dim_);
   pmgr.GetParamOptional("numPivot", num_pivot_);
+  num_pivot_search_ = num_pivot_;
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
 
   ToLower(proj_type_);
@@ -98,6 +103,12 @@ OMedRank<dist_t>::OMedRank(
 template <typename dist_t> 
 template <typename QueryType> 
 void OMedRank<dist_t>::GenSearch(QueryType* query) {
+  /* 
+   * Let these guys have num_pivot_ elements despite
+   * only num_pivot_search_ (potentially << num_pivot_) are used.
+   * This simplifies the code: element arrays can be addressed
+   * using the pivotId that can be > num_pivot_search_
+   */
   vector<ssize_t> lowIndx(num_pivot_);
   vector<ssize_t> highIndx(num_pivot_);
 
@@ -108,27 +119,54 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
 
   projection_->compProj(query, NULL, &projDists[0]);
 
+  typedef pair<dist_t, size_t>  DIPair;
+
+  // Let's use the closest pivots
+  priority_queue<DIPair>    closePivots;  
+
+  for (size_t i = 0 ; i < num_pivot_; ++i) {
+    dist_t  posDist = projDists[i] > 0 ? projDists[i] : - projDists[i];  
+    closePivots.push(make_pair(-posDist, i));
+    if (closePivots.size() > num_pivot_search_) closePivots.pop();
+  }
+
+  if (closePivots.size() != num_pivot_search_) {
+    stringstream err;
+    err << "Bug: the number of close pivots '" << closePivots.size() << "' isn't equal to " << num_pivot_search_;
+    throw runtime_error(err.str());
+  }
+
+  vector<size_t>  closePivotIds(num_pivot_search_);
+
+  // Note we should have exactly num_pivot_search_ elements in the queue
+  for (size_t kk = 0; kk < num_pivot_search_; ++kk) {
+    closePivotIds[kk] = closePivots.top().second;  
+    closePivots.pop();
+  } 
+
   for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {
     const auto & chunkPostLists = *posting_lists_[chunkId];
 
     if (chunkId != 0)
       memset(&counter[0], 0, sizeof(counter[0])*counter.size());
 
-    for (size_t i = 0 ; i < num_pivot_; ++i) {
+    //for (size_t i = 0 ; i < num_pivot_; ++i) {
+    for (size_t kk = 0; kk < num_pivot_search_; ++kk) {
+      size_t pivotId = closePivotIds[kk];
       // Again, pivot is the left argument, see the comment in the constructor
-      e.pivot_dist_ = projDists[i];
-      lowIndx[i] = (lower_bound(chunkPostLists[i].begin(), chunkPostLists[i].end(), e) - chunkPostLists[i].begin());;
-      --lowIndx[i]; // Can become less than zero
-      highIndx[i] = lowIndx[i] + 1;
-      CHECK(chunkPostLists[i].size() > 0);
-      CHECK(lowIndx[i] < 0 || static_cast<size_t>(lowIndx[i]) < chunkPostLists[i].size());
-      CHECK(highIndx[i] >= 0);
+      e.pivot_dist_ = projDists[pivotId];
+      lowIndx[pivotId] = (lower_bound(chunkPostLists[pivotId].begin(), chunkPostLists[pivotId].end(), e) - chunkPostLists[pivotId].begin());;
+      --lowIndx[pivotId]; // Can become less than zero
+      highIndx[pivotId] = lowIndx[pivotId] + 1;
+      CHECK(chunkPostLists[pivotId].size() > 0);
+      CHECK(lowIndx[pivotId] < 0 || static_cast<size_t>(lowIndx[pivotId]) < chunkPostLists[pivotId].size());
+      CHECK(highIndx[pivotId] >= 0);
     }
 
     bool      eof = false;
     size_t    totOp = 0;
     size_t    scannedQty = 0;
-    size_t    minMatchPivotQty = max(size_t(1), static_cast<size_t>(round(min_freq_ * num_pivot_)));
+    size_t    minMatchPivotQty = max(size_t(1), static_cast<size_t>(round(min_freq_ * num_pivot_search_)));
 
     size_t minId = chunkId * chunk_index_size_;
     size_t maxId = min(data_.size(), minId + chunk_index_size_);
@@ -138,22 +176,24 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
 
     while (scannedQty < min(db_scan_, chunkQty) && !eof) {
       eof = true;
-      for (size_t i = 0 ; i < num_pivot_; ++i) {
+      //for (size_t i = 0 ; i < num_pivot_; ++i) {
+      for (size_t kk = 0; kk < num_pivot_search_; ++kk) {
+        size_t pivotId = closePivotIds[kk];
         IdType    indx[2];
         unsigned  iQty = 0;
 
-        if (lowIndx[i] >= 0) {
-          indx[iQty++]=lowIndx[i];
-          --lowIndx[i];
+        if (lowIndx[pivotId] >= 0) {
+          indx[iQty++]=lowIndx[pivotId];
+          --lowIndx[pivotId];
         }
-        if (static_cast<size_t>(highIndx[i]) < chunkPostLists[i].size()) {
-          indx[iQty++]=highIndx[i];
-          ++highIndx[i];
+        if (static_cast<size_t>(highIndx[pivotId]) < chunkPostLists[pivotId].size()) {
+          indx[iQty++]=highIndx[pivotId];
+          ++highIndx[pivotId];
         }
 
         for (unsigned k = 0; k < iQty; ++k) {
           ++totOp;
-          IdType objIdDiff = chunkPostLists[i][indx[k]].id_;
+          IdType objIdDiff = chunkPostLists[pivotId][indx[k]].id_;
           unsigned freq = counter[objIdDiff]++;
 
           if (freq == minMatchPivotQty) { // Add only the first time when we exceeded the threshold!
@@ -184,6 +224,10 @@ void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);
   ComputeDbScan(db_scan_frac_, index_qty_);
   pmgr.GetParamOptional("minFreq", min_freq_);
+  pmgr.GetParamOptional("numPivotSearch", num_pivot_search_);
+
+  if (num_pivot_search_ > num_pivot_) 
+    throw runtime_error("numPivotSearch can't be > numPivot");
 
   if (db_scan_frac_ <= 0.0 || db_scan_frac_ > 1.0)
     throw runtime_error("dbScanFrac must be >0 and <= 1.0");

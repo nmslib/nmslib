@@ -84,6 +84,7 @@ class OMedRank : public Index<dist_t> {
   const ObjectVector&     data_;
   const Space<dist_t>*    space_;
   size_t                  num_pivot_;
+  size_t                  num_pivot_search_;
   size_t                  chunk_index_size_;
   size_t                  index_qty_;
   size_t                  db_scan_;
