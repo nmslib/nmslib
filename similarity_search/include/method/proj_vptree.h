@@ -51,18 +51,28 @@ class ProjectionVPTree : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
-  vector<string> GetQueryTimeParamNames() const { return VPTreeIndex_->GetQueryTimeParamNames();}
- private:
-  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-    AnyParams params;
-    pmgr.ExtractParametersExcept({});
-    VPTreeIndex_->SetQueryTimeParams(params);
+  vector<string> GetQueryTimeParamNames() const { 
+    vector<string> res = VPTreeIndex_->GetQueryTimeParamNames();
+    res.push_back("dbScanFrac");
+    res.push_back("knnAmp");
+    return res;
   }
+ private:
+  void SetQueryTimeParamsInternal(AnyParamManager& pmgr);
 
 
   const Space<dist_t>*              space_;
   const ObjectVector&               data_;
-  size_t                            db_scan_qty_;
+
+  size_t                            K_;
+  size_t                            knn_amp_;
+  float					                    db_scan_frac_;
+
+  size_t computeDbScan(size_t K) {
+    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * data_.size());
+  }
+
   unique_ptr<Projection<dist_t> >   projObj_;
   ObjectVector                      projData_;
   size_t                            projDim_;
