@@ -134,7 +134,7 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   pmgr.GetParamOptional("numPivot", num_pivot_);
 
   if (pmgr.hasParam("numPivotIndex") && pmgr.hasParam("numPrefix")) {
-    throw runtime_error("One shouldn't specify both parameters numPrefix and numPivotIndex, b/c they are synonoyms!");
+    throw runtime_error("One shouldn't specify both parameters numPrefix and numPivotIndex, b/c they are synonyms!");
   }
   pmgr.GetParamOptional("numPivotIndex", num_prefix_);
   pmgr.GetParamOptional("numPrefix", num_prefix_);
@@ -157,10 +157,11 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   pmgr.CheckUnused();
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
-  LOG(LIB_INFO) << "# of index chunks         = " << indexQty;
-  LOG(LIB_INFO) << "# of indexing thread      = " << index_thread_qty_;
-  LOG(LIB_INFO) << "# pivots                  = " << num_pivot_;
-  LOG(LIB_INFO) << "# pivots to index         = " << num_prefix_;
+  LOG(LIB_INFO) << "# of index chunks             = " << indexQty;
+  LOG(LIB_INFO) << "# of indexing thread          = " << index_thread_qty_;
+  LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
+  LOG(LIB_INFO) << "# pivots to index (numPrefix) = " << num_prefix_;
+  LOG(LIB_INFO) << "# pivots to search (minTimes) = " << min_times_;
   LOG(LIB_INFO) << "# dbScanFrac              = " << db_scan_frac_;
   LOG(LIB_INFO) << "# knnAmp                  = " << knn_amp_;
   
@@ -263,7 +264,13 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pm
   pmgr.GetParamOptional("skipChecking", skip_checking_);
   pmgr.GetParamOptional("useSort",      use_sort_);
   pmgr.GetParamOptional("invProcAlg",   inv_proc_alg);
-  pmgr.GetParamOptional("minTimes",     min_times_);
+
+  if (pmgr.hasParam("minTimes") && pmgr.hasParam("numPivotSearch")) {
+    throw runtime_error("One shouldn't specify both parameters minTimes and numPivotSearch, b/c they are synonyms!");
+  }
+
+  pmgr.GetParamOptional("minTimes",        min_times_);
+  pmgr.GetParamOptional("numPivotSearch",  min_times_);
   
   if (inv_proc_alg == PERM_PROC_FAST_SCAN) {
     inv_proc_alg_ = kScan; 

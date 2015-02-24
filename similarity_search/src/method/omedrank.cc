@@ -35,6 +35,7 @@ using namespace std;
 
 template <typename dist_t>
 OMedRank<dist_t>::OMedRank(
+    bool                 PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
     AnyParamManager &pmgr) 
@@ -95,14 +96,30 @@ OMedRank<dist_t>::OMedRank(
     posting_lists_[chunkId] = shared_ptr<vector<PostingList>>(new vector<PostingList>());
   }
 
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+                              new ProgressDisplay(data.size(), cerr)
+                              :NULL);
+
   for (size_t chunkId = 0; chunkId < index_qty_; ++chunkId) {
-    IndexChunk(chunkId);
+    IndexChunk(chunkId, progress_bar.get());
   }
 }
 
 template <typename dist_t> 
 template <typename QueryType> 
-void OMedRank<dist_t>::GenSearch(QueryType* query) {
+void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) {
+  // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
+  // a strange error message that says: dbScanFrac should be in the range [0,1].
+  if (!knn_amp_) {
+    if (db_scan_frac_ < 0.0 || db_scan_frac_ > 1.0) {
+      stringstream err;
+      err << METH_OMEDRANK << " requires that dbScanFrac is in the range [0,1]";
+      throw runtime_error(err.str());
+    }
+  }
+
+  size_t db_scan = computeDbScan(K);
+
   /* 
    * Let these guys have num_pivot_ elements despite
    * only num_pivot_search_ (potentially << num_pivot_) are used.
@@ -126,6 +143,11 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
 
   for (size_t i = 0 ; i < num_pivot_; ++i) {
     dist_t  posDist = projDists[i] > 0 ? projDists[i] : - projDists[i];  
+    /*
+     * minus means that the closest pivots are selected. This works
+     * better for random projections. However, it appears to work
+     * worse for type = rand (at least for CoPhIr)
+     */
     closePivots.push(make_pair(-posDist, i));
     if (closePivots.size() > num_pivot_search_) closePivots.pop();
   }
@@ -174,7 +196,7 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
 
     CHECK(chunkQty <= chunk_index_size_);
 
-    while (scannedQty < min(db_scan_, chunkQty) && !eof) {
+    while (scannedQty < min(db_scan, chunkQty) && !eof) {
       eof = true;
       //for (size_t i = 0 ; i < num_pivot_; ++i) {
       for (size_t kk = 0; kk < num_pivot_search_; ++kk) {
@@ -210,29 +232,38 @@ void OMedRank<dist_t>::GenSearch(QueryType* query) {
 
 template <typename dist_t>
 void OMedRank<dist_t>::Search(RangeQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, 0);
 }
 
 template <typename dist_t>
 void OMedRank<dist_t>::Search(KNNQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, query->GetK());
 }
 
 template <typename dist_t>
 void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("skipChecking", skip_check_);
-  pmgr.GetParamOptional("dbScanFrac", db_scan_frac_);
-  ComputeDbScan(db_scan_frac_, index_qty_);
+
   pmgr.GetParamOptional("minFreq", min_freq_);
   pmgr.GetParamOptional("numPivotSearch", num_pivot_search_);
 
   if (num_pivot_search_ > num_pivot_) 
     throw runtime_error("numPivotSearch can't be > numPivot");
 
-  if (db_scan_frac_ <= 0.0 || db_scan_frac_ > 1.0)
-    throw runtime_error("dbScanFrac must be >0 and <= 1.0");
-  if (min_freq_ <= 0.0 || min_freq_ > 1.0)
-    throw runtime_error("minFreq must be >0 and <= 1.0");
+  if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
+    throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
+  }
+  if (pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+  } else {
+    knn_amp_ = 0;
+  }
+  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+    knn_amp_ = 0;
+  }
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
+  pmgr.GetParamOptional("knnAmp",  knn_amp_);
 }
 
 template <typename dist_t>
@@ -240,12 +271,13 @@ vector<string>
 OMedRank<dist_t>::GetQueryTimeParamNames() const {
   vector<string> names;
   names.push_back("dbScanFrac");
+  names.push_back("knnAmp");
   names.push_back("minFreq");
   return names;
 }
 
 template <typename dist_t>
-void OMedRank<dist_t>::IndexChunk(size_t chunkId) {
+void OMedRank<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* displayBar) {
   size_t minId = chunkId * chunk_index_size_;
   size_t maxId = min(data_.size(), minId + chunk_index_size_);
 
@@ -269,6 +301,7 @@ void OMedRank<dist_t>::IndexChunk(size_t chunkId) {
       dist_t leftObjDst = projDists[j];
       chunkPostLists[j].push_back(ObjectInvEntry(id - minId, leftObjDst));
     }
+    if (displayBar) ++(*displayBar);
   }
   for (size_t j = 0; j < num_pivot_; ++j) {
     sort(chunkPostLists[j].begin(), chunkPostLists[j].end());

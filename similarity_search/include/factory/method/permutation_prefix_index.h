@@ -31,35 +31,12 @@ Index<dist_t>* CreatePermutationPrefixIndex(bool PrintProgress,
                            const Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
-  AnyParamManager pmgr(AllParams);
-
-  size_t    NumPivot        = 16;
-  size_t    PrefixLength    = 4;
-  size_t    MinCandidate    = 1000;
-  bool      ChunkBucket     = true;
-
-  pmgr.GetParamOptional("prefixLength", PrefixLength);
-  pmgr.GetParamOptional("numPivot", NumPivot);
-  pmgr.GetParamOptional("minCandidate", MinCandidate);
-  pmgr.GetParamOptional("chunkBucket", ChunkBucket);
-
-  if (PrefixLength == 0 || PrefixLength > NumPivot) {
-    LOG(LIB_FATAL) << METH_PERMUTATION_PREFIX_IND
-               << " requires that prefix length should lie in [1,"
-               << NumPivot << "]";
-  }
-  if (MinCandidate == 0) {
-    LOG(LIB_FATAL) << METH_PERMUTATION_PREFIX_IND
-               << " requires a min # of candidates should be > 0";
-  }
 
   return new PermutationPrefixIndex<dist_t>(
+                PrintProgress,
                 space, 
                 DataObjects,
-                NumPivot, 
-                PrefixLength, 
-                MinCandidate,
-                ChunkBucket);
+                AllParams);
 
 }
 

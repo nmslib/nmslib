@@ -33,7 +33,8 @@ Index<dist_t>* CreateOMedRank(bool PrintProgress,
                            const AnyParams& AllParams) {
   AnyParamManager pmgr(AllParams);
 
-  return new OMedRank<dist_t>(space,
+  return new OMedRank<dist_t>(PrintProgress,
+                              space,
                               DataObjects,
                               pmgr);
 

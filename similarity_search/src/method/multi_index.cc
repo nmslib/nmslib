@@ -60,6 +60,20 @@ MultiIndex<dist_t>::MultiIndex(
 }
 
 template <typename dist_t>
+vector<string> MultiIndex<dist_t>::GetQueryTimeParamNames() const {
+  if (!indices_.empty()) return indices_[0]->GetQueryTimeParamNames();
+  return vector<string>({});
+}
+
+template <typename dist_t>
+void MultiIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+  for (size_t i = 0; i < indices_.size(); ++i) {
+    AnyParams pars = pmgr.ExtractParametersExcept({});
+    indices_[i]->SetQueryTimeParams(pars);
+  }
+}
+
+template <typename dist_t>
 MultiIndex<dist_t>::~MultiIndex() {
   for (size_t i = 0; i < indices_.size(); ++i) 
     delete indices_[i];

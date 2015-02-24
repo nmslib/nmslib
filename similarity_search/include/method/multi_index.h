@@ -53,7 +53,10 @@ class MultiIndex : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
- private:
+  virtual vector<string> GetQueryTimeParamNames() const;
+ protected:
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& pmgr);
+
   std::vector<Index<dist_t>*> indices_;
   const Space<dist_t>*        space_;
   size_t                      IndexQty_;
