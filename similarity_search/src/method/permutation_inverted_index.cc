@@ -34,7 +34,7 @@ using namespace std;
 template <typename dist_t>
 vector<string>
 PermutationInvertedIndex<dist_t>::GetQueryTimeParamNames() const {
-  return vector<string>({"numPivotSearch", "maxPosDiff", "dbScanFraction", "knnAmp"});
+  return vector<string>({"numPivotSearch", "maxPosDiff", "dbScanFrac", "knnAmp"});
 }
     
     
