@@ -311,6 +311,7 @@ PivotNeighbInvertedIndex<dist_t>::GetQueryTimeParamNames() const {
   names.push_back("skipChecking");
   names.push_back("invProcAlg");
   names.push_back("minTimes");
+  names.push_back("numPivotSearch");
     
   return names;
 }
