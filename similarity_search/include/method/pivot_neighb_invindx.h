@@ -89,7 +89,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   size_t  chunk_index_size_;
   size_t  K_;
   size_t  knn_amp_;
-  size_t  db_scan_frac_;
+  float   db_scan_frac_;
   size_t  num_prefix_;       // K in the original paper
   size_t  min_times_;        // t in the original paper
   bool    use_sort_;
