@@ -49,12 +49,11 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
 	  use_priority_queue_(false) ,
     K_(0),
     knn_amp_(0),
-    db_scan_frac_(0)
+    db_scan_frac_(0),
+    use_cosine_(false)
 {
 
   AnyParamManager pmgr(AllParams);
-
-  pmgr.GetParamOptional("useQueue", use_priority_queue_);
 
   max_proj_dist_ = numeric_limits<float>::max();
 
@@ -82,6 +81,7 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
   LOG(LIB_INFO) << "knnAmp       = " << knn_amp_;
   LOG(LIB_INFO) << "maxProjDist  = " << max_proj_dist_;
   LOG(LIB_INFO) << "useQueue     = " << use_priority_queue_;
+  LOG(LIB_INFO) << "useCosine    = " << use_cosine_;
 
 
   /*
@@ -135,7 +135,9 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
 template <typename dist_t>
 void 
 ProjectionIndexIncremental<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+  pmgr.GetParamOptional("useQueue", use_priority_queue_);
   pmgr.GetParamOptional("maxProjDist", max_proj_dist_);
+  pmgr.GetParamOptional("useCosine", use_cosine_);
     
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
@@ -159,6 +161,8 @@ ProjectionIndexIncremental<dist_t>::GetQueryTimeParamNames() const {
   vector<string> names;
   names.push_back("dbScanFrac");
   names.push_back("knnAmp");
+  names.push_back("useCosine");
+  names.push_back("useQueue");
   names.push_back("maxProjDist");
   return names;
 }    
@@ -200,10 +204,17 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query, size_t K) {
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
     for (size_t i = 0, start = 0; i < data_.size(); ++i, start += proj_dim_) {
-      float projDist = L2NormSIMD(&proj_vects_[start], &QueryVect[0], proj_dim_);
+      float projDist = use_cosine_ ? 
+                    CosineSimilarity(&proj_vects_[start], &QueryVect[0], proj_dim_)
+                    :
+                    L2NormSIMD(&proj_vects_[start], &QueryVect[0], proj_dim_)
+                    ;
 #else
     for (size_t i = 0; i < proj_vects_.size(); ++i) {
-      float projDist = L2SqrSIMD(&proj_vects_[i][0], &QueryVect[0], proj_dim_);
+      float projDist = use_cosine_ ? 
+                    CosineSimilarity(&proj_vects_[i][0], &QueryVect[0], proj_dim_)
+                    :
+                    L2SqrSIMD(&proj_vects_[i][0], &QueryVect[0], proj_dim_);
 #endif
       if (projDist <= max_proj_dist_)
         proj_dists.push_back(std::make_pair(projDist, i));
