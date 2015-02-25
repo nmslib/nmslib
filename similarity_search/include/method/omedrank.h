@@ -27,6 +27,7 @@
 
 #include "index.h"
 #include "projection.h"
+#include "ported_boost_progress.h"
 
 #define METH_OMEDRANK             "omedrank"
 
@@ -66,7 +67,8 @@ using std::vector;
 template <typename dist_t>
 class OMedRank : public Index<dist_t> {
  public:
-  OMedRank(const Space<dist_t>* space,
+  OMedRank(bool PrintProgress,
+           const Space<dist_t>* space,
            const ObjectVector& data,
            AnyParamManager &pmgr);
   virtual ~OMedRank(){};
@@ -78,7 +80,7 @@ class OMedRank : public Index<dist_t> {
   virtual vector<string> GetQueryTimeParamNames() const;
 
  private:
-  void IndexChunk(size_t chunkId);
+  void IndexChunk(size_t chunkId, ProgressDisplay* displayBar);
   virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
   const ObjectVector&     data_;
@@ -91,6 +93,8 @@ class OMedRank : public Index<dist_t> {
   bool                    skip_check_;
   string                  proj_type_;
   size_t                  interm_dim_; // used only for sparse vector spaces
+  size_t                  K_;
+  size_t                  knn_amp_;
   float					          db_scan_frac_;
   float                   min_freq_;
   std::unique_ptr<Projection<dist_t>>  projection_;
@@ -110,13 +114,13 @@ class OMedRank : public Index<dist_t> {
   vector<shared_ptr<vector<PostingList>>> posting_lists_;
   
   // Heuristics: try to read db_scan_fraction/index_qty entries from each index part
-  void ComputeDbScan(float db_scan_fraction, size_t index_qty) {
-    CHECK(index_qty != 0);
-    db_scan_ = max(size_t(1), static_cast<size_t>(db_scan_fraction * data_.size()/index_qty));
-    //LOG(LIB_INFO) << "Scan at most: " << db_scan_ << " items in each of the " << index_qty << " index shard";
+  // or alternatively K * knn_amp_ entries, for KNN-search
+  size_t computeDbScan(size_t K) {
+    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
 
-  template <typename QueryType> void GenSearch(QueryType* query);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(OMedRank);
