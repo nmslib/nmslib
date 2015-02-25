@@ -253,6 +253,13 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
   }
   size_t scan_qty = min(db_scan, perm_dists.size());
 
+  if (!scan_qty) {
+    stringstream err;
+    err << "One should specify a proper value for either dbScanFrac or knnAmp" <<
+               " currently, dbScanFrac=" << db_scan_frac_ << " knnAmp=" << knn_amp_;
+    throw runtime_error(err.str());
+  }
+
   IncrementalQuickSelect<IntInt> quick_select(perm_dists);
   for (size_t i = 0; i < scan_qty; ++i) {
     const size_t idx = quick_select.GetNext().second;

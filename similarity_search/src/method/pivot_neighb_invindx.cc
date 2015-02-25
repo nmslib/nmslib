@@ -362,7 +362,10 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
 
     if (use_sort_) {
       if (!db_scan) {
-        throw runtime_error("One should specify a proper value for either dbScanFrac or knnAmp");
+        stringstream err;
+        err << "One should specify a proper value for either dbScanFrac or knnAmp" <<
+               " currently, dbScanFrac=" << db_scan_frac_ << " knnAmp=" << knn_amp_;
+        throw runtime_error(err.str());
       }
       vector<pair<int, size_t>> candidates;
 
