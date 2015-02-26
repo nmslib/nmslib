@@ -200,12 +200,11 @@ class PrefixTree {
 
 template <typename dist_t>
 vector<string> PermutationPrefixIndex<dist_t>::GetQueryTimeParamNames() const {
-  return vector<string>({"minCandidate", "prefixLength", "knnAmp"});
+  return vector<string>({"minCandidate", "knnAmp"});
 }
 
 template <typename dist_t>
 void PermutationPrefixIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  pmgr.GetParamOptional("prefixLength", prefix_length_);
 
   if (pmgr.hasParam("minCandidate") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters minCandidate and knnAmp, b/c they are synonyms!");
@@ -235,6 +234,7 @@ PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(
 
   pmgr.GetParamOptional("numPivot", num_pivot_);
   pmgr.GetParamOptional("chunkBucket", chunkBucket);
+  pmgr.GetParamOptional("prefixLength", prefix_length_);
 
   SetQueryTimeParamsInternal(pmgr);
 
