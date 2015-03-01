@@ -26,12 +26,6 @@
 #include "params.h"
 #include "searchoracle.h"
 
-/* 
- * The current sampling method works worse than stretching of the triangle inequality
- * We don't remove this completely, b/c we hope to significantly improve sampling one day.
- */
-//#define USE_VPTREE_SAMPLE
-
 #define METH_PERMUTATION_VPTREE     "perm_vptree"
 
 namespace similarity {
@@ -51,7 +45,8 @@ namespace similarity {
 template <typename dist_t, PivotIdType (*CorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 class PermutationVPTree : public Index<dist_t> {
  public:
-  PermutationVPTree(const Space<dist_t>* space,
+  PermutationVPTree(bool PrintProgress,
+                   const Space<dist_t>* space,
                    const ObjectVector& data,
                    const AnyParams& MethPars);
 
@@ -62,7 +57,6 @@ class PermutationVPTree : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query);
   
   vector<string> GetQueryTimeParamNames() const;
-
  private:
   void SetQueryTimeParamsInternal(AnyParamManager& );
 
@@ -78,16 +72,8 @@ class PermutationVPTree : public Index<dist_t> {
     db_scan_qty_ = max(size_t(1), static_cast<size_t>(DbScanFrac * data_.size()));
   }
 
-#ifdef USE_VPTREE_SAMPLE
-  VPTree<PivotIdType, SamplingOracle<PivotIdType>, SamplingOracleCreator<PivotIdType> >*   VPTreeIndex_;
-#else
-  VPTree<float, TriangIneq<float>, TriangIneqCreator<float> >*   VPTreeIndex_;
-#endif
-#ifdef USE_VPTREE_SAMPLE
-  const CorrelVectorSpace<CorrelDistFunc>*                                         VPTreeSpace_;
-#else
-  const SpaceLp<float>*                                                            VPTreeSpace_;
-#endif
+  VPTree<float, PolynomialPruner<float> >*          VPTreeIndex_;
+  const SpaceLp<float>*                             VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationVPTree);

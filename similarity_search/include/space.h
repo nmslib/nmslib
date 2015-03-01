@@ -27,14 +27,22 @@
 #include "global.h"
 #include "object.h"
 #include "utils.h"
+#include "logging.h"
 #include "permutation_type.h"
 
 #define LABEL_PREFIX "label:"
 
+#define DIST_TYPE_INT      "int"
+#define DIST_TYPE_FLOAT    "float"
+#define DIST_TYPE_DOUBLE   "double"
+
 namespace similarity {
 
 using std::map;
+using std::pair;
+using std::make_pair;
 using std::runtime_error;
+using std::hash;
 
 template <typename dist_t>
 class ExperimentConfig;
@@ -80,7 +88,29 @@ class Space {
                       const int MaxNumObjects) const = 0;
   virtual std::string ToString() const = 0;
   virtual void PrintInfo() const { LOG(LIB_INFO) << ToString(); }
-
+  /*
+   * For some real-valued or integer-valued *DENSE* vector spaces this function
+   * returns the number of vector elements. For all other spaces, it returns
+   * 0.
+   *
+   * TODO: @leo This seems to be related to issue #7
+   * https://github.com/searchivarius/NonMetricSpaceLib/issues/7
+   *
+   * With a proper hierarchy of Object classes, getDimension() would
+   * be a function of an object, not of a space. At some point Object
+   * must become smarter. Now it's a dumb container, while all the heavy
+   * lifting is done by a Space object.
+   *
+   */
+  virtual size_t GetElemQty(const Object* obj) const = 0;
+  /*
+   * For some dense vector spaces this function extracts the first nElem
+   * elements from the object. If nElem > getDimension(), an exception
+   * will be thrown. For sparse vector spaces, the algorithm may "hash"
+   * several elements together by summing up their values.
+   */
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                 size_t nElem) const = 0;
  protected:
   void SetIndexPhase() const { bIndexPhase = true; }
   void SetQueryPhase() const { bIndexPhase = false; }
@@ -96,6 +126,7 @@ class Space {
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
  private:
   bool mutable bIndexPhase = true;
+
 };
 
 /*

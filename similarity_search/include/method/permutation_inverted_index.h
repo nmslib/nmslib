@@ -21,7 +21,8 @@
 #include "index.h"
 #include "permutation_utils.h"
 
-#define METH_PERM_INVERTED_INDEX   "perm_inv_indx"
+#define METH_PERM_INVERTED_INDEX       "perm_inv_indx"
+#define METH_PERM_INVERTED_INDEX_SYN   "mi-file"
 
 #define USE_MAP_THRESHOLD 0.01
 
@@ -31,47 +32,59 @@ namespace similarity {
  * Giuseppe Amato and Pasquale Savino,
  * Approximate Similarity Search in Metric Spaces Using Inverted Files,
  * Infoscale (2008)
+ *
+ * Later dubbed as MI-File (metric inverted file).
  */
-
-struct ObjectInvEntry {
-  IdType    id_;
-  int       pos_;
-  ObjectInvEntry(IdType id, int pos) : id_(id), pos_(pos) {} 
-  bool operator<(const ObjectInvEntry& o) const { 
-    if (pos_ != o.pos_) return pos_ < o.pos_; 
-    return id_ < o.id_;
-  };
-};
-
-typedef std::vector<ObjectInvEntry> PostingList;
 
 template <typename dist_t>
 class PermutationInvertedIndex : public Index<dist_t> {
  public:
-  PermutationInvertedIndex(const Space<dist_t>* space,
+  PermutationInvertedIndex(
+                bool  PrintProgress,
+                const Space<dist_t>* space,
                 const ObjectVector& data,
-                const size_t num_pivot,
-                const size_t num_pivot_index,
-                const size_t num_pivot_search,
-                const size_t max_pos_diff,
-                const double db_scan_fraction);
+                AnyParams params);
   ~PermutationInvertedIndex();
 
   const std::string ToString() const;
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
+  virtual vector<string> GetQueryTimeParamNames() const;
+
  private:
+  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+
   const ObjectVector& data_;
-  const size_t db_scan_;
-  const int num_pivot_index_;      // ki in the original paper
-  const int num_pivot_search_;     // ks in the original paper
-  const int max_pos_diff_;
+  float  db_scan_frac_;
+  size_t num_pivot_;            // overall number of pivots
+  size_t num_pivot_index_;      // ki in the original paper
+  size_t num_pivot_search_;     // ks in the original paper
+  size_t max_pos_diff_;
+  size_t knn_amp_;
   ObjectVector pivot_;
+
+  size_t computeDbScan(size_t K) {
+    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * data_.size());
+  }
+
+  struct ObjectInvEntry {
+    IdType    id_;
+    int       pos_;
+    ObjectInvEntry(IdType id, int pos) : id_(id), pos_(pos) {} 
+    bool operator<(const ObjectInvEntry& o) const { 
+      if (pos_ != o.pos_) return pos_ < o.pos_; 
+      return id_ < o.id_;
+    };
+  };
+
+  typedef std::vector<ObjectInvEntry> PostingList;
 
   std::vector<PostingList> posting_lists_;
 
-  template <typename QueryType> void GenSearch(QueryType* query);
+  // K==0 for range search
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationInvertedIndex);

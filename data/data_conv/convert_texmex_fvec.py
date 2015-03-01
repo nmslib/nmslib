@@ -9,6 +9,9 @@ import array
 import os
 
 ifile = sys.argv[1]
+maxQty = 0
+if len(sys.argv) == 3:
+  maxQty = int(sys.argv[2])
 
 fsize = os.path.getsize(ifile)
 
@@ -27,6 +30,9 @@ fin = open(ifile, 'rb')
 rowQty = fsize / (dim + 1) / 4
 
 #print rowQty, dim
+
+if maxQty != 0:
+  rowQty = min(rowQty, maxQty)
 
 for i in range(0,rowQty):
   tmpd = struct.unpack('<i', fin.read(4))[0]

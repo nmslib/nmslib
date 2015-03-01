@@ -23,6 +23,7 @@
 #include <unordered_set>
 
 #include "object.h"
+#include "gold_standard.h"
 
 namespace similarity {
 
@@ -30,24 +31,6 @@ using std::vector;
 using std::sort;
 using std::ostream;
 using std::unordered_set;
-
-template <class dist_t>
-struct ResultEntry {
-  IdType      mId;
-  LabelType   mLabel;
-  dist_t      mDist;
-  ResultEntry(IdType id = 0, LabelType label = 0, dist_t dist = 0) 
-                 : mId(id), mLabel(label), mDist(dist) {}
-  bool operator<(const ResultEntry& o) const {
-    if (mDist != o.mDist) return mDist < o.mDist;
-    return mId < o.mId;
-  }
-};
-
-template <class dist_t>
-ostream& operator<<(ostream& out, const ResultEntry<dist_t>& e) {
-  return out << "[" << e.mId << " lab=" << e.mLabel << " dist=" << e.mDist << "]";
-}
 
 template <class dist_t>
 bool ApproxEqualElem(const ResultEntry<dist_t>& elem1, const ResultEntry<dist_t>& elem2) {
@@ -69,7 +52,7 @@ struct EvalMetricsBase {
                const vector<ResultEntry<dist_t>>& SortedAllEntries, const unordered_set<IdType>& ExactResultIds,
                const vector<ResultEntry<dist_t>>& ApproxEntries, const unordered_set<IdType>& ApproxResultIds
                ) {
-      for (size_t k = 0, p = 0; k < ApproxEntries.size(); ++k) {
+      for (size_t k = 0, p = 0; k < ApproxEntries.size() && p < SortedAllEntries.size(); ++k) {
         const auto& elemApprox = ApproxEntries[k];
         const auto& elemExact  = SortedAllEntries[p];
         /*

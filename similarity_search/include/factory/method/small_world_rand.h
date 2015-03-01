@@ -32,7 +32,7 @@ Index<dist_t>* CreateSmallWorldRand(bool PrintProgress,
                                         const ObjectVector& DataObjects,
                                         const AnyParams& AllParams) {
 
-    return new SmallWorldRand<dist_t>(space, DataObjects, AllParams);
+    return new SmallWorldRand<dist_t>(PrintProgress, space, DataObjects, AllParams);
 }
 
 /*

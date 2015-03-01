@@ -26,6 +26,7 @@
 #include "knnquery.h"
 #include "permutation_type.h"
 #include "distcomp.h"
+#include "utils.h"
 
 namespace similarity {
 
@@ -41,11 +42,17 @@ void GetPermutationPivot(const ObjectVector& data,
                          const Space<dist_t>* space,
                          const size_t num_pivot,
                          ObjectVector* pivot) {
-  CHECK(num_pivot < data.size());
+  if (num_pivot >= data.size()) {
+    throw runtime_error("The data set in the space " + space->ToString() +
+                        "is to small to select enough pivots");
+  }
   std::unordered_set<int> pivot_idx;
   for (size_t i = 0; i < num_pivot; ++i) {
     int p = RandomInt() % data.size();
-    while (pivot_idx.count(p) != 0) {
+    for (size_t rep = 0; pivot_idx.count(p) != 0; ++rep) {
+      if (rep > MAX_RAND_ITER_BEFORE_GIVE_UP) {
+        throw runtime_error("Cannot find a unique pivot, perhaps, the data set is too small.");
+      }
       p = RandomInt() % data.size();
     }
     pivot_idx.insert(p);
@@ -76,9 +83,9 @@ void GetPermutation(const ObjectVector& pivot, const Space<dist_t>* space,
   }
 }
 
-template <template<typename> class QueryType, typename dist_t>
-void GenPermutation(const ObjectVector& pivot,
-                    QueryType<dist_t>* query,
+template <typename dist_t>
+void GetPermutation(const ObjectVector& pivot,
+                    const Query<dist_t>* query,
                     Permutation* p) {
   std::vector<DistInt<dist_t>> dists;
   for (size_t i = 0; i < pivot.size(); ++i) {
@@ -98,17 +105,7 @@ void GenPermutation(const ObjectVector& pivot,
   }
 }
 
-template <typename dist_t>
-void GetPermutation(
-    const ObjectVector& pivot, RangeQuery<dist_t>* query, Permutation* p) {
-  GenPermutation(pivot, query, p);
-}
 
-template <typename dist_t>
-void GetPermutation(
-    const ObjectVector& pivot, KNNQuery<dist_t>* query, Permutation* p) {
-  GenPermutation(pivot, query, p);
-}
 
 
 // Permutation Prefix Index

@@ -31,6 +31,7 @@ namespace similarity {
 
 using std::vector;
 using std::pair;
+using std::mutex;
 
 struct IdCount {
   size_t id;
@@ -40,43 +41,29 @@ struct IdCount {
 
 typedef vector<IdCount> VectIdCount;
 
-/*
- * 
- * TODO: @Leo. This function isn't helping performance much
- *             Need to make more thorough tests at some point.
- *
- */
-/*
-void fastMemSet(uint32_t* ptr, size_t qty) {
-  size_t qty4 = qty / 4;
-  
-  __m128i zero = _mm_set1_epi32(0);
-  __m128i* ptr128 = reinterpret_cast<__m128i*>(ptr);
-  __m128i* ptr128end = ptr128 + qty4;
-  while (ptr128 < ptr128end)
-    _mm_storeu_si128(ptr128++, zero);
-  for (size_t i = 4*qty4; i < qty; ++i)
-    ptr[i] = 0;
-}
-*/
-
 template <typename dist_t>
 struct IndexThreadParamsPNII {
   PivotNeighbInvertedIndex<dist_t>&           index_;
   size_t                                      chunk_qty_;
   size_t                                      index_every_;
   size_t                                      out_of_;
+  ProgressDisplay*                            progress_bar_;
+  mutex&                                      display_mutex_;
 
   IndexThreadParamsPNII(
                      PivotNeighbInvertedIndex<dist_t>&  index,
                      size_t                             chunk_qty,
                      size_t                             index_every,
-                     size_t                             out_of
+                     size_t                             out_of,
+                     ProgressDisplay*                   progress_bar,
+                     mutex&                             display_mutex
                       ) :
                      index_(index),
                      chunk_qty_(chunk_qty),
                      index_every_(index_every),
-                     out_of_(out_of)
+                     out_of_(out_of),
+                     progress_bar_(progress_bar),
+                     display_mutex_(display_mutex)
                      { }
 };
 
@@ -85,7 +72,7 @@ struct IndexThreadPNII {
   void operator()(IndexThreadParamsPNII<dist_t>& prm) {
     for (size_t i = 0; i < prm.chunk_qty_; ++i) {
       if (prm.index_every_ == i % prm.out_of_) {
-        prm.index_.IndexChunk(i);
+        prm.index_.IndexChunk(i, prm.progress_bar_, prm.display_mutex_);
       }
     }
   }
@@ -123,13 +110,16 @@ void postListUnion(const VectIdCount& lst1, const PostingListInt lst2, VectIdCou
 
 template <typename dist_t>
 PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
+    bool  PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
     const AnyParams& AllParams) 
 : data_(data),   // reference
   space_(space), // pointer
   chunk_index_size_(65536),
-  db_scan_(0),
+  K_(0),
+  knn_amp_(0),
+  db_scan_frac_(0),
   num_prefix_(32),
   min_times_(2),
   use_sort_(false),
@@ -142,8 +132,15 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   string inv_proc_alg = PERM_PROC_FAST_SCAN;
 
   pmgr.GetParamOptional("numPivot", num_pivot_);
+
+  if (pmgr.hasParam("numPivotIndex") && pmgr.hasParam("numPrefix")) {
+    throw runtime_error("One shouldn't specify both parameters numPrefix and numPivotIndex, b/c they are synonyms!");
+  }
+  pmgr.GetParamOptional("numPivotIndex", num_prefix_);
   pmgr.GetParamOptional("numPrefix", num_prefix_);
+
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
+
   pmgr.GetParamOptional("indexThreadQty", index_thread_qty_);
 
   if (num_prefix_ > num_pivot_) {
@@ -155,14 +152,19 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   
   size_t indexQty = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
 
+  SetQueryTimeParamsInternal(pmgr);
+
+  pmgr.CheckUnused();
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
-  LOG(LIB_INFO) << "# of index chunks  = " << indexQty;
-  LOG(LIB_INFO) << "# of indexing thread  = " << index_thread_qty_;
-  LOG(LIB_INFO) << "# pivots      = " << num_pivot_;
-  LOG(LIB_INFO) << "# prefix (K)  = " << num_prefix_;
+  LOG(LIB_INFO) << "# of index chunks             = " << indexQty;
+  LOG(LIB_INFO) << "# of indexing thread          = " << index_thread_qty_;
+  LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
+  LOG(LIB_INFO) << "# pivots to index (numPrefix) = " << num_prefix_;
+  LOG(LIB_INFO) << "# pivots to search (minTimes) = " << min_times_;
+  LOG(LIB_INFO) << "# dbScanFrac              = " << db_scan_frac_;
+  LOG(LIB_INFO) << "# knnAmp                  = " << knn_amp_;
   
-  SetQueryTimeParamsInternal(pmgr);
 
   GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
 
@@ -179,33 +181,52 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   // Don't need more thread than you have chunks
   index_thread_qty_ = min(index_thread_qty_, indexQty);
 
+  mutex                                               progressBarMutex;
+
   if (index_thread_qty_ <= 1) {
+    unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+                                new ProgressDisplay(data.size(), cerr)
+                                :NULL);
     for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
-      IndexChunk(chunkId);
+      IndexChunk(chunkId, progress_bar.get(), progressBarMutex);
+    }
+
+    if (progress_bar) {
+      (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
     }
   } else {
     vector<thread>                                      threads(index_thread_qty_);
     vector<shared_ptr<IndexThreadParamsPNII<dist_t>>>   threadParams;
 
+    LOG(LIB_INFO) << "Will create " << index_thread_qty_ << " indexing threads";;
+
+    unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+                                new ProgressDisplay(data.size(), cerr)
+                                :NULL);
+
     for (size_t i = 0; i < index_thread_qty_; ++i) {
       threadParams.push_back(shared_ptr<IndexThreadParamsPNII<dist_t>>(
-                              new IndexThreadParamsPNII<dist_t>(*this, indexQty, i, index_thread_qty_)));
+                              new IndexThreadParamsPNII<dist_t>(*this, indexQty, i, index_thread_qty_,
+                                                               progress_bar.get(), progressBarMutex)));
     }
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
-      LOG(LIB_INFO) << "Creating indexing thread: " << (i+1) << " out of " << index_thread_qty_;
       threads[i] = thread(IndexThreadPNII<dist_t>(), ref(*threadParams[i]));
     }
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
       threads[i].join();
     }
+
+    if (progress_bar) {
+      (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
+    }
   }
 }
 
 template <typename dist_t>
 void 
-PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId) {
+PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* progress_bar, mutex& display_mutex) {
   size_t minId = chunkId * chunk_index_size_;
   size_t maxId = min(data_.size(), minId + chunk_index_size_);
 
@@ -218,6 +239,11 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId) {
     GetPermutationPPIndex(pivot_, space_, data_[minId + id], &perm);
     for (size_t j = 0; j < num_prefix_; ++j) {
       chunkPostLists[perm[j]].push_back(id);
+    }
+        
+    if (id % 1000) {
+      unique_lock<mutex> lock(display_mutex);
+      if (progress_bar) ++(*progress_bar);
     }
   }
 
@@ -233,15 +259,18 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId) {
 template <typename dist_t>
 void 
 PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  float db_scan_frac = 0.05f;
-  
   string inv_proc_alg = PERM_PROC_FAST_SCAN;
   
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac);
   pmgr.GetParamOptional("skipChecking", skip_checking_);
   pmgr.GetParamOptional("useSort",      use_sort_);
   pmgr.GetParamOptional("invProcAlg",   inv_proc_alg);
-  pmgr.GetParamOptional("minTimes",     min_times_);
+
+  if (pmgr.hasParam("minTimes") && pmgr.hasParam("numPivotSearch")) {
+    throw runtime_error("One shouldn't specify both parameters minTimes and numPivotSearch, b/c they are synonyms!");
+  }
+
+  pmgr.GetParamOptional("minTimes",        min_times_);
+  pmgr.GetParamOptional("numPivotSearch",  min_times_);
   
   if (inv_proc_alg == PERM_PROC_FAST_SCAN) {
     inv_proc_alg_ = kScan; 
@@ -250,10 +279,25 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pm
   } else if (inv_proc_alg == PERM_PROC_MERGE) {
     inv_proc_alg_ = kMerge; 
   } else {
-    LOG(LIB_FATAL) << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
+    stringstream err;
+    err << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
+    throw runtime_error(err.str());
   } 
     
-  ComputeDbScan(db_scan_frac);
+  if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
+    throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
+  }
+  if (pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+  } else {
+    knn_amp_ = 0;
+  }
+  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+    knn_amp_ = 0;
+  }
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
+  pmgr.GetParamOptional("knnAmp",  knn_amp_);
 }
 
 template <typename dist_t>
@@ -262,10 +306,12 @@ PivotNeighbInvertedIndex<dist_t>::GetQueryTimeParamNames() const {
   vector<string> names;
   
   names.push_back("dbScanFrac");
+  names.push_back("knnAmp");
   names.push_back("useSort");
   names.push_back("skipChecking");
   names.push_back("invProcAlg");
   names.push_back("minTimes");
+  names.push_back("numPivotSearch");
     
   return names;
 }
@@ -285,7 +331,20 @@ const string PivotNeighbInvertedIndex<dist_t>::ToString() const {
 
 template <typename dist_t>
 template <typename QueryType>
-void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
+void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
+  // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
+  // a strange error message that says: dbScanFrac should be in the range [0,1].
+  if (!knn_amp_) {
+    if (db_scan_frac_ < 0.0 || db_scan_frac_ > 1.0) {
+      stringstream err;
+      err << METH_PIVOT_NEIGHB_INVINDEX << " requires that dbScanFrac is in the range [0,1]";
+      throw runtime_error(err.str());
+    }
+  }
+
+  size_t db_scan = computeDbScan(K);
+
+
   Permutation perm_q;
   GetPermutationPPIndex(pivot_, query, &perm_q);
 
@@ -302,6 +361,12 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
     const auto data_start = &data_[0] + minId;
 
     if (use_sort_) {
+      if (!db_scan) {
+        stringstream err;
+        err << "One should specify a proper value for either dbScanFrac or knnAmp" <<
+               " currently, dbScanFrac=" << db_scan_frac_ << " knnAmp=" << knn_amp_;
+        throw runtime_error(err.str());
+      }
       vector<pair<int, size_t>> candidates;
 
       if (inv_proc_alg_ == kMap) {
@@ -312,7 +377,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
           }
         }
 
-        candidates.reserve(db_scan_);
+        candidates.reserve(db_scan);
 
         for (auto& it : map_counter) {
           if (it.second >= min_times_) {
@@ -339,7 +404,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
           prevRes = 1 - prevRes;
         }
 
-        candidates.reserve(db_scan_);
+        candidates.reserve(db_scan);
 
         for (const auto& it: tmpRes[1-prevRes]) {
           if (it.qty >= min_times_) {
@@ -352,7 +417,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 
       IncrementalQuickSelect<IntInt> quick_select(candidates);
 
-      size_t scan_qty = min(db_scan_, candidates.size());
+      size_t scan_qty = min(db_scan, candidates.size());
 
       for (size_t i = 0; i < scan_qty; ++i) {
         auto z = quick_select.GetNext();
@@ -380,7 +445,6 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
         }
       } else if (inv_proc_alg_ == kScan) {
         if (chunkId) {
-          //fastMemSet(&counter[0], counter.size());
           memset(&counter[0], 0, sizeof(counter[0])*counter.size());
         }
         for (size_t i = 0; i < num_prefix_; ++i) {
@@ -416,13 +480,13 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 template <typename dist_t>
 void PivotNeighbInvertedIndex<dist_t>::Search(
     RangeQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, 0);
 }
 
 template <typename dist_t>
 void PivotNeighbInvertedIndex<dist_t>::Search(
     KNNQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, query->GetK());
 }
 
 template class PivotNeighbInvertedIndex<float>;

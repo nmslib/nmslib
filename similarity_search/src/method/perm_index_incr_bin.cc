@@ -16,8 +16,10 @@
 
 #include <algorithm>
 #include <sstream>
+#include <memory>
 
 #include "space.h"
+#include "ported_boost_progress.h"
 #include "rangequery.h"
 #include "knnquery.h"
 #include "incremental_quick_select.h"
@@ -28,27 +30,45 @@ namespace similarity {
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBin(
+    bool PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
-    const size_t num_pivot,
-    const size_t bin_threshold,
-    const double db_scan_fraction,
-    const size_t max_hamming_dist,
-    const bool use_sort,
-    const bool skip_checking)
+    AnyParams allParams) 
     : data_(data),   // reference
-      bin_threshold_(bin_threshold),
-      db_scan_(max(size_t(1), static_cast<size_t>(db_scan_fraction * data.size()))),
-      bin_perm_word_qty_((num_pivot + 31)/32),
-      use_sort_(use_sort),
-      max_hamming_dist_(max_hamming_dist),
-      skip_checking_(skip_checking) {
-  CHECK(db_scan_fraction > 0.0);
-  CHECK(db_scan_fraction <= 1.0);
+      db_scan_frac_(0.05),
+      use_sort_(true),
+      skip_checking_(false) {
+  AnyParamManager pmgr(allParams);
+
+  size_t    num_pivot   = 16;
+
+  pmgr.GetParamOptional("numPivot",     num_pivot);
+  bin_threshold_    = num_pivot / 2;
+  max_hamming_dist_ = num_pivot;
+  pmgr.GetParamOptional("binThreshold", bin_threshold_);
+
+  bin_perm_word_qty_ = (num_pivot + 31)/32,
+
+  SetQueryTimeParamsInternal(pmgr);
+
+  LOG(LIB_INFO) << "# pivots                  = " << num_pivot;
+  LOG(LIB_INFO) << "# binarization threshold = "  << bin_threshold_;
+  LOG(LIB_INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
+  LOG(LIB_INFO) << "use sort = " << use_sort_;
+  if (use_sort_) {
+    LOG(LIB_INFO) << "db scan fraction = " << db_scan_frac_;
+  } else {
+    LOG(LIB_INFO) << "max hamming distance = " << max_hamming_dist_;
+  }
+  LOG(LIB_INFO) << "skip checking = " << skip_checking_;
 
   GetPermutationPivot(data, space, num_pivot, &pivot_);
 
   permtable_.resize(data.size() * bin_perm_word_qty_);
+
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+                                new ProgressDisplay(data.size(), cerr)
+                                :NULL);
 
   for (size_t i = 0, start = 0; i < data.size(); ++i, start += bin_perm_word_qty_) {
     Permutation TmpPerm;
@@ -58,19 +78,32 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBi
     Binarize(TmpPerm, bin_threshold_, binPivot);
     CHECK(binPivot.size() == bin_perm_word_qty_);
     memcpy(&permtable_[start], &binPivot[0], bin_perm_word_qty_ * sizeof(binPivot[0]));
+    if (progress_bar) ++(*progress_bar);
   }
-
-  LOG(LIB_INFO) << "# pivots                  = " << num_pivot;
-  LOG(LIB_INFO) << "# binarization threshold = "  << bin_threshold_;
-  LOG(LIB_INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
-  LOG(LIB_INFO) << "use sort = " << use_sort_;
-  if (use_sort_) {
-    LOG(LIB_INFO) << "db scan fraction = " << db_scan_fraction;
-  } else {
-    LOG(LIB_INFO) << "max hamming distance = " << max_hamming_dist_;
-  }
-  LOG(LIB_INFO) << "skip checking = " << skip_checking_;
   //SavePermTable(permtable_, "permtab");
+}
+    
+template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
+void PermutationIndexIncrementalBin<dist_t, perm_func>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+  pmgr.GetParamOptional("skipChecking", skip_checking_);
+  pmgr.GetParamOptional("useSort",      use_sort_);
+  pmgr.GetParamOptional("maxHammingDist", max_hamming_dist_);
+
+    
+  if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
+    throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
+  }
+  if (pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+  } else {
+    knn_amp_ = 0;
+  }
+  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+    knn_amp_ = 0;
+  }
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
+  pmgr.GetParamOptional("knnAmp",  knn_amp_);
 }
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
@@ -86,7 +119,20 @@ const std::string PermutationIndexIncrementalBin<dist_t, perm_func>::ToString() 
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)> 
 template <typename QueryType>
-void PermutationIndexIncrementalBin<dist_t, perm_func>::GenSearch(QueryType* query) {
+void PermutationIndexIncrementalBin<dist_t, perm_func>::GenSearch(QueryType* query, size_t K) {
+  // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
+  // a strange error message that says: dbScanFrac should be in the range [0,1].
+  if (!knn_amp_) {
+    if (db_scan_frac_ < 0.0 || db_scan_frac_ > 1.0) {
+      stringstream err;
+      err << METH_PERMUTATION_INC_SORT_BIN << " requires that dbScanFrac is in the range [0,1]";
+      throw runtime_error(err.str());
+    }
+  }
+
+  size_t db_scan = computeDbScan(K);
+
+
   Permutation perm_q;
   GetPermutation(pivot_, query, &perm_q);
   vector<uint32_t>  binPivot;
@@ -101,7 +147,7 @@ void PermutationIndexIncrementalBin<dist_t, perm_func>::GenSearch(QueryType* que
     }
 
     IncrementalQuickSelect<IntInt> quick_select(perm_dists);
-    for (size_t i = 0; i < db_scan_; ++i) {
+    for (size_t i = 0; i < db_scan; ++i) {
       const size_t idx = quick_select.GetNext().second;
       quick_select.Next();
       if (!skip_checking_) query->CheckAndAddToResult(data_[idx]);
@@ -118,13 +164,13 @@ void PermutationIndexIncrementalBin<dist_t, perm_func>::GenSearch(QueryType* que
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 void PermutationIndexIncrementalBin<dist_t, perm_func>::Search(
     RangeQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, 0);
 }
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 void PermutationIndexIncrementalBin<dist_t, perm_func>::Search(
     KNNQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, query->GetK());
 }
 
 

@@ -67,7 +67,7 @@ TEST(ExtractLabel) {
 
   lab = Object::extractLabel(str); 
 
-  EXPECT_EQ(lab, -1);
+  EXPECT_EQ(lab, EMPTY_LABEL);
   EXPECT_TRUE(str == "33");
 }
 

@@ -230,18 +230,18 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
   for (auto it = MethodsDesc.begin(); it != MethodsDesc.end(); ++it, ++MethNum) {
 
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetQty());
+      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetQty());
+      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
   }
 
 
-  for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
+  for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
 
-    LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
+    LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
 
     ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
@@ -321,9 +321,13 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
         }
       }
 
+      GoldStandardManager<dist_t> managerGS(config);
+      managerGS.Compute(0); // Keeping all GS entries, should be Ok here because our data sets are smallish
+
       Experiments<dist_t>::RunAll(true /* print info */, 
-                                      ThreadTestQty, 
+                                      ThreadTestQty,
                                       TestSetId,
+                                      managerGS,
                                       ExpResRange, ExpResKNN,
                                       config, 
                                       IndexPtrs, MethodsDesc);
@@ -411,6 +415,8 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
   unsigned              TestSetQty = 10;
   string                DataFile;
   string                QueryFile;
+  string                CacheGSFilePrefix;
+  size_t                MaxCacheGSQty;
   unsigned              MaxNumData = 0;
   unsigned              MaxNumQuery = 1000;
   vector<unsigned>      knn;
@@ -423,6 +429,9 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
 
   vector<shared_ptr<MethodWithParams>>        MethodsDesc;
 
+  if (!CacheGSFilePrefix.empty()) {
+    LOG(LIB_FATAL) << "Caching of gold standard data is not yet implemented for this utility";
+  }
  
   ParseCommandLine(argv.size(), &argv[0], tmp1,
                        DistType,
@@ -435,6 +444,8 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                        TestSetQty,
                        DataFile,
                        QueryFile,
+                       CacheGSFilePrefix,
+                       MaxCacheGSQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
@@ -443,9 +454,10 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                        MethodsDesc);
 
 
+
   ToLower(DistType);
 
-  if ("int" == DistType) {
+  if (DIST_TYPE_INT == DistType) {
     bTestRes = RunTestExper<int>(vTestCases,
                   cmd.str(),
                   MethodsDesc,
@@ -464,7 +476,7 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else if ("float" == DistType) {
+  } else if (DIST_TYPE_FLOAT == DistType) {
     bTestRes = RunTestExper<float>(vTestCases,
                   cmd.str(),
                   MethodsDesc,
@@ -483,7 +495,7 @@ bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else if ("double" == DistType) {
+  } else if (DIST_TYPE_DOUBLE == DistType) {
     bTestRes = RunTestExper<double>(vTestCases,
                   cmd.str(),
                   MethodsDesc,

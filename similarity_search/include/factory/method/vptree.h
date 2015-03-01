@@ -19,15 +19,29 @@
 
 #include "searchoracle.h"
 #include <method/vptree.h>
+#include <method/vptree_old.h>
 
 namespace similarity {
 
 /* 
- * We have two different creating functions, 
- * b/c there can be two different oracle types.
+ * We have different creating functions, 
+ * b/c there are different pruning methods.
  */
 template <typename dist_t>
-Index<dist_t>* CreateVPTreeTriang(bool PrintProgress,
+Index<dist_t>* CreateVPTree(bool PrintProgress,
+                           const string& SpaceType,
+                           const Space<dist_t>* space,
+                           const ObjectVector& DataObjects,
+                           const AnyParams& AllParams) {
+    return new VPTree<dist_t,PolynomialPruner<dist_t>>(PrintProgress,
+                              space,
+                              DataObjects,
+                              AllParams
+                             );
+}
+
+template <typename dist_t>
+Index<dist_t>* CreateVPTreeOldTriang(bool PrintProgress,
                            const string& SpaceType,
                            const Space<dist_t>* space,
                            const ObjectVector& DataObjects,
@@ -43,7 +57,7 @@ Index<dist_t>* CreateVPTreeTriang(bool PrintProgress,
 
     AnyParams RemainParams = pmgr.ExtractParametersExcept({"alphaLeft", "alphaRight"});
 
-    return new VPTree<dist_t, TriangIneq<dist_t>, TriangIneqCreator<dist_t> >(
+    return new VPTreeOld<dist_t, TriangIneq<dist_t>, TriangIneqCreator<dist_t> >(
                                                 PrintProgress,
                                                 OracleCreator,
                                                 space,
@@ -53,7 +67,7 @@ Index<dist_t>* CreateVPTreeTriang(bool PrintProgress,
 }
 
 template <typename dist_t>
-Index<dist_t>* CreateVPTreeSample(bool PrintProgress,
+Index<dist_t>* CreateVPTreeOldSample(bool PrintProgress,
                            const string& SpaceType,
                            const Space<dist_t>* space,
                            const ObjectVector& DataObjects,
@@ -92,7 +106,7 @@ Index<dist_t>* CreateVPTreeSample(bool PrintProgress,
                                                  NumOfPseudoQueriesInQuantile,
                                                  DistLearnThreshold);
 
-    return new VPTree<dist_t, SamplingOracle<dist_t>, SamplingOracleCreator<dist_t> >(
+    return new VPTreeOld<dist_t, SamplingOracle<dist_t>, SamplingOracleCreator<dist_t> >(
                                                  PrintProgress,
                                                  OracleCreator,
                                                  space,

@@ -17,19 +17,141 @@
 #define SEARCH_ORACLE_HPP
 
 #include <string>
+#include <cmath>
+#include <vector>
 #include <sstream>
 
 #include "object.h"
 #include "space.h"
+#include "pow.h"
+#include "params.h"
 #include "experimentconf.h"
 #include "logging.h"
 
+#define EXP_LEFT_PARAM  "expLeft"
+#define EXP_RIGHT_PARAM "expRight"
+#define ALPHA_LEFT_PARAM  "alphaLeft"
+#define ALPHA_RIGHT_PARAM "alphaRight"
+
 namespace similarity {
 
+/*
+ * Basic pruning oracles are built on the idea that you can relax the pruning criterion
+ * in a kd-tree or a vp-tree.
+ *
+ * First, this idea was proposed by P.N. Yianilos in 1999:
+ * Peter N. Yianilos, Locally lifting the curse of dimensionality for nearest neighbor search.
+ *
+ * It was later generalized to metric spaces. The introduced technique was called
+ * "stretching of the triangle inequality". Stretching was governed by a single coefficient alpha,
+ * so that the classic metric-space VP-tree pruning rule:
+ *
+ * MaxDist <= | M  - d(q, pivot) |
+ *
+ * was replaced by:
+ *
+ * MaxDist <= alpha | M  - d(q, pivot) |
+ *
+ * Here, M is a median distance from data points to the pivot and MaxDist
+ * is the minimum distance from an object to query encountered during the search
+ * (prior to encountering the current pivot/node), which plays a role of the 
+ * query radius.
+ *
+ * Stretching of the triangle inequality was described in:
+ *
+ * Probabilistic proximity search: 
+ * Fighting the curse of dimensionality in metric spaces
+ * E Chavez, G Navarro 
+ *
+ * Boytsov and Bilegsaikhan showed that a more generic pruning is needed if we want to
+ * search in generic metric spaces, where the distance is not symmetric. This more generic
+ * pruning method can also be more efficient in metric spaces than the originally proposed 
+ * stretching rule.
+ *
+ * More specifically, two potentially different stretching coefficients alphaLeft and alphaRight
+ * are used for the left and the right partition, respectively. 
+ *
+ * The results were published in:
+ * Boytsov, Leonid, and Bilegsaikhan Naidan. 
+ * "Learning to prune in metric and non-metric spaces." Advances in Neural Information Processing Systems. 2013.
+ *
+ * A further extension relies on a polynomial approximation of the pruning rule.
+ * In the left subtree we prune if:
+ * MaxDist <= alphaLeft | M  - d(q, pivot) |^expLeft
+ * In the right subtree we prune if:
+ * MaxDist <= alphaRight | M  - d(q, pivot) |^expRight
+ */
+
 using std::string; 
+using std::vector; 
 using std::stringstream;
 
 enum VPTreeVisitDecision { kVisitLeft = 1, kVisitRight = 2, kVisitBoth = 3 };
+
+template <typename dist_t>
+class PolynomialPruner {
+public:
+  static std::string GetName() { return "polynomial pruner"; }
+  PolynomialPruner() : alpha_left_(1), exp_left_(1), alpha_right_(1), exp_right_(1) {}
+  void SetParams(AnyParamManager& pmgr) {
+    // Default values are for the classic triangle inequality
+    alpha_left_  = 1.0;
+    exp_left_    = 1;
+    alpha_right_ = 1.0;
+    exp_right_   = 1;
+    pmgr.GetParamOptional(ALPHA_LEFT_PARAM, alpha_left_);
+    pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, alpha_right_);
+    pmgr.GetParamOptional(EXP_LEFT_PARAM, exp_left_);
+    pmgr.GetParamOptional(EXP_RIGHT_PARAM, exp_right_);
+  }
+
+  vector<string> GetParams() const {
+    vector<string> res = {ALPHA_LEFT_PARAM, EXP_LEFT_PARAM, ALPHA_RIGHT_PARAM, EXP_RIGHT_PARAM};
+    return res;
+  }
+  
+  void LogParams() {
+    LOG(LIB_INFO) << ALPHA_LEFT_PARAM << " = "   << alpha_left_ << " " << EXP_LEFT_PARAM << " = " << exp_left_;
+    LOG(LIB_INFO) << ALPHA_RIGHT_PARAM << " = " << alpha_right_ << " " << EXP_RIGHT_PARAM << " = " << exp_right_;
+  }
+
+  inline VPTreeVisitDecision Classify(dist_t distQueryPivot, dist_t MaxDist, dist_t MedianDist) const {
+
+    /*
+     * If the median is in both subtrees (e.g., this is often the case of a discrete metric)
+     * and the distance to the pivot is MedianDist, we need to visit both subtrees.
+     * Hence, we check for the strict inequality!!! Even if MaxDist == 0, 
+     * for the case of dist == MedianDist, 0 < 0 may be false. 
+     * Thus, we visit both subtrees. 
+     */
+    if (distQueryPivot <= MedianDist) {
+      double diff = double(MedianDist - distQueryPivot);
+      double expDiff = EfficientPow(diff, exp_left_);
+      //LOG(LIB_INFO) << " ### " << diff << " -> " << expDiff;
+      if (double(MaxDist) < alpha_left_ * expDiff) return (kVisitLeft);
+    }
+    if (distQueryPivot >= MedianDist) {
+      double diff = double(distQueryPivot - MedianDist);  
+      double expDiff = EfficientPow(diff, exp_right_);
+      //LOG(LIB_INFO) << " ### " << diff << " -> " << expDiff;
+      if (double(MaxDist) < alpha_right_* expDiff) return (kVisitRight);
+    }
+
+    return (kVisitBoth);
+  }
+  string Dump() { 
+    stringstream str;
+
+    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << " ExponentLeft: " << exp_left_ << 
+           ALPHA_RIGHT_PARAM << ": " << alpha_right_ << " ExponentRight: " << exp_right_ ;
+    return str.str();
+  }
+private:
+  double    alpha_left_;
+  unsigned  exp_left_;
+  double    alpha_right_;
+  unsigned  exp_right_;
+};
 
 
 template <typename dist_t>
@@ -38,20 +160,13 @@ public:
   static std::string GetName() { return "triangle inequality"; }
   TriangIneq(double alpha_left, double alpha_right) : alpha_left_(alpha_left), alpha_right_(alpha_right){}
 
-  inline VPTreeVisitDecision Classify(dist_t dist, dist_t MaxDist, dist_t MedianDist) {
-/*
- * Stretching triangle inequality similar to the description in:
- *
- * Probabilistic proximity search: Fighting the curse of dimensionality in metric spaces
- * E Chavez, G Navarro 
- *
- */
+  inline VPTreeVisitDecision Classify(dist_t dist, dist_t MaxDist, dist_t MedianDist) const {
 
     /*
-     * If the median is in both subtrees (e.g., this is often the case of a discreete metric)
+     * If the median is in both subtrees (e.g., this is often the case of a discrete metric)
      * and the distance to the pivot is MedianDist, we need to visit both subtrees.
      * Hence, we check for the strict inequality!!! Even if MaxDist == 0, 
-     * for the case of dist == MedianDist, 0 < 0 is false. 
+     * for the case of dist == MedianDist, 0 < 0 may be false. 
      * Thus, we visit both subtrees. 
      */
     if (double(MaxDist) < alpha_left_ * (double(MedianDist) - dist)) return (kVisitLeft);
@@ -62,7 +177,7 @@ public:
   string Dump() { 
     stringstream str;
 
-    str << "AlphaLeft: " << alpha_left_ << " AlphaRight: " << alpha_right_;
+    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << ALPHA_RIGHT_PARAM << ": " << alpha_right_;
     return str.str();
   }
 private:
@@ -74,9 +189,8 @@ template <typename dist_t>
 class TriangIneqCreator {
 public:
   TriangIneqCreator(double alpha_left, double alpha_right) : alpha_left_(alpha_left), alpha_right_(alpha_right){
-    LOG(LIB_INFO) << "alphaLeft (left stretch coeff)= "   << alpha_left;
-    LOG(LIB_INFO) << "alphaRight (right stretch coeff)= " << alpha_right;
-
+    LOG(LIB_INFO) << ALPHA_LEFT_PARAM << " (left stretch coeff)= "   << alpha_left;
+    LOG(LIB_INFO) << ALPHA_RIGHT_PARAM << " (right stretch coeff)= " << alpha_right;
   }
   TriangIneq<dist_t>* Create(unsigned level, const Object* /*pivot_*/, const DistObjectPairVector<dist_t>& /*dists*/) const {
     return new TriangIneq<dist_t>(alpha_left_, alpha_right_);

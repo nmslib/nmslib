@@ -20,6 +20,7 @@
 #include "space.h"
 #include "knnquery.h"
 #include "rangequery.h"
+#include "ported_boost_progress.h"
 #include "method/small_world_rand.h"
 
 #include <vector>
@@ -39,42 +40,64 @@ struct IndexThreadParamsSW {
   const ObjectVector&                         data_;
   size_t                                      index_every_;
   size_t                                      out_of_;
+  ProgressDisplay*                            progress_bar_;
+  mutex&                                      display_mutex_;
+  size_t                                      progress_update_qty_;
   
   IndexThreadParamsSW(
                      const Space<dist_t>*             space,
                      SmallWorldRand<dist_t>&          index, 
                      const ObjectVector&              data,
                      size_t                           index_every,
-                     size_t                           out_of
+                     size_t                           out_of,
+                     ProgressDisplay*                 progress_bar,
+                     mutex&                           display_mutex,
+                     size_t                           progress_update_qty
                       ) : 
                      space_(space),
                      index_(index), 
                      data_(data),
                      index_every_(index_every),
-                     out_of_(out_of) 
-                     {
-  }
+                     out_of_(out_of),
+                     progress_bar_(progress_bar),
+                     display_mutex_(display_mutex),
+                     progress_update_qty_(progress_update_qty)
+                     { }
 };
 
 template <typename dist_t>
 struct IndexThreadSW {
   void operator()(IndexThreadParamsSW<dist_t>& prm) {
+    ProgressDisplay*  progress_bar = prm.progress_bar_;
+    mutex&            display_mutex(prm.display_mutex_); 
     /* 
      * Skip the first element, it was added already
      */
+    size_t nextQty = prm.progress_update_qty_;
     for (size_t i = 1; i < prm.data_.size(); ++i) {
       if (prm.index_every_ == i % prm.out_of_) {
         MSWNode* node = new MSWNode(prm.data_[i]);
         prm.index_.add(prm.space_, node);
+      
+        if ((i + 1 >= min(prm.data_.size(), nextQty)) && progress_bar) {
+          unique_lock<mutex> lock(display_mutex);
+          (*progress_bar) += (nextQty - progress_bar->count());
+          nextQty += prm.progress_update_qty_;
+        }
       }
+    }
+    if (progress_bar) {
+      unique_lock<mutex> lock(display_mutex);
+      (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
     }
   }
 };
 
 template <typename dist_t>
-SmallWorldRand<dist_t>::SmallWorldRand(const Space<dist_t>* space,
-                                                   const ObjectVector& data,
-                                                   const AnyParams& MethParams) :
+SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
+                                       const Space<dist_t>* space,
+                                       const ObjectVector& data,
+                                       const AnyParams& MethParams) :
                                                    NN_(5),
                                                    initIndexAttempts_(2),
                                                    initSearchAttempts_(10),
@@ -97,27 +120,35 @@ SmallWorldRand<dist_t>::SmallWorldRand(const Space<dist_t>* space,
 
   ElList_.push_back(new MSWNode(data[0]));
 
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+                                new ProgressDisplay(data.size(), cerr)
+                                :NULL);
+
   if (indexThreadQty_ <= 1) {
     // Skip the first element, one element is already added
+    if (progress_bar) ++(*progress_bar);
     for (size_t i = 1; i != data.size(); ++i) {
       MSWNode* node = new MSWNode(data[i]);
       add(space, node);
+      if (progress_bar) ++(*progress_bar);
     }
   } else {
     vector<thread>                                    threads(indexThreadQty_);
     vector<shared_ptr<IndexThreadParamsSW<dist_t>>>   threadParams; 
+    mutex                                             progressBarMutex;
 
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
-                              new IndexThreadParamsSW<dist_t>(space, *this, data, i, indexThreadQty_)));
+                              new IndexThreadParamsSW<dist_t>(space, *this, data, i, indexThreadQty_,
+                                                              progress_bar.get(), progressBarMutex, 200)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
-      LOG(LIB_INFO) << "Creating indexing thread: " << (i+1) << " out of " << indexThreadQty_;
       threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threads[i].join();
     }
+    LOG(LIB_INFO) << indexThreadQty_ << " indexing threads have finished";
   }
 }
 

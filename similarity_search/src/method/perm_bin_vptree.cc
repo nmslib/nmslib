@@ -64,16 +64,16 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
 
   double AlphaLeft = 1.0, AlphaRight = 1.0;
 
-  pmgr.GetParamOptional("alphaLeft",  AlphaLeft);
-  pmgr.GetParamOptional("alphaRight", AlphaRight);
+  pmgr.GetParamOptional(ALPHA_LEFT_PARAM,  AlphaLeft);
+  pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, AlphaRight);
 
   RemainParams = pmgr.ExtractParametersExcept(
                         { "dbScanFrac",
                          "numPivot",
                          "binThreshold",
 
-                         "alphaLeft", 
-                         "alphaRight",
+                         ALPHA_LEFT_PARAM, 
+                         ALPHA_RIGHT_PARAM,
                         });
 
   // db_can_qty_ should always be > 0
@@ -90,15 +90,9 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
     BinPermData_[i] = VPTreeSpace_->CreateObjFromVect(i, -1, binPivot);
   }
 
-  TriangIneqCreator<int> OracleCreator(AlphaLeft, AlphaRight);
-
   ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, BinPermData_);
-
-
-  VPTreeIndex_ = new VPTree<int, TriangIneq<int>,
-                            TriangIneqCreator<int> >(
+  VPTreeIndex_ = new VPTree<int, PolynomialPruner<int>>(
                                           true,
-                                          OracleCreator,
                                           VPTreeSpace_,
                                           BinPermData_,
                                           RemainParams

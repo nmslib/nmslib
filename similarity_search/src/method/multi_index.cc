@@ -60,6 +60,20 @@ MultiIndex<dist_t>::MultiIndex(
 }
 
 template <typename dist_t>
+vector<string> MultiIndex<dist_t>::GetQueryTimeParamNames() const {
+  if (!indices_.empty()) return indices_[0]->GetQueryTimeParamNames();
+  return vector<string>({});
+}
+
+template <typename dist_t>
+void MultiIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+  for (size_t i = 0; i < indices_.size(); ++i) {
+    AnyParams pars = pmgr.ExtractParametersExcept({});
+    indices_[i]->SetQueryTimeParams(pars);
+  }
+}
+
+template <typename dist_t>
 MultiIndex<dist_t>::~MultiIndex() {
   for (size_t i = 0; i < indices_.size(); ++i) 
     delete indices_[i];
@@ -115,6 +129,11 @@ void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
     while(!ResQ->Empty()) {
       const Object* obj = reinterpret_cast<const Object*>(ResQ->TopObject());
 
+      /*  
+       * It's essential to check for previously added entries.
+       * If we don't do this, the same close entry may be added multiple
+       * times. At the same time, other relevant entries will be removed!
+       */
       if (!found.count(obj->id())) {
         query->CheckAndAddToResult(ResQ->TopDistance(), obj);
         found.insert(obj->id());

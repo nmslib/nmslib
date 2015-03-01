@@ -17,6 +17,7 @@
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <stdexcept>
 
 #include "knnqueue.h"
 #include "utils.h"

@@ -53,18 +53,18 @@ void Query<dist_t>::ResetStats() {
 template <typename dist_t>
 dist_t Query<dist_t>::Distance(
     const Object* object1,
-    const Object* object2) {
+    const Object* object2) const {
   ++distance_computations_;
   return space_->HiddenDistance(object1, object2);
 }
 
 template <typename dist_t>
-dist_t Query<dist_t>::DistanceObjLeft(const Object* object) {
+dist_t Query<dist_t>::DistanceObjLeft(const Object* object) const {
   return Distance(object, query_object_);
 }
 
 template <typename dist_t>
-dist_t Query<dist_t>::DistanceObjRight(const Object* object) {
+dist_t Query<dist_t>::DistanceObjRight(const Object* object) const {
   return Distance(query_object_, object);
 }
 

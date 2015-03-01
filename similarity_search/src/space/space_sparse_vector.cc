@@ -118,24 +118,6 @@ Object* SpaceSparseVector<dist_t>::CreateObjFromVect(IdType id, LabelType label,
   return new Object(id, label, InpVect.size() * sizeof(ElemType), &InpVect[0]);
 };
 
-template <typename dist_t>
-void SpaceSparseVector<dist_t>::GenRandProjPivots(ObjectVector& vDst, size_t Qty, size_t MaxElem) const {
-  // Static is thread-safe in C++-11
-  static  std::random_device          rd;
-  static  std::mt19937                engine(rd());
-  static  std::normal_distribution<>  normGen(0.0f, 1.0f);
-
-  vDst.clear();
-
-  for (unsigned i = 0; i < Qty; ++i) {
-    vector<ElemType>  temp;
-
-    for (unsigned id = 0; id < MaxElem; ++id) {
-      temp.push_back(ElemType(id, normGen(engine))); 
-    }
-    vDst.push_back(CreateObjFromVect(i, -1, temp));
-  }
-}
 
 /* 
  * We don't instantiate sparse vector spaces for types other than float & double

@@ -32,6 +32,7 @@
 #include "factory/method/multi_vantage_point_tree.h"
 #include "factory/method/perm_bin_vptree.h"
 #include "factory/method/perm_index_incr_bin.h"
+#include "factory/method/perm_lsh_bin.h"
 #include "factory/method/permutation_index.h"
 #include "factory/method/permutation_index_incremental.h"
 #include "factory/method/permutation_inverted_index.h"
@@ -39,10 +40,13 @@
 #include "factory/method/permutation_vptree.h"
 #include "factory/method/pivot_neighb_invindx.h"
 #include "factory/method/proj_vptree.h"
+#include "factory/method/projection_index_incremental.h"
 #include "factory/method/seqsearch.h"
 #include "factory/method/small_world_rand.h"
 #include "factory/method/spatial_approx_tree.h"
 #include "factory/method/vptree.h"
+#include "factory/method/omedrank.h"
+#include "factory/method/nndes.h"
 
 namespace similarity {
 
@@ -93,6 +97,11 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
   REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
 
+  // LSH based on binarized permutations
+  REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)
+  REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)
+  REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)
+
   // Sequential-search permutation index without incremental sorting
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION, CreatePermutationIndex)
   REGISTER_METHOD_CREATOR(double, METH_PERMUTATION, CreatePermutationIndex)
@@ -107,11 +116,17 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
   REGISTER_METHOD_CREATOR(double, METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PERM_INVERTED_INDEX, CreatePermInvertedIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_PERM_INVERTED_INDEX_SYN, CreatePermInvertedIndex)
+  REGISTER_METHOD_CREATOR(double, METH_PERM_INVERTED_INDEX_SYN, CreatePermInvertedIndex)
+  REGISTER_METHOD_CREATOR(int,    METH_PERM_INVERTED_INDEX_SYN, CreatePermInvertedIndex)
 
   // Prefix index over permutations
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_PREFIX_IND, CreatePermutationPrefixIndex)
   REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_PREFIX_IND, CreatePermutationPrefixIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_PREFIX_IND, CreatePermutationPrefixIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_PREFIX_IND_SYN, CreatePermutationPrefixIndex)
+  REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_PREFIX_IND_SYN, CreatePermutationPrefixIndex)
+  REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_PREFIX_IND_SYN, CreatePermutationPrefixIndex)
 
   // VP-tree built over permutations
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_VPTREE, CreatePermutationVPTree)
@@ -122,35 +137,61 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
+  REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
+  REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
+
+  // Rank aggregation approach (omedrank) by Fagin et al
+  REGISTER_METHOD_CREATOR(float,  METH_OMEDRANK, CreateOMedRank)
+  REGISTER_METHOD_CREATOR(double, METH_OMEDRANK, CreateOMedRank)
+  REGISTER_METHOD_CREATOR(int,    METH_OMEDRANK, CreateOMedRank)
 
   // VP-tree built over projections
   REGISTER_METHOD_CREATOR(float,  METH_PROJ_VPTREE, CreateProjVPTree)
   REGISTER_METHOD_CREATOR(double, METH_PROJ_VPTREE, CreateProjVPTree)
+  REGISTER_METHOD_CREATOR(int,    METH_PROJ_VPTREE, CreateProjVPTree)
+
+  
+  // Sequential-search projection index with incremental sorting
+  REGISTER_METHOD_CREATOR(float,  METH_PROJECTION_INC_SORT, CreateProjectionIndexIncremental)
+  REGISTER_METHOD_CREATOR(double, METH_PROJECTION_INC_SORT, CreateProjectionIndexIncremental)
+  REGISTER_METHOD_CREATOR(int,    METH_PROJECTION_INC_SORT, CreateProjectionIndexIncremental)
+
 
   // Just sequential searching
   REGISTER_METHOD_CREATOR(float,  METH_SEQ_SEARCH, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(double, METH_SEQ_SEARCH, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(int,    METH_SEQ_SEARCH, CreateSeqSearch)
 
-  // Small-word with randomly generated neighborhood-networks
+  // Small-word (KNN-graph) with randomly generated neighborhood-networks
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
+
+  // Another KNN-graph, which is computed via NN-descent
+  REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)
+  REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
+  REGISTER_METHOD_CREATOR(int,    METH_NNDES, CreateNNDescent)
 
   // SA-tree
   REGISTER_METHOD_CREATOR(float,  METH_SATREE, CreateSATree)
   REGISTER_METHOD_CREATOR(double, METH_SATREE, CreateSATree)
   REGISTER_METHOD_CREATOR(int,    METH_SATREE, CreateSATree)
 
-  // VP-tree, piecewise-linear approximation of the decision rule
-  REGISTER_METHOD_CREATOR(int,    METH_VPTREE, CreateVPTreeTriang)
-  REGISTER_METHOD_CREATOR(float,  METH_VPTREE, CreateVPTreeTriang)
-  REGISTER_METHOD_CREATOR(double, METH_VPTREE, CreateVPTreeTriang)
+  // VP-tree, piecewise-polynomial approximation of the decision rule
+  REGISTER_METHOD_CREATOR(int,    METH_VPTREE, CreateVPTree)
+  REGISTER_METHOD_CREATOR(float,  METH_VPTREE, CreateVPTree)
+  REGISTER_METHOD_CREATOR(double, METH_VPTREE, CreateVPTree)
 
-  // VP-tree, sampling-based (not so good yet) approximation of the decision rule
-  REGISTER_METHOD_CREATOR(int,    METH_VPTREE_SAMPLE, CreateVPTreeSample)
-  REGISTER_METHOD_CREATOR(float,  METH_VPTREE_SAMPLE, CreateVPTreeSample)
-  REGISTER_METHOD_CREATOR(double, METH_VPTREE_SAMPLE, CreateVPTreeSample)
+  // VP-tree (old version), piecewise-linear approximation of the decision rule
+  REGISTER_METHOD_CREATOR(int,    METH_VPTREE_OLD, CreateVPTreeOldTriang)
+  REGISTER_METHOD_CREATOR(float,  METH_VPTREE_OLD, CreateVPTreeOldTriang)
+  REGISTER_METHOD_CREATOR(double, METH_VPTREE_OLD, CreateVPTreeOldTriang)
+
+  // VP-tree (old version), sampling-based (not so good yet) approximation of the decision rule
+  REGISTER_METHOD_CREATOR(int,    METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
+  REGISTER_METHOD_CREATOR(float,  METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
+  REGISTER_METHOD_CREATOR(double, METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
 
   // A multi-index combination
   REGISTER_METHOD_CREATOR(float,  METH_MULT_INDEX, CreateMultiIndex)

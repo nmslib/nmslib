@@ -1107,7 +1107,7 @@ $L_p$ (generic $p \ge 1$)& \ttt{lp:p=\ldots}, \ttt{lp\_sparse:p=\ldots}  &  0.1-
                                 & $\left(\sum_{i=1}^n |x_i-y_i|^p\right)^{1/p}$  & \\
 \cmidrule(l){1-3} 
 Angular distance & \ttt{angulardist}, \ttt{angulardist\_sparse}, \ttt{angulardist\_sparse\_fast} & { 13, 1.4, 3.5 } \\
-                        & $\arccos\left(1-\frac{\sum_{i=1}^n x_i y_i}{\sqrt{\sum_{i=1}^n x_i^2}\sqrt{\sum_{i=1}^n y_i^2 }}\right)$   & \\
+                        & $\arccos\left(\frac{\sum_{i=1}^n x_i y_i}{\sqrt{\sum_{i=1}^n x_i^2}\sqrt{\sum_{i=1}^n y_i^2 }}\right)$   & \\
 \cmidrule(l){1-3} 
 Jensen-Shan. metr. &\ttt{jsmetrslow, jsmetrfast, jsmetrfastapprox} &  0.3, 1.9, 4.8  \\
                           & $\sqrt{\frac{1}{2}\sum_{i=1}^n \left[x_i \log x_i + y_i \log y_i  - (x_i+y_i)\log \frac{x_i +y_i}{2}\right]}$  & \vspace{1em} \\
@@ -1189,12 +1189,13 @@ d(x,y) =1-\frac{\sum_{i=1}^n x_i y_i}
 {\sqrt{\sum_{i=1}^n x_i^2} \sqrt{\sum_{i=1}^n y_i^2 } } 
 $$ 
 The cosine similarity is not a true metric, but it can be converted into
-one by applying a monotonic transformation (i.e.., taking an inverse cosine).
+one by applying a monotonic transformation (i.e.., subtracting the 
+cosine similarity from one and taking an inverse cosine).
 The resulting distance function is a true metric that 
 is called the angular distance.
 The angular distance is computed using the following formula:
 $$
-d(x,y) =\arccos\left(1-\frac{\sum_{i=1}^n x_i y_i} 
+d(x,y) =\arccos\left(\frac{\sum_{i=1}^n x_i y_i} 
 {\sqrt{\sum_{i=1}^n x_i^2} \sqrt{\sum_{i=1}^n y_i^2 } }\right) 
 $$ 
 
@@ -1742,7 +1743,7 @@ Next, for every binary hash function, we draw a value $a_i$ from a $p$-stable di
 and a value $b_i$ from the uniform distribution with the support $[0, W]$.
 Finally, we define $h_i(x)$ as:
 $$
-h_i(x) = \left\lfloor \frac{ x \cdot v_i + a_i  }{W}\right\rfloor,
+h_i(x) = \left\lfloor \frac{ a_i \cdot x + b_i  }{W}\right\rfloor,
 $$
 where $\lfloor x \rfloor$  is the \texttt{floor} function
 and $x \cdot y$ denotes the scalar product of $x$ and $y$.
@@ -2020,7 +2021,7 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_incsort_bin:numPivot=32,\
+  --method perm_incsort_bin:numPivot=32,binThreshold=16,\
            dbScanFrac=0.05
 \end{verbatim}
 }

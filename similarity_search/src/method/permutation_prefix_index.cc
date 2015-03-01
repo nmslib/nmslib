@@ -17,10 +17,12 @@
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
+
 #include "space.h"
 #include "rangequery.h"
 #include "knnquery.h"
 #include "permutation_utils.h"
+#include "ported_boost_progress.h"
 #include "method/permutation_prefix_index.h"
 
 namespace similarity {
@@ -197,31 +199,71 @@ class PrefixTree {
 };
 
 template <typename dist_t>
+vector<string> PermutationPrefixIndex<dist_t>::GetQueryTimeParamNames() const {
+  return vector<string>({"minCandidate", "knnAmp"});
+}
+
+template <typename dist_t>
+void PermutationPrefixIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+
+  if (pmgr.hasParam("minCandidate") && pmgr.hasParam("knnAmp")) {
+    throw runtime_error("One shouldn't specify both parameters minCandidate and knnAmp, b/c they are synonyms!");
+  }
+
+  if (pmgr.hasParam("knnAmp")) {
+    min_candidate_ = 0;
+  } else {
+    knn_amp_ = 0;
+  }
+
+  pmgr.GetParamOptional("minCandidate", min_candidate_);
+  pmgr.GetParamOptional("knnAmp",  knn_amp_);
+}
+
+template <typename dist_t>
 PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(
+    bool  PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
-    const size_t num_pivot,
-    const size_t prefix_length,
-    const size_t min_candidate,
-    bool chunk_bucket)
-  : prefix_length_(prefix_length), min_candidate_(min_candidate) {
-  CHECK(prefix_length_ <= num_pivot);
-  CHECK(prefix_length_ > 0);
+    const AnyParams& AllParams) 
+  : data_(data), // reference
+    num_pivot_(16), prefix_length_(4), min_candidate_(0), knn_amp_(0) {
+  AnyParamManager pmgr(AllParams);
 
-  LOG(LIB_INFO) << "# pivots         = " << num_pivot;
+  bool chunkBucket = true;
+
+  pmgr.GetParamOptional("numPivot", num_pivot_);
+  pmgr.GetParamOptional("chunkBucket", chunkBucket);
+  pmgr.GetParamOptional("prefixLength", prefix_length_);
+
+  SetQueryTimeParamsInternal(pmgr);
+
+  pmgr.CheckUnused();
+
+  LOG(LIB_INFO) << "# pivots         = " << num_pivot_;
   LOG(LIB_INFO) << "prefix length    = " << prefix_length_;
   LOG(LIB_INFO) << "min candidate    = " << min_candidate_;
+  LOG(LIB_INFO) << "knnAmp           = " << knn_amp_;
+  LOG(LIB_INFO) << "ChunkBucket      = " << chunkBucket;
 
-  GetPermutationPivot(data, space, num_pivot, &pivot_);
+  GetPermutationPivot(data, space, num_pivot_, &pivot_);
   prefixtree_ = new PrefixTree;
   Permutation permutation;
+
+
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+                                new ProgressDisplay(data.size(), cerr)
+                                :NULL);
+
   for (const auto& it : data) {
     permutation.clear();
     GetPermutationPPIndex(pivot_, space, it, &permutation);
     prefixtree_->Insert(permutation, it, prefix_length_);
+
+    if (progress_bar) ++(*progress_bar);
   }
   // Store elements in leaves/buckets contiguously
-  if (chunk_bucket) prefixtree_->ChunkBuckets();
+  if (chunkBucket) prefixtree_->ChunkBuckets();
 }
 
 template <typename dist_t>
@@ -236,14 +278,30 @@ const std::string PermutationPrefixIndex<dist_t>::ToString() const {
 
 template <typename dist_t>
 template <typename QueryType>
-void PermutationPrefixIndex<dist_t>::GenSearch(QueryType* query) {
+void PermutationPrefixIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
+  if (prefix_length_ == 0 || prefix_length_ > num_pivot_) {
+    stringstream err;
+    err << METH_PERMUTATION_PREFIX_IND
+               << " requires that prefix length should be in the range in [1,"
+               << num_pivot_ << "]";
+    throw runtime_error(err.str());
+  }
+
   Permutation perm_q;
   GetPermutationPPIndex(pivot_, query, &perm_q);
 
+  size_t db_scan = computeDbScan(K);
+
+  if (!db_scan) {
+    if (!db_scan) {
+      throw runtime_error("One should specify a proper value for either minCandidate or knnAmp");
+    }
+  }
+
   ObjectVector candidates;
-  candidates.reserve(2  * min_candidate_);
+  candidates.reserve(2  * db_scan);
   prefixtree_->FindCandidates(perm_q, prefix_length_,
-                              min_candidate_, &candidates);
+                              db_scan, &candidates);
 
   for (const auto& it : candidates) {
     query->CheckAndAddToResult(it);
@@ -252,12 +310,12 @@ void PermutationPrefixIndex<dist_t>::GenSearch(QueryType* query) {
 
 template <typename dist_t>
 void PermutationPrefixIndex<dist_t>::Search(RangeQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, 0);
 }
 
 template <typename dist_t>
 void PermutationPrefixIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, query->GetK());
 }
 
 template class PermutationPrefixIndex<float>;

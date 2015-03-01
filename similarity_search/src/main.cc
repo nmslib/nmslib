@@ -129,6 +129,8 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
              unsigned                     TestSetQty,
              const string&                DataFile,
              const string&                QueryFile,
+             const string&                CacheGSFilePrefix,
+             size_t                       MaxCacheGSQty,
              unsigned                     MaxNumData,
              unsigned                     MaxNumQuery,
              const                        vector<unsigned>& knn,
@@ -140,8 +142,13 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
   LOG(LIB_INFO) << "### OutFilePrefix : " << ResFilePrefix;
   vector<dist_t> range;
 
+  bool bWriteGSCache = false;
+  bool bReadGSCache = false;
   bool bFail = false;
+  bool bCacheGS = !CacheGSFilePrefix.empty();
 
+  unique_ptr<fstream>      cacheGSControl;
+  unique_ptr<fstream>      cacheGSBinary;
 
   if (!RangeArg.empty()) {
     if (!SplitStr(RangeArg, range, ',')) {
@@ -156,7 +163,73 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
                                   MaxNumData, MaxNumQuery,
                                   dimension, knn, eps, range);
 
+  size_t cacheDataSetQty = 0;
+  if (bCacheGS) {
+    const string& cacheGSControlName = CacheGSFilePrefix + "_ctrl.txt";
+    const string& cacheGSBinaryName  = CacheGSFilePrefix + "_data.bin";
+
+    if (DoesFileExist(cacheGSControlName)) {
+    // Cache exists => reuse it
+      if (!DoesFileExist(cacheGSBinaryName)) {
+        throw runtime_error("Inconsistent cache state, there is a text control file: '" +
+                            cacheGSControlName + "' but no binary data file: '" +
+                            cacheGSBinaryName + "'");
+      }
+      cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
+                                        std::ios::in));
+      cacheGSBinary.reset(new fstream(cacheGSBinaryName.c_str(),
+                                        std::ios::in));
+
+      bReadGSCache = true;
+    } else {
+      if (DoesFileExist(cacheGSBinaryName)) {
+        throw runtime_error("Inconsistent cache state, there is no text control file: '" +
+                            cacheGSControlName + "' but there is binary data file: '" +
+                            cacheGSBinaryName + "'");
+      }
+    // No cache => create new file
+      cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
+                                        std::ios::trunc | std::ios::out));
+      cacheGSBinary.reset(new fstream(cacheGSBinaryName.c_str(),
+                                        std::ios::trunc | std::ios::out));
+      bWriteGSCache = true;
+    }
+
+    cacheGSControl->exceptions(std::ios::badbit);
+    cacheGSBinary->exceptions(std::ios::badbit);
+
+    /*
+     * If the cache exists, it should be read before ReadData() is called.
+     */
+    if (!bWriteGSCache) {
+      config.Read(*cacheGSControl, *cacheGSBinary, cacheDataSetQty);
+    }
+  }
+
   config.ReadDataset();
+
+  if (bReadGSCache) {
+    // Let's check the number of data entries, must exactly coincide with
+    // what was used to create the cache!
+    if (config.GetOrigDataQty() != cacheDataSetQty) {
+      stringstream err;
+      err << "The number of entries in the file, or the maximum number "
+          << "of data elements don't match the value in the cache file: "
+          << cacheDataSetQty;
+      throw runtime_error(err.str());
+    }
+  }
+
+  /*
+   * Yet, if we need to create a new cache file, we must write the cache
+   * after reading the data set.
+   */
+  if (bWriteGSCache) {
+    config.Write(*cacheGSControl, *cacheGSBinary);
+  }
+
+
+
   MemUsage  mem_usage_measure;
 
 
@@ -169,25 +242,48 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
   vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
                                               vector<MetaAnalysis*>(MethodsDesc.size()));
 
+  GoldStandardManager<dist_t> managerGS(config);
+
+
+
   size_t MethNum = 0;
 
   for (auto it = MethodsDesc.begin(); it != MethodsDesc.end(); ++it, ++MethNum) {
-
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetQty());
+      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetQty());
+      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
   }
 
-
-  for (int TestSetId = 0; TestSetId < config.GetTestSetQty(); ++TestSetId) {
+  for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
 
-    LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetQty() << ")";
+    // SelectTestSet must go before managerGS.Compute()!!!
 
-    ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
+    if (bReadGSCache) {
+      size_t cacheTestId = 0;
+      managerGS.Read(*cacheGSControl, *cacheGSBinary,
+                     config.GetTotalQueryQty(), cacheTestId);
+      if (cacheTestId != TestSetId) {
+        stringstream err;
+        err << "Perhaps, the input file is corrput (or is incompatible with "
+            << "program parameters), expect test set id=" << TestSetId
+            << "but obtained " << cacheTestId;
+        throw runtime_error(err.str());
+      }
+    } else {
+      managerGS.Compute(MaxCacheGSQty);
+      if (bWriteGSCache) {
+        LOG(LIB_INFO) << "Saving the cache, at most: " << MaxCacheGSQty << " entries";
+        managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId, MaxCacheGSQty);
+      }
+    }
+
+    LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
+
+    //ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
     vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
 
@@ -263,9 +359,10 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
         }
       }
 
-      Experiments<dist_t>::RunAll(true /* print info */, 
+      Experiments<dist_t>::RunAll(true /* print info */,
                                       ThreadTestQty, 
                                       TestSetId,
+                                      managerGS,
                                       ExpResRange, ExpResKNN,
                                       config, 
                                       IndexPtrs, MethodsDesc);
@@ -344,6 +441,8 @@ int main(int ac, char* av[]) {
   unsigned              TestSetQty;
   string                DataFile;
   string                QueryFile;
+  string                CacheGSFilePrefix;
+  size_t                MaxCacheGSQty;
   unsigned              MaxNumData;
   unsigned              MaxNumQuery;
   vector<unsigned>      knn;
@@ -365,6 +464,8 @@ int main(int ac, char* av[]) {
                        TestSetQty,
                        DataFile,
                        QueryFile,
+                       CacheGSFilePrefix,
+                       MaxCacheGSQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
@@ -378,7 +479,7 @@ int main(int ac, char* av[]) {
 
   ToLower(DistType);
 
-  if ("int" == DistType) {
+  if (DIST_TYPE_INT == DistType) {
     RunExper<int>(MethodsDesc,
                   SpaceType,
                   SpaceParams,
@@ -389,13 +490,15 @@ int main(int ac, char* av[]) {
                   TestSetQty,
                   DataFile,
                   QueryFile,
+                  CacheGSFilePrefix,
+                  MaxCacheGSQty,
                   MaxNumData,
                   MaxNumQuery,
                   knn,
                   eps,
                   RangeArg
                  );
-  } else if ("float" == DistType) {
+  } else if (DIST_TYPE_FLOAT == DistType) {
     RunExper<float>(MethodsDesc,
                   SpaceType,
                   SpaceParams,
@@ -406,13 +509,15 @@ int main(int ac, char* av[]) {
                   TestSetQty,
                   DataFile,
                   QueryFile,
+                  CacheGSFilePrefix,
+                  MaxCacheGSQty,
                   MaxNumData,
                   MaxNumQuery,
                   knn,
                   eps,
                   RangeArg
                  );
-  } else if ("double" == DistType) {
+  } else if (DIST_TYPE_DOUBLE == DistType) {
     RunExper<double>(MethodsDesc,
                   SpaceType,
                   SpaceParams,
@@ -423,6 +528,8 @@ int main(int ac, char* av[]) {
                   TestSetQty,
                   DataFile,
                   QueryFile,
+                  CacheGSFilePrefix,
+                  MaxCacheGSQty,
                   MaxNumData,
                   MaxNumQuery,
                   knn,

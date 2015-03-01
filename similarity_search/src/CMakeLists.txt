@@ -14,6 +14,7 @@ set(HDR_FILES ${PROJ_HDR_FILES} ${OTH_HDR_FILES})
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/space/*.cc ${PROJECT_SOURCE_DIR}/src/method/*.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/main.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
+list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/report_intr_dim.cc)
 # The dummy application file also needs to be removed from the list
 # of library source files:
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
@@ -48,11 +49,13 @@ else()
 endif()
 add_executable (experiment main.cc)
 add_executable (tune_vptree tune_vptree.cc)
+add_executable (report_intr_dim report_intr_dim.cc)
 # The following line is necessary to create an executable for the dummy application:
 add_executable (dummy_app dummy_app.cc)
 
 target_link_libraries (experiment NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries (tune_vptree NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (report_intr_dim NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 # What are the libraries that we need to link with for dummy_app?
 target_link_libraries (dummy_app NonMetricSpaceLib ${LSHKIT_LIB} 
                                                           ${Boost_LIBRARIES} 

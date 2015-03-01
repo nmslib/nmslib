@@ -7,8 +7,8 @@
  * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
+ * https://github.com/searchivarius/NonMetricSpaceLib
+ *
  * Copyright (c) 2014
  *
  * This code is released under the
@@ -18,6 +18,7 @@
 
 #include "spacefactory.h"
 
+#include "factory/space/space_edist.h"
 #include "factory/space/space_bit_hamming.h"
 #include "factory/space/space_bregman.h"
 #include "factory/space/space_dummy.h"
@@ -26,7 +27,7 @@
 #include "factory/space/space_scalar.h"
 #include "factory/space/space_sparse_lp.h"
 #include "factory/space/space_sparse_scalar.h"
-
+#include "factory/space/space_sqfd.h"
 #include "factory/space/space_savch.h"
 
 namespace similarity {
@@ -40,6 +41,10 @@ inline void initSpaces() {
 
   // Registering binary/bit Hamming
   REGISTER_SPACE_CREATOR(int,  SPACE_BIT_HAMMING,  CreateBitHamming)
+
+  // Registering the Levensthein-distance: regular and normalized
+  REGISTER_SPACE_CREATOR(int,   SPACE_LEVENSHTEIN,  CreateLevenshtein)
+  REGISTER_SPACE_CREATOR(float, SPACE_LEVENSHTEIN_NORM,  CreateLevenshteinNormalized)
 
   // Registering Bregman divergences
   REGISTER_SPACE_CREATOR(float,  SPACE_KLDIV_FAST, CreateKLDivFast)
@@ -107,9 +112,15 @@ inline void initSpaces() {
 
 
   REGISTER_SPACE_CREATOR(float,  "savch",  CreateSavch)
+
+  // Signature Quadratic Form Distance
+  REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_HEURISTIC_FUNC, CreateSqfdHeuristicFunc)
+  REGISTER_SPACE_CREATOR(double, SPACE_SQFD_HEURISTIC_FUNC, CreateSqfdHeuristicFunc)
+  REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_MINUS_FUNC, CreateSqfdMinusFunc)
+  REGISTER_SPACE_CREATOR(double, SPACE_SQFD_MINUS_FUNC, CreateSqfdMinusFunc)
+  REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
+  REGISTER_SPACE_CREATOR(double, SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
 }
-
-
 
 }
 

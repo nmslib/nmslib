@@ -34,95 +34,103 @@ using std::string;
 using std::stringstream;
 using std::endl;
 using std::cout;
+using std::cerr;
+    
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPTree(
+template <typename dist_t, typename SearchOracle>
+VPTree<dist_t, SearchOracle>::VPTree(
                        bool  PrintProgress,
-                       const SearchOracleCreator& OracleCreator,
                        const Space<dist_t>* space,
                        const ObjectVector& data,
                        const AnyParams& MethParams,
                        bool use_random_center) : 
                               BucketSize_(50),
                               MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT),
-                              ChunkBucket_(true),
-                              SaveHistFileName_("")
+                              ChunkBucket_(true)
                        {
   AnyParamManager pmgr(MethParams);
 
   pmgr.GetParamOptional("bucketSize", BucketSize_);
   pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
-  pmgr.GetParamOptional("saveHistFileName", SaveHistFileName_);
 
-  size_t IndexedQty = 0;
-  
-  root_ = new VPNode(
-                     PrintProgress, 0,
-                     data.size(), IndexedQty,
-                     OracleCreator, space,
+  LOG(LIB_INFO) << "bucketSize  = " << BucketSize_;
+  LOG(LIB_INFO) << "chunkBucket = " << ChunkBucket_;
+
+  VPTree<dist_t,SearchOracle>::SetQueryTimeParamsInternal(pmgr);
+
+  LOG(LIB_INFO) << "Initial parameters of the oracle: ";
+
+  pmgr.CheckUnused();
+
+  oracle_.LogParams();
+
+  unique_ptr<ProgressDisplay>   progress_bar(PrintProgress ? 
+                                              new ProgressDisplay(data.size(), cerr):
+                                              NULL);
+
+  root_ = new VPNode(0,
+                     progress_bar.get(), 
+                     oracle_, space,
                      const_cast<ObjectVector&>(data),
                      BucketSize_, ChunkBucket_,
-                     SaveHistFileName_,
                      use_random_center, true);
+
+  if (progress_bar) { // make it 100%
+    (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
+  }
 }
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-VPTree<dist_t, SearchOracle, SearchOracleCreator>::~VPTree() {
+template <typename dist_t,typename SearchOracle>
+VPTree<dist_t, SearchOracle>::~VPTree() {
   delete root_;
 }
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-const std::string VPTree<dist_t, SearchOracle, SearchOracleCreator>::ToString() const {
+template <typename dist_t,typename SearchOracle>
+const std::string VPTree<dist_t, SearchOracle>::ToString() const {
   return "vptree: " + SearchOracle::GetName();
 }
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-void VPTree<dist_t, SearchOracle, SearchOracleCreator>::Search(RangeQuery<dist_t>* query) {
+template <typename dist_t, typename SearchOracle>
+void VPTree<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query) {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-void VPTree<dist_t, SearchOracle, SearchOracleCreator>::Search(KNNQuery<dist_t>* query) {
+template <typename dist_t, typename SearchOracle>
+void VPTree<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query) {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::CreateBucket(bool ChunkBucket, 
-                                                                             const ObjectVector& data, 
-                                                                             bool PrintProgress,
-                                                                             size_t&  IndexedQty,
-                                                                             size_t   TotalQty) {
+template <typename dist_t, typename SearchOracle>
+void VPTree<dist_t, SearchOracle>::VPNode::CreateBucket(bool ChunkBucket, 
+                                                        const ObjectVector& data, 
+                                                        ProgressDisplay* progress_bar) {
     if (ChunkBucket) {
       CreateCacheOptimizedBucket(data, CacheOptimizedBucket_, bucket_);
     } else {
       bucket_ = new ObjectVector(data);
     }
-    IndexedQty += data.size();
-    if (PrintProgress) std::cout << "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\bBuilding an index: " << std::round(1000.0 * IndexedQty / TotalQty)/10.0 << "% done     \r"; // Note the trailing spaces - they are to compensate differences in output length.
+    if (progress_bar) (*progress_bar) += data.size();
 }
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
-                               bool     PrintProgress,
+template <typename dist_t, typename SearchOracle>
+VPTree<dist_t, SearchOracle>::VPNode::VPNode(
                                unsigned level,
-                               size_t   TotalQty,
-                               size_t&  IndexedQty,
-                               const SearchOracleCreator& OracleCreator,
+                               ProgressDisplay* progress_bar,
+                               const SearchOracle& oracle,
                                const Space<dist_t>* space, const ObjectVector& data,
                                size_t BucketSize, bool ChunkBucket,
-                               const string& SaveHistFileName,
                                bool use_random_center, bool is_root)
-    : pivot_(NULL), mediandist_(0),
-      left_child_(NULL), right_child_(NULL), oracle_(NULL),
+    : oracle_(oracle),
+      pivot_(NULL), mediandist_(0),
+      left_child_(NULL), right_child_(NULL),
       bucket_(NULL), CacheOptimizedBucket_(NULL) 
 {
   CHECK(!data.empty());
 
   if (!data.empty() && data.size() <= BucketSize) {
-    CreateBucket(ChunkBucket, data, PrintProgress, IndexedQty, TotalQty);
+    CreateBucket(ChunkBucket, data, progress_bar);
     return;
   }
 
@@ -143,24 +151,9 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
     DistObjectPair<dist_t>  medianDistObj = GetMedian(dp);
     mediandist_ = medianDistObj.first; 
 
-    oracle_ = OracleCreator.Create(level, pivot_, dp);
-
-    if (0 == level && !SaveHistFileName.empty()) {
-      stringstream str;
-      str <<  oracle_->Dump() <<  mediandist_ << endl ;
-
-      std::ofstream  of(SaveHistFileName.c_str(), std::ios::trunc | std::ios::out); 
-
-      if (!of) {
-        LOG(LIB_FATAL) << "Cannot open: " << SaveHistFileName << " for writing";
-      }
-      of << str.str();
-    }
-
     ObjectVector left;
     ObjectVector right;
 
-#if 1
     for (auto it = dp.begin(); it != dp.end(); ++it) {
       const Object* v = it->second;
 
@@ -176,31 +169,7 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
         right.push_back(v);
       }
     }
-#else
-    /*
-     * TODO: This code creates overlapping partitions.
-     *       If we ever uncomment it, you will have to take care of duplicates.
-     *       You will also need to modify the code that reports progress in index creation.
-     *       See std::cout << ... in VPNode
-     */
-    size_t LeftQty = dp.size() / 2;
-    size_t RightQty = dp.size() / 2;
-    if (level < 8) {
-        RightQty = (size_t)round(0.4 * dp.size());
-        LeftQty = (size_t)round(0.6 * dp.size());
-    }
 
-    for (size_t i = 0; i < dp.size(); ++i) {
-      const Object* v = dp[i].second;
-
-      if (i <= LeftQty) {
-        left.push_back(v);
-      }
-      if (i >= RightQty)  {
-        right.push_back(v);
-      }
-    }
-#endif
     /*
      * Sometimes, e.g.., for integer-valued distances,
      * mediandist_ will be non-discriminative. In this case
@@ -209,32 +178,31 @@ VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::VPNode(
     size_t LeastSize = dp.size() / BalanceConst;
 
     if (left.size() < LeastSize || right.size() < LeastSize) {
-        CreateBucket(ChunkBucket, data, PrintProgress, IndexedQty, TotalQty);
+        CreateBucket(ChunkBucket, data, progress_bar);
         return;
     }
 
     if (!left.empty()) {
-      left_child_ = new VPNode(PrintProgress, level + 1, TotalQty, IndexedQty, OracleCreator, space, left, BucketSize, ChunkBucket, "", use_random_center, false);
+      left_child_ = new VPNode(level + 1, progress_bar, oracle_, space, left, BucketSize, ChunkBucket, use_random_center, false);
     }
 
     if (!right.empty()) {
-      right_child_ = new VPNode(PrintProgress, level + 1, TotalQty, IndexedQty, OracleCreator, space, right, BucketSize, ChunkBucket, "", use_random_center, false);
+      right_child_ = new VPNode(level + 1, progress_bar, oracle_, space, right, BucketSize, ChunkBucket, use_random_center, false);
     }
   }
 }
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
-VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::~VPNode() {
+template <typename dist_t, typename SearchOracle>
+VPTree<dist_t, SearchOracle>::VPNode::~VPNode() {
   delete left_child_;
   delete right_child_;
-  delete oracle_;
   ClearBucket(CacheOptimizedBucket_, bucket_);
 }
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
+template <typename dist_t, typename SearchOracle>
 template <typename QueryType>
-void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::GenericSearch(QueryType* query,
-                                                                          int& MaxLeavesToVisit) {
+void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
+                                                         int& MaxLeavesToVisit) {
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (bucket_) {
     --MaxLeavesToVisit;
@@ -247,36 +215,43 @@ void VPTree<dist_t, SearchOracle, SearchOracleCreator>::VPNode::GenericSearch(Qu
     return;
   }
 
-  // Distance can be asymmetric, the pivot is always on the left side (see the function that create the node)!
+  // Distance can be asymmetric, the pivot is always the left argument (see the function that creates the node)!
   dist_t distQC = query->DistanceObjLeft(pivot_);
   query->CheckAndAddToResult(distQC, pivot_);
 
   if (distQC < mediandist_) {      // the query is inside
     // then first check inside
-    if (left_child_ != NULL && oracle_->Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
+    if (left_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
        left_child_->GenericSearch(query, MaxLeavesToVisit);
 
+    /* 
+     * After potentially visiting the left child, we need to reclassify the node,
+     * because the query radius might have decreased.
+     */
+
+
     // after that outside
-    if (right_child_ != NULL && oracle_->Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
+    if (right_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
        right_child_->GenericSearch(query, MaxLeavesToVisit);
   } else {                         // the query is outside
     // then first check outside
-    if (right_child_ != NULL && oracle_->Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
+    if (right_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
        right_child_->GenericSearch(query, MaxLeavesToVisit);
 
+    /* 
+     * After potentially visiting the left child, we need to reclassify the node,
+     * because the query radius might have decreased.
+     */
+
     // after that inside
-    if (left_child_ != NULL && oracle_->Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
+    if (left_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
       left_child_->GenericSearch(query, MaxLeavesToVisit);
   }
 }
 
-template class VPTree<float, TriangIneq<float>, TriangIneqCreator<float> >;
-template class VPTree<double, TriangIneq<double>, TriangIneqCreator<double> >;
-template class VPTree<int, TriangIneq<int>, TriangIneqCreator<int> >;
-
-template class VPTree<float, SamplingOracle<float>, SamplingOracleCreator<float> >;
-template class VPTree<double, SamplingOracle<double>, SamplingOracleCreator<double> >;
-template class VPTree<int, SamplingOracle<int>, SamplingOracleCreator<int> >;
+template class VPTree<float, PolynomialPruner<float> >;
+template class VPTree<double, PolynomialPruner<double> >;
+template class VPTree<int, PolynomialPruner<int> >;
 
 }   // namespace similarity
 

@@ -139,6 +139,9 @@
     <ClCompile Include="memory.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="method\omedrank.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\distcomp.h">
@@ -339,8 +342,16 @@
     <ClInclude Include="..\include\space\space_vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\space\space_vector_gen.h" />
     <ClInclude Include="..\include\factory\space\space_savch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\space\space_vector_gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\method\omedrank.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\factory\method\omedrank.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

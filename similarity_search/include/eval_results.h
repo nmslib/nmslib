@@ -21,6 +21,7 @@
 #include <vector>
 #include <unordered_set>
 #include <memory>
+#include <stdexcept>
 #include <unordered_map>
 
 #include "utils.h"
@@ -37,60 +38,7 @@ using std::unordered_map;
 using std::vector;
 using std::sort;
 
-enum ClassResult {
-  kClassUnknown,
-  kClassCorrect,
-  kClassWrong,
-};
 
-template <class dist_t>
-class GoldStandard {
-public:
-  GoldStandard(const typename similarity::Space<dist_t>* space,
-              const ObjectVector& datapoints, 
-              const typename similarity::KNNQuery<dist_t>* query 
-              ) {
-    DoSeqSearch(space, datapoints, query->QueryObject());
-  }
-  GoldStandard(const typename similarity::Space<dist_t>* space,
-              const ObjectVector& datapoints, 
-              const typename similarity::RangeQuery<dist_t>* query 
-              ) {
-    DoSeqSearch(space, datapoints, query->QueryObject());
-  }
-  uint64_t GetSeqSearchTime()     const { return SeqSearchTime_; }
-
-  /* 
-   * SortedAllEntries_ include all database entries sorted in the order
-   * of increasing distance from the query.
-   */
-  const vector<ResultEntry<dist_t>>&   GetSortedEntries() const { return  SortedAllEntries_;}
-private:
-  void DoSeqSearch(const similarity::Space<dist_t>* space,
-                   const ObjectVector&              datapoints,
-                   const Object*                    query) {
-    WallClockTimer  wtm;
-
-    wtm.reset();
-
-    SortedAllEntries_.resize(datapoints.size());
-
-    for (size_t i = 0; i < datapoints.size(); ++i) {
-      // Distance can be asymmetric, but the query is always on the right side
-      SortedAllEntries_[i] = ResultEntry<dist_t>(datapoints[i]->id(), datapoints[i]->label(), space->IndexTimeDistance(datapoints[i], query));
-    }
-
-    wtm.split();
-
-    SeqSearchTime_ = wtm.elapsed();
-
-    std::sort(SortedAllEntries_.begin(), SortedAllEntries_.end());
-  }
-
-  uint64_t                            SeqSearchTime_;
-
-  vector<ResultEntry<dist_t>>         SortedAllEntries_;
-};
 
 template <class dist_t>
 class EvalResults {

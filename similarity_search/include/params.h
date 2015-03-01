@@ -24,6 +24,7 @@
 #include <memory>
 #include <sstream>
 #include <algorithm>
+#include <stdexcept>
 
 #include "logging.h"
 #include "utils.h"
@@ -53,13 +54,18 @@ public:
       vector<string>  OneParamPair;
       if (!SplitStr(Desc[i], OneParamPair, '=') ||
           OneParamPair.size() != 2) {
-        LOG(LIB_FATAL) << "Wrong format of an argument: '" << Desc[i] << "' should be in the format: <Name>=<Value>";
+        stringstream err;
+        err << "Wrong format of an argument: '" << Desc[i] << "' should be in the format: <Name>=<Value>";
+        LOG(LIB_ERROR)  << err.str();
+        throw runtime_error(err.str());
       }
       const string& Name = OneParamPair[0];
       const string& sVal = OneParamPair[1];
 
       if (seen.count(Name)) {
-        LOG(LIB_FATAL) << "Duplicate parameter: " << Name;
+        string err = "Duplicate parameter: " + Name;
+        LOG(LIB_ERROR)  << err;
+        throw runtime_error(err);
       }
       seen.insert(Name);
 
@@ -127,8 +133,25 @@ public:
       ParamValues[i] = str.str();
       return;
     }
-    LOG(LIB_FATAL) << "Parameter not found: " << Name;
+    string err = "Parameter not found: " + Name;
+    LOG(LIB_ERROR)  << err;
+    throw runtime_error(err);
   } 
+
+  template <typename ParamType> 
+  void AddChangeParam(const string& Name, const ParamType& Value) {
+    stringstream str;
+    str << Value;
+  
+    for (unsigned i = 0; i < ParamNames.size(); ++i) 
+    if (Name == ParamNames[i]) {
+      ParamValues[i] = str.str();
+      return;
+    }
+
+    ParamNames.push_back(Name);
+    ParamValues.push_back(str.str());
+  }
 
   AnyParams(){}
   AnyParams(const vector<string>& Names, const vector<string>& Values) 
@@ -145,7 +168,9 @@ class AnyParamManager {
 public:
   AnyParamManager(const AnyParams& params) : params(params), seen() {
     if (params.ParamNames.size() != params.ParamValues.size()) {
-      LOG(LIB_FATAL) << "Bug: different # of parameters and values";
+      string err = "Bug: different # of parameters and values";
+      LOG(LIB_ERROR) << err;
+      throw runtime_error(err);
     }
   }
 
@@ -190,15 +215,24 @@ public:
     return AnyParams(names, values);
   }
 
-  ~AnyParamManager() {
+  bool hasParam(const string& name) {
+    for (const string& s: params.ParamNames)
+    if (s == name) return true;
+    return false;
+  };
+
+  void CheckUnused() {
     bool bFail = false;
-    for (const auto Name: params.ParamNames) 
-    if (!seen.count(Name)) {
-      LOG(LIB_ERROR) << "Unknown parameter: " << Name;
-      bFail = true;
+    for (size_t i = 0; i < params.ParamNames.size(); ++i) {
+      const string& name = params.ParamNames[i];
+      if (seen.count(name) == 0) {
+        bFail = true;
+        LOG(LIB_ERROR) << "Unknown parameter: '" << name << "'";
+      }
     }
-    if (bFail) LOG(LIB_FATAL) << "Unknown parameters found, aborting!";
+    if (bFail) throw runtime_error("Unknown parameters found!"); 
   }
+
 private:
   const AnyParams&  params;
   set<string>       seen;
@@ -218,8 +252,10 @@ private:
 
     if (!bFound) {
       if (bRequired) {
-        // Here the program terminates
-        LOG(LIB_FATAL) << "Mandatory parameter: " << Name << " is missing!";
+        stringstream err;
+        err <<  "Mandatory parameter: '" << Name << "' is missing!";
+        LOG(LIB_ERROR) << err.str();
+        throw runtime_error(err.str());
       }
     }
     //LOG(LIB_INFO) << "@@@ Parameter: " << Name << "=" << Value << " @@@";
@@ -236,7 +272,10 @@ inline void AnyParamManager::ConvertStrToValue(const string& s, ParamType& Value
   stringstream str(s);
 
   if (!(str>>Value) || !str.eof()) {
-    LOG(LIB_FATAL) << "Failed to convert value '" << s << "' from type: " << typeid(Value).name();
+    stringstream err;
+    err << "Failed to convert value '" << s << "' from type: " << typeid(Value).name();
+    LOG(LIB_ERROR) << err.str();
+    throw runtime_error(err.str());
   }
 }
 
@@ -256,6 +295,9 @@ struct MethodWithParams {
 	                    methPars_(methPars) {}				
 };
 
+void ParseSpaceArg(const string& str, string& SpaceType, vector<string>& SpaceDesc);
+void ParseMethodArg(const string& str, string& MethName, vector<string>& MethodDesc);
+
 void ParseCommandLine(int argc, char *av[],
                       string&                 LogFile,
                       string&                 DistType,
@@ -268,6 +310,8 @@ void ParseCommandLine(int argc, char *av[],
                       unsigned&               TestSetQty,
                       string&                 DataFile,
                       string&                 QueryFile,
+                      string&                 CacheGSFilePrefix,
+                      size_t&                 MaxCacheGSQty,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,

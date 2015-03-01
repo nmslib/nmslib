@@ -23,38 +23,96 @@
 #include "knnquery.h"
 #include "incremental_quick_select.h"
 #include "method/permutation_inverted_index.h"
+#include "ported_boost_progress.h"
 #include "utils.h"
 
 namespace similarity {
 
 using namespace std;
 
+
+template <typename dist_t>
+vector<string>
+PermutationInvertedIndex<dist_t>::GetQueryTimeParamNames() const {
+  return vector<string>({"numPivotSearch", "maxPosDiff", "dbScanFrac", "knnAmp"});
+}
+    
+    
+template <typename dist_t>
+void 
+PermutationInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+  if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
+    throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
+  }
+  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
+    throw runtime_error("One should specify either dbScanFrac or knnAmp");
+  }
+  if (pmgr.hasParam("knnAmp")) {
+    db_scan_frac_ = 0;
+  } else {
+    knn_amp_ = 0;
+  }
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
+  pmgr.GetParamOptional("knnAmp",  knn_amp_);
+
+
+  pmgr.GetParamOptional("numPivotSearch", num_pivot_search_);
+  pmgr.GetParamOptional("maxPosDiff",     max_pos_diff_);
+
+  if (num_pivot_search_ > num_pivot_index_) {
+    stringstream err;
+    err << METH_PERM_INVERTED_INDEX << " requires that numPivotSearch "
+               << "should be less than or equal to numPivotIndex";
+    throw runtime_error(err.str());
+  }
+}
+   
+
 template <typename dist_t>
 PermutationInvertedIndex<dist_t>::PermutationInvertedIndex(
+    bool  PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
-    const size_t num_pivot,
-    const size_t num_pivot_index,
-    const size_t num_pivot_search,
-    const size_t max_pos_diff,
-    const double db_scan_fraction)
-    : data_(data),   // reference
-      db_scan_(static_cast<size_t>(db_scan_fraction * data.size())),
-      num_pivot_index_(min(num_pivot_index, num_pivot_search + max_pos_diff)),
-      num_pivot_search_(num_pivot_search),
-      max_pos_diff_(max_pos_diff) {
-  CHECK(num_pivot_search > 0);
-  CHECK(num_pivot_search <= num_pivot_index);
-  CHECK(num_pivot_index <= num_pivot);
-  LOG(LIB_INFO) << "# pivots             = " << num_pivot;
-  LOG(LIB_INFO) << "# pivots to index requested (ki)  = " << num_pivot_index;
-  LOG(LIB_INFO) << "# pivots to index effective (ki)  = " << num_pivot_index_;
-  LOG(LIB_INFO) << "# pivots search (ks) = " << num_pivot_search_;
-  LOG(LIB_INFO) << "# max position difference = " << max_pos_diff_;
+    AnyParams params)
+    : data_(data) {
+  db_scan_frac_     = 0;
+  knn_amp_          = 0;
+  num_pivot_        = 512;
+  num_pivot_index_  = 32;
+  num_pivot_search_ = 16;
+  max_pos_diff_ = num_pivot_;
 
-  GetPermutationPivot(data, space, num_pivot, &pivot_);
+  AnyParamManager pmgr(params);
 
-  posting_lists_.resize(num_pivot);
+  pmgr.GetParamOptional("numPivot", num_pivot_);
+  pmgr.GetParamOptional("numPivotIndex", num_pivot_index_);
+
+  SetQueryTimeParamsInternal(pmgr);
+
+  pmgr.CheckUnused();
+
+  if (num_pivot_index_ > num_pivot_) {
+    stringstream err;
+    err << METH_PERM_INVERTED_INDEX << " requires that numPivotIndex "
+               << "should be less than or equal to numPivot";
+    throw runtime_error(err.str());
+  }
+
+  LOG(LIB_INFO) << "# pivots             = "              << num_pivot_;
+  LOG(LIB_INFO) << "# pivots to index requested (ki)  = " << num_pivot_index_;
+  LOG(LIB_INFO) << "# pivots to search (ks) = "           << num_pivot_search_;
+  LOG(LIB_INFO) << "# max position difference = "         << max_pos_diff_;
+  LOG(LIB_INFO) << "# dbScanFrac              = "         << db_scan_frac_;
+  LOG(LIB_INFO) << "# knnAmp                  = "         << knn_amp_;
+
+  unique_ptr<ProgressDisplay>   progress_bar(PrintProgress ? 
+                                              new ProgressDisplay(data.size(), cerr):
+                                              NULL);
+
+
+  GetPermutationPivot(data, space, num_pivot_, &pivot_);
+
+  posting_lists_.resize(num_pivot_);
 
 
   for (size_t id = 0; id < data.size(); ++id) {
@@ -65,9 +123,13 @@ PermutationInvertedIndex<dist_t>::PermutationInvertedIndex(
         posting_lists_[j].push_back(ObjectInvEntry(id, perm[j]));
       }
     }
+  if (progress_bar) ++(*progress_bar);
   }
   for (size_t j = 0; j < posting_lists_.size(); ++j) {
     sort(posting_lists_[j].begin(), posting_lists_[j].end());
+  }
+  if (progress_bar) { // make it 100%
+    (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
   }
 }
 
@@ -84,11 +146,24 @@ const string PermutationInvertedIndex<dist_t>::ToString() const {
 
 template <typename dist_t>
 template <typename QueryType>
-void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
+void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
+  // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
+  // a strange error message that says: dbScanFrac should be in the range [0,1].
+  if (!knn_amp_) {
+    if (db_scan_frac_ < 0.0 || db_scan_frac_ > 1.0) {
+      stringstream err;
+      err << METH_PERM_INVERTED_INDEX << " requires that dbScanFrac is in the range [0,1]";
+      throw runtime_error(err.str());
+    }
+  }
+
+
+  size_t db_scan = computeDbScan(K);
+
   Permutation perm_q;
   GetPermutation(pivot_, query, &perm_q);
-  vector<vector<ObjectInvEntry>::iterator>  iterBegs;
-  vector<vector<ObjectInvEntry>::iterator>  iterEnds;
+  vector<typename vector<typename PermutationInvertedIndex<dist_t>::ObjectInvEntry>::iterator>  iterBegs;
+  vector<typename vector<typename PermutationInvertedIndex<dist_t>::ObjectInvEntry>::iterator>  iterEnds;
 
   size_t maxScanQty = 0;
 
@@ -176,8 +251,14 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
       }
     }
   }
+  size_t scan_qty = min(db_scan, perm_dists.size());
 
-  size_t scan_qty = min(db_scan_, perm_dists.size());
+  if (!scan_qty) {
+    stringstream err;
+    err << "One should specify a proper value for either dbScanFrac or knnAmp" <<
+               " currently, dbScanFrac=" << db_scan_frac_ << " knnAmp=" << knn_amp_;
+    throw runtime_error(err.str());
+  }
 
   IncrementalQuickSelect<IntInt> quick_select(perm_dists);
   for (size_t i = 0; i < scan_qty; ++i) {
@@ -190,13 +271,13 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query) {
 template <typename dist_t>
 void PermutationInvertedIndex<dist_t>::Search(
     RangeQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, 0);
 }
 
 template <typename dist_t>
 void PermutationInvertedIndex<dist_t>::Search(
     KNNQuery<dist_t>* query) {
-  GenSearch(query);
+  GenSearch(query, query->GetK());
 }
 
 template class PermutationInvertedIndex<float>;

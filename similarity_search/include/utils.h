@@ -30,6 +30,7 @@
 #include <typeinfo>
 #include <random>
 #include <climits>
+#include <stdexcept>
 
 // compiler_warning.h
 #define STRINGISE_IMPL(x) #x
@@ -66,6 +67,8 @@
 typedef SSIZE_T ssize_t;
 #endif
 
+#define FIELD_DELIMITER ':'
+
 namespace similarity {
 
 using std::string;
@@ -81,9 +84,9 @@ const char* GetFileName(const char* fullpath);
 
 bool CreateDir(const char* name, int mode = 0777);
 
-bool IsFileExists(const char* filename);
+bool DoesFileExist(const char* filename);
 
-inline bool IsFileExists(const string& filename) { return IsFileExists(filename.c_str()); }
+inline bool DoesFileExist(const string& filename) { return DoesFileExist(filename.c_str()); }
 
 inline int RandomInt() {
     // Static is thread-safe in C++ 11
@@ -115,6 +118,13 @@ double Variance(const double* array, const unsigned size, const double mean);
 double StdDev(const double* array, const unsigned size);
 
 /*
+ * A maximum number of random operations (e.g. while searching
+ * for a pivot with given properties) before giving up and firing
+ * an exception.
+ */
+#define MAX_RAND_ITER_BEFORE_GIVE_UP 100000
+
+/*
  * We want to avoid an overflow in the case when the distance is an integer type.
  */
 template <typename dist_t>
@@ -140,6 +150,11 @@ inline double round3(double x) { return round(x*1000.0)/1000.0; }
 /*
  * This function will only work for strings without spaces
  * TODO(@leo) replace, perhaps, it with a more generic version
+ * Another TODO is to get rid of all streams all together,
+ * because they are horribly slow. Does it affect our performance?
+ *
+ * See, e.g. Leo's rant here:
+ * http://searchivarius.org/blog/branchless-code-would-leave-you-speechless-c-streams-are-super-expensive
  */
 template <typename ElemType>
 inline bool SplitStr(const std::string& str_, vector<ElemType>& res, const char SplitChar) {
@@ -162,13 +177,65 @@ inline bool SplitStr(const std::string& str_, vector<ElemType>& res, const char 
   return true;
 }
 
+  /*
+   * "fields" each occupy a single line, they are in the format:
+   * fieldName:fieldValue.
+   */
+
+// Returns false if the line is empty
+inline void ReadField(istream &in, const string& fieldName, string& fieldValue) {
+  string s;
+  if (!getline(in, s)) throw runtime_error("Error reading a field value");
+  if (s.empty()) {
+    throw runtime_error("Empty field!");
+  }
+  string::size_type p = s.find(FIELD_DELIMITER);
+  if (string::npos == p)
+    throw runtime_error("Wrong field format, no delimiter: '" + s + "'");
+  string gotFieldName = s.substr(0, p);
+  if (gotFieldName != fieldName) {
+    throw runtime_error("Expected field '" + fieldName + "' but got: '"
+                        + gotFieldName + "'");
+  }
+  fieldValue = s.substr(p + 1);
+}
+
+inline void WriteField(ostream& out, const string& fieldName, const string& fieldValue) {
+  if (!(out << fieldName << ":" << fieldValue << std::endl)) {
+    throw
+      runtime_error("Error writing to an output stream, field name: " + fieldName);
+  }
+}
+
+template <typename obj_type>
+string ConvertToString(const obj_type& o) {
+  std::stringstream str;
+  str << o;
+  return str.str();
+}
+
+template <typename obj_type>
+void ConvertFromString(const string& s, obj_type& o) {
+  std::stringstream str(s);
+  if (!(str >> o) || !str.eof()) {
+    throw runtime_error("Cannot convert '" + s +
+                        "' to the type:" + string(typeid(obj_type).name()));
+  }
+}
+
 inline void ToLower(string &s) {
   for (size_t i = 0; i < s.size(); ++i) s[i] = std::tolower(s[i]);
 }
 
+inline bool StartsWith(const std::string& str, const std::string& prefix) {
+  return str.length() >= prefix.length() &&
+         str.substr(0, prefix.length()) == prefix;
+}
+
 // Don't remove period here
 inline void ReplaceSomePunct(string &s) {
-  for (size_t i = 0; i < s.size(); ++i) if (s[i] == ',' || s[i] == ':') s[i] = ' ';
+  for (size_t i = 0; i < s.size(); ++i)
+    if (s[i] == ',' || s[i] == FIELD_DELIMITER) s[i] = ' ';
 }
 
 template <class T>

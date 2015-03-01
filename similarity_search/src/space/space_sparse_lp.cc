@@ -29,7 +29,7 @@ namespace similarity {
 
 template <typename dist_t>
 dist_t SpaceSparseLp<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
-  return SpaceSparseVector<dist_t>::ComputeDistanceHelper(obj1, obj2, distObj_);
+  return SpaceSparseVectorSimpleStorage<dist_t>::ComputeDistanceHelper(obj1, obj2, distObj_);
 }
 
 template <typename dist_t>

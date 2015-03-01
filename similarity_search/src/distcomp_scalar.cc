@@ -24,7 +24,7 @@ namespace similarity {
 
 using namespace std;
 /*
- * Scalar-product
+ * Scalar-product (divided by Euclidean vector norms)
  *
  * TODO: @leo implement a more efficient version
  */
@@ -60,6 +60,128 @@ T NormScalarProduct(const T *p1, const T *p2, size_t qty)
 
 template float  NormScalarProduct<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double NormScalarProduct<double>(const double* pVect1, const double* pVect2, size_t qty);
+
+/*
+ * Scalar products that are not normalized.
+ */
+
+template <class T>
+T ScalarProduct(const T *p1, const T *p2, size_t qty) { 
+    T sum = 0;
+
+    for (size_t i = 0; i < qty; i++) { 
+      sum += p1[i] * p2[i];
+    }
+    return sum;
+}
+
+template float  ScalarProduct<float>(const float* pVect1, const float* pVect2, size_t qty);
+template double ScalarProduct<double>(const double* pVect1, const double* pVect2, size_t qty);
+
+/* 
+ * On new architectures unaligned loads are almost as fast as aligned ones. 
+ * Ensuring that both pVect1 and pVect2 are similarly aligned could be hard.
+ */
+
+template <> 
+float ScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
+#ifndef PORTABLE_SSE2
+#pragma message WARN("ScalarProductSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
+    return ScalarProduct(pVect1, pVect2, qty);
+#else
+    size_t qty16  = qty/16;
+    size_t qty4  = qty/4;
+
+    const float* pEnd1 = pVect1 + 16  * qty16;
+    const float* pEnd2 = pVect1 + 4  * qty4;
+    const float* pEnd3 = pVect1 + qty;
+
+    __m128  v1, v2; 
+    __m128  sum = _mm_set1_ps(0); 
+
+    while (pVect1 < pEnd1) {
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum  = _mm_add_ps(sum, _mm_mul_ps(v1, v2));
+
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum  = _mm_add_ps(sum, _mm_mul_ps(v1, v2));
+
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum  = _mm_add_ps(sum, _mm_mul_ps(v1, v2));
+
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum  = _mm_add_ps(sum, _mm_mul_ps(v1, v2));
+    }
+
+    while (pVect1 < pEnd2) {
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum  = _mm_add_ps(sum, _mm_mul_ps(v1, v2));
+    }
+
+    float PORTABLE_ALIGN16 TmpRes[4];
+
+    _mm_store_ps(TmpRes, sum);
+    float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
+
+    while (pVect1 < pEnd3) {
+        res += (*pVect1) * (*pVect2); 
+        ++pVect1; ++pVect2;
+    }
+
+    return res;
+#endif
+}
+
+template <> 
+double ScalarProductSIMD(const double* pVect1, const double* pVect2, size_t qty) {
+#ifndef PORTABLE_SSE2
+#pragma message WARN("ScalarProductSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
+    return ScalarProduct(pVect1, pVect2, qty);
+#else
+    size_t qty4 = qty/4;
+    size_t qty2 = qty/2;
+
+    const double* pEnd1 = pVect1 + 4 * qty4;
+    const double* pEnd2 = pVect1 + 2 * qty2;
+    const double* pEnd3 = pVect1 + qty;
+
+    __m128d  v1, v2; 
+    __m128d  sum = _mm_set1_pd(0); 
+
+    while (pVect1 < pEnd1) {
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum  = _mm_add_pd(sum, _mm_mul_pd(v1, v2));
+
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum  = _mm_add_pd(sum, _mm_mul_pd(v1, v2));
+    }
+
+    while (pVect1 < pEnd2) {
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum  = _mm_add_pd(sum, _mm_mul_pd(v1, v2));
+    }
+
+    double PORTABLE_ALIGN16 TmpRes[2];
+
+    _mm_store_pd(TmpRes, sum);
+    double res= TmpRes[0] + TmpRes[1];
+
+    while (pVect1 < pEnd3) {
+        res += (*pVect1) * (*pVect2); 
+        ++pVect1; ++pVect2;
+    }
+
+    return res;
+#endif
+}
 
 /*
  * Angular distance (a proper metric)

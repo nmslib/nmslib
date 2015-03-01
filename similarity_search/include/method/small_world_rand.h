@@ -157,9 +157,10 @@ struct SearchThreadParams {
 template <typename dist_t>
 class SmallWorldRand : public Index<dist_t> {
 public:
-  SmallWorldRand(const Space<dist_t>* space,
-                        const ObjectVector& data,
-                        const AnyParams& MethParams);
+  SmallWorldRand(bool PrintProgress,
+                 const Space<dist_t>* space,
+                 const ObjectVector& data,
+                 const AnyParams& MethParams);
   ~SmallWorldRand();
 
   typedef std::vector<MSWNode*> ElementList;

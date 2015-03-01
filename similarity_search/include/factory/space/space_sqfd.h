@@ -1,0 +1,59 @@
+/**
+ * Non-metric Space Library
+ *
+ * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+ *
+ * For the complete list of contributors and further details see:
+ * https://github.com/searchivarius/NonMetricSpaceLib
+ *
+ * Copyright (c) 2014
+ *
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
+
+#ifndef FACTORY_SPACE_SQFD_H
+#define FACTORY_SPACE_SQFD_H
+
+#include "space/space_sqfd.h"
+
+namespace similarity {
+
+/*
+ * Creating functions.
+ */
+
+template <typename dist_t>
+Space<dist_t>* CreateSqfdHeuristicFunc(const AnyParams& AllParams) {
+  AnyParamManager pmgr(AllParams);
+
+  dist_t alpha;
+  pmgr.GetParamRequired("alpha", alpha);
+
+  return new SpaceSqfd<dist_t>(new SqfdHeuristicFunction<dist_t>(alpha));
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateSqfdMinusFunc(const AnyParams& ignore) {
+  return new SpaceSqfd<dist_t>(new SqfdMinusFunction<dist_t>);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateSqfdGaussianFunc(const AnyParams& AllParams) {
+  AnyParamManager pmgr(AllParams);
+
+  dist_t alpha;
+  pmgr.GetParamRequired("alpha", alpha);
+
+  return new SpaceSqfd<dist_t>(new SqfdGaussianFunction<dist_t>(alpha));
+}
+
+/*
+ * End of creating functions.
+ */
+
+}
+
+#endif

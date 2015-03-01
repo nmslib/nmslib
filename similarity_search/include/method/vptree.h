@@ -17,26 +17,29 @@
 #define _VPTREE_H_
 
 #include <string>
+#include <vector>
+#include <memory>
 
 #include "index.h"
 #include "params.h"
+#include "ported_boost_progress.h"
 
 #define METH_VPTREE          "vptree"
-#define METH_VPTREE_SAMPLE   "vptree_sample"
 
 namespace similarity {
 
 using std::string;
+using std::vector;
+using std::unique_ptr;
 
 // Vantage point tree
 
 template <typename dist_t> class Space;
 
-template <typename dist_t, typename SearchOracle, typename SearchOracleCreator>
+template <typename dist_t, typename SearchOracle>
 class VPTree : public Index<dist_t> {
  public:
   VPTree(bool  PrintProgress,
-         const SearchOracleCreator& OracleCreator,
          const Space<dist_t>* space,
          const ObjectVector& data,
          const AnyParams& MethParams,
@@ -48,20 +51,24 @@ class VPTree : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
+  vector<string> GetQueryTimeParamNames() const { return oracle_.GetParams(); }
+
  private:
+  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) { 
+    oracle_.SetParams(pmgr); 
+    pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
+  }
+
   class VPNode {
    public:
     // We want trees to be balanced
     const size_t BalanceConst = 4; 
 
-    VPNode(bool     PrintProgress,
-           unsigned level,
-           size_t   TotalQty,
-           size_t&  IndexedQty,
-           const SearchOracleCreator& OracleCreator,
+    VPNode(unsigned level,
+           ProgressDisplay* progress_bar,
+           const SearchOracle&  oracle,
            const Space<dist_t>* space, const ObjectVector& data,
            size_t BucketSize, bool ChunkBucket,
-           const string& SaveHistFileName,
            bool use_random_center, bool is_root);
     ~VPNode();
 
@@ -70,8 +77,9 @@ class VPTree : public Index<dist_t> {
 
    private:
     void CreateBucket(bool ChunkBucket, const ObjectVector& data, 
-                      bool PrintProgress,
-                      size_t&  IndexedQty, size_t   TotalQty);
+                      ProgressDisplay* progress_bar);
+    const SearchOracle& oracle_; // The search oracle must be accessed by reference,
+                                 // so that VP-tree may be able to change its parameters
     const Object* pivot_;
     /* 
      * Even if dist_t is double, or long double
@@ -81,18 +89,17 @@ class VPTree : public Index<dist_t> {
     float         mediandist_;
     VPNode*       left_child_;
     VPNode*       right_child_;
-    SearchOracle* oracle_;
     ObjectVector* bucket_;
     char*         CacheOptimizedBucket_;
 
     friend class VPTree;
   };
 
-  VPNode* root_;
-  size_t  BucketSize_;
-  int     MaxLeavesToVisit_;
-  bool    ChunkBucket_;
-  string  SaveHistFileName_;
+  SearchOracle    oracle_;
+  VPNode*         root_;
+  size_t          BucketSize_;
+  int             MaxLeavesToVisit_;
+  bool            ChunkBucket_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(VPTree);
 };
@@ -100,4 +107,4 @@ class VPTree : public Index<dist_t> {
 
 }   // namespace similarity
 
-#endif     // _VPTREE_H_
+#endif

@@ -31,35 +31,12 @@ Index<dist_t>* CreatePermutationIndexIncrementalBin(bool PrintProgress,
                            const Space<dist_t>* space,
                            const ObjectVector& dataObjects,
                            const AnyParams& allParams) {
-  AnyParamManager pmgr(allParams);
-
-  double    dbScanFrac = 0.05;
-  size_t    numPivot   = 16;
-  size_t    binThres   = 8;
-  bool      skipChecking = false;
-  bool      useSort    = true;
-  size_t    maxHammingDist = numPivot = 4;
-
-  pmgr.GetParamOptional("dbScanFrac",   dbScanFrac);
-  pmgr.GetParamOptional("numPivot",     numPivot);
-  pmgr.GetParamOptional("binThreshold", binThres);
-  pmgr.GetParamOptional("skipChecking", skipChecking);
-  pmgr.GetParamOptional("useSort",      useSort);
-  pmgr.GetParamOptional("maxHammingDist", maxHammingDist);
-
-  if (dbScanFrac < 0.0 || dbScanFrac > 1.0) {
-    LOG(LIB_FATAL) << METH_PERMUTATION_INC_SORT_BIN << " requires that dbScanFrac is in the range [0,1]";
-  }
 
   return new PermutationIndexIncrementalBin<dist_t, SpearmanRhoSIMD>(
+                                                       PrintProgress,
                                                        space,
                                                        dataObjects,
-                                                       numPivot,
-                                                       binThres,
-                                                       dbScanFrac,
-                                                       maxHammingDist,
-                                                       useSort,
-                                                       skipChecking);
+                                                       allParams);
 
 }
 

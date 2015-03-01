@@ -34,14 +34,18 @@ namespace similarity {
 
 using std::string;
 using std::stringstream;
+using std::numeric_limits;
 
-#define LABEL_PREFIX "label:"
+
 
 /* 
  * Structure of object: | 4-byte id | 4-byte label | 8-byte datasize | data ........ |
  * We need data to be aligned on 8-byte boundaries.
  * 
- * See: http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
+ * TODO this all apparenlty hinges on the assumption that malloc() gives addresses
+ *      that are 8-bye aligned. So, this is related to issue #9
+ *
+ * See also http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
  */
 
 /* 
@@ -50,6 +54,9 @@ using std::stringstream;
  */
 typedef int32_t IdType;
 typedef int32_t LabelType;
+
+#define LABEL_PREFIX "label:"
+#define EMPTY_LABEL  numeric_limits<LabelType>::min()
 
 const size_t ID_SIZE         = sizeof(IdType);
 const size_t LABEL_SIZE      = sizeof(LabelType);
@@ -119,7 +126,7 @@ class Object {
   static LabelType extractLabel(string& fileLine) {
     static string labelPrefix = LABEL_PREFIX; // thread-safe in C++11
 
-    LabelType res = -1;
+    LabelType res = EMPTY_LABEL;
     if (fileLine.size() > labelPrefix.size() + 1 &&
         fileLine.substr(0, labelPrefix.size()) == labelPrefix) {
       int p = -1;
