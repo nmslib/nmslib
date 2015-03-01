@@ -85,8 +85,8 @@ void DistExampleFromPaper() {
   VR wo = {0.5, 0.25, 0.25};
   auto o = FeatureSignaturePtr(new FeatureSignature(co, wo));
 
-  float d = SQFD(simfunc, q, o);   // it gives 0.652 not 0.808
-  if (fabs(d - 0.652) > kEPS) {
+  float d = SQFD(simfunc, q, o);
+  if (fabs(d - 0.808) > kEPS) {
     std::cerr << "incorrect distance " << d << std::endl;
     exit(1);
   }
@@ -94,14 +94,15 @@ void DistExampleFromPaper() {
 
   /*
   >>> import numpy as np
+  >>> import math
   >>> w = np.array([0.5,0.5,-0.5,-0.25,-0.25])
   >>> a = np.array([[1.0, 0.135, 0.195, 0.137, 0.157],
                     [0.135, 1.0, 0.2, 0.309, 0.143],
                     [0.195, 0.2, 1.0, 0.157, 0.122],
                     [0.137, 0.309, 0.157, 1.0, 0.195],
                     [0.157, 0.143, 0.122, 0.195, 1.0]])
-  >>> w.dot(a).dot(w.transpose())
-  0.652625
+  >>> math.sqrt(w.dot(a).dot(w.transpose()))
+  0.807
   */
 }
 
