@@ -32,11 +32,7 @@
 namespace similarity {
 
 /*
- * The VP-tree build over random projections.
- * This is designed to work only with SPARSE vector spaces.
- *
- * NOT READY FOR PRIME TIME!
- *
+ * The VP-tree build over projections.
  */
 template <typename dist_t>
 class ProjectionVPTree : public Index<dist_t> {

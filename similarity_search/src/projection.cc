@@ -206,6 +206,44 @@ private:
   size_t dstDim_;
 };
 
+template <typename dist_t>
+class ProjectionPermutationTrunc : public Projection<dist_t> {
+public:
+  virtual void compProj(const Query<dist_t>* pQuery,
+                        const Object* pObj,
+                        float* pDstVect) const {
+    Permutation perm;
+
+    if (NULL == pQuery) {
+      GetPermutation(ref_pts_, space_, pObj, &perm);
+    } else {
+      GetPermutation(ref_pts_, pQuery, &perm);
+    }
+
+    for (size_t i = 0; i < dstDim_; ++i) {
+      pDstVect[i] = perm[i] <= trunc_threshold_ ? static_cast<float>(perm[i]) : 0;
+    }
+
+  }
+
+  friend class Projection<dist_t>;
+
+private:
+  ProjectionPermutationTrunc(const Space<dist_t>* space,
+                             const ObjectVector& data,
+                             size_t nDstDim,
+                             unsigned trunc_threshold) : space_(space), data_(data),
+                                           dstDim_(nDstDim), 
+                                           trunc_threshold_(trunc_threshold) {
+    GetPermutationPivot(data_, space_, nDstDim, &ref_pts_);
+  }
+  const Space<dist_t>*        space_;
+  const ObjectVector&         data_;
+  ObjectVector                ref_pts_;
+  size_t                      dstDim_;
+  unsigned                    trunc_threshold_;
+};
+
 // Binarized permutations
 template <typename dist_t>
 class ProjectionPermutationBin : public Projection<dist_t> {
@@ -340,6 +378,8 @@ Projection<dist_t>::createProjection(const Space<dist_t>* space,
     return new ProjectionRandRefPoint<dist_t>(space, data, nDstDim);
   } else if (PROJ_TYPE_PERM == projType) {
     return new ProjectionPermutation<dist_t>(space, data, nDstDim);
+  } else if (PROJ_TYPE_PERM_TRUNC == projType) {
+    return new ProjectionPermutationTrunc<dist_t>(space, data, nDstDim, binThreshold);
   } else if (PROJ_TYPE_PERM_BIN == projType) {
     return new ProjectionPermutationBin<dist_t>(space, data, nDstDim, binThreshold);
   } else if (PROJ_TYPE_VECTOR_DENSE == projType) {

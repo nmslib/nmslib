@@ -32,6 +32,8 @@
 #define PROJ_TYPE_FAST_MAP        "fastmap"       
 // Integer value permutations
 #define PROJ_TYPE_PERM            "perm"
+// Integer value truncted permutations
+#define PROJ_TYPE_PERM_TRUNC      "permtrunc"
 // Binarized permutations: note that the result is nevertheless saved as floating-point vector
 #define PROJ_TYPE_PERM_BIN        "permbin"
 // Dense vectors remain unchanged, sparsed vectors are "hashed" into dense ones
