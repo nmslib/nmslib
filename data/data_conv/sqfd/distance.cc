@@ -14,6 +14,7 @@
  *
  */
 
+#include <math.h>
 #include "distance.h"
 
 namespace sqfd {
@@ -75,7 +76,7 @@ float SQFD(std::shared_ptr<SimilarityFunction> simfunc,
     }
   }
   auto res = W.transpose() * A * W;
-  return res(0,0);
+  return sqrt(res(0,0));
 }
 
 }
