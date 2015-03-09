@@ -12,7 +12,7 @@ Leo(nid) Boytsov is a maintainer.
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, and debugging the code using Eclipse.
+A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -136,7 +136,7 @@ We **are** aware of other (numerous) papers on building and querying k-NN graphs
 * The greedy construction algorithm published by Krylov et al. in 2008;
 * The *open-source* version of the NN-Descent algorithm due to Dong et al. 2011. This version comes without a search algorithm. Therefore, we use the same search algorithm as Krylov et al. 2008. There is also a *closed-source*, binary-only, version that does include the search algorithm. It can be found [by following this link](http://www.kgraph.org/).
 
-Most important related papers are cited below: 
+Most important related papers are listed below in the chronological order: 
 
 * Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)
 * Boytsov, L., Bilegsaikhan, N., 2013. [Engineering Efficient and Effective Non-Metric Space Library.](http://boytsov.info/pubs/sisap2013.pdf)   In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13)  
