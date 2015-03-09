@@ -17,18 +17,9 @@ A detailed description is given [in the manual](docs/manual.pdf). The manual als
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
 
-The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
+To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13). Some other related papers are listed in the end.
 
-Related papers are cited below. We **are** aware of other (numerous) papers on building and querying proximity (knn) graphs. However, we have not adopted any of them yet. In our library, we are currently using only the greedy construction algorithm published by Krylov et al in 2008 (see below).
-
-* Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)
-* Boytsov, L., Bilegsaikhan, N., 2013. [Engineering Efficient and Effective Non-Metric Space Library.](http://boytsov.info/pubs/sisap2013.pdf)   In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13)  
-* Boytsov, L., Bilegsaikhan, N., 2013. [Learning to Prune in Metric and Non-Metric Spaces.](http://boytsov.info/pubs/nips2013.pdf)   In Advances in Neural Information Processing Systems 2013. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/nips/BoytsovN13)      
-* L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
-
-* Krylov, V., Logvinov, A., Ponomarenko, A., Ponomarev, D., 2008. [Metrized Small World Properties Based Data Structure.](http://www.researchgate.net/publication/228829307_Metrized_small_world_properties_based_data_structure/file/72e7e52a020d9c040a.pdf) In SEDE (pp. 203-208). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sede/KrylovLPP08)
-
-To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13),   
+The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. The k-NN graph construction algorithm *NN-Descent* (due to Dong et al, see the links below), which is also embedded into our library, seems to be covered by a less restrictive license (close to Apache 2).
 
 
 Prerequisites
@@ -137,6 +128,21 @@ To acknowledge the use in an academic publication:
 } 
 ```
 
+Related publications
+-----------------------
+
+Most important related papers are cited below. We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
+
+* The greedy construction algorithm published by Krylov et al. in 2008;
+* The *open-source* version of the NN-Descent algorithm due to Dong et al. 2011. This version comes without a search algorithm. Therefore, we use the same search algorithm as Krylov et al. 2008. There is also a *closed-source*, binary-only, version that does include the search algorithm. It can be found [by following this link](http://www.kgraph.org/).
+
+* Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)
+* Boytsov, L., Bilegsaikhan, N., 2013. [Engineering Efficient and Effective Non-Metric Space Library.](http://boytsov.info/pubs/sisap2013.pdf)   In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13)  
+* Boytsov, L., Bilegsaikhan, N., 2013. [Learning to Prune in Metric and Non-Metric Spaces.](http://boytsov.info/pubs/nips2013.pdf)   In Advances in Neural Information Processing Systems 2013. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/nips/BoytsovN13)
+* Dong, Wei, Charikar Moses, and Kai Li. 2011. ["Efficient k-nearest neighbor graph construction for generic similarity measures."](http://wwwconference.org/proceedings/www2011/proceedings/p577.pdf) Proceedings of the 20th international conference on World wide web. ACM, 2011.
+[**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/mir/DongWCL12)
+* L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
+* Krylov, V., Logvinov, A., Ponomarenko, A., Ponomarev, D., 2008. [Metrized Small World Properties Based Data Structure.](http://www.researchgate.net/publication/228829307_Metrized_small_world_properties_based_data_structure/file/72e7e52a020d9c040a.pdf) In SEDE (pp. 203-208). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sede/KrylovLPP08)
 
 
 
