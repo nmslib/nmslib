@@ -131,10 +131,12 @@ To acknowledge the use in an academic publication:
 Related publications
 -----------------------
 
-Most important related papers are cited below. We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
+We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
 
 * The greedy construction algorithm published by Krylov et al. in 2008;
 * The *open-source* version of the NN-Descent algorithm due to Dong et al. 2011. This version comes without a search algorithm. Therefore, we use the same search algorithm as Krylov et al. 2008. There is also a *closed-source*, binary-only, version that does include the search algorithm. It can be found [by following this link](http://www.kgraph.org/).
+
+Most important related papers are cited below: 
 
 * Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)
 * Boytsov, L., Bilegsaikhan, N., 2013. [Engineering Efficient and Effective Non-Metric Space Library.](http://boytsov.info/pubs/sisap2013.pdf)   In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13)  
