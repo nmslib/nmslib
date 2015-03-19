@@ -75,10 +75,11 @@ const static __m128i shuffle_mask16[16] = {
  * 1) The original algorithm was used to obtain only IDs.
  *    to extract both IDs and respective floating-point values,
  *    we need to call _mm_cmpistrm twice. 
- * 2) During partitioning we scale ids so that 
+ * 2) During partitioning we transform ids so that 
  *    none of them is a multiple of 65536.
  *    The latter trick allows us to employ a slightly faster
- *    version of the _mm_cmpistrm.
+ *    version of the _mm_cmpistrm without worrying about
+ *    zero values (handling those requires a check).
  *
  */
 float ScalarProductFast(const char* pData1, size_t len1,
