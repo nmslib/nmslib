@@ -38,9 +38,51 @@ static void Usage(const char *prog,
 }
 
 template <typename dist_t>
+void ComputeMuDeffect(const Space<dist_t>& space, 
+                    const ObjectVector& dataset,
+                    double & dleft, double & dright,
+                    size_t SampleQty = 1000000) {
+  dleft = dright = -1;
+  for (size_t n = 0; n < SampleQty; ++n) {
+    size_t r1 = RandomInt() % dataset.size();
+    size_t r2 = RandomInt() % dataset.size();
+    size_t r3 = RandomInt() % dataset.size();
+    CHECK(r1 < dataset.size());
+    CHECK(r2 < dataset.size());
+    CHECK(r3 < dataset.size());
+    const Object* q = dataset[r1];
+    const Object* a = dataset[r2];
+    const Object* b = dataset[r3];
+    {
+      dist_t d1 = space.IndexTimeDistance(q, a);
+      dist_t d2 = space.IndexTimeDistance(q, b);
+      dist_t d3 = space.IndexTimeDistance(a, b);
+      if (ISNAN(d1) || ISNAN(d2) || ISNAN(d3)) {
+        LOG(LIB_FATAL) << "!!! Bug: a distance returned NAN!";
+      }
+      if (d3 != 0) {
+        dright = max(dright, (double)fabs(double(d1)-double(d2))/double(d3));
+      }
+    }
+    {
+      dist_t d1 = space.IndexTimeDistance(a, q);
+      dist_t d2 = space.IndexTimeDistance(b, q);
+      dist_t d3 = space.IndexTimeDistance(b, a);
+      if (ISNAN(d1) || ISNAN(d2) || ISNAN(d3)) {
+        LOG(LIB_FATAL) << "!!! Bug: a distance returned NAN!";
+      }
+      if (d3 != 0) {
+        dleft = max(dleft, (double)fabs(double(d1)-double(d2))/double(d3));
+      }
+    }
+  }
+}
+
+template <typename dist_t>
 void TestSpace(
                 string spaceDesc,
                 string dataFile,
+                bool compMuDeffect,
                 unsigned maxNumData,
                 unsigned sampleQty
                ) {
@@ -58,6 +100,16 @@ void TestSpace(
 
   // Prints the report
   ReportIntrinsicDimensionality("********", *space, data, sampleQty);
+  if (compMuDeffect) {
+    double    dleft, dright;
+    ComputeMuDeffect<dist_t>(
+                  *space,
+                  data,
+                  dleft, dright,
+                  sampleQty
+                 );
+    LOG(LIB_INFO) << "### left mu-defect. : " << dleft << " right mu-defect. :" << dright;
+  }
 }
 
 int main(int argc, char* argv[]) {
@@ -65,6 +117,7 @@ int main(int argc, char* argv[]) {
   string    dataFile;
   unsigned  maxNumData;
   unsigned  sampleQty;
+  bool      compMuDeffect;
 
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
@@ -79,6 +132,9 @@ int main(int argc, char* argv[]) {
                         "if non-zero, only the first maxNumData elements are used")
     ("sampleQty",       po::value<unsigned>(&sampleQty)->default_value(defaultSampleQty),
                         "a number of samples (a sample is a pair of data points)")
+    ("muDeffect,m",     po::value<bool>(&compMuDeffect)->default_value(false),
+                        "estimate the left and the right mu deffectiveness")
+    
   ;
 
   po::variables_map vm;
@@ -96,13 +152,15 @@ int main(int argc, char* argv[]) {
       TestSpace<int>(
                   spaceDesc,
                   dataFile,
+                  compMuDeffect,
                   maxNumData,
                   sampleQty
-                 );
+                );
     } else if (DIST_TYPE_FLOAT == distType) {
       TestSpace<float>(
                   spaceDesc,
                   dataFile,
+                  compMuDeffect,
                   maxNumData,
                   sampleQty
                  );
@@ -110,6 +168,7 @@ int main(int argc, char* argv[]) {
       TestSpace<double>(
                   spaceDesc,
                   dataFile,
+                  compMuDeffect,
                   maxNumData,
                   sampleQty
                  );
