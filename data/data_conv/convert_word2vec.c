@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
   for (a = 0; a < words; a++){
     printf("%s ",&vocab[a * max_w]);
     for (b = 0; b< size; b++){ printf("%f ",M[a*size + b]); }
-    printf("\b\b\n");
+    printf("\n");
   }  
 
   return 0;
