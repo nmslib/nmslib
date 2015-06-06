@@ -192,6 +192,38 @@ bool TestScalarProductAgree(size_t N, size_t dim, size_t Rep) {
     return true;
 }
 
+template <class T>
+bool TestNormScalarProductAgree(size_t N, size_t dim, size_t Rep) {
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+
+    float maxRelDiff = 1e-6f;
+    float maxAbsDiff = 1e-6f;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim, T(1), T(2), true /* do normalize */);
+            GenRandVect(pVect2, dim, T(1), T(2), true /* do normalize */);
+
+            T val1 = NormScalarProduct(pVect1, pVect2, dim);
+            T val2 = NormScalarProductSIMD(pVect1, pVect2, dim);
+
+            bool bug = false;
+            T diff = fabs(val1 - val2);
+            T diffRel = diff/max(max(fabs(val1),fabs(val2)),T(1e-18));
+            if (diffRel > maxRelDiff && diff > maxAbsDiff) {
+                bug = true;
+                cerr << "Bug NormScalarProduct !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 <<  " diff=" << diff << " diffRel=" << diffRel << endl;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+    return true;
+}
+
 // Agreement test functions
 template <class T>
 bool TestLInfAgree(size_t N, size_t dim, size_t Rep) {
@@ -823,6 +855,11 @@ TEST(TestAgree) {
             TestLPGenericAgree(1024, dim, 10, power);
           }
         }
+
+        nTest++;
+        nFail += !TestNormScalarProductAgree<float>(1024, dim, 10);
+        nTest++;
+        nFail += !TestNormScalarProductAgree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestScalarProductAgree<float>(1024, dim, 10);

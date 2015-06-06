@@ -100,8 +100,7 @@ float LInfNormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     /* 
      * A hack to quickly unset the sign flag.
      */
-	uint32_t scalar_mask = 0x7fffffffu;
-    __m128 mask_sign = _mm_set1_ps(reinterpret_cast<float&>(scalar_mask));
+    __m128 mask_sign = _mm_castsi128_ps(_mm_set1_epi32(0x7fffffffu));
 
     __m128 MAX = _mm_setzero_ps();
 
@@ -260,8 +259,7 @@ float L1NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     /* 
      * A hack to quickly unset the sign flag.
      */
-	uint32_t scalar_mask = 0x7fffffffu;
-	__m128 mask_sign = _mm_set1_ps(reinterpret_cast<float&>(scalar_mask));
+    __m128 mask_sign = _mm_castsi128_ps(_mm_set1_epi32(0x7fffffffu));
 
     while (pVect1 < pEnd1) {
         v1   = _mm_loadu_ps(pVect1); pVect1 += 4;

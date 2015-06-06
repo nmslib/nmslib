@@ -32,7 +32,7 @@ using namespace std;
 template <class T>
 T NormScalarProduct(const T *p1, const T *p2, size_t qty) 
 { 
-    const T eps = numeric_limits<T>::min() * 2;
+    constexpr T eps = numeric_limits<T>::min() * 2;
 
     T sum = 0;
     T norm1 = 0;
@@ -60,6 +60,189 @@ T NormScalarProduct(const T *p1, const T *p2, size_t qty)
 
 template float  NormScalarProduct<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double NormScalarProduct<double>(const double* pVect1, const double* pVect2, size_t qty);
+
+template <> 
+float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
+#ifndef PORTABLE_SSE2
+#pragma message WARN("ScalarProductSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
+    return NormScalarProduct(pVect1, pVect2, qty);
+#else
+    size_t qty16  = qty/16;
+    size_t qty4  = qty/4;
+
+    const float* pEnd1 = pVect1 + 16  * qty16;
+    const float* pEnd2 = pVect1 + 4  * qty4;
+    const float* pEnd3 = pVect1 + qty;
+
+    __m128  v1, v2; 
+    __m128  sum_prod = _mm_set1_ps(0); 
+    __m128  sum_square1 = sum_prod;
+    __m128  sum_square2 = sum_prod;
+
+    while (pVect1 < pEnd1) {
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum_prod  = _mm_add_ps(sum_prod, _mm_mul_ps(v1, v2));
+        sum_square1  = _mm_add_ps(sum_square1, _mm_mul_ps(v1, v1));
+        sum_square2  = _mm_add_ps(sum_square2, _mm_mul_ps(v2, v2));
+
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum_prod  = _mm_add_ps(sum_prod, _mm_mul_ps(v1, v2));
+        sum_square1  = _mm_add_ps(sum_square1, _mm_mul_ps(v1, v1));
+        sum_square2  = _mm_add_ps(sum_square2, _mm_mul_ps(v2, v2));
+
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum_prod  = _mm_add_ps(sum_prod, _mm_mul_ps(v1, v2));
+        sum_square1  = _mm_add_ps(sum_square1, _mm_mul_ps(v1, v1));
+        sum_square2  = _mm_add_ps(sum_square2, _mm_mul_ps(v2, v2));
+
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum_prod  = _mm_add_ps(sum_prod, _mm_mul_ps(v1, v2));
+        sum_square1  = _mm_add_ps(sum_square1, _mm_mul_ps(v1, v1));
+        sum_square2  = _mm_add_ps(sum_square2, _mm_mul_ps(v2, v2));
+    }
+
+    while (pVect1 < pEnd2) {
+        v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
+        v2   = _mm_loadu_ps(pVect2); pVect2 += 4;
+        sum_prod  = _mm_add_ps(sum_prod, _mm_mul_ps(v1, v2));
+        sum_square1  = _mm_add_ps(sum_square1, _mm_mul_ps(v1, v1));
+        sum_square2  = _mm_add_ps(sum_square2, _mm_mul_ps(v2, v2));
+    }
+
+    float PORTABLE_ALIGN16 TmpResProd[4];
+    float PORTABLE_ALIGN16 TmpResSquare1[4];
+    float PORTABLE_ALIGN16 TmpResSquare2[4];
+
+    _mm_store_ps(TmpResProd, sum_prod);
+    float sum = TmpResProd[0] + TmpResProd[1] + TmpResProd[2] + TmpResProd[3];
+    _mm_store_ps(TmpResSquare1, sum_square1);
+    float norm1 = TmpResSquare1[0] + TmpResSquare1[1] + TmpResSquare1[2] + TmpResSquare1[3];
+    _mm_store_ps(TmpResSquare2, sum_square2);
+    float norm2 = TmpResSquare2[0] + TmpResSquare2[1] + TmpResSquare2[2] + TmpResSquare2[3];
+
+    while (pVect1 < pEnd3) {
+        sum += (*pVect1) * (*pVect2); 
+        norm1 += (*pVect1) * (*pVect1); 
+        norm2 += (*pVect2) * (*pVect2); 
+
+        ++pVect1; ++pVect2;
+    }
+
+    const float eps = numeric_limits<float>::min() * 2;
+
+    if (norm1 < eps) { /* 
+                        * This shouldn't normally happen for this space, but 
+                        * if it does, we don't want to get NANs 
+                        */
+      if (norm2 < eps) return 1;
+      return 0;
+    } 
+    /* 
+     * Sometimes due to rounding errors, we get values > 1 or < -1.
+     * This throws off other functions that use scalar product, e.g., acos
+     */
+    return max(float(-1), min(float(1), sum / sqrt(norm1) / sqrt(norm2)));
+#endif
+}
+
+template <> 
+double NormScalarProductSIMD(const double* pVect1, const double* pVect2, size_t qty) {
+#ifndef PORTABLE_SSE2
+#pragma message WARN("NormScalarProductSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
+    return NormScalarProduct(pVect1, pVect2, qty);
+#else
+    size_t qty8 = qty/8;
+    size_t qty2 = qty/2;
+
+    const double* pEnd1 = pVect1 + 8 * qty8;
+    const double* pEnd2 = pVect1 + 2 * qty2;
+    const double* pEnd3 = pVect1 + qty;
+
+    __m128d  v1, v2; 
+    __m128d  sum_prod = _mm_set1_pd(0); 
+    __m128d  sum_square1 = sum_prod;
+    __m128d  sum_square2 = sum_prod;
+
+    while (pVect1 < pEnd1) {
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum_prod  = _mm_add_pd(sum_prod, _mm_mul_pd(v1, v2));
+        sum_square1 = _mm_add_pd(sum_square1, _mm_mul_pd(v1, v1));
+        sum_square2 = _mm_add_pd(sum_square2, _mm_mul_pd(v2, v2));
+
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum_prod  = _mm_add_pd(sum_prod, _mm_mul_pd(v1, v2));
+        sum_square1 = _mm_add_pd(sum_square1, _mm_mul_pd(v1, v1));
+        sum_square2 = _mm_add_pd(sum_square2, _mm_mul_pd(v2, v2));
+
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum_prod  = _mm_add_pd(sum_prod, _mm_mul_pd(v1, v2));
+        sum_square1 = _mm_add_pd(sum_square1, _mm_mul_pd(v1, v1));
+        sum_square2 = _mm_add_pd(sum_square2, _mm_mul_pd(v2, v2));
+
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum_prod  = _mm_add_pd(sum_prod, _mm_mul_pd(v1, v2));
+        sum_square1 = _mm_add_pd(sum_square1, _mm_mul_pd(v1, v1));
+        sum_square2 = _mm_add_pd(sum_square2, _mm_mul_pd(v2, v2));
+
+    }
+
+    while (pVect1 < pEnd2) {
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum_prod  = _mm_add_pd(sum_prod, _mm_mul_pd(v1, v2));
+        sum_square1 = _mm_add_pd(sum_square1, _mm_mul_pd(v1, v1));
+        sum_square2 = _mm_add_pd(sum_square2, _mm_mul_pd(v2, v2));
+
+    }
+
+    double PORTABLE_ALIGN16 TmpResProd[2];
+    double PORTABLE_ALIGN16 TmpResSquare1[2];
+    double PORTABLE_ALIGN16 TmpResSquare2[2];
+
+    _mm_store_pd(TmpResProd, sum_prod);
+    double sum = TmpResProd[0] + TmpResProd[1];
+
+    _mm_store_pd(TmpResSquare1, sum_square1);
+    double norm1 = TmpResSquare1[0] + TmpResSquare1[1];
+
+    _mm_store_pd(TmpResSquare2, sum_square2);
+    double norm2 = TmpResSquare2[0] + TmpResSquare2[1];
+
+    while (pVect1 < pEnd3) {
+        sum += (*pVect1) * (*pVect2); 
+        norm1 += (*pVect1) * (*pVect1); 
+        norm2 += (*pVect2) * (*pVect2); 
+
+        ++pVect1; ++pVect2;
+    }
+
+    const double eps = numeric_limits<double>::min() * 2;
+
+    if (norm1 < eps) { /* 
+                        * This shouldn't normally happen for this space, but 
+                        * if it does, we don't want to get NANs 
+                        */
+      if (norm2 < eps) return 1;
+      return 0;
+    } 
+    /* 
+     * Sometimes due to rounding errors, we get values > 1 or < -1.
+     * This throws off other functions that use scalar product, e.g., acos
+     */
+    return max(double(-1), min(double(1), sum / sqrt(norm1) / sqrt(norm2)));
+#endif
+}
+
+template float   NormScalarProductSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
+template double  NormScalarProductSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 /*
  * Scalar products that are not normalized.
@@ -143,10 +326,10 @@ double ScalarProductSIMD(const double* pVect1, const double* pVect2, size_t qty)
 #pragma message WARN("ScalarProductSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
     return ScalarProduct(pVect1, pVect2, qty);
 #else
-    size_t qty4 = qty/4;
+    size_t qty8 = qty/8;
     size_t qty2 = qty/2;
 
-    const double* pEnd1 = pVect1 + 4 * qty4;
+    const double* pEnd1 = pVect1 + 8 * qty8;
     const double* pEnd2 = pVect1 + 2 * qty2;
     const double* pEnd3 = pVect1 + qty;
 
@@ -154,6 +337,14 @@ double ScalarProductSIMD(const double* pVect1, const double* pVect2, size_t qty)
     __m128d  sum = _mm_set1_pd(0); 
 
     while (pVect1 < pEnd1) {
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum  = _mm_add_pd(sum, _mm_mul_pd(v1, v2));
+
+        v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
+        v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
+        sum  = _mm_add_pd(sum, _mm_mul_pd(v1, v2));
+
         v1   = _mm_loadu_pd(pVect1); pVect1 += 2;
         v2   = _mm_loadu_pd(pVect2); pVect2 += 2;
         sum  = _mm_add_pd(sum, _mm_mul_pd(v1, v2));
@@ -182,6 +373,9 @@ double ScalarProductSIMD(const double* pVect1, const double* pVect2, size_t qty)
     return res;
 #endif
 }
+
+template float   ScalarProductSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
+template double  ScalarProductSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 /*
  * Angular distance (a proper metric)

@@ -42,8 +42,9 @@ using std::numeric_limits;
  * Structure of object: | 4-byte id | 4-byte label | 8-byte datasize | data ........ |
  * We need data to be aligned on 8-byte boundaries.
  * 
- * TODO this all apparenlty hinges on the assumption that malloc() gives addresses
+ * TODO 1) this all apparenlty hinges on the assumption that malloc() gives addresses
  *      that are 8-bye aligned. So, this is related to issue #9
+ *      2) even though GCC doesn't complain, using a single char buffer may break aliasing rules
  *
  * See also http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
  */

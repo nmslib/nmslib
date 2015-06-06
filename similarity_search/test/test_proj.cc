@@ -62,9 +62,9 @@ TEST(TestRandProj) {
     for (int srcDim = 1; srcDim <= 128; ) {
       for (int dstDim = 1; dstDim < srcDim; ) {
         ++nTest;
-        nFail += !TestRandProj<float>(srcDim, dstDim, 2, 2e-5f);
+        nFail += !TestRandProj<float>(srcDim, dstDim, 2, 1e-4f);
         ++nTest;
-        nFail += !TestRandProj<double>(srcDim, dstDim, 2, 1e-10);
+        nFail += !TestRandProj<double>(srcDim, dstDim, 2, 1e-8);
         dstDim += (srcDim < 32 ? 1:8);
       }
       srcDim += (srcDim < 32 ? 1:8);

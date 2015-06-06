@@ -38,7 +38,7 @@ class ShortStringDataSet : public TestDataset {
  public:
   ShortStringDataSet(SpaceLevenshtein& space) {
 
-    for (int i = 0; i < NUM_TEST_SHORT_STR; ++i) {
+    for (unsigned i = 0; i < NUM_TEST_SHORT_STR; ++i) {
       dataobjects_.push_back(space.CreateObjFromStr(i, -1, pTestArr[i]));
     }
   }

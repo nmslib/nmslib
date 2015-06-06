@@ -1490,6 +1490,80 @@ void TestScalarProductSIMD(size_t N, size_t dim, size_t Rep) {
 }
 
 template <class T>
+void TestNormScalarProduct(size_t N, size_t dim, size_t Rep) {
+    T* pArr = new T[N * dim];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * NormScalarProduct(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of NormScalarProduct per second: " << (1e6/tDiff) * N * Rep ;
+
+    delete [] pArr;
+
+}
+
+template <class T>
+void TestNormScalarProductSIMD(size_t N, size_t dim, size_t Rep) {
+    T* pArr = new T[N * dim];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim, -T(RANGE), T(RANGE));
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * NormScalarProductSIMD(pArr + j*dim, pArr + (j-1)*dim, dim) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of NormScalarProduct SIMD per second: " << (1e6/tDiff) * N * Rep ;
+
+    delete [] pArr;
+
+}
+
+template <class T>
 void TestCosineSimilarity(size_t N, size_t dim, size_t Rep) {
     T* pArr = new T[N * dim];
 
@@ -1646,14 +1720,32 @@ int main(int argc, char* argv[]) {
     nTest++;
     TestScalarProductSIMD<float>(1000, dim, 1000);
     nTest++;
+
+
+    nTest++;
+    TestNormScalarProduct<float>(1000, dim, 1000);
+    nTest++;
+    TestNormScalarProductSIMD<float>(1000, dim, 1000);
+    nTest++;
+
+
     TestCosineSimilarity<float>(1000, dim, 1000);
     nTest++;
     TestAngularDistance<float>(1000, dim, 1000);
+
 #if TEST_SPEED_DOUBLE
     nTest++;
     TestScalarProduct<double>(1000, dim, 1000);
     nTest++;
     TestScalarProductSIMD<double>(1000, dim, 1000);
+
+    nTest++;
+    TestNormScalarProduct<double>(1000, dim, 1000);
+    nTest++;
+    TestNormScalarProductSIMD<double>(1000, dim, 1000);
+    nTest++;
+
+
     nTest++;
     TestCosineSimilarity<double>(1000, dim, 1000);
     nTest++;
