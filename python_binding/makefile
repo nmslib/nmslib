@@ -1,0 +1,33 @@
+PYTHON_VERSION=2.7
+NON_METRIC_SPACE_LIBRARY=../similarity_search
+NON_METRIC_SPACE_LIBRARY_INC=$(NON_METRIC_SPACE_LIBRARY)/include
+NON_METRIC_SPACE_LIBRARY_LIB=$(NON_METRIC_SPACE_LIBRARY)/release
+PYTHON_INC=/usr/include/python$(PYTHON_VERSION)
+ADD_LIBS= -lrt -lgsl -lgslcblas -lboost_program_options -fopenmp
+
+CC=g++
+CFLAGS=-c -fpic -Wall -I$(PYTHON_INC) -I$(NON_METRIC_SPACE_LIBRARY_INC) -std=c++11 -Ofast -fno-strict-aliasing
+LDFLAGS=-shared -lpython$(PYTHON_VERSION) -pthread 
+
+SOURCES=nmslib.cc
+OBJECTS=$(SOURCES:.cc=.o)
+LIBS=$(NON_METRIC_SPACE_LIBRARY_LIB)/libNonMetricSpaceLib.a $(NON_METRIC_SPACE_LIBRARY_LIB)/liblshkit.a $(ADD_LIBS) 
+
+FINALLIB=nmslib.so
+
+all: $(SOURCES) $(FINALLIB)
+
+.PHONY: clean link
+
+$(FINALLIB): $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(FINALLIB)
+
+.cc.o:
+	$(CC) $(CFLAGS) $< -o $@
+
+clean:
+	rm -f $(OBJECTS) $(FINALLIB)
+
+link:
+	ln -sf $(FINALLIB)
+
