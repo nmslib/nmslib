@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef _SMALL_WORLD_RAND_H_
-#define _SMALL_WORLD_RAND_H_
+#ifndef _SMALL_WORLD_RAND_OLD_H_
+#define _SMALL_WORLD_RAND_OLD_H_
 
 #include "index.h"
 #include "params.h"
@@ -28,10 +28,9 @@
 #include <memory>
 #include <mutex>
 #include <condition_variable>
-#include <queue>
 
 
-#define METH_SMALL_WORLD_RAND                 "small_world_rand"
+#define METH_SMALL_WORLD_RAND_OLD                 "small_world_rand_old"
 
 namespace similarity {
 
@@ -58,13 +57,12 @@ class Space;
  */
 
 //----------------------------------
-class MSWNode{
+class MSWNodeOld{
 public:
-  MSWNode(const Object *Obj) {
-    addIndex_ = numeric_limits<size_t>::max(); // to detect if addIndex_ wasn't later init. properly
+  MSWNodeOld(const Object *Obj){
     data_ = Obj;
   }
-  ~MSWNode(){};
+  ~MSWNodeOld(){};
   void removeAllFriends(){
     friends.clear();
   }
@@ -72,7 +70,7 @@ public:
    * 1. The list of friend pointers is sorted.
    * 2. addFriend checks for duplicates using binary searching
    */
-  void addFriend(MSWNode* element) {
+  void addFriend(MSWNodeOld* element) {
     unique_lock<mutex> lock(accessGuard_);
 
     auto it = lower_bound(friends.begin(), friends.end(), element);
@@ -92,90 +90,64 @@ public:
    * we exit the scope that has access to
    * the reference returned by getAllFriends()
    */
-  const vector<MSWNode*>& getAllFriends() const {
+  const vector<MSWNodeOld*>& getAllFriends() const {
     return friends;
   }
 
   mutex accessGuard_;
 
-  size_t addIndex_;
 private:
   const Object*       data_;
-  vector<MSWNode*>    friends;
+  vector<MSWNodeOld*>    friends;
 };
 //----------------------------------
 template <typename dist_t>
-class EvaluatedMSWNodeReverse{
+class EvaluatedMSWNodeOld{
 public:
-  EvaluatedMSWNodeReverse() {
+  EvaluatedMSWNodeOld() {
       distance = 0;
       element = NULL;
   }
-  EvaluatedMSWNodeReverse(dist_t di, MSWNode* node) {
+  EvaluatedMSWNodeOld(dist_t di, MSWNodeOld* node) {
     distance = di;
     element = node;
   }
-  ~EvaluatedMSWNodeReverse(){}
+  ~EvaluatedMSWNodeOld(){}
   dist_t getDistance() const {return distance;}
-  MSWNode* getMSWNode() const {return element;}
-  bool operator< (const EvaluatedMSWNodeReverse &obj1) const {
+  MSWNodeOld* getMSWNodeOld() const {return element;}
+  bool operator< (const EvaluatedMSWNodeOld &obj1) const {
     return (distance > obj1.getDistance());
   }
 
 private:
   dist_t distance;
-  MSWNode* element;
-};
-
-template <typename dist_t>
-class EvaluatedMSWNodeDirect{
-public:
-  EvaluatedMSWNodeDirect() {
-      distance = 0;
-      element = NULL;
-  }
-  EvaluatedMSWNodeDirect(dist_t di, MSWNode* node) {
-    distance = di;
-    element = node;
-  }
-  ~EvaluatedMSWNodeDirect(){}
-  dist_t getDistance() const {return distance;}
-  MSWNode* getMSWNode() const {return element;}
-  bool operator< (const EvaluatedMSWNodeDirect &obj1) const {
-    return (distance < obj1.getDistance());
-  }
-
-private:
-  dist_t distance;
-  MSWNode* element;
+  MSWNodeOld* element;
 };
 
 //----------------------------------
 template <typename dist_t>
-class SmallWorldRand : public Index<dist_t> {
+class SmallWorldRandOld : public Index<dist_t> {
 public:
-  SmallWorldRand(bool PrintProgress,
+  SmallWorldRandOld(bool PrintProgress,
                  const Space<dist_t>* space,
                  const ObjectVector& data,
                  const AnyParams& MethParams);
-  ~SmallWorldRand();
+  ~SmallWorldRandOld();
 
-  typedef std::vector<MSWNode*> ElementList;
+  typedef std::vector<MSWNodeOld*> ElementList;
 
   const std::string ToString() const;
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
-  MSWNode* getRandomEntryPoint() const;
-  MSWNode* getRandomEntryPointLocked() const;
-  size_t getEntryQtyLocked() const;
+  MSWNodeOld* getRandomEntryPoint() const;
+  MSWNodeOld* getRandomEntryPointLocked() const;
    
   void kSearchElementsWithAttempts(const Space<dist_t>* space, 
                                    const Object* queryObj, size_t NN, 
                                    size_t initAttempts, 
-                                   std::priority_queue<EvaluatedMSWNodeDirect<dist_t>>& resultSet) const;
-  void add(const Space<dist_t>* space, MSWNode *newElement);
-  void addCriticalSection(MSWNode *newElement);
-  void link(MSWNode* first, MSWNode* second){
+                                   set<EvaluatedMSWNodeOld<dist_t>>& resultSet) const;
+  void add(const Space<dist_t>* space, MSWNodeOld *newElement);
+  void link(MSWNodeOld* first, MSWNodeOld* second){
     // addFriend checks for duplicates
     first->addFriend(second);
     second->addFriend(first);
@@ -189,6 +161,7 @@ private:
   size_t NN_;
   size_t initIndexAttempts_;
   size_t initSearchAttempts_;
+  size_t size_;
   size_t indexThreadQty_;
 
   mutable mutex   ElListGuard_;
@@ -196,7 +169,7 @@ private:
 
 protected:
 
-  DISABLE_COPY_AND_ASSIGN(SmallWorldRand);
+  DISABLE_COPY_AND_ASSIGN(SmallWorldRandOld);
 };
 
 

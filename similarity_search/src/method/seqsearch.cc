@@ -22,16 +22,41 @@
 namespace similarity {
 
 template <typename dist_t>
+SeqSearch<dist_t>::SeqSearch(const ObjectVector& origData, const AnyParams& params) : 
+                      origData_(origData), cacheOptimizedBucket_(NULL), pData_(NULL) {
+  AnyParamManager pmgr(params);
+
+  bool bCopyMem = false;
+
+  pmgr.GetParamOptional("copyMem", bCopyMem);
+
+  LOG(LIB_INFO) << "copyMem = " << bCopyMem;
+
+  if (bCopyMem) {
+    CreateCacheOptimizedBucket(origData, cacheOptimizedBucket_, pData_);
+  }
+}
+
+template <typename dist_t>
+SeqSearch<dist_t>::~SeqSearch() {
+  if (cacheOptimizedBucket_ != NULL) {
+    ClearBucket(cacheOptimizedBucket_, pData_);
+  }
+}
+
+template <typename dist_t>
 void SeqSearch<dist_t>::Search(RangeQuery<dist_t>* query) {
-  for (size_t i = 0; i < data_.size(); ++i) {
-    query->CheckAndAddToResult(data_[i]);
+  const ObjectVector& data = pData_ != NULL ? *pData_ : origData_;
+  for (size_t i = 0; i < data.size(); ++i) {
+    query->CheckAndAddToResult(data[i]);
   }
 }
 
 template <typename dist_t>
 void SeqSearch<dist_t>::Search(KNNQuery<dist_t>* query) {
-  for (size_t i = 0; i < data_.size(); ++i) {
-    query->CheckAndAddToResult(data_[i]);
+  const ObjectVector& data = pData_ != NULL ? *pData_ : origData_;
+  for (size_t i = 0; i < data.size(); ++i) {
+    query->CheckAndAddToResult(data[i]);
   }
 }
 

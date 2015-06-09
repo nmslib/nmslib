@@ -138,6 +138,7 @@ PyMODINIT_FUNC initnmslib() {
   PyModule_AddObject(module, "DistType",
         reinterpret_cast<PyObject*>(&NmslibDist_Type));
   initLibrary(LIB_LOGSTDERR, NULL);
+  //initLibrary(LIB_LOGNONE, NULL);
 }
 
 class PyException {
@@ -214,11 +215,16 @@ class IndexWrapper {
   }
 
   ~IndexWrapper() {
+    //cout << "(nmslib) Mopping up" << endl;
     delete space_;
+    //cout << "(nmslib) Deleted space" << endl;
     delete index_;
+    //cout << "(nmslib) Deleted index" << endl;
     for (auto p : data_) {
       delete p;
     }
+    //cout << "(nmslib) Deleted wrapper Object instance" << endl;
+    //cout << "(nmslib) Mopping up finished" << endl;
   }
 
   inline int GetDistType() { return dist_type_; }
@@ -232,7 +238,8 @@ class IndexWrapper {
 
   void Build() {
     index_ = MethodFactoryRegistry<T>::Instance()
-        .CreateMethod(false, method_name_, space_type_,
+        .CreateMethod(true /* let's print progress bars for now */, 
+                      method_name_, space_type_,
                       space_, data_, method_param_);
   }
 

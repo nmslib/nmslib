@@ -43,6 +43,7 @@
 #include "factory/method/projection_index_incremental.h"
 #include "factory/method/seqsearch.h"
 #include "factory/method/small_world_rand.h"
+#include "factory/method/small_world_rand_old.h"
 #include "factory/method/spatial_approx_tree.h"
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
@@ -167,6 +168,11 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
+
+  // An older version of Small-word (KNN-graph) with randomly generated neighborhood-networks
+  REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_OLD, CreateSmallWorldRandOld)
+  REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_OLD, CreateSmallWorldRandOld)
+  REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_OLD, CreateSmallWorldRandOld)
 
   // Another KNN-graph, which is computed via NN-descent
   REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)

@@ -31,8 +31,8 @@ using std::string;
 template <typename dist_t>
 class SeqSearch : public Index<dist_t> {
  public:
-  SeqSearch(const ObjectVector& data) : data_(data) {}
-  ~SeqSearch(){};
+  SeqSearch(const ObjectVector& data, const AnyParams& params);
+  virtual ~SeqSearch();
 
   const std::string ToString() const { return "Sequential search"; }
 
@@ -40,7 +40,9 @@ class SeqSearch : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query);
 
  private:
-  const ObjectVector&     data_;
+  const ObjectVector&     origData_;
+  char*                   cacheOptimizedBucket_;
+  ObjectVector*           pData_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(SeqSearch);
 };
