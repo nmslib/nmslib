@@ -60,9 +60,9 @@ class Space;
 //----------------------------------
 class MSWNode{
 public:
-  MSWNode(const Object *Obj) {
-    addIndex_ = numeric_limits<size_t>::max(); // to detect if addIndex_ wasn't later init. properly
+  MSWNode(const Object *Obj, size_t id) {
     data_ = Obj;
+    id_ = id;
   }
   ~MSWNode(){};
   void removeAllFriends(){
@@ -83,6 +83,7 @@ public:
   const Object* getData() const {
     return data_;
   }
+  size_t getId() const { return id_; }
   /* 
    * THIS NOTE APPLIES ONLY TO THE INDEXING PHASE:
    *
@@ -98,9 +99,9 @@ public:
 
   mutex accessGuard_;
 
-  size_t addIndex_;
 private:
   const Object*       data_;
+  size_t              id_;
   vector<MSWNode*>    friends;
 };
 //----------------------------------

@@ -78,12 +78,12 @@ struct IndexThreadSW {
      * Skip the first element, it was added already
      */
     size_t nextQty = prm.progress_update_qty_;
-    for (size_t i = 1; i < prm.data_.size(); ++i) {
-      if (prm.index_every_ == i % prm.out_of_) {
-        MSWNode* node = new MSWNode(prm.data_[i]);
+    for (size_t id = 1; id < prm.data_.size(); ++id) {
+      if (prm.index_every_ == id % prm.out_of_) {
+        MSWNode* node = new MSWNode(prm.data_[id], id);
         prm.index_.add(prm.space_, node);
       
-        if ((i + 1 >= min(prm.data_.size(), nextQty)) && progress_bar) {
+        if ((id + 1 >= min(prm.data_.size(), nextQty)) && progress_bar) {
           unique_lock<mutex> lock(display_mutex);
           (*progress_bar) += (nextQty - progress_bar->count());
           nextQty += prm.progress_update_qty_;
@@ -125,10 +125,8 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
 
   if (data.empty()) return;
 
-  // 1) During indexing: Don't create an MSWNode without adding it
-  // The field addIndex_ will not be init properly!
-  // 2) One entry should be added before all the threads are started, or else add() might not work properly
-  addCriticalSection(new MSWNode(data[0]));
+  // 2) One entry should be added before all the threads are started, or else add() will not work properly
+  addCriticalSection(new MSWNode(data[0], 0 /* id == 0 */));
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
                                 new ProgressDisplay(data.size(), cerr)
@@ -137,8 +135,8 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
   if (indexThreadQty_ <= 1) {
     // Skip the first element, one element is already added
     if (progress_bar) ++(*progress_bar);
-    for (size_t i = 1; i != data.size(); ++i) {
-      MSWNode* node = new MSWNode(data[i]);
+    for (size_t id = 1; id < data.size(); ++id) {
+      MSWNode* node = new MSWNode(data[id], id);
       add(space, node);
       if (progress_bar) ++(*progress_bar);
     }
@@ -246,11 +244,11 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
  
 #if USE_BITSET_FOR_INDEXING
     /* 
-     * Recall that
-     * 1) Some entries might not have their addIndex_ initialized (in this case addIndex_ will be a very large value)
-     * 2) Some entries might have been added after the call to getEntryQtyLocked();
+     * Recall that some entries might have been added after the call to getEntryQtyLocked().
+     * We may visit such entries more than once, however, it's very unlikely (i.e., doesn't effect performance much)
      */
-    if (provider->addIndex_ < entryQty) visitedBitset[provider->addIndex_] = true;
+    size_t nodeId = provider->getId();
+    if (nodeId < entryQty) visitedBitset[nodeId] = true;
 #else
     visited.insert(provider);
 #endif
@@ -281,21 +279,14 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
 
       // calculate distance to each neighbor
       for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
-        size_t nodeAddIndex = (*iter)->addIndex_;
+        size_t nodeId = (*iter)->getId();
 #if USE_BITSET_FOR_INDEXING
-    /*
-     *  Actually such a situation is quite normal, because:
-     * 1) Some entries might not have their addIndex_ initialized (in this case addIndex_ will be a very large value)
-     * 2) Some entries might have been added after the call to getEntryQtyLocked();
-        However, in such a case the condition nodeAddIndex >= entryQty will hold true.
-
-        if (nodeAddIndex == numeric_limits<size_t>::max()) {
-          LOG(LIB_INFO) << "Bug: uninitialized addIndex_";
-          throw runtime_error("Bug: uninitialized addIndex_");
-        }
-     */
-        if (nodeAddIndex >= entryQty || !visitedBitset[nodeAddIndex]) {
-          if (nodeAddIndex < entryQty) visitedBitset[nodeAddIndex] = true;
+        if (nodeId >= entryQty || !visitedBitset[nodeId]) {
+          /*
+           * Recall that some entries might have been added after the call to getEntryQtyLocked().
+           * We may visit such entries more than once, however, it's very unlikely (i.e., doesn't effect performance much)
+           */
+          if (nodeId < entryQty) visitedBitset[nodeId] = true;
 #else
         if (visited.find((*iter)) == visited.end()) {
           visited.insert(*iter);
@@ -359,7 +350,6 @@ template <typename dist_t>
 void SmallWorldRand<dist_t>::addCriticalSection(MSWNode *newElement){
   unique_lock<mutex> lock(ElListGuard_);
 
-  newElement->addIndex_ = ElList_.size(); // Need to do this under the mutex protection
   ElList_.push_back(newElement);
 }
 
@@ -367,6 +357,7 @@ template <typename dist_t>
 void SmallWorldRand<dist_t>::Search(RangeQuery<dist_t>* query) {
   throw runtime_error("Range search is not supported!");
 }
+
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
@@ -378,25 +369,27 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
    */
     MSWNode* provider = getRandomEntryPoint();
 
-    priority_queue <dist_t>                   closestDistQueue; //The set of all elements which distance was calculated
+    priority_queue <dist_t>                          closestDistQueue; //The set of all elements which distance was calculated
     priority_queue <EvaluatedMSWNodeReverse<dist_t>> candidateQueue; //the set of elements which we can use to evaluate
 
-    dist_t d = query->DistanceObjLeft(provider->getData());
+    const Object* currObj = provider->getData();
+    dist_t d = query->DistanceObjLeft(currObj);
+    query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
 
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
     candidateQueue.push(ev);
     closestDistQueue.emplace(d);
 
-    if (provider->addIndex_ == numeric_limits<size_t>::max()) {
-      LOG(LIB_INFO) << "Bug: uninitialized addIndex_";
-      throw runtime_error("Bug: uninitialized addIndex_");
+    size_t nodeId = provider->getId();
+    if (nodeId > ElList_.size()) {
+      LOG(LIB_INFO) << "Bug: nodeId > ElList_ ";
+      throw runtime_error("Bug: nodeId > ElList_ ");
     }
-
-    visitedBitset[provider->addIndex_] = true; 
+    visitedBitset[nodeId] = true; 
 
     while(!candidateQueue.empty()){
 
-      auto iter = candidateQueue.top();
+      auto iter = candidateQueue.top(); // This one was already compared to the query
       const EvaluatedMSWNodeReverse<dist_t>& currEv = iter;
  
       dist_t lowerBound = closestDistQueue.top();
@@ -413,16 +406,16 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
 
       //calculate distance to each neighbor
       for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
-        size_t nodeAddIndex = (*iter)->addIndex_;
-        if (nodeAddIndex == numeric_limits<size_t>::max()) {
-          LOG(LIB_INFO) << "Bug: uninitialized addIndex_";
-          throw runtime_error("Bug: uninitialized addIndex_");
+        nodeId = (*iter)->getId();
+        if (nodeId > ElList_.size()) {
+          LOG(LIB_INFO) << "Bug: nodeId > ElList_ ";
+          throw runtime_error("Bug: nodeId > ElList_ ");
         }
-        if (!visitedBitset[nodeAddIndex]) {
-          const Object* currObj = (*iter)->getData();
+        if (!visitedBitset[nodeId]) {
+          currObj = (*iter)->getData();
           d = query->DistanceObjLeft(currObj);
             
-          visitedBitset[nodeAddIndex] = true;
+          visitedBitset[nodeId] = true;
           closestDistQueue.emplace(d);
           if (closestDistQueue.size() > NN_) { 
             closestDistQueue.pop(); 
@@ -434,7 +427,6 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
     }
   }
 }
-
 
 
 template class SmallWorldRand<float>;

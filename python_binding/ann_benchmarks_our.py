@@ -325,7 +325,7 @@ def get_algos(m):
 
 
 def get_fn(base, args):
-    fn = os.path.join(base, args.dataset)
+    fn = os.path.join(base, args.distance, args.dataset)
 
     if args.limit != -1:
         fn += '-%d' % args.limit

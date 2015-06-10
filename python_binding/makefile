@@ -17,7 +17,11 @@ FINALLIB=nmslib.so
 
 all: $(SOURCES) $(FINALLIB)
 
-.PHONY: clean link
+install: all
+	cp nmslib.so /usr/local/lib/python$(PYTHON_VERSION)/dist-packages
+
+
+.PHONY: clean 
 
 $(FINALLIB): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(FINALLIB)
@@ -28,6 +32,4 @@ $(FINALLIB): $(OBJECTS)
 clean:
 	rm -f $(OBJECTS) $(FINALLIB)
 
-link:
-	ln -sf $(FINALLIB)
 

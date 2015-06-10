@@ -58,6 +58,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "knnquery.h"
 #include "method/nndes.h"
 
+#define USE_BITSET_FOR_SEARCHING 1
+
 namespace similarity {
 
 template <typename dist_t>
@@ -150,9 +152,11 @@ template <typename dist_t>
 void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
   const vector<KNN> &nn = nndesObj_->getNN();
 
-  size_t k = query->GetK();
-  set <EvaluatedNode>               resultSet;
+#if USE_BITSET_FOR_SEARCHING
+  vector<bool>                      visitedBitset(data_.size());
+#else
   unordered_set <IdType>            visitedNodes;
+#endif
 
   for (size_t i=0; i < initSearchAttempts_; i++) {
   /**
@@ -163,13 +167,19 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
     priority_queue <dist_t>             closestDistQueue; //The set of all elements which distance was calculated
     priority_queue <EvaluatedNode>      candidateSet; //the set of elements which we can use to evaluate
 
-    dist_t         d = query->DistanceObjLeft(data_[randPoint]);
+    const Object* currObj = data_[randPoint];
+    dist_t         d = query->DistanceObjLeft(currObj);
+    query->CheckAndAddToResult(d, currObj);
+    
     EvaluatedNode  ev(-d, randPoint);
 
     candidateSet.push(ev);
     closestDistQueue.push(d);
+#if USE_BITSET_FOR_INDEXING
     visitedNodes.insert(randPoint);
-    resultSet.insert(ev);
+#else
+    visitedBitset[randPoint] = true;
+#endif
 
     while(!candidateSet.empty()){
       const EvaluatedNode& currEv = candidateSet.top();
@@ -190,28 +200,27 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
         IdType currNew = e.key;
         if (currNew == KNNEntry::BAD) continue;
 
+#if USE_BITSET_FOR_SEARCHING
+        if (!visitedBitset[currNew]) {
+          visitedBitset[currNew] = true;
+#else
         if (visitedNodes.find(currNew) == visitedNodes.end()){
-            d = query->DistanceObjLeft(data_[currNew]);
+            visitedNodes.insert(currNew);
+#endif
+
+            currObj = data_[currNew];
+            d = query->DistanceObjLeft(currObj);
+            query->CheckAndAddToResult(d, currObj);
             EvaluatedNode  evE1(-d, currNew);
 
-            visitedNodes.insert(currNew);
             closestDistQueue.push(d);
             if (closestDistQueue.size() > searchNN_) { 
               closestDistQueue.pop(); 
             }
             candidateSet.push(evE1);
-            resultSet.insert(evE1);
           }
       }
     }
-  }
-
-  auto iter = resultSet.rbegin();
-
-  while(k && iter != resultSet.rend()) {
-    query->CheckAndAddToResult(-iter->first, data_[iter->second]);
-    iter++;
-    k--;
   }
 }
 
