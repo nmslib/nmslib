@@ -175,10 +175,10 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
 
     candidateSet.push(ev);
     closestDistQueue.push(d);
-#if USE_BITSET_FOR_INDEXING
-    visitedNodes.insert(randPoint);
-#else
+#if USE_BITSET_FOR_SEARCHING
     visitedBitset[randPoint] = true;
+#else
+    visitedNodes.insert(randPoint);
 #endif
 
     while(!candidateSet.empty()){
