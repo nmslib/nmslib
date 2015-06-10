@@ -105,7 +105,8 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
                                                    NN_(5),
                                                    initIndexAttempts_(2),
                                                    initSearchAttempts_(10),
-                                                   indexThreadQty_(0)
+                                                   indexThreadQty_(0),
+                                                   data_(data)
 {
   AnyParamManager pmgr(MethParams);
 
@@ -155,6 +156,12 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threads[i].join();
+    }
+    if (ElList_.size() != data_.size()) {
+      stringstream err;
+      err << "Bug: ElList_.size() (" << ElList_.size() << ") isn't equal to data_.size() (" << data_.size() << ")";
+      LOG(LIB_INFO) << err.str();
+      throw runtime_error(err.str());
     }
     LOG(LIB_INFO) << indexThreadQty_ << " indexing threads have finished";
   }
@@ -219,9 +226,8 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
                                                     size_t initIndexAttempts,
                                                     priority_queue<EvaluatedMSWNodeDirect<dist_t>>& resultSet) const
 {
-  size_t                              entryQty = getEntryQtyLocked();
 #if USE_BITSET_FOR_INDEXING
-  vector<bool>                        visitedBitset(entryQty); // seems to be working fine even in a multi-threaded mode.
+  vector<bool>                        visitedBitset(data_.size()); // seems to be working fine even in a multi-threaded mode.
 #else
   unordered_set<MSWNode*>             visited;
 #endif
@@ -243,12 +249,14 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
     closestDistQueue.push(d);
  
 #if USE_BITSET_FOR_INDEXING
-    /* 
-     * Recall that some entries might have been added after the call to getEntryQtyLocked().
-     * We may visit such entries more than once, however, it's very unlikely (i.e., doesn't effect performance much)
-     */
     size_t nodeId = provider->getId();
-    if (nodeId < entryQty) visitedBitset[nodeId] = true;
+    if (nodeId >= data_.size()) {
+      stringstream err;
+      err << "Bug: nodeId > data_size()";
+      LOG(LIB_INFO) << err.str();
+      throw runtime_error(err.str());
+    }
+    visitedBitset[nodeId] = true;
 #else
     visited.insert(provider);
 #endif
@@ -279,14 +287,16 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
 
       // calculate distance to each neighbor
       for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
-        size_t nodeId = (*iter)->getId();
 #if USE_BITSET_FOR_INDEXING
-        if (nodeId >= entryQty || !visitedBitset[nodeId]) {
-          /*
-           * Recall that some entries might have been added after the call to getEntryQtyLocked().
-           * We may visit such entries more than once, however, it's very unlikely (i.e., doesn't effect performance much)
-           */
-          if (nodeId < entryQty) visitedBitset[nodeId] = true;
+        size_t nodeId = (*iter)->getId();
+        if (nodeId >= data_.size()) {
+          stringstream err;
+          err << "Bug: nodeId > data_size()";
+          LOG(LIB_INFO) << err.str();
+          throw runtime_error(err.str());
+        }
+        if (!visitedBitset[nodeId]) {
+          visitedBitset[nodeId] = true;
 #else
         if (visited.find((*iter)) == visited.end()) {
           visited.insert(*iter);
@@ -381,9 +391,12 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
     closestDistQueue.emplace(d);
 
     size_t nodeId = provider->getId();
-    if (nodeId > ElList_.size()) {
-      LOG(LIB_INFO) << "Bug: nodeId > ElList_ ";
-      throw runtime_error("Bug: nodeId > ElList_ ");
+    // data_.size() is guaranteed to be equal to ElList_.size()
+    if (nodeId >= data_.size()) {
+      stringstream err;
+      err << "Bug: nodeId > data_size()";
+      LOG(LIB_INFO) << err.str();
+      throw runtime_error(err.str());
     }
     visitedBitset[nodeId] = true; 
 
@@ -407,9 +420,12 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
       //calculate distance to each neighbor
       for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
         nodeId = (*iter)->getId();
-        if (nodeId > ElList_.size()) {
-          LOG(LIB_INFO) << "Bug: nodeId > ElList_ ";
-          throw runtime_error("Bug: nodeId > ElList_ ");
+        // data_.size() is guaranteed to be equal to ElList_.size()
+        if (nodeId >= data_.size()) {
+          stringstream err;
+          err << "Bug: nodeId > data_size()";
+          LOG(LIB_INFO) << err.str();
+          throw runtime_error(err.str());
         }
         if (!visitedBitset[nodeId]) {
           currObj = (*iter)->getData();

@@ -187,10 +187,11 @@ public:
 private:
   virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
-  size_t NN_;
-  size_t initIndexAttempts_;
-  size_t initSearchAttempts_;
-  size_t indexThreadQty_;
+  size_t                NN_;
+  size_t                initIndexAttempts_;
+  size_t                initSearchAttempts_;
+  size_t                indexThreadQty_;
+  const ObjectVector&   data_;
 
   mutable mutex   ElListGuard_;
   ElementList     ElList_;
