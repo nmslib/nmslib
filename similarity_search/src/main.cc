@@ -156,9 +156,11 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
     }
   }
 
-  // Note that space will be deleted by the destructor of ExperimentConfig
-  ExperimentConfig<dist_t> config(SpaceFactoryRegistry<dist_t>::
-                                  Instance().CreateSpace(SpaceType, *SpaceParams),
+  
+  unique_ptr<Space<dist_t>> space (SpaceFactoryRegistry<dist_t>::
+                                  Instance().CreateSpace(SpaceType, *SpaceParams));
+
+  ExperimentConfig<dist_t> config(space.get(),
                                   DataFile, QueryFile, TestSetQty,
                                   MaxNumData, MaxNumQuery,
                                   dimension, knn, eps, range);

@@ -71,7 +71,12 @@ public:
   }
 
   ~ExperimentConfig() {
-    delete space_;
+    /*  
+        The experimental config shouldn't assume ownership of the space.
+        This is also related to the Object-ownership issue https://github.com/searchivarius/NonMetricSpaceLib/issues/48
+    */
+    //delete space_;
+
     for (auto it = origData_.begin(); it != origData_.end(); ++it) {
       delete *it;
     }

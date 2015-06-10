@@ -397,9 +397,13 @@ void RunExper(unsigned AddRestartQty,
 
       range.push_back(rangeAll[i]);
 
-      Space<dist_t>*  pSpace = SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, *SpaceParams);
-      // Note that space will be deleted by the destructor of ExperimentConfig
-      config.reset(new ExperimentConfig<dist_t>(pSpace,
+      unique_ptr<Space<dist_t>> space(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, *SpaceParams));
+
+      if (NULL == space.get()) {
+        LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
+      }
+      
+      config.reset(new ExperimentConfig<dist_t>(space.get(),
                                       DataFile, QueryFile, TestSetQty,
                                       MaxNumData, MaxNumQuery,
                                       0, knn, eps, range));
@@ -411,9 +415,13 @@ void RunExper(unsigned AddRestartQty,
 
       knn.push_back(knnAll[i]);
 
-      Space<dist_t>*  pSpace = SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, *SpaceParams);
-      // Note that space will be deleted by the destructor of ExperimentConfig
-      config.reset(new ExperimentConfig<dist_t>(pSpace,
+      unique_ptr<Space<dist_t>> space(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, *SpaceParams));
+
+      if (NULL == space.get()) {
+        LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
+      }
+      
+      config.reset(new ExperimentConfig<dist_t>(space.get(),
                                       DataFile, QueryFile, TestSetQty,
                                       MaxNumData, MaxNumQuery,
                                       0, knn, eps, range));

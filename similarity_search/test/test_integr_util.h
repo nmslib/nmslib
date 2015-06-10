@@ -205,9 +205,15 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     }
   }
 
-  // Note that space will be deleted by the destructor of ExperimentConfig
-  ExperimentConfig<dist_t> config(SpaceFactoryRegistry<dist_t>::
-                                  Instance().CreateSpace(SpaceType, *SpaceParams),
+
+  unique_ptr<Space<dist_t>> space(SpaceFactoryRegistry<dist_t>::
+                                  Instance().CreateSpace(SpaceType, *SpaceParams));
+
+  if (NULL == space.get()) {
+    LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
+  }
+ 
+  ExperimentConfig<dist_t> config(space.get(),
                                   DataFile, QueryFile, TestSetQty,
                                   MaxNumData, MaxNumQuery,
                                   dimension, knn, eps, range);
