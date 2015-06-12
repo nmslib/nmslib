@@ -146,4 +146,3 @@ Most important related papers are listed below in the chronological order:
 * Krylov, V., Logvinov, A., Ponomarenko, A., Ponomarev, D., 2008. [Metrized Small World Properties Based Data Structure.](http://www.researchgate.net/publication/228829307_Metrized_small_world_properties_based_data_structure/file/72e7e52a020d9c040a.pdf) In SEDE (pp. 203-208). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sede/KrylovLPP08)
 
 
-
