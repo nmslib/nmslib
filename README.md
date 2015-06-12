@@ -6,8 +6,9 @@ A cross-platform similarity search library and a toolkit for evaluation of simil
 
 Leo(nid) Boytsov is a maintainer.
 
-**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. 
+**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**.
 
+**We have a few important updates coming (including Python binding).** They will soon be propagated from the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop) (after a few bugs are fixed).
 
 General information
 -----------------------
