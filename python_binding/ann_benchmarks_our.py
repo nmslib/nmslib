@@ -269,6 +269,7 @@ def get_queries(args):
 
     return queries
             
+# Uncomment more entries if necessary.
 def get_algos(m):
     return {
         #'lshf': [LSHF(m, 5, 10), LSHF(m, 5, 20), LSHF(m, 10, 20), LSHF(m, 10, 50), LSHF(m, 20, 100)],
@@ -280,7 +281,7 @@ def get_algos(m):
         #           NearPy(m, 14, 5), NearPy(m, 14, 10), NearPy(m, 14, 20), NearPy(m, 14, 40), NearPy(m, 14, 100),
         #           NearPy(m, 16, 5), NearPy(m, 16, 10), NearPy(m, 16, 15), NearPy(m, 16, 20), NearPy(m, 16, 25), NearPy(m, 16, 30), NearPy(m, 16, 40), NearPy(m, 16, 50), NearPy(m, 16, 70), NearPy(m, 16, 90), NearPy(m, 16, 120), NearPy(m, 16, 150)],
         'kgraph': [KGraph(m, 20), KGraph(m, 50), KGraph(m, 100), KGraph(m, 200), KGraph(m, 500), KGraph(m, 1000)],
-        'bruteforce': [BruteForce(m)],
+        #'bruteforce': [BruteForce(m)],
         #'ball': [BallTree(m, 10), BallTree(m, 20), BallTree(m, 40), BallTree(m, 100), BallTree(m, 200), BallTree(m, 400), BallTree(m, 1000)],
         #'kd': [KDTree(m, 10), KDTree(m, 20), KDTree(m, 40), KDTree(m, 100), KDTree(m, 200), KDTree(m, 400), KDTree(m, 1000)]
 
@@ -303,6 +304,21 @@ def get_algos(m):
 
     'bruteforce0(nmslib)': [Nmslib(m, 'seq_search', ['copyMem=0'])],
     'bruteforce1(nmslib)': [Nmslib(m, 'seq_search', ['copyMem=1'])],
+
+    'BallTree(nmslib)': [
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.99', 'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.95', 'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.90', 'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.85', 'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.8',  'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.7',  'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.6',  'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.5',  'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.4',  'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.3',  'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.2',  'bucketSize=100']),
+                  Nmslib(m, 'vptree', ['tuneK=10', 'desiredRecall=0.1',  'bucketSize=100']),
+                ],
 
     'SW-graph(nmslib)':[
                 Nmslib(m, 'small_world_rand', ['NN=20', 'initIndexAttempts=4', 'initSearchAttempts=48']),

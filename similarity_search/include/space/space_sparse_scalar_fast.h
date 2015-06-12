@@ -42,6 +42,7 @@ public:
     return "CosineSimilarity (fast)";
   }
 protected:
+  virtual Space<float>* HiddenClone() const { return new SpaceSparseCosineSimilarityFast(); } // no parameters 
   virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
 };
 
@@ -50,6 +51,7 @@ public:
   virtual std::string ToString() const {
     return "AngularDistance (fast)";
   }
+  virtual Space<float>* HiddenClone() const { return new SpaceSparseAngularDistanceFast(); } // no parameters 
 protected:
   virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
 };

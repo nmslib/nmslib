@@ -54,9 +54,15 @@ class VPTree : public Index<dist_t> {
   vector<string> GetQueryTimeParamNames() const { return oracle_.GetParams(); }
 
  private:
+  // Call this function *ONLY AFTER* the bucket size is obtained!
   void SetQueryTimeParamsInternal(AnyParamManager& pmgr) { 
-    oracle_.SetParams(pmgr); 
+    AnyParams paramNew(pmgr.GetAllParams());
+    // An Oracle may need to know the size of the bucket
+    paramNew.AddChangeParam("BucketSize", BucketSize_);
+    AnyParamManager pmgrNew(paramNew);
+    oracle_.SetParams(pmgrNew); 
     pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
+    pmgrNew.copySeen(pmgr);
   }
 
   class VPNode {

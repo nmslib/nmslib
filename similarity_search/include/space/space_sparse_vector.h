@@ -87,6 +87,7 @@ public:
 
   virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const = 0;
 protected:
+  virtual Space<dist_t>* HiddenClone() const = 0;
   void ReadSparseVec(std::string line, IdType& label, std::vector<ElemType>& v) const;
 };
 
@@ -115,6 +116,7 @@ public:
                             ComputeDistanceHelper(obj1, obj2, distObjNormSP);
   }
 protected:
+  virtual Space<dist_t>* HiddenClone() const = 0;
 
   struct SpaceNormScalarProduct {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {

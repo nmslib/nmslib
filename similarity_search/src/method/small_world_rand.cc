@@ -227,6 +227,15 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
                                                     priority_queue<EvaluatedMSWNodeDirect<dist_t>>& resultSet) const
 {
 #if USE_BITSET_FOR_INDEXING
+/*
+ * The trick of using large dense bitsets instead of unordered_set was 
+ * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
+ *
+ * This trick works really well even in a multi-threaded mode. Indeed, the amount
+ * of allocated memory is small. For example, if one has 8M entries, the size of
+ * the bitmap is merely 1 MB. Furthermore, setting 1MB of entries to zero via memset would take only
+ * a fraction of millisecond.
+ */
   vector<bool>                        visitedBitset(data_.size()); // seems to be working fine even in a multi-threaded mode.
 #else
   unordered_set<MSWNode*>             visited;
@@ -371,6 +380,15 @@ void SmallWorldRand<dist_t>::Search(RangeQuery<dist_t>* query) {
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
+/*
+ * The trick of using large dense bitsets instead of unordered_set was 
+ * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
+ *
+ * This trick works really well even in a multi-threaded mode. Indeed, the amount
+ * of allocated memory is small. For example, if one has 8M entries, the size of
+ * the bitmap is merely 1 MB. Furthermore, setting 1MB of entries to zero via memset would take only
+ * a fraction of millisecond.
+ */
   vector<bool>                        visitedBitset(ElList_.size());
 
   for (size_t i=0; i < initSearchAttempts_; i++) {

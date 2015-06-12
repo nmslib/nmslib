@@ -36,6 +36,7 @@ class SpaceLevenshtein : public StringSpace<int> {
   virtual ~SpaceLevenshtein() {}
   virtual std::string ToString() const { return "Levenshtein distance"; }
  protected:
+  virtual Space<int>* HiddenClone() const { return new SpaceLevenshtein(); } // no parameters 
   virtual int HiddenDistance(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
     CHECK(obj2->datalength() > 0);
@@ -53,6 +54,7 @@ class SpaceLevenshteinNormalized : public StringSpace<float> {
   virtual ~SpaceLevenshteinNormalized() {}
   virtual std::string ToString() const { return "Normalized Levenshtein distance"; }
  protected:
+  virtual Space<float>* HiddenClone() const { return new SpaceLevenshteinNormalized(); } // no parameters 
   virtual float HiddenDistance(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
     CHECK(obj2->datalength() > 0);

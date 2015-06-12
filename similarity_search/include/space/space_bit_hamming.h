@@ -48,6 +48,7 @@ class SpaceBitHamming : public Space<int> {
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
+  virtual Space<int>* HiddenClone() const { return new SpaceBitHamming(); } // no parameters 
   virtual int HiddenDistance(const Object* obj1, const Object* obj2) const;
   void ReadVec(std::string line, LabelType& label, std::vector<uint32_t>& v) const;
 };

@@ -82,6 +82,11 @@ class SpaceDummy : public Space<dist_t> {
   * should be able to access it.
   */
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
+  virtual Space<dist_t>* HiddenClone() const {
+    // The clone function should reproduce the space with *IDENTICAL* parameters
+    // Another option is to use the default copy constructor (if there are no pointer fields)
+    return new SpaceDummy<dist_t>(param1_, param2_);
+  }
  private:
  
   /* 

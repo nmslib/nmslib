@@ -7,7 +7,7 @@
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
  * 
- * Copyright (c) 2014
+ * Copyright (c) 2015
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -39,6 +39,7 @@
 #include "experimentconf.h"
 #include "space.h"
 #include "index.h"
+#include "tune.h"
 #include "method/vptree.h"
 #include "method/proj_vptree.h"
 #include "method/permutation_vptree.h"
@@ -66,253 +67,6 @@ static void Usage(const char *prog,
                   const po::options_description& desc) {
     std::cout << prog << std::endl
               << desc << std::endl;
-}
-
-template <typename dist_t>
-void GetOptimalAlphas(ExperimentConfig<dist_t>&     config, 
-                      const string&                 SpaceType,
-                      const string&                 methodName,
-                      float                         DesiredRecall,
-                      AnyParams                     MethPars, 
-                      float                         StepFactor, 
-                      float                         alpha_left_base,
-                      float                         alpha_right_base,
-                      vector<shared_ptr<GoldStandardManager<dist_t>>>&  
-                                                    vManagerGS,
-                      vector<shared_ptr<Index<dist_t>>>&
-                                                    vIndexForAllSetsPtrs,
-                      float& recall, float& time_best, float& impr_best,
-                      float& alpha_left_best, unsigned exp_left,
-                      float& alpha_right_best, unsigned exp_right,
-                      unsigned MaxIter,
-                      unsigned MaxRecDepth,
-                      int StepN,
-                      unsigned maxCacheGSQty,
-                      unsigned recLevel) {
-  if (recLevel >= MaxRecDepth) {
-    LOG(LIB_INFO) << "Reached the maximum recursion level: " << recLevel;
-    return;
-  }
-
-  LOG(LIB_INFO) << "================================================================";
-  LOG(LIB_INFO) << ALPHA_LEFT_PARAM << ": " << alpha_left_base << " " << ALPHA_RIGHT_PARAM << ": " << alpha_right_base;
-  LOG(LIB_INFO) << EXP_LEFT_PARAM << ": " << exp_left << " " << EXP_RIGHT_PARAM ": " << exp_right;
-  LOG(LIB_INFO) << "================================================================";
-
-  MethPars.AddChangeParam(EXP_LEFT_PARAM, exp_left);
-  MethPars.AddChangeParam(EXP_RIGHT_PARAM, exp_right);
-
-  for (unsigned iter = 0; iter < MaxIter; ++iter) {
-    LOG(LIB_INFO) << "Iteration: " << iter << " Level: " << recLevel << " StepFactor: " << StepFactor;
-    double MinRecall = 1.0;
-    double MaxRecall = 0;
-      
-    for (int left = -StepN; left < StepN; ++left) {
-      for (int right = -StepN; right < StepN; ++right) {
-        float alphaLeftCurr = alpha_left_base * pow(StepFactor, left);
-        float alphaRightCurr = alpha_right_base * pow(StepFactor, right);
-        MethPars.AddChangeParam(ALPHA_LEFT_PARAM, alphaLeftCurr);
-        MethPars.AddChangeParam(ALPHA_RIGHT_PARAM, alphaRightCurr);
-
-#ifdef DETAILED_LOG_INFO
-        LOG(LIB_INFO) << "left: " << left << " right: " << right;
-#endif
-
-        vector<vector<MetaAnalysis*>> ExpResRange(config.GetRange().size(),
-                                                vector<MetaAnalysis*>(1));
-        vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
-                                              vector<MetaAnalysis*>(1));
-
-        MetaAnalysis    Stat(config.GetTestSetToRunQty());
-
-        // Stat is used exactly only once: for one GetRange() or one GetKNN() (but not both)
-        for (size_t i = 0; i < config.GetRange().size(); ++i) {
-          ExpResRange[i][0] = &Stat;
-        }
-        for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-          ExpResKNN[i][0] = &Stat;
-        }
-        for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
-          config.SelectTestSet(TestSetId);
-#ifdef DETAILED_LOG_INFO
-          LOG(LIB_INFO) << "****************************************************";
-          LOG(LIB_INFO) << "*** Test set id: " << TestSetId << 
-                            " (set qty: " << config.GetTestSetToRunQty() << ")" << " iteration: " << iter << "\t***";
-          LOG(LIB_INFO) << "****************************************************";
-#endif
-          if (!vManagerGS[TestSetId].get()) {
-            vManagerGS[TestSetId].reset(new GoldStandardManager<dist_t>(config));
-            vManagerGS[TestSetId]->Compute(maxCacheGSQty); 
-          } else {
-#ifdef DETAILED_LOG_INFO
-            LOG(LIB_INFO) << "Using existing GS for test set id: " << TestSetId;
-#endif
-          }
-
-          std::shared_ptr<Index<dist_t>> MethodPtr = vIndexForAllSetsPtrs[TestSetId];
-          
-          if (!MethodPtr.get()) {
-            LOG(LIB_INFO) << "Creating a new index, params: " << MethPars.ToString();
-            MethodPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
-                                           CreateMethod(true, 
-                                                        methodName,
-                                                        SpaceType, config.GetSpace(), 
-                                                        config.GetDataObjects(), 
-                                                        MethPars) );
-            vIndexForAllSetsPtrs[TestSetId] = MethodPtr;
-          } else {
-#ifdef DETAILED_LOG_INFO
-            LOG(LIB_INFO) << "Reusing an existing index, only reseting params";
-#endif
-            MethodPtr->SetQueryTimeParams(MethPars);
-          }
-
-          vector<shared_ptr<Index<dist_t>>>          IndexPtrs;
-          vector<shared_ptr<MethodWithParams>>       MethodsDesc;
-          
-          IndexPtrs.push_back(MethodPtr);
-          MethodsDesc.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(methodName, MethPars)));
-
-          Experiments<dist_t>::RunAll(false /* don't print info */, 1 /* thread */,
-                                      TestSetId,
-                                      *vManagerGS[TestSetId],
-                                      ExpResRange, ExpResKNN,
-                                      config, 
-                                      IndexPtrs,
-                                      MethodsDesc);
-        }
-        Stat.ComputeAll();
-        if (Stat.GetRecallAvg() >= DesiredRecall &&
-          Stat.GetImprEfficiencyAvg() > impr_best) {
-          recall =    Stat.GetRecallAvg();
-          time_best = Stat.GetQueryTimeAvg();
-          impr_best = Stat.GetImprEfficiencyAvg();
-          alpha_left_best  = alphaLeftCurr; 
-          alpha_right_best = alphaRightCurr; 
-
-          LOG(LIB_INFO) << " ************* BETTER EFFICIENCY POINT ******************* ";
-          LOG(LIB_INFO) << "iteration: " << iter << " out of " << MaxIter;
-          LOG(LIB_INFO) << ALPHA_LEFT_PARAM  << "=" << alpha_left_best  << " " << EXP_LEFT_PARAM  << "=" << exp_left << " "
-                           ALPHA_RIGHT_PARAM << "=" << alpha_right_best << " " << EXP_RIGHT_PARAM << "=" << exp_right;
-          LOG(LIB_INFO) << "Recall: " << Stat.GetRecallAvg();
-          LOG(LIB_INFO) << "Query time: " << Stat.GetQueryTimeAvg();
-          LOG(LIB_INFO) << "Impr. in efficiency: " << Stat.GetImprEfficiencyAvg();
-          LOG(LIB_INFO) << "Impr. in dist comp:  " << Stat.GetImprDistCompAvg();
-          LOG(LIB_INFO) << " ********************************************************** ";
-
-        }
-        MinRecall = std::min(MinRecall, Stat.GetRecallAvg());
-        MaxRecall = std::max(MaxRecall, Stat.GetRecallAvg());
-      }
-    }
-    LOG(LIB_INFO) << " ********** After iteration statistics ******************** ";
-    LOG(LIB_INFO) << " Local: MinRecall: " << MinRecall << " MaxRecall: " << MaxRecall << " Desired: " << DesiredRecall;
-
-    LOG(LIB_INFO) << " Global: best impr. in efficiency: " << impr_best << " Time: "<< time_best << " Recall: " << recall;
-    LOG(LIB_INFO) << " Using: " << ALPHA_LEFT_PARAM  << "=" << alpha_left_best  << " " << EXP_LEFT_PARAM  << "=" << exp_left << " "
-                                << ALPHA_RIGHT_PARAM << "=" << alpha_right_best << " " << EXP_RIGHT_PARAM << "=" << exp_right;
-
-    // Now let's see, if we need to increase/decrease base alpha levels
-    if (MaxRecall < DesiredRecall) {
-      // Two situations are possible
-      if (recall < DesiredRecall) { 
-        // we never got a required recall, let's decrease existing alphas
-        // so that recall will go up.
-        alpha_left_base  = alpha_left_base / StepFactor;
-        alpha_right_base = alpha_right_base / StepFactor;
-
-        LOG(LIB_INFO) << "[CHANGE] max recall < desired recall, setting alpha_left_base=" << alpha_left_base << " alpha_right_base=" << alpha_right_base;
-      } else {
-        // we encountered the required recall before, but we somehow managed to select
-        // large alphas, so that even the maximum recall is below DesiredRecall.
-        // If this is the case, let's return to the previously know good point,
-        // with a decreased step factor.
-        LOG(LIB_INFO) << "[CHANGE] max recall < desired recall, setting alpha_left_base=" << alpha_left_base << " alpha_right_base=" << alpha_right_base;
-
-        GetOptimalAlphas(config, SpaceType, methodName,
-                   DesiredRecall,
-                   MethPars, 
-                   sqrt(StepFactor), alpha_left_best, alpha_right_best,
-                   vManagerGS, vIndexForAllSetsPtrs,
-                   recall, time_best, impr_best,
-                   alpha_left_best, exp_left,
-                   alpha_right_best, exp_right,
-                   MaxIter, MaxRecDepth, StepN, maxCacheGSQty,
-                   recLevel + 1);
-        return;
-      }
-    } else if (MinRecall > DesiredRecall) {
-    /* 
-     * If we are above the minimum recall, this means we chose alphas two pessimistically.
-     * Let's multiply our best values so far by StepFactor.
-     */
-      alpha_left_base  = alpha_left_best * StepFactor;
-      alpha_right_base = alpha_right_best * StepFactor;
-      LOG(LIB_INFO) << "[CHANGE] max recall > desired recall, setting alpha_left_base=" << alpha_left_base << " alpha_right_base=" << alpha_right_base;
-    } else {
-      CHECK(MaxRecall >= DesiredRecall && MinRecall <= DesiredRecall); 
-        // Let's return to the previously know good point,
-        // with a decreased step factor.
-
-      LOG(LIB_INFO) << "[CHANGE] desired recall is between min and max recall, decreasing factor, setting alpha_left_base=" << alpha_left_best << " alpha_right_base=" << alpha_right_best;
-
-        GetOptimalAlphas(config, SpaceType, methodName,
-                   DesiredRecall,
-                   MethPars, 
-                   sqrt(StepFactor), alpha_left_best, alpha_right_best,
-                   vManagerGS, vIndexForAllSetsPtrs,
-                   recall, time_best, impr_best,
-                   alpha_left_best, exp_right,
-                   alpha_right_best, exp_right,
-                   MaxIter, MaxRecDepth, StepN, maxCacheGSQty,
-                   recLevel + 1);
-        return;
-    }
-  }
-
-  LOG(LIB_INFO) << "Exhausted " << MaxIter << " iterations";
-}
-
-template <typename dist_t>
-void GetOptimalAlphas(ExperimentConfig<dist_t>& config, 
-                      const string&   SpaceType,
-                      const string&   methodName,
-                      AnyParams       AllParams, 
-                      float& recall, float& time_best, float& impr_best,
-                      float& alpha_left_best,  unsigned exp_left,
-                      float& alpha_right_best, unsigned exp_right,
-                      unsigned               MaxIter,
-                      unsigned               MaxRecDepth,
-                      unsigned               StepN,
-                      float                  FullFactor,
-                      unsigned               maxCacheGSQty) {
-  time_best = std::numeric_limits<float>::max();
-  impr_best = 0;
-  recall = 0;
-
-  LOG(LIB_INFO) << EXP_LEFT_PARAM << ": " << exp_left << " " << EXP_RIGHT_PARAM ": " << exp_right;
-
-  AnyParamManager pmgr(AllParams);
-
-  LOG(LIB_INFO) << "Method parameters: " << AllParams.ToString();
-
-  float DesiredRecall = 0;
-
-  pmgr.GetParamRequired("desiredRecall", DesiredRecall);
-
-  vector<shared_ptr<GoldStandardManager<dist_t>>>  vManagerGS(config.GetTestSetToRunQty());
-  vector<shared_ptr<Index<dist_t>>>                vIndexForAllSetsPtrs(config.GetTestSetToRunQty());
-
-  GetOptimalAlphas(config, SpaceType, methodName,
-                   DesiredRecall,
-                   pmgr.ExtractParametersExcept({"desiredRecall"}), 
-                   pow(FullFactor, 1.0/StepN), alpha_left_best, alpha_right_best,
-                   vManagerGS, vIndexForAllSetsPtrs,
-                   recall, time_best, impr_best,
-                   alpha_left_best, exp_right,
-                   alpha_right_best, exp_right,
-                   MaxIter, MaxRecDepth, StepN, maxCacheGSQty,
-                   0 /* recLevel */);
 }
 
 template <typename dist_t>
@@ -376,32 +130,44 @@ void RunExper(unsigned AddRestartQty,
 
   AnyParamManager pmgr(MethPars);
 
-  float DesiredRecall = 0;
+  float         desiredRecall = 0;
 
-  pmgr.GetParamRequired("desiredRecall", DesiredRecall);
+  pmgr.GetParamRequired(DESIRED_RECALL_PARAM, desiredRecall);
+
+  string metricName = OPTIM_METRIC_DEFAULT; 
+
+  pmgr.GetParamOptional(OPTIM_METRIC_PARAMETER, metricName);
+
+  OptimMetric metric = getOptimMetric(metricName);
+
+  if (IMPR_INVALID == metric) {
+    stringstream err;
+  
+    err << "Invalid metric name: " << metricName;
+    LOG(LIB_FATAL) << err.str();
+  }
 
   try {
 
-    if (!MaxExp) throw runtime_error("MaxExp can't be zero!");
-    if (MaxExp < MinExp) throw runtime_error("MaxExp can't be < MinExp!");
+    if (!MaxExp) throw runtime_error(string(MIN_EXP_PARAM) + " can't be zero!");
+    if (MaxExp < MinExp) throw runtime_error(string(MAX_EXP_PARAM) + " can't be < " + string(MIN_EXP_PARAM));
 
     if (rangeAll.size() + knnAll.size() != 1) {
       LOG(LIB_FATAL) << "You need to specify exactly one range or one knn search!";
     }
 
     unique_ptr<ExperimentConfig<dist_t>>  config;
+    unique_ptr<Space<dist_t>>             space(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, *SpaceParams));
+
+    if (NULL == space.get()) {
+      LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
+    }
 
     for (unsigned i = 0; i < rangeAll.size(); ++i) {
       vector<dist_t>      range;
       vector<unsigned>    knn;
 
       range.push_back(rangeAll[i]);
-
-      unique_ptr<Space<dist_t>> space(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, *SpaceParams));
-
-      if (NULL == space.get()) {
-        LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
-      }
       
       config.reset(new ExperimentConfig<dist_t>(space.get(),
                                       DataFile, QueryFile, TestSetQty,
@@ -415,12 +181,6 @@ void RunExper(unsigned AddRestartQty,
 
       knn.push_back(knnAll[i]);
 
-      unique_ptr<Space<dist_t>> space(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, *SpaceParams));
-
-      if (NULL == space.get()) {
-        LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
-      }
-      
       config.reset(new ExperimentConfig<dist_t>(space.get(),
                                       DataFile, QueryFile, TestSetQty,
                                       MaxNumData, MaxNumQuery,
@@ -447,7 +207,11 @@ void RunExper(unsigned AddRestartQty,
         LOG(LIB_INFO) << " RANDOM STARTING POINTS: " << alpha_left_loc << " " << alpha_right_loc;
       } 
 
-      GetOptimalAlphas(*config, SpaceType, methodName, MethPars, 
+      GetOptimalAlphas(true,
+                     *config, 
+                     metric, desiredRecall,
+                     SpaceType, methodName, 
+                     pmgr.ExtractParametersExcept({DESIRED_RECALL_PARAM, OPTIM_METRIC_PARAMETER}), 
                      recall_loc, 
                      time_best_loc, impr_best_loc,
                      alpha_left_loc, expLeft, alpha_right_loc, expRight,
@@ -476,14 +240,14 @@ void RunExper(unsigned AddRestartQty,
     }
     LOG(LIB_INFO) << "Recall: " << recall;
     LOG(LIB_INFO) << "Best time: " << time_best;
-    LOG(LIB_INFO) << "Best impr. eff.: " << impr_best;
+    LOG(LIB_INFO) << "Best impr. " << impr_best << " (" << getOptimMetricName(metric) << ")" << endl; 
     LOG(LIB_INFO) << "alpha_left: " << alpha_left;
     LOG(LIB_INFO) << "exp_left: " << exp_left;
     LOG(LIB_INFO) << "alpha_right: " << alpha_right;
     LOG(LIB_INFO) << "exp_right: " << exp_right;
     LOG(LIB_INFO) << "optimal parameters: " << bestParams.str();
 
-    if (recall < DesiredRecall) {
+    if (recall < desiredRecall) {
       LOG(LIB_FATAL) << "Failed to get the desired recall!";
     }
 
@@ -550,7 +314,7 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                         "if non-zero, only the first maxNumData elements are used")
     ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
                         "query file")
-    ("maxCacheGSQty",   po::value<size_t>(&maxCacheGSQty)->default_value(1000),
+    (MAX_CACHE_GS_QTY_PARAM, po::value<size_t>(&maxCacheGSQty)->default_value(MAX_CACHE_GS_QTY_DEFAULT),
                        "a maximum number of gold standard entries to compute/cache")
     ("logFile,l",       po::value<string>(&LogFile)->default_value(""),
                         "log file")
@@ -571,19 +335,19 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                         "<method name>:<param1>,<param2>,...,<paramK>")
     ("outFile,o",       po::value<string>(&ResFile)->default_value(""),
                         "output file")
-    ("minExp",      po::value<unsigned>(&MinExp)->default_value(1),
+    (MIN_EXP_PARAM, po::value<unsigned>(&MinExp)->default_value(MIN_EXP_DEFAULT),
                     "the minimum exponent in the pruning oracle.")
-    ("maxExp",      po::value<unsigned>(&MaxExp)->default_value(2),
+    (MAX_EXP_PARAM, po::value<unsigned>(&MaxExp)->default_value(MAX_EXP_DEFAULT),
                     "the maximum exponent in the pruning oracle.")
-    ("maxIter",     po::value<unsigned>(&MaxIter)->default_value(10),
+    (MAX_ITER_PARAM,     po::value<unsigned>(&MaxIter)->default_value(MAX_ITER_DEFAULT),
                     "the maximum number of iteration while we are looking for a point where a desired recall can be achieved.")
-    ("maxRecDepth", po::value<unsigned>(&MaxRecDepth)->default_value(6),
+    (MAX_REC_DEPTH_PARAM, po::value<unsigned>(&MaxRecDepth)->default_value(MAX_REC_DEPTH_DEFAULT),
                     "the maximum recursion in the maximization algorithm (each recursion leads to decrease in the grid search step).")
-    ("stepN",       po::value<unsigned>(&StepN)->default_value(2),
+    (STEP_N_PARAM,       po::value<unsigned>(&StepN)->default_value(STEP_N_DEFAULT),
                     "each local step of the grid search involves (2StepN+1)^2 mini-iterations.")
-    ("addRestartQty",  po::value<unsigned>(&addRestartQty)->default_value(0),
+    (ADD_RESTART_QTY_PARAM,  po::value<unsigned>(&addRestartQty)->default_value(ADD_RESTART_QTY_DEFAULT),
                     "number of *ADDITIONAL* restarts, initial values are selected randomly")
-    ("fullFactor",  po::value<double>(&fullFactorTmp)->default_value(8.0),
+    (FULL_FACTOR_PARAM,  po::value<double>(&fullFactorTmp)->default_value(FULL_FACTOR_DEFAULT),
                     "the maximum factor used in the local grid search (i.e., if (A, B) is a starting point for the grid search, the first element will be in the range: [A/Factor,A*Factor], while the second element will be in the range [B/Factor,B*Factor]. In the beginning, Factor==FullFactor, but it gradually decreases as the algorithm converges.")
     ;
 
@@ -642,6 +406,7 @@ void ParseCommandLineForTuning(int argc, char*argv[],
     if (!MaxNumQuery && QueryFile.empty()) {
       LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
     }
+
   } catch (const exception& e) {
     LOG(LIB_FATAL) << "Exception: " << e.what();
   }

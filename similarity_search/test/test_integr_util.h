@@ -252,6 +252,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
     vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
+    vector<bool>                       isNewIndex;
 
     bool bFailDueExcept = false;
 
@@ -295,6 +296,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                                         config.GetDataObjects(), MethPars)
                            )
                            :IndexPtrs.back());
+        isNewIndex.push_back(bCreateNew);
 
         LOG(LIB_INFO) << "==============================================";
 
@@ -336,7 +338,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                                       managerGS,
                                       ExpResRange, ExpResKNN,
                                       config, 
-                                      IndexPtrs, MethodsDesc);
+                                      IndexPtrs, isNewIndex, MethodsDesc);
 
 
     } catch (const std::exception& e) {

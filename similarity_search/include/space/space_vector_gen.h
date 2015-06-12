@@ -52,6 +52,9 @@ class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
  protected:
   DistObjType      distObj_;
 
+  virtual Space<dist_t>* HiddenClone() const { 
+    return new VectorSpaceGen<dist_t, DistObjType>(*this); 
+  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
     CHECK(obj1->datalength() == obj2->datalength());

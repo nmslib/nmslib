@@ -48,6 +48,9 @@ template <typename dist_t>
 void ExperimentConfig<dist_t>::Read(istream& controlStream,
                                     istream& binaryStream,
                                     size_t& dataFileQty) {
+  if (dataSetWasRead_) {
+    throw runtime_error("Bug: the function to read cache shouldn't be called after the data set is read!");  
+  }
   string s;
   size_t i;
 
@@ -179,7 +182,7 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
     throw runtime_error(err.str());
   }
 
-  if (noQueryFile_) {
+  if (noQueryData_) {
     for (size_t TestSetId = 0; TestSetId < testSetQty_; ++TestSetId) {
       vector<int> vTmp;
       if (!getline(controlStream, s)) {
@@ -214,7 +217,7 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
   }
   unsigned queryQty = origQuery_.size();
 
-  if (noQueryFile_) {
+  if (noQueryData_) {
     if (!testSetToRunQty_) {
       throw runtime_error("Bug: zero number of test sets!");
     }
@@ -252,7 +255,7 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
 
   WriteField(controlStream, QUERY_QTY, ConvertToString(queryQty));
 
-  if (noQueryFile_) {
+  if (noQueryData_) {
   // Let's save test set assignments
     size_t OrigQty = origData_.size();
     for (size_t SetNum = 0; SetNum < testSetQty_; ++SetNum) {
@@ -274,7 +277,7 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::SelectTestSet(int SetNum) {
-  if (!noQueryFile_) return;
+  if (!noQueryData_) return;
   if (SetNum <0 || static_cast<unsigned>(SetNum) >= testSetToRunQty_) {
     stringstream err;
     err << "Invalid test set #: " << SetNum;
@@ -308,6 +311,13 @@ void ExperimentConfig<dist_t>::SelectTestSet(int SetNum) {
 }
 
 template <typename dist_t>
+void ExperimentConfig<dist_t>::CopyExternal(const ObjectVector& src, ObjectVector& dst, size_t maxQty) {
+  for (size_t i = 0; i < src.size() && i < maxQty; ++i) {
+    dst.push_back(src[i]->Clone());
+  }
+}
+
+template <typename dist_t>
 void ExperimentConfig<dist_t>::ReadDataset() {
   if (space_ == NULL) throw runtime_error("Space pointer should not be NULL!");
   if (!dataobjects_.empty())
@@ -318,7 +328,8 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     throw runtime_error(
         "The set of query objects in non-empty, did you read the data set already?");
 
-  space_->ReadDataset(origData_, this, datafile_.c_str(), maxNumData_);
+  if (pExternalData_) CopyExternal(*pExternalData_, origData_, maxNumData_);
+  else space_->ReadDataset(origData_, this, datafile_.c_str(), maxNumData_);
 
   /*
    * Note!!! 
@@ -327,9 +338,13 @@ void ExperimentConfig<dist_t>::ReadDataset() {
    * 1) dataobjects 
    * 2) queryobjects.
    */
-  if (!noQueryFile_) {
+  if (!noQueryData_) {
     dataobjects_ = origData_;
-    space_->ReadDataset(queryobjects_, this, queryfile_.c_str(), maxNumQuery_);
+    if (pExternalQuery_) 
+      CopyExternal(*pExternalQuery_, queryobjects_, maxNumQuery_);
+    else 
+      space_->ReadDataset(queryobjects_, this, queryfile_.c_str(), maxNumQuery_);
+
     origQuery_ = queryobjects_;
   } else {
     size_t OrigQty = origData_.size();
@@ -370,6 +385,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     }
   }
 
+  dataSetWasRead_ = true;
   LOG(LIB_INFO) << "data & query .... ok!\n";
 }
 
@@ -380,8 +396,8 @@ void ExperimentConfig<dist_t>::PrintInfo() const {
   LOG(LIB_INFO) << "data file             = " << datafile_;
   LOG(LIB_INFO) << "# of test sets        = " << GetTestSetTotalQty();
   LOG(LIB_INFO) << "# of test sets to run = " << GetTestSetToRunQty();
-  LOG(LIB_INFO) << "Use held-out queries  = " << !noQueryFile_;
-  LOG(LIB_INFO) << "# of data points      = " << origData_.size() - (noQueryFile_ ? GetQueryToRunQty():0);
+  LOG(LIB_INFO) << "Use held-out queries  = " << !noQueryData_;
+  LOG(LIB_INFO) << "# of data points      = " << origData_.size() - (noQueryData_ ? GetQueryToRunQty():0);
   LOG(LIB_INFO) << "# of query points     = " << GetQueryToRunQty();
 }
 

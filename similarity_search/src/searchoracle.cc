@@ -16,14 +16,258 @@
 #include "searchoracle.h"
 #include "method/vptree_utils.h"
 #include "space.h"
+#include "method/vptree.h"
+#include "tune.h"
 
 #include <vector>
 #include <iostream>
 #include <queue>
+#include <cmath>
 
 namespace similarity {
 
+const size_t TUNE_QTY_DEFAULT = 20000;
+const size_t TUNE_QUERY_QTY   = 200;
+const size_t TUNE_SPLIT_QTY   = 5;
+const size_t TOTAL_QUERY_QTY  = TUNE_QUERY_QTY * TUNE_SPLIT_QTY;
+const size_t MIN_TUNE_QTY     = TOTAL_QUERY_QTY; 
+
 using std::vector;
+using std::round;
+using std::endl;
+using std::cout;
+
+template <typename dist_t>
+void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
+  // Default values are for the classic triangle inequality
+  alpha_left_  = 1.0;
+  exp_left_    = MIN_EXP_DEFAULT;
+  alpha_right_ = 1.0;
+  exp_right_   = MAX_EXP_DEFAULT;
+  pmgr.GetParamOptional(ALPHA_LEFT_PARAM, alpha_left_);
+  pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, alpha_right_);
+  pmgr.GetParamOptional(EXP_LEFT_PARAM, exp_left_);
+  pmgr.GetParamOptional(EXP_RIGHT_PARAM, exp_right_);
+
+  if (pmgr.hasParam(TUNE_R_PARAM) && pmgr.hasParam(TUNE_K_PARAM)) {
+    stringstream err;
+
+    err << "Specify only one paramter: " << TUNE_R_PARAM << " or " << TUNE_K_PARAM;
+    LOG(LIB_INFO) << err.str();
+    throw runtime_error(err.str());
+  }
+
+  /*
+   * The tuning part is hardcoded to make only with the VP-tree.
+   */
+  if (pmgr.hasParam(TUNE_R_PARAM) || pmgr.hasParam(TUNE_K_PARAM)) {
+  // Obtain optimal parameters automatically
+    size_t fullBucketSize;
+    pmgr.GetParamRequired("bucketSize", fullBucketSize);
+
+    if (data_.size() < TOTAL_QUERY_QTY) {
+      stringstream err;
+      err << "The data size is too small: should be > " << MIN_TUNE_QTY;
+      LOG(LIB_INFO) << err.str();
+      throw runtime_error(err.str());
+    }
+
+    size_t treeHeightQty = static_cast<size_t>(round(float(data_.size() - TUNE_QUERY_QTY)/ fullBucketSize)); 
+
+    size_t tuneQty = TUNE_QTY_DEFAULT;
+    pmgr.GetParamOptional(TUNE_QTY_PARAM, tuneQty);
+
+    if (treeHeightQty > tuneQty) {
+      stringstream err;
+      LOG(LIB_INFO) << "Increasing the value of '" << TUNE_QTY_PARAM << "', because it should be >= " << treeHeightQty;
+      tuneQty = treeHeightQty;
+    }
+    if (treeHeightQty < MIN_TUNE_QTY) {
+      stringstream err;
+      err << "The data size is too small or the bucket size is too big. Select the parameters so that <total # of records> is NOT less than <bucket size> * " << MIN_TUNE_QTY; 
+      LOG(LIB_INFO) << err.str();
+      throw runtime_error(err.str());
+    }
+
+    size_t bucketSize = tuneQty / treeHeightQty;
+    if (!bucketSize) {
+      LOG(LIB_INFO) << "Bug: bucket size is zero in the tunning code";
+      throw runtime_error("Bug: bucket size is zero in the tunning code");
+    }
+    LOG(LIB_INFO) << "tuneQty: " << tuneQty << " Chosen bucket size: " << bucketSize;
+
+    float desiredRecall;
+    pmgr.GetParamRequired(DESIRED_RECALL_PARAM, desiredRecall);
+
+    vector<string>                methodDesc;
+    stringstream                  methStrDesc;
+    string                        methName;
+
+    methStrDesc << METH_VPTREE << ":bucketSize=" << bucketSize;
+
+    ParseMethodArg(methStrDesc.str(), methName, methodDesc);
+    shared_ptr<MethodWithParams>  method = shared_ptr<MethodWithParams>(new MethodWithParams(methName, methodDesc));
+
+    size_t minExp = MIN_EXP_DEFAULT, maxExp = MAX_EXP_DEFAULT;
+
+    pmgr.GetParamOptional(MIN_EXP_PARAM, minExp);
+    pmgr.GetParamOptional(MAX_EXP_PARAM, maxExp);
+
+    if (!maxExp) throw runtime_error(string(MIN_EXP_PARAM) + " can't be zero!");
+    if (maxExp < minExp) throw runtime_error(string(MAX_EXP_PARAM) + " can't be < " + string(MIN_EXP_PARAM));
+
+
+    string metricName = OPTIM_METRIC_DEFAULT; 
+
+    pmgr.GetParamOptional(OPTIM_METRIC_PARAMETER, metricName);
+
+    OptimMetric metric = getOptimMetric(metricName);
+
+    if (IMPR_INVALID == metric) {
+      stringstream err;
+  
+      err << "Invalid metric name: " << metricName;
+      LOG(LIB_INFO) << err.str();
+      throw runtime_error(err.str());
+    }
+
+
+    unique_ptr<ExperimentConfig<dist_t>>  config;
+
+    dist_t eps = 0;
+
+    ObjectVector emptyQueries;
+
+    vector<unsigned>                  knn;
+    vector<dist_t>                    range;
+    // The cloned space will be in the indexing mode.
+    // Otherwise, the tunning code will crash while accessing function IndexTimeDistance() 
+    unique_ptr<const Space<dist_t>>   clonedSpace(space_->Clone());
+
+    if (pmgr.hasParam(TUNE_R_PARAM)) {
+      dist_t r;
+      pmgr.GetParamRequired(TUNE_R_PARAM, r);
+      range.push_back(r);
+      
+      config.reset(new ExperimentConfig<dist_t>(clonedSpace.get(), 
+                                      data_, emptyQueries, 
+                                      TUNE_SPLIT_QTY,
+                                      tuneQty, TUNE_QUERY_QTY,
+                                      0, knn, eps, range));
+  
+    }
+
+    if (pmgr.hasParam(TUNE_K_PARAM)) {
+      size_t k;
+      pmgr.GetParamRequired(TUNE_K_PARAM, k);
+      knn.push_back(k);
+      
+      config.reset(new ExperimentConfig<dist_t>(clonedSpace.get(), 
+                                      data_, emptyQueries, 
+                                      TUNE_SPLIT_QTY,
+                                      tuneQty, TUNE_QUERY_QTY,
+                                      0, knn, eps, range));
+  
+    }
+
+    CHECK(config.get());
+
+    config->ReadDataset();
+
+    size_t maxCacheGSQty = MAX_CACHE_GS_QTY_DEFAULT;
+    pmgr.GetParamOptional(MAX_CACHE_GS_QTY_PARAM, maxCacheGSQty);
+    size_t maxIter = MAX_ITER_DEFAULT;
+    pmgr.GetParamOptional(MAX_ITER_PARAM, maxIter);
+    size_t maxRecDepth = MAX_REC_DEPTH_DEFAULT;
+    pmgr.GetParamOptional(MAX_REC_DEPTH_PARAM, maxRecDepth);
+    size_t stepN = STEP_N_DEFAULT;
+    pmgr.GetParamOptional(STEP_N_PARAM, stepN);
+    size_t addRestartQty = ADD_RESTART_QTY_DEFAULT;
+    pmgr.GetParamOptional(ADD_RESTART_QTY_PARAM, addRestartQty);
+    float fullFactor = FULL_FACTOR_DEFAULT;
+    pmgr.GetParamOptional(FULL_FACTOR_PARAM, fullFactor);
+
+    float recall = 0, time_best = 0, impr_best = -1, alpha_left = 0, alpha_right = 0; 
+    unsigned exp_left = 0, exp_right = 0;
+
+    static  std::random_device          rd;
+    static  std::mt19937                engine(rd());
+    static  std::normal_distribution<>  normGen(0.0f, log(fullFactor));
+
+
+    for (unsigned ce = minExp; ce <= maxExp; ++ce)
+    for (unsigned k = 0; k < 1 + addRestartQty; ++k) {
+      unsigned expLeft = ce, expRight = ce;
+      float recall_loc, time_best_loc, impr_best_loc, 
+            alpha_left_loc = 1.0, alpha_right_loc = 1.0; // These are initial values
+
+      if (k > 0) {
+        // Let's do some random normal fun
+        alpha_left_loc = exp(normGen(engine));
+        alpha_right_loc = exp(normGen(engine));
+        LOG(LIB_INFO) << " RANDOM STARTING POINTS: " << alpha_left_loc << " " << alpha_right_loc;
+      } 
+
+      string SpaceType; // VP-tree doesn't use the space type during creation.
+
+      GetOptimalAlphas(printProgress_,
+                     *config, 
+                     metric, desiredRecall,
+                     SpaceType, 
+                     METH_VPTREE, 
+                     method->methPars_, 
+                     recall_loc, 
+                     time_best_loc, impr_best_loc,
+                     alpha_left_loc, expLeft, alpha_right_loc, expRight,
+                     maxIter, maxRecDepth, stepN, fullFactor, maxCacheGSQty);
+
+      if (impr_best_loc > impr_best) {
+        recall = recall_loc; 
+        time_best = time_best_loc; 
+        impr_best = impr_best_loc;
+        alpha_left = alpha_left_loc; 
+        alpha_right = alpha_right_loc;
+        exp_left = expLeft;
+        exp_right = expRight;
+      }
+    }
+
+    alpha_left_ = alpha_left;
+    alpha_right_ = alpha_right;
+    exp_left_ = exp_left;
+    exp_right_ = exp_right;
+
+    stringstream  bestParams;
+    bestParams << ALPHA_LEFT_PARAM << "=" << alpha_left_ << "," << ALPHA_RIGHT_PARAM << "=" << alpha_right_ << ","
+                 << EXP_LEFT_PARAM   << "=" << exp_left_   << "," << EXP_RIGHT_PARAM   << "=" << exp_right_;
+
+    if (printProgress_) {
+      cout << "===============================================================" << endl;
+      cout << "|                      OPTIMIZATION RESULTS                   |" << endl;
+      cout << "===============================================================" << endl;
+      if (!knn.empty()) {
+        cout << "K: "  << knn[0] << endl;
+      } else {
+        cout << "Range: "  << range[0] << endl;
+      }
+      cout << "Recall: " << recall << endl;
+      cout << "Best time: " << time_best << endl;
+      cout << "Best impr. " << impr_best << " (" << getOptimMetricName(metric) << ")" << endl; 
+      cout << "alpha_left: " << alpha_left << endl;
+      cout << "exp_left: " << exp_left << endl;
+      cout << "alpha_right: " << alpha_right << endl;
+      cout << "exp_right: " << exp_right << endl;
+      cout << "optimal parameters: " << bestParams.str() << endl;
+      cout << "===============================================================" << endl;
+    }
+
+    if (recall < desiredRecall) {
+      LOG(LIB_INFO) << "Failed to get the desired recall!";
+      throw runtime_error("Failed to get the desired recall!");
+    }
+ 
+  }
+}
 
 template <typename dist_t>
 SamplingOracleCreator<dist_t>::SamplingOracleCreator(
@@ -269,6 +513,10 @@ template class SamplingOracleCreator<int>;
 template class SamplingOracleCreator<short int>;
 template class SamplingOracleCreator<float>;
 template class SamplingOracleCreator<double>;
+
+template class PolynomialPruner<int>;
+template class PolynomialPruner<float>;
+template class PolynomialPruner<double>;
 
 
 }

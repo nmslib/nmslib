@@ -70,6 +70,11 @@ class Experiments;
 template <typename dist_t>
 class Space {
  public:
+  virtual Space<dist_t>* Clone() const {
+    Space<dist_t>* res = HiddenClone();
+    res->SetIndexPhase(); // A newly cloned space should start in the index phase!
+    return res;
+  }
   virtual ~Space() {}
   // This function is public and it is not supposed to be used in the query-mode
   dist_t IndexTimeDistance(const Object* obj1, const Object* obj2) const {
@@ -124,6 +129,7 @@ class Space {
    * IndexTimeDistance access can be disable/enabled only by function friends 
    */
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
+  virtual Space<dist_t>* HiddenClone() const = 0;
  private:
   bool mutable bIndexPhase = true;
 

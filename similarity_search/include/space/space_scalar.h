@@ -43,6 +43,7 @@ public:
     return "CosineSimilarity";
   }
 protected:
+  virtual Space<dist_t>* HiddenClone() const { return new SpaceCosineSimilarity<dist_t>(); } // no parameters 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
 };
 
@@ -62,6 +63,7 @@ public:
   }
 
 protected:
+  virtual Space<dist_t>* HiddenClone() const { return new SpaceAngularDistance<dist_t>(); } // no parameters 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
 };
 

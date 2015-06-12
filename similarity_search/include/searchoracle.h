@@ -28,12 +28,63 @@
 #include "experimentconf.h"
 #include "logging.h"
 
-#define EXP_LEFT_PARAM  "expLeft"
-#define EXP_RIGHT_PARAM "expRight"
-#define ALPHA_LEFT_PARAM  "alphaLeft"
-#define ALPHA_RIGHT_PARAM "alphaRight"
+#define EXP_LEFT_PARAM              "expLeft"
+#define EXP_RIGHT_PARAM             "expRight"
+#define ALPHA_LEFT_PARAM            "alphaLeft"
+#define ALPHA_RIGHT_PARAM           "alphaRight"
+#define MIN_EXP_PARAM               "minExp"
+#define MAX_EXP_PARAM               "maxExp"
+#define DESIRED_RECALL_PARAM        "desiredRecall"
+#define TUNE_K_PARAM                "tuneK"
+#define TUNE_R_PARAM                "tuneR"
+#define TUNE_QTY_PARAM              "tuneQty"
+
+#define MAX_CACHE_GS_QTY_PARAM      "maxCacheGSQty"
+#define MAX_ITER_PARAM              "maxIter"
+#define MAX_REC_DEPTH_PARAM         "maxRecDepth"
+#define STEP_N_PARAM                "stepN"
+#define ADD_RESTART_QTY_PARAM       "addRestartQty"
+#define FULL_FACTOR_PARAM           "fullFactor"
 
 namespace similarity {
+
+const size_t MIN_EXP_DEFAULT          =  1;
+const size_t MAX_EXP_DEFAULT          =  1;
+
+const size_t MAX_CACHE_GS_QTY_DEFAULT =  1000;
+const size_t MAX_ITER_DEFAULT         =  10;
+const size_t MAX_REC_DEPTH_DEFAULT    =  6;
+const size_t STEP_N_DEFAULT           =  2;
+const size_t ADD_RESTART_QTY_DEFAULT  =  4;
+const double FULL_FACTOR_DEFAULT      = 8.0;
+
+using std::string; 
+using std::vector; 
+using std::stringstream;
+
+enum OptimMetric  {IMPR_DIST_COMP,
+                   IMPR_EFFICIENCY,
+                   IMPR_INVALID};
+
+#define OPTIM_METRIC_PARAMETER  "metric"
+
+#define OPTIM_IMPR_DIST_COMP  "dist"
+#define OPTIM_IMPR_EFFICIENCY "time"
+#define OPTIM_METRIC_DEFAULT   OPTIM_IMPR_DIST_COMP 
+
+inline OptimMetric getOptimMetric(const string& s) {
+  string s1 = s;
+  ToLower(s1);
+  if (s1 == OPTIM_IMPR_DIST_COMP) return IMPR_DIST_COMP;
+  if (s1 == OPTIM_IMPR_EFFICIENCY) return IMPR_EFFICIENCY;
+  return IMPR_INVALID;
+}
+
+inline string getOptimMetricName(OptimMetric metr) {
+  if (IMPR_DIST_COMP == metr) return "improvement in dist. comp";
+  if (IMPR_EFFICIENCY == metr) return "improvement in efficiency";
+  throw runtime_error("Bug: Invalid optimization metric name");
+}
 
 /*
  * Basic pruning oracles are built on the idea that you can relax the pruning criterion
@@ -82,31 +133,22 @@ namespace similarity {
  * MaxDist <= alphaRight | M  - d(q, pivot) |^expRight
  */
 
-using std::string; 
-using std::vector; 
-using std::stringstream;
-
 enum VPTreeVisitDecision { kVisitLeft = 1, kVisitRight = 2, kVisitBoth = 3 };
 
 template <typename dist_t>
 class PolynomialPruner {
 public:
   static std::string GetName() { return "polynomial pruner"; }
-  PolynomialPruner() : alpha_left_(1), exp_left_(1), alpha_right_(1), exp_right_(1) {}
-  void SetParams(AnyParamManager& pmgr) {
-    // Default values are for the classic triangle inequality
-    alpha_left_  = 1.0;
-    exp_left_    = 1;
-    alpha_right_ = 1.0;
-    exp_right_   = 1;
-    pmgr.GetParamOptional(ALPHA_LEFT_PARAM, alpha_left_);
-    pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, alpha_right_);
-    pmgr.GetParamOptional(EXP_LEFT_PARAM, exp_left_);
-    pmgr.GetParamOptional(EXP_RIGHT_PARAM, exp_right_);
-  }
+  PolynomialPruner(const Space<dist_t>* space, const ObjectVector& data, bool bPrintProgres) : 
+      space_(space), data_(data), printProgress_(bPrintProgres), alpha_left_(1), exp_left_(1), alpha_right_(1), exp_right_(1) {}
+  void SetParams(AnyParamManager& pmgr);
 
   vector<string> GetParams() const {
-    vector<string> res = {ALPHA_LEFT_PARAM, EXP_LEFT_PARAM, ALPHA_RIGHT_PARAM, EXP_RIGHT_PARAM};
+    vector<string> res = {ALPHA_LEFT_PARAM, EXP_LEFT_PARAM, ALPHA_RIGHT_PARAM, EXP_RIGHT_PARAM, 
+
+                          MIN_EXP_PARAM, MAX_EXP_PARAM, DESIRED_RECALL_PARAM, TUNE_K_PARAM, TUNE_R_PARAM, TUNE_QTY_PARAM,
+
+                          MAX_CACHE_GS_QTY_PARAM, MAX_ITER_PARAM, MAX_REC_DEPTH_PARAM, STEP_N_PARAM, ADD_RESTART_QTY_PARAM, FULL_FACTOR_PARAM};
     return res;
   }
   
@@ -147,6 +189,10 @@ public:
     return str.str();
   }
 private:
+  const Space<dist_t>*  space_;
+  const ObjectVector    data_;
+  bool                  printProgress_;
+
   double    alpha_left_;
   unsigned  exp_left_;
   double    alpha_right_;

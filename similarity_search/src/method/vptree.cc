@@ -44,6 +44,7 @@ VPTree<dist_t, SearchOracle>::VPTree(
                        const ObjectVector& data,
                        const AnyParams& MethParams,
                        bool use_random_center) : 
+                              oracle_(space, data, PrintProgress),
                               BucketSize_(50),
                               MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT),
                               ChunkBucket_(true)
@@ -56,9 +57,8 @@ VPTree<dist_t, SearchOracle>::VPTree(
   LOG(LIB_INFO) << "bucketSize  = " << BucketSize_;
   LOG(LIB_INFO) << "chunkBucket = " << ChunkBucket_;
 
+  // Call this function *ONLY AFTER* the bucket size is obtained!
   VPTree<dist_t,SearchOracle>::SetQueryTimeParamsInternal(pmgr);
-
-  LOG(LIB_INFO) << "Initial parameters of the oracle: ";
 
   pmgr.CheckUnused();
 

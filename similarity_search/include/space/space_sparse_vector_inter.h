@@ -66,6 +66,7 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
   }
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
  protected:
+  virtual Space<dist_t>* HiddenClone() const = 0;
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 };
 

@@ -288,6 +288,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
     //ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
     vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
+    vector<bool>                       isNewIndex;
 
     try {
       
@@ -319,6 +320,7 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
         LOG(LIB_INFO) << (bCreateNew ? "Creating a new index":"Using a previosuly created index");
 
+        isNewIndex.push_back(bCreateNew);
         IndexPtrs.push_back(
                 bCreateNew ?
                            shared_ptr<Index<dist_t>>(
@@ -367,7 +369,8 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
                                       managerGS,
                                       ExpResRange, ExpResKNN,
                                       config, 
-                                      IndexPtrs, MethodsDesc);
+                                      IndexPtrs, isNewIndex,
+                                      MethodsDesc);
 
 
     } catch (const std::exception& e) {

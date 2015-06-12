@@ -122,6 +122,7 @@ class KLDivGenSlow : public KLDivAbstract<dist_t> {
 
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t); }
  protected:
+  virtual Space<dist_t>* HiddenClone() const { return new KLDivGenSlow<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
 };
@@ -137,6 +138,7 @@ class KLDivGenFast : public KLDivAbstract<dist_t> {
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
   virtual Object* Mean(const ObjectVector& data) const;
  protected:
+  virtual Space<dist_t>* HiddenClone() const { return new KLDivGenFast<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
 };
@@ -155,6 +157,7 @@ class ItakuraSaitoFast : public BregmanDiv<dist_t> {
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
   virtual Object* Mean(const ObjectVector& data) const;
  protected:
+  virtual Space<dist_t>* HiddenClone() const { return new ItakuraSaitoFast<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
 };
@@ -174,6 +177,7 @@ class KLDivGenFastRightQuery : public VectorSpace<dist_t> {
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
+  virtual Space<dist_t>* HiddenClone() const { return new KLDivGenFastRightQuery<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
 };
@@ -193,6 +197,7 @@ class KLDivFast: public VectorSpace<dist_t> {
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
+  virtual Space<dist_t>* HiddenClone() const { return new KLDivFast<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
 };
@@ -212,6 +217,7 @@ class KLDivFastRightQuery: public VectorSpace<dist_t> {
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
+  virtual Space<dist_t>* HiddenClone() const { return new KLDivFastRightQuery<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
 };

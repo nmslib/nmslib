@@ -37,7 +37,7 @@ using std::unordered_map;
 template <typename dist_t>
 class ExperimentConfig {
 public:
-  ExperimentConfig(Space<dist_t>* space,
+  ExperimentConfig(const Space<dist_t>* space,
                    const string& datafile,
                    const string& queryfile,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
@@ -47,10 +47,12 @@ public:
                    const typename std::vector<unsigned>& knn,
                    float eps,
                    const typename std::vector<dist_t>& range)
-      : space_(reinterpret_cast<Space<dist_t>*>(space)),
+      : space_(space),
         datafile_(datafile),
         queryfile_(queryfile),
-        noQueryFile_(queryfile.empty()),
+        pExternalData_(NULL),
+        pExternalQuery_(NULL),
+        noQueryData_(queryfile.empty()),
         testSetToRunQty_(TestSetQty),
         testSetQty_(TestSetQty),
         maxNumData_(MaxNumData),
@@ -59,11 +61,48 @@ public:
         dimension_(dimension),
         range_(range),
         knn_(knn),
-        eps_(eps) {
-    if (noQueryFile_) {
+        eps_(eps),
+        dataSetWasRead_(false) {
+    if (noQueryData_) {
       if (!testSetToRunQty_) {
         throw runtime_error(
-            "Bad configuration. One should either specify a query file, "
+            "Bad configuration. One should either specify a query file/data, "
+            " or the number of test sets obtained by bootstrapping "
+            "(random division into query and data files).");
+      }
+    }
+  }
+
+  ExperimentConfig(const Space<dist_t>* space,
+                   const ObjectVector& externalData,
+                   const ObjectVector& externalQuery,
+                   unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
+                   unsigned MaxNumData,
+                   unsigned MaxNumQueryToRun,
+                   unsigned dimension,
+                   const typename std::vector<unsigned>& knn,
+                   float eps,
+                   const typename std::vector<dist_t>& range)
+      : space_(space),
+        datafile_(""),
+        queryfile_(""),
+        pExternalData_(&externalData),
+        pExternalQuery_(&externalQuery),
+        noQueryData_(externalQuery.empty()),
+        testSetToRunQty_(TestSetQty),
+        testSetQty_(TestSetQty),
+        maxNumData_(MaxNumData),
+        maxNumQuery_(MaxNumQueryToRun),
+        maxNumQueryToRun_(MaxNumQueryToRun),
+        dimension_(dimension),
+        range_(range),
+        knn_(knn),
+        eps_(eps),
+        dataSetWasRead_(false) {
+    if (noQueryData_) {
+      if (!testSetToRunQty_) {
+        throw runtime_error(
+            "Bad configuration. One should either specify a query file/data, "
             " or the number of test sets obtained by bootstrapping "
             "(random division into query and data files).");
       }
@@ -85,15 +124,14 @@ public:
     }
   }
 
-  void ReadDataset();
   void PrintInfo() const;
   void SelectTestSet(int SetNum);
   int GetTestSetToRunQty() const {
-    if (!noQueryFile_) return 1;
+    if (!noQueryData_) return 1;
     return testSetToRunQty_;
   }
   int GetTestSetTotalQty() const {
-    if (!noQueryFile_) return 1;
+    if (!noQueryData_) return 1;
     return testSetQty_;
   }
   size_t GetOrigDataQty() const { return origData_.size(); }
@@ -105,11 +143,11 @@ public:
   const typename std::vector<dist_t>& GetRange() const { return range_; }
   int   GetDimension() const { return dimension_; }
   int   GetQueryToRunQty() const {
-    return noQueryFile_ ? maxNumQueryToRun_ :
+    return noQueryData_ ? maxNumQueryToRun_ :
                           static_cast<unsigned>(origQuery_.size());
   }
   int   GetTotalQueryQty() const {
-    return noQueryFile_ ? maxNumQuery_:
+    return noQueryData_ ? maxNumQuery_:
                           static_cast<unsigned>(origQuery_.size());
   }
 
@@ -117,10 +155,24 @@ public:
    * Read/Write : save/retrieve some of the config information.
    */
   void Write(ostream& controlStream, ostream& binaryStream);
+  /* 
+   * If this function is called (i.e., the cache is read), it should be read
+   * before the dataset is read, because data/query splits are stored in cache.
+   * TODO: this is an evil form of delayed (and ordered) initialization,
+   *       we'll need to get rid of this some day. Instead, we should do
+   *       all the work in the constructor.
+   *
+   *       For now, as a protection from changing the sequence of calls,
+   *       we have a special flag (dataSetWasRead_). However, this is not
+   *       an ideal solution, in particular, b/c the bug will be noticed
+   *       only at run-time.
+   *       
+   */
   void Read(istream& controlStream, istream& binaryStream, size_t& cacheDataSetQty);
 
+  void ReadDataset();
 private:
-  Space<dist_t>*    space_;
+  const Space<dist_t>*    space_;
   ObjectVector      dataobjects_;
   ObjectVector      queryobjects_;
   ObjectVector      origData_;
@@ -129,7 +181,9 @@ private:
   unordered_map<size_t, size_t> cachedDataAssignment_;
   string            datafile_;
   string            queryfile_;
-  bool              noQueryFile_;
+  const ObjectVector* pExternalData_;  
+  const ObjectVector* pExternalQuery_;  
+  bool              noQueryData_;
   unsigned          testSetToRunQty_;
   unsigned          testSetQty_;
   unsigned          maxNumData_;
@@ -137,10 +191,14 @@ private:
   unsigned          maxNumQueryToRun_;
   unsigned          dimension_;
 
+
   vector<dist_t>    range_;  // range search parameter
   vector<unsigned>  knn_;    // knn search parameters
   float             eps_;    // knn search parameter
 
+  bool              dataSetWasRead_;
+
+  void CopyExternal(const ObjectVector& src, ObjectVector& dst, size_t maxQty);
 };
 
 }

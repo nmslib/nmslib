@@ -59,6 +59,7 @@ class StringSpace : public Space<dist_t> {
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
+  virtual Space<dist_t>* HiddenClone() const = 0;
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
   void ReadStr(std::string line, LabelType& label, std::string& str) const;
 };

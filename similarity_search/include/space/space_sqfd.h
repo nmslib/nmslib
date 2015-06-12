@@ -39,6 +39,7 @@ class SqfdFunction {
   virtual ~SqfdFunction() {}
   virtual dist_t f(const dist_t* p1, const dist_t* p2, const int sz) const = 0;
   virtual std::string ToString() const = 0;
+  virtual SqfdFunction<dist_t>* Clone() const = 0;
 };
 
 template <typename dist_t>
@@ -49,6 +50,9 @@ class SqfdMinusFunction : public SqfdFunction<dist_t> {
   }
   std::string ToString() const {
     return "minus function";
+  }
+  virtual SqfdFunction<dist_t>* Clone() const {
+    return new SqfdMinusFunction<dist_t>(); // No parameters!!!!
   }
 };
 
@@ -63,6 +67,9 @@ class SqfdHeuristicFunction : public SqfdFunction<dist_t> {
     std::stringstream stream;
     stream << "heuristic function alpha=" << alpha_;
     return stream.str();
+  }
+  virtual SqfdFunction<dist_t>* Clone() const {
+    return new SqfdHeuristicFunction<dist_t>(alpha_);
   }
  private:
   float alpha_;
@@ -80,6 +87,9 @@ class SqfdGaussianFunction : public SqfdFunction<dist_t> {
     std::stringstream stream;
     stream << "gaussian function alpha=" << alpha_;
     return stream.str();
+  }
+  virtual SqfdFunction<dist_t>* Clone() const {
+    return new SqfdGaussianFunction<dist_t>(alpha_);
   }
  private:
   float alpha_;
@@ -108,6 +118,9 @@ class SpaceSqfd : public Space<dist_t> {
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
+  virtual Space<dist_t>* HiddenClone() const {
+    return new SpaceSqfd<dist_t>(func_->Clone());
+  }
   dist_t HiddenDistance(
       const Object* obj1,
       const Object* obj2) const;

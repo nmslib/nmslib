@@ -233,6 +233,12 @@ public:
     if (bFail) throw runtime_error("Unknown parameters found!"); 
   }
 
+  const AnyParams& GetAllParams() const { return params; }
+
+  void copySeen(AnyParamManager& other) {
+    for (const string s: seen) other.seen.insert(s);
+  }
+
 private:
   const AnyParams&  params;
   set<string>       seen;
