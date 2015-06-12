@@ -1,0 +1,63 @@
+annoy	Annoy(n_trees=20, n_cand=100)	63.6466248035	0.000926667928696	0.2097
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.7', 'bucketSize=100'])	157.288635969	0.0181734850407	0.6165
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.8', 'bucketSize=100'])	169.631186962	0.0304653160572	0.7311
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.85', 'bucketSize=100'])	162.692454815	0.0363680660725	0.7828
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.2', 'bucketSize=100'])	92.2954149246	0.00132585000992	0.1805
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.90', 'bucketSize=100'])	163.445743084	0.0459667329788	0.8348
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=14', 'initIndexAttempts=4', 'initSearchAttempts=2'])	282.860117912	0.00174871993065	0.7344
+kgraph	KGraph(P=100)	529.424396992	0.00254578995705	0.7328
+annoy	Annoy(n_trees=40, n_cand=400)	116.270255089	0.00629950284958	0.5911
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=20', 'initIndexAttempts=4', 'initSearchAttempts=16'])	415.559248924	0.0163274140358	0.9527
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.6', 'bucketSize=100'])	119.781074047	0.012776777029	0.5241
+kgraph	KGraph(P=20)	529.866239071	0.00101422810555	0.5232
+annoy	Annoy(n_trees=20, n_cand=20)	63.509857893	0.000244385004044	0.0829
+kgraph	KGraph(P=50)	528.914648056	0.00161340785027	0.5999
+annoy	Annoy(n_trees=10, n_cand=400)	33.4790389538	0.0016875538826	0.2596
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=3', 'initIndexAttempts=5', 'initSearchAttempts=2'])	107.146593094	0.000518929958344	0.2244
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.99', 'bucketSize=100'])	197.462184906	0.0774957649708	0.9722
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=20', 'initIndexAttempts=4', 'initSearchAttempts=2'])	416.121954918	0.00252381396294	0.8062
+annoy	Annoy(n_trees=10, n_cand=100)	33.5189619064	0.000474868059158	0.1268
+bruteforce1(nmslib)	Nmslib(method_name=seq_search, method_param=['copyMem=1'])	4.57521390915	0.090675467968	1.0
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=8', 'initIndexAttempts=5', 'initSearchAttempts=2'])	215.329800844	0.00106942009926	0.5943
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=20', 'initIndexAttempts=4', 'initSearchAttempts=8'])	416.879307985	0.00891862511635	0.9195
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=20', 'initIndexAttempts=4', 'initSearchAttempts=48'])	416.99530983	0.0399933679104	0.9854
+annoy	Annoy(n_trees=10, n_cand=1000)	33.5015342236	0.00405153918266	0.3867
+bruteforce0(nmslib)	Nmslib(method_name=seq_search, method_param=['copyMem=0'])	4.13081908226	0.242584450006	1.0
+annoy	Annoy(n_trees=100, n_cand=1000)	266.639194965	0.0359701268673	0.9311
+annoy	Annoy(n_trees=3, n_cand=10)	12.4581449032	4.10449504852e-05	0.0159
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.1', 'bucketSize=100'])	73.7839779854	0.00043709397316	0.099
+annoy	Annoy(n_trees=100, n_cand=200)	266.990620852	0.00813314795494	0.6886
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=5', 'initIndexAttempts=5', 'initSearchAttempts=2'])	150.017472982	0.000738425016403	0.4255
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.5', 'bucketSize=100'])	110.609449863	0.00760441112518	0.4204
+kgraph	KGraph(P=1000)	529.159098148	0.0160453858376	0.9324
+annoy	Annoy(n_trees=40, n_cand=100)	115.825205088	0.00171951508522	0.3373
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.3', 'bucketSize=100'])	81.3066759109	0.00277355599403	0.2632
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=17', 'initIndexAttempts=4', 'initSearchAttempts=2'])	351.691486835	0.00213725614548	0.78
+annoy	Annoy(n_trees=100, n_cand=100)	266.609856129	0.00428691387177	0.5541
+bruteforce	BruteForce()	0.122823953629	0.886583773136	1.0
+annoy	Annoy(n_trees=20, n_cand=400)	63.4778580666	0.00334326100349	0.4065
+kgraph	KGraph(P=500)	529.321156025	0.00837973594666	0.8985
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.95', 'bucketSize=100'])	176.264395952	0.056354943037	0.9018
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=11', 'initIndexAttempts=5', 'initSearchAttempts=2'])	282.632378101	0.0014479238987	0.6804
+annoy	Annoy(n_trees=40, n_cand=40)	115.973905087	0.000772678852081	0.2137
+annoy	Annoy(n_trees=10, n_cand=200)	33.5824859142	0.000888000011444	0.1833
+BallTree(nmslib)	Nmslib(method_name=vptree, method_param=['tuneK=10', 'desiredRecall=0.4', 'bucketSize=100'])	95.489346981	0.00465019917488	0.3447
+annoy	Annoy(n_trees=5, n_cand=25)	18.471462965	8.57179164886e-05	0.033
+annoy	Annoy(n_trees=10, n_cand=10)	33.5231740475	9.00101661682e-05	0.0359
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=20', 'initIndexAttempts=4', 'initSearchAttempts=4'])	422.702996969	0.00483877706528	0.8716
+kgraph	KGraph(P=200)	529.575156927	0.00418444705009	0.8277
+annoy	Annoy(n_trees=10, n_cand=40)	33.5547168255	0.000220105886459	0.0739
+annoy	Annoy(n_trees=100, n_cand=400)	266.978362799	0.01565640378	0.8177
+SW-graph(nmslib)	Nmslib(method_name=small_world_rand, method_param=['NN=20', 'initIndexAttempts=4', 'initSearchAttempts=32'])	421.463042974	0.0288407819271	0.9752
+annoy	Annoy(n_trees=20, n_cand=200)	63.6212859154	0.00174776911736	0.296
+flann	FLANN(target_precision=0.700000)	1129.1290319	0.00182282996178	0.6004
+flann	FLANN(target_precision=0.200000)	493.736586094	0.000187391042709	0.1275
+flann	FLANN(target_precision=0.800000)	2055.7302959	0.00268000292778	0.6846
+flann	FLANN(target_precision=0.970000)	9569.99871707	0.0291650640965	0.9421
+flann	FLANN(target_precision=0.900000)	3898.22000098	0.00636076998711	0.8151
+flann	FLANN(target_precision=0.990000)	3819.73505998	0.100193274975	1.0
+flann	FLANN(target_precision=0.500000)	682.883198977	0.000547054052353	0.4021
+flann	FLANN(target_precision=0.980000)	3798.18061495	0.101117418051	1.0
+flann	FLANN(target_precision=0.950000)	7289.15739799	0.019423967123	0.912
+flann	FLANN(target_precision=0.995000)	4642.07597494	0.100367709875	1.0
+flann	FLANN(target_precision=0.975000)	9034.04715896	0.0343554599285	0.9542
