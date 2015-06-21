@@ -5,8 +5,7 @@ NON_METRIC_SPACE_LIBRARY_LIB=$(NON_METRIC_SPACE_LIBRARY)/release
 PYTHON_INC=/usr/include/python$(PYTHON_VERSION)
 ADD_LIBS= -lrt -lgsl -lgslcblas -lboost_program_options -fopenmp
 
-CC=g++
-CFLAGS=-c -fpic -Wall -I$(PYTHON_INC) -I$(NON_METRIC_SPACE_LIBRARY_INC) -std=c++11 -Ofast -fno-strict-aliasing
+CXXFLAGS=-c -fpic -Wall -I$(PYTHON_INC) -I$(NON_METRIC_SPACE_LIBRARY_INC) -std=c++11 -Ofast -fno-strict-aliasing
 LDFLAGS=-shared -lpython$(PYTHON_VERSION) -pthread 
 
 SOURCES=nmslib.cc
@@ -24,10 +23,10 @@ install: all
 .PHONY: clean 
 
 $(FINALLIB): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(FINALLIB)
+	$(CXX) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(FINALLIB)
 
 .cc.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:
 	rm -f $(OBJECTS) $(FINALLIB)
