@@ -40,7 +40,7 @@ TestRunner& TestRunner::Instance() {
   return instance;
 }
 
-void TestRunner::AddTest(const std::string& test_name, TestFunc& test_func) {
+void TestRunner::AddTest(const std::string& test_name, TestBase* test_instance) {
   const size_t pos = test_name.find(kDisable);
   bool disabled = false;
   if (pos != std::string::npos) {
@@ -51,7 +51,7 @@ void TestRunner::AddTest(const std::string& test_name, TestFunc& test_func) {
       exit(1);
     }
   }
-  tests_.push_back(std::make_tuple(test_name, test_func, disabled));
+  tests_.push_back(std::make_tuple(test_name, test_instance, disabled));
 }
 
 int TestRunner::RunAllTests() {
@@ -64,7 +64,7 @@ int TestRunner::RunAllTests() {
       std::cout << yellow << "disabled" << no_color << std::endl;
     } else {
       try {
-        std::get<1>(*it)();
+        std::get<1>(*it)->Test();
         std::cout << green << "passed" << no_color << std::endl;
       } catch (TestException& ex) {
         ++num_failed;

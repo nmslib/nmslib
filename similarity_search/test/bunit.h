@@ -50,30 +50,35 @@ class TestException : std::exception {
 
 const std::string kDisable = "DISABLE_";
 
+class TestBase {
+public:
+  virtual void Test() = 0;
+  virtual ~TestBase(){}
+};
+
 class TestRunner {
  public:
   ~TestRunner() {}
 
   static TestRunner& Instance();
-  void AddTest(const std::string& test_name, TestFunc& test_func);
+  void AddTest(const std::string& test_name, TestBase* test_instance);
   int RunAllTests();
 
  private:
   TestRunner() {}
-  // <test_name, test_func, is_disabled>
-  std::vector<std::tuple<std::string,TestFunc,bool>> tests_;
+  // <test_name, test_instance, is_disabled>
+  std::vector<std::tuple<std::string,TestBase*,bool>> tests_;
 };
 
 #define TEST(test_name) \
-  class _Test_##test_name##_ { \
+  class _Test_##test_name##_ : TestBase { \
    public: \
     _Test_##test_name##_() { \
-      TestFunc test_func = std::bind(&_Test_##test_name##_::Test, this); \
-      similarity::TestRunner::Instance().AddTest(#test_name, test_func); \
+      similarity::TestRunner::Instance().AddTest(#test_name, this); \
     } \
-    ~_Test_##test_name##_() {} \
+    virtual ~_Test_##test_name##_() {} \
    private: \
-    void Test(); \
+    virtual void Test(); \
   }; \
   similarity::_Test_##test_name##_ _test_##test_name##_; \
   void _Test_##test_name##_::Test()
