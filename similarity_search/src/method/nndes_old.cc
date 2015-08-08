@@ -56,14 +56,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "utils.h"
 #include "rangequery.h"
 #include "knnquery.h"
-#include "method/nndes.h"
-
-#define USE_BITSET_FOR_SEARCHING 1
+#include "method/nndes_old.h"
 
 namespace similarity {
 
 template <typename dist_t>
-NNDescentMethod<dist_t>::NNDescentMethod(
+NNDescentMethodOld<dist_t>::NNDescentMethodOld(
     bool  PrintProgress,
     const Space<dist_t>* space,
     const ObjectVector& data,
@@ -139,24 +137,22 @@ NNDescentMethod<dist_t>::NNDescentMethod(
 }
 
 template <typename dist_t>
-void NNDescentMethod<dist_t>::Search(RangeQuery<dist_t>* query) {
+void NNDescentMethodOld<dist_t>::Search(RangeQuery<dist_t>* query) {
   throw runtime_error("Range search is not supported!");
 }
 
 template <typename dist_t>
-void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
+void NNDescentMethodOld<dist_t>::Search(KNNQuery<dist_t>* query) {
   greedy_ ? SearchGreedy(query) : SearchSmallWorld(query);
 }
 
 template <typename dist_t>
-void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
+void NNDescentMethodOld<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
   const vector<KNN> &nn = nndesObj_->getNN();
 
-#if USE_BITSET_FOR_SEARCHING
-  vector<bool>                      visitedBitset(data_.size());
-#else
+  size_t k = query->GetK();
+  set <EvaluatedNode>               resultSet;
   unordered_set <IdType>            visitedNodes;
-#endif
 
   for (size_t i=0; i < initSearchAttempts_; i++) {
   /**
@@ -167,19 +163,13 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
     priority_queue <dist_t>             closestDistQueue; //The set of all elements which distance was calculated
     priority_queue <EvaluatedNode>      candidateSet; //the set of elements which we can use to evaluate
 
-    const Object* currObj = data_[randPoint];
-    dist_t         d = query->DistanceObjLeft(currObj);
-    query->CheckAndAddToResult(d, currObj);
-    
+    dist_t         d = query->DistanceObjLeft(data_[randPoint]);
     EvaluatedNode  ev(-d, randPoint);
 
     candidateSet.push(ev);
     closestDistQueue.push(d);
-#if USE_BITSET_FOR_SEARCHING
-    visitedBitset[randPoint] = true;
-#else
     visitedNodes.insert(randPoint);
-#endif
+    resultSet.insert(ev);
 
     while(!candidateSet.empty()){
       const EvaluatedNode& currEv = candidateSet.top();
@@ -200,33 +190,34 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
         IdType currNew = e.key;
         if (currNew == KNNEntry::BAD) continue;
 
-#if USE_BITSET_FOR_SEARCHING
-        if (!visitedBitset[currNew]) {
-          visitedBitset[currNew] = true;
-#else
         if (visitedNodes.find(currNew) == visitedNodes.end()){
-            visitedNodes.insert(currNew);
-#endif
-
-            currObj = data_[currNew];
-            d = query->DistanceObjLeft(currObj);
-            query->CheckAndAddToResult(d, currObj);
+            d = query->DistanceObjLeft(data_[currNew]);
             EvaluatedNode  evE1(-d, currNew);
 
+            visitedNodes.insert(currNew);
             closestDistQueue.push(d);
             if (closestDistQueue.size() > searchNN_) { 
               closestDistQueue.pop(); 
             }
             candidateSet.push(evE1);
+            resultSet.insert(evE1);
           }
       }
     }
+  }
+
+  auto iter = resultSet.rbegin();
+
+  while(k && iter != resultSet.rend()) {
+    query->CheckAndAddToResult(-iter->first, data_[iter->second]);
+    iter++;
+    k--;
   }
 }
 
 
 template <typename dist_t>
-void NNDescentMethod<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) {
+void NNDescentMethodOld<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) {
   const vector<KNN> &nn = nndesObj_->getNN();
 
   for (size_t i=0; i < initSearchAttempts_; i++) {
@@ -258,7 +249,7 @@ void NNDescentMethod<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) {
 
 template <typename dist_t>
 void 
-NNDescentMethod<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+NNDescentMethodOld<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
   pmgr.GetParamOptional("searchNN", searchNN_);
   pmgr.GetParamOptional("greedy", greedy_);
@@ -266,7 +257,7 @@ NNDescentMethod<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
 
 template <typename dist_t>
 vector<string>
-NNDescentMethod<dist_t>::GetQueryTimeParamNames() const {
+NNDescentMethodOld<dist_t>::GetQueryTimeParamNames() const {
   vector<string> names;
   names.push_back("initSearchAttempts");
   names.push_back("searchNN");
@@ -274,8 +265,8 @@ NNDescentMethod<dist_t>::GetQueryTimeParamNames() const {
   return names;
 }
 
-template class NNDescentMethod<float>;
-template class NNDescentMethod<double>;
-template class NNDescentMethod<int>;
+template class NNDescentMethodOld<float>;
+template class NNDescentMethodOld<double>;
+template class NNDescentMethodOld<int>;
 
 }

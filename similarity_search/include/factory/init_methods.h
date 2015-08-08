@@ -48,6 +48,7 @@
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
 #include "factory/method/nndes.h"
+#include "factory/method/nndes_old.h"
 
 namespace similarity {
 
@@ -178,6 +179,11 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)
   REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
   REGISTER_METHOD_CREATOR(int,    METH_NNDES, CreateNNDescent)
+
+  // Another KNN-graph (old version), which is computed via NN-descent
+  REGISTER_METHOD_CREATOR(float,  METH_NNDES_OLD, CreateNNDescentOld)
+  REGISTER_METHOD_CREATOR(double, METH_NNDES_OLD, CreateNNDescentOld)
+  REGISTER_METHOD_CREATOR(int,    METH_NNDES_OLD, CreateNNDescentOld)
 
   // SA-tree
   REGISTER_METHOD_CREATOR(float,  METH_SATREE, CreateSATree)

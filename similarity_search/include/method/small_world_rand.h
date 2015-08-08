@@ -50,10 +50,10 @@ class Space;
  *
  * A small world approach. It builds the knn-graph incrementally and relies on 
  * a straightforward randomized algorithm to insert an element. 
- * This work is described in a paper:
  * 
- * Malkov, Yury, Alexander Ponomarenko, Andrey Logvinov, and Vladimir Krylov. 
- * "Approximate nearest neighbor algorithm based on navigable small world graphs." Information Systems (2013).
+ * The main publication is as follows, but the basic algorithm was also presented as SISAP'12: 
+ *    Malkov, Y., Ponomarenko, A., Logvinov, A., & Krylov, V., 2014. 
+ *    Approximate nearest neighbor algorithm based on navigable small world graphs. Information Systems, 45, 61-68. 
  *
  */
 

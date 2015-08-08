@@ -2,7 +2,7 @@
 . ./lib.sh
 
 cat <<EOF
-This data set was created using the gensim library.
+This Wikipedia-based data set was created using the gensim library.
 If you use it, please, consider citing:
 
 @inproceedings{rehurek_lrec,

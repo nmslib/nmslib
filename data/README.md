@@ -1,3 +1,5 @@
+For the VLDB'15 evaluation, one can download data using the script ./get_data_vldb2015.sh
+
 To download SISAP'13 and NIPS'13 data sets use the script:
 ./get_data_nips2013.sh
 

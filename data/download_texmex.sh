@@ -2,7 +2,7 @@
 . ./lib.sh
 
 cat <<EOF
-This data set is a part of the TexMex collection http://corpus-texmex.irisa.fr/
+The SIFT1M data set are a part of the TexMex collection http://corpus-texmex.irisa.fr/
 If you use it, please, consider citing:
 
 @article{jegou2011product,

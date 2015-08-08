@@ -2,7 +2,7 @@
 . ./lib.sh
 
 cat <<EOF
-This data set was created using the gensim library.
+This Wikipedia based data set was created using the gensim library.
 If you use it, please, consider citing:
 
 @inproceedings{rehurek_lrec,
@@ -45,4 +45,4 @@ Download https://s3.amazonaws.com/RemoteDisk/TextCollections/WikipediaSparse/wik
 CheckMD5 wikipedia.7z.010 fe7ce81d36ad132fc4d982edd767be48
 
 
-echo "Download was successful! MD5 sums are correct."
+echo "Download of the Wikipedia-sparse was successful! MD5 sums are correct."
