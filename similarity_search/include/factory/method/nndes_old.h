@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef _FACTORY_NNDES_OLD_ H_
-#define _FACTORY_NNDES_OLD_ H_
+#ifndef _FACTORY_NNDES_OLD_H_
+#define _FACTORY_NNDES_OLD_H_
 
 #include <method/nndes_old.h>
 

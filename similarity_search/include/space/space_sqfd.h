@@ -17,6 +17,9 @@
 #ifndef _SPACE_SQFD_H_
 #define _SPACE_SQFD_H_
 
+// Don't use on windows
+#if !defined(_MSC_VER)
+
 #include <string>
 #include <stdexcept>
 
@@ -131,3 +134,6 @@ class SpaceSqfd : public Space<dist_t> {
 }  // namespace similarity
 
 #endif
+
+#endif
+

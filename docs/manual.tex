@@ -328,7 +328,8 @@ Then, Clang 3.4 (and LLDB debugger) can be installed by typing:
 sudo apt-get install clang-3.4 lldb-3.4
 \end{verbatim}
 
-The Intel compiler can be freely used for non-commerical purposes.
+The Intel compiler can be freely used for non-commercial purposes by some categories of users (students, academics,
+and active open-source contributors).
 It is a part of C++ Composer XE for Linux and can 
 be obtained \href{http://software.intel.com/en-us/non-commercial-software-development}{from the Intel web site}.
 After downloading and running an installation script, one needs to set environment variables.
@@ -1022,13 +1023,12 @@ plotting area, e.g.:
 
 
 \section{Spaces}\label{SectionSpaces}
-Currently we provide implementations only for vector spaces,
-but this is not a principal limitation.
-The input files can come in either regular, i.e., dense,
+Currently we provide implementations mostly for vector spaces.
+Vector-space input files can come in either regular, i.e., dense,
 or sparse variant (see \S~\ref{SectionDatasets}). 
-
 A detailed list of spaces, their parameters, 
 and performance characteristics is given in Table~\ref{TableSpaces}.
+
 The mnemonic name of the space is passed to the benchmarking utility (see \S~\ref{SectionRunBenchmark}).
 There can be more than one version of a distance function,
 which have different space-performance trade-off.
@@ -1052,6 +1052,7 @@ In the latter case the name of the space ends on \ttt{rq}.
 Separating spaces by query types, might not be the best approach.
 Yet, it seems to be unavoidable, because, in many cases,
 we need separate indices to support left and right queries \cite{Cayton2008}.
+If you know a better approach, feel free, to tell us.
 
 Distance computation efficiency was evaluated on a Core i7 laptop (3.4 Ghz peak frequency)
 in a single-threaded mode (by the utility \href{\replocfile similarity_search/test/bench_distfunc.cc}{bench\_distfunc}).
@@ -1059,7 +1060,7 @@ It is measured in millions of computations per second for single-precision
 floating pointer numbers (double precision computations are, of course, more costly). 
 The code was compiled using the GNU compiler. 
 Somewhat higher efficiency numbers can be obtained by using the Intel compiler
-or the Visual Studio (Clang seems to be equally efficient).
+or the Visual Studio (Clang seems to be equally efficient to the GNU compiler).
 In fact, performance is much better for distances relying on ``heavy'' math functions:
 slow versions of KL- and Jensen-Shannon divergences and Jensen-Shannon metrics, 
 as well as for $L_p$ spaces,

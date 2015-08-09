@@ -17,6 +17,8 @@
 #ifndef FACTORY_SPACE_SQFD_H
 #define FACTORY_SPACE_SQFD_H
 
+#if !defined(_MSC_VER)
+
 #include "space/space_sqfd.h"
 
 namespace similarity {
@@ -55,5 +57,7 @@ Space<dist_t>* CreateSqfdGaussianFunc(const AnyParams& AllParams) {
  */
 
 }
+
+#endif
 
 #endif

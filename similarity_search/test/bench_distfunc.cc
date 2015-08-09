@@ -25,6 +25,9 @@
 #include "space/space_sparse_scalar_fast.h"
 #include "space/space_sparse_vector.h"
 #include "space/space_scalar.h"
+#ifndef _MSC_VER
+#include "space/space_sqfd.h"
+#endif
 #include "distcomp.h"
 #include "permutation_utils.h"
 #include "ztimer.h"
@@ -1187,6 +1190,67 @@ void TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 
 }
 
+#if !defined(_MSC_VER)
+
+template <class T>
+void TestSQFDGeneric(size_t N, size_t Rep, SqfdFunction<T>& func) {
+    // Space will try to delete the function
+    unique_ptr<SpaceSqfd<T>>  space(new SpaceSqfd<T>(func.Clone()));
+    ObjectVector              elems;
+
+    space->ReadDataset(elems, NULL, (sampleDataPrefix + "sqfd10_10k_10k.txt").c_str(), N); 
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    float DiffSum = 0;
+
+    float fract = 1.0f/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) <<  typeid(T).name() << " Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of " << space->ToString() << " distances per second: " << (1e6/tDiff) * N * Rep ;
+
+}
+
+
+template <class T>
+void TestSQFDMinus(size_t N, size_t Rep) {
+  SqfdMinusFunction<T> func;
+  TestSQFDGeneric(N, Rep, func);
+}
+
+template <class T>
+void TestSQFDHeuristic(size_t N, size_t Rep) {
+  SqfdHeuristicFunction<T> func(T(1));
+  TestSQFDGeneric(N, Rep, func);
+}
+
+template <class T>
+void TestSQFDGaussian(size_t N, size_t Rep) {
+  SqfdGaussianFunction<T> func(T(1));
+  TestSQFDGeneric(N, Rep, func);
+}
+
+#endif
+
 void TestLevenshtein(size_t N, size_t Rep) {
     unique_ptr<SpaceLevenshtein>  space(new SpaceLevenshtein);
     ObjectVector                  elems;
@@ -1694,6 +1758,23 @@ int main(int argc, char* argv[]) {
     int nTest  = 0;
 
     int dim = 128;
+
+#if !defined(_MSC_VER)
+    nTest++;
+    TestSQFDMinus<float>(2000, 50);
+    nTest++;
+    TestSQFDHeuristic<float>(2000, 50);
+    nTest++;
+    TestSQFDGaussian<float>(2000, 50);
+#if TEST_SPEED_DOUBLE
+    nTest++;
+    TestSQFDMinus<double>(2000, 50);
+    nTest++;
+    TestSQFDHeuristic<double>(2000, 50);
+    nTest++;
+    TestSQFDGaussian<double>(2000, 50);
+#endif
+#endif
 
     nTest++;
     TestLevenshtein(10000, 50);

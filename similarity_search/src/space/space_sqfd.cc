@@ -14,6 +14,8 @@
  *
  */
 
+#if !defined(_MSC_VER)
+
 #include <cmath>
 #include <fstream>
 #include <string>
@@ -173,3 +175,5 @@ std::string SpaceSqfd<dist_t>::ToString() const {
 template class SpaceSqfd<float>;
 template class SpaceSqfd<double>;
 }  // namespace similarity
+
+#endif
