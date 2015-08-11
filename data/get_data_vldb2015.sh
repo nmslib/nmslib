@@ -11,7 +11,8 @@ function get_item() {
 
 
 # SQFD
-get_item c12453480d0d161563f8f84fbe317834  in_10_10k.txt.bz2
+#get_item c12453480d0d161563f8f84fbe317834  in_10_10k.txt.bz2
+get_item 2ccc604b95dfcaa06b26b6c60ddd7429  in_20_10k.txt.bz2
 
 cat <<EOF
 The Signature Quadratic Form Distance (SQFD) distance was proposed by Christian Beecks:
