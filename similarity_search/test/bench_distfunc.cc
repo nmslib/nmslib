@@ -1198,7 +1198,7 @@ void TestSQFDGeneric(size_t N, size_t Rep, SqfdFunction<T>& func) {
     unique_ptr<SpaceSqfd<T>>  space(new SpaceSqfd<T>(func.Clone()));
     ObjectVector              elems;
 
-    space->ReadDataset(elems, NULL, (sampleDataPrefix + "sqfd10_10k_10k.txt").c_str(), N); 
+    space->ReadDataset(elems, NULL, (sampleDataPrefix + "sqfd20_10k_10k.txt").c_str(), N); 
 
     N = min(N, elems.size());
 
@@ -1255,7 +1255,7 @@ void TestLevenshtein(size_t N, size_t Rep) {
     unique_ptr<SpaceLevenshtein>  space(new SpaceLevenshtein);
     ObjectVector                  elems;
 
-    space->ReadDataset(elems, NULL, (sampleDataPrefix + "dna32_10K.txt").c_str(), N); 
+    space->ReadDataset(elems, NULL, (sampleDataPrefix + "dna32_4_5K.txt").c_str(), N); 
 
     N = min(N, elems.size());
 
