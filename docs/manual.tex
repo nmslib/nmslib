@@ -1454,7 +1454,8 @@ categories:
 \item Locality Sensitive Hashing (LSH) methods \S~\ref{SectionLSH};
 \item Filter-and-refine methods based on projection to a lower-dimensional space \S~\ref{SectionProjMethod};
 \item Filtering methods based on permutations \S~\ref{SectionPermMethod};
-\item Miscellaneous methods \S~\ref{SectionMiscMeth}, which also include a \knn graph implementation \S~\ref{SectionKNNGraph};
+\item Methods that construct a proximity graph \S~\ref{SectionProxGraph};
+\item Miscellaneous methods \S~\ref{SectionMiscMeth}.
 \end{itemize}
 
 In the following subsections (\S~\ref{SectionSpacePartMeth}-\ref{SectionMiscMeth}),
@@ -2240,8 +2241,8 @@ case of the projection VP-tree (see \S~\ref{SectionProjVPTree}).
 There is also an additional VP-tree based method that indexes binarized permutations.
 It is described in \S~\ref{SectionPermBinary}.
 
-\subsubsection{MI-File.}
-Another approach, called MI-File, relies on the inverted index over permutations \cite{amato2008approximate}.
+\subsubsection{Metric Inverted File}
+(MI-File) relies on the inverted index over permutations \cite{amato2008approximate}.
 We select (a potentially large) subset of pivots (parameter \ttt{numPivot}).
 Using these pivots, we compute a permutation for every data point.
 Then, \ttt{numPivotIndex} most closest pivots are memorized in a data file. 
@@ -2270,6 +2271,8 @@ Finally, we select at most $\mbox{dbScanFrac} \cdot N$ objects ($N$ is the total
 number of indexed objects) with the smallest
 estimates for the $L_1$ between their permutations and the permutation of the query.
 These objects are compared directly against the query.
+The filtering step of the MI-file is expensive. Therefore,
+this method is efficient only for computationally-intensive distances.
 
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
@@ -2286,18 +2289,25 @@ release/experiment \
 
 \subsubsection{Neighborhood APProximation Index (NAPP).}
 Recently it was proposed to index pivot neighborhoods: 
-For each data point, we select \ttt{numPivotIndex} $\ll$ \ttt{numPivot} pivots 
+For each data point, we compute distances to \ttt{numPivot} points
+and select \ttt{numPivotIndex} (typically, much smaller than \ttt{numPivot}) pivots 
 that are closest to the data point.
 Then, we associate these \ttt{numPivotIndex} closest pivots with the data point 
 via an inverted file \cite{tellez2013succinct}.
 One can hope that for similar points two pivot neighborhoods will have a non-zero intersection.
 
-\todonoteinline{Parameters need to be synched with the VLDB paper, we have a lot of new ones,
-but we don't want to document all of them here.}
-
 To exploit this observation, our implementation of the pivot neighborhood indexing method retrieves all points that 
-share at least \ttt{minTimes} nearest neighbor pivots (using an inverted file).
-Then, these candidates points are compared directly against the query.
+share at least \ttt{numPivotSearch} nearest neighbor pivots (using an inverted file).
+Then, these candidates points can be compared directly against the query,
+which works well for cheap distances like $L_2$.
+
+For computationally expensive distances, one can add an additional filtering step by
+setting the parameter \ttt{useSort} to one.
+If \ttt{useSort} is one, all candidate entries are additionally sorted by the number of shared pivots
+(in the decreasing order).
+Afterwards, the number of candidates defined by the parameter \ttt{dbScanFrac} are compared directly against the query. 
+This secondary filtering may eliminate less promising entries, but it incurs additional
+computational costs, which may outweigh the benefits of additional filtering ``power'', if the distance is cheap.
 
 Note that our implementation is different from that of Tellez~\cite{tellez2013succinct} in several ways.
 First, we do not use a succinct inverted index. Second, we use a simple posting merging algorithm
@@ -2311,7 +2321,7 @@ We also divide the index in chunks each accounting for at most \ttt{chunkIndexSi
 The search algorithm processes one chunk at a time. The idea is to make a chunk sufficiently small
 so that counters fit into L1 or L2  cache.
 
-An example of testing this method using the utility \texttt{experiment} is as follows:
+An example of running NAPP without the additional filtering stage:
 {
 \footnotesize
 \begin{verbatim}
@@ -2319,8 +2329,20 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method pivot_neighb_invindx:numPivot=32,numPrefix=8,minTimes=8,\
+  --method napp:numPivot=32,numPivotIndex=8,numPivotSearch=8,\
            chunkIndexSize=1024
+\end{verbatim}
+}
+An example of running NAPP \textbf{with} the additional filtering stage:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
+  --knn 1 --range 0.1 \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --method napp:numPivot=32,numPivotIndex=8,numPivotSearch=8,\
+           chunkIndexSize=1024,useSort=1,dbScanFrac=0.01
 \end{verbatim}
 }
 
@@ -2381,7 +2403,7 @@ it becomes 0 in the binarized permutation. If the
 value is above, the value is converted to 1.
 \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{PP-index} (\ttt{perm\_prefix}) \cite{Esuli:2012}  }\\
+\multicolumn{2}{c}{\textbf{Permutation Prefix Index} (\ttt{pp-index}) \cite{Esuli:2012}  }\\
 \cmidrule(l){1-2} 
 \ttt{numPivot}      & A number of pivots. \\
 \ttt{minCandidate} & a minimum number of candidates to retrieve (note that we do not use
@@ -2391,7 +2413,7 @@ retrieve candidate records. \\
 \ttt{chunkBucket} & 1 if we want to store vectors having the same permutation prefix
  in the same memory chunk (i.e., contiguously in memory) \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{Inverted index over permutations} (\ttt{perm\_inv\_indx}) \cite{amato2008approximate}  }\\
+\multicolumn{2}{c}{\textbf{Metric Inverted File} (\ttt{mi-file}) \cite{amato2008approximate}  }\\
 \cmidrule(l){1-2} 
                      & Common parameters: \ttt{numPivot} and \ttt{dbScanFrac}. \\
 \ttt{numPivotIndex}  & a number of (closest) pivots to index                         \\
@@ -2399,14 +2421,14 @@ retrieve candidate records. \\
 \ttt{maxPosDiff}     & the maximum position difference permitted for searching      
 in the inverted file \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{Inverted index over pivot neighborhoods} (\ttt{pivot\_neighb\_invindx}) \cite{tellez2013succinct}  }\\
+\multicolumn{2}{c}{\textbf{Neighborhood Approximation Index} (\ttt{napp}) \cite{tellez2013succinct}  }\\
 \cmidrule(l){1-2} 
                      & Common parameter \ttt{numPivot}. \\
 \ttt{invProcAlg}     & An algorithm to merge posting lists. In practice, only \texttt{scan} worked  well. \\
 \ttt{chunkIndexSize} & A number of documents in one index chunk. Select a small value (in the order of several thousands) for better cache utilization. \\
 \ttt{indexThreadQty} & A number of indexhing threads. \\
-\ttt{minPrefix}      & A number of most closest pivots to be indexed. \\
-\ttt{minTimes}       & A candidate entry should share this number of pivots with the query. 
+\ttt{numPivotIndex}  & A number of most closest pivots to be indexed. \\
+\ttt{numPivotSearch} & A candidate entry should share this number of pivots with the query. 
 This is a \textbf{query time} parameter. \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
@@ -2437,10 +2459,7 @@ Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
 \end{tabular}
 \end{table}
 
-\subsection{Miscellaneous Methods} \label{SectionMiscMeth}
-Parameters of miscellaneous methods are summarized in Table~\ref{TableMiscMethParams}. 
-
-\subsubsection{$k$-NN graph.} \label{SectionKNNGraph}
+\subsection{Proximity Graphs} \label{SectionProxGraph}
 One efficient and effective approach
 relies on a graph, where objects are graph nodes and edges connect sufficiently close objects.
 When edges connect mostly near neighbors, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
@@ -2452,13 +2471,23 @@ A sub-search starts at a random node and proceeds to expanding the set of traver
 that are closer than already found \ttt{NN} nearest points (\ttt{NN} is a search parameter).
 Note that the greedy search is only approximate and does not necessarily return all \ttt{NN} nearest neighbors.
 
-Indexing is a bottom-up procedure that relies on the previously described greedy search algorithm.  
+In our library we use to approaches to create a proximity graphs, which are described below.
+Parameters of these methods are summarized in Table~\ref{TableProxGraphs}.
+Note that both methods have the parameter with the same name, namely, \ttt{NN}.
+However, this parameter has a somewhat different interpretation depending on the method.
+
+\subsubsection{Small World Graph.} \label{SectionSWGraph}
+In the Small World graph (SW-gaph),
+indexing is a bottom-up procedure that relies on the previously described greedy search algorithm.  
 The number of restarts, though, is defined by a different parameter, i.e., \ttt{initIndexAttempts}.
 We add points one by one. For each data point, 
 we find \ttt{NN} closest points using an already constructed index.
 Then, we create an edge between a new graph node (representing a new point) 
 and nodes that represent \ttt{NN} closest points found by the greedy search. 
 Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
+This algorithm was presented at SISAP 2012 \cite{malkov2012scalable},
+but some of the implementation details are missing in the publication.
+This issue was resolved in a subsequent paper \cite{malkov2014}
 
 The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads. The number of threads is defined by the parameter \ttt{indexThreadQty}.
 The graph updates are synchronized: If a thread  needs to add edges to a node or obtain
@@ -2481,6 +2510,75 @@ release/experiment \
            indexThreadQty=4 
 \end{verbatim}
 }
+
+\subsubsection{NN-Descent.} \label{SectionNNDescent}
+The NN-descent is an iterative procedure initialized with randomly selected
+nearest neighbors. In each iteration, a random sample of queries is selected
+to participate in neighborhood propagation.
+
+This process is governed by parameters \ttt{rho} and \ttt{delta}. 
+Parameter \ttt{rho} defines a fraction of the data set that is randomly
+sampled for neighborhood propagation. A good value that works
+in many case is $\ttt{rho}=2$. As the indexing algorithm iterates,
+fewer and fewer neighborhoods change after an attempt to improve the local
+neighborhood structure via neighborhood propagation. 
+The parameter \ttt{delta} defines a stopping condition in terms of a fraction
+of modified edges in the \knnns graph (the exact definition can be inferred from code). 
+A good default value is \ttt{delta}=0.001.
+
+The indexing algorithm multi-threaded: the method uses all available cores.
+
+Until recently, the search algorithm by the author of NN-descent was not open sourced.
+Therefore, in this release, we use the same algorithm as for the SW-graph \cite{malkov2012scalable,malkov2014}.
+
+Here is an example of testing this method using the utility \ttt{experiment}:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
+  --knn 1  \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --method nndes:NN=10,rho=0.5,delta=0.001,\
+           initSearchAttempts=3
+\end{verbatim}
+}
+
+\begin{table}
+\caption{Parameters of proximity-graph based methods\label{TableProxGraphs}}
+\centering
+\begin{tabular}{l@{\hspace{2mm}}p{3.5in}}
+\toprule
+\multicolumn{2}{c}{\textbf{Common parameters}}\\
+\cmidrule(l){1-2} 
+\ttt{initSearchAttempts}  & A number of random search restarts. \\
+\\
+\cmidrule(l){1-2} 
+\multicolumn{2}{c}{\textbf{SW-graph} (\ttt{small\_world\_rand}) \cite{malkov2012scalable,malkov2014}  }\\
+\cmidrule(l){1-2} 
+\ttt{NN}                  & Search: keep a queue containing at most this number of closest points. 
+                            Indexing: for a new point find this number of most closest points
+                            that make the initial neighborhood of the point. When more points are added,
+                            this neighborhood may be expanded. \\
+\ttt{initIndexAttempts}   & The number of random search restarts necessary for the addition of one point.\\
+\ttt{indexThreadQty}      & The number of indexing threads. If \href{http://openmp.org/wp/}{OpenMP}  is available the default value is
+                            equal to the number of (logical) CPU cores. \\
+\cmidrule(l){1-2} 
+\multicolumn{2}{c}{\textbf{NN-descent} (\ttt{nndes}) \cite{dong2011efficient,malkov2012scalable,malkov2014}  }\\
+\cmidrule(l){1-2} 
+\ttt{NN}                  & Search: keep a queue containing at most this number of closest points. 
+                            Indexing: for a new point find this number of most closest points
+                            that make the initial neighborhood of the point. When more points are added,
+                            this neighborhood may be expanded. \\
+\ttt{rho}                 & A fraction of the data set that is randomly sampled for neighborhood propagation.  \\
+\ttt{delta}               & A stopping condition in terms of the fraction of updated edges in the \knnns graph. \\
+\bottomrule
+\multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
+\end{tabular}
+\end{table}
+
+\subsection{Miscellaneous Methods} \label{SectionMiscMeth}
+Parameters of miscellaneous methods are summarized in Table~\ref{TableMiscMethParams}. 
 
 \subsubsection{\textbf{Sequential searching}.}
 The improvement in efficiency is measured with respect
