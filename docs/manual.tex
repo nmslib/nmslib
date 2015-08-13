@@ -85,7 +85,7 @@ Pittsburgh, PA, USA\\
 \maketitle
 
 {\begin{center}{\small \textbf{Maintainer}: Leonid Boytsov}\end{center}}
-{\begin{center}{Version 1.0}\end{center} 
+{\begin{center}{Version 1.1}\end{center} 
 {\begin{center}{{\today}}\end{center}}
 
 \begin{abstract}
@@ -684,7 +684,7 @@ something went wrong, or not, i.e., we observe an unlikely outcome due to random
 The exact search method, however, should always have an almost perfect recall.
 
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
-There are no major differences in benchmarking on Linux and Windows.
+There are no principal differences in benchmarking on Linux and Windows.
 There is a \ttt{single} benchmarking utility 
 \ttt{experiment} (\ttt{experiment.exe} on Windows) that includes implementation of all methods.
 It has multiple options, which specify, among others, 
@@ -716,8 +716,7 @@ For real-valued distance functions, one can use either single- or double-precisi
 type. Single-precision is a recommended default.\footnote{It is not clear yet,
 if having double-precision distance functions is essential. Yet, we decided
 to keep them. Thanks to C++ templates, it requires very little additional effort.}
-We do not have a space with integer-valued distance function yet, but we
-plan to implement an edit distance in the nearest future.
+One example of integer-valued distance function the Levenshtein distance.
 
 \subsubsection{Input Data/Test Set}
 There are three options that define the data to be indexed:
@@ -784,14 +783,20 @@ of parameters in the format:
 \ttt{<parameter name>=<parameter value>}.
 For a detailed list of methods and their parameters, please, refer to \S~\ref{SectionMethods}.
 
+
 \subsubsection{Saving and Processing Benchmark Results}
-The benchmarking utility outputs a detailed report (including all the log entries) to the screen
-(we plan to improve logging in the nearest future).
+The benchmarking utility may produce output of three types:
+\begin{itemize}
+\item Benchmarking results (a human readable report and a tab-separated data file);
+\item Log output (which can be redirected to a file);
+\item Progress bars to indicate the progress in index creation for some methods (cannot be currently suppressed);
+\end{itemize}
+
 To save benchmarking results to a file, on needs to specify a parameter:
 \begin{verbatim}
   -o [ --outFilePrefix ] arg   output file prefix
 \end{verbatim}
-In fact, we create two files: a human-readable report (suffix \ttt{.rep}) and 
+As noted above, we create two files: a human-readable report (suffix \ttt{.rep}) and 
 a tab-separated data file (suffix \ttt{.data}).
 By default, the benchmarking utility creates files from scratch. The
 following option can be used to make it work in the append mode:
@@ -801,28 +806,64 @@ following option can be used to make it work in the append mode:
 For information on processing and interpreting results see \S~\ref{SectionMeasurePerf}.
 A description of the plotting utility is given in \S~\ref{SectionGenPlot}.
 
-Finally, one can redirect the output of the benchmarking utility
-to a log-file:
+By default, all log messages are printed to the standard error stream.
+However, they can also be redirected to a log-file:
 \begin{verbatim}
   -l [ --logFile ] arg         log file
 \end{verbatim}
-The default behavior is to send all messages to the standard error stream.
 
 \subsubsection{Efficiency of Testing}\label{SectionBenchEfficiency}
 Except for  measuring methods' performance, 
-two expensive operations are computing ground truth answers
-and indexing.
-Currently, we recompute ground truth data every time we benchmark, which may take long time.
-However, substantial time savings can be achieved by benchmarking several methods
-using a single invocation of the binary \ttt{experiment}. In this case,
-ground truth data is computed once for all tested methods.
+three expensive operations are computing ground truth answers (also
+known as \emph{gold standard} data),
+loading the data set, and indexing. There are two tricks to reduce their costs:
+\begin{itemize}
+\item Caching of ground truth answers;
+\item Asking the benchmarking utility to test several methods
+or the same method with several different sets of query-time parameters; 
+\end{itemize}
+
+By default, we recompute gold standard data every time we run benchmarks, which may take long time.
+However, it is possible to save gold standard data and re-use it later
+by specifying an additional argument:
+\begin{verbatim}
+--cachePrefixGS  a prefix of gold standard cache files
+\end{verbatim}
+Ground truth data saved in two files. One is a textual meta file
+that memorizes important input parameters such as the name of the data and/or query file,
+the number of test queries, etc. 
+For each query, the binary cache files contains ids of answers (as well as distances and 
+class labels). 
+When queries are created by random sampling from the main data set,
+we memorize which objects belong to each query set.
+
+When the gold standard data is reused later,
+the benchmarking code verifies if input parameters match the content of the cache file. 
+Thus, we can prevent an accidental use of ground truth data created for one data set
+while testing with a different data set.
+
+By default, we store at most 1000 answer entries per query. 
+This is done to reduce the size of the cache files.
+This is sufficient to precisely compute the recall of a \knn search if $k \le 1000$.
+In addition, if $k$ is small, a rank approximation metric can be computed very accurately as well (see \S~\ref{SectionEffect}
+for a description of rank approximation metrics).
+However, 1000 entries may be too small for a range search, which may potentially return very large answer sets.\footnote{In the future, we will, perhaps, memorize at least every record returned by the search.} 
+To store a larger ground truth set,
+one can use the following parameter:
+\begin{verbatim}
+-maxCacheGSQty arg (=1000)  a maximum number of gold standard 
+                            entries to compute/cache
+\end{verbatim}
+
+Note that it is possible to benchmark several methods
+using a single invocation of the binary \ttt{experiment}. 
 To do this one simply needs to provide several arguments \ttt{--method} with different method
 names and/or parameters.
-
+While this saves some time on (not) re-loading the data set,
+this trick is most useful when caching of ground truth data is not used.\footnote{Because
+we compute ground truth data only once, rather than for each method separately.}
 The disadvantage, of course, is that the test binary \ttt{experiment} will use
 more memory (as it has to keep several indices), which limits the size of the data set that can be tested. 
-In future versions, we plan to address this issue and to compute ground truth data before any experimentation begins 
-(and save it to a file).
 
 Additional time savings can be achieved by testing copies of the same method
 that differ only in one or more \emph{query time} parameter.
@@ -1411,8 +1452,8 @@ categories:
 \begin{itemize}
 \item Space partitioning methods (including a specialized method bbtree for Bregman divergences) \S~\ref{SectionSpacePartMeth};
 \item Locality Sensitive Hashing (LSH) methods \S~\ref{SectionLSH};
+\item Filter-and-refine methods based on projection to a lower-dimensional space \S~\ref{SectionProjMethod};
 \item Filtering methods based on permutations \S~\ref{SectionPermMethod};
-%\item Filtering methods based on random projections;
 \item Miscellaneous methods \S~\ref{SectionMiscMeth}, which also include a \knn graph implementation \S~\ref{SectionKNNGraph};
 \end{itemize}
 
@@ -1509,7 +1550,7 @@ the recall can be too low or retrieval time can be too long.
 
 Yet, in non-metric spaces, 
 it is often possible to answer queries, 
-when using $\alpha$ possibly smaller than one \cite{Boytsov_and_Bilegsaikhan:nips2013}.
+when using $\alpha$ possibly smaller than one \cite{Boytsov_and_Bilegsaikhan:nips2013,naidan2015permutation}.
 In this version, we would use different $\alpha$ for different partitions.
 More generally, we assume that there exists an unknown decision/pruning function $D(R, d(\pi, q))$ and
 that pruning is done when $r \le D(R, d(\pi, q))$.
@@ -1519,22 +1560,66 @@ is a special case of the search oracle described by the formula:
 \begin{equation}\label{EqDecFunc}
 D_{\pi,R}(x) = \left\{
 \begin{array}{ll}
-\alpha_{left} |x - R|,  & \mbox{ if }x \le R\\
-\alpha_{right} |x - R|, & \mbox{ if }x \ge R\\
+\alpha_{left} |x - R|^{{exp}_{left}},  & \mbox{ if }x \le R\\
+\alpha_{right} |x - R|^{{exp}_{right}}, & \mbox{ if }x \ge R\\
 \end{array}
 \right.
 \end{equation}
-Optimal $\alpha_{left}$ and $\alpha_{right}$ are determined by the utility \ttt{tune\_vptree} (via a grid search).\footnote{
-To this end, we index a small subset of the data points
-and seek to obtain parameters that give the shortest retrieval time 
-at a specified recall threshold.
-%Another approach to learn $D()$, which did not work out well yet, is to use sampling.
-}
-The user can specify values of $\alpha_{left}$ and $\alpha_{right}$ via parameters 
-\ttt{alphaLeft} and \ttt{alphaRight}, respectively.
-It is possible to implement new search oracles and plug them into the implementation of the VP-tree.
+There are several ways to obtain/specify optimal parameters for the VP-tree: 
+\begin{itemize} 
+\item using the auto-tuning procedure fired before creation of the index; 
+\item using the standalone tuning utility \texttt{tune\_vptree} (\texttt{tune\_vptree.exe} for Windows);
+\item fully manually.
+\end{itemize}
 
-The following is an example of testing the VP-tree with the benchmarking utility \ttt{experiment}:
+
+It is, perhaps, the easiest to initiate the tunning procedure during creation of the index.
+To this end, one needs to specify parameters \texttt{desiredRecall} (the minimum desired recall), \texttt{bucketSize} (the size 
+of the bucket), \texttt{tuneK} or \texttt{tuneR}, and (optionally) parameters \texttt{tuneQty}, \ttt{minExp} and \ttt{maxExp}. 
+Parameters \texttt{tuneK} and \texttt{tuneR} are used to specify the value of $k$ for \knn search,
+or the search radius $r$ for the range search.
+
+The parameter \texttt{tuneQty} defines the maximum number of records in a subset that is used for tuning. 
+The tunning procedure will sample \texttt{tuneQty} records from the main set to make a (potentially) smaller data test. 
+Additional query sets will be created by further random sampling of points from this smaller data set.
+
+The tuning procedure considers all possible values for exponents between \ttt{minExp} and \ttt{maxExp} with 
+a restriction that  $exp_{left}=exp_{right}$. 
+By default, \ttt{minExp} = \ttt{maxExp} = 1, which is almost always a good setting.
+For each value of the exponents,
+the tunning procedure carries out a grid-like search procedure for parameters $\alpha_{left}$ and $\alpha_{right}$ 
+with several random restarts. 
+It creates several indices for the tuning subset and runs a batch of mini-experiments to
+find parameters yielding the desired recall value at the minimum cost.
+If it is necessary to produce more accurate estimates, the tunning method may use automatically adjusted
+values for parameters \texttt{tuneQty}, \texttt{bucketSize}, and \texttt{desiredRecall}.
+The tunning algorithm cannot adjust the parameter \texttt{maxLeavesToVisit}:
+please, do not use it with the auto-tunning procedure.
+
+The disadvantage of automatic tuning is that it might fail to obtain
+parameters for a desired recall level. Another limitations is that a tunning procedure cannot
+run on very small data sets (less than two thousand entries).
+
+The standalone tuning utility \texttt{tune\_vptree} exploits an almost identical tuning procedure.
+It differs from index-time auto-tuning in several ways:  
+\begin{itemize}
+\item  It can be used with other VP-tree based methods, 
+in particular, with the projection VP-tree (see \S~\ref{SectionProjVPTree}).
+\item It allows the user to specify a separate query set, which can be useful
+when queries cannot be accurately modelled by a bootstrapping approach (sampling queries from the main data set).
+\item Once the optimal values are computed, they can be further re-used without the need
+to start the tunning procedure each time the index is created.
+\item However, the user is fully responsible for specifying the size of the test data set
+and the value of the parameter \texttt{desiredRecall}: the system
+will not try to change them for optimization purposes.
+\end{itemize}
+
+If automatic tunning fails,
+the user can also manually specify values of  parameters:
+\ttt{alphaLeft}, \ttt{alphaRight}, \ttt{expLeft}, and \ttt{expRight} (by default exponents are one).
+
+The following is an example of testing the VP-tree with the benchmarking utility \ttt{experiment}
+without the auto-tunning:
 {
 \footnotesize
 \begin{verbatim}
@@ -1542,7 +1627,23 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method vptree:alphaLeft=2.0,alphaRight=2.0,maxLeavesToVisit=500,\
+  --method vptree:alphaLeft=2.0,alphaRight=2.0,\
+                  expLeft=1,expRight=1,\
+                  maxLeavesToVisit=500,\
+                  bucketSize=10,chunkBucket=1
+\end{verbatim}
+}
+
+To initiate auto-tuning, one may use the following command line (note that we do 
+not use the parameter \texttt{maxLeavesToVisit} here):
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
+  --knn 1 --range 0.1 \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --method vptree:tuneK=1,desiredRecall=0.9,
                   bucketSize=10,chunkBucket=1
 \end{verbatim}
 }
@@ -1582,7 +1683,7 @@ release/experiment \
 Our implementation of the MVP-tree permits to answer queries both exactly and approximately (by specifying
 the parameter \ttt{maxLeavesToVisit}). Yet, this implementation should be used only with metric spaces.
 
-\begin{table}[t!]
+\begin{table}
 \caption{Parameters of space partitioning methods\label{TableSpaceMethPart}}
 \centering
 \begin{tabular}{l@{\hspace{2mm}}p{3.5in}}
@@ -1596,23 +1697,27 @@ the parameter \ttt{maxLeavesToVisit}). Yet, this implementation should be used o
 \multicolumn{2}{c}{\textbf{VP-tree} (\ttt{vptree}) \cite{Uhlmann:1991,Yianilos:1993}  } 
 \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
- \ttt{alphaLeft}   & A stretching coefficient $\alpha_{left}$ in Equation~(\ref{EqDecFunc}) \\
- \ttt{alphaRight}  & A stretching coefficient $\alpha_{right}$ in Equation~(\ref{EqDecFunc}) \\
+                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
+ \ttt{alphaLeft}/\ttt{alphaRight}   & A stretching coefficient $\alpha_{left}$/$\alpha_{right}$ in Eq.~(\ref{EqDecFunc}) \\
+ \ttt{expLeft}/\ttt{expRight} & The left/right exponent in Eq.~(\ref{EqDecFunc}) \\
+ \ttt{expRight}    & The right exponent in Eq.~(\ref{EqDecFunc}) \\
+ \ttt{tuneK}       & The value of $k$ used in the auto-tunning procedure (in the case of \knn search) \\
+ \ttt{tuneR}       & The value of the radius $r$ used in the auto-tunning procedure (in the case of the range search) \\
+ \ttt{minExp}/\ttt{maxExp} & The minimum/maximum value of exponent used in the auto-tunning procedure \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{Multi-Vantage Point Tree} (\ttt{mvptree})  \cite{bozkaya1999indexing}}   \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
+                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
  \ttt{maxPathLen}  & the maximum number of top-level pivots for which we memorize distances
 to data objects in the leaves \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{GH-tree} (\ttt{ghtree})  \cite{Uhlmann:1991}}   \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
+                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{List of clusters} (\ttt{list\_clusters})  \cite{chavez2005compact}}   \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit}. Note \ttt{maxLeavesToVisit} is a \textbf{query time} parameter. \\
+                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit}. Note \ttt{maxLeavesToVisit} is a \textbf{query time} parameter. \\
 \ttt{useBucketSize} & If equal to one, we use the parameter \ttt{bucketSize} to determine the number of points in the cluster. Otherwise, the size of the cluster is defined by the parameter \ttt{radius}. \\
 \ttt{radius}        & The maximum radius of a cluster (used when \ttt{useBucketSize} is set to zero). \\
 \ttt{strategy}      & A cluster selection strategy. It is one of the following: \ttt{random}, \ttt{closestPrevCenter}, \ttt{farthestPrevCenter}, \ttt{minSumDistPrevCenters}, \ttt{maxSumDistPrevCenters}. \\ 
@@ -1623,7 +1728,7 @@ to data objects in the leaves \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{bbtree} (\ttt{bbtree})  \cite{Cayton2008}}   \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
+                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -1809,7 +1914,7 @@ which are concatenated to produce an integer hash value.  \\
 \multicolumn{2}{c}{
 \textbf{Multiprobe LSH: only for $L_2$} (\ttt{lsh\_multiprobe}) \cite{lv2007multi,Dong_et_al:2008,dong2011high} } \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{W}, \ttt{M}, \ttt{H}, and \ttt{L} \\
+                   & Common parameters: \ttt{W}, \ttt{M}, \ttt{H}, and \ttt{L} \\
 \ttt{T}            & a number of probes \\
 \ttt{desiredRecall}& a desired recall \\
 \ttt{tuneK}        & find optimal parameter for \knn, search
@@ -1817,15 +1922,15 @@ which are concatenated to produce an integer hash value.  \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{LSH Gaussian: only for $L_2$  (\ttt{lsh\_gaussian}) } \cite{charikar2002similarity}}\\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{W}, \ttt{M}, \ttt{H}, and \ttt{L} \\
+                   & Common parameters: \ttt{W}, \ttt{M}, \ttt{H}, and \ttt{L} \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{LSH Cauchy: only for $L_1$ } (\ttt{lsh\_cauchy}) \cite{charikar2002similarity}} \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{W}, \ttt{M}, \ttt{H}, and \ttt{L} \\
+                   & Common parameters: \ttt{W}, \ttt{M}, \ttt{H}, and \ttt{L} \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{LSH thresholding: only for $L_1$ } (\ttt{lsh\_threshold})  \cite{wang2007sizing,lv2004image}} \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{M}, \ttt{H}, and \ttt{L} (\ttt{W} is not used)\\
+                   & Common parameters: \ttt{M}, \ttt{H}, and \ttt{L} (\ttt{W} is not used)\\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -1924,6 +2029,133 @@ release/experiment \
 \end{verbatim}
 }
 
+\subsection{Projection-based Filter-and-Refine Methods}\label{SectionProjMethod}
+Projection-based filter-and-refine methods operate by mapping data and query points
+to a low(er) dimensional space (a \emph{projection} space) with a simple, 
+easy to compute, distance function.
+The search procedure consists in generation of candidate entries by searching
+in a low-dimensional projection space with subsequent
+refinement, where candidate entries are directly compared against the query
+using the original distance function.
+
+The number of candidate records is an important method parameter,
+which can be specified as a fraction of the total number of data base entries
+(parameter \ttt{dbScanFrac}). 
+
+Different projection-based methods arise depending on: 
+the type of a projection, the type of the projection space, 
+and on the type of the search algorithm for the projection space.
+A type of the projection can be specified via a method's parameter \ttt{projType}.
+A dimensionality of the projection space is specified via a method's parameter \ttt{projDim}.
+
+We support four well-known types of projections:
+\begin{itemize}
+\item Classic random projections using random orthonormal vectors (mnemonic name \ttt{rand});
+\item Fastmap (mnemonic name \ttt{fastmap});
+\item Distances to random reference points/pivots (mnemonic name \ttt{randrefpt});
+\item Based on permutations \ttt{perm};
+\end{itemize}
+All but the classic random projections are distance-based and
+can be applied to an arbitrary space with the distance function.
+Random projections can be applied only to vector spaces.
+A more detailed description of projection approaches is given in \S~\ref{SectionProjDetails}
+
+We provide two basic implementations to generated candidates in the projected spaces.
+One is based on brute-force searching and another builds a VP-tree.
+In what follows, these methods are described in detail.
+
+\subsubsection{Brute-force projection search.}\label{SectionProjBruteForce}
+In the brute-force approach, we scan the list of projections and compute the distance
+between the projected query and a projection of every data point.
+Then, we sort all data points in the order of increasing distance to the query permutation.
+A fraction (defined by \ttt{dbScanFrac}) of data points is compared directly against the query.
+Top candidates (most closest entries) are identified using either the priority queue
+or incremental sorting (\cite{Chavez2008incsort}). 
+Incremental sorting is a more efficient approach enabled by default.
+The mnemonic code of this method is \ttt{proj\_incsort}.
+
+A choice of the distance in the projected space is governed by the parameter \ttt{useCosine}.
+If it set to 1, the cosine similarity is used (this makes most sense if we use the cosine similarity
+in the original space). By default $\ttt{useCosine}=0$, which forces the use of $L_2$ in the projected space. 
+
+The following is an example of testing the brute-force search of projections with the benchmarking utility \ttt{experiment}:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType cosinesimil --testSetQty 5 --maxNumQuery 100 \
+  --knn 1 --range 0.1 \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --method proj_incsort:projType=rand,projDim=4,useCosine=1,dbScanFrac=0.01
+\end{verbatim}
+}
+
+\subsubsection{Projection VP-tree.}\label{SectionProjVPTree}
+To avoid exhaustive search in the space of projections, 
+it is possible to index projected vectors using a VP-tree.
+The method's mnemonic name is \ttt{proj\_vptree}.
+In that, one needs to specify both the parameters of the VP-tree  (see \S~\ref{SectionVPtree})
+and the projection parameters as in the case of brute-force searching of projections (see \S~\ref{SectionProjBruteForce}). 
+
+The major difference from the brute-force search over projections is that, instead of choosing between $L_2$ and cosine similarity as the distance
+in the projected space, one uses a methods' parameter \ttt{projSpaceType} to specify an arbitrary one.
+Similar to the regular VP-tree implementation,
+optimal $\alpha_{left}$ and $\alpha_{right}$ are determined by the utility \ttt{tune\_vptree} via a grid search like procedure (\ttt{tune\_vptree.exe} on Windows). 
+
+This method, unfortunately, tends to perform worse than the VP-tree applied to the original space. 
+The only exception are spaces with high intrinsic (and, perhaps, representational) dimensionality
+where VP-trees (even with an approximate search algorithm) are useless unless dimensionality is reduced substantially.
+One example is Wikipedia tf-idf vectors, see \S~\ref{SectionDatasets}.
+
+The following is an example of testing the VP-tree over projections with the benchmarking utility \ttt{experiment}:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType cosinesimil --testSetQty 5 --maxNumQuery 100 \
+  --knn 1 --range 0.1 \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --method proj_vptree:projType=rand,projDim=4,projSpaceType=cosinesimil,\
+alphaLeft=2,alphaRight=2,dbScanFrac=0.01
+\end{verbatim}
+}
+
+\begin{table}
+\caption{Parameters of projection-based filter-and-refine methods\label{TableSpaceProjMethods}}
+\centering
+\begin{tabular}{l@{\hspace{2mm}}p{3.5in}}
+\toprule
+\multicolumn{2}{c}{\textbf{Common parameters}}\\
+\cmidrule(l){1-2} 
+\ttt{projType}      & A type of projection.    \\
+\ttt{projDim}       & Dimensionality of projection vectors. \\
+\ttt{intermDim}     & An intermediate dimensionality used to reduce dimensionality via the hashing trick (used only for sparse vector spaces). \\
+\ttt{dbScanFrac}    & A number of candidate records obtained during the filtering step. \\
+\multicolumn{2}{c}{\textbf{Brute-force Projection Search} (\ttt{proj\_incsort}) } 
+\\
+\cmidrule(l){1-2} 
+                     & Common parameters: \ttt{projType}, \ttt{projDim}, \ttt{intermDim}, \ttt{dbScanFrac} \\
+ \ttt{useCosine}    & If set to one, we use the cosine similarity in the projected space. By default (value zero),
+                      $L_2$ is used. \\
+ \ttt{useQueue}    & If set to one, we use the priority queue instead of incremental sorting. By default is zero.\\
+                      
+\cmidrule(l){1-2} 
+\multicolumn{2}{c}{\textbf{Projection VP-tree} (\ttt{proj\_vptree}) } 
+\\
+\cmidrule(l){1-2} 
+                     & Common parameters: \ttt{projType}, \ttt{projDim}, \ttt{intermDim}, \ttt{dbScanFrac} \\
+ \ttt{projSpaceType} & Type of the space of projections                 \\
+ \ttt{bucketSize}    & A maximum number of elements in a bucket/leaf.    \\
+ \ttt{chunkBucket}   & Indicates if bucket elements should be stored contiguously in memory (1 by default).  \\
+ \ttt{maxLeavesToVisit}  & An early termination parameter equal to the maximum number of buckets (tree leaves) visited by a search algorithm (2147483647 by default). \\
+ \ttt{alphaLeft}/\ttt{alphaRight}   & A stretching coefficient $\alpha_{left}$/$\alpha_{right}$ in Eq.~(\ref{EqDecFunc}) \\
+ \ttt{expLeft}/\ttt{expRight} & The left/right exponent in Eq.~(\ref{EqDecFunc}) \\
+\bottomrule
+\multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
+\end{tabular}
+\vspace{2em}
+\end{table}
+
 \subsection{Permutation-based Filtering Methods} \label{SectionPermMethod}
 
 Rather than relying on distance values directly,
@@ -1944,7 +2176,7 @@ Values of the distance in the source space often correlates well with the distan
 of permutations.
 This property is exploited in permutation methods.
 An advantage of permutation methods is that they are not relying on metric properties of the original distance 
-and can be successfully applied to non-metric spaces \cite{Boytsov_and_Bilegsaikhan:nips2013}.
+and can be successfully applied to non-metric spaces \cite{Boytsov_and_Bilegsaikhan:nips2013,naidan2015permutation}.
 
 Note that there is no simple relationship between the distance in the target space
 and the distance in the source space. In particular, the distance in the target space is neither a lower nor an upper bound
@@ -1961,30 +2193,19 @@ Permutation methods differ in how they index and process permutations.
 In the following subsections, we briefly review implemented variants.
 Parameters of these methods are summarized in Tables~\ref{TablePermMethodParams}-\ref{TablePermMethodParamsCont}.
 
-\subsubsection{Sequential permutation search}
-In the sequential search (i.e., brute-force) approach, we scan the list of permutation methods and compute the distance
+\subsubsection{Brute-force permutation search.}
+In the brute-force approach, we scan the list of permutation methods and compute the distance
 between the permutation of the query and a permutation of every data point.
-Then, we sort all data points in the order of increasing distance to the query permutation.
-A fraction (\ttt{dbScanFrac}) of data points is compared directly against the query.
-The mnemonic code of this method is \ttt{permutation}.
-Instead of computing the complete ordering of permutations, 
-one can resort to incremental sorting \cite{Chavez2008incsort}. 
-The mnemonic code of this (faster) modification is \ttt{perm\_incsort}.
+Then, we sort all data points in the order of increasing distance to the query permutation
+and a fraction (\ttt{dbScanFrac}) of data points is compared directly against the query.
 
+In the current version of the library, the brute-force search over
+regular permutations is a special case of the brute-force search
+over projections (see \ref{SectionProjBruteForce}), where the projection type is \ttt{perm}. 
+There is also an additional brute-force filtering method, which relies on the so-called binarized permutations.
+It is described in~\ref{SectionPermBinary}.
 
-The following is an example of testing the incremental-sort permutation method with the benchmarking utility \ttt{experiment}:
-{
-\footnotesize
-\begin{verbatim}
-release/experiment \
-  --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
-  --knn 1 --range 0.1 \
-  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_incsort:numPivot=4,dbScanFrac=0.2
-\end{verbatim}
-}
-
-\subsubsection{Permutation Prefix Index  (PP-Index)}
+\subsubsection{Permutation Prefix Index  (PP-Index).}
 In a permutation prefix index (PP-index),
  permutation are stored in a prefix tree 
 of limited depth \cite{Esuli:2012}. A parameter \ttt{prefixLength}
@@ -2003,33 +2224,24 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_prefix:numPivot=4,prefixLength=4,minCandidate=100
+  --method pp-index:numPivot=4,prefixLength=4,minCandidate=100
 \end{verbatim}
 }
 
-\subsubsection{VP-tree index over permutations}
+\subsubsection{VP-tree index over permutations.}
 We can use a VP-tree to index permutations.
 This approach is similar to that of Figueroa and Fredriksson \cite{figueroa2009speeding}. 
 We, however, rely on the approximate version of the VP-tree described in \S~\ref{SectionVPtree},
 while Figueroa and Fredriksson use an exact one.
 The ``sloppiness'' of the VP-tree search is governed by the stretching coefficients 
- \ttt{alphaLeft}   and \ttt{alphaRight}  in Equation~(\ref{EqDecFunc}).
+ \ttt{alphaLeft}   and \ttt{alphaRight} as well as by the exponents in Eq.~(\ref{EqDecFunc}).
+In this release, the VP-tree index over permutations is a special
+case of the projection VP-tree (see \S~\ref{SectionProjVPTree}).
+There is also an additional VP-tree based method that indexes binarized permutations.
+It is described in \S~\ref{SectionPermBinary}.
 
-The following is an example of testing the VP-tree index over permutations 
-with the benchmarking utility \ttt{experiment}.
-{
-\footnotesize
-\begin{verbatim}
-release/experiment \
-  --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
-  --knn 1 --range 0.1 \
-  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2,dbScanFrac=0.05
-\end{verbatim}
-}
-
-\subsubsection{Inverted index over permutations}
-Another approach relies on the inverted index over permutations \cite{amato2008approximate}.
+\subsubsection{MI-File.}
+Another approach, called MI-File, relies on the inverted index over permutations \cite{amato2008approximate}.
 We select (a potentially large) subset of pivots (parameter \ttt{numPivot}).
 Using these pivots, we compute a permutation for every data point.
 Then, \ttt{numPivotIndex} most closest pivots are memorized in a data file. 
@@ -2067,18 +2279,21 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_inv_indx:numPivot=128,numPivotIndex=16,numPivotSearch=4,\
+  --method mi-file:numPivot=128,numPivotIndex=16,numPivotSearch=4,\
            dbScanFrac=0.01
 \end{verbatim}
 }
 
-\subsubsection{Pivot neighborhood index}
+\subsubsection{Neighborhood APProximation Index (NAPP).}
 Recently it was proposed to index pivot neighborhoods: 
-For each data point, we select \ttt{numPrefix} $\ll$ \ttt{numPivot} pivots 
+For each data point, we select \ttt{numPivotIndex} $\ll$ \ttt{numPivot} pivots 
 that are closest to the data point.
-Then, we associate these \ttt{numPrefix} closest pivots with the data point 
+Then, we associate these \ttt{numPivotIndex} closest pivots with the data point 
 via an inverted file \cite{tellez2013succinct}.
 One can hope that for similar points two pivot neighborhoods will have a non-zero intersection.
+
+\todonoteinline{Parameters need to be synched with the VLDB paper, we have a lot of new ones,
+but we don't want to document all of them here.}
 
 To exploit this observation, our implementation of the pivot neighborhood indexing method retrieves all points that 
 share at least \ttt{minTimes} nearest neighbor pivots (using an inverted file).
@@ -2109,7 +2324,7 @@ release/experiment \
 \end{verbatim}
 }
 
-\subsubsection{Binarized permutation methods}
+\subsubsection{Binarized permutation methods.}\label{SectionPermBinary}
 Instead of computing the $L_2$ distance between two permutations,
 we can binarize permutations and compute the Hamming distance between
 binarized permutations. 
@@ -2149,7 +2364,7 @@ release/experiment \
 \end{verbatim}
 }
 
-\begin{table}[t!]
+\begin{table}
 \caption{Parameters of permutation-based filtering methods\label{TablePermMethodParams}}
 \centering
 \begin{tabular}{l@{\hspace{2mm}}p{3.5in}}
@@ -2166,15 +2381,6 @@ it becomes 0 in the binarized permutation. If the
 value is above, the value is converted to 1.
 \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{Brute-force permutation search} (\ttt{permutation})  \cite{Chavez2008incsort} }\\
-\cmidrule(l){1-2} 
-                   & Common parameters \ttt{numPivot} and \ttt{dbScanFrac}. \\
-\cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{Brute-force permutation search with incremental sorting} (\ttt{perm\_incsort})  \cite{Chavez2008incsort} }\\
-\cmidrule(l){1-2} 
-                   & Common parameters \ttt{numPivot} and \ttt{dbScanFrac}. 
-Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
-\cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{PP-index} (\ttt{perm\_prefix}) \cite{Esuli:2012}  }\\
 \cmidrule(l){1-2} 
 \ttt{numPivot}      & A number of pivots. \\
@@ -2187,7 +2393,7 @@ retrieve candidate records. \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{Inverted index over permutations} (\ttt{perm\_inv\_indx}) \cite{amato2008approximate}  }\\
 \cmidrule(l){1-2} 
-                     & Common parameters \ttt{numPivot} and \ttt{dbScanFrac}. \\
+                     & Common parameters: \ttt{numPivot} and \ttt{dbScanFrac}. \\
 \ttt{numPivotIndex}  & a number of (closest) pivots to index                         \\
 \ttt{numPivotSearch} & a number of (closest) pivots to use during searching          \\
 \ttt{maxPosDiff}     & the maximum position difference permitted for searching      
@@ -2215,22 +2421,17 @@ This is a \textbf{query time} parameter. \\
 \multicolumn{2}{c}{\textbf{Brute-force search with incremental sorting for binarized permutations}}\\
 \multicolumn{2}{c}{ (\ttt{perm\_incsort\_bin})  \cite{tellez2009brief} }\\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{numPivot}, \ttt{dbScanFrac}, \ttt{binThreshold}. \\
+                   & Common parameters: \ttt{numPivot}, \ttt{dbScanFrac}, \ttt{binThreshold}. \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{VP-tree index over binarized permutations} (\ttt{perm\_bin\_vptree}) } \\
 \multicolumn{2}{c}{ Similar to \cite{tellez2009brief}, but uses
 an approximate search in the VP-tree. }  \\
 \cmidrule(l){1-2} 
-                   & Common parameters \ttt{numPivot}, \ttt{dbScanFrac}, \ttt{binThreshold}. \\
-\cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{VP-tree index over permutations} (\ttt{perm\_vptree}) } \\
-\multicolumn{2}{c}{ Similar to \cite{figueroa2009speeding}, but uses
-an approximate search in the VP-tree. }  \\
-\cmidrule(l){1-2} 
-                     & Common parameters \ttt{numPivot} and \ttt{dbScanFrac}. 
+                   & Common parameters: \ttt{numPivot}, \ttt{dbScanFrac}, \ttt{binThreshold}. 
 Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
- \ttt{alphaLeft}   & A stretching coefficient $\alpha_{left}$ in Equation~(\ref{EqDecFunc}) \\
- \ttt{alphaRight}  & A stretching coefficient $\alpha_{right}$ in Equation~(\ref{EqDecFunc}) \\
+\cmidrule(l){1-2} 
+ \ttt{alphaLeft}   & A stretching coefficient $\alpha_{left}$ in Eq.~(\ref{EqDecFunc}) \\
+ \ttt{alphaRight}  & A stretching coefficient $\alpha_{right}$ in Eq.~(\ref{EqDecFunc}) \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -2239,7 +2440,7 @@ Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
 \subsection{Miscellaneous Methods} \label{SectionMiscMeth}
 Parameters of miscellaneous methods are summarized in Table~\ref{TableMiscMethParams}. 
 
-\subsubsection{$k$-NN graph} \label{SectionKNNGraph}
+\subsubsection{$k$-NN graph.} \label{SectionKNNGraph}
 One efficient and effective approach
 relies on a graph, where objects are graph nodes and edges connect sufficiently close objects.
 When edges connect mostly near neighbors, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
@@ -2281,7 +2482,7 @@ release/experiment \
 \end{verbatim}
 }
 
-\subsubsection{\textbf{Sequential searching}}
+\subsubsection{\textbf{Sequential searching}.}
 The improvement in efficiency is measured with respect
 to a single-thread sequential search method.
 To verify how the speed of sequential searching
@@ -2302,7 +2503,7 @@ release/experiment \
 \end{verbatim}
 }
 
-\subsubsection{\textbf{Several copies of the same index type}}
+\subsubsection{\textbf{Several copies of the same index type}.}
 It is possible to generate several copies of the same index using a
 meta method \ttt{mult\_indx}.
 This makes sense for randomized indexing methods, e.g., for the VP-tree
@@ -3077,44 +3278,26 @@ All Wikipedia-based data sets were created with a help of the \href{https://gith
 }
 \end{verbatim}
 
-Our library incorporates the efficient LSHKIT library.
-Note that is is distributed under a different license: 
+Our library incorporates the efficient LSHKIT library
+as well as the implementation of NN-Descent: 
+an iterative algorithm to construct an approximate \knnns-graph \cite{dong2011efficient}.
+
+Note that LSHKIT is distributed under a different license: 
 GNU General Public License version 3 or later. 
+The NN-Descent is distributed under a free license similar to
+that of the Apache license (see \href{https://code.google.com/p/nndes/source/browse/trunk/LICENSE}{the 
+text of the license here}). There is also \href{http://kgraph.org}{a newer open-source}
+implementation of the NN-Descent that includes both
+the graph construction and the search algorithm, but we have not incorporated it yet.
 
-If you (re)-use it, please, consider citing the authors:
+Last, but not least, whenever you re-use an implementation, please,
+consider citing the original authors (if they are known).
 
-\begin{verbatim}
-@inproceedings{Dong_et_al:2008,
-  author =      {Dong, Wei and Wang, Zhe and Josephson, William 
-                  and Charikar, Moses and Li, Kai},
-  title =       {Modeling LSH for performance tuning},
-  booktitle =   {Proceedings of the 17th ACM conference on Information
-                 and knowledge management},
-  series =      {CIKM '08},
-  year =        {2008},
-  isbn =        {978-1-59593-991-3},
-  location =    {Napa Valley, California, USA},
-  pages =       {669--678},
-  numpages =    {10},
-  url =         {http://doi.acm.org/10.1145/1458082.1458172},
-  doi =         {10.1145/1458082.1458172},
-  acmid =       {1458172},
-  publisher =   {ACM},
-  address =     {New York, NY, USA},
- keywords = {locality sensitive hashing, similarity search},
-} 
-\end{verbatim}
-
-\todonoteinline{Make these references just references + add a reference to NN-descent}
-
-\todonoteinline{Wei Dong, Charikar Moses, and Kai Li. 2011. Efficient k-nearest neighbor graph construction for generic similarity measures. In Proceedings of the 20th international conference on World wide web (WWW '11). ACM, New York, NY, USA, 577-586.}
-
-\label{SectionCredits}
 
 \section{Acknowledgements}
 We thank 
 Lawrence Cayton for providing the data sets,
-Nikita Avrelin for implementing the first version of the \knn graph,
+Nikita Avrelin for implementing the first version of the SW-graph
 and Daniel Lemire for contributing 
 the implementation of the original Schlegel~et~al.~\cite{schlegel2011fast}
 intersection algorithm.
@@ -3127,5 +3310,56 @@ to improve the library and the documentation.
 \bibliographystyle{abbrv}
 %\bibliographystyle{plain}
 \bibliography{manual}
+
+\begin{appendix}
+\section{Description of Projection Types}\label{SectionProjDetails}
+\subsection{The classic random projections} work only for vector spaces (both sparse and dense).
+At index time, we generate \ttt{projDim} vectors by sampling their elements from
+the standard normal distribution $\mathcal{N}(0,1)$ and orthonormalizing them. \footnote{If 
+the dimensionality of the projection space is larger than the dimensionality of the original
+space, only the first \ttt{projDim} vectors are orthonormalized. The remaining are simply
+divided by their norms.}
+Coordinates in the projected spaces are obtained by computing scalar products
+between a given vector and each of the \ttt{projDim} randomly generated vectors.
+
+In the case of sparse vector spaces, the dimensionality is first reduced via the hashing trick:
+the value of the element $i$ is equal to the sum of values for all elements whose indices are 
+hashed into number $i$. 
+After hashing, classic random projections are applied. 
+The dimensionality of the intermediate space is defined by a method's parameter \ttt{intermDim}. 
+
+The hashing trick is used purely for efficiency reasons. 
+However, for large enough values of the intermediate
+dimensionality, it has virtually no adverse affect on performance.
+For example, in the case of Wikipedia tf-idf vectors (see \S~\ref{SectionDatasets}),
+it is safe to use the value \ttt{intermDim}=4096.
+
+Random projections work best if both the source and the target space are Euclidean,
+whereas the distance is either $L_2$ or the cosine similarity.
+In this case, there are theoretical guarantees that the projection preserves
+well distances in the original space (see e.g. \cite{bingham2001random}).
+
+\subsection{FastMap} introduced by Faloutsos and Lin \cite{faloutsos1995fastmap}
+is also a type of the random-projection method. 
+At indexing time, we randomly select $projDim$ pairs $A_i$ and $B_i$.
+The \mbox{$i$-th} coordinate of vector $x$ is computed using the formula:
+\begin{equation}\label{EqFastMap}
+\mbox{\ttt{FastMap}}_{i}(x)  = \frac{d(A_i,x)^2 - d(B_i,x_i)^2 + d(A_i,B_i)}{2 d(A_i,B_i)^2}
+\end{equation}
+Given points $A$ and $B$ in the Euclidean space, Eq.~\ref{EqFastMap} give the length of the
+orthogonal projection of $x$ to the line connecting $A$ and $B$.
+However, FastMap can be used in non-Euclidean spaces as well.
+
+\subsection{Distances to the Random Reference Points} is a folklore projection approach,
+where the $i$ coordinate of point $x$ in the projected space is computed as simply $d(x, \pi_i)$,
+where $\pi_i$ is a pivot in the original space, i.e., a randomly selected reference point.
+Pivots are selected once during indexing time.
+
+\subsection{Permutation-based Projections.}
+In this approach, we also select \ttt{projDim} pivots at index time.
+However, instead of using raw distances to the pivots,
+we rely on ordinal positions of pivots sorted by their distance to a point.  
+A more detailed description is given in \S~\ref{SectionPermMethod}.
+\end{appendix}
 
 \end{document}
