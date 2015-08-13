@@ -351,7 +351,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     size_t MinOrigQty = (testSetQty_ + 1) * maxNumQuery_;
     if (OrigQty < MinOrigQty) {
       stringstream err;
-      err << "The data set is too small, expecting at least: " << MinOrigQty << " data points. " <<
+      err << "The data set is too small, add " << (MinOrigQty - OrigQty) << " MORE data points. " <<
                     "Try to either increase the number of data points, or to decrease parameters: " <<
                     "testSetQty and/or maxNumQuery ";
       throw runtime_error(err.str());

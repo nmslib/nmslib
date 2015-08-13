@@ -36,6 +36,8 @@ using std::vector;
 using std::round;
 using std::endl;
 using std::cout;
+using std::pow;
+using std::log;
 
 template <typename dist_t>
 void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
@@ -52,7 +54,7 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
   if (pmgr.hasParam(TUNE_R_PARAM) && pmgr.hasParam(TUNE_K_PARAM)) {
     stringstream err;
 
-    err << "Specify only one paramter: " << TUNE_R_PARAM << " or " << TUNE_K_PARAM;
+    err << "Specify only one parameter: " << TUNE_R_PARAM << " or " << TUNE_K_PARAM;
     LOG(LIB_INFO) << err.str();
     throw runtime_error(err.str());
   }
@@ -67,43 +69,53 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
 
     if (data_.size() < TOTAL_QUERY_QTY) {
       stringstream err;
-      err << "The data size is too small: should be > " << MIN_TUNE_QTY;
+      err << "The data size is too small: it should have " << (TOTAL_QUERY_QTY - data_.size()) << " MORE entries!";
       LOG(LIB_INFO) << err.str();
       throw runtime_error(err.str());
     }
-
-    size_t treeHeightQty = static_cast<size_t>(round(float(data_.size() - TUNE_QUERY_QTY)/ fullBucketSize)); 
 
     size_t tuneQty = TUNE_QTY_DEFAULT;
     pmgr.GetParamOptional(TUNE_QTY_PARAM, tuneQty);
 
-    if (treeHeightQty > tuneQty) {
+    if (tuneQty < MIN_TUNE_QTY) {
       stringstream err;
-      LOG(LIB_INFO) << "Increasing the value of '" << TUNE_QTY_PARAM << "', because it should be >= " << treeHeightQty;
-      tuneQty = treeHeightQty;
-    }
-    if (treeHeightQty < MIN_TUNE_QTY) {
-      stringstream err;
-      err << "The data size is too small or the bucket size is too big. Select the parameters so that <total # of records> is NOT less than <bucket size> * " << MIN_TUNE_QTY; 
+      err << "The value of parameter " <<  TUNE_QTY_PARAM << " should be >= " << MIN_TUNE_QTY;
       LOG(LIB_INFO) << err.str();
       throw runtime_error(err.str());
     }
 
-    size_t bucketSize = tuneQty / treeHeightQty;
-    if (!bucketSize) {
-      LOG(LIB_INFO) << "Bug: bucket size is zero in the tunning code";
-      throw runtime_error("Bug: bucket size is zero in the tunning code");
-    }
-    LOG(LIB_INFO) << "tuneQty: " << tuneQty << " Chosen bucket size: " << bucketSize;
+    float desiredRecallRequested = 0;
+    pmgr.GetParamRequired(DESIRED_RECALL_PARAM, desiredRecallRequested);
 
-    float desiredRecall;
-    pmgr.GetParamRequired(DESIRED_RECALL_PARAM, desiredRecall);
+    float  desiredRecallAdjusted = desiredRecallRequested;
+    size_t bucketSizeAdjusted = fullBucketSize;
+
+    if (tuneQty >= data_.size()) {
+      tuneQty = data_.size(); // Perfect, nothing to do at this point
+    } else {
+      float treeHeightQty = float(data_.size())/ fullBucketSize; 
+
+      if (treeHeightQty > tuneQty) {
+        bucketSizeAdjusted = 1;
+        // Because treeHeightQty > tuneQty > 0, logs are well defined.
+        // Furthermore, the ratio of logs should be < 1, so we increase the desired recall
+        desiredRecallAdjusted = pow(desiredRecallRequested, log(tuneQty)/log(treeHeightQty));
+        LOG(LIB_INFO) << "Adjusting recall value from " << desiredRecallRequested << " to " << desiredRecallAdjusted;
+      } else {
+        // in this conditional branch we expect treeHeightQty to be <= tuneQty so the adjusted bucket size should be > 0
+        bucketSizeAdjusted = tuneQty / treeHeightQty;
+      }
+    }
+
+    LOG(LIB_INFO) << "Adjusted values for tuneQty: " << tuneQty << 
+                     " bucket size: " << bucketSizeAdjusted << 
+                     " recall: " << desiredRecallAdjusted;
 
     vector<string>                methodDesc;
     stringstream                  methStrDesc;
     string                        methName;
 
-    methStrDesc << METH_VPTREE << ":bucketSize=" << bucketSize;
+    methStrDesc << METH_VPTREE << ":bucketSize=" << bucketSizeAdjusted;
 
     ParseMethodArg(methStrDesc.str(), methName, methodDesc);
     shared_ptr<MethodWithParams>  method = shared_ptr<MethodWithParams>(new MethodWithParams(methName, methodDesc));
@@ -212,7 +224,7 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
 
       GetOptimalAlphas(printProgress_,
                      *config, 
-                     metric, desiredRecall,
+                     metric, desiredRecallAdjusted,
                      SpaceType, 
                      METH_VPTREE, 
                      method->methPars_, 
@@ -261,7 +273,7 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
       cout << "===============================================================" << endl;
     }
 
-    if (recall < desiredRecall) {
+    if (recall < desiredRecallAdjusted) {
       LOG(LIB_INFO) << "Failed to get the desired recall!";
       throw runtime_error("Failed to get the desired recall!");
     }
