@@ -100,13 +100,13 @@ namespace similarity {
                 if ((option & GRAPH_KNN) || (option & GRAPH_BOTH)) {
                     nn_new[i].resize(S);
                     BOOST_FOREACH(int &u, nn_new[i]) {
-                        u = rand() % N;
+                        u = RandomInt() % N;
                     }
                 }
                 if ((option & GRAPH_RNN) || (option & GRAPH_BOTH)) {
                     rnn_new[i].resize(S);
                     BOOST_FOREACH(int &u, rnn_new[i]) {
-                        u = rand() % N;
+                        u = RandomInt() % N;
                     }
                 }
             }

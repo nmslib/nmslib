@@ -27,7 +27,7 @@
 namespace similarity {
 
 /*
- * Permutation Prefix Index: 
+ * Permutation Prefix Index (PP-index): 
  * Esuli, 2012.
  * Using Permutation Prefixes for Efficient and Scalable Approximate Similarity Search.
  */

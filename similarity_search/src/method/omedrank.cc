@@ -259,7 +259,7 @@ void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
     knn_amp_ = 0;
   }
   if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
+    db_scan_frac_ = 0.05;
     knn_amp_ = 0;
   }
   pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);

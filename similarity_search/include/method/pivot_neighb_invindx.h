@@ -37,6 +37,8 @@ using std::vector;
 using std::mutex;
 
 /*
+ * Neighborhood-APProximation Index (NAPP).
+ *
  * The main idea of the method (indexing K most closest pivots using an inverted file)
  * was taken from the paper:
  *

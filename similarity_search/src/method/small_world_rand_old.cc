@@ -190,7 +190,7 @@ MSWNodeOld* SmallWorldRandOld<dist_t>::getRandomEntryPoint() const {
   if(!ElList_.size()) {
     return NULL;
   } else {
-    size_t num = rand()%size;
+    size_t num = RandomInt()%size;
     return ElList_[num];
   }
 }
