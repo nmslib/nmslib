@@ -34,6 +34,8 @@ Space<dist_t>* CreateDummy(const AnyParams& AllParams) {
   pmgr.GetParamRequired("param1",  param1);
   pmgr.GetParamRequired("param2",  param2);
 
+  pmgr.CheckUnused();
+
   return new SpaceDummy<dist_t>(param1, param2);
 }
 

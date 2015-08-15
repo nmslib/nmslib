@@ -283,11 +283,10 @@ Installing C++11 compilers can be tricky,
 because they are not always provided as a standard package.
 This is why we briefly review the installation process here. 
 
-It is, perhaps, the easiest to obtain Visual Studio 12 by simply downloading
-it from the \href{http://www.microsoft.com/en-us/download/details.aspx?id=40787}{Microsoft 
-web-page}.
+It is, perhaps, the easiest to obtain Visual Studio by simply downloading
+it from the \href{https://www.microsoft.com/en-us/download/default.aspx}{Microsoft web-site}.
 We were able to build and run the 64-bit code using the free distributive of Visual Studio Express 12 (also called 
-\ttt{Express 2013}). The professional (and expensive) version of Visual Studio is not required. 
+\ttt{Express 2013}) and Visual Studio 2015. The professional (and expensive) version of Visual Studio is not required. 
 
 
 To install GNU C++ version 4.7 on some Linux distributions with the Debian package management system, 
@@ -372,6 +371,22 @@ Examples of using this benchmarking utility can be found in the directory \href{
 Please, check the script \href{\replocfile sample_scripts/sample_run.sh}{sample\_run.sh}. 
 
 A more detailed description of the build process on Linux is given in \S~\ref{SectionBuildLinux}.
+
+
+\subsection{Python bindings (only on Linux)}
+In this release, we implemented basic Python bindings (for Linux and Python 2.7).
+Currently, only dense vector spaces are supported (see \S~\ref{SectionSpaces} for the description of spaces).
+\href{https://github.com/erikbern/ann-benchmarks}{One public evaluation of our library using these bindings was
+carried out by Erik Bernhardsson}. 
+
+
+To build the bindings, build the library first.
+Then, change the directory to \ttt{python\_bindings} and type:
+\begin{verbatim}
+make
+sudo make install
+\end{verbatim} 
+For an example of using our library in Python, see the script  \href{\replocfile python_bindings/test_nmslib.py}{test\_nmslib.py}.
 
 \subsection{Quick Start on Windows}\label{QuickStartWindows}
 Building on Windows is straightforward:
@@ -513,6 +528,9 @@ newly created directory \ttt{eclipse}).
 On the first start, Eclipse will ask you select a repository location.
 This would be the place to store the project metadata and (optionally)
 actual project source files.
+The following description is given for Eclipse Europe. 
+It may be a bit different with newer versions of Eclipse.
+
 
 \begin{figure}
 \centering
@@ -894,6 +912,10 @@ as well as an improvement in the number of distance computations.
 A good method should
 carry out fewer distance computations and be faster than the brute-force search,
 which compares \emph{all the objects} directly with the query. 
+Note that the improvement in efficiency is adjusted for the number of threads.
+Therefore, it should not increase as more threads are added: in contrast,
+it should decrease as there is more competition for computing resources (e.g., memory)
+in a multi-threaded mode.
 
 The amount of memory consumed by a search method is measured indirectly: 
 We record the overall memory usage of a benchmarking process before and after creation of the index. Then, we add the amount of memory used by the data.
@@ -2121,6 +2143,68 @@ alphaLeft=2,alphaRight=2,dbScanFrac=0.01
 \end{verbatim}
 }
 
+\subsubsection{\textbf{OMEDRANK}.}\label{SectionOmedrank}
+In OMEDRANK \cite{Fagin2003} there is a small set of voting pivots,
+each of which ranks data points based on a somewhat imperfect notion of the distance from points to the query (computed
+by a classic random projection or a projection of some different kind).
+While each individual ranking is imperfect,
+a more accurate ranking can be achieved by rank aggregation. 
+When such a consolidating ranking is found, the most highly ranked objects from this
+\emph{aggregate} ranking can be used as answers to a nearest-neighbor query.
+Finding the aggregate ranking is an NP-complete problem that Fagin~et~al.~\cite{Fagin2003} solve only heuristically.
+
+Technically, during the index time, each point in the original space is projected into a (low)er dimensional
+vector space. The dimensionality of the projection is defined using a method's parameter  \ttt{numPivot}
+(note that this is different from other projection methods).
+Then, for each dimension $i$ in the projected space, we sort data points in the order of increasing value of
+the \mbox{$i$-th} element of its projection.
+
+We also divide the index in chunks each accounting for at most \ttt{chunkIndexSize} data points.
+The search algorithm processes one chunk at a time. The idea is to make a chunk sufficiently small
+so that counters fit into L1 or L2  cache.
+
+
+The retrieval algorithm uses \ttt{numPivot} pointers $low_i$ and \ttt{numPivot} pointers $high_i$ ($low_i \le high_i$),
+The \mbox{$i$-th} pair of pointers ($low_i$, $high_i$) indicate a start and an end position in the \mbox{$i$-th} list.
+For each data point, we allocate a zero-initialized counter.
+We further create a projection of the query and use \ttt{numPivot} binary searches to find 
+\ttt{numPivot} data points that have the closest \mbox{$i$-th} projection coordinates.
+In each of the $i$ list, we make both $high_i$ and $low_i$ point to the found data entries.
+In addition, for each data point found, we increase its counter.
+Note that a single data point may appear the closest with respect to more than one projection coordinate!
+
+After that, we run a series of iteration. In each iteration, we increase \ttt{numPivot} pointers $high_i$ and
+decrease \ttt{numPivot} pointers $low_i$ (unless we reached the beginning or the end of a list).
+For each data entry at the which the pointer points, we increase the value of the counter.
+Obviously, when we complete traversal of all \ttt{numPivot} lists each counter will have the value \ttt{numPivot} (recall
+that each data point appears exactly one in each of the lists).
+Thus, sooner or later the value of a counter becomes equal to or exceeds $\ttt{numPivot} \times \ttt{minFreq}$, where \ttt{minFreq}
+is a method's parameter, e.g., 0.5.
+
+The first point whose counter becomes equal to or exceed $\ttt{numPivot} \times \ttt{minFreq}$, becomes the first candidate
+entry to be compared directly against the query. The total number of candidate entries is defined by the parameter \ttt{dbScanFrac}.
+Instead of all \ttt{numPivot} lists, it its possible to use only \ttt{numPivotSearch} lists that correspond
+to the smallest absolute value of query's projection coordinates. In this case, the counter threshold is  $\ttt{numPivotSearch} \times \ttt{minFreq}$.
+By default, $\ttt{numPivot}=\ttt{numPivotSearch}$.
+
+Note that parameters \ttt{numPivotSearch} and \ttt{dbScanFrac}
+were introduced by us, they were not employed in the original version of OMEDRANK.
+
+
+The following is an example of testing OMEDRANK with the benchmarking utility \ttt{experiment}:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType cosinesimil --testSetQty 5 --maxNumQuery 100 \
+  --knn 1 --range 0.1 \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --method omedrank:projType=rand,numPivot=8,minFreq=0.5,dbScanFrac=0.02
+\end{verbatim}
+}
+
+
+
 \begin{table}
 \caption{Parameters of projection-based filter-and-refine methods\label{TableSpaceProjMethods}}
 \centering
@@ -2151,6 +2235,17 @@ alphaLeft=2,alphaRight=2,dbScanFrac=0.01
  \ttt{maxLeavesToVisit}  & An early termination parameter equal to the maximum number of buckets (tree leaves) visited by a search algorithm (2147483647 by default). \\
  \ttt{alphaLeft}/\ttt{alphaRight}   & A stretching coefficient $\alpha_{left}$/$\alpha_{right}$ in Eq.~(\ref{EqDecFunc}) \\
  \ttt{expLeft}/\ttt{expRight} & The left/right exponent in Eq.~(\ref{EqDecFunc}) \\
+\cmidrule(l){1-2} 
+\multicolumn{2}{c}{\textbf{OMEDRANK} \cite{Fagin2003} (\ttt{omedrank}) } 
+\\
+\cmidrule(l){1-2} 
+                     & Common parameters: \ttt{projType}, \ttt{intermDim}, \ttt{dbScanFrac} \\
+\ttt{numPivot}       & Projection dimensionality \\
+\ttt{numPivotSearch} & Number of data point lists to be used in search \\
+\ttt{minFreq}        & The threshold for being considered a candidate entry: whenever
+                       a point's counter exceeds $\ttt{numPivotSearch}\times\ttt{minFreq}$,
+                       this point is compared directly to the query.  \\
+\ttt{chunkIndexSize} & A number of documents in one index chunk. Select a small value (in the order of several thousands) for better cache utilization. \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -2580,14 +2675,11 @@ release/experiment \
 \subsection{Miscellaneous Methods} \label{SectionMiscMeth}
 Parameters of miscellaneous methods are summarized in Table~\ref{TableMiscMethParams}. 
 
-\subsubsection{\textbf{Sequential searching}.}
-The improvement in efficiency is measured with respect
-to a single-thread sequential search method.
-To verify how the speed of sequential searching
+\subsubsection{\textbf{Brute-force (sequential) searching}.}
+To verify how the speed of brute-force searching
 scales with the number of threads,
 we provide a reference implementation of the sequential
 searching.
-
 For example, to benchmark sequential searching using two threads, 
 one can type the following command:
 {
@@ -2738,8 +2830,8 @@ In the first scenario, the user specifies separate data and test files.
 In the second scenario, a test file is created by bootstrapping:
 The data set is randomly divided into training and a test set.
 Then,
-we call the function \href{\replocfile similarity_search/include/experiments.h#L97}{RunAll} 
-and subsequently \href{\replocfile similarity_search/include/experiments.h#L225}{Execute} for all possible test sets.
+we call the function \href{\replocfile similarity_search/include/experiments.h#L70}{RunAll} 
+and subsequently \href{\replocfile similarity_search/include/experiments.h#L213}{Execute} for all possible test sets.
 
 The function \ttt{Execute} is a main workhorse, which creates queries, runs searches,
 produces ground truth data, and collects execution statistics.
@@ -2754,7 +2846,7 @@ In the case of the range query, the radius of a query is constant.
 However, in the case of the nearest-neighbor query,
 the radius typically decreases as we compare the query
 with previously unseen data objects (by calling the function \ttt{CheckAndAddToResult}).
-In both cases, the value of the function \ttt{Radius} is used to prune unpromising
+In both cases, the value of the function \ttt{Radius} can be used to prune unpromising
 partitions and data points.
 
 This commonality between the \ttt{RangeQuery} and \ttt{KNNQuery}
@@ -2802,6 +2894,8 @@ Then, this function should be used to instantiate a template
 \href{\replocfile similarity_search/include/space/space_vector_gen.h}{VectorSpaceGen}.
 A sample implementation of this approach can be found
 in \href{\replocfile sample_standalone_app/sample_standalone_app1.cc#L114}{sample\_standalone\_app1.cc}.
+However, as we explain below, \textbf{additional work} is needed if the space should work correctly with all projection methods 
+(see \S~\ref{SectionProjMethod}) or any other methods that rely on projections (e.g., OMEDRANK \S~\ref{SectionOmedrank}).
 
 To further illustrate the process of developing a new space,
 we created a sample zero-functionality space \ttt{DummySpace}.
@@ -2813,10 +2907,12 @@ and the source file
 The user is encouraged to study these files and read the comments.
 Here we focus only on the main aspects of creating a new space.
 
-The sample files describe a template class \ttt{DummySpace}, 
+The sample files describe a template class \ttt{DummySpace} (see Table~\ref{FigDummySpace}), 
 which is declared and defined in the namespace \ttt{similarity}.
-It is a direct ancestor of the class \ttt{Space}:
+It is a direct ancestor of the class \ttt{Space}.
 
+\begin{table}[t]
+\caption{\label{FigDummySpace}A sample space}
 \begin{verbatim}
 template <typename dist_t>
 class SpaceDummy : public Space<dist_t> {
@@ -2826,11 +2922,29 @@ class SpaceDummy : public Space<dist_t> {
                       const ExperimentConfig<dist_t>* config,
                       const char* inputfile,
                       const int MaxNumObjects) const;
+  /*
+   * CreateVectFromObj and GetElemQty() are only needed, if
+   * one wants to use methods with random projections.
+   */
+  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+                                   size_t nElem) const {
+    throw runtime_error("Cannot create vector for the space: " + ToString());
+  }
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, 
                                 const Object* obj2) const;
+  virtual Space<dist_t>* HiddenClone() const {
+    // The clone function should reproduce the space 
+    // with *IDENTICAL* parameters. 
+    // Another option is to use the default copy constructor 
+    // (if there are no pointer fields)
+    return new SpaceDummy<dist_t>(param1_, param2_);
+  }
 }
 \end{verbatim}
+\end{table}
+
 It is possible to provide the complete implementation of the \ttt{DummySpace}
 in the header file. However, this would make compilation slower.
 Instead, we recommend to use the mechanism of explicit template instantiation.
@@ -2846,8 +2960,9 @@ template class SpaceDummy<double>;
 \end{verbatim}
 
 Most importantly, the user needs to implement the function \ttt{ReadDataset},
-which reads objects from a file, and the function \ttt{HiddenDistance},
-which computes the distance between objects.
+which reads objects from a file, the function \ttt{HiddenDistance},
+which computes the distance between objects,
+and the function \ttt{HiddenClone} that creates the copy of the space object (with the same parameters).
 For a sample implementation of \ttt{ReadDataset},
 please, see the file
 \href{\replocfile similarity_search/src/space/space_bit_hamming.cc}{space\_bit\_hamming.cc}.
@@ -2864,9 +2979,25 @@ during the indexing phase,
 During the testing phase, a search method can compute a distance
 only by accessing functions \ttt{Distance}, \ttt{DistanceObjLeft}, or
 \ttt{DistanceObjRight}, which are member functions of the \ttt{Query}.
+In some cases, however, we need to access the distance function without
+altering distance-computation statistics. To this end, one may create
+a copy of the space object by calling the function \ttt{HiddenClone}. 
+This function should create an exact copy of the space with exactly
+the same parameters.
+This is by far not a perfect solution and we are considering better
+way to proxy distance computations. 
 
+If we implement a vector space that should work properly with projection methods
+and classic random projections, we need to define functions \ttt{GetElemQty} and \ttt{CreateVectFromObj}. 
+In the case of a dense vector space, \ttt{GetElemQty}
+should return the number of vector elements stored in the object.
+For sparse vector spaces, it should return zero. The function \ttt{CreateVectFromObj}
+extracts elements stored in a vector. For dense vector spaces,
+it merely copies vector elements to a buffer. For space vector spaces,
+it should do some kind of basic dimensionality reduction. 
+Currently, we do it via the hashing trick (see \S~\ref{SectionProjDetails}).
 
-Finally, we need to ``tell'' the library about the space,
+Importantly, we need to ``tell'' the library about the space,
 by registering the space in the space factory.
 At runtime, the space is created through a helper function.
 In our case, it is called \ttt{CreateDummy}.
@@ -2883,12 +3014,20 @@ Space<dist_t>* CreateDummy(const AnyParams& AllParams) {
   pmgr.GetParamRequired("param1",  param1);
   pmgr.GetParamRequired("param2",  param2);
 
+  pmgr.CheckUnused();
+
   return new SpaceDummy<dist_t>(param1, param2);
 }
 \end{verbatim}
 To extract parameters, the user needs an instance of the class \ttt{AnyParamManager} (see the above example).
 In most cases, it is sufficient to call two functions: \ttt{GetParamOptional} and
 \ttt{GetParamRequired}.
+To verify that no extra parameters are added, it is recommended to call the function \ttt{CheckUnused}
+(it fires an exception if some parameters are unclaimed).
+This may also help to identify situations where the user misspells 
+a parameter's name.
+
+
 Parameter values specified in the commands line are interpreted as strings.
 The \ttt{GetParam*} functions can convert these string values
 to integer or floating-point numbers if necessary.
@@ -2946,6 +3085,9 @@ class DummyMethod : public Index<dist_t> {
               AnyParamManager& pmgr) 
               : data_(data) {
     pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch_);
+
+    pmgr.CheckUnused();
+
     SetQueryTimeParamsInternal(pmgr);
   }
   ~DummyMethod(){};
@@ -2971,6 +3113,8 @@ The parameter manager is used to retrieve too parameters:
 \ttt{doSeqSearch}, and \ttt{dummyParam} (the second one is a query time parameter).
 When the first parameter is true, our dummy method will carry out a sequential search.
 Otherwise, it does nothing useful.
+Again, it is recommended to call the function \ttt{CheckUnused} to ensure
+that the user did not enter parameters with incorrect names.
 
 Query time parameters can be changed
 without rebuilding the index.
@@ -2980,6 +3124,7 @@ If this list is non-empty and the method is supposed to support
 query time modification of some parameters,
 these modifications are carried out inside the function  
 \ttt{SetQueryTimeParamsInternal}.
+Make sure, you call \ttt{SetQueryTimeParamsInternal} from the constructor as well.
 
 The space object is typically used to compute the distance by calling
 the function \ttt{IndexTimeDistance}.
@@ -3103,6 +3248,8 @@ target_link_libraries (dummy_app NonMetricSpaceLib lshkit
 \end{itemize}
 
 \subsection{Creating an application on Windows (inside the framework)}\label{SectionCreateAppWindows}
+The following description was created for Visual Studio Express 2015.
+It may be a bit for newer releases of the Visual Studio.
 Creating a new sub-project in the Visual Studio is rather straightforward.
 
 In addition, one can use a provided sample project file \href{\replocfile similarity_search/src/dummy_app.vcxproj}{dummy\_app.vcxproj} as a template.
@@ -3262,39 +3409,39 @@ It is up to a designer of the space to decide on the default value for an unspec
 All existing implementations use \emph{zero} as the default value.
 Again, elements can be separated by spaces or commas/columns instead of spaces.
 
-In addition, the directory \ttt{sample\_scripts} contains the full set of scripts that can be used to re-produce our NIPS'13 and SISAP'13 results \cite{Boytsov_and_Bilegsaikhan:sisap2013,Boytsov_and_Bilegsaikhan:nips2013}.
+In addition, the directory \ttt{sample\_scripts} contains the full set of scripts that can be used to re-produce our NIPS'13, SISAP'13, DA'14, and VLDB'15 results \cite{Boytsov_and_Bilegsaikhan:sisap2013,Boytsov_and_Bilegsaikhan:nips2013,ponomarenko2014comparative,naidan2015permutation}.
 This includes the software to generate plots (see also \S~\ref{SectionGenPlot}). 
-Additionally, to reproduce our previous results, one needs to obtain a data set using the script 
-\href{\replocfile data/get_data_nips2013.sh}{data/get\_data\_nips2013.sh}. 
-To get all data set sets available, please, use the script
-\href{\replocfile data/get_all_data.sh}{data/get\_all\_data.sh}. 
+Additionally, to reproduce our previous results, one needs to obtain data sets using scripts
+\href{\replocfile data/get_data_nips2013.sh}{data/get\_data\_nips2013.sh} 
+and \href{\replocfile data/get_data_vldb2015.sh}{data/get\_data\_vldb2015.sh}. 
+Note that for all evaluations except VLDB'15, you need the previous version of software (1.0),
+which \href{https://github.com/searchivarius/NonMetricSpaceLib/releases}{can be download from here}.
 
-The complete set contains the following:
+%The complete set contains the following:
 
-\begin{itemize} 
-\item The data set created by \href{http://lcayton.com}{Lawrence Cayton}. 
-To download, use the script 
-\href{\replocfile data/download_cayton.sh}{data/download\_cayton.sh};
-\item The Colors data set, which comes with the Metric Spaces Library\cite{LibMetricSpace}.
-To download, use the script 
-\href{\replocfile data/download_colors.sh}{data/download\_colors.sh};
-\item The Wikipedia tf-idf vectors in the sparse format.
-To download, use the script 
-\href{\replocfile data/download_wikipedia_sparse.sh}{data/download\_wikipedia\_sparse.sh};
-\item The Wikipedia dense 128-element vectors obtained from sparse vectors.
-Dimensionality is reduced via the singular value decomposition (SVD).
-To download, use the script 
-\href{\replocfile data/download_wikipedia_lsi128.sh}{data/download\_wikipedia\_lsi128.sh};
-\item A synthetic, randomly generated, 64-dimensional data set, where each coordinate is a real number sampled independently from $U[0,1]$:  
+%\begin{itemize} 
+%\item The data set created by \href{http://lcayton.com}{Lawrence Cayton}. 
+%To download, use the script 
+%\href{\replocfile data/download_cayton.sh}{data/download\_cayton.sh};
+%\item The Colors data set, which comes with the Metric Spaces Library\cite{LibMetricSpace}.
+%To download, use the script 
+%\href{\replocfile data/download_colors.sh}{data/download\_colors.sh};
+%\item The Wikipedia tf-idf vectors in the sparse format.
+%To download, use the script 
+%\href{\replocfile data/download_wikipedia_sparse.sh}{data/download\_wikipedia\_sparse.sh};
+%\item The Wikipedia dense 128-element vectors obtained from sparse vectors.
+%Dimensionality is reduced via the singular value decomposition (SVD).
+%To download, use the script 
+%\href{\replocfile data/download_wikipedia_lsi128.sh}{data/download\_wikipedia\_lsi128.sh};
+%\item A synthetic, randomly generated, 64-dimensional data set, where each coordinate is a real number sampled independently from $U[0,1]$:  
 
-\ttt{data/genunif.py -d 64 -n 500000 -o unif64.txt}
-\end{itemize}
+%\ttt{data/genunif.py -d 64 -n 500000 -o unif64.txt}
+%\end{itemize}
 
-Note that all data sets, except the Wikipedia tf-idf (sparse) vectors, 
-are vectors in the dense format (see \S~\ref{SectionSpaces}).
+Most data sets are vectors in the dense format (see \S~\ref{SectionSpaces}).
 If we use any of them, please consider citing the sources (see Section \ref{SectionCredits}) for details.
 Also note that, the data will be downloaded in the \textbf{compressed} form.
-You would need the standard \ttt{gunzip} to uncompress all the data except
+You would need the standard \ttt{gunzip} or \ttt{bunzip2} to uncompress all the data except
 the Wikipedia (sparse and dense) vectors.
 The Wikipedia data is compressed using \ttt{7z}, which provides 
 superior compression ratios.
@@ -3306,6 +3453,7 @@ The best way to acknowledge the use of this code
 in a scientific publication is to 
 provide the URL of the GitHub repository\footnote{\url{https://github.com/searchivarius/NonMetricSpaceLib}} 
 and to cite our engineering paper:
+
 \begin{verbatim}
 @incollection{Boytsov_and_Bilegsaikhan:sisap2013,
   year={2013},
@@ -3326,61 +3474,36 @@ and to cite our engineering paper:
 \end{verbatim}
 
 
-Most provided data sets are created by Lawrence Cayton.
+If you re-use a specific implementation, please,
+consider citing the original authors (if they are known).
+If you re-use one of the downloaded data sets,
+please, consider citing one (or more) of the following people:
+\begin{itemize}
+\item authors of software that was used to generate the data;
+\item authors of the source data set;
+\item authors who generated data set (if it was not done by us).
+\end{itemize}
+
+In particular, note the following:
+\begin{itemize}
+\item Most of the data sets used in our SISAP'13 and NIPS'13
+evaluation were created by  by Lawrence Cayton \cite{Cayton2008}.
 Our implementation of the bbtree, 
 an exact search method for Bregman divergences,
 is also based on the code of Cayton.
-If you use any of these, please, consider citing:
-\begin{verbatim}
-@inproceedings{cayton2008,
-  title=     {Fast nearest neighbor retrieval for bregman divergences},
-  author=    {Cayton, Lawrence},
-  booktitle= {Proceedings of the 25th international conference on 
-             Machine learning},
-  pages=     {112--119},
-  year=      {2008},
-  organization={ACM}
-}
-\end{verbatim}
 
-The Colors data set originally belongs to the Metric Spaces Library: 
-\begin{verbatim}
-@misc{LibMetricSpace, 
-  Author =    {K.~Figueroa and G.{}~Navarro and E.~Ch\'avez}, 
-  Keywords =  {Metric Spaces, similarity searching}, 
-  Lastchecked = {August 18, 2012}, 
-  Note = {Available at 
-         {\url{http://www.sisap.org/Metric\_Space\_Library.html}}}, 
-  Title = {\mbox{Metric Spaces Library}}, 
-  Year =  {2007}
-} 
-\end{verbatim}
+\item The Colors data set originally belongs to the Metric Spaces Library \cite{LibMetricSpace}.
 
-All Wikipedia-based data sets were created with a help of the \href{https://github.com/piskvorky/gensim/}{\ttt{gensim} library}:
+\item All Wikipedia-based data sets were created with a help of the \href{https://github.com/piskvorky/gensim/}{\ttt{gensim} library} \cite{rehurek_lrec}.
 
-\begin{verbatim}
-@inproceedings{rehurek_lrec,
-  title = {{Software Framework for Topic Modelling 
-            with Large Corpora}},
-  author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},
-  booktitle = {{Proceedings of the LREC 2010 Workshop on New
-                Challenges for NLP Frameworks}},
-  pages = {45--50},
-  year = 2010,
-  month = May,
-  day = 22,
-  publisher = {ELRA},
-  address = {Valletta, Malta},
-  note={\url{http://is.muni.cz/publication/884893/en}},
-  language={English}
-}
-\end{verbatim}
+\item The VLDB'15 data set for the Signature Quadratic Form Distance (SQFD) \cite{Beecks:2010,Beecks:2013} 
+was tested using signatures extracted from LSVRC-2014 data set~\cite{ILSVRCarxiv14}. 
 
-Our library incorporates the efficient LSHKIT library
+\item Our library incorporates the efficient LSHKIT library
 as well as the implementation of NN-Descent: 
 an iterative algorithm to construct an approximate \knnns-graph \cite{dong2011efficient}.
 
-Note that LSHKIT is distributed under a different license: 
+\item Note that LSHKIT is distributed under a different license: 
 GNU General Public License version 3 or later. 
 The NN-Descent is distributed under a free license similar to
 that of the Apache license (see \href{https://code.google.com/p/nndes/source/browse/trunk/LICENSE}{the 
@@ -3388,9 +3511,7 @@ text of the license here}). There is also \href{http://kgraph.org}{a newer open-
 implementation of the NN-Descent that includes both
 the graph construction and the search algorithm, but we have not incorporated it yet.
 
-Last, but not least, whenever you re-use an implementation, please,
-consider citing the original authors (if they are known).
-
+\end{itemize}
 
 \section{Acknowledgements}
 We thank 

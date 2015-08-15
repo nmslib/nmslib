@@ -49,6 +49,7 @@ DummyMethod<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   int dummy;
   pmgr.GetParamOptional("dummyParam", dummy);
   LOG(LIB_INFO) << "Set dummy = " << dummy;
+  pmgr.CheckUnused();
 }
 
 template <typename dist_t>
