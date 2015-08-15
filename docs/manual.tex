@@ -510,7 +510,7 @@ and a \ttt{ddd} (a GUI wrapper for gdb).
 For users who prefer IDEs, one good option is Eclipse IDE for C/C++
 developers.
 It is not the same as Eclipse for Java and one needs 
-to \href{http://www.eclipse.org/downloads/moreinfo/c.php}{download 
+to \href{http://www.eclipse.org/ide/}{download 
 this version of Eclipse separately.}.
 
 \begin{figure}
@@ -859,6 +859,9 @@ When the gold standard data is reused later,
 the benchmarking code verifies if input parameters match the content of the cache file. 
 Thus, we can prevent an accidental use of ground truth data created for one data set
 while testing with a different data set.
+Note that if you terminate the benchmarking utility while it is writing cache files,
+the latter will become corrupt and unusable. In this case, you would need to remove 
+the corrupt files manually.
 
 By default, we store at most 1000 answer entries per query. 
 This is done to reduce the size of the cache files.
@@ -2733,7 +2736,7 @@ release/experiment \
   For instance, if we create several copies of the VP-tree, we can specify the parameters
 \ttt{alphaLeft}, \ttt{alphaRight}, \ttt{maxLeavesToVisit}, and so on. \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{Exhaustive/sequential search} (\ttt{seq\_search}) } \\
+\multicolumn{2}{c}{\textbf{Brute-force/sequential search} (\ttt{seq\_search}) } \\
 \cmidrule(l){1-2} 
                  & No parameters. \\
 \bottomrule

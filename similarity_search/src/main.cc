@@ -95,7 +95,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tMethodParams\tNumData" << std::endl;
+  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tQueryPerSec\tMethodParams\tNumData" << std::endl;
 
   Data << "\"" << MethDescStr << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
@@ -108,6 +108,8 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << ExpRes.GetImprEfficiencyAvg() << "\t";
   Data << ExpRes.GetImprDistCompAvg() << "\t";
   Data << size_t(ExpRes.GetMemAvg()) << "\t";
+  Data << ExpRes.GetIndexTimeAvg() << "\t";
+  Data << ExpRes.GetQueryPerSecAvg() << "\t";
   Data << "\"" << MethParamStr << "\"" << "\t";
   Data << config.GetDataObjects().size();
   Data << std::endl;
@@ -291,6 +293,9 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
     vector<bool>                       isNewIndex;
 
     try {
+
+      double prevMemUsed = 0;
+      double prevTimeUsed = 0;
       
       for (const auto& methElem: MethodsDesc) {
         MethNum = &methElem - &MethodsDesc[0];
@@ -336,25 +341,32 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
         const double vmsize_after = mem_usage_measure.get_vmsize();
 
-        const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
-
-        const double TotalMemByMethod = vmsize_after - vmsize_before + data_size;
-
         wtm.split();
+        const double TimeElapsed = double(wtm.elapsed())/1e6;
+
+        const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
+        const double TotalMemByMethod = bCreateNew ? vmsize_after - vmsize_before + data_size : prevMemUsed;
+        const double TimeUsed = bCreateNew ? TimeElapsed : prevTimeUsed;
+    
+        prevMemUsed = TotalMemByMethod;
+        prevTimeUsed = TimeUsed;
+
 
         LOG(LIB_INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
         LOG(LIB_INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
         LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
-        LOG(LIB_INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
+        LOG(LIB_INFO) << ">>>> Time elapsed:         " << TimeElapsed << " sec";
 
 
         for (size_t i = 0; i < config.GetRange().size(); ++i) {
           MetaAnalysis* res = ExpResRange[i][MethNum];
           res->SetMem(TestSetId, TotalMemByMethod);
+          res->SetIndexTime(TestSetId, TimeUsed);
         }
         for (size_t i = 0; i < config.GetKNN().size(); ++i) {
           MetaAnalysis* res = ExpResKNN[i][MethNum];
           res->SetMem(TestSetId, TotalMemByMethod);
+          res->SetIndexTime(TestSetId, TimeUsed);
         }
 
         if (!TestSetId) {

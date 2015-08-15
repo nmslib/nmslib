@@ -425,6 +425,10 @@ public:
     for (auto it = IndexPtrs.begin(); it != IndexPtrs.end(); ++it) {
       size_t MethNum = it - IndexPtrs.begin();
       Index<dist_t>& Method = **it;
+
+      double timeSec = SearchTime[MethNum]/double(1e6);
+      double queryPerSec = numquery / timeSec;
+
       if (LogInfo) {
         LOG(LIB_INFO) << "=========================================";
         LOG(LIB_INFO) << ">>>> Index type is "<< Method.ToString();
@@ -434,8 +438,9 @@ public:
         LOG(LIB_INFO) << ">>>> # of distance computations = " << AvgNumDistComp[MethNum];
         LOG(LIB_INFO) << ">>>> Impr in # of dist comp: " << ImprDistComp[MethNum];
         LOG(LIB_INFO) << "=========================================";
-        LOG(LIB_INFO) << ">>>> Time elapsed:           " << (SearchTime[MethNum]/double(1e6)) << " sec";
-        LOG(LIB_INFO) << ">>>> Avg time per query:     " << (SearchTime[MethNum]/double(1e3)/numquery) << " msec";
+        LOG(LIB_INFO) << ">>>> Time elapsed:           " << timeSec << " sec";
+        LOG(LIB_INFO) << ">>>> # of queries per sec: : " << queryPerSec;
+        LOG(LIB_INFO) << ">>>> Avg time per query:     " << (timeSec/1e3/numquery) << " msec";
         LOG(LIB_INFO) << ">>>> System time elapsed:    " << (SystemTimeElapsed[MethNum]/double(1e6)) << " sec";
         LOG(LIB_INFO) << "=========================================";
       }
@@ -444,6 +449,7 @@ public:
       double  ImprEfficiency = static_cast<double>(SeqSearchTime)/(SearchTime[MethNum]*ThreadTestQty);
 
       ExpRes[MethNum]->SetImprEfficiency(TestSetId, ImprEfficiency);
+      ExpRes[MethNum]->SetQueryPerSec(TestSetId, queryPerSec);
 
       Recall[MethNum]            /= static_cast<double>(numquery);
       ClassAccuracy[MethNum]     /= static_cast<double>(numquery);

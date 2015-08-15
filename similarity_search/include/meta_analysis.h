@@ -43,6 +43,8 @@ public:
     ImprEfficiency_ .resize(TestSetQty);
     ImprDistComp_   .resize(TestSetQty);
     Mem_            .resize(TestSetQty);
+    IndexTime_      .resize(TestSetQty);
+    QueryPerSec_    .resize(TestSetQty);
   }
 
   // Let's protect Add* functions, b/c them can be called from different threads  
@@ -70,6 +72,12 @@ public:
   void SetMem(size_t SetId, double Mem) {
     Mem_[SetId] = Mem;
   }
+  void SetIndexTime(size_t SetId, double IndexTime) {
+    IndexTime_[SetId] = IndexTime;
+  }
+  void SetQueryPerSec(size_t SetId, double QueryPerSec) {
+    QueryPerSec_[SetId] = QueryPerSec;
+  }
   void SetImprEfficiency(size_t SetId, double ImprEfficiency) {
     ImprEfficiency_[SetId] = ImprEfficiency;
   }
@@ -89,6 +97,8 @@ public:
     ComputeOneSimple("ImprEfficiency", ImprEfficiency_, ImprEfficiencyAvg, ImprEfficiencyConfMin, ImprEfficiencyConfMax);
     ComputeOneSimple("ImprDistComp", ImprDistComp_, ImprDistCompAvg, ImprDistCompConfMin, ImprDistCompConfMax);
     ComputeOneSimple("MemUsage", Mem_, MemAvg, MemConfMin, MemConfMax);
+    ComputeOneSimple("IndexTime", IndexTime_, IndexTimeAvg, IndexTimeConfMin, IndexTimeConfMax);
+    ComputeOneSimple("QueryPerSec", QueryPerSec_, QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax);
   }
 
   double GetRecallAvg() const { return RecallAvg;} 
@@ -123,6 +133,14 @@ public:
   double GetMemConfMin() const{return MemConfMin;}; 
   double GetMemConfMax() const { return MemConfMax;}
 
+  double GetIndexTimeAvg() const { return IndexTimeAvg;} 
+  double GetIndexTimeConfMin() const{return IndexTimeConfMin;}; 
+  double GetIndexTimeConfMax() const { return IndexTimeConfMax;}
+
+  double GetQueryPerSecAvg() const { return QueryPerSecAvg;} 
+  double GetQueryPerSecConfMin() const{return QueryPerSecConfMin;}; 
+  double GetQueryPerSecConfMax() const { return QueryPerSecConfMax;}
+
   double GetQueryTimeAvg() const { return QueryTimeAvg;} 
   double GetQueryTimeConfMin() const{return QueryTimeConfMin;}; 
   double GetQueryTimeConfMax() const { return QueryTimeConfMax;}
@@ -141,6 +159,8 @@ double DistCompAvg, DistCompConfMin, DistCompConfMax;
 double ImprEfficiencyAvg, ImprEfficiencyConfMin, ImprEfficiencyConfMax;
 double ImprDistCompAvg, ImprDistCompConfMin, ImprDistCompConfMax;
 double MemAvg, MemConfMin, MemConfMax;
+double IndexTimeAvg, IndexTimeConfMin, IndexTimeConfMax;
+double QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax;
 double zVal_;
 
 vector<vector<double>>   Recall_; 
@@ -153,6 +173,8 @@ vector<vector<double>>   DistComp_;
 vector<double>           ImprEfficiency_; 
 vector<double>           ImprDistComp_; 
 vector<double>           Mem_; 
+vector<double>           IndexTime_; 
+vector<double>           QueryPerSec_; 
 
 MetaAnalysis(){} // be private!
 

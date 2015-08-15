@@ -51,12 +51,14 @@ namespace similarity {
     Print << "NumCloser:         " << round2(ExpRes.GetNumCloserAvg())    << " -> " << "[" << round2(ExpRes.GetNumCloserConfMin()) << " \t" << round2(ExpRes.GetNumCloserConfMax()) << "]" << std::endl;
     Print << "------------------------------------" << std::endl;
     Print << "QueryTime:         " << round2(ExpRes.GetQueryTimeAvg())    << " -> " << "[" << round2(ExpRes.GetQueryTimeConfMin()) << " \t" << round2(ExpRes.GetQueryTimeConfMax()) << "]" << std::endl;
+    Print << "QueryPerSec:       " << round2(ExpRes.GetQueryPerSecAvg())    << " -> " << "[" << round2(ExpRes.GetQueryPerSecConfMin()) << " \t" << round2(ExpRes.GetQueryPerSecConfMax()) << "]" << std::endl;
     Print << "DistComp:          " << round2(ExpRes.GetDistCompAvg())     << " -> " << "[" << round2(ExpRes.GetDistCompConfMin()) << " \t" << round2(ExpRes.GetDistCompConfMax()) << "]" << std::endl;
     Print << "------------------------------------" << std::endl;
     Print << "ImprEfficiency:    " << round2(ExpRes.GetImprEfficiencyAvg()) << " -> " << "["  <<  round2(ExpRes.GetImprEfficiencyConfMin()) << " \t" << round2(ExpRes.GetImprEfficiencyConfMax()) << "]" << std::endl;
     Print << "ImprDistComp:      " << round2(ExpRes.GetImprDistCompAvg()) << " -> " << "[" << round2(ExpRes.GetImprDistCompAvg()) << " \t"<< round2(ExpRes.GetImprDistCompConfMax()) << "]" << std::endl;
     Print << "------------------------------------" << std::endl;
     Print << "Memory Usage:      " << round2(ExpRes.GetMemAvg()) << " MB" << std::endl;
+    Print << "Index Time:        " << round2(ExpRes.GetIndexTimeAvg()) << " sec" << std::endl;
     Print << "------------------------------------" << std::endl;
     
     return Print.str();
