@@ -290,7 +290,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                 bCreateNew ?
                            shared_ptr<Index<dist_t>>(
                            MethodFactoryRegistry<dist_t>::Instance().
-                           CreateMethod(true /* print progress */,
+                           CreateMethod(false /* don't print progress */,
                                         MethodName, 
                                         SpaceType, config.GetSpace(), 
                                         config.GetDataObjects(), MethPars)

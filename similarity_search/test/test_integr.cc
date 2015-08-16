@@ -59,13 +59,75 @@ using std::stringstream;
 #define MAX_NUM_QUERY "100"
 
 vector<MethodTestCase>    vTestCaseDesc = {
+  // *************** NEW versions of permutation & projection-based filtering method tests ******************** //
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes:NN=10,rho=0.5,delta=0.001",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "small_world_rand:NN=10,initSearchAttempts=1,initIndexAttempts=1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 40, 52),  
+#if 1
+  // 4 different types of projections
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort:projType=perm,projDim=4,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort:projType=rand,projDim=4,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort:projType=fastmap,projDim=4,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort:projType=randrefpt,projDim=4,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+
+  // Proj. VP-tree
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_vptree:projType=perm,projDim=4,alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt","pp-index:numPivot=4,prefixLength=4,minCandidate=10000",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mi-file:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=1.0",
+
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp:numPivot=8,numPivotIndex=8,numPivotSearch=8,chunkIndexSize=102",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+
+  // Binarized permutations
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin:numPivot=32,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+
+
+  // 4 different types of projections
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort:projType=perm,projDim=4,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort:projType=rand,projDim=4,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.01, 0.0, 0.2, 8, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort:projType=fastmap,projDim=4,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.01, 0.0, 0.2, 8, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort:projType=randrefpt,projDim=4,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.01, 0.0, 0.2, 8, 12),  
+
+  // Proj. VP-tree
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_vptree:projType=perm,projDim=4,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
+
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt","pp-index:numPivot=4,prefixLength=4,minCandidate=100",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 3, 8),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mi-file:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.95, 1.0, 0, 0.5, 8, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp:numPivot=32,numPivotIndex=8,numPivotSearch=8,chunkIndexSize=102",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 1, 4, 22, 35),
+
+  // Binarized
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin:numPivot=32,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.3, 8, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.5, 8, 12),  
+
 
   // *************** omedrank tests ******************** //
 
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "omedrank:numPivot=4,dbScanFrac=0.01,minFreq=0.5,chunkIndexSize=102",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.9, 0.2, 1.5, 60, 90),  
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "omedrank:numPivot=4,dbScanFrac=0.01,minFreq=0.5,chunkIndexSize=102",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 0.5, 3, 60, 90),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "omedrank:numPivot=4,dbScanFrac=0.01,minFreq=0.5,chunkIndexSize=16536",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.97, 0.1, 1, 70, 120),  
+  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "omedrank:numPivot=4,dbScanFrac=0.01,minFreq=0.5,chunkIndexSize=16536",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.9, 0.2, 3, 70, 120),  
 
   // *************** VP-tree tests ******************** //
   // knn
@@ -100,7 +162,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10,maxLeavesToVisit=10", 
                 1 /* KNN-1 */, 0 /* no range search */ , 0.82, 0.9, 0.2, 3, 230, 250),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10,maxLeavesToVisit=20", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.75, 0.82, 0.2, 1.0, 85, 100),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.75, 0.82, 0.2, 2.0, 85, 100),  
 
   // range
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree:maxPathLen=4,bucketSize=10", 
@@ -143,9 +205,9 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=2147483647", 
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 7.5, 8.5),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=10", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.78, 0.85, 0.2, 1.5, 9.5, 11.5),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.78, 0.9, 0.2, 1.5, 9.5, 11.5),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=20", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.05, 0.7, 8.5, 10.5),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.97, 0.05, 0.7, 8.5, 10.5),  
   // range
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters:strategy=random,useBucketSize=1,bucketSize=10,maxLeavesToVisit=2147483647", 
                 0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 8, 10),  
@@ -200,46 +262,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_threshold:L=5,M=60,H=16535",
                 10 /* KNN-10 */, 0 /* no range search */ , 0.65, 0.85, 0.1, 50, 40, 70),  
 #endif
-
-  // *************** permutation-based and rank-aggregation filtering method tests ******************** //
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort:numPivot=4,dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "permutation:numPivot=4,dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt","perm_prefix:numPivot=4,prefixLength=4,minCandidate=10000",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_inv_indx:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=1.0",
-
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "pivot_neighb_invindx:numPivot=8,numPrefix=8,minTimes=8,chunkIndexSize=102",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin:numPivot=32,dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort:numPivot=4,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "permutation:numPivot=4,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt","perm_prefix:numPivot=4,prefixLength=4,minCandidate=100",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 3, 8),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_vptree:numPivot=4,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_inv_indx:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=0.1",
-
-                1 /* KNN-1 */, 0 /* no range search */ , 0.95, 1.0, 0, 0.5, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "pivot_neighb_invindx:numPivot=32,numPrefix=8,minTimes=8,chunkIndexSize=102",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 1, 4, 22, 35),
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin:numPivot=32,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.3, 8, 12),  
-
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.5, 8, 12),  
-
+#endif
 };
 
 
