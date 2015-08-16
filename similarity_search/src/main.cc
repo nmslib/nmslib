@@ -42,6 +42,7 @@
 
 #include "meta_analysis.h"
 #include "params.h"
+#include "params_cmdline.h"
 
 using namespace similarity;
 

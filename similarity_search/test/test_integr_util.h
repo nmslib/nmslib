@@ -24,6 +24,7 @@
 
 #include "utils.h"
 #include "report.h"
+#include "params_cmdline.h"
 
 using std::set;
 using std::multimap;

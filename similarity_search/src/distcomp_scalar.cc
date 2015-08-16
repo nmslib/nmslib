@@ -15,6 +15,7 @@
  */
 #include "distcomp.h"
 #include "string.h"
+#include "utils.h"
 
 #include <cstdlib>
 #include <limits>
@@ -32,7 +33,7 @@ using namespace std;
 template <class T>
 T NormScalarProduct(const T *p1, const T *p2, size_t qty) 
 { 
-    constexpr T eps = numeric_limits<T>::min() * 2;
+    const T eps = numeric_limits<T>::min() * 2;
 
     T sum = 0;
     T norm1 = 0;

@@ -223,7 +223,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cc" />
-    <ClCompile Include="params.cc" />
+    <ClCompile Include="params_cmdline.cc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)src\NonMetricSpaceLib.vcxproj">

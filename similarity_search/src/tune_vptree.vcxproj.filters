@@ -4,9 +4,7 @@
     <ClCompile Include="tune_vptree.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="params.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="params_cmdline.cc" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

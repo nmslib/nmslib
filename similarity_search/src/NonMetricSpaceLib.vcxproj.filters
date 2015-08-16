@@ -142,6 +142,36 @@
     <ClCompile Include="method\omedrank.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="space\space_sqfd.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="space\space_string.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\perm_lsh_bin.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\projection_index_incremental.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\small_world_rand_old.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\vptree_old.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distcomp_edist.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="projection.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="randproj_util.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="params.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\distcomp.h">
@@ -354,6 +384,71 @@
     <ClInclude Include="..\include\factory\method\omedrank.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\space\space_sqfd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\space\space_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\factory\space\space_sqfd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\factory\space\space_edist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\factory\method\proj_vptree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\factory\method\projection_index_incremental.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\factory\method\small_world_rand_old.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\method\perm_lsh_bin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\factory\method\perm_lsh_bin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\factory\init_methods.h" />
+    <ClInclude Include="..\include\factory\init_spaces.h" />
+    <ClInclude Include="..\include\space\space_leven.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\distcomp_edist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\eval_metrics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\floatdiff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\gold_standard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ported_boost_progress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\projection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\query_creator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\randproj_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\report.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\tune.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\method\projection_index_incremental.h" />
+    <ClInclude Include="..\include\method\small_world_rand_old.h" />
+    <ClInclude Include="..\include\method\vptree_old.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

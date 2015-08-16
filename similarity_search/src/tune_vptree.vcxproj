@@ -217,7 +217,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="params.cc" />
+    <ClCompile Include="params_cmdline.cc" />
     <ClCompile Include="tune_vptree.cc" />
   </ItemGroup>
   <ItemGroup>

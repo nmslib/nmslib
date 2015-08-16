@@ -47,8 +47,10 @@
 #include "factory/method/spatial_approx_tree.h"
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
+#if !defined(_MSC_VER)
 #include "factory/method/nndes.h"
 #include "factory/method/nndes_old.h"
+#endif
 
 namespace similarity {
 
@@ -174,7 +176,7 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_OLD, CreateSmallWorldRandOld)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_OLD, CreateSmallWorldRandOld)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_OLD, CreateSmallWorldRandOld)
-
+#if !defined(_MSC_VER)
   // Another KNN-graph, which is computed via NN-descent
   REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)
   REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
@@ -184,7 +186,7 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_NNDES_OLD, CreateNNDescentOld)
   REGISTER_METHOD_CREATOR(double, METH_NNDES_OLD, CreateNNDescentOld)
   REGISTER_METHOD_CREATOR(int,    METH_NNDES_OLD, CreateNNDescentOld)
-
+#endif
   // SA-tree
   REGISTER_METHOD_CREATOR(float,  METH_SATREE, CreateSATree)
   REGISTER_METHOD_CREATOR(double, METH_SATREE, CreateSATree)

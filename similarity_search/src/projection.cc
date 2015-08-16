@@ -17,6 +17,7 @@
 #include <vector>
 #include <stdexcept>
 #include <limits>
+#include <cmath>
 
 #include "utils.h"
 #include "projection.h"
@@ -340,7 +341,7 @@ private:
             pb = RandomInt() % data.size();
         dist_ab_[i] = space_->IndexTimeDistance(data[pa], data[pb]);
         if (pivot_idx.count(pa) !=0 || pivot_idx.count(pb) !=0 ||
-            fabs(dist_ab_[i] < eps)) continue;
+            fabs((double)dist_ab_[i]) < eps) continue;
         pivot_idx.insert(pa);
         pivot_idx.insert(pb);
         ref_pts_a_[i] = data_[pa];

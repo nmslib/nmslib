@@ -304,26 +304,6 @@ struct MethodWithParams {
 void ParseSpaceArg(const string& str, string& SpaceType, vector<string>& SpaceDesc);
 void ParseMethodArg(const string& str, string& MethName, vector<string>& MethodDesc);
 
-void ParseCommandLine(int argc, char *av[],
-                      string&                 LogFile,
-                      string&                 DistType,
-                      string&                 SpaceType,
-                      shared_ptr<AnyParams>&  SpaceParams,
-                      unsigned&               dimension,
-                      unsigned&               ThreadTestQty,
-                      bool&                   DoAppend, 
-                      string&                 ResFilePrefix,
-                      unsigned&               TestSetQty,
-                      string&                 DataFile,
-                      string&                 QueryFile,
-                      string&                 CacheGSFilePrefix,
-                      size_t&                 MaxCacheGSQty,
-                      unsigned&               MaxNumData,
-                      unsigned&               MaxNumQuery,
-                      vector<unsigned>&       knn,
-                      float&                  eps,
-                      string&                 RangeArg,
-                      vector<shared_ptr<MethodWithParams>>& Methods);
 };
 
 #endif

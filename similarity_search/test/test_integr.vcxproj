@@ -222,8 +222,8 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\params_cmdline.cc" />
     <ClCompile Include="test_integr.cc" />
-    <ClCompile Include="..\src\params.cc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)src\NonMetricSpaceLib.vcxproj">
