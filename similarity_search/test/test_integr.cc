@@ -113,7 +113,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mi-file:numPivot=16,numPivotIndex=16,numPivotSearch=16,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.95, 1.0, 0, 0.5, 8, 12),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp:numPivot=32,numPivotIndex=8,numPivotSearch=8,chunkIndexSize=102",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 1, 4, 22, 35),
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 1, 4, 22, 37),
 
   // Binarized
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin:numPivot=32,dbScanFrac=0.1",
