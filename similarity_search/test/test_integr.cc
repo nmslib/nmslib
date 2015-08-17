@@ -60,8 +60,10 @@ using std::stringstream;
 
 vector<MethodTestCase>    vTestCaseDesc = {
   // *************** NEW versions of permutation & projection-based filtering method tests ******************** //
+#if !defined(_MSC_VER)
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes:NN=10,rho=0.5,delta=0.001",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
+#endif
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "small_world_rand:NN=10,initSearchAttempts=1,initIndexAttempts=1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 40, 52),  
 #if 1
