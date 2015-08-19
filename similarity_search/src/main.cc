@@ -473,98 +473,104 @@ int main(int ac, char* av[]) {
   float                 eps = 0.0;
   unsigned              ThreadTestQty;
 
-  vector<shared_ptr<MethodWithParams>>        MethodsDesc;
+  try {
+    vector<shared_ptr<MethodWithParams>>        MethodsDesc;
 
-  ParseCommandLine(ac, av, LogFile,
-                       DistType,
-                       SpaceType,
-                       SpaceParams,
-                       dimension,
-                       ThreadTestQty,
-                       DoAppend, 
-                       ResFilePrefix,
-                       TestSetQty,
-                       DataFile,
-                       QueryFile,
-                       CacheGSFilePrefix,
-                       MaxCacheGSQty,
-                       MaxNumData,
-                       MaxNumQuery,
-                       knn,
-                       eps,
-                       RangeArg,
-                       MethodsDesc);
+    ParseCommandLine(ac, av, LogFile,
+                         DistType,
+                         SpaceType,
+                         SpaceParams,
+                         dimension,
+                         ThreadTestQty,
+                         DoAppend, 
+                         ResFilePrefix,
+                         TestSetQty,
+                         DataFile,
+                         QueryFile,
+                         CacheGSFilePrefix,
+                         MaxCacheGSQty,
+                         MaxNumData,
+                         MaxNumQuery,
+                         knn,
+                         eps,
+                         RangeArg,
+                         MethodsDesc);
 
-  initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+    initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
-  LOG(LIB_INFO) << "Program arguments are processed";
+    LOG(LIB_INFO) << "Program arguments are processed";
 
-  ToLower(DistType);
+    ToLower(DistType);
 
-  if (DIST_TYPE_INT == DistType) {
-    RunExper<int>(MethodsDesc,
-                  SpaceType,
-                  SpaceParams,
-                  dimension,
-                  ThreadTestQty,
-                  DoAppend, 
-                  ResFilePrefix,
-                  TestSetQty,
-                  DataFile,
-                  QueryFile,
-                  CacheGSFilePrefix,
-                  MaxCacheGSQty,
-                  MaxNumData,
-                  MaxNumQuery,
-                  knn,
-                  eps,
-                  RangeArg
-                 );
-  } else if (DIST_TYPE_FLOAT == DistType) {
-    RunExper<float>(MethodsDesc,
-                  SpaceType,
-                  SpaceParams,
-                  dimension,
-                  ThreadTestQty,
-                  DoAppend, 
-                  ResFilePrefix,
-                  TestSetQty,
-                  DataFile,
-                  QueryFile,
-                  CacheGSFilePrefix,
-                  MaxCacheGSQty,
-                  MaxNumData,
-                  MaxNumQuery,
-                  knn,
-                  eps,
-                  RangeArg
-                 );
-  } else if (DIST_TYPE_DOUBLE == DistType) {
-    RunExper<double>(MethodsDesc,
-                  SpaceType,
-                  SpaceParams,
-                  dimension,
-                  ThreadTestQty,
-                  DoAppend, 
-                  ResFilePrefix,
-                  TestSetQty,
-                  DataFile,
-                  QueryFile,
-                  CacheGSFilePrefix,
-                  MaxCacheGSQty,
-                  MaxNumData,
-                  MaxNumQuery,
-                  knn,
-                  eps,
-                  RangeArg
-                 );
-  } else {
-    LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
+    if (DIST_TYPE_INT == DistType) {
+      RunExper<int>(MethodsDesc,
+                    SpaceType,
+                    SpaceParams,
+                    dimension,
+                    ThreadTestQty,
+                    DoAppend, 
+                    ResFilePrefix,
+                    TestSetQty,
+                    DataFile,
+                    QueryFile,
+                    CacheGSFilePrefix,
+                    MaxCacheGSQty,
+                    MaxNumData,
+                    MaxNumQuery,
+                    knn,
+                    eps,
+                    RangeArg
+                   );
+    } else if (DIST_TYPE_FLOAT == DistType) {
+      RunExper<float>(MethodsDesc,
+                    SpaceType,
+                    SpaceParams,
+                    dimension,
+                    ThreadTestQty,
+                    DoAppend, 
+                    ResFilePrefix,
+                    TestSetQty,
+                    DataFile,
+                    QueryFile,
+                    CacheGSFilePrefix,
+                    MaxCacheGSQty,
+                    MaxNumData,
+                    MaxNumQuery,
+                    knn,
+                    eps,
+                    RangeArg
+                   );
+    } else if (DIST_TYPE_DOUBLE == DistType) {
+      RunExper<double>(MethodsDesc,
+                    SpaceType,
+                    SpaceParams,
+                    dimension,
+                    ThreadTestQty,
+                    DoAppend, 
+                    ResFilePrefix,
+                    TestSetQty,
+                    DataFile,
+                    QueryFile,
+                    CacheGSFilePrefix,
+                    MaxCacheGSQty,
+                    MaxNumData,
+                    MaxNumQuery,
+                    knn,
+                    eps,
+                    RangeArg
+                   );
+    } else {
+      LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
+    }
+
+    timer.split();
+    LOG(LIB_INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
+    LOG(LIB_INFO) << "Finished at " << LibGetCurrentTime();
+  } catch (const std::exception& e) {
+    LOG(LIB_FATAL) << "Exception: " << e.what();
+  } catch (...) {
+    LOG(LIB_FATAL) << "Unknown exception";
   }
-
-  timer.split();
-  LOG(LIB_INFO) << "Time elapsed = " << timer.elapsed() / 1e6;
-  LOG(LIB_INFO) << "Finished at " << LibGetCurrentTime();
 
   return 0;
 }
