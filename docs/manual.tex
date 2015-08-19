@@ -367,10 +367,12 @@ This creates several binaries in the directory \ttt{similarity\_search/release},
 most importantly, 
 a benchmarking utility \ttt{experiment}, which carries out experiments,
 and testing utilities \ttt{bunit}, \ttt{test\_integer}, and \ttt{bench\_distfunc}.
-Examples of using this benchmarking utility can be found in the directory \href{\replocdir sample_scripts}{sample\_scripts}. 
-Please, check the script \href{\replocfile sample_scripts/sample_run.sh}{sample\_run.sh}. 
-
 A more detailed description of the build process on Linux is given in \S~\ref{SectionBuildLinux}.
+
+Examples of using the benchmarking utility can be found in the directory \href{\replocdir sample_scripts}{sample\_scripts}. 
+Please, check the script \href{\replocfile sample_scripts/sample_run.sh}{sample\_run.sh}. 
+The latter runs a bunch of methods. It can also create an efficiency-effectiveness plot if needed.
+
 
 
 \subsection{Python bindings (only on Linux)}
@@ -1213,7 +1215,7 @@ $L_p$ (generic $p < 1$)& \ttt{lp:p=\ldots, lp\_sparse:p=\ldots}                 
 Jensen-Shan. div. &\ttt{jsdivslow, jsdivfast, jsdivfastapprox} &   0.3, 1.9, 4.8 \\
                           & $\frac{1}{2}\sum_{i=1}^n \left[x_i \log x_i + y_i \log y_i  - (x_i+y_i)\log \frac{x_i +y_i}{2}\right]$ & \\
 \cmidrule(l){1-3} 
-Cosine similarity & \ttt{cosinesimil}, \ttt{cosinesimil\_sparse}, \ttt{cosinesimil\_sparse\_fast} & { 13, 1.4, 3.5 } \\
+Cosine distance & \ttt{cosinesimil}, \ttt{cosinesimil\_sparse}, \ttt{cosinesimil\_sparse\_fast} & { 13, 1.4, 3.5 } \\
                         & $1-\frac{\sum_{i=1}^n x_i y_i}{\sqrt{\sum_{i=1}^n x_i^2}\sqrt{\sum_{i=1}^n y_i^2 }}$   & \vspace{1em} \\
 \cmidrule(l){1-3} 
 Norm. Levenshtein       &\ttt{normleven}, see \S~\ref{SectionEditDistance} for details & 0.2 \\
@@ -1278,16 +1280,15 @@ due to a costly, branch-heavy, operation of matching sparse vector indices
 
 \subsection{Scalar-product Related Distances}
 We have two distance function whose formulas include normalized scalar product.
-One is the cosine similarity, which is equal to:
+One is the cosine distance, which is equal to:
 $$
 d(x,y) =1-\frac{\sum_{i=1}^n x_i y_i} 
 {\sqrt{\sum_{i=1}^n x_i^2} \sqrt{\sum_{i=1}^n y_i^2 } } 
 $$ 
-The cosine similarity is not a true metric, but it can be converted into
+The cosine distance is not a true metric, but it can be converted into
 one by applying a monotonic transformation (i.e.., subtracting the 
-cosine similarity from one and taking an inverse cosine).
-The resulting distance function is a true metric that 
-is called the angular distance.
+cosine distance from one and taking an inverse cosine).
+The resulting distance function is a true metric, which is called the angular distance.
 The angular distance is computed using the following formula:
 $$
 d(x,y) =\arccos\left(\frac{\sum_{i=1}^n x_i y_i} 
@@ -1813,7 +1814,7 @@ The clusters are visited in the order of increasing distance from
 the query to a cluster center.
 The search process stops after vising a \ttt{maxLeavesToVisit} clusters.
 Our version is supposed to work for metric spaces (and symmetric distance functions),
-but it can also be used with mildly-nonmetric symmetric distances such as the cosine similarity.
+but it can also be used with mildly-nonmetric symmetric distances such as the cosine distance.
 
 An example of testing the list of clusters using the \ttt{bucketSize} as a parameter to define
 the size of the cluster:
@@ -2101,7 +2102,7 @@ Incremental sorting is a more efficient approach enabled by default.
 The mnemonic code of this method is \ttt{proj\_incsort}.
 
 A choice of the distance in the projected space is governed by the parameter \ttt{useCosine}.
-If it set to 1, the cosine similarity is used (this makes most sense if we use the cosine similarity
+If it set to 1, the cosine distance is used (this makes most sense if we use the cosine distance
 in the original space). By default $\ttt{useCosine}=0$, which forces the use of $L_2$ in the projected space. 
 
 The following is an example of testing the brute-force search of projections with the benchmarking utility \ttt{experiment}:
@@ -2123,7 +2124,7 @@ The method's mnemonic name is \ttt{proj\_vptree}.
 In that, one needs to specify both the parameters of the VP-tree  (see \S~\ref{SectionVPtree})
 and the projection parameters as in the case of brute-force searching of projections (see \S~\ref{SectionProjBruteForce}). 
 
-The major difference from the brute-force search over projections is that, instead of choosing between $L_2$ and cosine similarity as the distance
+The major difference from the brute-force search over projections is that, instead of choosing between $L_2$ and cosine distance as the distance
 in the projected space, one uses a methods' parameter \ttt{projSpaceType} to specify an arbitrary one.
 Similar to the regular VP-tree implementation,
 optimal $\alpha_{left}$ and $\alpha_{right}$ are determined by the utility \ttt{tune\_vptree} via a grid search like procedure (\ttt{tune\_vptree.exe} on Windows). 
@@ -2223,7 +2224,7 @@ release/experiment \
 \\
 \cmidrule(l){1-2} 
                      & Common parameters: \ttt{projType}, \ttt{projDim}, \ttt{intermDim}, \ttt{dbScanFrac} \\
- \ttt{useCosine}    & If set to one, we use the cosine similarity in the projected space. By default (value zero),
+ \ttt{useCosine}    & If set to one, we use the cosine distance in the projected space. By default (value zero),
                       $L_2$ is used. \\
  \ttt{useQueue}    & If set to one, we use the priority queue instead of incremental sorting. By default is zero.\\
                       
@@ -3557,7 +3558,7 @@ For example, in the case of Wikipedia tf-idf vectors (see \S~\ref{SectionDataset
 it is safe to use the value \ttt{intermDim}=4096.
 
 Random projections work best if both the source and the target space are Euclidean,
-whereas the distance is either $L_2$ or the cosine similarity.
+whereas the distance is either $L_2$ or the cosine distance.
 In this case, there are theoretical guarantees that the projection preserves
 well distances in the original space (see e.g. \cite{bingham2001random}).
 

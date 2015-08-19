@@ -223,26 +223,28 @@ def methodNameAndStyle(methodName):
     methodName = methodName.strip().lower()
     if startsWith(methodName, 'vptree'):
         return ('vp-tree', 'mark=*')
-    if methodName == 'permutation  incr  sorting':
-        return ('permutation incr.','mark=x')
+    if methodName == 'permutation  incr  sorting' or methodName == 'projection  perm  incr  sorting':
+        return ('brute-force filt.','mark=x')
     if methodName == 'binarized permutation  vptree':
         return ('perm. bin. vptree','mark=+' )
     if methodName == 'permutation  pref  index':
         return ('pref. index','mark=text')
-    if methodName == 'permutation  vptree':
-        return ('perm. vptree','mark=diamond*')
+    if methodName == 'permutation  vptree' or methodName == "projection  vptree":
+        return ('proj. vptree','mark=diamond*')
     if methodName == 'small world rand':
-        return ('small world', 'mark=o')
+        return ('kNN-graph (SmallWorld)', 'mark=o')
+    if startsWith(methodName, 'nndescentmethod method'):
+        return ('kNN-graph (NN-desc)', 'mark=oplus*')
     if methodName == 'permutation  inverted index over neighboring pivots':
-        return ('pivot neighb. index','mark=triangle')
+        return ('NAPP','mark=triangle')
     if methodName == 'multiprobe lsh':
-        return ('multi-probe LSH', 'mark=triangle*')
+        return ('MPLSH', 'mark=triangle*')
     if methodName.find('copies of') >= 0:
         return (methodName.strip(), 'mark=square')
     if methodName == 'bbtree':
         return (methodName.strip(), 'mark=square*')
     if methodName == 'list of clusters':
-        return ('list clust', 'mark=diamond')
+        return ('list. clust.', 'mark=diamond')
     if methodName == 'ghtree':
         return ('gh-tree', 'mark=diamond*')
     if methodName == 'mvp tree':
@@ -252,9 +254,9 @@ def methodNameAndStyle(methodName):
     if methodName == 'lsh':
         return ('LSH', 'mark=otimes*')
     if methodName == 'permutation  inverted index':
-        return ('perm inv index', 'mark=asterisk')
+        return ('MI-file', 'mark=asterisk')
     if methodName == 'permutation binarized  incr  sorting':
-        return ('perm bin incr', 'mark=pentagon')
+        return ('brute-force filt. bin.', 'mark=pentagon')
     if methodName == 'sequential search':
         return ('brute force', 'mark=pentagon*')
     print >> sys.stderr, "Does not know how to rename the method '" + methodName + "'"
