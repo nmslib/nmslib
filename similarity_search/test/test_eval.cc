@@ -19,6 +19,7 @@
 #include "bunit.h"
 
 #include <limits>
+#include <iostream>
 
 #include <eval_metrics.h>
 
@@ -55,11 +56,46 @@ void testMetric(
 };
 
 typedef ResultEntry<float>  RESF;
+typedef ResultEntry<double>  RESD;
 typedef ResultEntry<int>    RESI;
 
-const float EPSF = numeric_limits<float>::min();
+const float  EPSF = numeric_limits<float>::min();
+const double EPSD = numeric_limits<double>::min();
 
 const size_t KNN = 10;
+
+TEST(TestRecallDouble) {
+  vector<vector<RESD>> exactEntries = {
+    {},
+    {},
+    {RESD(0, 0, 100)},
+    { RESD(0, 0, 1), RESD(1, 0, 2), RESD(3, 0, 3), RESD(4, 0, 4), RESD(5, 0, 5), RESD(6, 0, 6), RESD(7, 0, 7), RESD(8, 0, 8), RESD(9, 0, 9), RESD(10, 0, 10), },
+    { RESD(0, 0, 1), RESD(1, 0, 2), RESD(3, 0, 3), RESD(4, 0, 4), RESD(5, 0, 5), RESD(6, 0, 6), RESD(7, 0, 7), RESD(8, 0, 8), RESD(9, 0, 9), RESD(10, 0, 10), },
+  };
+  vector<vector<RESD>> approxEntries = {
+    {},
+    {RESD(0, 0, 100)},
+    {},
+    { RESD(0, 0, 1), RESD(3, 0, 3), RESD(5, 0, 5), RESD(7, 0, 7), RESD(9, 0, 9), },
+    { RESD(0, 0, 1), RESD(1, 0, 2), RESD(3, 0, 3), RESD(4, 0, 4), RESD(5, 0, 5), RESD(6, 0, 6), RESD(7, 0, 7), RESD(8, 0, 8), RESD(9, 0, 9), RESD(10, 0, 10), },
+  };
+  vector<double> expRecall {
+    1,
+    1,
+    0.0,
+    0.5,
+    1.0,
+  };
+  
+  EXPECT_EQ(exactEntries.size(), approxEntries.size());
+  EXPECT_EQ(exactEntries.size(), expRecall.size());
+
+  for (size_t i = 0; i < exactEntries.size(); ++i) {
+    testMetric<double,EvalRecall<double>>(KNN, exactEntries[i], approxEntries[i], expRecall[i]); 
+    // In a special case when there are no results recall should be equal to 1
+    testMetric<double,EvalRecall<double>>(0, exactEntries[i], approxEntries[i], 1.0);
+  }
+}
 
 
 TEST(TestRecallFloat) {
@@ -128,6 +164,39 @@ TEST(TestRecallInt) {
   }
 }
 
+TEST(TestNumCloserDouble) {
+  vector<vector<RESD>> exactEntries = {
+    {},
+    { RESD(0, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2) },
+    { RESD(0, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2) },
+    { RESD(0, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2) },
+    { RESD(0, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2) },
+  };
+  vector<vector<RESD>> approxEntries = {
+    {},
+    {},
+    { RESD(33, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2) },
+    { RESD(33, 0, EPSD), RESD(1, 0, 1 + EPSD), RESD(2, 0, 2 + EPSD) },
+    { RESD(11, 0, 2), RESD(12, 0, 2.0001), RESD(13, 0, 2.0001) },
+  };
+  vector<double> expNumCloser {
+    0,
+    static_cast<double>(exactEntries[1].size()),
+    0,
+    0,
+    2
+  };
+  
+  EXPECT_EQ(exactEntries.size(), approxEntries.size());
+  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+
+  for (size_t i = 0; i < exactEntries.size(); ++i) {
+    testMetric<double,EvalNumberCloser<double>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    // In a special case when there are no results the number of points that are closer is 0 
+    testMetric<double,EvalNumberCloser<double>>(0, exactEntries[i], approxEntries[i], 0.0); 
+  }
+}
+
 TEST(TestNumCloserFloat) {
   vector<vector<RESF>> exactEntries = {
     {},
@@ -140,7 +209,7 @@ TEST(TestNumCloserFloat) {
     {},
     {},
     { RESF(33, 0, 0), RESF(1, 0, 1), RESF(2, 0, 2) },
-    { RESF(33, 0, EPSF), RESF(1, 0, 1 + numeric_limits<float>::epsilon()), RESF(2, 0, 2 + numeric_limits<float>::epsilon()) },
+    { RESF(33, 0, EPSF), RESF(1, 0, 1 + EPSF), RESF(2, 0, 2 + EPSF) },
     { RESF(11, 0, 2), RESF(12, 0, 2.0001), RESF(13, 0, 2.0001) },
   };
   vector<double> expNumCloser {
@@ -191,6 +260,42 @@ TEST(TestNumCloserInt) {
     testMetric<int,EvalNumberCloser<int>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
     // In a special case when there are no results the number of points that are closer is 0 
     testMetric<int,EvalNumberCloser<int>>(0, exactEntries[i], approxEntries[i], 0.0); 
+  }
+}
+
+TEST(TestRelPosErrorDouble) {
+  vector<vector<RESD>> exactEntries = {
+    {},
+    { RESD(0, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2) },
+    { RESD(0, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2), RESD(3, 0, 3) },
+    { RESD(0, 0, 33), RESD(1, 0, 33), RESD(2, 0, 33) },
+    { RESD(0, 0, 33), RESD(1, 0, 33), RESD(2, 0, 33) },
+  };
+  vector<vector<RESD>> approxEntries = {
+    {},
+    {},
+    { RESD(10, 0, 1), RESD(11, 0, 3) },
+    { RESD(10, 0, 33), RESD(11, 0, 33), RESD(12, 0, 33) },
+    { RESD(10, 0, 33 + + numeric_limits<double>::epsilon()), RESD(11, 0, 33 + + numeric_limits<double>::epsilon()), RESD(12, 0, 33 + numeric_limits<double>::epsilon()) },
+  };
+  vector<double> expNumCloser {
+    0,
+    log(static_cast<double>(exactEntries[1].size())),
+    log(2),
+    0,
+    0,
+  };
+  
+  EXPECT_EQ(exactEntries.size(), approxEntries.size());
+  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+
+  for (size_t i = 0; i < exactEntries.size(); ++i) {
+    testMetric<double,EvalLogRelPosError<double>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    /* 
+     * In a special case when there are no results the relative position error should be 1.0 and
+     * its logarithm should be zero
+     */
+    testMetric<double,EvalLogRelPosError<double>>(0, exactEntries[i], approxEntries[i], 0.0); 
   }
 }
 
@@ -263,6 +368,39 @@ TEST(TestRelPosErrorInt) {
   }
 }
 
+TEST(TestPrecisionOfApproxDouble) {
+  vector<vector<RESD>> exactEntries = {
+    {},
+    { RESD(0, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2) },
+    { RESD(0, 0, 0), RESD(1, 0, 1), RESD(2, 0, 2), RESD(3, 0, 3) },
+    { RESD(0, 0, 33), RESD(1, 0, 33), RESD(2, 0, 33) },
+    { RESD(0, 0, 33), RESD(1, 0, 33), RESD(2, 0, 33) },
+  };
+  vector<vector<RESD>> approxEntries = {
+    {},
+    {},
+    { RESD(10, 0, 1), RESD(11, 0, 3) },
+    { RESD(10, 0, 33), RESD(11, 0, 33), RESD(12, 0, 33) },
+    { RESD(10, 0, 33 + + numeric_limits<double>::epsilon()), RESD(11, 0, 33 + + numeric_limits<double>::epsilon()), RESD(12, 0, 33 + numeric_limits<double>::epsilon()) },
+  };
+  vector<double> expNumCloser {
+    1.0,
+    0.0,
+    0.5,
+    1.0,
+    1.0,
+  };
+  
+  EXPECT_EQ(exactEntries.size(), approxEntries.size());
+  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+
+  for (size_t i = 0; i < exactEntries.size(); ++i) {
+    testMetric<double,EvalPrecisionOfApprox<double>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    // In a special case when there are no results, the precision of approximation should be equal to 1.0
+    testMetric<double,EvalPrecisionOfApprox<double>>(0, exactEntries[i], approxEntries[i], 1.0); 
+  }
+}
+
 TEST(TestPrecisionOfApproxFloat) {
   vector<vector<RESF>> exactEntries = {
     {},
@@ -324,6 +462,62 @@ TEST(TestPrecisionOfApproxInt) {
     // In a special case when there are no results, the precision of approximation should be equal to 1.0
     testMetric<int,EvalPrecisionOfApprox<int>>(0, exactEntries[i], approxEntries[i], 1.0); 
   }
+}
+
+template <class dist_t>
+void testResultEntryIO(string fileName, const vector<ResultEntry<dist_t>>& testData) {
+  unique_ptr<fstream>      cacheGSBinary;
+
+  cacheGSBinary.reset(new fstream(fileName.c_str(),
+                                        std::ios::trunc | std::ios::out));
+  for (const ResultEntry<dist_t>& e: testData) {
+    e.writeBinary(*cacheGSBinary);
+  }
+
+  cacheGSBinary->close();
+  
+  cacheGSBinary.reset(new fstream(fileName.c_str(),
+                                        std::ios::in));
+
+  ResultEntry<dist_t> tmp;
+  for (size_t i = 0; i < testData.size(); ++i) {
+    EXPECT_FALSE(cacheGSBinary->eof());
+    tmp.readBinary(*cacheGSBinary);
+    EXPECT_EQ(testData[i], tmp);
+  }
+
+  cacheGSBinary->close();
+}
+
+TEST(TestResultEntryIntIO) {
+  vector<RESI> testData;
+
+  for (int i = 0; i < 300000; ++i) {
+    testData.push_back(RESI(i, i % 10, i * 2));
+  }
+
+  testResultEntryIO("tmpfile.bin", testData);
+}
+
+
+TEST(TestResultEntryFloatIO) {
+  vector<RESF> testData;
+
+  for (int i = 0; i < 300000; ++i) {
+    testData.push_back(RESF(i, i % 10, i * 0.01f));
+  }
+
+  testResultEntryIO("tmpfile.bin", testData);
+}
+
+TEST(TestResultEntryDoubleIO) {
+  vector<RESD> testData;
+
+  for (int i = 0; i < 300000; ++i) {
+    testData.push_back(RESD(i, i % 10, i * 0.01));
+  }
+
+  testResultEntryIO("tmpfile.bin", testData);
 }
 
 }

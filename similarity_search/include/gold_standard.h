@@ -70,6 +70,11 @@ struct ResultEntry {
     if (mDist != o.mDist) return mDist < o.mDist;
     return mId < o.mId;
   }
+  bool operator==(const ResultEntry& o) const {
+    return mId    == o.mId    && 
+           mDist  == o.mDist  && 
+           mLabel == o.mLabel;
+  }
 };
 
 template <class dist_t>
