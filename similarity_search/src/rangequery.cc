@@ -17,6 +17,7 @@
 #include <iostream>
 #include <algorithm>
 #include <set>
+#include <iterator>
 
 #include "space.h"
 #include "object.h"
@@ -24,6 +25,8 @@
 #include "rangequery.h"
 
 namespace similarity {
+
+using namespace std;
 
 template <typename dist_t>
 RangeQuery<dist_t>::RangeQuery(const Space<dist_t>* space,

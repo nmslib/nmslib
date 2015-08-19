@@ -26,7 +26,7 @@ using std::round;
 
 class WallClockTimer {
 public:
-  time_point<system_clock> t1, t2;
+  high_resolution_clock::time_point t1, t2;
 
   WallClockTimer() {
     reset();
