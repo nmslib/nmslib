@@ -29,13 +29,13 @@
 #include <exception>
 
 // Uncomment this to disable tests taking long time
-//#define DISABLE_LONG_TESTS
+#define DISABLE_LONG_TESTS
 
 namespace similarity {
 
 using TestFunc = std::function<void()>;
 
-class TestException : std::exception {
+class TestException : public std::exception {
  public:
   TestException(const std::string& msg) : msg_(msg) {}
   const char* what() const 

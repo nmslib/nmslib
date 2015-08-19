@@ -66,10 +66,17 @@ int TestRunner::RunAllTests() {
       try {
         std::get<1>(*it)->Test();
         std::cout << green << "passed" << no_color << std::endl;
-      } catch (TestException& ex) {
+      } catch (const TestException& ex) {
+          ++num_failed;
+          std::cout << red << "failed" << no_color << std::endl;
+          std::cout << ex.what() << std::endl;
+      } catch (const std::exception& ex) {
         ++num_failed;
         std::cout << red << "failed" << no_color << std::endl;
         std::cout << ex.what() << std::endl;
+      } catch (...) {
+        std::cout << red << "failed" << no_color << std::endl;
+        std::cout << "unknown cause" << std::endl;
       }
     }
   }

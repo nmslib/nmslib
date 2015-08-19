@@ -183,7 +183,9 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
       cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
                                         std::ios::in));
       cacheGSBinary.reset(new fstream(cacheGSBinaryName.c_str(),
-                                        std::ios::in));
+                                        std::ios::in 
+                                        // On Windows you don't get a proper binary stream without ios::binary!
+                                        | ios::binary));
 
       bReadGSCache = true;
     } else {
@@ -196,7 +198,9 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
       cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
                                         std::ios::trunc | std::ios::out));
       cacheGSBinary.reset(new fstream(cacheGSBinaryName.c_str(),
-                                        std::ios::trunc | std::ios::out));
+                                        std::ios::trunc | std::ios::out |
+                                        // On Windows you don't get a proper binary stream without ios::binary!
+                                        ios::binary));
       bWriteGSCache = true;
     }
 

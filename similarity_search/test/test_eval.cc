@@ -469,7 +469,7 @@ void testResultEntryIO(string fileName, const vector<ResultEntry<dist_t>>& testD
   unique_ptr<fstream>      cacheGSBinary;
 
   cacheGSBinary.reset(new fstream(fileName.c_str(),
-                                        std::ios::trunc | std::ios::out));
+                      std::ios::trunc | std::ios::out | ios::binary));
   for (const ResultEntry<dist_t>& e: testData) {
     e.writeBinary(*cacheGSBinary);
   }
@@ -477,7 +477,7 @@ void testResultEntryIO(string fileName, const vector<ResultEntry<dist_t>>& testD
   cacheGSBinary->close();
   
   cacheGSBinary.reset(new fstream(fileName.c_str(),
-                                        std::ios::in));
+                                  std::ios::in | ios::binary));
 
   ResultEntry<dist_t> tmp;
   for (size_t i = 0; i < testData.size(); ++i) {

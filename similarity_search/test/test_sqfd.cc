@@ -14,6 +14,8 @@
  *
  */
 
+#ifndef _MSC_VER
+
 #include <string.h>
 #include "space.h"
 #include "bunit.h"
@@ -119,3 +121,6 @@ TEST(Sqfd) {
 }
 
 }  // namespace similarity
+
+#endif
+

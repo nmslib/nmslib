@@ -22,6 +22,15 @@
     <ClCompile Include="test_fp.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_sqfd.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_eval.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_proj.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
@@ -30,6 +39,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="testdataset.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bunit.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
