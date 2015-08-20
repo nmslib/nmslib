@@ -76,7 +76,7 @@ Data sets
 
 We use several data sets, which were created either by other folks,
 or using 3d party software. If you use these data sets, please, consider
-giving proper credit. The download scripts print respective BibTex entries.
+giving proper credit. The download scripts prints respective BibTex entries.
 More information can be found **Need a URL from arxiv** [in the manual]().
 
 Here is the list of scripts to download major data sets:
@@ -87,11 +87,6 @@ The downloaded data needs to be decompressed (you may need 7z, gzip, and bzip2)
 
 Related publications
 -----------------------
-
-We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
-
-* The search-based construction algorithm published by Malkov et al. in 2014 (also presented on SISAP 2012);
-* The NN-Descent algorithm due to Dong et al. 2011. This first version came without a search algorithm. Therefore, we use the same search algorithm as Malkov et al. 2014. A newer version of NN-descent can be found [by following this link](http://www.kgraph.org/). It is not incorporated, though.
 
 Most important related papers are listed below in the chronological order: 
 
@@ -107,6 +102,11 @@ Most important related papers are listed below in the chronological order:
 * L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
 * Amato, Giuseppe, Claudio Gennaro, and Pasquale Savino. ["Mi-file: using inverted files for scalable approximate similarity search." Multimedia tools and applications 71.3 (2014): 1333-1362. [**[BibText]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
 * Gonzalez, Edgar Chavez, Karina Figueroa, and Gonzalo Navarro. ["Effective proximity retrieval by ordering permutations."](http://www.dcc.uchile.cl/~gnavarro/ps/tpami07.pdf) Pattern Analysis and Machine Intelligence, IEEE Transactions on 30.9 (2008): 1647-1658. [**[BibText]**](http://dblp.uni-trier.de/rec/bibtex/journals/pami/ChavezFN08)
+
+We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
+
+* The search-based construction algorithm published by Malkov et al. in 2014 (also presented on SISAP 2012);
+* The NN-Descent algorithm due to Dong et al. 2011. This first version came without a search algorithm. Therefore, we use the same search algorithm as Malkov et al. 2014. A newer version of NN-descent can be found [by following this link](http://www.kgraph.org/). It is not incorporated, though.
 
 
 
