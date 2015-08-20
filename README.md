@@ -1,18 +1,20 @@
 Non-Metric Space Library
 =================
-A cross-platform similarity search library and a toolkit for evaluation of similarity search methods.
+Non-Metric Space Library is a cross-platform similarity search library and a toolkit for evaluation of similarity search methods.
+The goal of the project is to create an effective toolkit for searching in **generic non-metric** spaces.
+Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the focus is **approximate**
+methods. Some of the implemented approaches are quite efficient, see e.g., results of [a public evaluation](https://github.com/erikbern/ann-benchmarks).
 
 **Contributors**: Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
 Leo(nid) Boytsov is a maintainer.
 
-**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. 
-
+**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**.
 
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse.
+A detailed description is given **Need a URL from arxiv** [in the manual](). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -21,11 +23,10 @@ To acknowledge the use of the library, you could provide a link to this reposito
 
 The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. The k-NN graph construction algorithm *NN-Descent* due to Dong et al. 2011 (see the links below), which is also embedded in our library, seems to be covered by a free-to-use license, similar to Apache 2.
 
-
 Prerequisites
 -----------------------
 
-1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 4.2.1, or Visual Studio 12.
+1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 12.
 2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well.
 3. Boost (dev version). For Windows, the core library and the standalone sample application do not require Boost.
 4. Only for Linux: cmake (GNU make is also required) 
@@ -57,16 +58,20 @@ In addition, the directory [sample_scripts](sample_scripts) contains the full se
 
 Quick start on Windows
 -----------------------
-Building on Windows is straightforward:
-One can simply use the provided  [Visual Studio solution file](similarity_search/NonMetricSpaceLib.sln).
+Building on Windows is straightforward.
+Download [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). 
+Download and install respective [Boost binaries](http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-32.exe/download). Please, use the **default** installation directory on disk ``c:`` (otherwise, it will be necessary to update project files).
+
+Afterwards, one can simply use the provided  [Visual Studio solution file](similarity_search/NonMetricSpaceLib.sln).
 The solution file references several project (\*.vcxproj) files: 
 [NonMetricSpaceLib.vcxproj](similarity_search/src/NonMetricSpaceLib.vcxproj)
 is the main project file that is used to build the library itself.
 The output is stored in the folder **similarity_search\x64**.
-Note that the core library, the test utilities,
+
+Also note that the core library, the test utilities,
  as well as examples of the standalone applications (projects **sample_standalone_app1**
 and **sample_standalone_app2**)
-can be built without installing Boost. 
+can be built **without installing Boost**. 
 
 
 Data sets
@@ -74,58 +79,13 @@ Data sets
 
 We use several data sets, which were created either by other folks,
 or using 3d party software. If you use these data sets, please, consider
-giving proper credit.
+giving proper credit. The download scripts print respective BibTex entries.
+More information can be found **Need a URL from arxiv** [in the manual]().
 
-The data set created by Lawrence Cayton (lcayton.com).
-To download use [data/download_cayton.sh](data/download_cayton.sh).  
-To acknowledge the use in an academic publication:
+Here is the list of scripts to download major data sets:
+* Data sets for our NIPS'13 and SISAP'13 papers [data/get_data_nips2013.sh](data/get_data_nips2013.sh).  
+* Data sets for our VLDB'15 paper [data/get_data_vldb2015.sh](data/get_data_vldb2015.sh).  
 
-```
-@inproceedings{cayton:2008,  
-    title={Fast nearest neighbor retrieval for bregman divergences},  
-    author={Cayton, Lawrence},   
-    booktitle={Proceedings of the 25th international conference on Machine learning},  
-    pages={112--119},   
-    year={2008},   
-    organization={ACM}  
-}
-```
-
-The Wikipedia data set was created using the [gensim library](https://github.com/piskvorky/gensim/). To download use the the script [data/download_wikipedia_sparse.sh](data/download_wikipedia_sparse.sh). To acknowledge the use in an academic publication:
-
-```
-@inproceedings{rehurek_lrec,  
-    title = {{Software Framework for Topic Modelling   
-            with Large Corpora}},  
-    author = {Radim {\v R}eh{\r u}{\v r}ek and Petr Sojka},  
-    booktitle = {{Proceedings of the LREC 2010 Workshop on New  
-                Challenges for NLP Frameworks}},  
-    pages = {45--50},  
-    year = 2010,  
-    month = May,  
-    day = 22,  
-    publisher = {ELRA},  
-    address = {Valletta, Malta},  
-    note={\url{http://is.muni.cz/publication/884893/en}},  
-    language={English}  
-} 
-```
-
-The Colors data set belongs to the Metric Spaces Library.
-However, our software uses data in a different format.
-Thus, we changed the format a bit (removed the header),
-To download use [data/download_colors.sh](data/download_colors.sh).   
-To acknowledge the use in an academic publication:
-
-```
-@misc{LibMetricSpace, 
-    Author = {K.~Figueroa and G.{}~Navarro and E.~Ch\'avez},  
-    Keywords = {Metric Spaces, similarity searching},  
-    Note = {Available at {\tt http://www.sisap.org/Metric\_Space\_Library.html}},  
-    Title = {Metric Spaces Library},  
-    Year = {2007}  
-} 
-```
 
 Related publications
 -----------------------
@@ -133,12 +93,12 @@ Related publications
 We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
 
 * The search-based construction algorithm published by Malkov et al. in 2014 (also presented on SISAP 2012);
-* The *open-source* version of the NN-Descent algorithm due to Dong et al. 2011. This first version came without a search algorithm. Therefore, we use the same search algorithm as Malkov et al. 2014. A newer version of NN-descent can be found [by following this link](http://www.kgraph.org/). It is not incoroporated, though.
+* The NN-Descent algorithm due to Dong et al. 2011. This first version came without a search algorithm. Therefore, we use the same search algorithm as Malkov et al. 2014. A newer version of NN-descent can be found [by following this link](http://www.kgraph.org/). It is not incorporated, though.
 
 Most important related papers are listed below in the chronological order: 
 
 
-
+* Bilegsaikhan, N., Boytsov, L. 2015 [Permutation Search Methods are Efficient, Yet Faster Search is Possible](http://boytsov.info/pubs/p2332-naidan-arxiv.pdf) To appear in proceedings of VLDB 2015 [**[BibTex]](https://scholar.google.com/scholar.bib?q=info:beiFMMSrg7cJ:scholar.google.com/&output=citation&scisig=AAGBfm0AAAAAVdYmCJsBIYH3IGHb8iDDWGyQ2nQ776Nf&scisf=4&hl=en)
 * Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)
 * Malkov, Y., Ponomarenko, A., Logvinov, A., & Krylov, V., 2014. [Approximate nearest neighbor algorithm based on navigable small world graphs.](http://www.sciencedirect.com/science/article/pii/S0306437913001300) Information Systems, 45, 61-68. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/is/MalkovPLK14)
 * Boytsov, L., Bilegsaikhan, N., 2013. [Engineering Efficient and Effective Non-Metric Space Library.](http://boytsov.info/pubs/sisap2013.pdf)   In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13)  

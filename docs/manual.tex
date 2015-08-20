@@ -109,17 +109,20 @@ new search methods and spaces.
 \end{abstract}
 
 \section{Introduction}
-\subsection{Motivation}
+\subsection{History, Objectives, and Principles}
 The Non-Metric Space Library is a collection of
 similarity search methods and a toolkit for their evaluation.
 Our software suit can also be used as a standalone search library on Linux and Windows. 
 Most search methods were implemented by Bileg(saikhan) Naidan and Leo(nid) Boytsov.\footnote{Leo(nid) Boytsov is a maintainer.}
 Additional contributors are listed on the \href{https://github.com/searchivarius/NonMetricSpaceLib}{GitHub 
 page}.
+Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
+and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
+
 %We encourage potential users and contributors to use GitHub for bug reports.
 
 The code written by Bileg and Leo is distributed under the business-friendly \href{http://apache.org/licenses/LICENSE-2.0}{Apache License}. 
-Some contributions are licensed differently.
+However, some third-party contributions are licensed differently.
 For more information regarding licensing and acknowledging the use of the library
 resource, please refer to \S~\ref{SectionCredits}.
 
@@ -136,7 +139,7 @@ return a true nearest-neighbor or
 
 \item We simplify experimentation, in particular, 
 through automatically measuring and aggregating important parameters
-related to speed and accuracy. 
+related to speed, accuracy, index size, and index creation time. 
 In addition, we provide capabilities for testing in both single- and multi-threaded modes
 to ensure that implemented solutions scale well with the number of available CPUs.
 
@@ -155,9 +158,9 @@ and instead one has to resort to approximate search procedures.
 This is why methods
 are evaluated in terms of efficiency-effectiveness trade-offs
 rather than merely in terms of their efficiency.
-We believe that there is no ``one-size-fits-all'' search method.
-Hence, it is important to being able to evaluate the ``goodness of fit''
-for a particular  domain.
+We suspect that there is no ``one-size-fits-all'' search method.
+Therefore, it is important to provide a variety of methods
+each of which may work best for some specific classes of data.
 
 Our commitment to efficiency affected several design decisions:
 \begin{itemize}
@@ -165,6 +168,7 @@ Our commitment to efficiency affected several design decisions:
 \item We focus on in-memory indices 
 and, thus, do not require our methods to materialize a disk-based version of an index
 (this also reduces programming effort).
+However, one of our immediate goals is to support serialization of several best methods.
 %It is, nevertheless, possible to benchmark disk-based implementations as well (see \ref{SectionWorkflow}).
 
 \item 
@@ -175,7 +179,7 @@ approximation of computationally intensive mathematical operations (see \S~\ref{
 
 It is often possible to demonstrate a substantial reduction in the number of distance computations
 compared to sequential searching.
-However, such reductions entail additional computations (i.e., extra book-keeping)
+However, such reductions may entail additional computations (i.e., extra book-keeping)
 and do not always lead to improved overall performance \cite{Boytsov_and_Bilegsaikhan:sisap2013}.
 To eliminate situations where book-keeping costs are ``masked''
 by inefficiencies of the distance function,
@@ -185,16 +189,16 @@ we pay special attention to distance function efficiency.
 Similarity search is an essential part of many applications,
 which include, among others,  
 content-based retrieval of multimedia  and statistical machine learning.
-The search is carried out on a finite database of objects $\{o_i\}$ (we also used a term data point or simply point),
-using a search query $q$ and a dissimilarity measure.
+The search is carried out in a finite database of objects $\{o_i\}$,
+using a search query $q$ and a dissimilarity measure (the term data point or simply a point is often
+used a synonym to denote either a data object or a query).
 The dissimilarity measure is typically represented by a distance function $d(o_i, q)$. 
 The ultimate goal is to answer a query by retrieving a subset of database objects sufficiently similar to the query $q$.
-These objects will be called \ttt{answers}.
-Note that we use the terms \ttt{distance} and the \ttt{distance function} in a broader sense than
-usually:
+These objects will be called \emph{answers}.
+Note that we use the terms \emph{distance} and the \emph{distance function} in a broader sense than
+some of the textbooks:
 We do not assume that the distance is a true metric distance. 
-The distance can be asymmetric and is not constrained to be metric (i.e., 
-it may not satisfy the triangle inequality).
+The distance function can disobey the triangle inequality and/or be even non-symmetric.
 
 Two retrieval tasks are typically considered: a nearest neighbor and a range search. 
 The nearest neighbor search aims to find the least dissimilar object,
@@ -220,36 +224,38 @@ One common effectiveness metric is recall. In the case
 of the nearest neighbor search, it is computed as
 an average fraction of true neighbors returned by the method.
 If ground-truth judgements (produced by humans) are available,
-it is possible to compute an accuracy of a \knn based classification
+it is also possible to compute an accuracy of a \knn based classification
 (see \S~\ref{SectionEffect}).
 
-In the current release, we focus on vector-space implementations,
-i.e., all the distance functions are defined over real-valued vectors. 
-Note that this is not a principal limitation, 
-because most methods do not access data objects
-directly. 
-Instead, they rely only on distance values.
-In the future, we plan to add more complex spaces, in particular, string-based.
+%In the current release, we focus on vector-space implementations,
+%i.e., all the distance functions are defined over real-valued vectors. 
+%Note that this is not a principal limitation, 
+%because most methods do not access data objects
+%directly. 
+%Instead, they rely only on distance values.
+%In the future, we plan to add more complex spaces, in particular, string-based.
 
 \section{Getting Started}
 \subsection{Prerequisites}
 The Non-Metric Space Library was developed and tested on 64-bit Linux.
-Yet, almost all the code (except LSHKIT) can be built and run on 64-bit Windows.
+Yet, almost all the code can be built and run on 64-bit Windows (two notable exceptions are: LSHKIT and NN-Descent).
 Building the code requires a modern C++ compiler that supports \mbox{C++11}.
 Currently, we support GNU C++ ($\ge4.7$), Intel compiler ($\ge14$), 
-Clang ($\ge4.2.1$), 
-and Visual Studio ($\ge12$; note that you can use the free express version).
+Clang ($\ge3.4$), 
+and Visual Studio ($\ge12$)\footnote{One can use the free express version.}.
 Under Linux, the build process relies on CMake. 
-Under Windows, one should use Visual Studio projects stored in the repository.
+Under Windows, one could use Visual Studio projects stored in the repository.
+These projects are for Visual Studio 14 (2015). 
+However, they can be downgraded to work with Visual Studio 12 (see \S~\ref{SectionBuildWindows}).
 
-Note, however, that we do not have a portable code to measure memory consumption:
-This part will work only for Linux (with \href{https://en.wikipedia.org/wiki/Procfs}{PROCFS})
-and Windows. 
+%Note, however, that we do not have a portable code to measure memory consumption:
+%This part will work only for Linux (with \href{https://en.wikipedia.org/wiki/Procfs}{PROCFS})
+%and Windows. 
 
 More specifically, for Linux we require:
 \begin{enumerate}
 \item A \textbf{64-bit} distributive (Ubuntu \textbf{LTS} is recommended);
-\item GNU C++ ($\ge4.7$), Intel Compiler ($\ge14$), Clang ($\ge4.2.1$);
+\item GNU C++ ($\ge4.7$), Intel Compiler ($\ge14$), Clang ($\ge3.4$);
 \item Cmake (GNU make is also required);
 \item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev});
 \item GNU scientific library (dev version, Ubuntu package \ttt{libgsl0-dev}).
@@ -260,7 +266,8 @@ For Windows, we require:
 \item A \textbf{64-bit} distributive (we tested on Windows 8); 
 \item Visual Studio Express (or Professional) version 12 or later;
 \item Boost is not required to build the core library and test utilities, 
-but it is needed by the main testing binary \ttt{experiment.exe} (see \S~\ref{SectionBuildWindows}). 
+but it is necessary to build some applications,
+including the main testing binary \ttt{experiment.exe} (see \S~\ref{SectionBuildWindows}). 
 \end{enumerate}
 
 Efficient implementations of many distance functions (see \S~\ref{SectionEfficiency})
@@ -270,31 +277,53 @@ These instructions are available on most modern processors,
 but we support only SIMD instructions available on recent Intel and AMD processors.   
 Each distance function has a pure C++ implementation,
 which can be less efficient than an optimized SIMD-based implementation.
+
 On Linux, SIMD-based implementations are activated automatically 
-for all sufficiently recent CPUs. On Windows, it is necessary to update
-project settings manually (see \S\ref{SectionBuildWindows}).
+for all sufficiently recent CPUs. 
+On Windows, only SSE2 is enabled by default\footnote{Because SSE2 is available on all 64-bit computers.}. 
+Yet, it is necessary to manually update project settings 
+to enable more recent SIMD extensions (see \S\ref{SectionBuildWindows}).
 
 Scripts to generate and process data sets are written in Python.
-We also provide the Python script to plot performance graphs: \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py} (see \S~\ref{SectionGenPlot}).
+We also provide a sample Python script to plot performance graphs: \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py} (see \S~\ref{SectionGenPlot}).
 In addition to Python, this plotting script requires Latex and PGF. 
 
 \subsection{Installing C++11 Compilers}
 Installing C++11 compilers can be tricky, 
 because they are not always provided as a standard package.
 This is why we briefly review the installation process here. 
+In addition, installing compilers does 
+not necessarily make them default compilers.
+One way to fix this is on Linux is to set environment variables \ttt{CXX} and \ttt{CC}.
+For the GNU 4.7 compiler:
+\begin{verbatim}
+export CXX=g++-4.7 CC=gcc-4.7 
+\end{verbatim}
+For the Clang compiler:
+\begin{verbatim}
+export CXX=clang++-3.4 CC=clang-3.4
+\end{verbatim}
+For the Intel compiler:
+\begin{verbatim}
+export CXX=icc CC=icc 
+\end{verbatim}
 
 It is, perhaps, the easiest to obtain Visual Studio by simply downloading
 it from the \href{https://www.microsoft.com/en-us/download/default.aspx}{Microsoft web-site}.
-We were able to build and run the 64-bit code using the free distributive of Visual Studio Express 12 (also called 
-\ttt{Express 2013}) and Visual Studio 2015. The professional (and expensive) version of Visual Studio is not required. 
+We were able to build and run the 64-bit code using the free distributive of Visual Studio Express 14 (also called 
+\ttt{Express 2015}) and Visual Studio 12 (Express 2013). The professional (and expensive) version of Visual Studio is not required. 
 
 
-To install GNU C++ version 4.7 on some Linux distributions with the Debian package management system, 
+To install GNU C++ version 4.7 on newer Linux distributions (in particular, on Ubuntu 14) with the Debian package management system, 
 one can simply type:
 \begin{verbatim}
 sudo apt-get install gcc-4.7 g++-4.7
 \end{verbatim}
-However, it did not work for us and we needed to use an experimental repository as follows:
+At the time of this writing, GNU C++ 4.8 was available as a standard package as well.
+
+
+However, this would not work on older distributives of Linux. 
+One may need to use an experimental repository as follows:
 \begin{verbatim}
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
@@ -306,7 +335,12 @@ sudo apt-get install python-software-properties
 \end{verbatim}
 More details can be found on the \href{http://askubuntu.com/questions/113291/how-do-i-install-gcc-4-7}{AskUbuntu web-site.}
 
-Similarly to the GNU C++ compiler, to install a C++11 version of Clang, one may need to add a non-standard repository.
+Similarly to the GNU C++ compiler, to install a C++11 version of Clang on newer Debian-based distributives one can simply type:
+\begin{verbatim}
+sudo apt-get install clang-3.6
+\end{verbatim}
+
+However, for older distributives one may need to add a non-standard repository.
 For Debian and Ubuntu distributions, it is easiest to add repositories from \href{http://llvm.org/apt/}{the LLVM web-site}. 
 For example, if you have Ubuntu 12 (Precise), you need to add repositories
 as follows:\footnote{Do not forget to remove \ttt{deb-src} for source repositories.
@@ -340,21 +374,6 @@ are set by a script as follows:
 /opt/intel/bin/compilervars.sh intel64
 \end{verbatim}
 
-One pitfall on Linux is that installing compilers does 
-not necessarily make them default compilers.
-One way to fix this is to set environment variables \ttt{CXX} and \ttt{CC}.
-For the GNU 4.7 compiler:
-\begin{verbatim}
-export CXX=g++-4.7 CC=gcc-4.7 
-\end{verbatim}
-For the Clang compiler:
-\begin{verbatim}
-export CXX=clang++ CC=clang
-\end{verbatim}
-For the Intel compiler:
-\begin{verbatim}
-export CXX=icc CC=icc 
-\end{verbatim}
 
 
 \subsection{Quick Start on Linux}\label{QuickStartLinux}
@@ -391,19 +410,24 @@ sudo make install
 For an example of using our library in Python, see the script  \href{\replocfile python_bindings/test_nmslib.py}{test\_nmslib.py}.
 
 \subsection{Quick Start on Windows}\label{QuickStartWindows}
-Building on Windows is straightforward:
-One can simply use the provided \href{\replocfile similarity_search/NonMetricSpaceLib.sln}{Visual Studio 
+Building on Windows is straightforward.
+Download \href{https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx}{Visual Studio 2015 Express for Desktop}. 
+Download and install respective \href{http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-32.exe/download}{Boost binaries}. Please, use the \textbf{default} installation directory on disk \ttt{c:} (otherwise, it will be necessary to update project files).
+
+
+Afterwards, one can simply use the provided \href{\replocfile similarity_search/NonMetricSpaceLib.sln}{Visual Studio 
 solution file}.
 The solution file references several project (*.vcxproj) files: 
 \href{\replocfile similarity_search/src/NonMetricSpaceLib.vcxproj}{NonMetricSpaceLib.vcxproj}
 is the main project file that is used to build the library itself.
 The output is stored in the folder \ttt{similarity\_search\textbackslash x64}.
+A more detailed description of the build process on Windows is given in \S~\ref{SectionBuildWindows}.
+
 Note that the core library, the test utilities,
  as well as examples of the standalone applications (projects \ttt{sample\_standalone\_app1}
 and \ttt{sample\_standalone\_app2})
 can be built without installing Boost. 
 
-A more detailed description of the build process on Windows is given in \S~\ref{SectionBuildWindows}.
 
 \section{Building and running the code (in detail)}
 
