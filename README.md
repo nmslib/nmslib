@@ -43,7 +43,7 @@ cmake .
 make  
 ```
 
-Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/downloads/moreinfo/c.php).  A more detailed description is given in [in the manual](docs/manual.pdf).  
+Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in **Need a URL from arxiv** [in the manual]().  
 
 Examples of using the software can be found in the directory [sample_scripts](sample_scripts). A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small data sets stored in this repository. You can also download almost every data set used in our evaluations (see the section **Data sets** below).
 
