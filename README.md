@@ -30,7 +30,8 @@ Prerequisites
 2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well.
 3. Boost (dev version). For Windows, the core library and the standalone sample application do not require Boost.
 4. Only for Linux: cmake (GNU make is also required) 
-5. Only for Linux: GNU scientific library (dev version) 
+5. Only for Linux: GNU scientific library (dev version)
+6. Only for Linux: Eigen (dev version)
 6. An Intel or AMD processor that supports SSE 4.2 is recommended
 
 
