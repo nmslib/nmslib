@@ -6,7 +6,7 @@ To run sample experiments **AND** plot performance plots, type:
 ```
 ./sample_run.sh 1
 ```
-Scripts to reproduce our previous results are in subdirectories [sisap2013](sisap2013), [nips2013](nips2013), [da2014](da2014), and [vldb2015](vldb2015).
+Scripts to reproduce our previous results are in subdirectories [sisap2013](sisap2013), [nips2013](nips2013), [da2014](smallworld_Apr2014), and [vldb2015](vldb2015).
 Notes on reproducibility:
 * All scripts except for **vldb2015** should use binaries from the previous release.
 * The current release contain implementations of proximity graphs that are actually more efficient than those used for vldb2015 paper. 
