@@ -107,6 +107,7 @@ Most important related papers are listed below in the chronological order:
 [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/mir/DongWCL12)
 * Tellez, Eric Sadit, Edgar Chávez, and Gonzalo Navarro. ["Succinct nearest neighbor search."](http://www.dcc.uchile.cl/~gnavarro/ps/is12.pdf) Information Systems 38.7 (2013): 1019-1030. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/is/TellezCN13)
 * L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
+* Amato, Giuseppe, Claudio Gennaro, and Pasquale Savino. ["Mi-file: using inverted files for scalable approximate similarity search." Multimedia tools and applications 71.3 (2014): 1333-1362. [**[BibText]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
 * Gonzalez, Edgar Chavez, Karina Figueroa, and Gonzalo Navarro. ["Effective proximity retrieval by ordering permutations."](http://www.dcc.uchile.cl/~gnavarro/ps/tpami07.pdf) Pattern Analysis and Machine Intelligence, IEEE Transactions on 30.9 (2008): 1647-1658. [**[BibText]**](http://dblp.uni-trier.de/rec/bibtex/journals/pami/ChavezFN08)
 
 
