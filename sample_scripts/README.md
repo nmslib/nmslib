@@ -6,6 +6,8 @@ To run sample experiments **AND** plot performance plots, type:
 ```
 ./sample_run.sh 1
 ```
+Note that plots generating software requires Python, Latex, and PGF.
+
 Scripts to reproduce our previous results are in subdirectories [sisap2013](sisap2013), [nips2013](nips2013), [da2014](smallworld_Apr2014), and [vldb2015](vldb2015).
 Notes on reproducibility:
 * All scripts except for **vldb2015** should use binaries from [the previous release](https://github.com/searchivarius/NonMetricSpaceLib/releases/tag/v1.0).
