@@ -29,7 +29,7 @@ Prerequisites
 1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 12.
 2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well.
 3. Boost (dev version). For Windows, the core library and the standalone sample application do not require Boost.
-4. Only for Linux: cmake (GNU make is also required) 
+4. Only for Linux: CMake (GNU make is also required) 
 5. Only for Linux: GNU scientific library (dev version)
 6. Only for Linux: Eigen (dev version)
 6. An Intel or AMD processor that supports SSE 4.2 is recommended
@@ -58,7 +58,7 @@ Quick start on Windows
 -----------------------
 Building on Windows is straightforward.
 Download [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). 
-Download and install respective [Boost binaries](http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-32.exe/download). Please, use the **default** installation directory on disk ``c:`` (otherwise, it will be necessary to update project files).
+Download and install respective [Boost binaries](http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-64.exe/download). Please, use the **default** installation directory on disk ``c:`` (otherwise, it will be necessary to update project files).
 
 Afterwards, one can simply use the provided  [Visual Studio solution file](similarity_search/NonMetricSpaceLib.sln).
 The solution file references several project (\*.vcxproj) files: 

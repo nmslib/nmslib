@@ -16,6 +16,7 @@
 \usepackage{booktabs}
 \usepackage{url}
 \usepackage{float}
+\usepackage{upquote}
 
 \renewcommand{\arraystretch}{1.3}
 
@@ -23,10 +24,13 @@
 \newcommand{\todonote}[1]{\todo[color=red!40,caption={TODO}]{#1}}
 
 \newcommand{\nonmetrlib}{Non-Metric Space Library}
-%\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/}
-%\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/}
-\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/develop}
-\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/develop/}
+
+\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/}
+\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/}
+
+%\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/develop}
+%\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/develop/}
+
 \newcommand{\ttt}[1]{\texttt{#1}}
 \newcommand{\knn}{$k$-NN }
 \newcommand{\knnns}{$k$-NN}
@@ -254,11 +258,12 @@ However, they can be downgraded to work with Visual Studio 12 (see \S~\ref{Secti
 
 More specifically, for Linux we require:
 \begin{enumerate}
-\item A \textbf{64-bit} distributive (Ubuntu \textbf{LTS} is recommended);
-\item GNU C++ ($\ge4.7$), Intel Compiler ($\ge14$), Clang ($\ge3.4$);
-\item Cmake (GNU make is also required);
-\item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev});
-\item GNU scientific library (dev version, Ubuntu package \ttt{libgsl0-dev}).
+\item A \textbf{64-bit} distributive (Ubuntu \textbf{LTS} is recommended)
+\item GNU C++ ($\ge4.7$), Intel Compiler ($\ge14$), Clang ($\ge3.4$)
+\item CMake (GNU make is also required)
+\item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev})
+\item GNU scientific library (dev version, Ubuntu package \ttt{libgsl0-dev})
+\item Eigen (dev version, Ubuntu package \ttt{libeigen3-dev})
 \end{enumerate}
 
 For Windows, we require:
@@ -412,7 +417,7 @@ For an example of using our library in Python, see the script  \href{\replocfile
 \subsection{Quick Start on Windows}\label{QuickStartWindows}
 Building on Windows is straightforward.
 Download \href{https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx}{Visual Studio 2015 Express for Desktop}. 
-Download and install respective \href{http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-32.exe/download}{Boost binaries}. Please, use the \textbf{default} installation directory on disk \ttt{c:} (otherwise, it will be necessary to update project files).
+Download and install respective \href{http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-64.exe/download}{Boost binaries}. Please, use the \textbf{default} installation directory on disk \ttt{c:} (otherwise, it will be necessary to update project files).
 
 Afterwards, one can simply use the provided \href{\replocfile similarity_search/NonMetricSpaceLib.sln}{Visual Studio 
 solution file}.
@@ -451,14 +456,16 @@ Implementation of similarity search methods is in the directory \ttt{similarity\
 The code is built using a \ttt{cmake}, which works on top of the GNU make.
 Before creating the makefiles, we need to ensure that a right compiler is used.
 This is done by setting two environment variables: \ttt{CXX} and \ttt{CC}.
-In the case of GNU C++ (version 4.7), you need to type:
+In the case of GNU C++ (version 4.7), you may need to type:
 \begin{verbatim}
 export CCX=g++-4.7 CC=gcc-4.7 
 \end{verbatim}
-In the case of the Intel compiler, you need to type:
+In the case of the Intel compiler, you may need to type:
 \begin{verbatim}
 export CXX=icc CC=icc 
 \end{verbatim}
+If you do not set variables \ttt{CXX} and \ttt{CC}, 
+the default C++ compiler is used (which can be fine, if it is the right compiler already).
 
 
 To create makefiles for a release version of the code, type:
@@ -481,13 +488,14 @@ If \ttt{cmake} complains about the wrong version of the GCC,
 it is most likely that you forgot to set the environment variables \ttt{CXX} and \ttt{CC} (as described above).
 If this is the case, make these variables point to the correction version of the compiler.
 \textbf{Important note:} 
-do not forget to delete the \ttt{cmake} cache file, before recreating the makefiles:
+do not forget to delete the \ttt{cmake} cache and make file, before recreating the makefiles.
+For example, you can do the following (assuming the current directory is \ttt{similarity\_search}):
 \begin{verbatim}
-rm CMakeCache.txt
+rm -rf `find . -name CMakeFiles` CMakeCache.txt
 \end{verbatim}
 
-Also note that, for some reason, \ttt{cmake} may ignore environmental variables \ttt{CXX} and \ttt{CC}.
-Then, you can specify the compiler directly through \ttt{cmake} arguments.
+Also note that, for some reason, \ttt{cmake} might sometimes ignore environmental variables \ttt{CXX} and \ttt{CC}.
+In this unlikely case, you can specify the compiler directly through \ttt{cmake} arguments.
 For example, in the case of the GNU C++ and the \ttt{Release} build, 
 this can be done as follows:
 \begin{verbatim}
@@ -599,8 +607,7 @@ Then, check the box \ttt{Insert spaces for tabs}.
 In the same menu, you can also change the fonts (use the
 category \ttt{General/Appearance/Colors and Fonts}).
 
-It is possible to build the project from Eclipse (
-see the menu \ttt{Project}).
+It is possible to build the project from Eclipse  (see the menu \ttt{Project}).
 However, one first needs to generate makefiles as described in \S~\ref{SectionBuildLinux}.
 The current limitation is that you can build either release
 or the debug version at a time.
@@ -643,26 +650,30 @@ The respective screenshot is shown in Fig.~\ref{FigDebugConf}.
 
 Note that this manual contains only a basic introduction to Eclipse.
 If the user is new to Eclipse, we recommend reading
-additional \href{http://www.eclipse.org/downloads/moreinfo/c.php}{documentation available online}.
+additional \href{http://www.eclipse.org/ide/}{documentation available online}.
 
 
 \subsection{Building under Windows}\label{SectionBuildWindows}
 
 \begin{figure}
 \centering
-\caption{\label{FigAVXSet}Enabling SIMD Instructions in the Visual Studio}
+\caption{\label{FigAVXSet}Enabling advanced SIMD Instructions in the Visual Studio}
 \includegraphics[width=0.9\textwidth]{figures/SettingAVXinVS2012.pdf}
 \end{figure}
 
-It is straightforward to build the project
+Download \href{https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx}{Visual Studio 2015 Express for Desktop}. 
+Download and install respective \href{http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-64.exe/download}{Boost binaries}. Please, use the \textbf{default} installation directory on disk \ttt{c:}.
+In the end of the section, we explain how to select a different location of the Boost files,
+as well as to how downgrade the project to build it with Visual Studio 2013 (if this is really necessary). 
+
+After downloading Visual Studio and installing Boost (version 59, 64-bit binaries, for MSVC-14), it is straightforward to build the project
 using the provided \href{\replocfile similarity_search/NonMetricSpaceLib.sln}{Visual Studio 
 solution file}.
-The solution file references several (sub)-project (*.vcxproj) files,
+The solution file references several (sub)-project (\ttt{*.vcxproj}) files,
 which can be built either separately or all together.
 
-The main sub-project is \ttt{NonMetricSpaceLib} that is built before 
-any other sub-projects. 
-Two sub-projects: 
+The main sub-project is \ttt{NonMetricSpaceLib}, which is built before any other sub-projects. 
+Sub-projects: 
 \ttt{sample\_standalone\_app1},
 \ttt{sample\_standalone\_app2} 
 are examples of using the library in a standalone mode.
@@ -679,9 +690,12 @@ The corresponding output files are placed into the subdirectories:
   similarity_search\x64\RelWithDebInfo.
 \end{verbatim}
 
-If the user's CPU supports \href{https://en.wikipedia.org/wiki/Advanced_Vector_Extensions}{AVX extensions}, it is recommended to modify code generation settings as shown in the screenshot in Fig.~\ref{FigAVXSet}.
-This should be done for all sub-projects.
 Unlike other compilers, there seems to be no way to detect the CPU type in the Visual Studio automatically.\footnote{It is not also possible to opt for using \href{http://en.wikipedia.org/wiki/SSE4}{only SSE4}.}
+And, by default, only SSE2 is enabled (because it is supported by all 64-bit CPUs).
+Therefore, if the user's CPU supports \href{https://en.wikipedia.org/wiki/Advanced_Vector_Extensions}{AVX extensions}, it is recommended to modify code generation settings as shown in the screenshot in Fig.~\ref{FigAVXSet}.
+This should be done for \textbf{all} sub-projects and \textbf{all} binary configurations.
+Note that you can set a property for all projects at once, if you select all the sub-projects, right-click, and then choose \ttt{Properties} 
+in the pop-up menu.
 
 \begin{figure}
 \centering
@@ -691,14 +705,20 @@ Unlike other compilers, there seems to be no way to detect the CPU type in the V
 
 The core library, the semi unit test binary as well as examples of the standalone applications
 can be built without installing Boost. 
-However, Boost libraries are required for the binaries \ttt{experiment} and \ttt{tune\_vptree}.
-The installer of the Boost libraries can be downloaded from \href{http://boost.teeks99.com/bin/1.55.0/}{this page}. 
-Note that one needs 64-bit binaries compiled with the same version of the Visual Studio as the \nonmetrlib{} binaries.  For Visual Studio 12, one can use the following \href{http://boost.teeks99.com/bin/1.55.0/boost_1_55_0-msvc-12.0-64.exe}{download link}.
+However, Boost libraries are required for the binaries \ttt{experiment.exe}, \ttt{tune\_vptree.exe}, and \ttt{test\_integr.exe}.
 
-We recommend installing Boost into the folder \ttt{c:\textbackslash local\textbackslash boost\_1\_55\_0.64}. Then, no modifications of the project settings are required.
-Should you install into a different folder, 
+We would re-iterate that one needs 64-bit Boost binaries compiled with the same version of the Visual Studio as the \nonmetrlib{} binaries.  
+If you \href{http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-64.exe/download}{download the installer for Boost 59} and install it to a default location, then you do not have to change project files.
+Should you install Boost into a different folder, 
 the location of Boost binaries and header file need to be specified in the 
 project settings for all three build configurations (\ttt{Release}, \ttt{Debug}, \ttt{RelWithDebInfo}). An example of specifying the location of Boost libraries (binaries) is given in Fig.~\ref{FigBoostSet}.
+
+In the unlikely case that the user has to use older Visual Studio 12, the project files are to be downgraded.
+To do so, one have to manually edit every \ttt{*.vcxproj} file by replacing 
+each occurrence of \ttt{<PlatformToolset>v140</PlatformToolset>} with \ttt{<PlatformToolset>v120</PlatformToolset>}.
+Additionally, one has to download Boost binaries compatible with the older Visual studio and modify the project files
+accordingly.
+In particular, one may need to modify options \ttt{Additional Include Directories} and \ttt{Additional Library Directories}.
 
 \subsection{Testing the Correctness of Implementations}
 We have two main testing utilities \ttt{bunit} and \ttt{test\_integr} (\ttt{experiment.exe} and
@@ -726,6 +746,9 @@ From an error message, it should be clear if the discrepancy is substantial, i.e
 something went wrong, or not, i.e., we observe an unlikely outcome due to randomization.
 The exact search method, however, should always have an almost perfect recall.
 
+Variance is partly due to using low-dimensional test sets. In the future, we plan to change this.
+For high-dimensional data sets, the outcomes are much more stable despite the randomized nature
+of most implementations.
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
 There are no principal differences in benchmarking on Linux and Windows.
 There is a \ttt{single} benchmarking utility 
@@ -872,7 +895,7 @@ by specifying an additional argument:
 \begin{verbatim}
 --cachePrefixGS  a prefix of gold standard cache files
 \end{verbatim}
-Ground truth data saved in two files. One is a textual meta file
+Ground truth data is stored in two files. One is a textual meta file
 that memorizes important input parameters such as the name of the data and/or query file,
 the number of test queries, etc. 
 For each query, the binary cache files contains ids of answers (as well as distances and 
@@ -923,7 +946,7 @@ Second, one needs to explicitly specify all default values.
 Currently, (though this needs to be fixed in the future)
 the main benchmarking utility knows nothing about the default parameter
 values and cannot, therefore, set them. If a default parameter is omitted,
-the system simply uses an arbitrary explicitly specified value of the parameter.
+the system will not change its value.
 
 In particular, for the list of clusters method \S~\ref{SectionListClust},
 specifying the default value (2147483647) for the parameter \ttt{maxLeavesToVisit} is
@@ -931,15 +954,22 @@ specifying the default value (2147483647) for the parameter \ttt{maxLeavesToVisi
 algorithm) when \ttt{maxLeavesToVisit} is equal to the default value.
 
 \subsection{Measuring Performance and Interpreting Results}\label{SectionMeasurePerf}
-\subsubsection{Efficiency}
-Three types of efficiency indicators are used: query runtime, the number of distance computations,
-and the amount of memory used by the index \emph{and} the data.
+\subsubsection{Efficiency.} We measure several efficiency metrics: query runtime, the number of distance computations,
+the amount of memory used by the index \emph{and} the data, and the time to create the index.
 We also measure the improvement in runtime (improvement in efficiency) 
 with respect to a single-thread sequential search (i.e., brute force) approach
 as well as an improvement in the number of distance computations. 
+
 A good method should
 carry out fewer distance computations and be faster than the brute-force search,
 which compares \emph{all the objects} directly with the query. 
+However, great reduction in the number of distance computations 
+does not always entail good improvement in efficiency:
+while we do not spend CPU time on computing directly,
+we may be spending CPU time on, e.g., computing the value of the distance 
+in the projected space (as
+in the case of projection-based methods, see \S~\ref{SectionProjMethod}).
+
 Note that the improvement in efficiency is adjusted for the number of threads.
 Therefore, it should not increase as more threads are added: in contrast,
 it should decrease as there is more competition for computing resources (e.g., memory)
@@ -1013,8 +1043,14 @@ Memory Usage:   5.8 MB
 
 Recall is a classic metric. 
 It was argued, however, 
-that recall does not account for position information of returned objects
+that recall does not account for positional information of returned objects
 and is, therefore, inferior to rank approximation error metrics \cite{Amato_et_al:2003,Cayton2008}.
+Consider the case of 10-NN search and imagine that there are two methods
+that, on average, find only half of true 10-NN objects.
+Also, assume that the first method always finds neighbors from one to five,
+but misses neighbors from six to ten.
+The second method always finds neighbors from six to ten, but misses the first five ones.
+Clearly, the second method produces substantially inferior results, but it has the same recall as the first one.
 
 If we specify ground-truth object classes (see \S~\ref{SectionDatasets} 
 for the description of data set formats), 
@@ -1381,8 +1417,7 @@ Another possible approach is to use \href{http://fastapprox.googlecode.com/svn/t
 \href{https://github.com/searchivarius/BlogCode/tree/master/2013/12/26}{As our tests show},
 this method is about 1.5x times faster (1.5 vs 1.0 billions of logarithms per second),
 but for the logarithms in the range $[1,2]$,
- the relative error is one order magnitude higher (i.e., around $3 \cdot 10^{-4}$)
-than for the table-based discretization approach.
+ the relative error is one order magnitude higher (for a single logarithm) than for the table-based discretization approach.
 
 \subsection{Bregman Divergences}\label{SectionBregman}
 Bregman divergences are typically non-metric distance functions,
@@ -1473,7 +1508,7 @@ $n$ unmodified signature histogram values of the first image
 followed by $n$ negated signature histogram values of the second image. 
 Unlike the classic quadratic form distance, where the quadratic form matrix is fixed,
 in the case of the SQFD, the matrix is re-computed for each pair of images.
-This can be seen as computing the quadratic form distance between infinite-dimensional vectors
+This can be seen as computing the distance between infinite-dimensional vectors
 each of which has only a finite number of non-zero elements.
 
 To compute the quadratic form matrix, we introduce the new global enumeration of signatures,
@@ -1547,7 +1582,7 @@ at the expense of extra memory consumed by a testing utility (e.g., \ttt{experim
 However, this is not necessary for a real production system.
 Hence, storing bucket vectors at contiguous memory locations does not have to result in a larger memory footprint.}
 
-Classic hierarchical space partitioning methods are exact. 
+Classic hierarchical space partitioning methods for metric spaces are exact. 
 It is possible to make them approximate via an early termination technique,
 where we terminate the search after exploring a pre-specified number of partitions.
 To implement this strategy, we define an order of visiting partitions.
@@ -1560,6 +1595,8 @@ the maximum number of buckets (parameter \ttt{maxLeavesToVisit})
 to visit before terminating the search procedure.
 By default, the parameter \ttt{maxLeavesToVisit} is set to a large number (2147483647), 
 which means that no early termination is employed.
+The parameter \ttt{maxLeavesToVisit} is supported by many, but not all
+space partitioning methods.
 
 \subsubsection{VP-tree}\label{SectionVPtree}
 A VP-tree \cite{Uhlmann:1991,Yianilos:1993} (also known as a ball-tree)
@@ -1601,7 +1638,6 @@ the recall can be too low or retrieval time can be too long.
 Yet, in non-metric spaces, 
 it is often possible to answer queries, 
 when using $\alpha$ possibly smaller than one \cite{Boytsov_and_Bilegsaikhan:nips2013,naidan2015permutation}.
-In this version, we would use different $\alpha$ for different partitions.
 More generally, we assume that there exists an unknown decision/pruning function $D(R, d(\pi, q))$ and
 that pruning is done when $r \le D(R, d(\pi, q))$.
 The decision function $D()$, which can be learned from data, is called a search oracle.
@@ -1623,7 +1659,7 @@ There are several ways to obtain/specify optimal parameters for the VP-tree:
 \end{itemize}
 
 
-It is, perhaps, the easiest to initiate the tunning procedure during creation of the index.
+It is, perhaps, easiest to initiate the tunning procedure during creation of the index.
 To this end, one needs to specify parameters \texttt{desiredRecall} (the minimum desired recall), \texttt{bucketSize} (the size 
 of the bucket), \texttt{tuneK} or \texttt{tuneR}, and (optionally) parameters \texttt{tuneQty}, \ttt{minExp} and \ttt{maxExp}. 
 Parameters \texttt{tuneK} and \texttt{tuneR} are used to specify the value of $k$ for \knn search,
@@ -1635,7 +1671,7 @@ Additional query sets will be created by further random sampling of points from 
 
 The tuning procedure considers all possible values for exponents between \ttt{minExp} and \ttt{maxExp} with 
 a restriction that  $exp_{left}=exp_{right}$. 
-By default, \ttt{minExp} = \ttt{maxExp} = 1, which is almost always a good setting.
+By default, \ttt{minExp} = \ttt{maxExp} = 1, which is usually a good setting.
 For each value of the exponents,
 the tunning procedure carries out a grid-like search procedure for parameters $\alpha_{left}$ and $\alpha_{right}$ 
 with several random restarts. 
@@ -1665,7 +1701,8 @@ will not try to change them for optimization purposes.
 \end{itemize}
 
 If automatic tunning fails,
-the user can also manually specify values of  parameters:
+the user can restart the procedure with the smaller value of \ttt{desiredRecall}.
+Alternatively, the user can manually specify values of  parameters:
 \ttt{alphaLeft}, \ttt{alphaRight}, \ttt{expLeft}, and \ttt{expRight} (by default exponents are one).
 
 The following is an example of testing the VP-tree with the benchmarking utility \ttt{experiment}
@@ -1750,7 +1787,6 @@ the parameter \ttt{maxLeavesToVisit}). Yet, this implementation should be used o
                    & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
  \ttt{alphaLeft}/\ttt{alphaRight}   & A stretching coefficient $\alpha_{left}$/$\alpha_{right}$ in Eq.~(\ref{EqDecFunc}) \\
  \ttt{expLeft}/\ttt{expRight} & The left/right exponent in Eq.~(\ref{EqDecFunc}) \\
- \ttt{expRight}    & The right exponent in Eq.~(\ref{EqDecFunc}) \\
  \ttt{tuneK}       & The value of $k$ used in the auto-tunning procedure (in the case of \knn search) \\
  \ttt{tuneR}       & The value of the radius $r$ used in the auto-tunning procedure (in the case of the range search) \\
  \ttt{minExp}/\ttt{maxExp} & The minimum/maximum value of exponent used in the auto-tunning procedure \\
@@ -2110,14 +2146,15 @@ can be applied to an arbitrary space with the distance function.
 Random projections can be applied only to vector spaces.
 A more detailed description of projection approaches is given in \S~\ref{SectionProjDetails}
 
-We provide two basic implementations to generated candidates in the projected spaces.
-One is based on brute-force searching and another builds a VP-tree.
+We provide two basic implementations to generate candidates.
+One is based on brute-force searching in the projected space and another builds a VP-tree
+over objects' projections.
 In what follows, these methods are described in detail.
 
 \subsubsection{Brute-force projection search.}\label{SectionProjBruteForce}
 In the brute-force approach, we scan the list of projections and compute the distance
 between the projected query and a projection of every data point.
-Then, we sort all data points in the order of increasing distance to the query permutation.
+Then, we sort all data points in the order of increasing distance to the projected query.
 A fraction (defined by \ttt{dbScanFrac}) of data points is compared directly against the query.
 Top candidates (most closest entries) are identified using either the priority queue
 or incremental sorting (\cite{Chavez2008incsort}). 
@@ -2188,7 +2225,7 @@ the \mbox{$i$-th} element of its projection.
 
 We also divide the index in chunks each accounting for at most \ttt{chunkIndexSize} data points.
 The search algorithm processes one chunk at a time. The idea is to make a chunk sufficiently small
-so that counters fit into L1 or L2  cache.
+so that auxiliary data structures fit into L1 or L2  cache.
 
 
 The retrieval algorithm uses \ttt{numPivot} pointers $low_i$ and \ttt{numPivot} pointers $high_i$ ($low_i \le high_i$),
@@ -2200,16 +2237,19 @@ In each of the $i$ list, we make both $high_i$ and $low_i$ point to the found da
 In addition, for each data point found, we increase its counter.
 Note that a single data point may appear the closest with respect to more than one projection coordinate!
 
-After that, we run a series of iteration. In each iteration, we increase \ttt{numPivot} pointers $high_i$ and
+After that, we run a series of iterations. In each iteration, we increase \ttt{numPivot} pointers $high_i$ and
 decrease \ttt{numPivot} pointers $low_i$ (unless we reached the beginning or the end of a list).
-For each data entry at the which the pointer points, we increase the value of the counter.
-Obviously, when we complete traversal of all \ttt{numPivot} lists each counter will have the value \ttt{numPivot} (recall
-that each data point appears exactly one in each of the lists).
-Thus, sooner or later the value of a counter becomes equal to or exceeds $\ttt{numPivot} \times \ttt{minFreq}$, where \ttt{minFreq}
+For each data entry at which the pointer points, we increase the value of the counter.
+Obviously, when we complete traversal of all \ttt{numPivot} lists, each counter will have the value \ttt{numPivot} (recall
+that each data point appears exactly once in each of the lists).
+Thus, sooner or later the value of a counter becomes equal to or larger than $\ttt{numPivot} \times \ttt{minFreq}$, where \ttt{minFreq}
 is a method's parameter, e.g., 0.5.
 
-The first point whose counter becomes equal to or exceed $\ttt{numPivot} \times \ttt{minFreq}$, becomes the first candidate
-entry to be compared directly against the query. The total number of candidate entries is defined by the parameter \ttt{dbScanFrac}.
+The first point whose counter becomes equal to or larger than $\ttt{numPivot} \times \ttt{minFreq}$, becomes the first candidate
+entry to be compared directly against the query. 
+The next point whose counter matches the threshold value $\ttt{numPivot} \times \ttt{minFreq}$, 
+becomes the second candidate and so on so forth.
+The total number of candidate entries is defined by the parameter \ttt{dbScanFrac}.
 Instead of all \ttt{numPivot} lists, it its possible to use only \ttt{numPivotSearch} lists that correspond
 to the smallest absolute value of query's projection coordinates. In this case, the counter threshold is  $\ttt{numPivotSearch} \times \ttt{minFreq}$.
 By default, $\ttt{numPivot}=\ttt{numPivotSearch}$.
@@ -2270,9 +2310,9 @@ release/experiment \
 \ttt{numPivot}       & Projection dimensionality \\
 \ttt{numPivotSearch} & Number of data point lists to be used in search \\
 \ttt{minFreq}        & The threshold for being considered a candidate entry: whenever
-                       a point's counter exceeds $\ttt{numPivotSearch}\times\ttt{minFreq}$,
+                       a point's counter becomes $\ge\ttt{numPivotSearch}\times\ttt{minFreq}$,
                        this point is compared directly to the query.  \\
-\ttt{chunkIndexSize} & A number of documents in one index chunk. Select a small value (in the order of several thousands) for better cache utilization. \\
+\ttt{chunkIndexSize} & A number of documents in one index chunk.  \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -2288,12 +2328,13 @@ For each data point $x$,
 we can arrange pivots $\pi$ in the order of increasing distances from $x$ (for
 simplicity we assume that there are no ties).
 This arrangement is called a \emph{permutation}.
-The permutation is essentially a vector whose \mbox{$i$-th}
+The permutation is essentially a pivot ranking. 
+Technically, it is a vector whose \mbox{$i$-th}
 element keeps an (ordinal) position of the \mbox{$i$-th} pivot (in the set of pivots
 sorted by a distance from $x$).
 
 Computation of the permutation
-is a mapping from a source vector space with real coordinates to a target vector space with integer coordinates. 
+is a mapping from a source space, which may not have coordinates, to a target vector space with integer coordinates. 
 In our library, the distance between permutations is defined as either $L_1$ or $L_2$.
 Values of the distance in the source space often correlates well with the distance in the target space
 of permutations.
@@ -2309,7 +2350,7 @@ In the first step, we retrieve a certain number of candidate points whose permut
 to the permutation of the query vector.
 For these candidate data points, we compute an actual distance to the query, using the original distance function.
 For almost all implemented permutation methods, 
-the number of candidate records can be controlled by a parameter \ttt{dbScanFrac} or \ttt{minCandidate}.
+the number of candidate objects can be controlled by a parameter \ttt{dbScanFrac} or \ttt{minCandidate}.
 
 
 Permutation methods differ in how they index and process permutations.
@@ -2335,7 +2376,7 @@ of limited depth \cite{Esuli:2012}. A parameter \ttt{prefixLength}
 defines the depth.
 The filtering phase aims to find \ttt{minCandidate} candidate data points.
 To this end, it first retrieves the data points whose permutation prefix is exactly the same
-as that of the query. If we do not get enough candidate records, we shorten the prefix
+as that of the query. If we do not get enough candidate objects, we shorten the prefix
 and repeat the procedure until we get a sufficient number of candidate entries.
 Note that we do not the use the parameter \ttt{dbScanFrac} here.
 
@@ -2472,11 +2513,15 @@ release/experiment \
 Instead of computing the $L_2$ distance between two permutations,
 we can binarize permutations and compute the Hamming distance between
 binarized permutations. 
-To this end, we select an adhoc binarization threshold \texttt{binThreshold}.
+To this end, we select an adhoc binarization threshold \texttt{binThreshold} (the
+number of pivots divided by two is usually a good setting).
 All integer values smaller than \texttt{binThreshold} become zeros,
 and values larger than or equal to \texttt{binThreshold} become ones.
 
-On a plus side, the Hamming distance between binarized permutations can be computed much faster than $L_2$ or $L_1$ (see Table~\ref{TableSpaces}). This comes at a cost though, as the Hamming distance appears to be a worse proxy for the original distance than $L_2$ or $L_1$.
+The Hamming distance between binarized permutations can be computed much faster than $L_2$ or $L_1$ (see Table~\ref{TableSpaces}). This comes at a cost though, as the Hamming distance appears to be a worse proxy for the original distance than $L_2$ or $L_1$ (for the same
+number of pivots).
+One can compensate in quality by using more pivots. In our experiments,
+it was usually sufficient to double the number of pivots.
 
 The binarized permutation can be search sequentially. 
 An example of testing such a method using the utility \texttt{experiment} is as follows:
@@ -2547,9 +2592,9 @@ in the inverted file \\
 \cmidrule(l){1-2} 
                      & Common parameter \ttt{numPivot}. \\
 \ttt{invProcAlg}     & An algorithm to merge posting lists. In practice, only \texttt{scan} worked  well. \\
-\ttt{chunkIndexSize} & A number of documents in one index chunk. Select a small value (in the order of several thousands) for better cache utilization. \\
+\ttt{chunkIndexSize} & A number of documents in one index chunk.  \\
 \ttt{indexThreadQty} & A number of indexhing threads. \\
-\ttt{numPivotIndex}  & A number of most closest pivots to be indexed. \\
+\ttt{numPivotIndex}  & A number of closest pivots to be indexed. \\
 \ttt{numPivotSearch} & A candidate entry should share this number of pivots with the query. 
 This is a \textbf{query time} parameter. \\
 \bottomrule
@@ -2583,20 +2628,20 @@ Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
 
 \subsection{Proximity Graphs} \label{SectionProxGraph}
 One efficient and effective approach
-relies on a graph, where objects are graph nodes and edges connect sufficiently close objects.
+relies on building a graph, where objects are graph nodes and edges connect sufficiently close objects.
 When edges connect mostly near neighbors, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
-This method implements only the nearest-neighbor, but not the range search.
 
-A search process is a series of sub-searches with 
+A search process is a series of sub-searches 
 (the number of sub-searches is defined by the parameter \ttt{initSearchAttempts}).
 A sub-search starts at a random node and proceeds to expanding the set of traversed nodes by following neighboring links. The sub-search stops when we cannot find points 
 that are closer than already found \ttt{NN} nearest points (\ttt{NN} is a search parameter).
 Note that the greedy search is only approximate and does not necessarily return all \ttt{NN} nearest neighbors.
 
-In our library we use to approaches to create a proximity graphs, which are described below.
+In our library we use two approaches to create proximity graphs, which are described below.
 Parameters of these methods are summarized in Table~\ref{TableProxGraphs}.
 Note that both methods have the parameter with the same name, namely, \ttt{NN}.
 However, this parameter has a somewhat different interpretation depending on the method.
+Also note that these methods support only the nearest-neighbor, but not the range search.
 
 \subsubsection{Small World Graph.} \label{SectionSWGraph}
 In the Small World graph (SW-gaph),
@@ -2604,11 +2649,11 @@ indexing is a bottom-up procedure that relies on the previously described greedy
 The number of restarts, though, is defined by a different parameter, i.e., \ttt{initIndexAttempts}.
 We add points one by one. For each data point, 
 we find \ttt{NN} closest points using an already constructed index.
-Then, we create an edge between a new graph node (representing a new point) 
+Then, we create an undirected edge between a new graph node (representing a new point) 
 and nodes that represent \ttt{NN} closest points found by the greedy search. 
 Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
 This algorithm was presented at SISAP 2012 \cite{malkov2012scalable},
-but some of the implementation details are missing in the publication.
+but some of the implementation details were missing in the publication.
 This issue was resolved in a subsequent paper \cite{malkov2014}
 
 The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads. The number of threads is defined by the parameter \ttt{indexThreadQty}.
@@ -2633,6 +2678,7 @@ release/experiment \
 \end{verbatim}
 }
 
+
 \subsubsection{NN-Descent.} \label{SectionNNDescent}
 The NN-descent is an iterative procedure initialized with randomly selected
 nearest neighbors. In each iteration, a random sample of queries is selected
@@ -2641,14 +2687,14 @@ to participate in neighborhood propagation.
 This process is governed by parameters \ttt{rho} and \ttt{delta}. 
 Parameter \ttt{rho} defines a fraction of the data set that is randomly
 sampled for neighborhood propagation. A good value that works
-in many case is $\ttt{rho}=2$. As the indexing algorithm iterates,
+in many cases is $\ttt{rho}=0.5$. As the indexing algorithm iterates,
 fewer and fewer neighborhoods change after an attempt to improve the local
 neighborhood structure via neighborhood propagation. 
 The parameter \ttt{delta} defines a stopping condition in terms of a fraction
 of modified edges in the \knnns graph (the exact definition can be inferred from code). 
 A good default value is \ttt{delta}=0.001.
 
-The indexing algorithm multi-threaded: the method uses all available cores.
+The indexing algorithm is multi-threaded: the method uses all available cores.
 
 Until recently, the search algorithm by the author of NN-descent was not open sourced.
 Therefore, in this release, we use the same algorithm as for the SW-graph \cite{malkov2012scalable,malkov2014}.
@@ -2689,9 +2735,7 @@ release/experiment \
 \multicolumn{2}{c}{\textbf{NN-descent} (\ttt{nndes}) \cite{dong2011efficient,malkov2012scalable,malkov2014}  }\\
 \cmidrule(l){1-2} 
 \ttt{NN}                  & Search: keep a queue containing at most this number of closest points. 
-                            Indexing: for a new point find this number of most closest points
-                            that make the initial neighborhood of the point. When more points are added,
-                            this neighborhood may be expanded. \\
+                            Indexing: for a new point find this number of most closest points. \\
 \ttt{rho}                 & A fraction of the data set that is randomly sampled for neighborhood propagation.  \\
 \ttt{delta}               & A stopping condition in terms of the fraction of updated edges in the \knnns graph. \\
 \bottomrule
@@ -2744,14 +2788,6 @@ release/experiment \
 \begin{tabular}{l@{\hspace{2mm}}p{3.5in}}
 \toprule
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{\knn graph (bottom-up and greedy index creation)} (\ttt{small\_world\_rand})
-\cite{malkov2012scalable}} \\
-\cmidrule(l){1-2} 
- \ttt{NN}                  & A number of close entries returned by one sub-search.           \\
- \ttt{initSearchAttempts}  & A number of sub-searches to answer one query. This is a \textbf{query time} parameter.                   \\
- \ttt{initIndexAttempts}   & A number of sub-searches to add one data point during indexing.  \\
- \ttt{indexThreadQty}      & A number of indexing threads. \\
-\cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{Several copies of the same index type} (\ttt{mult\_index})} \\
 \cmidrule(l){1-2} 
 \ttt{indexQty}   & A number of copies \\
@@ -2800,7 +2836,7 @@ or to the file
 This step has two sub-steps. 
 First, the user includes the previously created helper file into either
 \ttt{init\_spaces.h} or \ttt{init\_methods.h}.
-Finally the function \ttt{initMethods} or \ttt{initSpaces} are extended
+Finally the function \ttt{initMethods} or \ttt{initSpaces} is extended
 by adding a macro call that actually registers the space or method in a factory class.
 No modification of makefiles (or other configuration files) is required.
 
@@ -2814,7 +2850,8 @@ distance values or decide to focus, e.g., only on integer-valued distances.
 The user can also add new applications, which are meant to be 
 a part of the testing framework/library.
 However, adding new applications does require minor editing of the meta-makefile \ttt{CMakeLists.txt} 
-(and re-running \ttt{cmake} \S~\ref{SectionBuildLinux}).
+(and re-running \ttt{cmake} \S~\ref{SectionBuildLinux}) on Linux,
+or creation of new Visual Studio sub-projects on Windows (see \S~\ref{SectionBuildWindows}).
 It is also possible to create standalone applications that use the library.
 Please, see \S~\ref{SectionBuildLinux} and \S~\ref{SectionBuildWindows} for details.
 
@@ -2823,13 +2860,13 @@ we consider extension tasks in more detail.
 For illustrative purposes,
 we created a zero-functionality space (\ttt{DummySpace}), 
 method (\ttt{DummyMethod}), and application (\ttt{dummy\_app}).
-These dummy classes can also be used as starting points to develop fully functional code.
+These zero-functionality examples can also be used as starting points to develop fully functional code.
 
 \subsection{Test Workflow}\label{SectionWorkflow}
 The main benchmarking utility \ttt{experiment} parses command line parameters. 
 Then, it creates a space and all required search methods using
 the space and the method factories.
-Thus, when we create a class representing a search method,
+Thus, when it creates a class representing a search method,
 the constructor of this class has to create an index in the memory.
 %Thus, when we create a class representing a search method,
 %the constructor of this class has to create an index in the memory
@@ -3062,7 +3099,7 @@ A conversion occurs, if the type of a receiving variable (passed as a second par
 to the functions \ttt{GetParam*}) is different from a string.
 It is possible to use boolean variables as parameters.
 In that, in the command line, one has to specify 1 (for \ttt{true}) or 0 (for \ttt{false}).
-Note that the function \ttt{GetParamRequired} raises an error, 
+Note that the function \ttt{GetParamRequired} raises an exception, 
 if the request parameter was not supplied in the command line.
 
 The function \ttt{CreateDummy} is registered in the space factory using a special macro.
@@ -3151,7 +3188,7 @@ If this list is non-empty and the method is supposed to support
 query time modification of some parameters,
 these modifications are carried out inside the function  
 \ttt{SetQueryTimeParamsInternal}.
-Make sure, you call \ttt{SetQueryTimeParamsInternal} from the constructor as well.
+Make sure, you call the method \ttt{SetQueryTimeParamsInternal} from the constructor as well.
 
 The space object is typically used to compute the distance by calling
 the function \ttt{IndexTimeDistance}.
@@ -3276,7 +3313,7 @@ target_link_libraries (dummy_app NonMetricSpaceLib lshkit
 
 \subsection{Creating an application on Windows (inside the framework)}\label{SectionCreateAppWindows}
 The following description was created for Visual Studio Express 2015.
-It may be a bit for newer releases of the Visual Studio.
+It may be a bit different for newer releases of the Visual Studio.
 Creating a new sub-project in the Visual Studio is rather straightforward.
 
 In addition, one can use a provided sample project file \href{\replocfile similarity_search/src/dummy_app.vcxproj}{dummy\_app.vcxproj} as a template.
@@ -3326,7 +3363,7 @@ the $L_p$ spaces for non-integer values of $p$ more efficiently than in the case
 and Clang.
 In the Visual Studio's fast math mode (which is enabled in the provided project files)
 it is also possible to compute some hard distances several times faster compared to GNU C++ and Clang.
-Yet, our custom implementations seems to be always twice as fast. 
+Yet, our custom implementations are often much faster.
 For example, in the case of the Intel compiler,
 the custom implementation of the KL-divergence is 10 times faster 
 than the standard one while
@@ -3344,21 +3381,21 @@ operate on small vectors.
 Some C++ implementations can be efficiently vectorized by both the GNU and Intel compilers.
 That is, instead of the scalar operations the compiler would generate
 more efficient SIMD instructions.
-Yet, the code is not always vectorized by the Clang.
+Yet, the code is not always vectorized, e.g., by the Clang.
 And even the Intel compiler, fails to efficiently vectorize 
 computation of the KL-divergence (with pre-computed logarithms).
 
-There are also situations when we efficient automatic vectorization
+There are also situations when efficient automatic vectorization
 is hardly possible. For instance,
 we provide an efficient implementation of the scalar product
 for sparse \emph{single-precision} floating point vectors.
 It relies on the all-against-all comparison SIMD instruction \texttt{\_mm\_cmpistrm}. 
 However, it requires keeping the data in a special format,
-which makes automatic vectorization nearly impossible.
+which makes automatic vectorization impossible.
 
 Intel SSE extensions that provide SIMD instructions are automatically detected
-by compilers but the Visual Studio.
-If these SSE extensions are not available, the compilation process will produce warnings like the
+by all compilers but the Visual Studio.
+If some SSE extensions are not available, the compilation process will produce warnings like the
 following one:
 {
 \footnotesize
@@ -3367,8 +3404,8 @@ LInfNormSIMD: SSE2 is not available, defaulting to pure C++ implementation!
 \end{verbatim}
 }
 Because we do not know a good way to create/modify Visual Studio project files 
-that enable SSE extensions automatically (depending on whether hardware supports them),
-the user need to enable these extensions manually. 
+that enable advanced SSE extensions automatically (depending on whether hardware supports them),
+the user has to enable these extensions manually. 
 For the instructions, the user is referred to \S~\ref{SectionBuildWindows}.
 
 \subsection{Cache-friendly Data Layout}
@@ -3410,8 +3447,8 @@ In the future, we plan to address this issue.
 
 \section{Data Sets}
 \label{SectionDatasets}
-Currently we provide only vector space data sets 
-that come in either dense or sparse format.
+Currently we provide mostly vector space data sets,
+which come in either dense or sparse format.
 For simplicity, these are textual formats where each row of the file contains a single vector.
 If a row starts with a prefix in the form: \ttt{label:<non-negative integer value> <white-space>},
 the integer value is interpreted as the identifier of a class.
@@ -3465,8 +3502,7 @@ which \href{https://github.com/searchivarius/NonMetricSpaceLib/releases}{can be 
 %\ttt{data/genunif.py -d 64 -n 500000 -o unif64.txt}
 %\end{itemize}
 
-Most data sets are vectors in the dense format (see \S~\ref{SectionSpaces}).
-If we use any of them, please consider citing the sources (see Section \ref{SectionCredits}) for details.
+If we use any of the provided data sets, please consider citing the sources (see Section \ref{SectionCredits}) for details.
 Also note that, the data will be downloaded in the \textbf{compressed} form.
 You would need the standard \ttt{gunzip} or \ttt{bunzip2} to uncompress all the data except
 the Wikipedia (sparse and dense) vectors.
@@ -3479,7 +3515,7 @@ under the business-friendly \href{http://apache.org/licenses/LICENSE-2.0}{Apache
 The best way to acknowledge the use of this code 
 in a scientific publication is to 
 provide the URL of the GitHub repository\footnote{\url{https://github.com/searchivarius/NonMetricSpaceLib}} 
-and to cite our engineering paper:
+and to cite our engineering paper \cite{Boytsov_and_Bilegsaikhan:sisap2013}:
 
 \begin{verbatim}
 @incollection{Boytsov_and_Bilegsaikhan:sisap2013,
@@ -3541,7 +3577,9 @@ the graph construction and the search algorithm, but we have not incorporated it
 \end{itemize}
 
 \section{Acknowledgements}
-We thank 
+Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
+and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
+We also thank 
 Lawrence Cayton for providing the data sets,
 Nikita Avrelin for implementing the first version of the SW-graph
 and Daniel Lemire for contributing 
@@ -3559,13 +3597,14 @@ to improve the library and the documentation.
 
 \begin{appendix}
 \section{Description of Projection Types}\label{SectionProjDetails}
-\subsection{The classic random projections} work only for vector spaces (both sparse and dense).
+\subsection{The classic random projections} 
+The classic random projections work only for vector spaces (both sparse and dense).
 At index time, we generate \ttt{projDim} vectors by sampling their elements from
 the standard normal distribution $\mathcal{N}(0,1)$ and orthonormalizing them. \footnote{If 
 the dimensionality of the projection space is larger than the dimensionality of the original
 space, only the first \ttt{projDim} vectors are orthonormalized. The remaining are simply
 divided by their norms.}
-Coordinates in the projected spaces are obtained by computing scalar products
+Coordinates in the projection spaces are obtained by computing scalar products
 between a given vector and each of the \ttt{projDim} randomly generated vectors.
 
 In the case of sparse vector spaces, the dimensionality is first reduced via the hashing trick:
@@ -3585,19 +3624,21 @@ whereas the distance is either $L_2$ or the cosine distance.
 In this case, there are theoretical guarantees that the projection preserves
 well distances in the original space (see e.g. \cite{bingham2001random}).
 
-\subsection{FastMap} introduced by Faloutsos and Lin \cite{faloutsos1995fastmap}
+\subsection{FastMap} 
+FastMap introduced by Faloutsos and Lin \cite{faloutsos1995fastmap}
 is also a type of the random-projection method. 
 At indexing time, we randomly select $projDim$ pairs $A_i$ and $B_i$.
 The \mbox{$i$-th} coordinate of vector $x$ is computed using the formula:
 \begin{equation}\label{EqFastMap}
 \mbox{\ttt{FastMap}}_{i}(x)  = \frac{d(A_i,x)^2 - d(B_i,x_i)^2 + d(A_i,B_i)}{2 d(A_i,B_i)^2}
 \end{equation}
-Given points $A$ and $B$ in the Euclidean space, Eq.~\ref{EqFastMap} give the length of the
+Given points $A$ and $B$ in the Euclidean space, Eq.~\ref{EqFastMap} gives the length of the
 orthogonal projection of $x$ to the line connecting $A$ and $B$.
 However, FastMap can be used in non-Euclidean spaces as well.
 
-\subsection{Distances to the Random Reference Points} is a folklore projection approach,
-where the $i$ coordinate of point $x$ in the projected space is computed as simply $d(x, \pi_i)$,
+\subsection{Distances to the Random Reference Points} 
+This method is a folklore projection approach,
+where the \mbox{$i$-th} coordinate of point $x$ in the projected space is computed as simply $d(x, \pi_i)$,
 where $\pi_i$ is a pivot in the original space, i.e., a randomly selected reference point.
 Pivots are selected once during indexing time.
 
