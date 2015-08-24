@@ -113,6 +113,9 @@ class Space {
    * elements from the object. If nElem > getDimension(), an exception
    * will be thrown. For sparse vector spaces, the algorithm may "hash"
    * several elements together by summing up their values.
+   *
+   * Non-vector spaces don't have to support this function, they may
+   * throw an exception.
    */
   virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const = 0;
