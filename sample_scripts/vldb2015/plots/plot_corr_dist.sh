@@ -27,7 +27,7 @@ function plot_and_embed {
 
 DimTrunc=64
 
-RUN_BENCH_PROJ=1
+RUN_BENCH_PROJ=0
 
 if [ "$RUN_BENCH_PROJ" = "1" ] ; then
   DataDir=$DATA_DIR
@@ -67,7 +67,7 @@ done
 for ProjDim in 64 ; do
   for type in rand perm ; do
     if [ "$RUN_BENCH_PROJ" = "1" ] ; then
-      $BinDir/bench_projection -s l2 --projSpaceType l2 --distType float -i $DATA_DIR/sift_texmex_base1m.txt -o sift_l2_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
+      $BinDir/bench_projection -s l2 --projSpaceType l2 --distType float -i $DATA_DIR/sift_texmex_learn5m.txt -o sift_l2_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
     fi
 
     plot_and_embed sift_l2_${type}${ProjDim}_corr.tsv sift_l2_${type}${ProjDim}_corr.pdf
