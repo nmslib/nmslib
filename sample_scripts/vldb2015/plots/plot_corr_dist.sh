@@ -27,7 +27,7 @@ function plot_and_embed {
 
 DimTrunc=64
 
-RUN_BENCH_PROJ=0
+RUN_BENCH_PROJ=1
 
 if [ "$RUN_BENCH_PROJ" = "1" ] ; then
   DataDir=$DATA_DIR
@@ -46,7 +46,7 @@ for sd in 8 128 ; do
   for ProjDim in 64 ; do
     for type in perm ; do
       if [ "$RUN_BENCH_PROJ" = "1" ] ; then
-        $BinDir/bench_projection -s jsdivfast --projSpaceType l2 --distType float -i $DATA_DIR/VectorSpaces/wikipedia_lda${sd}.txt  -o wikipedia_lda${sd}_jsdiv_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
+        $BinDir/bench_projection -s jsdivfast --projSpaceType l2 --distType float -i $DATA_DIR/wikipedia_lda${sd}.txt  -o wikipedia_lda${sd}_jsdiv_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
       fi
 
       plot_and_embed wikipedia_lda${sd}_jsdiv_${type}${ProjDim}_corr.tsv wikipedia_lda${sd}_jsdiv_${type}${ProjDim}_corr.pdf
@@ -56,7 +56,7 @@ for sd in 8 128 ; do
   for ProjDim in 64 ; do
     for type in perm ; do
       if [ "$RUN_BENCH_PROJ" = "1" ] ; then
-        $BinDir/bench_projection -s kldivgenfast --projSpaceType l2 --distType float -i $DATA_DIR/VectorSpaces/wikipedia_lda${sd}.txt  -o wikipedia_lda${sd}_kldiv_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
+        $BinDir/bench_projection -s kldivgenfast --projSpaceType l2 --distType float -i $DATA_DIR/wikipedia_lda${sd}.txt  -o wikipedia_lda${sd}_kldiv_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
       fi
 
       plot_and_embed wikipedia_lda${sd}_kldiv_${type}${ProjDim}_corr.tsv wikipedia_lda${sd}_kldiv_${type}${ProjDim}_corr.pdf
@@ -67,7 +67,7 @@ done
 for ProjDim in 64 ; do
   for type in rand perm ; do
     if [ "$RUN_BENCH_PROJ" = "1" ] ; then
-      $BinDir/bench_projection -s l2 --projSpaceType l2 --distType float -i $DATA_DIR/VectorSpaces/sift_texmex_base1m.txt -o sift_l2_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
+      $BinDir/bench_projection -s l2 --projSpaceType l2 --distType float -i $DATA_DIR/sift_texmex_base1m.txt -o sift_l2_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
     fi
 
     plot_and_embed sift_l2_${type}${ProjDim}_corr.tsv sift_l2_${type}${ProjDim}_corr.pdf
@@ -77,7 +77,7 @@ done
 for ProjDim in 64 ; do
   for type in perm ; do
     if [ "$RUN_BENCH_PROJ" = "1" ] ; then
-      $BinDir/bench_projection -s normleven --projSpaceType l2 --distType float -i $DATA_DIR/StringSpaces/dna5M_32_4.txt  -o dna_32_4_normleven_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
+      $BinDir/bench_projection -s normleven --projSpaceType l2 --distType float -i $DATA_DIR/dna5M_32_4.txt  -o dna_32_4_normleven_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
     fi
 
     plot_and_embed dna_32_4_normleven_${type}${ProjDim}_corr.tsv dna_32_4_normleven_${type}${ProjDim}_corr.pdf
@@ -87,7 +87,7 @@ done
 for ProjDim in 64 ; do
   for type in perm ; do
     if [ "$RUN_BENCH_PROJ" = "1" ] ; then
-      $BinDir/bench_projection -s cosinesimil_sparse_fast --projSpaceType l2 --distType float -i $DATA_DIR/VectorSpaces/wikipedia.txt -o cosinesimil_wiki_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
+      $BinDir/bench_projection -s cosinesimil_sparse_fast --projSpaceType l2 --distType float -i $DATA_DIR/wikipedia.txt -o cosinesimil_wiki_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc
     fi
 
     plot_and_embed cosinesimil_wiki_${type}${ProjDim}_corr.tsv cosinesimil_wiki_${type}${ProjDim}_corr.pdf
@@ -97,7 +97,7 @@ done
 for ProjDim in 64 ; do
   for type in rand ; do
     if [ "$RUN_BENCH_PROJ" = "1" ] ; then
-      $BinDir/bench_projection -s cosinesimil_sparse_fast --projSpaceType cosinesimil --distType float -i $DATA_DIR/VectorSpaces/wikipedia.txt -o cosinesimil_wiki_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc --intermDim 4096
+      $BinDir/bench_projection -s cosinesimil_sparse_fast --projSpaceType cosinesimil --distType float -i $DATA_DIR/wikipedia.txt -o cosinesimil_wiki_${type}${ProjDim}_corr.tsv -p ${type}  --projDim $ProjDim --maxNumData $MaxNumData  --sampleRandPairQty $SampleQty --sampleKNNQueryQty $SampleQueryKNN --sampleKNNTotalQty $SampleQty --knn $knn --repeat $repeatQty --binThreshold $DimTrunc --intermDim 4096
     fi
 
     plot_and_embed cosinesimil_wiki_${type}${ProjDim}_corr.tsv cosinesimil_wiki_${type}${ProjDim}_corr.pdf
