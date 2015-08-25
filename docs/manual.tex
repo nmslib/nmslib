@@ -1100,7 +1100,7 @@ For the relative error, however, we use the geometric mean  \cite{king:1986}.
 We provide the Python script to generate performance graphs 
 from tab-separated data file produced by the 
 benchmarking utility \ttt{experiment}. 
-The plotting script is \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py}.
+The plotting script is \href{\replocfile sample_scripts/genplot.py}{genplot.py}.
 In addition to Python, it requires Latex and PGF. 
 This script is supposed to run only on Linux.
 
@@ -2375,7 +2375,7 @@ In a permutation prefix index (PP-index),
 of limited depth \cite{Esuli:2012}. A parameter \ttt{prefixLength}
 defines the depth.
 The filtering phase aims to find \ttt{minCandidate} candidate data points.
-To this end, it first retrieves the data points whose permutation prefix is exactly the same
+To this end, it first retrieves the data points whose prefix of the inverse pivot ranking is exactly the same
 as that of the query. If we do not get enough candidate objects, we shorten the prefix
 and repeat the procedure until we get a sufficient number of candidate entries.
 Note that we do not the use the parameter \ttt{dbScanFrac} here.
