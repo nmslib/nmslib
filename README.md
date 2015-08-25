@@ -1,9 +1,11 @@
 Non-Metric Space Library
 =================
 Non-Metric Space Library is a cross-platform similarity search library and a toolkit for evaluation of similarity search methods.
-The goal of the project is to create an effective toolkit for searching in **generic non-metric** spaces.
+The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces.
+
 Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the focus is on **approximate**
-methods. Some of the implemented approaches are quite efficient. For example, according to the results of [a public evaluation](https://github.com/erikbern/ann-benchmarks), our implementation of the SW-graph outperforms other methods in most cases.
+methods. Some of the implemented approaches are quite efficient. For example, according to the results of [a public evaluation](https://github.com/erikbern/ann-benchmarks), our implementation of the SW-graph outperforms other methods in most cases. 
+
 
 **Contributors**: Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
