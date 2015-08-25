@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
+#include <functional>
 
 #include <string.h>
 #include "global.h"
@@ -39,6 +40,7 @@
 namespace similarity {
 
 using std::map;
+using std::string;
 using std::pair;
 using std::make_pair;
 using std::runtime_error;
@@ -91,8 +93,17 @@ class Space {
                       const ExperimentConfig<dist_t>* config, // NULL pointers are allowed
                       const char* inputfile,
                       const int MaxNumObjects) const = 0;
-  virtual std::string ToString() const = 0;
+  virtual string ToString() const = 0;
   virtual void PrintInfo() const { LOG(LIB_INFO) << ToString(); }
+
+  /*
+   * Create an object from string representation.
+   */
+//  virtual Object* CreateObjFromStr(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const = 0;
+//  virtual string CreateStrFromObj(const Object* pObj) const = 0;
+//  virtual shared_ptr<FileState> ReadFileHeader(const string& inputFile);
+//  virtual string ReadNextObjStr(shared_ptr<FileState>);
+
   /*
    * For some real-valued or integer-valued *DENSE* vector spaces this function
    * returns the number of vector elements. For all other spaces, it returns
