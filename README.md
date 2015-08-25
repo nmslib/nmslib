@@ -64,7 +64,7 @@ In this release, we implemented basic Python bindings (for Linux and Python 2.7)
 sudo make install
 ```
 
-For an example of using our library in Python, see the script [python_bindings/test_nmslib.py](test_nmslib.py).
+For an example of using our library in Python, see the script [test_nmslib.py](python_bindings/test_nmslib.py).
 
 Quick start on Windows
 -----------------------
