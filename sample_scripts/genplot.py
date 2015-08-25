@@ -228,7 +228,7 @@ def methodNameAndStyle(methodName):
     if methodName == 'binarized permutation  vptree':
         return ('perm. bin. vptree','mark=+' )
     if methodName == 'permutation  pref  index':
-        return ('pref. index','mark=text')
+        return ('PP-index','mark=text')
     if methodName == 'permutation  vptree' or methodName == "projection  vptree":
         return ('proj. vptree','mark=diamond*')
     if methodName == 'small world rand':
