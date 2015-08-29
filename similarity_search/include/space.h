@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <cmath>
+#include <memory>
 #include <functional>
 
 #include <string.h>
@@ -69,6 +70,18 @@ class RangeQuery;
 template <typename dist_t>
 class Experiments;
 
+class DataFileInputState {
+public:
+  virtual void Close() = 0;
+  virtual ~DataFileInputState(){};
+};
+
+class DataFileOutputState {
+public:
+  virtual void Close() = 0;
+  virtual ~DataFileOutputState(){};
+};
+
 template <typename dist_t>
 class Space {
  public:
@@ -86,23 +99,37 @@ class Space {
     }
     return HiddenDistance(obj1, obj2);
   }
-  /*
-   * Read data set from the external file.
-   */
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config, // NULL pointers are allowed
-                      const char* inputfile,
-                      const int MaxNumObjects) const = 0;
+
   virtual string ToString() const = 0;
   virtual void PrintInfo() const { LOG(LIB_INFO) << ToString(); }
 
+  /** Standard functions to read/write/create objects */ 
   /*
    * Create an object from string representation.
+   * If the input state pointer isn't null, we check
+   * if the new vector is consistent with previous output.
+   * If now previous output was seen, the state vector may be
+   * updated. For example, when we start reading vectors,
+   * we don't know the number of elements. When, we see the first
+   * vector, we memorize dimensionality. If a subsequently read
+   * vector has a different dimensionality, an exception will be thrown.
    */
-//  virtual Object* CreateObjFromStr(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const = 0;
-//  virtual string CreateStrFromObj(const Object* pObj) const = 0;
-//  virtual shared_ptr<FileState> ReadFileHeader(const string& inputFile);
-//  virtual string ReadNextObjStr(shared_ptr<FileState>);
+  virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                              DataFileInputState* pInpState) const = 0;
+  // Create a string representation of an object.
+  virtual string CreateStrFromObj(const Object* pObj) const = 0;
+  // Open a file for reading, fetch a header (if there is any) and memorize an input state
+  virtual unique_ptr<DataFileInputState> ReadFileHeader(const string& inputFile) const = 0;
+  // Open a file for writing, write a header (if there is any) and memorize an output state
+  virtual unique_ptr<DataFileOutputState> WriteFileHeader(const string& outputFile) const = 0;
+  /*
+   * Read a string representation of the next object in a file as well
+   * as its label. Return false, on EOF.
+   */
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label) const = 0;
+  // Write a string representation of the next object to a file
+  virtual void WriteNextObjStr(const Object& obj, DataFileOutputState &) const = 0;
+  /** End of standard functions to read/write/create objects */ 
 
   /*
    * For some real-valued or integer-valued *DENSE* vector spaces this function

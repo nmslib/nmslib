@@ -20,10 +20,14 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <stdexcept>
 
 using std::ostream;
 using std::ofstream;
 using std::cerr;
+using std::stringstream;
+using std::runtime_error;
 
 enum LogSeverity {LIB_INFO, LIB_WARNING, LIB_ERROR, LIB_FATAL};
 enum LogChoice  {LIB_LOGNONE, LIB_LOGFILE, LIB_LOGSTDERR};
@@ -51,6 +55,16 @@ class Logger {
   friend void InitializeLogger(LogChoice choice, const char* logfile);
 };
 
+class RuntimeErrorWrapper {
+ public:
+  RuntimeErrorWrapper(const std::string& file, int line, const char* function);
+
+  stringstream& stream() { return currstrm_ ; }
+
+ private:
+  stringstream currstrm_;
+};
+
 
 #define LOG(severity) \
   Logger(severity, __FILE__, __LINE__, __FUNCTION__).stream()
@@ -68,6 +82,11 @@ class Logger {
 #define DCHECK(condition) while (0) CHECK(condition)
 #define DLOG(severity) while (0) LOG(severity)
 #endif
+
+#define PREPARE_RUNTIME_ERR(var) \
+  RuntimeErrorWrapper var(__FILE__, __LINE__, __FUNCTION__); var.stream()
+#define THROW_RUNTIME_ERR(var) \
+  throw runtime_error(var.sream())
 
 #endif     // _LOGGING_H_
 

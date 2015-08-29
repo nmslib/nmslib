@@ -18,6 +18,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <memory>
 
 #include "object.h"
 #include "logging.h"
@@ -27,16 +28,103 @@
 
 namespace similarity {
 
+using namespace std;
+
 template <typename dist_t>
-void VectorSpace<dist_t>::ReadVec(std::string line, LabelType& label, std::vector<dist_t>& v) const
+struct DataFileInputStateVec : public DataFileInputState {
+  DataFileInputState(const string& inpFileName) :
+                                          mInpFile(inpFileName.c_str()),
+                                          mDim(0) {
+
+    if (!mInpFile) {
+      PREPARE_RUNTIME_ERR(err) << "Cannot open file: " << inpFileName << " for reading";
+      THROW_RUNTIME_ERR(err);
+    }
+
+    mInpFile.exceptions(ios::badbit);
+  }
+  ifstream        mInpFile;
+  unsigned        mDim;
+};
+
+template <typename dist_t>
+struct DataFileOutputStateVec : public DataFileOutputState {
+  DataFileOutputState(const string& outFileName) :
+                                          mOutFile(outFileName.c_str(), ostream::out | ostream::trunc),
+                                          mDim(0) {
+
+    if (!mOutFile) {
+      PREPARE_RUNTIME_ERR(err) << "Cannot open file: " << outFileName < " for writing";
+      THROW_RUNTIME_ERR(err);
+    }
+
+    mOutFile.exceptions(ios::badbit | ios::failbit);
+  }
+  ofstream        mOutFile;
+};
+
+template <typename dist_t>
+unique_ptr<Object> 
+VectorSpace<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                            DataFileInputState* pInpStateBase) const;
+  DataFileInputStateVec*  pInpState = dynamic_cast<DataFileInputStateVec>(pInpStateBase);
+  if (NULL == pInpState) {
+    PREPARE_RUNTIME_ERR(err) << "Unexpected pointer type";
+    THROW_RUNTIME_ERR(err);
+  }
+  vector<dist_t>  vec;
+  ReadVec(id, label, vec);
+  if (pInpState != null) {
+    if (pInpState->mDim == 0) pInpState->mDim = vec.size();
+    else if (vec.size() != {
+      PREPARE_RUNTIME_ERR(err) << "The # of vector elements (" << vec.size() << ")" <<
+                      " doesn't match the # of elements in previous lines. (" << pInpState->mDim << " )";
+      THROW_RUNTIME_ERR(err);
+    }
+  }
+  return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
+}
+
+template <typename dist_t>
+unique_ptr<DataFileInputState<dist_t>> VectorSpace<dist_t>::ReadFileHeader(const string& inpFileName) {
+  return unique_ptr<DataFileInputState<dist_t>>(new DataFileInputState<dist_t>(inpFileName));
+}
+
+template <typename dist_t> unique_ptr<DataFileOutputState<dist_t>> 
+VectorSpace<dist_t>::ReadFileHeader(const string& outFileName) {
+  return unique_ptr<DataFileOutputState<dist_t>>(new DataFileOutputState<dist_t>(outFileName));
+}
+
+template <typename dist_t>
+void VectorSpace<dist_t>::CloseInputFile(DataFileInputState<dist_t>& inputStateBase) {
+  DataFileInputStateVec*  pInpState = dynamic_cast<DataFileInputStateVec>(&inpStateBase);
+  if (NULL == pInpState) {
+    PREPARE_RUNTIME_ERR(err) << "Unexpected pointer type";
+    THROW_RUNTIME_ERR(err);
+  }
+  pInpState->mInpFile.close();
+}
+
+template <typename dist_t>
+void VectorSpace<dist_t>::CloseOutputFile(DataFileOutputState<dist_t>& outStateBase) {
+  DataFileOutputStateVec*  pOutState = dynamic_cast<DataFileOutputStateVec>(&outStateBase);
+  if (NULL == pOutState) {
+    PREPARE_RUNTIME_ERR(err) << "Unexpected pointer type";
+    THROW_RUNTIME_ERR(err);
+  }
+  pOutState->mOutFile.close();
+}
+
+template <typename dist_t>
+void VectorSpace<dist_t>::ReadVec(string line, LabelType& label, vector<dist_t>& v) const
 {
   v.clear();
 
   label = Object::extractLabel(line);
 
-  std::stringstream str(line);
+  stringstream str(line);
 
-  str.exceptions(std::ios::badbit);
+  str.exceptions(ios::badbit);
 
   dist_t val;
 
@@ -46,108 +134,14 @@ void VectorSpace<dist_t>::ReadVec(std::string line, LabelType& label, std::vecto
     while (str >> val) {
       v.push_back(val);
     }
-  } catch (const std::exception &e) {
+  } catch (const exception &e) {
     LOG(LIB_ERROR) << "Exception: " << e.what();
     LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'";
   }
 }
 
 template <typename dist_t>
-void VectorSpace<dist_t>::WriteDataset(const ObjectVector& dataset,
-                                       const char* outputfile) const {
-  std::ofstream outFile(outputfile, ostream::out | ostream::trunc);
-
-  if (!outFile) {
-    LOG(LIB_FATAL) << "Cannot open: '" << outputfile << "' for writing!";
-  }
-
-  outFile.exceptions(std::ios::badbit | std::ios::failbit);
-
-  for (const Object* obj: dataset) {
-    CHECK(obj->datalength() > 0);
-    const dist_t* x = reinterpret_cast<const dist_t*>(obj->data());
-    const size_t length = obj->datalength() / sizeof(dist_t);
-
-    if (obj->label()>=0) outFile << LABEL_PREFIX << obj->label() << " ";
-
-    for (size_t i = 0; i < length; ++i) {
-      outFile << x[i];
-      if (i + 1 == length) outFile << std::endl; else outFile << "  ";
-    }
-    
-  }
-  outFile.close();
-}
-
-
-template <typename dist_t>
-void VectorSpace<dist_t>::ReadDataset(
-    ObjectVector& dataset,
-    const ExperimentConfig<dist_t>* config,
-    const char* FileName,
-    const int MaxNumObjects) const {
-
-  dataset.clear();
-  dataset.reserve(MaxNumObjects);
-
-  std::vector<dist_t>    temp;
-
-  std::ifstream InFile(FileName);
-
-  if (!InFile) {
-      LOG(LIB_FATAL) << "Cannot open file: " << FileName;
-  }
-
-  InFile.exceptions(std::ios::badbit);
-
-  try {
-
-    std::string StrLine;
-
-    int linenum = 0;
-    int id = linenum;
-    LabelType label = -1;
-
-    int dim = 0;
-    int actualDim = 0;
-
-    while (getline(InFile, StrLine) && (!MaxNumObjects || linenum < MaxNumObjects)) {
-      ReadVec(StrLine, label, temp);
-      int currDim = static_cast<int>(temp.size());
-      if (!dim) dim = currDim;
-      else {
-        if (dim != currDim) {
-            LOG(LIB_FATAL) << "The # of vector elements (" << currDim << ")" <<
-                      " doesn't match the # of elements in previous lines. (" << dim << " )" <<
-                      "Found mismatch in line: " << (linenum + 1) << " file: " << FileName;
-        }
-      }
-
-      actualDim = dim;
-
-      if (config && config->GetDimension()) {
-        if (config->GetDimension() > currDim) {
-          LOG(LIB_FATAL) << "The # of vector elements (" << currDim << ")" <<
-                      " is smaller than the requested # of dimensions. " <<
-                      "Found mismatch in line: " << (linenum + 1) << " file: " << FileName;
-        } else {
-          actualDim = config->GetDimension();
-        }
-      }
-      temp.resize(actualDim);
-      id = linenum;
-      ++linenum;
-      dataset.push_back(CreateObjFromVect(id, label, temp));
-    }
-    LOG(LIB_INFO) << "Actual dimensionality: " << actualDim;
-  } catch (const std::exception &e) {
-    LOG(LIB_ERROR) << "Exception: " << e.what();
-    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'";
-  }
-}
-
-template <typename dist_t>
-Object* VectorSpace<dist_t>::CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
+Object* VectorSpace<dist_t>::CreateObjFromVect(IdType id, LabelType label, const vector<dist_t>& InpVect) const {
   return new Object(id, label, InpVect.size() * sizeof(dist_t), &InpVect[0]);
 };
 

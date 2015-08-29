@@ -171,6 +171,9 @@ public:
   void Read(istream& controlStream, istream& binaryStream, size_t& cacheDataSetQty);
 
   void ReadDataset();
+  void ReadDataset(ObjectVector& dataset,
+                   const string& inputfile,
+                   const int MaxNumObjects);
 private:
   const Space<dist_t>*    space_;
   ObjectVector      dataobjects_;

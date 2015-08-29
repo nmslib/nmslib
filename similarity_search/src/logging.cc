@@ -30,6 +30,8 @@
 
 const char* log_severity[] = {"INFO", "WARNING", "ERROR", "FATAL"};
 
+using namespace std;
+
 // allocate the static member
 std::ofstream Logger::logfile_;
 

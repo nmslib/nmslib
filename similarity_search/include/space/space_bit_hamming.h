@@ -36,10 +36,25 @@ class SpaceBitHamming : public Space<int> {
  public:
   virtual ~SpaceBitHamming() {}
 
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<int>* config,
-                      const char* inputfile,
-                      const int MaxNumObjects) const;
+  /** Standard functions to read/write/create objects */ 
+  // Create an object from string representation.
+  virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                              DataFileInputState* pInpState) const;
+  // Create a string representation of an object.
+  virtual string CreateStrFromObj(const Object* pObj) const;
+  // Open a file for reading, fetch a header (if there is any) and memorize an input state
+  virtual unique_ptr<DataFileInputState> ReadFileHeader(const string& inputFile) const;
+  // Open a file for writing, write a header (if there is any) and memorize an output state
+  virtual unique_ptr<DataFileOutputState> WriteFileHeader(const string& outputFile) const;
+  /*
+   * Read a string representation of the next object in a file as well
+   * as its label. Return false, on EOF.
+   */
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label) const;
+  // Write a string representation of the next object to a file
+  virtual void WriteNextObjStr(const Object& obj, DataFileOutputState &) const;
+  /** End of standard functions to read/write/create objects */
+
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const;
   virtual std::string ToString() const { return "Hamming (bit-storage) space"; }
   virtual void CreateVectFromObj(const Object* obj, int* pVect,
