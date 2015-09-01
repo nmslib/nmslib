@@ -256,6 +256,10 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
 
     candidateSet.push(ev);
     closestDistQueue.push(d);
+
+    if (closestDistQueue.size() > NN) {
+      closestDistQueue.pop();
+    }
  
 #if USE_BITSET_FOR_INDEXING
     size_t nodeId = provider->getId();
@@ -270,6 +274,10 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
     visited.insert(provider);
 #endif
     resultSet.emplace(d, provider);
+        
+    if (resultSet.size() > NN) { // TODO check somewhere that NN > 0
+      resultSet.pop();
+    }        
 
     while (!candidateSet.empty()) {
       const EvaluatedMSWNodeReverse<dist_t>& currEv = candidateSet.top();
