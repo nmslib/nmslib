@@ -86,7 +86,7 @@ class RuntimeErrorWrapper {
 #define PREPARE_RUNTIME_ERR(var) \
   RuntimeErrorWrapper var(__FILE__, __LINE__, __FUNCTION__); var.stream()
 #define THROW_RUNTIME_ERR(var) \
-  throw runtime_error(var.sream())
+  throw runtime_error(var.stream().str())
 
 #endif     // _LOGGING_H_
 

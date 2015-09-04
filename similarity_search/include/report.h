@@ -22,6 +22,7 @@
 #include "meta_analysis.h"
 #include "experiments.h"
 #include "experimentconf.h"
+#include "space.h"
 
 namespace similarity {
   using std::string;
@@ -63,7 +64,7 @@ namespace similarity {
     
     return Print.str();
   }
-};
 
+};
 
 #endif

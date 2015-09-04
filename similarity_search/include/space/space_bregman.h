@@ -70,7 +70,7 @@ class BregmanDiv : public VectorSpace<dist_t> {
    * of the object. Thus, known the number of elements one can always
    * extract them.
    */
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
     return VectorSpace<dist_t>::
                 CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
@@ -167,7 +167,7 @@ class KLDivGenFastRightQuery : public VectorSpace<dist_t> {
  public:
   virtual ~KLDivGenFastRightQuery() {}
 
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
     return VectorSpace<dist_t>::
                 CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
@@ -187,7 +187,7 @@ class KLDivFast: public VectorSpace<dist_t> {
  public:
   virtual ~KLDivFast() {}
 
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
     return VectorSpace<dist_t>::
                 CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
@@ -207,7 +207,7 @@ class KLDivFastRightQuery: public VectorSpace<dist_t> {
  public:
   virtual ~KLDivFastRightQuery() {}
 
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
     return VectorSpace<dist_t>::
                 CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);

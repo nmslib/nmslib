@@ -318,20 +318,6 @@ void ExperimentConfig<dist_t>::CopyExternal(const ObjectVector& src, ObjectVecto
 }
 
 template <typename dist_t>
-void ExperimentConfig<dist_t>::ReadDataset(ObjectVector& dataset,
-                                           const string& inputFile,
-                                           const int MaxNumObjects) {
-  unique_ptr<DataFileInputState> inpState(space_->ReadFileHeader(inputFile));
-  string line;
-  IdType label;
-  for (int id = 0; id < MaxNumObjects; ++id) {
-    if (!space_->ReadNextObjStr(*inpState, line, label)) break;
-    dataset.push_back(space_->CreateObjFromStr(id, label, line, inpState.get()).release());
-  }
-  inpState->Close();
-}
-
-template <typename dist_t>
 void ExperimentConfig<dist_t>::ReadDataset() {
   if (space_ == NULL) throw runtime_error("Space pointer should not be NULL!");
   if (!dataobjects_.empty())
@@ -343,7 +329,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
         "The set of query objects in non-empty, did you read the data set already?");
 
   if (pExternalData_) CopyExternal(*pExternalData_, origData_, maxNumData_);
-  else ReadDataset(origData_, datafile_, maxNumData_);
+  else space_->ReadDataset(origData_, datafile_, maxNumData_);
 
   /*
    * Note!!! 
@@ -357,7 +343,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     if (pExternalQuery_) 
       CopyExternal(*pExternalQuery_, queryobjects_, maxNumQuery_);
     else 
-      ReadDataset(queryobjects_, queryfile_, maxNumQuery_);
+      space_->ReadDataset(queryobjects_, queryfile_, maxNumQuery_);
 
     origQuery_ = queryobjects_;
   } else {

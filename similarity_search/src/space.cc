@@ -21,11 +21,11 @@ namespace similarity {
 template <typename dist_t>
 void Space<dist_t>::ReadDataset(ObjectVector& dataset,
                            const string& inputFile,
-                           const int MaxNumObjects) {
-  unique_ptr<DataFileInputState> inpState(space_->OpenReadFileHeader(inputFile));
+                           const int MaxNumObjects) const {
+  unique_ptr<DataFileInputState> inpState(OpenReadFileHeader(inputFile));
   string line;
   IdType label;
-  for (int id = 0; id < MaxNumObjects; ++id) {
+  for (int id = 0; id < MaxNumObjects || !MaxNumObjects; ++id) {
     if (!ReadNextObjStr(*inpState, line, label)) break;
     dataset.push_back(CreateObjFromStr(id, label, line, inpState.get()).release());
   }
@@ -35,17 +35,17 @@ void Space<dist_t>::ReadDataset(ObjectVector& dataset,
 template <typename dist_t>
 void Space<dist_t>::WriteDataset(ObjectVector& dataset,
                            const string& outputFile,
-                           const int MaxNumObjects) {
-  unique_ptr<DataFileOutputState> outState(space_->OpenWriteFile(outputFile));
+                           const int MaxNumObjects) const {
+  unique_ptr<DataFileOutputState> outState(OpenWriteFileHeader(outputFile));
   for (int i = 0; i < MaxNumObjects && i < dataset.size(); ++i) {
-    WriteNextObj(dataset[i], *outState);
+    WriteNextObj(*dataset[i], *outState);
   }
   outState->Close();
 }
 
-template class<Space<int>>;
-template class<Space<float>>;
-template class<Space<double>>;
+template class Space<int>;
+template class Space<float>;
+template class Space<double>;
 
 
 }

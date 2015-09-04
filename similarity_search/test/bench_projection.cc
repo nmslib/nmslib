@@ -89,7 +89,7 @@ void benchProjection(size_t repeatQty,
 
   ObjectVector data;
   LOG(LIB_INFO) << "maxNumData=" << maxNumData;
-  space->ReadDataset(data, NULL, inFile.c_str(), maxNumData);
+  space->ReadDataset(data, inFile, maxNumData);
 
   size_t N = data.size();
 

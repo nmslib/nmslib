@@ -39,7 +39,7 @@ class ShortStringDataSet : public TestDataset {
   ShortStringDataSet(SpaceLevenshtein& space) {
 
     for (unsigned i = 0; i < NUM_TEST_SHORT_STR; ++i) {
-      dataobjects_.push_back(space.CreateObjFromStr(i, -1, pTestArr[i]));
+      dataobjects_.push_back(space.CreateObjFromStr(i, -1, pTestArr[i], NULL).release());
     }
   }
 };
@@ -97,8 +97,8 @@ class LongStringDataSet : public TestDataset {
     str1 = string(MAX_LEVEN_BUFFER_QTY + 1, 'a');
     str2 = string(MAX_LEVEN_BUFFER_QTY, 'c') + str1 + string(MAX_LEVEN_BUFFER_QTY, 'b');
 
-    dataobjects_.push_back(space.CreateObjFromStr(0, -1, str1));
-    dataobjects_.push_back(space.CreateObjFromStr(0, -1, str2));
+    dataobjects_.push_back(space.CreateObjFromStr(0, -1, str1, NULL).release());
+    dataobjects_.push_back(space.CreateObjFromStr(0, -1, str2, NULL).release());
   }
 };
 

@@ -22,6 +22,7 @@
 #include "space.h"
 #include "params.h"
 #include "init.h"
+#include "report_intr_dim.h"
 #include "spacefactory.h"
 
 using namespace similarity;
@@ -96,7 +97,7 @@ void TestSpace(
                                 Instance().CreateSpace(spaceType, spaceParams));
 
   ObjectVector data;
-  space->ReadDataset(data, NULL, dataFile.c_str(), maxNumData);
+  space->ReadDataset(data, dataFile, maxNumData);
 
   // Prints the report
   ReportIntrinsicDimensionality("********", *space, data, sampleQty);

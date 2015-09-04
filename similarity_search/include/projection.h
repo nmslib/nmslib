@@ -105,12 +105,12 @@ protected:
                                vector<dist_t>& intermBuffer) {
 
     /*
-     *  For dense vector spaces CreateVectObj does nothing useful
+     *  For dense vector spaces CreateDenseVectFromObj does nothing useful
      *  (and intermDim_ == srcDim_),
      *  however, we introduced this function to have the
      *  uniform interface for sparse and dense vector spaces.
      */
-    pSpace->CreateVectFromObj(pObj, &intermBuffer[0], nIntermDim);
+    pSpace->CreateDenseVectFromObj(pObj, &intermBuffer[0], nIntermDim);
   }
 };
 

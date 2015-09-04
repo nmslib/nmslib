@@ -43,29 +43,31 @@ class SpaceBitHamming : public Space<int> {
   // Create a string representation of an object.
   virtual string CreateStrFromObj(const Object* pObj) const;
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
-  virtual unique_ptr<DataFileInputState> ReadFileHeader(const string& inputFile) const;
+  virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
   // Open a file for writing, write a header (if there is any) and memorize an output state
-  virtual unique_ptr<DataFileOutputState> WriteFileHeader(const string& outputFile) const;
+  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const string& outputFile) const;
   /*
    * Read a string representation of the next object in a file as well
    * as its label. Return false, on EOF.
    */
   virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label) const;
   // Write a string representation of the next object to a file
-  virtual void WriteNextObjStr(const Object& obj, DataFileOutputState &) const;
+  virtual void WriteNextObj(const Object& obj, DataFileOutputState &) const;
   /** End of standard functions to read/write/create objects */
 
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const;
+
   virtual std::string ToString() const { return "Hamming (bit-storage) space"; }
-  virtual void CreateVectFromObj(const Object* obj, int* pVect,
-                                 size_t nElem) const {
-    throw runtime_error("Cannot create vector for the space: " + ToString());
+  virtual void CreateDenseVectFromObj(const Object* obj, int* pVect,
+                                      size_t nElem) const {
+    throw runtime_error("Cannot create a dense vector for the space: " + ToString());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
+  Object* CreateObjFromBitMaskVect(IdType id, LabelType label, const std::vector<uint32_t>& bitMaskVect) const;
   virtual Space<int>* HiddenClone() const { return new SpaceBitHamming(); } // no parameters 
   virtual int HiddenDistance(const Object* obj1, const Object* obj2) const;
-  void ReadVec(std::string line, LabelType& label, std::vector<uint32_t>& v) const;
+  void ReadBitMaskVect(std::string line, LabelType& label, std::vector<uint32_t>& v) const;
 };
 
 }  // namespace similarity

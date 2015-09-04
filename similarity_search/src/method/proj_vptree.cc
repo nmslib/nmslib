@@ -27,14 +27,14 @@
 #include "distcomp.h"
 #include "projection.h"
 #include "spacefactory.h"
+#include "report_intr_dim.h"
 
 namespace similarity {
 
 using std::unique_ptr;
 
 template <typename dist_t>
-Object* 
-ProjectionVPTree<dist_t>::ProjectOneVect(size_t targSpaceId,
+Object* ProjectionVPTree<dist_t>::ProjectOneVect(size_t targSpaceId,
                                          const Query<dist_t>* pQuery,
                                          const Object* pSrcObj) const {
   vector<float> targVect(projDim_);
@@ -42,7 +42,7 @@ ProjectionVPTree<dist_t>::ProjectOneVect(size_t targSpaceId,
   projObj_->compProj(pQuery, pSrcObj, &targVect[0]);
 
   return VPTreeSpace_->CreateObjFromVect(targSpaceId, -1, targVect);
-};
+}
 
 template <typename dist_t>
 void ProjectionVPTree<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {

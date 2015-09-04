@@ -26,6 +26,7 @@
 #include "method/perm_bin_vptree.h"
 #include "utils.h"
 #include "distcomp.h"
+#include "report_intr_dim.h"
 
 namespace similarity {
 

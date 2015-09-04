@@ -53,7 +53,7 @@ class SpaceJSBase : public VectorSpace<dist_t> {
     size_t tmp = object->datalength()/ sizeof(dist_t);
     return (type_ == kJSSlow) ? tmp : tmp / 2;
   }
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
     return VectorSpace<dist_t>::
                 CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);

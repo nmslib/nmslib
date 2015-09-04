@@ -20,6 +20,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <Eigen/Dense>
 
 #include "object.h"
@@ -33,6 +34,8 @@ namespace similarity {
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
+using namespace std;
+
 template <typename dist_t>
 SpaceSqfd<dist_t>::SpaceSqfd(SqfdFunction<dist_t>* func)
     : func_(func) {
@@ -43,84 +46,173 @@ SpaceSqfd<dist_t>::~SpaceSqfd() {
   delete func_;
 }
 
+struct DataFileInputStateSQFD : public DataFileInputState {
+  DataFileInputStateSQFD(const string& inpFileName) : 
+                              DataFileInputState(inpFileName), 
+                              num_clusters_(0), 
+                              feature_dimension_(0) { } 
+  uint32_t        num_clusters_;
+  uint32_t        feature_dimension_;
+};
+
+/** Standard functions to read/write/create objects */ 
+
 template <typename dist_t>
-void SpaceSqfd<dist_t>::ReadDataset(
-    ObjectVector& dataset,
-    const ExperimentConfig<dist_t>* config,
-    const char* FileName,
-    const int MaxNumObjects) const {
-  dataset.clear();
-  dataset.reserve(MaxNumObjects);
+unique_ptr<DataFileInputState> SpaceSqfd<dist_t>::OpenReadFileHeader(const string& inpFileName) const {
+  return unique_ptr<DataFileInputState>(new DataFileInputStateSQFD(inpFileName));
+}
 
-  std::ifstream infile(FileName);
+template <typename dist_t>
+unique_ptr<DataFileOutputState> SpaceSqfd<dist_t>::OpenWriteFileHeader(const string& outFileName) const {
+  return unique_ptr<DataFileOutputState>(new DataFileOutputState( outFileName));
+}
 
-  if (!infile) {
-      LOG(LIB_FATAL) << "Cannot open file: " << FileName;
+template <typename dist_t>
+string SpaceSqfd<dist_t>::CreateStrFromObj(const Object* pObj) const {
+  CHECK(pObj->datalength() > 0);
+  const uint32_t* h = reinterpret_cast<const uint32_t*>(pObj->data());
+  const uint32_t num_clusters = h[0], feature_dimension = h[1];
+  const dist_t*   pElems = reinterpret_cast<const dist_t*>(pObj->data() + 2*sizeof(uint32_t));
+  stringstream out;
+  size_t pos = 0;
+  out << FAKE_FILE_NAME << endl;
+  for (uint32_t i = 0; i < num_clusters; ++i) {
+    for (uint32_t j = 0; j < feature_dimension; ++j) {
+      if (j) out << " ";
+      out << pElems[pos++];
+    }
+    out << endl;
+  }
+  return out.str();
+}
+
+template <typename dist_t>
+unique_ptr<Object> SpaceSqfd<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                                       DataFileInputState* pInpStateBase) const {
+  DataFileInputStateSQFD*  pInpState = NULL;
+  if (pInpStateBase != NULL) {
+    pInpState = dynamic_cast<DataFileInputStateSQFD*>(pInpStateBase);
+    if (NULL == pInpState) {
+      PREPARE_RUNTIME_ERR(err) << "Bug: unexpected pointer type";
+      THROW_RUNTIME_ERR(err);
+    }
+  }
+  stringstream stream1(s);
+  string line;
+
+  int prevQty = -1;
+
+  vector<float> obj;
+  if (pInpState != NULL) 
+    obj.reserve(pInpState->num_clusters_ * pInpState->feature_dimension_);
+
+  size_t currLine = 0;
+
+  if (pInpStateBase != NULL) {
+    currLine = pInpStateBase->line_num_;
+    if (!currLine) {
+      throw  runtime_error("Bug: got a zero line number while expecting a positive one!");
+    }
+    currLine--; // One is for the empty line that is not present in the input string
+    // line_num_ points to the last read line, we need to identify the number of the first line
+    for (char c: s) 
+    if (c =='\n') {
+      if (!currLine) {
+        throw  runtime_error("Bug: got a zero line number while expecting a positive one!");
+      }
+      --currLine;
+    }
   }
 
-  infile.exceptions(std::ios::badbit);
+  if (!getline(stream1, line)) {
+    stringstream lineStr;
+    lineStr <<  " after line:" << currLine << " ";
+    PREPARE_RUNTIME_ERR(err) << "Expecting a non-empty line " << lineStr.str();
+    THROW_RUNTIME_ERR(err);
+  }
+  ++currLine;
 
-  try {
-    int linenum = 0;
-    std::string line;
-    // header information
-    getline(infile, line);
-    linenum++;
-    std::stringstream ss(line);
-    ss.exceptions(std::ios::badbit);
-    int num_clusters, feature_dimension, num_rand_pixels;
-    ss >> num_clusters >> feature_dimension >> num_rand_pixels;
-    LOG(LIB_INFO) << "header information\n"
-        << "num_clusters = " << num_clusters << " "
-        << "feature_dimension = " << feature_dimension << " "
-        << "num_rand_pixels = " << num_rand_pixels;
-    // empty line
-    getline(infile, line);
-    linenum++;
-    if (line.length() != 0) {
-      LOG(LIB_FATAL) << "Expected empty line at line " << linenum;
+  while (getline(stream1, line)) {
+    ++currLine;
+
+    if (line.length() == 0) break; // Empty line
+    stringstream stream2(line);
+    stream2.exceptions(ios::badbit);
+
+    int qty = 0;
+    dist_t v;
+
+    while (stream2 >> v) {
+      obj.push_back(v);
+      qty++;
     }
-    // objects
-    int id = 0;
-    const int feature_weight = feature_dimension + 1;   // feature+weight
-    const int object_size =
-        2 * sizeof(int) + // num_clusters & feature_dimension
+
+    if (prevQty == -1) prevQty = qty;
+    else if (qty != prevQty) {
+      stringstream lineStr;
+      lineStr <<  " after line:" << currLine << " ";
+      PREPARE_RUNTIME_ERR(err) << "The number of elements " << lineStr.str() << " doesn't match the number of elements in previous lines'";
+      THROW_RUNTIME_ERR(err);
+    }
+    // +1 is because one element is the feature weight
+    if (pInpState != NULL && qty != pInpState->feature_dimension_ + 1) {
+      PREPARE_RUNTIME_ERR(err) << "The number of elements in the line '" << line << "' doesn't match the number of elements in the file header'";
+      THROW_RUNTIME_ERR(err);
+    }
+  }
+
+  const uint32_t feature_weight = prevQty;
+  const uint32_t num_clusters = obj.size() / prevQty;
+  const int object_size =
+        2 * sizeof(uint32_t) + // num_clusters & feature_dimension
         num_clusters * feature_weight * sizeof(dist_t);
-    std::vector<char> buf(object_size);
-    int* h = reinterpret_cast<int*>(&buf[0]);
-    h[0] = num_clusters;
-    h[1] = feature_dimension;
-    dist_t* obj = reinterpret_cast<dist_t*>(&buf[2*sizeof(int)]);
 
-    while (getline(infile, line) /* image file name */ &&
-           (!MaxNumObjects || static_cast<int>(dataset.size()) < MaxNumObjects)) {
-      linenum++;
-      int pos = 0;
-      for (int i = 0; i < num_clusters; ++i) {
-        getline(infile, line);
-        linenum++;
-        std::stringstream ss(line);
-        ss.exceptions(std::ios::badbit);
-        int n = 0;
-        dist_t v;
-        while (ss >> v) {
-          obj[pos++] = v;
-          n++;
-        }
-        if (n != feature_weight) {
-          LOG(LIB_FATAL) << "Found incorrectly line at " << linenum;
-        }
-      }
-      // empty line
-      if (!getline(infile, line) || line.length() != 0) {
-        LOG(LIB_FATAL) << "Expected empty line";
-      }
-      dataset.push_back(new Object(id++, -1, object_size, &buf[0]));
-    }
-  } catch (const std::exception &e) {
-    LOG(LIB_ERROR) << "Exception: " << e.what();
-    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'";
+  vector<char> buf(object_size);
+  uint32_t* h = reinterpret_cast<uint32_t*>(&buf[0]);
+  h[0] = num_clusters;
+  h[1] = feature_weight - 1;
+
+  dist_t* pVect = reinterpret_cast<dist_t*>(h+2);
+  copy(obj.begin(), obj.end(), pVect);
+
+  return unique_ptr<Object>(new Object(id, label, object_size, &buf[0]));
+}
+
+template <typename dist_t>
+void SpaceSqfd<dist_t>::WriteNextObj(const Object& obj, DataFileOutputState &outState) const {
+  outState.out_file_ << CreateStrFromObj(&obj) << endl;
+}
+
+template <typename dist_t>
+bool SpaceSqfd<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label) const {
+  DataFileInputStateSQFD*  pInpState = NULL;
+  pInpState = dynamic_cast<DataFileInputStateSQFD*>(&inpState);
+  if (NULL == pInpState) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: unexpected reference type";
+    THROW_RUNTIME_ERR(err);
   }
+
+  stringstream stream1(strObj);
+  string line;
+
+  size_t currLine = pInpState->line_num_;
+
+  if (!getline(pInpState->inp_file_, line)) {
+    return false;
+  }
+  ++currLine;
+
+  stream1 << line << endl;
+
+  while (getline(pInpState->inp_file_, line)) {
+    ++currLine;
+
+    if (line.length() == 0) break; // Empty line, don't append it to the object representation!
+    stream1 << line << endl;
+  }
+  pInpState->line_num_ = currLine;
+  strObj = stream1.str();
+  return true;
 }
 
 template <typename dist_t>
@@ -128,30 +220,30 @@ dist_t SpaceSqfd<dist_t>::HiddenDistance(
     const Object* obj1, const Object* obj2) const {
   CHECK(obj1->datalength() > 0);
   CHECK(obj2->datalength() > 0);
-  const int* h1 = reinterpret_cast<const int*>(obj1->data());
-  const int* h2 = reinterpret_cast<const int*>(obj2->data());
-  const int num_clusters1 = h1[0], feature_dimension1 = h1[1];
-  const int num_clusters2 = h2[0], feature_dimension2 = h2[1];
+  const uint32_t* h1 = reinterpret_cast<const uint32_t*>(obj1->data());
+  const uint32_t* h2 = reinterpret_cast<const uint32_t*>(obj2->data());
+  const uint32_t num_clusters1 = h1[0], feature_dimension1 = h1[1];
+  const uint32_t num_clusters2 = h2[0], feature_dimension2 = h2[1];
   const dist_t* x = reinterpret_cast<const dist_t*>(
-      obj1->data() + 2*sizeof(int));
+      obj1->data() + 2*sizeof(uint32_t));
   const dist_t* y = reinterpret_cast<const dist_t*>(
-      obj2->data() + 2*sizeof(int));
+      obj2->data() + 2*sizeof(uint32_t));
   CHECK(feature_dimension1 == feature_dimension2);
-  const int sz = num_clusters1 + num_clusters2;
+  const uint32_t sz = num_clusters1 + num_clusters2;
   VectorXd W(sz);
-  int pos = feature_dimension1;
-  for (int i = 0; i < num_clusters1; ++i) {
+  size_t pos = feature_dimension1;
+  for (uint32_t i = 0; i < num_clusters1; ++i) {
     W(i) = x[pos];
     pos += feature_dimension1 + 1;
   }
   pos = feature_dimension2;
-  for (int i = 0; i < num_clusters2; ++i) {
+  for (uint32_t i = 0; i < num_clusters2; ++i) {
     W(num_clusters1 + i) = -y[pos];
     pos += feature_dimension2 + 1;
   }
   MatrixXd A(sz,sz);
-  for (int i = 0; i < sz; ++i) {
-    for (int j = i; j < sz; ++j) {
+  for (uint32_t i = 0; i < sz; ++i) {
+    for (uint32_t j = i; j < sz; ++j) {
       const dist_t* p1 = i < num_clusters1
           ? x + i * (feature_dimension1 + 1)
           : y + (i - num_clusters1) * (feature_dimension1 + 1);
@@ -166,8 +258,8 @@ dist_t SpaceSqfd<dist_t>::HiddenDistance(
 }
 
 template <typename dist_t>
-std::string SpaceSqfd<dist_t>::ToString() const {
-  std::stringstream stream;
+string SpaceSqfd<dist_t>::ToString() const {
+  stringstream stream;
   stream << "SpaceSqfd: " << func_->ToString();
   return stream.str();
 }

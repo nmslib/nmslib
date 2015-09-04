@@ -62,30 +62,42 @@ class SpaceDummy : public Space<dist_t> {
   }
 
   /** Standard functions to read/write/create objects */ 
-  // Create an object from string representation.
-  virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s) const;
+  /*
+   * Create an object from string representation.
+   * If the input state pointer isn't null, we check
+   * if the new vector is consistent with previous output.
+   * If now previous output was seen, the state vector may be
+   * updated. For example, when we start reading vectors,
+   * we don't know the number of elements. When, we see the first
+   * vector, we memorize dimensionality. If a subsequently read
+   * vector has a different dimensionality, an exception will be thrown.
+   */
+  virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                              DataFileInputState* pInpState) const;
   // Create a string representation of an object.
   virtual string CreateStrFromObj(const Object* pObj) const;
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
-  virtual unique_ptr<DataFileInputState> ReadFileHeader(const string& inputFile);
+  virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
   // Open a file for writing, write a header (if there is any) and memorize an output state
-  virtual unique_ptr<DataFileInputState> WriteFileHeader(const string& outputFile);
-  // Read a string representation of the next object in a file
-  virtual string ReadNextObjStr(DataFileInputState &);
-  // Write a string representation of the next object to a file 
-  virtual void WriteNextObjStr(const Object& obj, DataFileOutputState &);
-  // Close the input file
-  virtual void CloseInputFile(DataFileInputState& ); 
-  // Close the output file
-  virtual void CloseOutputFile(DataFileOutputState& );
-  /** End of standard functions to read/write/create objects */
-
+  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const string& outputFile) const;
+  /*
+   * Read a string representation of the next object in a file as well
+   * as its label. Return false, on EOF.
+   */
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label) const;
+  /* 
+   * Write a string representation of the next object to a file. We totally delegate
+   * this to a Space object, because it may package the string representation, by
+   * e.g., in the form of an XML fragment.
+   */
+  virtual void WriteNextObj(const Object& obj, DataFileOutputState &) const;
+  /** End of standard functions to read/write/create objects */ 
 
   /*
-   * CreateVectFromObj and GetElemQty() are only needed, if
+   * CreateDenseVectFromObj and GetElemQty() are only needed, if
    * one wants to use methods with random projections.
    */
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                    size_t nElem) const {
     throw runtime_error("Cannot create vector for the space: " + ToString());
   }

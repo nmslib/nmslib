@@ -45,25 +45,21 @@ class VectorSpace : public Space<dist_t> {
     // Create a string representation of an object.
     virtual string CreateStrFromObj(const Object* pObj) const;
     // Open a file for reading, fetch a header (if there is any) and memorize an input state
-    virtual unique_ptr<DataFileInputState> ReadFileHeader(const string& inputFile) const;
+    virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
     // Open a file for writing, write a header (if there is any) and memorize an output state
-    virtual unique_ptr<DataFileOutputState> WriteFileHeader(const string& outputFile) const;
+    virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const string& outputFile) const;
     /*
      * Read a string representation of the next object in a file as well
      * as its label. Return false, on EOF.
      */
     virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label) const;
     // Write a string representation of the next object to a file
-    virtual void WriteNextObjStr(const Object& obj, DataFileOutputState &) const;
-    // Close the input file
-    virtual void CloseInputFile(DataFileInputState& ) const;
-    // Close the output file
-    virtual void CloseOutputFile(DataFileOutputState& ) const;
+    virtual void WriteNextObj(const Object& obj, DataFileOutputState &) const;
   /** End of standard functions to read/write/create objects */ 
 
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const = 0;
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const = 0;
  protected:
   virtual Space<dist_t>* HiddenClone() const = 0;
@@ -91,7 +87,7 @@ class VectorSpaceSimpleStorage : public VectorSpace<dist_t> {
   virtual size_t GetElemQty(const Object* object) const {
     return object->datalength()/ sizeof(dist_t);
   }
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
     VectorSpace<dist_t>::
                 CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);

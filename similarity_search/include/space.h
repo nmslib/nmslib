@@ -23,7 +23,7 @@
 #include <iostream>
 #include <cmath>
 #include <memory>
-#include <functional>
+#include <limits>
 
 #include <string.h>
 #include "global.h"
@@ -42,6 +42,8 @@ namespace similarity {
 
 using std::map;
 using std::string;
+using std::ifstream;
+using std::ofstream;
 using std::pair;
 using std::make_pair;
 using std::runtime_error;
@@ -70,16 +72,35 @@ class RangeQuery;
 template <typename dist_t>
 class Experiments;
 
-class DataFileInputState {
-public:
-  virtual void Close() = 0;
+struct DataFileInputState {
+  virtual void Close() { inp_file_.close(); }
+  DataFileInputState(const string& inpFileName) :
+                                          inp_file_(inpFileName.c_str()), line_num_(0) {
+
+    if (!inp_file_) {
+      PREPARE_RUNTIME_ERR(err) << "Cannot open file: " << inpFileName << " for reading";
+      THROW_RUNTIME_ERR(err);
+    }
+
+    inp_file_.exceptions(ios::badbit);
+  }
   virtual ~DataFileInputState(){};
+  ifstream        inp_file_;
+  size_t          line_num_;
 };
 
-class DataFileOutputState {
-public:
-  virtual void Close() = 0;
+struct DataFileInputStateVec : public DataFileInputState {
+  DataFileInputStateVec(const string& inpFileName) : DataFileInputState(inpFileName), dim_(0) { } 
+  unsigned        dim_;
+};
+
+struct DataFileOutputState {
+  DataFileOutputState(const string& outputFile) : out_file_(outputFile.c_str()) {
+    out_file_.exceptions(std::ios::badbit | std::ios::failbit);
+  }
+  virtual void Close() { out_file_.close(); }
   virtual ~DataFileOutputState(){};
+  ofstream out_file_;
 };
 
 template <typename dist_t>
@@ -119,17 +140,28 @@ class Space {
   // Create a string representation of an object.
   virtual string CreateStrFromObj(const Object* pObj) const = 0;
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
-  virtual unique_ptr<DataFileInputState> ReadFileHeader(const string& inputFile) const = 0;
+  virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const = 0;
   // Open a file for writing, write a header (if there is any) and memorize an output state
-  virtual unique_ptr<DataFileOutputState> WriteFileHeader(const string& outputFile) const = 0;
+  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const string& outputFile) const = 0;
   /*
    * Read a string representation of the next object in a file as well
    * as its label. Return false, on EOF.
    */
   virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label) const = 0;
-  // Write a string representation of the next object to a file
-  virtual void WriteNextObjStr(const Object& obj, DataFileOutputState &) const = 0;
+  /* 
+   * Write a string representation of the next object to a file. We totally delegate
+   * this to a Space object, because it may package the string representation, by
+   * e.g., in the form of an XML fragment.
+   */
+  virtual void WriteNextObj(const Object& obj, DataFileOutputState &) const = 0;
   /** End of standard functions to read/write/create objects */ 
+
+  void ReadDataset(ObjectVector& dataset,
+                   const string& inputFile,
+                   const int MaxNumObjects = numeric_limits<int>::max()) const;
+  void WriteDataset(ObjectVector& dataset,
+                   const string& inputFile,
+                   const int MaxNumObjects = numeric_limits<int>::max()) const;
 
   /*
    * For some real-valued or integer-valued *DENSE* vector spaces this function
@@ -148,14 +180,14 @@ class Space {
   virtual size_t GetElemQty(const Object* obj) const = 0;
   /*
    * For some dense vector spaces this function extracts the first nElem
-   * elements from the object. If nElem > getDimension(), an exception
+   * elements from the object. If nElem > getElemQty(), an exception
    * will be thrown. For sparse vector spaces, the algorithm may "hash"
    * several elements together by summing up their values.
    *
    * Non-vector spaces don't have to support this function, they may
    * throw an exception.
    */
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const = 0;
  protected:
   void SetIndexPhase() const { bIndexPhase = true; }
@@ -175,70 +207,6 @@ class Space {
   bool mutable bIndexPhase = true;
 
 };
-
-/*
- * This version of intrinsic dimensionality is defined in 
- * E. Chavez, G. Navarro, R. Baeza-Yates, and J. L. Marroquin, 2001, Searching in metric spaces.
- *
- * Note that this measure may be irrelevant in non-metric spaces.
- */
-template <typename dist_t>
-void ComputeIntrinsicDimensionality(const Space<dist_t>& space, 
-                               const ObjectVector& dataset,
-                               double& IntrDim,
-                               double& DistMean,
-                               double& DistSigma,
-                               size_t SampleQty = 1000000) {
-  std::vector<double> dist;
-  DistMean = 0;
-  for (size_t n = 0; n < SampleQty; ++n) {
-    size_t r1 = RandomInt() % dataset.size();
-    size_t r2 = RandomInt() % dataset.size();
-    CHECK(r1 < dataset.size());
-    CHECK(r2 < dataset.size());
-    const Object* obj1 = dataset[r1];
-    const Object* obj2 = dataset[r2];
-    dist_t d = space.IndexTimeDistance(obj1, obj2);
-    dist.push_back(d);
-    if (ISNAN(d)) {
-      /* 
-       * TODO: @leo Dump object contents here. To this end,
-       *            we need to subclass objects, so that sparse
-       *            vectors, dense vectors and other objects
-       *            can implement their own dump function.
-       */
-      LOG(LIB_FATAL) << "!!! Bug: a distance returned NAN!";
-    }
-    DistMean += d;
-  }
-  DistMean /= double(SampleQty);
-  DistSigma = 0;
-  for (size_t i = 0; i < SampleQty; ++i) {
-    DistSigma += (dist[i] - DistMean) * (dist[i] - DistMean);
-  }
-  DistSigma /= double(SampleQty);
-  IntrDim = DistMean * DistMean / (2 * DistSigma);
-  DistSigma = sqrt(DistSigma);
-}
-
-template <typename dist_t>
-void ReportIntrinsicDimensionality(const string& reportName,
-                                   const Space<dist_t>& space, 
-                                   const ObjectVector& dataset,
-                                   size_t SampleQty = 1000000) {
-    double DistMean, DistSigma, IntrDim;
-
-    ComputeIntrinsicDimensionality(space, dataset,
-                                  IntrDim,
-                                  DistMean,
-                                  DistSigma,
-                                  SampleQty);
-
-    LOG(LIB_INFO) << "### " << reportName;
-    LOG(LIB_INFO) << "### intrinsic dim: " << IntrDim;
-    LOG(LIB_INFO) << "### distance mean: " << DistMean;
-    LOG(LIB_INFO) << "### distance sigma: " << DistSigma;
-}
 
 }  // namespace similarity
 

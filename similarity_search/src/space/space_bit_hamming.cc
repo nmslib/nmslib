@@ -28,17 +28,20 @@
 
 namespace similarity {
 
+using namespace std;
+
 int SpaceBitHamming::HiddenDistance(const Object* obj1, const Object* obj2) const {
   CHECK(obj1->datalength() > 0);
   CHECK(obj1->datalength() == obj2->datalength());
   const uint32_t* x = reinterpret_cast<const uint32_t*>(obj1->data());
   const uint32_t* y = reinterpret_cast<const uint32_t*>(obj2->data());
-  const size_t length = obj1->datalength() / sizeof(uint32_t);
+  const size_t length = obj1->datalength() / sizeof(uint32_t)
+                        - 1; // the last integer is an original number of elements 
 
   return BitHamming(x, y, length);
 }
 
-void SpaceBitHamming::ReadVec(std::string line, LabelType& label, std::vector<uint32_t>& binVect) const
+void SpaceBitHamming::ReadBitMaskVect(std::string line, LabelType& label, std::vector<uint32_t>& binVect) const
 {
   binVect.clear();
 
@@ -65,64 +68,80 @@ void SpaceBitHamming::ReadVec(std::string line, LabelType& label, std::vector<ui
     LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
     LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
   }
-  Binarize(v, 1, binVect);
-/*
-  for (int i = 0; i < binVect.size(); ++i)
-    cout << bitset<32>(binVect[i]);
-  cout << endl;
-*/
+  Binarize(v, 1, binVect);      // Create the binary vector
+  binVect.push_back(v.size());   // Put the number of elements in the end
 }
 
+Object* SpaceBitHamming::CreateObjFromBitMaskVect(IdType id, LabelType label, const std::vector<uint32_t>& bitMaskVect) const {
+  return new Object(id, label, bitMaskVect.size() * sizeof(uint32_t), &bitMaskVect[0]);
+};
 
-void SpaceBitHamming::ReadDataset(
-    ObjectVector& dataset,
-    const ExperimentConfig<int>* config,
-    const char* FileName,
-    const int MaxNumObjects) const {
+/** Standard functions to read/write/create objects */ 
 
-  dataset.clear();
-  dataset.reserve(MaxNumObjects);
+unique_ptr<DataFileInputState> SpaceBitHamming::OpenReadFileHeader(const string& inpFileName) const {
+  return unique_ptr<DataFileInputState>(new DataFileInputStateVec(inpFileName));
+}
 
-  std::vector<uint32_t>    temp;
+unique_ptr<DataFileOutputState> SpaceBitHamming::OpenWriteFileHeader(const string& outFileName) const {
+  return unique_ptr<DataFileOutputState>(new DataFileOutputState(outFileName));
+}
 
-  std::ifstream InFile(FileName);
-  InFile.exceptions(std::ios::badbit);
-
-  try {
-
-    std::string StrLine;
-
-    int linenum = 0;
-    int id = linenum;
-    LabelType label = -1;
-
-    int wordQty = 0;
-
-    while (getline(InFile, StrLine) && (!MaxNumObjects || linenum < MaxNumObjects)) {
-      ReadVec(StrLine, label, temp);
-      int currWordQty = static_cast<int>(temp.size());
-      if (!wordQty) wordQty = currWordQty;
-      else {
-        if (wordQty != currWordQty) {
-            LOG(LIB_FATAL) << "The # of vector elements (" << currWordQty << ")" <<
-                      " doesn't match the # of elements in previous lines. (" << wordQty << " )" <<
-                      "Found mismatch in line: " << (linenum + 1) << " file: " << FileName;
-        }
-      }
-
-      id = linenum;
-      ++linenum;
-      dataset.push_back(CreateObjFromVect(id, label, temp));
+unique_ptr<Object> 
+SpaceBitHamming::CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                            DataFileInputState* pInpStateBase) const {
+  DataFileInputStateVec*  pInpState = NULL;
+  if (pInpStateBase != NULL) {
+    pInpState = dynamic_cast<DataFileInputStateVec*>(pInpStateBase);
+    if (NULL == pInpState) {
+      PREPARE_RUNTIME_ERR(err) << "Bug: unexpected pointer type";
+      THROW_RUNTIME_ERR(err);
     }
-    LOG(LIB_INFO) << "Number of words per vector : " << wordQty;
-  } catch (const std::exception &e) {
-    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
   }
+  vector<uint32_t>  vec;
+  ReadBitMaskVect(s, label, vec);
+  if (pInpState != NULL) {
+    size_t elemQty = vec[vec.size() - 1];
+    if (pInpState->dim_ == 0) pInpState->dim_ = elemQty;
+    else if (elemQty != pInpState->dim_) {
+      PREPARE_RUNTIME_ERR(err) << "The # of bit-vector elements (" << elemQty << ")" <<
+                      " doesn't match the # of elements in previous lines. (" << pInpState->dim_ << " )";
+      THROW_RUNTIME_ERR(err);
+    }
+  }
+  return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
 }
 
 Object* SpaceBitHamming::CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const {
   return new Object(id, label, InpVect.size() * sizeof(uint32_t), &InpVect[0]);
 };
+
+string SpaceBitHamming::CreateStrFromObj(const Object* pObj) const {
+  stringstream out;
+  const uint32_t* p = reinterpret_cast<const uint32_t*>(pObj->data());
+  const size_t length = pObj->datalength() / sizeof(uint32_t)
+                        - 1; // the last integer is an original number of elements 
+  const size_t elemQty = p[length]; // last elem
+
+  for (size_t i = 0; i < elemQty; ++i) {
+    if (i) out << " ";
+    out << ((p[i/32] >> (i & 31)) & 1);
+  }
+
+  return out.str();
+}
+
+bool SpaceBitHamming::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label) const {
+  if (!inpState.inp_file_) return false;
+  if (!getline(inpState.inp_file_, strObj)) return false;
+  inpState.line_num_++;
+  return true;
+}
+
+
+void SpaceBitHamming::WriteNextObj(const Object& obj, DataFileOutputState &outState) const {
+  string s = CreateStrFromObj(&obj);
+  outState.out_file_ << s << endl;
+}
+/** End of standard functions to read/write/create objects */ 
 
 }  // namespace similarity

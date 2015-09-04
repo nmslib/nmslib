@@ -52,8 +52,10 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
  public:
   typedef SparseVectElem<dist_t> ElemType;
 
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
-                                 size_t nElem) const;
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
+                                     size_t nElem) const;
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
+  virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const ;
   /*
    * Overriding the function from the base class
    */
@@ -64,8 +66,8 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
     return ScalarProductFast(obj1->data(), obj1->datalength(),
                              obj2->data(), obj2->datalength());
   }
-  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
  protected:
+
   virtual Space<dist_t>* HiddenClone() const = 0;
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 };

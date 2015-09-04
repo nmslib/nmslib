@@ -92,3 +92,13 @@ void InitializeLogger(LogChoice choice, const char* logfile) {
   }
 }
 
+
+RuntimeErrorWrapper::RuntimeErrorWrapper(const std::string& _file, int line, const char* function) {
+  std::string file = _file;
+  size_t n = file.rfind('/');
+  if (n != std::string::npos) {
+    file.erase(file.begin(), file.begin() + n + 1);
+  }
+  stream() << LibGetCurrentTime() << " " << file << ":" << line
+           << " (" << function << ") ";
+}
