@@ -222,29 +222,29 @@ def startsWith(s, prefix):
 def methodNameAndStyle(methodName):
     methodName = methodName.strip().lower()
     if startsWith(methodName, 'vptree'):
-        return ('vp-tree', 'mark=*')
-    if methodName == 'permutation  incr  sorting' or methodName == 'projection  perm  incr  sorting':
-        return ('brute-force filt.','mark=x')
+        return ('VP-tree', 'mark=*')
+    if methodName == 'permutation  incr  sorting':
+        return ('perm. filter','mark=x')
     if methodName == 'binarized permutation  vptree':
         return ('perm. bin. vptree','mark=+' )
     if methodName == 'permutation  pref  index':
         return ('PP-index','mark=text')
-    if methodName == 'permutation  vptree' or methodName == "projection  vptree":
-        return ('proj. vptree','mark=diamond*')
+    if methodName == 'permutation  vptree':
+        return ('perm. vptree','mark=diamond*')
     if methodName == 'small world rand':
-        return ('kNN-graph (SmallWorld)', 'mark=o')
-    if startsWith(methodName, 'nndescentmethod method'):
-        return ('kNN-graph (NN-desc)', 'mark=oplus*')
+        return ('kNN-graph (SW)', 'mark=o')
     if methodName == 'permutation  inverted index over neighboring pivots':
         return ('NAPP','mark=triangle')
     if methodName == 'multiprobe lsh':
-        return ('MPLSH', 'mark=triangle*')
+        return ('MPLSH', 'mark=pentagon')
     if methodName.find('copies of') >= 0:
         return (methodName.strip(), 'mark=square')
-    if methodName == 'bbtree':
-        return (methodName.strip(), 'mark=square*')
-    if methodName == 'list of clusters':
-        return ('list. clust.', 'mark=diamond')
+    if methodName == 'projection  perm  incr  sorting':
+        return ('brute-force filt.', 'mark=square*')
+    if startsWith(methodName, 'nndescentmethod method'):
+        return ('kNN-graph (NN-desc)', 'mark=diamond')
+    #if methodName == 'list of clusters':
+        #return ('list clust', 'mark=diamond')
     if methodName == 'ghtree':
         return ('gh-tree', 'mark=diamond*')
     if methodName == 'mvp tree':
@@ -254,7 +254,7 @@ def methodNameAndStyle(methodName):
     if methodName == 'lsh':
         return ('LSH', 'mark=otimes*')
     if methodName == 'permutation  inverted index':
-        return ('MI-file', 'mark=asterisk')
+        return ('perm inv index', 'mark=asterisk')
     if methodName == 'permutation binarized  incr  sorting':
         return ('brute-force filt. bin.', 'mark=pentagon')
     if methodName == 'sequential search':

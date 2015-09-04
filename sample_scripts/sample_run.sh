@@ -21,6 +21,7 @@ fi
 # This will create new output files (instead of appending to existing ones)
 
 $BinDir/release/experiment --distType float --spaceType l2 \
+        --cachePrefixGS exper1_cache --maxCacheGSQty 2000 \
         --testSetQty 5 --maxNumQuery 100 --knn 1  \
         --dataFile $SampleData/final8_10K.txt --outFilePrefix result --appendToResFile 0 -l log \
         --method vptree:alphaLeft=2.0,alphaRight=2.0,maxLeavesToVisit=500,bucketSize=10,chunkBucket=1 \
@@ -31,12 +32,14 @@ $BinDir/release/experiment --distType float --spaceType l2 \
 
 # Testing the bregman-ball tree
 $BinDir/release/experiment --distType float --spaceType kldivgenfast \
+        --cachePrefixGS exper2_cache --maxCacheGSQty 2000 \
         --testSetQty 5 --maxNumQuery 100 --knn 1 \
         --dataFile $SampleData/final8_10K.txt --outFilePrefix result --appendToResFile 1 -l log \
         --method bbtree:maxLeavesToVisit=20,bucketSize=10
                
 # Testing permutation-based filtering methods
 $BinDir/release/experiment --distType float --spaceType l2 \
+        --cachePrefixGS exper3_cache --maxCacheGSQty 2000 \
         --testSetQty 5 --maxNumQuery 100 --knn 1  \
         --dataFile $SampleData/final8_10K.txt --outFilePrefix result --appendToResFile 1 -l log \
         --method proj_incsort:projType=perm,projDim=4,dbScanFrac=0.2 \
@@ -50,6 +53,7 @@ $BinDir/release/experiment --distType float --spaceType l2 \
 
 # Testing misc methods
 $BinDir/release/experiment --distType float --spaceType l2 \
+        --cachePrefixGS exper4_cache --maxCacheGSQty 2000 \
         --testSetQty 5 --maxNumQuery 100 --knn 1 --appendToResFile 1  -l log \
         --dataFile $SampleData/final8_10K.txt --outFilePrefix result \
         --method small_world_rand:NN=3,initIndexAttempts=5,initSearchAttempts=2,indexThreadQty=4  \

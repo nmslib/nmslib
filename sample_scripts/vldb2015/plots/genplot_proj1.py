@@ -20,6 +20,7 @@ import re
 from subprocess import call
 
 AXIS = {
+    'Frac': 'Fraction of data retrieved',
     'Recall': 'Recall',
     'RelPosError': 'Relative position error',
     'NumCloser': 'Number closer',
@@ -94,8 +95,9 @@ def getAxisLatex(axisType):
         return ['     \\begin{axis}', '    \\end{axis}']
     if axisType == AXIS_TYPES.LOGX_NORMALY:
         return ['     \\begin{semilogxaxis}', '    \\end{semilogxaxis}']
+    # The xmin/max is hardcoded, because this plot is used only to display recall
     if axisType == AXIS_TYPES.NORMALX_LOGY:
-        return ['     \\begin{semilogyaxis}', '    \\end{semilogyaxis}']
+        return ['     \\begin{semilogyaxis}[xmin=-0.05,xmax=1.05]', '    \\end{semilogyaxis}']
     if axisType == AXIS_TYPES.LOGLOG:
         return ['     \\begin{loglogaxis}', '    \\end{loglogaxis}']
     assert False
@@ -107,7 +109,8 @@ def genPGFPlot(experiments, methStyles, outputFile, xAxisField, yAxisField, axis
     global TITLE
 
     lines = []
-    for methodName, points in experiments.items():
+    #for methodName, points in experiments.items():
+    for methodName, points in experiments:
         legendEntry=''
         if not noLegend:
           legendEntry='\\addlegendentry{%s}' % methodName
@@ -143,28 +146,46 @@ def parseHeader(row):
         h[field] = index
     return h
 
-def parseExpr(inputFile, lineNumber, row, header, xAxisField, yAxisField):
+def parseExpr(inputFile, lineNumber, row, header, xAxisField, yAxisField, K):
     row = row.rstrip().split('\t')
     if len(row) != len(header):
       raise Exception("The input file '" + inputFile + "' is probably corrupt, as the number of values  in line "+str(lineNumber+1)+ " doesn't match the number of fields, expected # of fields: " + str(len(header)) + " but got: " + str(len(row)))
-    
-    props  = methodNameAndStyle(clear(row[0]))
-    return [props[0], props[1], row[header[xAxisField]] + ' ' + row[header[yAxisField]]]
 
-def genPlotLatex(inputFile, outputFile, xAxisField, yAxisField, axisType, noLegend, printXaxis, printYaxis, title):
+    NumData = int(row[12]) 
+    knnAmp = 0
+    projType = ''
+    projDim = 0
+    for tmp in row[11].replace('"','').split(','):
+      (n,v) = tmp.split('=')
+      if n == 'projDim': projDim = int(v)
+      if n == 'projType': projType = v
+      if n == 'knnAmp': knnAmp = int(v)
+    scanFrac = float(knnAmp*K)/NumData
+    #print "pt{} pd={} ka={}".format(projType,projDim,scanFrac)
+
+    methodName = '{}-{}'.format(projType, projDim)
+    
+    #props  = methodNameAndStyle(clear(row[0]))
+    props  = methodNameAndStyle(methodName)
+    #return [props[0], props[1], row[header[xAxisField]] + ' ' + row[header[yAxisField]]]
+    return [props[0], props[1], row[header[xAxisField]] + ' ' + str(scanFrac)]
+
+def genPlotLatex(inputFile, outputFile, xAxisField, yAxisField, axisType, noLegend, printXaxis, printYaxis, title,K):
     header = {}
     experiments = {}
+    expName = {}
     methStyles = {}
     rows = open(inputFile).readlines()
+    num=0
     for lineNumber, row in enumerate(rows):
         if lineNumber == 0:   # header information
             header = parseHeader(row)
             if xAxisField not in header:
               raise Exception("You specified an invalid xAxis name '" + xAxisField + "', valid are: " + ','.join(header))
-            if yAxisField not in header:
+            if yAxisField != 'Frac' and yAxisField not in header:
               raise Exception("You specified an invalid yAxis name '" + yAxisField + "', valid are: " + ','.join(header))
         else:
-            parsed = parseExpr(inputFile, lineNumber, row, header, xAxisField, yAxisField)
+            parsed = parseExpr(inputFile, lineNumber, row, header, xAxisField, yAxisField, K)
             # group by method name
             methodName = parsed[0]
             methodData = parsed[2]
@@ -173,12 +194,19 @@ def genPlotLatex(inputFile, outputFile, xAxisField, yAxisField, axisType, noLege
                 experiments[methodName].append(methodData)
             else:
                 experiments[methodName] = [methodData]
+                expName[num] = methodName
+                num = num + 1
+  
+    experiments_sorted = []
+    for i in range(0,num): 
+      t = (expName[i], experiments[expName[i]])
+      experiments_sorted.append(t)
 
-    return genPGFPlot(experiments, methStyles,outputFile, xAxisField, yAxisField, axisType, noLegend, printXaxis, printYaxis, title)
+    return genPGFPlot(experiments_sorted, methStyles,outputFile, xAxisField, yAxisField, axisType, noLegend, printXaxis, printYaxis, title)
 
 
-def genPlot(inputFile, outputFilePrefix, xAxisField, yAxisField, axisType, noLegend,legendNumColumn,legendRelative, legendPos, printXaxis, printYaxis, title):
-    plots = genPlotLatex(inputFile, outputFilePrefix,  xAxisField, yAxisField, axisType, noLegend, printXaxis, printYaxis, title)
+def genPlot(inputFile, outputFilePrefix, xAxisField, yAxisField, axisType, noLegend,legendNumColumn,legendRelative, legendPos, printXaxis, printYaxis, title,K):
+    plots = genPlotLatex(inputFile, outputFilePrefix,  xAxisField, yAxisField, axisType, noLegend, printXaxis, printYaxis, title,K)
 
     legendDesc=' legend style={font=\\small} '
 
@@ -221,44 +249,59 @@ def startsWith(s, prefix):
      
 def methodNameAndStyle(methodName):
     methodName = methodName.strip().lower()
-    if startsWith(methodName, 'vptree'):
-        return ('vp-tree', 'mark=*')
-    if methodName == 'permutation  incr  sorting' or methodName == 'projection  perm  incr  sorting':
-        return ('brute-force filt.','mark=x')
-    if methodName == 'binarized permutation  vptree':
-        return ('perm. bin. vptree','mark=+' )
-    if methodName == 'permutation  pref  index':
-        return ('PP-index','mark=text')
-    if methodName == 'permutation  vptree' or methodName == "projection  vptree":
-        return ('proj. vptree','mark=diamond*')
-    if methodName == 'small world rand':
-        return ('kNN-graph (SmallWorld)', 'mark=o')
-    if startsWith(methodName, 'nndescentmethod method'):
-        return ('kNN-graph (NN-desc)', 'mark=oplus*')
-    if methodName == 'permutation  inverted index over neighboring pivots':
-        return ('NAPP','mark=triangle')
-    if methodName == 'multiprobe lsh':
-        return ('MPLSH', 'mark=triangle*')
-    if methodName.find('copies of') >= 0:
-        return (methodName.strip(), 'mark=square')
-    if methodName == 'bbtree':
-        return (methodName.strip(), 'mark=square*')
-    if methodName == 'list of clusters':
-        return ('list. clust.', 'mark=diamond')
-    if methodName == 'ghtree':
-        return ('gh-tree', 'mark=diamond*')
-    if methodName == 'mvp tree':
-        return ('mvp-tree', 'mark=oplus')
-    if methodName == 'satree':
-        return ('sa-tree', 'mark=otimes')
-    if methodName == 'lsh':
-        return ('LSH', 'mark=otimes*')
-    if methodName == 'permutation  inverted index':
-        return ('MI-file', 'mark=asterisk')
-    if methodName == 'permutation binarized  incr  sorting':
-        return ('brute-force filt. bin.', 'mark=pentagon')
-    if methodName == 'sequential search':
-        return ('brute force', 'mark=pentagon*')
+
+    mark=''
+
+    (projType, dim) = methodName.split('-')
+
+    if   dim == '4'   : mark='*'
+    if   dim == '8'   : mark='o'
+    elif dim == '16'  : mark='x'
+    elif dim == '32'  : mark='triangle'
+    elif dim == '64'  : mark='pentagon'
+    elif dim == '128' : mark='diamond'
+    elif dim == '256' : mark='+'
+    elif dim == '512' : mark='square'
+    elif dim == '1024': mark='asterisk'
+
+    if mark != '': return (projType+'-'+dim, 'mark='+mark)
+
+    #if startsWith(methodName, 'vptree'):
+    #    return ('vp-tree', 'mark=*')
+    #if methodName == 'permutation  incr  sorting':
+    #    return ('permutation incr.','mark=x')
+    #if methodName == 'binarized permutation  vptree':
+    #    return ('perm. bin. vptree','mark=+' )
+    #if methodName == 'permutation  pref  index':
+    #    return ('pref. index','mark=text')
+    #if methodName == 'permutation  vptree':
+    #    return ('perm. vptree','mark=diamond*')
+    #if methodName == 'small world rand':
+    #    return ('small world', 'mark=o')
+    #if methodName == 'permutation  inverted index over neighboring pivots':
+    #    return ('pivot neighb. index','mark=triangle')
+    #if methodName == 'multiprobe lsh':
+    #    return ('multi-probe LSH', 'mark=triangle*')
+    #if methodName.find('copies of') >= 0:
+    #    return (methodName.strip(), 'mark=square')
+    #if methodName == 'bbtree':
+    #    return (methodName.strip(), 'mark=square*')
+    #if methodName == 'list of clusters':
+    #    return ('list clust', 'mark=diamond')
+    #if methodName == 'ghtree':
+    #    return ('gh-tree', 'mark=diamond*')
+    #if methodName == 'mvp tree':
+    #    return ('mvp-tree', 'mark=oplus')
+    #if methodName == 'satree':
+    #    return ('sa-tree', 'mark=otimes')
+    #if methodName == 'lsh':
+    #    return ('LSH', 'mark=otimes*')
+    #if methodName == 'permutation  inverted index':
+    #    return ('perm inv index', 'mark=asterisk')
+    #if methodName == 'permutation binarized  incr  sorting':
+    #    return ('perm bin incr', 'mark=pentagon')
+    #if methodName == 'sequential search':
+    #    return ('brute force', 'mark=pentagon*')
     print >> sys.stderr, "Does not know how to rename the method '" + methodName + "'"
     exit(1)
     #assert False
@@ -271,6 +314,7 @@ if __name__ == '__main__':
     parser.add_argument('-y','--yaxis',   required=True, help='y axis description in the format: ' + AXIS_DESC)
     parser.add_argument('-l','--legend',  required=True, help='legend description: ' + LEGEND_DESC)
     parser.add_argument('-t','--title',   required=True, help='title')
+    parser.add_argument('-k','--knn',   required=True, help='k in the k-NN')
 
     args = vars(parser.parse_args())
 
@@ -278,6 +322,7 @@ if __name__ == '__main__':
     outputFilePrefix = args['outfile_pref']
     title      = args['title']
     legendDesc  = args['legend']
+    K = int(args['knn'])
 
     noLegend = False
     if legendDesc == "none":
@@ -324,6 +369,6 @@ if __name__ == '__main__':
     else:
       parser.error('Wrong format for x or y axis description, should be: ' + AXIS_DESC)
 
-    genPlot(inputFile, outputFilePrefix, xAxisField, yAxisField, axisType, noLegend, legendNumColumn,legendRelative, legendPos, printXaxis, printYaxis, title)
+    genPlot(inputFile, outputFilePrefix, xAxisField, yAxisField, axisType, noLegend, legendNumColumn,legendRelative, legendPos, printXaxis, printYaxis, title, K)
 
 
