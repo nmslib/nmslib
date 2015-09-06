@@ -142,7 +142,7 @@ string SpaceSqfd<dist_t>::CreateStrFromObj(const Object* pObj) const {
   size_t pos = 0;
   out << FAKE_FILE_NAME << endl;
   for (uint32_t i = 0; i < num_clusters; ++i) {
-    for (uint32_t j = 0; j < feature_dimension; ++j) {
+    for (uint32_t j = 0; j < feature_dimension + 1; ++j) {
       if (j) out << " ";
       out << scientific <<  setprecision(numeric_limits<dist_t>::max_digits10) << pElems[pos++];
     }
@@ -190,9 +190,7 @@ unique_ptr<Object> SpaceSqfd<dist_t>::CreateObjFromStr(IdType id, LabelType labe
   }
 
   if (!getline(stream1, line)) {
-    stringstream lineStr;
-    lineStr <<  " in line:" << currLine << " ";
-    PREPARE_RUNTIME_ERR(err) << "Expecting a non-empty line " << lineStr.str();
+    PREPARE_RUNTIME_ERR(err) << "Expecting a non-empty line # " << currLine;
     THROW_RUNTIME_ERR(err);
   }
   ++currLine;
@@ -214,9 +212,7 @@ unique_ptr<Object> SpaceSqfd<dist_t>::CreateObjFromStr(IdType id, LabelType labe
 
     if (prevQty == -1) prevQty = qty;
     else if (qty != prevQty) {
-      stringstream lineStr;
-      lineStr <<  " in line:" << currLine << " ";
-      PREPARE_RUNTIME_ERR(err) << "The number of elements " << qty << lineStr.str() << 
+      PREPARE_RUNTIME_ERR(err) << "The number of elements " << qty << " in line " << currLine << 
                                   " doesn't match the number of elements " << prevQty << " in previous lines " << 
                                   " offending line: '" << line << "'" << endl <<
                                   " offending block:" << endl << s;
@@ -224,9 +220,7 @@ unique_ptr<Object> SpaceSqfd<dist_t>::CreateObjFromStr(IdType id, LabelType labe
     }
     // +1 is because one element is the feature weight
     if (pInpState != NULL && qty != pInpState->feature_dimension_ + 1) {
-      stringstream lineStr;
-      lineStr <<  " in line:" << currLine << " ";
-      PREPARE_RUNTIME_ERR(err) << "The number of elements in line " << lineStr.str() << 
+      PREPARE_RUNTIME_ERR(err) << "The number of elements in line " << currLine << 
                          " doesn't match the number of elements in the file header'" <<
                          " expected: " << (pInpState->feature_dimension_ + 1) << " but got: " << qty;
       THROW_RUNTIME_ERR(err);
