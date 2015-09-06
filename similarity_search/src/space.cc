@@ -33,10 +33,10 @@ void Space<dist_t>::ReadDataset(ObjectVector& dataset,
 }
 
 template <typename dist_t>
-void Space<dist_t>::WriteDataset(ObjectVector& dataset,
+void Space<dist_t>::WriteDataset(const ObjectVector& dataset,
                            const string& outputFile,
                            const int MaxNumObjects) const {
-  unique_ptr<DataFileOutputState> outState(OpenWriteFileHeader(outputFile));
+  unique_ptr<DataFileOutputState> outState(OpenWriteFileHeader(dataset, outputFile));
   for (int i = 0; i < MaxNumObjects && i < dataset.size(); ++i) {
     WriteNextObj(*dataset[i], *outState);
   }

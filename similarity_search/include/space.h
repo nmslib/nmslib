@@ -142,7 +142,8 @@ class Space {
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
   virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const = 0;
   // Open a file for writing, write a header (if there is any) and memorize an output state
-  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const string& outputFile) const = 0;
+  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const ObjectVector& dataset, 
+                                                              const string& outputFile) const = 0;
   /*
    * Read a string representation of the next object in a file as well
    * as its label. Return false, on EOF.
@@ -156,10 +157,16 @@ class Space {
   virtual void WriteNextObj(const Object& obj, DataFileOutputState &) const = 0;
   /** End of standard functions to read/write/create objects */ 
 
+  /*
+   * Used only for debugging: compares objects approximately. Floating point numbers
+   * should be nearly equal. Integers and strings should coincide exactly.
+   */
+  virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const = 0;
+
   void ReadDataset(ObjectVector& dataset,
                    const string& inputFile,
                    const int MaxNumObjects = numeric_limits<int>::max()) const;
-  void WriteDataset(ObjectVector& dataset,
+  void WriteDataset(const ObjectVector& dataset,
                    const string& inputFile,
                    const int MaxNumObjects = numeric_limits<int>::max()) const;
 

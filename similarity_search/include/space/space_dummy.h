@@ -79,7 +79,8 @@ class SpaceDummy : public Space<dist_t> {
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
   virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
   // Open a file for writing, write a header (if there is any) and memorize an output state
-  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const string& outputFile) const;
+  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const ObjectVector& dataset,
+                                                              const string& outputFile) const;
   /*
    * Read a string representation of the next object in a file as well
    * as its label. Return false, on EOF.
@@ -92,6 +93,15 @@ class SpaceDummy : public Space<dist_t> {
    */
   virtual void WriteNextObj(const Object& obj, DataFileOutputState &) const;
   /** End of standard functions to read/write/create objects */ 
+
+  /*
+   * Used only for debugging: compares objects approximately. Floating point numbers
+   * should be nearly equal. Integers and strings should coincide exactly.
+   */
+  virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const {
+    return true; // In an actual, non-dummy class, you should return the result
+                 // of an actual comparison. Here 'true' is used only to make it compile.
+  }
 
   /*
    * CreateDenseVectFromObj and GetElemQty() are only needed, if

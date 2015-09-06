@@ -20,6 +20,8 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <iomanip>
+#include <limits>
 #include <algorithm>
 #include <Eigen/Dense>
 
@@ -50,9 +52,26 @@ struct DataFileInputStateSQFD : public DataFileInputState {
   DataFileInputStateSQFD(const string& inpFileName) : 
                               DataFileInputState(inpFileName), 
                               num_clusters_(0), 
-                              feature_dimension_(0) { } 
+                              feature_dimension_(0),
+                              num_rand_pixels_(0) { 
+    string line;
+    if (!getline(inp_file_, line))
+      throw runtime_error("Expecting a non-empty first line in '" + inpFileName + "'");
+    line_num_++;
+
+    stringstream ss(line);
+    ss.exceptions(std::ios::badbit);
+    ss >> num_clusters_ >> feature_dimension_ >> num_rand_pixels_;
+
+    if (!getline(inp_file_, line) || !line.empty())
+      throw runtime_error("Expecting an empty second line in '" + inpFileName + "'");
+
+    line_num_++;
+  }
+  
   uint32_t        num_clusters_;
   uint32_t        feature_dimension_;
+  uint32_t        num_rand_pixels_;
 };
 
 /** Standard functions to read/write/create objects */ 
@@ -63,13 +82,59 @@ unique_ptr<DataFileInputState> SpaceSqfd<dist_t>::OpenReadFileHeader(const strin
 }
 
 template <typename dist_t>
-unique_ptr<DataFileOutputState> SpaceSqfd<dist_t>::OpenWriteFileHeader(const string& outFileName) const {
-  return unique_ptr<DataFileOutputState>(new DataFileOutputState( outFileName));
+unique_ptr<DataFileOutputState> SpaceSqfd<dist_t>::OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                       const string& outFileName) const {
+  unique_ptr<DataFileOutputState> outState(new DataFileOutputState(outFileName));
+  uint32_t num_clusters = 0, feature_dimension = 0, num_rand_pixels = 0;
+  if (!dataset.empty()) {
+    const uint32_t* h = reinterpret_cast<const uint32_t*>(dataset[0]->data());
+    num_clusters = h[0]; 
+    feature_dimension = h[1];
+  }
+  outState->out_file_ << num_clusters << " " << feature_dimension << " " << num_rand_pixels << endl << endl; 
+  return outState;
+}
+
+template <typename dist_t>
+bool SpaceSqfd<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) const {
+  if (obj1.datalength() < 8) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: object size " << obj1.datalength() << " is smaller than 8 bytes!";
+    THROW_RUNTIME_ERR(err);
+  }
+  if (obj2.datalength() < 8) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: object size " << obj2.datalength() << " is smaller than 8 bytes!";
+    THROW_RUNTIME_ERR(err);
+  }
+  const uint32_t* h1 = reinterpret_cast<const uint32_t*>(obj1.data());
+  const uint32_t* h2 = reinterpret_cast<const uint32_t*>(obj2.data());
+  const uint32_t num_clusters1 = h1[0], feature_dimension1 = h1[1];
+  const uint32_t num_clusters2 = h2[0], feature_dimension2 = h2[1];
+  const dist_t* x = reinterpret_cast<const dist_t*>(obj1.data() + 2*sizeof(uint32_t));
+  const dist_t* y = reinterpret_cast<const dist_t*>(obj2.data() + 2*sizeof(uint32_t));
+  if (feature_dimension1 != feature_dimension2) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: different feature dimensions: " 
+               << feature_dimension1 << " vs " << feature_dimension2;
+    THROW_RUNTIME_ERR(err);
+  }
+  if (num_clusters1 != num_clusters2) return false;
+
+  for (size_t i = 0; i < num_clusters1; ++i) {
+    const dist_t* p1 = x + i * (feature_dimension1 + 1);
+    const dist_t* p2 = y + i * (feature_dimension1 + 1);
+    for (size_t k = 0; k < feature_dimension1; ++k) {
+      if (!similarity::ApproxEqual(p1[k], p2[k])) return false;
+    }
+  }
+
+  return true;
 }
 
 template <typename dist_t>
 string SpaceSqfd<dist_t>::CreateStrFromObj(const Object* pObj) const {
-  CHECK(pObj->datalength() > 0);
+  if (pObj->datalength() < 8) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: object size " << pObj->datalength() << " is smaller than 8 bytes!";
+    THROW_RUNTIME_ERR(err);
+  }
   const uint32_t* h = reinterpret_cast<const uint32_t*>(pObj->data());
   const uint32_t num_clusters = h[0], feature_dimension = h[1];
   const dist_t*   pElems = reinterpret_cast<const dist_t*>(pObj->data() + 2*sizeof(uint32_t));
@@ -79,7 +144,7 @@ string SpaceSqfd<dist_t>::CreateStrFromObj(const Object* pObj) const {
   for (uint32_t i = 0; i < num_clusters; ++i) {
     for (uint32_t j = 0; j < feature_dimension; ++j) {
       if (j) out << " ";
-      out << pElems[pos++];
+      out << scientific <<  setprecision(numeric_limits<dist_t>::max_digits10) << pElems[pos++];
     }
     out << endl;
   }
@@ -126,7 +191,7 @@ unique_ptr<Object> SpaceSqfd<dist_t>::CreateObjFromStr(IdType id, LabelType labe
 
   if (!getline(stream1, line)) {
     stringstream lineStr;
-    lineStr <<  " after line:" << currLine << " ";
+    lineStr <<  " in line:" << currLine << " ";
     PREPARE_RUNTIME_ERR(err) << "Expecting a non-empty line " << lineStr.str();
     THROW_RUNTIME_ERR(err);
   }
@@ -150,13 +215,20 @@ unique_ptr<Object> SpaceSqfd<dist_t>::CreateObjFromStr(IdType id, LabelType labe
     if (prevQty == -1) prevQty = qty;
     else if (qty != prevQty) {
       stringstream lineStr;
-      lineStr <<  " after line:" << currLine << " ";
-      PREPARE_RUNTIME_ERR(err) << "The number of elements " << lineStr.str() << " doesn't match the number of elements in previous lines'";
+      lineStr <<  " in line:" << currLine << " ";
+      PREPARE_RUNTIME_ERR(err) << "The number of elements " << qty << lineStr.str() << 
+                                  " doesn't match the number of elements " << prevQty << " in previous lines " << 
+                                  " offending line: '" << line << "'" << endl <<
+                                  " offending block:" << endl << s;
       THROW_RUNTIME_ERR(err);
     }
     // +1 is because one element is the feature weight
     if (pInpState != NULL && qty != pInpState->feature_dimension_ + 1) {
-      PREPARE_RUNTIME_ERR(err) << "The number of elements in the line '" << line << "' doesn't match the number of elements in the file header'";
+      stringstream lineStr;
+      lineStr <<  " in line:" << currLine << " ";
+      PREPARE_RUNTIME_ERR(err) << "The number of elements in line " << lineStr.str() << 
+                         " doesn't match the number of elements in the file header'" <<
+                         " expected: " << (pInpState->feature_dimension_ + 1) << " but got: " << qty;
       THROW_RUNTIME_ERR(err);
     }
   }
@@ -192,7 +264,7 @@ bool SpaceSqfd<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& str
     THROW_RUNTIME_ERR(err);
   }
 
-  stringstream stream1(strObj);
+  stringstream stream1;
   string line;
 
   size_t currLine = pInpState->line_num_;
@@ -218,8 +290,14 @@ bool SpaceSqfd<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& str
 template <typename dist_t>
 dist_t SpaceSqfd<dist_t>::HiddenDistance(
     const Object* obj1, const Object* obj2) const {
-  CHECK(obj1->datalength() > 0);
-  CHECK(obj2->datalength() > 0);
+  if (obj1->datalength() < 8) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: object size " << obj1->datalength() << " is smaller than 8 bytes!";
+    THROW_RUNTIME_ERR(err);
+  }
+  if (obj2->datalength() < 8) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: object size " << obj2->datalength() << " is smaller than 8 bytes!";
+    THROW_RUNTIME_ERR(err);
+  }
   const uint32_t* h1 = reinterpret_cast<const uint32_t*>(obj1->data());
   const uint32_t* h2 = reinterpret_cast<const uint32_t*>(obj2->data());
   const uint32_t num_clusters1 = h1[0], feature_dimension1 = h1[1];
@@ -228,7 +306,11 @@ dist_t SpaceSqfd<dist_t>::HiddenDistance(
       obj1->data() + 2*sizeof(uint32_t));
   const dist_t* y = reinterpret_cast<const dist_t*>(
       obj2->data() + 2*sizeof(uint32_t));
-  CHECK(feature_dimension1 == feature_dimension2);
+  if (feature_dimension1 != feature_dimension2) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: different feature dimensions: " 
+               << feature_dimension1 << " vs " << feature_dimension2;
+    THROW_RUNTIME_ERR(err);
+  }
   const uint32_t sz = num_clusters1 + num_clusters2;
   VectorXd W(sz);
   size_t pos = feature_dimension1;

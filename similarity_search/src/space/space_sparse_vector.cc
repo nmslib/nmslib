@@ -17,6 +17,8 @@
 #include <cmath>
 #include <fstream>
 #include <string>
+#include <limits>
+#include <iomanip>
 #include <sstream>
 #include <random>
 
@@ -27,6 +29,8 @@
 #include "experimentconf.h"
 
 namespace similarity {
+
+using namespace std;
 
 template <typename dist_t>
 void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, LabelType& label, vector<ElemType>& v) const
@@ -79,7 +83,8 @@ unique_ptr<DataFileInputState> SpaceSparseVector<dist_t>::OpenReadFileHeader(con
 }
 
 template <typename dist_t>
-unique_ptr<DataFileOutputState> SpaceSparseVector<dist_t>::OpenWriteFileHeader(const string& outputFile) const {
+unique_ptr<DataFileOutputState> SpaceSparseVector<dist_t>::OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                              const string& outputFile) const {
   return unique_ptr<DataFileOutputState>(new DataFileOutputState(outputFile));
 }
 
@@ -97,6 +102,15 @@ SpaceSparseVector<dist_t>::CreateObjFromStr(IdType id, LabelType label, const st
 }
 
 template <typename dist_t>
+bool 
+SpaceSparseVector<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) const {
+  vector<SparseVectElem<dist_t>> target1, target2;
+  CreateVectFromObj(&obj1, target1);
+  CreateVectFromObj(&obj2, target2);
+  return target1 == target2;
+}
+
+template <typename dist_t>
 string SpaceSparseVector<dist_t>::CreateStrFromObj(const Object* pObj) const {
   stringstream out;
 
@@ -107,7 +121,8 @@ string SpaceSparseVector<dist_t>::CreateStrFromObj(const Object* pObj) const {
 
   for (size_t i = 0; i < target.size(); ++i) {
     if (i) out << " ";
-    out << target[i].id_ << " " << target[i].val_;
+    out << target[i].id_ << " " << 
+        scientific <<  setprecision(numeric_limits<dist_t>::max_digits10) << target[i].val_;
   }
 
   return out.str();

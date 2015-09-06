@@ -48,7 +48,8 @@ unique_ptr<DataFileInputState> SpaceDummy<dist_t>::OpenReadFileHeader(const stri
 }
 
 template <typename dist_t>
-unique_ptr<DataFileOutputState> SpaceDummy<dist_t>::OpenWriteFileHeader(const string& outFileName) const {
+unique_ptr<DataFileOutputState> SpaceDummy<dist_t>::OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                        const string& outFileName) const {
   return unique_ptr<DataFileOutputState>(new DataFileOutputState(outFileName));
 }
 

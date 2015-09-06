@@ -51,8 +51,14 @@ unique_ptr<DataFileInputState> StringSpace<dist_t>::OpenReadFileHeader(const str
 }
 
 template <typename dist_t>
-unique_ptr<DataFileOutputState> StringSpace<dist_t>::OpenWriteFileHeader(const string& outFileName) const {
+unique_ptr<DataFileOutputState> StringSpace<dist_t>::OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                         const string& outFileName) const {
   return unique_ptr<DataFileOutputState>(new DataFileOutputState(outFileName));
+}
+
+template <typename dist_t>
+bool StringSpace<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) const {
+  return CreateStrFromObj(&obj1) == CreateStrFromObj(&obj2);
 }
 
 template <typename dist_t>

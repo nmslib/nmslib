@@ -82,7 +82,8 @@ unique_ptr<DataFileInputState> SpaceBitHamming::OpenReadFileHeader(const string&
   return unique_ptr<DataFileInputState>(new DataFileInputStateVec(inpFileName));
 }
 
-unique_ptr<DataFileOutputState> SpaceBitHamming::OpenWriteFileHeader(const string& outFileName) const {
+unique_ptr<DataFileOutputState> SpaceBitHamming::OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                     const string& outFileName) const {
   return unique_ptr<DataFileOutputState>(new DataFileOutputState(outFileName));
 }
 
@@ -114,6 +115,27 @@ SpaceBitHamming::CreateObjFromStr(IdType id, LabelType label, const string& s,
 Object* SpaceBitHamming::CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const {
   return new Object(id, label, InpVect.size() * sizeof(uint32_t), &InpVect[0]);
 };
+
+bool SpaceBitHamming::ApproxEqual(const Object& obj1, const Object& obj2) const {
+  const uint32_t* p1 = reinterpret_cast<const uint32_t*>(obj1.data());
+  const uint32_t* p2 = reinterpret_cast<const uint32_t*>(obj2.data());
+  const size_t len1 = obj1.datalength() / sizeof(uint32_t)
+                        - 1; // the last integer is an original number of elements 
+  const size_t len2 = obj2.datalength() / sizeof(uint32_t)
+                        - 1; // the last integer is an original number of elements 
+  if (len1 != len2) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: comparing vectors of different lengths: " << len1 << " and " << len2;
+    THROW_RUNTIME_ERR(err);
+  }
+  for (size_t i = 0; i < len1; ++i) {
+    uint32_t v1 =  ((p1[i/32] >> (i & 31)) & 1);
+    uint32_t v2 =  ((p2[i/32] >> (i & 31)) & 1);
+    if (v1 != v2) return false;
+  }
+
+  return true;
+}
+
 
 string SpaceBitHamming::CreateStrFromObj(const Object* pObj) const {
   stringstream out;

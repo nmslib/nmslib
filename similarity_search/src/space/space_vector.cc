@@ -24,6 +24,7 @@
 #include <limits>
 
 #include "object.h"
+#include "utils.h"
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"
@@ -41,7 +42,8 @@ unique_ptr<DataFileInputState> VectorSpace<dist_t>::OpenReadFileHeader(const str
 }
 
 template <typename dist_t>
-unique_ptr<DataFileOutputState> VectorSpace<dist_t>::OpenWriteFileHeader(const string& outFileName) const {
+unique_ptr<DataFileOutputState> VectorSpace<dist_t>::OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                         const string& outFileName) const {
   return unique_ptr<DataFileOutputState>(new DataFileOutputState(outFileName));
 }
 
@@ -73,6 +75,23 @@ VectorSpace<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& 
 }
 
 template <typename dist_t>
+bool VectorSpace<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) const {
+  const dist_t* p1 = reinterpret_cast<const dist_t*>(obj1.data());
+  const dist_t* p2 = reinterpret_cast<const dist_t*>(obj2.data());
+  const size_t len1 = GetElemQty(&obj1);
+  const size_t len2 = GetElemQty(&obj2);
+  if (len1 != len2) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: comparing vectors of different lengths: " << len1 << " and " << len2;
+    THROW_RUNTIME_ERR(err);
+  }
+  for (size_t i = 0; i < len1; ++i) 
+  // We have to specify the namespace here, otherwise a compiler
+  // thinks that it should use the equally named member function
+  if (!similarity::ApproxEqual(p1[i], p2[i])) return false;
+  return true;
+}
+
+template <typename dist_t>
 string VectorSpace<dist_t>::CreateStrFromObj(const Object* pObj) const {
   stringstream out;
   const dist_t* p = reinterpret_cast<const dist_t*>(pObj->data());
@@ -80,7 +99,7 @@ string VectorSpace<dist_t>::CreateStrFromObj(const Object* pObj) const {
   for (size_t i = 0; i < length; ++i) {
     if (i) out << " ";
     // Set to the maximum precision available
-    out << scientific <<  setprecision(numeric_limits<float>::max_digits10) << p[i];
+    out << scientific <<  setprecision(numeric_limits<dist_t>::max_digits10) << p[i];
   }
 
   return out.str();
