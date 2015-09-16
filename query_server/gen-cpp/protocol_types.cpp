@@ -18,7 +18,7 @@ ReplyEntry::~ReplyEntry() throw() {
 }
 
 
-void ReplyEntry::__set_id(const std::string& val) {
+void ReplyEntry::__set_id(const int32_t val) {
   this->id = val;
 }
 
@@ -31,8 +31,8 @@ void ReplyEntry::__set_obj(const std::string& val) {
 __isset.obj = true;
 }
 
-const char* ReplyEntry::ascii_fingerprint = "CAD99879040BB94BCA63533B6094F391";
-const uint8_t ReplyEntry::binary_fingerprint[16] = {0xCA,0xD9,0x98,0x79,0x04,0x0B,0xB9,0x4B,0xCA,0x63,0x53,0x3B,0x60,0x94,0xF3,0x91};
+const char* ReplyEntry::ascii_fingerprint = "A06EE678A1068D671ED12C1F350BE9D3";
+const uint8_t ReplyEntry::binary_fingerprint[16] = {0xA0,0x6E,0xE6,0x78,0xA1,0x06,0x8D,0x67,0x1E,0xD1,0x2C,0x1F,0x35,0x0B,0xE9,0xD3};
 
 uint32_t ReplyEntry::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -57,8 +57,8 @@ uint32_t ReplyEntry::read(::apache::thrift::protocol::TProtocol* iprot) {
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readString(this->id);
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->id);
           isset_id = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -101,8 +101,8 @@ uint32_t ReplyEntry::write(::apache::thrift::protocol::TProtocol* oprot) const {
   oprot->incrementRecursionDepth();
   xfer += oprot->writeStructBegin("ReplyEntry");
 
-  xfer += oprot->writeFieldBegin("id", ::apache::thrift::protocol::T_STRING, 1);
-  xfer += oprot->writeString(this->id);
+  xfer += oprot->writeFieldBegin("id", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->id);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("dist", ::apache::thrift::protocol::T_DOUBLE, 2);

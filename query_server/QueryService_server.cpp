@@ -1,4 +1,5 @@
 #include <memory>
+#include <stdexcept>
 
 #include "QueryService.h"
 #include <thrift/protocol/TBinaryProtocol.h>
@@ -36,6 +37,7 @@ using namespace apache::thrift::server;
 
 using std::string;
 using std::unique_ptr;
+using std::exception;
 
 using namespace  ::similarity;
 
@@ -73,31 +75,39 @@ class QueryServiceHandler : virtual public QueryServiceIf {
   }
 
   void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObjStr, const bool retObj) {
-    LOG(LIB_INFO) << "Running a " << k << "-NN query";
+    try {
+      //LOG(LIB_INFO) << "Running a " << k << "-NN query";
 
-    unique_ptr<Object>  queryObj(space_->CreateObjFromStr(0, -1, queryObjStr, NULL));
+      unique_ptr<Object>  queryObj(space_->CreateObjFromStr(0, -1, queryObjStr, NULL));
 
-    KNNQuery<dist_t> knn(space_.get(), queryObj.get(), k);
-    index_->Search(&knn);
-    unique_ptr<KNNQueue<dist_t>> res(knn.Result()->Clone());
+      KNNQuery<dist_t> knn(space_.get(), queryObj.get(), k);
+      index_->Search(&knn);
+      unique_ptr<KNNQueue<dist_t>> res(knn.Result()->Clone());
 
-    _return.clear();
+      _return.clear();
 
-    while (!res->Empty()) {
-      stringstream ss;
-      const Object* topObj = res->TopObject();
-      ss << topObj->id();
-      res->Pop();
-      dist_t topDist = res->TopDistance();
+      while (!res->Empty()) {
+        const Object* topObj = res->TopObject();
+        dist_t topDist = res->TopDistance();
 
-      ReplyEntry e;
+        ReplyEntry e;
 
-      e.__set_id(ss.str()); 
-      e.__set_dist(topDist);
-      if (retObj) {
-        e.__set_obj(space_->CreateStrFromObj(topObj));
+        e.__set_id(topObj->id());
+        e.__set_dist(topDist);
+        if (retObj) {
+          e.__set_obj(space_->CreateStrFromObj(topObj));
+        }
+        _return.insert(_return.begin(), e);
+        res->Pop();
       }
-      _return.push_back(e);
+    } catch (const exception& e) {
+        QueryException qe;
+        qe.__set_message(e.what());
+        throw qe;
+    } catch (...) {
+        QueryException qe;
+        qe.__set_message("Unknown exception");
+        throw qe;
     }
 
 
@@ -163,7 +173,7 @@ void ParseCommandLineForServer(int argc, char*argv[],
     po::notify(vm);
   } catch (const exception& e) {
     Usage(argv[0], ProgOptDesc);
-    LOG(LIB_FATAL) << e.what();
+    LOG(LIB_FATAL) << e.what() << endl;
   }
 
   if (vm.count("help")  ) {

@@ -2,7 +2,7 @@ namespace java edu.cmu.lti.oaqa.similarity
 namespace cpp similarity
 
 struct ReplyEntry {
-  1: required string id ;   // an object ID
+  1: required i32 id ;   // an object ID
   2: required double dist ; // the distance to the object from the query
   3: optional string obj ;  // an optional string representation of the answer object
 }

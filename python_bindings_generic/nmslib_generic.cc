@@ -217,7 +217,7 @@ class IndexWrapper : public IndexWrapperBase {
     KNNQueue<T>* res = knn.Result()->Clone();
     IntVector ids;
     while (!res->Empty()) {
-      ids.push_back(res->TopObject()->id());
+      ids.insert(ids.begin(), res->TopObject()->id());
       res->Pop();
     }
     delete res;

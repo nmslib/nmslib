@@ -13,7 +13,7 @@ CXXFLAGS += -fopenmp
 #CXXFLAGS += -g
 CXXFLAGS += -g -O3
 
-BIN=query_server
+BIN=query_server query_client
 
 all: $(BIN)
 
@@ -26,4 +26,7 @@ THRIFT_OBJ=$(patsubst %.cpp,%.o,$(THRIFT_SRC))
 # Note -pthread: this enables threads!!!
 query_server:  $(THRIFT_OBJ) QueryService_server.o gen-cpp/*.h makefile
 	$(CXX) -o$@  $(THRIFT_OBJ) QueryService_server.o -L/usr/local/lib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIBS) -pthread -fopenmp 
+
+query_client:  $(THRIFT_OBJ) QueryClient.o gen-cpp/*.h makefile
+	$(CXX) -o$@  $(THRIFT_OBJ) QueryClient.o -L/usr/local/lib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIBS) -pthread -fopenmp 
 

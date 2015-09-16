@@ -122,8 +122,8 @@ typedef struct _QueryService_knnQuery_result__isset {
 class QueryService_knnQuery_result {
  public:
 
-  static const char* ascii_fingerprint; // = "68500F060AF1AEF1EFF1B217FA0CBC55";
-  static const uint8_t binary_fingerprint[16]; // = {0x68,0x50,0x0F,0x06,0x0A,0xF1,0xAE,0xF1,0xEF,0xF1,0xB2,0x17,0xFA,0x0C,0xBC,0x55};
+  static const char* ascii_fingerprint; // = "A31F768594FC277DDE49DE4FA1E7399E";
+  static const uint8_t binary_fingerprint[16]; // = {0xA3,0x1F,0x76,0x85,0x94,0xFC,0x27,0x7D,0xDE,0x49,0xDE,0x4F,0xA1,0xE7,0x39,0x9E};
 
   QueryService_knnQuery_result(const QueryService_knnQuery_result&);
   QueryService_knnQuery_result& operator=(const QueryService_knnQuery_result&);
@@ -169,8 +169,8 @@ typedef struct _QueryService_knnQuery_presult__isset {
 class QueryService_knnQuery_presult {
  public:
 
-  static const char* ascii_fingerprint; // = "68500F060AF1AEF1EFF1B217FA0CBC55";
-  static const uint8_t binary_fingerprint[16]; // = {0x68,0x50,0x0F,0x06,0x0A,0xF1,0xAE,0xF1,0xEF,0xF1,0xB2,0x17,0xFA,0x0C,0xBC,0x55};
+  static const char* ascii_fingerprint; // = "A31F768594FC277DDE49DE4FA1E7399E";
+  static const uint8_t binary_fingerprint[16]; // = {0xA3,0x1F,0x76,0x85,0x94,0xFC,0x27,0x7D,0xDE,0x49,0xDE,0x4F,0xA1,0xE7,0x39,0x9E};
 
 
   virtual ~QueryService_knnQuery_presult() throw();
@@ -234,7 +234,7 @@ class QueryServiceProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["knnQuery"] = &QueryServiceProcessor::process_knnQuery;
   }
 
-  virtual ~QueryServiceProcessor(){};
+  virtual ~QueryServiceProcessor() {}
 };
 
 class QueryServiceProcessorFactory : public ::apache::thrift::TProcessorFactory {

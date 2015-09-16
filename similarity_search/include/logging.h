@@ -71,7 +71,10 @@ class RuntimeErrorWrapper {
 
 // always check
 #define CHECK(condition) \
-  if (!(condition)) LOG(LIB_FATAL) << "Check failed: " << #condition
+  if (!(condition)) {\
+    LOG(LIB_ERROR) << "Check failed: " << #condition;  \
+    throw runtime_error("Check failed: it's either a bug or inconsistent data!"); \
+  }
 
 // debug only check and log
 #ifndef NDEBUG

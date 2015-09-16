@@ -33,22 +33,22 @@ typedef struct _ReplyEntry__isset {
 class ReplyEntry {
  public:
 
-  static const char* ascii_fingerprint; // = "CAD99879040BB94BCA63533B6094F391";
-  static const uint8_t binary_fingerprint[16]; // = {0xCA,0xD9,0x98,0x79,0x04,0x0B,0xB9,0x4B,0xCA,0x63,0x53,0x3B,0x60,0x94,0xF3,0x91};
+  static const char* ascii_fingerprint; // = "A06EE678A1068D671ED12C1F350BE9D3";
+  static const uint8_t binary_fingerprint[16]; // = {0xA0,0x6E,0xE6,0x78,0xA1,0x06,0x8D,0x67,0x1E,0xD1,0x2C,0x1F,0x35,0x0B,0xE9,0xD3};
 
   ReplyEntry(const ReplyEntry&);
   ReplyEntry& operator=(const ReplyEntry&);
-  ReplyEntry() : id(), dist(0), obj() {
+  ReplyEntry() : id(0), dist(0), obj() {
   }
 
   virtual ~ReplyEntry() throw();
-  std::string id;
+  int32_t id;
   double dist;
   std::string obj;
 
   _ReplyEntry__isset __isset;
 
-  void __set_id(const std::string& val);
+  void __set_id(const int32_t val);
 
   void __set_dist(const double val);
 
