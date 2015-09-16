@@ -22,6 +22,8 @@
 #include "methodfactory.h"
 #include "init.h"
 
+#define DEBUG_PRINT
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -76,7 +78,9 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
   void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObjStr, const bool retObj) {
     try {
-      //LOG(LIB_INFO) << "Running a " << k << "-NN query";
+#ifdef DEBUG_PRINT
+      LOG(LIB_INFO) << "Running a " << k << "-NN query";
+#endif
 
       unique_ptr<Object>  queryObj(space_->CreateObjFromStr(0, -1, queryObjStr, NULL));
 
@@ -86,6 +90,13 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
       _return.clear();
 
+#ifdef DEBUG_PRINT
+      vector<IdType> ids;
+      vector<double> dists;
+
+      LOG(LIB_INFO) << "Results: ";
+#endif
+
       while (!res->Empty()) {
         const Object* topObj = res->TopObject();
         dist_t topDist = res->TopDistance();
@@ -94,12 +105,21 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
         e.__set_id(topObj->id());
         e.__set_dist(topDist);
+#ifdef DEBUG_PRINT
+        ids.insert(ids.begin(), e.id);
+        dists.insert(dists.begin(), e.dist);
+#endif
         if (retObj) {
           e.__set_obj(space_->CreateStrFromObj(topObj));
         }
         _return.insert(_return.begin(), e);
         res->Pop();
       }
+#ifdef DEBUG_PRINT
+      for (size_t i = 0; i < ids.size(); ++i) {
+       LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i];
+      }
+#endif
     } catch (const exception& e) {
         QueryException qe;
         qe.__set_message(e.what());
