@@ -2,7 +2,7 @@ NON_METRIC_SPACE_LIBRARY=../similarity_search/
 NON_METRIC_SPACE_LIBRARY_INC=$(NON_METRIC_SPACE_LIBRARY)/include
 NON_METRIC_SPACE_LIBRARY_LIB=$(NON_METRIC_SPACE_LIBRARY)/release
 
-LIBS=-lgsl -lgslcblas -llshkit -lthrift -lNonMetricSpaceLib -lboost_program_options
+LIBS= -lthrift -lNonMetricSpaceLib -lgsl -lgslcblas -llshkit -lboost_program_options
 
 CXXFLAGS += -I$(NON_METRIC_SPACE_LIBRARY_INC)  -I./gen-cpp/
 # Enable C++11
