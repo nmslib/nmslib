@@ -11,7 +11,8 @@ CXXFLAGS += -std=c++11
 CXXFLAGS += -fopenmp
 # Debug flags
 #CXXFLAGS += -g
-CXXFLAGS += -g -O3
+#CXXFLAGS += -g -O3
+CXXFLAGS += -O3
 
 BIN=query_server query_client
 

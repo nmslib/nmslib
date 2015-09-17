@@ -1,5 +1,8 @@
 #include <memory>
 #include <stdexcept>
+#include <mutex>
+#include <thread>
+#include <chrono>
 
 #include "QueryService.h"
 #include <thrift/protocol/TBinaryProtocol.h>
@@ -17,16 +20,19 @@
 #include "space.h"
 #include "spacefactory.h"
 #include "index.h"
+#include "rangequery.h"
 #include "knnquery.h"
 #include "knnqueue.h"
 #include "methodfactory.h"
 #include "init.h"
-
-#define DEBUG_PRINT
+#include "ztimer.h"
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+#define MAX_SPIN_LOCK_QTY 1000000
+#define SLEEP_DURATION    10
 
 
 const unsigned THREAD_COEFF = 4;
@@ -40,25 +46,50 @@ using namespace apache::thrift::server;
 using std::string;
 using std::unique_ptr;
 using std::exception;
+using std::mutex;
+using std::unique_lock;
 
 using namespace  ::similarity;
+
+class LockedCounterManager {
+public:
+  LockedCounterManager(int& counter, mutex& mtx) : counter_(counter), mtx_(mtx) 
+  {
+    unique_lock<mutex> lock(mtx_);
+    ++counter_;
+  }
+
+  ~LockedCounterManager() {
+    unique_lock<mutex> lock(mtx_);
+    --counter_;
+  }
+
+private:
+  int&     counter_; 
+  mutex&   mtx_;
+};
 
 template <class dist_t>
 class QueryServiceHandler : virtual public QueryServiceIf {
  public:
   QueryServiceHandler(
+                      bool                               debugPrint,
                       const string&                      SpaceType,
                       const AnyParams&                   SpaceParams,
                       const string&                      DataFile,
                       unsigned                           MaxNumData,
                       const MethodWithParams&            MethodParams 
   ) :
-    space_(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, SpaceParams))
+    debugPrint_(debugPrint),
+    space_(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, SpaceParams)),
+    counter_(0)
 
   {
     space_->ReadDataset(dataSet_,
                        DataFile,
-                        0);
+                       MaxNumData);
+
+    methName_ = MethodParams.methName_;
 
     index_.reset(MethodFactoryRegistry<dist_t>::Instance().
                                 CreateMethod(true /* print progress */,
@@ -76,11 +107,129 @@ class QueryServiceHandler : virtual public QueryServiceIf {
     for (auto e: dataSet_) delete e;
   }
 
-  void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObjStr, const bool retObj) {
+  void setQueryTimeParams(const string& queryTimeParams) {
     try {
-#ifdef DEBUG_PRINT
-      LOG(LIB_INFO) << "Running a " << k << "-NN query";
-#endif
+      // Query time parameters are essentially spin-locked
+      while (true) {
+        for (size_t i = 0; i < MAX_SPIN_LOCK_QTY; ++i) {
+          unique_lock<mutex> lock(mtx_);
+          if (0 == counter_) {
+            string          s;
+            vector<string>  desc;
+            ParseMethodArg(methName_ + ":" + queryTimeParams, s, desc);
+            if (debugPrint_) {
+              LOG(LIB_INFO) << "Setting query time parameters (" << queryTimeParams << ")";
+              for (string s: desc) {
+                LOG(LIB_INFO) << s;
+              }
+            }
+            index_->SetQueryTimeParams(AnyParams(desc));
+            return;
+          }
+        } // the lock will be released in the end of the block
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_DURATION));
+      }
+    } catch (const exception& e) {
+        QueryException qe;
+        qe.__set_message(e.what());
+        throw qe;
+    } catch (...) {
+        QueryException qe;
+        qe.__set_message("Unknown exception");
+        throw qe;
+    }
+  }
+
+  void rangeQuery(ReplyEntryList& _return, const double r, const string& queryObjStr, const bool retObj) {
+    // This will increase the counter and prevent modification of query time parameters.
+    LockedCounterManager  mngr(counter_, mtx_);
+
+    try {
+      if (debugPrint_) {
+        LOG(LIB_INFO) << "Running a range query, r=" << r;
+      }
+      WallClockTimer wtm;
+
+      wtm.reset();
+
+      unique_ptr<Object>  queryObj(space_->CreateObjFromStr(0, -1, queryObjStr, NULL));
+
+      RangeQuery<dist_t> range(space_.get(), queryObj.get(), r);
+      index_->Search(&range);
+
+      _return.clear();
+
+      wtm.split();
+
+      if (debugPrint_) {
+        LOG(LIB_INFO) << "Finished in: " << wtm.elapsed() / 1e3f << " ms";
+      }
+
+      vector<IdType> ids;
+      vector<double> dists;
+      vector<string> objs;
+
+     
+      if (debugPrint_) { 
+        LOG(LIB_INFO) << "Results: ";
+      }
+      
+      const ObjectVector&     vResObjs  = *range.Result(); 
+      const vector<dist_t>&   vResDists = *range.ResultDists();
+
+      for (size_t i = 0; i < vResObjs.size(); ++i) {
+        const Object* pObj = vResObjs[i];
+        dist_t dist        = vResDists[i];
+
+        ReplyEntry e;
+
+        e.__set_id(pObj->id());
+        e.__set_dist(dist);
+
+        if (debugPrint_) {
+          ids.insert(ids.begin(), e.id);
+          dists.insert(dists.begin(), e.dist);
+        }
+
+        if (retObj) {
+          const string& s = space_->CreateStrFromObj(pObj);
+          e.__set_obj(s);
+          if (debugPrint_) {
+            objs.insert(objs.begin(), s);
+          }
+        }
+        _return.insert(_return.begin(), e);
+      }
+      if (debugPrint_) {
+        for (size_t i = 0; i < ids.size(); ++i) {
+          LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i];
+          if (retObj) LOG(LIB_INFO) << objs[i]; 
+        }
+      }
+    } catch (const exception& e) {
+        QueryException qe;
+        qe.__set_message(e.what());
+        throw qe;
+    } catch (...) {
+        QueryException qe;
+        qe.__set_message("Unknown exception");
+        throw qe;
+    }
+  }
+
+  void knnQuery(ReplyEntryList& _return, const int32_t k, 
+                const std::string& queryObjStr, const bool retObj) {
+    // This will increase the counter and prevent modification of query time parameters.
+    LockedCounterManager  mngr(counter_, mtx_);
+
+    try {
+      if (debugPrint_) {
+        LOG(LIB_INFO) << "Running a " << k << "-NN query";
+      }
+      WallClockTimer wtm;
+
+      wtm.reset();
 
       unique_ptr<Object>  queryObj(space_->CreateObjFromStr(0, -1, queryObjStr, NULL));
 
@@ -90,12 +239,20 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
       _return.clear();
 
-#ifdef DEBUG_PRINT
+      wtm.split();
+
+      if (debugPrint_) {
+        LOG(LIB_INFO) << "Finished in: " << wtm.elapsed() / 1e3f << " ms";
+      }
+
       vector<IdType> ids;
       vector<double> dists;
+      vector<string> objs;
 
-      LOG(LIB_INFO) << "Results: ";
-#endif
+     
+      if (debugPrint_) { 
+        LOG(LIB_INFO) << "Results: ";
+      }
 
       while (!res->Empty()) {
         const Object* topObj = res->TopObject();
@@ -105,21 +262,28 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
         e.__set_id(topObj->id());
         e.__set_dist(topDist);
-#ifdef DEBUG_PRINT
-        ids.insert(ids.begin(), e.id);
-        dists.insert(dists.begin(), e.dist);
-#endif
+
+        if (debugPrint_) {
+          ids.insert(ids.begin(), e.id);
+          dists.insert(dists.begin(), e.dist);
+        }
+
         if (retObj) {
-          e.__set_obj(space_->CreateStrFromObj(topObj));
+          const string& s = space_->CreateStrFromObj(topObj);
+          e.__set_obj(s);
+          if (debugPrint_) {
+            objs.insert(objs.begin(), s);
+          }
         }
         _return.insert(_return.begin(), e);
         res->Pop();
       }
-#ifdef DEBUG_PRINT
-      for (size_t i = 0; i < ids.size(); ++i) {
-       LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i];
+      if (debugPrint_) {
+        for (size_t i = 0; i < ids.size(); ++i) {
+          LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i];
+          if (retObj) LOG(LIB_INFO) << objs[i]; 
+        }
       }
-#endif
     } catch (const exception& e) {
         QueryException qe;
         qe.__set_message(e.what());
@@ -134,9 +298,14 @@ class QueryServiceHandler : virtual public QueryServiceIf {
   }
 
  private:
+  bool                        debugPrint_;
   unique_ptr<Space<dist_t>>   space_;
+  string                      methName_;
   unique_ptr<Index<dist_t>>   index_;
   ObjectVector                dataSet_; 
+
+  int                         counter_; 
+  mutex                       mtx_;
 };
 
 namespace po = boost::program_options;
@@ -148,6 +317,7 @@ static void Usage(const char *prog,
 }
 
 void ParseCommandLineForServer(int argc, char*argv[],
+                      int&                    debugPrint,
                       int&                    port,
                       size_t&                 threadQty,
                       string&                 LogFile,
@@ -168,6 +338,8 @@ void ParseCommandLineForServer(int argc, char*argv[],
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
     ("help,h", "produce help message")
+    ("debug,d",         po::value<int>(&debugPrint)->default_value(0),
+                        "Print debug messages?")
     ("port,p",          po::value<int>(&port)->required(),
                         "TCP/IP port number")
     ("threadQty",       po::value<size_t>(&threadQty)->default_value(defaultThreadQty),
@@ -235,6 +407,7 @@ void ParseCommandLineForServer(int argc, char*argv[],
 }
 
 int main(int argc, char *argv[]) {
+  int         debugPrint = 0;
   int         port = 0;
   size_t      threadQty = 0;
   string      LogFile;
@@ -246,6 +419,7 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<MethodWithParams> MethodParams;
 
   ParseCommandLineForServer(argc, argv,
+                      debugPrint,
                       port,
                       threadQty,
                       LogFile,
@@ -263,21 +437,21 @@ int main(int argc, char *argv[]) {
   unique_ptr<QueryServiceIf>   queryHandler;
 
   if (DIST_TYPE_INT == DistType) {
-    queryHandler.reset(new QueryServiceHandler<int>(
+    queryHandler.reset(new QueryServiceHandler<int>(debugPrint != 0,
                                                     SpaceType,
                                                     *SpaceParams,
                                                     DataFile,
                                                     MaxNumData,
                                                     *MethodParams));
   } else if (DIST_TYPE_FLOAT == DistType) {
-    queryHandler.reset(new QueryServiceHandler<float>(
+    queryHandler.reset(new QueryServiceHandler<float>(debugPrint != 0,
                                                     SpaceType,
                                                     *SpaceParams,
                                                     DataFile,
                                                     MaxNumData,
                                                     *MethodParams));
   } else if (DIST_TYPE_DOUBLE == DistType) {
-    queryHandler.reset(new QueryServiceHandler<double>(
+    queryHandler.reset(new QueryServiceHandler<double>(debugPrint != 0,
                                                     SpaceType,
                                                     *SpaceParams,
                                                     DataFile,

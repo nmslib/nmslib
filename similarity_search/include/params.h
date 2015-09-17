@@ -256,6 +256,10 @@ private:
       ConvertStrToValue<ParamType>(params.ParamValues[i], Value);
     }
 
+    if (bFound) {
+      seen.insert(Name);
+    }
+
     if (!bFound) {
       if (bRequired) {
         stringstream err;
@@ -263,9 +267,7 @@ private:
         LOG(LIB_ERROR) << err.str();
         throw runtime_error(err.str());
       }
-    }
-    //LOG(LIB_INFO) << "@@@ Parameter: " << Name << "=" << Value << " @@@";
-    seen.insert(Name);
+    } 
   }
 
   template <typename ParamType>

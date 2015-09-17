@@ -98,8 +98,9 @@ string VectorSpace<dist_t>::CreateStrFromObj(const Object* pObj) const {
   const size_t length = GetElemQty(pObj);
   for (size_t i = 0; i < length; ++i) {
     if (i) out << " ";
-    // Set to the maximum precision available
-    out << scientific <<  setprecision(numeric_limits<dist_t>::max_digits10) << noshowpoint << p[i];
+    // Clear all previous flags & set to the maximum precision available
+    out.unsetf(ios_base::floatfield);
+    out << setprecision(numeric_limits<dist_t>::max_digits10) << noshowpoint << p[i];
   }
 
   return out.str();

@@ -144,7 +144,9 @@ string SpaceSqfd<dist_t>::CreateStrFromObj(const Object* pObj) const {
   for (uint32_t i = 0; i < num_clusters; ++i) {
     for (uint32_t j = 0; j < feature_dimension + 1; ++j) {
       if (j) out << " ";
-      out << scientific <<  setprecision(numeric_limits<dist_t>::max_digits10) << pElems[pos++];
+      // Clear all previous flags & set to the maximum precision available
+      out.unsetf(ios_base::floatfield);
+      out << setprecision(numeric_limits<dist_t>::max_digits10) << pElems[pos++];
     }
     out << endl;
   }

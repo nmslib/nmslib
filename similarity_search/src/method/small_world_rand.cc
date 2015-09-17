@@ -124,6 +124,8 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
   LOG(LIB_INFO) << "initSearchAttempts  = " << initSearchAttempts_;
   LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
 
+  pmgr.CheckUnused();
+
   if (data.empty()) return;
 
   // 2) One entry should be added before all the threads are started, or else add() will not work properly
@@ -171,6 +173,7 @@ template <typename dist_t>
 void 
 SmallWorldRand<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
+  pmgr.CheckUnused();
 }
 
 template <typename dist_t>

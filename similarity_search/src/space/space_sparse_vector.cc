@@ -121,8 +121,9 @@ string SpaceSparseVector<dist_t>::CreateStrFromObj(const Object* pObj) const {
 
   for (size_t i = 0; i < target.size(); ++i) {
     if (i) out << " ";
-    out << target[i].id_ << " " << 
-        scientific <<  setprecision(numeric_limits<dist_t>::max_digits10) << target[i].val_;
+    // Clear all previous flags & set to the maximum precision available
+    out.unsetf(ios_base::floatfield);
+    out << target[i].id_ << " " << setprecision(numeric_limits<dist_t>::max_digits10) << target[i].val_;
   }
 
   return out.str();

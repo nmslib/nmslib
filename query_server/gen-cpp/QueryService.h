@@ -15,7 +15,9 @@ namespace similarity {
 class QueryServiceIf {
  public:
   virtual ~QueryServiceIf() {}
+  virtual void setQueryTimeParams(const std::string& queryTimeParams) = 0;
   virtual void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retObj) = 0;
+  virtual void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retObj) = 0;
 };
 
 class QueryServiceIfFactory {
@@ -45,9 +47,111 @@ class QueryServiceIfSingletonFactory : virtual public QueryServiceIfFactory {
 class QueryServiceNull : virtual public QueryServiceIf {
  public:
   virtual ~QueryServiceNull() {}
+  void setQueryTimeParams(const std::string& /* queryTimeParams */) {
+    return;
+  }
   void knnQuery(ReplyEntryList& /* _return */, const int32_t /* k */, const std::string& /* queryObj */, const bool /* retObj */) {
     return;
   }
+  void rangeQuery(ReplyEntryList& /* _return */, const double /* r */, const std::string& /* queryObj */, const bool /* retObj */) {
+    return;
+  }
+};
+
+
+class QueryService_setQueryTimeParams_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "EFB929595D312AC8F305D5A794CFEDA1";
+  static const uint8_t binary_fingerprint[16]; // = {0xEF,0xB9,0x29,0x59,0x5D,0x31,0x2A,0xC8,0xF3,0x05,0xD5,0xA7,0x94,0xCF,0xED,0xA1};
+
+  QueryService_setQueryTimeParams_args(const QueryService_setQueryTimeParams_args&);
+  QueryService_setQueryTimeParams_args& operator=(const QueryService_setQueryTimeParams_args&);
+  QueryService_setQueryTimeParams_args() : queryTimeParams() {
+  }
+
+  virtual ~QueryService_setQueryTimeParams_args() throw();
+  std::string queryTimeParams;
+
+  void __set_queryTimeParams(const std::string& val);
+
+  bool operator == (const QueryService_setQueryTimeParams_args & rhs) const
+  {
+    if (!(queryTimeParams == rhs.queryTimeParams))
+      return false;
+    return true;
+  }
+  bool operator != (const QueryService_setQueryTimeParams_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const QueryService_setQueryTimeParams_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_setQueryTimeParams_args& obj);
+};
+
+
+class QueryService_setQueryTimeParams_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "EFB929595D312AC8F305D5A794CFEDA1";
+  static const uint8_t binary_fingerprint[16]; // = {0xEF,0xB9,0x29,0x59,0x5D,0x31,0x2A,0xC8,0xF3,0x05,0xD5,0xA7,0x94,0xCF,0xED,0xA1};
+
+
+  virtual ~QueryService_setQueryTimeParams_pargs() throw();
+  const std::string* queryTimeParams;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_setQueryTimeParams_pargs& obj);
+};
+
+
+class QueryService_setQueryTimeParams_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+  QueryService_setQueryTimeParams_result(const QueryService_setQueryTimeParams_result&);
+  QueryService_setQueryTimeParams_result& operator=(const QueryService_setQueryTimeParams_result&);
+  QueryService_setQueryTimeParams_result() {
+  }
+
+  virtual ~QueryService_setQueryTimeParams_result() throw();
+
+  bool operator == (const QueryService_setQueryTimeParams_result & /* rhs */) const
+  {
+    return true;
+  }
+  bool operator != (const QueryService_setQueryTimeParams_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const QueryService_setQueryTimeParams_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_setQueryTimeParams_result& obj);
+};
+
+
+class QueryService_setQueryTimeParams_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
+  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+
+
+  virtual ~QueryService_setQueryTimeParams_presult() throw();
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_setQueryTimeParams_presult& obj);
 };
 
 
@@ -184,6 +288,140 @@ class QueryService_knnQuery_presult {
   friend std::ostream& operator<<(std::ostream& out, const QueryService_knnQuery_presult& obj);
 };
 
+
+class QueryService_rangeQuery_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "7D0BBCA29FBD2916D88FFE0F182776DC";
+  static const uint8_t binary_fingerprint[16]; // = {0x7D,0x0B,0xBC,0xA2,0x9F,0xBD,0x29,0x16,0xD8,0x8F,0xFE,0x0F,0x18,0x27,0x76,0xDC};
+
+  QueryService_rangeQuery_args(const QueryService_rangeQuery_args&);
+  QueryService_rangeQuery_args& operator=(const QueryService_rangeQuery_args&);
+  QueryService_rangeQuery_args() : r(0), queryObj(), retObj(0) {
+  }
+
+  virtual ~QueryService_rangeQuery_args() throw();
+  double r;
+  std::string queryObj;
+  bool retObj;
+
+  void __set_r(const double val);
+
+  void __set_queryObj(const std::string& val);
+
+  void __set_retObj(const bool val);
+
+  bool operator == (const QueryService_rangeQuery_args & rhs) const
+  {
+    if (!(r == rhs.r))
+      return false;
+    if (!(queryObj == rhs.queryObj))
+      return false;
+    if (!(retObj == rhs.retObj))
+      return false;
+    return true;
+  }
+  bool operator != (const QueryService_rangeQuery_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const QueryService_rangeQuery_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_rangeQuery_args& obj);
+};
+
+
+class QueryService_rangeQuery_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "7D0BBCA29FBD2916D88FFE0F182776DC";
+  static const uint8_t binary_fingerprint[16]; // = {0x7D,0x0B,0xBC,0xA2,0x9F,0xBD,0x29,0x16,0xD8,0x8F,0xFE,0x0F,0x18,0x27,0x76,0xDC};
+
+
+  virtual ~QueryService_rangeQuery_pargs() throw();
+  const double* r;
+  const std::string* queryObj;
+  const bool* retObj;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_rangeQuery_pargs& obj);
+};
+
+typedef struct _QueryService_rangeQuery_result__isset {
+  _QueryService_rangeQuery_result__isset() : success(false), err(false) {}
+  bool success :1;
+  bool err :1;
+} _QueryService_rangeQuery_result__isset;
+
+class QueryService_rangeQuery_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "A31F768594FC277DDE49DE4FA1E7399E";
+  static const uint8_t binary_fingerprint[16]; // = {0xA3,0x1F,0x76,0x85,0x94,0xFC,0x27,0x7D,0xDE,0x49,0xDE,0x4F,0xA1,0xE7,0x39,0x9E};
+
+  QueryService_rangeQuery_result(const QueryService_rangeQuery_result&);
+  QueryService_rangeQuery_result& operator=(const QueryService_rangeQuery_result&);
+  QueryService_rangeQuery_result() {
+  }
+
+  virtual ~QueryService_rangeQuery_result() throw();
+  ReplyEntryList success;
+  QueryException err;
+
+  _QueryService_rangeQuery_result__isset __isset;
+
+  void __set_success(const ReplyEntryList& val);
+
+  void __set_err(const QueryException& val);
+
+  bool operator == (const QueryService_rangeQuery_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(err == rhs.err))
+      return false;
+    return true;
+  }
+  bool operator != (const QueryService_rangeQuery_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const QueryService_rangeQuery_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_rangeQuery_result& obj);
+};
+
+typedef struct _QueryService_rangeQuery_presult__isset {
+  _QueryService_rangeQuery_presult__isset() : success(false), err(false) {}
+  bool success :1;
+  bool err :1;
+} _QueryService_rangeQuery_presult__isset;
+
+class QueryService_rangeQuery_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "A31F768594FC277DDE49DE4FA1E7399E";
+  static const uint8_t binary_fingerprint[16]; // = {0xA3,0x1F,0x76,0x85,0x94,0xFC,0x27,0x7D,0xDE,0x49,0xDE,0x4F,0xA1,0xE7,0x39,0x9E};
+
+
+  virtual ~QueryService_rangeQuery_presult() throw();
+  ReplyEntryList* success;
+  QueryException err;
+
+  _QueryService_rangeQuery_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_rangeQuery_presult& obj);
+};
+
 class QueryServiceClient : virtual public QueryServiceIf {
  public:
   QueryServiceClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
@@ -209,9 +447,15 @@ class QueryServiceClient : virtual public QueryServiceIf {
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> getOutputProtocol() {
     return poprot_;
   }
+  void setQueryTimeParams(const std::string& queryTimeParams);
+  void send_setQueryTimeParams(const std::string& queryTimeParams);
+  void recv_setQueryTimeParams();
   void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retObj);
   void send_knnQuery(const int32_t k, const std::string& queryObj, const bool retObj);
   void recv_knnQuery(ReplyEntryList& _return);
+  void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retObj);
+  void send_rangeQuery(const double r, const std::string& queryObj, const bool retObj);
+  void recv_rangeQuery(ReplyEntryList& _return);
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -227,11 +471,15 @@ class QueryServiceProcessor : public ::apache::thrift::TDispatchProcessor {
   typedef  void (QueryServiceProcessor::*ProcessFunction)(int32_t, ::apache::thrift::protocol::TProtocol*, ::apache::thrift::protocol::TProtocol*, void*);
   typedef std::map<std::string, ProcessFunction> ProcessMap;
   ProcessMap processMap_;
+  void process_setQueryTimeParams(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_knnQuery(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_rangeQuery(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   QueryServiceProcessor(boost::shared_ptr<QueryServiceIf> iface) :
     iface_(iface) {
+    processMap_["setQueryTimeParams"] = &QueryServiceProcessor::process_setQueryTimeParams;
     processMap_["knnQuery"] = &QueryServiceProcessor::process_knnQuery;
+    processMap_["rangeQuery"] = &QueryServiceProcessor::process_rangeQuery;
   }
 
   virtual ~QueryServiceProcessor() {}
@@ -260,6 +508,15 @@ class QueryServiceMultiface : virtual public QueryServiceIf {
     ifaces_.push_back(iface);
   }
  public:
+  void setQueryTimeParams(const std::string& queryTimeParams) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->setQueryTimeParams(queryTimeParams);
+    }
+    ifaces_[i]->setQueryTimeParams(queryTimeParams);
+  }
+
   void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retObj) {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -267,6 +524,16 @@ class QueryServiceMultiface : virtual public QueryServiceIf {
       ifaces_[i]->knnQuery(_return, k, queryObj, retObj);
     }
     ifaces_[i]->knnQuery(_return, k, queryObj, retObj);
+    return;
+  }
+
+  void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retObj) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->rangeQuery(_return, r, queryObj, retObj);
+    }
+    ifaces_[i]->rangeQuery(_return, r, queryObj, retObj);
     return;
   }
 

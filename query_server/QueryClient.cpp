@@ -9,6 +9,8 @@
 
 #include "QueryService.h"
 
+#include "ztimer.h"
+
 #include <boost/program_options.hpp>
 
 #ifdef _OPENMP
@@ -33,6 +35,10 @@ using namespace apache::thrift::transport;
 
 namespace po = boost::program_options;
 
+enum SearchType {
+  kKNNSearch, kRangeSearch
+};
+
 static void Usage(const char *prog,
                   const po::options_description& desc) {
     std::cout << prog << std::endl
@@ -42,8 +48,11 @@ static void Usage(const char *prog,
 void ParseCommandLineForClient(int argc, char*argv[],
                       string&                 host,
                       int&                    port,
+                      SearchType&             searchType,
                       int&                    k,
-                      int&                    retObjInt
+                      double&                 r,
+                      int&                    retObjInt,
+                      string&                 queryTimeParams
                       ) {
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
@@ -52,9 +61,13 @@ void ParseCommandLineForClient(int argc, char*argv[],
                         "TCP/IP server port number")
     ("addr,a",          po::value<string>(&host)->required(),
                         "TCP/IP server address")
-    ("knn,k",             po::value<int>(&k)->required(),
-                        "TCP/IP server port number")
-    ("retObj",          po::value<int>(&retObjInt)->default_value(0),
+    ("knn,k",             po::value<int>(&k),
+                        "k for k-NN search")
+    ("range,r",         po::value<double>(&r),
+                        "range for the range search")
+    ("queryTimeParams,q", po::value<string>(&queryTimeParams)->default_value(""),
+                        "Query time parameters")
+    ("retObj,r",          po::value<int>(&retObjInt)->default_value(0),
                         "Return string representation of found objects?")
     ;
 
@@ -68,6 +81,26 @@ void ParseCommandLineForClient(int argc, char*argv[],
     exit(1);
   }
 
+  if (vm.count("knn") == 1) {
+    if (vm.count("range") != 0) {
+      cerr << "Range search is not allowed if the KNN search is specified!";
+      Usage(argv[0], ProgOptDesc);
+      exit(1);
+    }
+    searchType = kKNNSearch;
+  } else if (vm.count("range") == 1) {
+    if (vm.count("knn") != 0) {
+      cerr << "KNN search is not allowed if the range search is specified";
+      Usage(argv[0], ProgOptDesc);
+      exit(1);
+    }
+    searchType = kRangeSearch;
+  } else {
+    cerr << "One has to specify either range or KNN-search parameter";
+    Usage(argv[0], ProgOptDesc);
+    exit(1);
+  }
+
   if (vm.count("help")  ) {
     Usage(argv[0], ProgOptDesc);
     exit(0);
@@ -78,13 +111,18 @@ int main(int argc, char *argv[]) {
   string      host;
   int         port = 0;
   int         k;
+  double      r;
   int         retObjInt = 0;
+  SearchType  searchType;
+  string      queryTimeParams;
 
   ParseCommandLineForClient(argc, argv,
                       host,
                       port,
-                      k,
-                      retObjInt);
+                      searchType,
+                      k, r,
+                      retObjInt,
+                      queryTimeParams);
 
   // Let's read the query from the input stream
   string        s;
@@ -105,9 +143,27 @@ int main(int argc, char *argv[]) {
     transport->open();
 
     try {
+      if (!queryTimeParams.empty()) {
+        client.setQueryTimeParams(queryTimeParams);
+      }
+
       ReplyEntryList res;
 
-      client.knnQuery(res, k, queryObjStr, retObjInt != 0);
+      WallClockTimer wtm;
+
+      wtm.reset();
+
+      if (kKNNSearch == searchType) {
+        cout << "Running a " << k << "-NN query" << endl;;
+        client.knnQuery(res, k, queryObjStr, retObjInt != 0);
+      } else {
+        cout << "Running a range query with radius = " << r << endl;
+        client.rangeQuery(res, r, queryObjStr, retObjInt != 0);
+      }
+
+      wtm.split();
+
+      cout << "Finished in: " << wtm.elapsed() / 1e3f << " ms" << endl;
 
       for (auto e: res) {
         cout << "id=" << e.id << " dist=" << e.dist << endl; 
