@@ -189,6 +189,8 @@ int main(int argc, char *argv[]) {
       cerr << "Query execution error: " << e.message << endl;
       exit(1);
     }
+
+    transport->close(); // Close transport !!!
   } catch (const TException& tx) {
     cerr << "Connection error: " << tx.what() << endl;
     exit(1);

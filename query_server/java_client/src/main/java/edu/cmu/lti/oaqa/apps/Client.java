@@ -191,7 +191,8 @@ public class Client {
           System.out.println(String.format("id=%d dist=%g", e.getId(), e.getDist()));
           if (retObj) System.out.println(e.getObj());
         }
-        
+       
+        transport.close(); // Close transport/socket !
       } catch (TException te) {
         System.err.println("Apache Thrift exception: " + te);
         te.printStackTrace();
