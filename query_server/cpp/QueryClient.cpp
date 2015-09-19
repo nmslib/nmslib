@@ -1,3 +1,18 @@
+/**
+ * Non-metric Space Library
+ *
+ * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+ *
+ * For the complete list of contributors and further details see:
+ * https://github.com/searchivarius/NonMetricSpaceLib 
+ * 
+ * Copyright (c) 2015
+ *
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
 #include <memory>
 #include <iostream>
 #include <sstream>
@@ -51,7 +66,7 @@ void ParseCommandLineForClient(int argc, char*argv[],
                       SearchType&             searchType,
                       int&                    k,
                       double&                 r,
-                      int&                    retObjInt,
+                      bool&                   retObj,
                       string&                 queryTimeParams
                       ) {
   po::options_description ProgOptDesc("Allowed options");
@@ -67,8 +82,7 @@ void ParseCommandLineForClient(int argc, char*argv[],
                         "range for the range search")
     ("queryTimeParams,q", po::value<string>(&queryTimeParams)->default_value(""),
                         "Query time parameters")
-    ("retObj,r",          po::value<int>(&retObjInt)->default_value(0),
-                        "Return string representation of found objects?")
+    ("retObj,o",         "Return string representation of found objects?")
     ;
 
   po::variables_map vm;
@@ -101,6 +115,8 @@ void ParseCommandLineForClient(int argc, char*argv[],
     exit(1);
   }
 
+  retObj = vm.count("retObj") != 0;
+
   if (vm.count("help")  ) {
     Usage(argv[0], ProgOptDesc);
     exit(0);
@@ -112,7 +128,7 @@ int main(int argc, char *argv[]) {
   int         port = 0;
   int         k;
   double      r;
-  int         retObjInt = 0;
+  bool        retObj;
   SearchType  searchType;
   string      queryTimeParams;
 
@@ -121,7 +137,7 @@ int main(int argc, char *argv[]) {
                       port,
                       searchType,
                       k, r,
-                      retObjInt,
+                      retObj,
                       queryTimeParams);
 
   // Let's read the query from the input stream
@@ -155,10 +171,10 @@ int main(int argc, char *argv[]) {
 
       if (kKNNSearch == searchType) {
         cout << "Running a " << k << "-NN query" << endl;;
-        client.knnQuery(res, k, queryObjStr, retObjInt != 0);
+        client.knnQuery(res, k, queryObjStr, retObj);
       } else {
         cout << "Running a range query with radius = " << r << endl;
-        client.rangeQuery(res, r, queryObjStr, retObjInt != 0);
+        client.rangeQuery(res, r, queryObjStr, retObj);
       }
 
       wtm.split();
@@ -167,8 +183,7 @@ int main(int argc, char *argv[]) {
 
       for (auto e: res) {
         cout << "id=" << e.id << " dist=" << e.dist << endl; 
-        if (retObjInt != 0) 
-        cout << e.obj << endl;
+        if (retObj) cout << e.obj << endl;
       }
     } catch (const QueryException& e) {
       cerr << "Query execution error: " << e.message << endl;
