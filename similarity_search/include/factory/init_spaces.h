@@ -28,6 +28,7 @@
 #include "factory/space/space_sparse_lp.h"
 #include "factory/space/space_sparse_scalar.h"
 #include "factory/space/space_savch.h"
+#include "factory/space/space_word_embed.h"
 #if !defined(_MSC_VER)
 #include "factory/space/space_sqfd.h"
 #endif
@@ -76,6 +77,10 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(double, SPACE_JS_METR_FAST, CreateJSMetricFastPrecomp)
   REGISTER_SPACE_CREATOR(float,  SPACE_JS_METR_FAST_APPROX, CreateJSMetricFastPrecompApprox)
   REGISTER_SPACE_CREATOR(double, SPACE_JS_METR_FAST_APPROX, CreateJSMetricFastPrecompApprox)
+
+  // Word embeddings
+  REGISTER_SPACE_CREATOR(float,  SPACE_WORD_EMBED,  CreateWordEmbed)
+  REGISTER_SPACE_CREATOR(double, SPACE_WORD_EMBED,  CreateWordEmbed)
 
   // LP spaces
   REGISTER_SPACE_CREATOR(float,  SPACE_L,  CreateL)

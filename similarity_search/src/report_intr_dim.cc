@@ -96,8 +96,9 @@ void TestSpace(
   unique_ptr<Space<dist_t>> space(SpaceFactoryRegistry<dist_t>::
                                 Instance().CreateSpace(spaceType, spaceParams));
 
-  ObjectVector data;
-  space->ReadDataset(data, dataFile, maxNumData);
+  ObjectVector    data;
+  vector<string>  tmp;
+  space->ReadDataset(data, tmp, dataFile, maxNumData);
 
   // Prints the report
   ReportIntrinsicDimensionality("********", *space, data, sampleQty);

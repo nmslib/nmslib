@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <cctype>
 #include <map>
 #include <typeinfo>
 #include <random>
@@ -230,6 +231,12 @@ inline void ToLower(string &s) {
 inline bool StartsWith(const std::string& str, const std::string& prefix) {
   return str.length() >= prefix.length() &&
          str.substr(0, prefix.length()) == prefix;
+}
+
+inline bool HasWhiteSpace(const string& s) {
+  for (char c: s)
+  if (std::isspace(c)) return true;
+  return false;
 }
 
 // Don't remove period here

@@ -319,6 +319,8 @@ void ExperimentConfig<dist_t>::CopyExternal(const ObjectVector& src, ObjectVecto
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::ReadDataset() {
+  vector<string> tmp;
+
   if (space_ == NULL) throw runtime_error("Space pointer should not be NULL!");
   if (!dataobjects_.empty())
     throw runtime_error(
@@ -329,7 +331,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
         "The set of query objects in non-empty, did you read the data set already?");
 
   if (pExternalData_) CopyExternal(*pExternalData_, origData_, maxNumData_);
-  else space_->ReadDataset(origData_, datafile_, maxNumData_);
+  else space_->ReadDataset(origData_, tmp, datafile_, maxNumData_);
 
   /*
    * Note!!! 
@@ -343,7 +345,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     if (pExternalQuery_) 
       CopyExternal(*pExternalQuery_, queryobjects_, maxNumQuery_);
     else 
-      space_->ReadDataset(queryobjects_, queryfile_, maxNumQuery_);
+      space_->ReadDataset(queryobjects_, tmp, queryfile_, maxNumQuery_);
 
     origQuery_ = queryobjects_;
   } else {

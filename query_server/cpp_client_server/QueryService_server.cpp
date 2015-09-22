@@ -101,8 +101,11 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
   {
     space_->ReadDataset(dataSet_,
+                       externIds_,
                        DataFile,
                        MaxNumData);
+
+    CHECK(dataSet_.size() == externIds_.size());
 
     methName_ = MethodParams.methName_;
 
@@ -156,13 +159,14 @@ class QueryServiceHandler : virtual public QueryServiceIf {
     }
   }
 
-  void rangeQuery(ReplyEntryList& _return, const double r, const string& queryObjStr, const bool retObj) {
+  void rangeQuery(ReplyEntryList& _return, const double r, const string& queryObjStr, 
+                  const bool retExternId, const bool retObj) {
     // This will increase the counter and prevent modification of query time parameters.
     LockedCounterManager  mngr(counter_, mtx_);
 
     try {
       if (debugPrint_) {
-        LOG(LIB_INFO) << "Running a range query, r=" << r;
+        LOG(LIB_INFO) << "Running a range query, r=" << r << " retExternId=" << retExternId << " retObj=" << retObj;
       }
       WallClockTimer wtm;
 
@@ -183,6 +187,7 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
       vector<IdType> ids;
       vector<double> dists;
+      vector<string> externIds;
       vector<string> objs;
 
      
@@ -207,8 +212,17 @@ class QueryServiceHandler : virtual public QueryServiceIf {
           dists.insert(dists.begin(), e.dist);
         }
 
+        string externId;
+
+        if (retExternId || retObj) {
+          CHECK(e.id < externIds_.size());
+          externId = externIds_[e.id];
+          e.__set_externId(externId);
+          externIds.insert(externIds.begin(), e.externId);
+        }
+
         if (retObj) {
-          const string& s = space_->CreateStrFromObj(pObj);
+          const string& s = space_->CreateStrFromObj(pObj, externId);
           e.__set_obj(s);
           if (debugPrint_) {
             objs.insert(objs.begin(), s);
@@ -218,7 +232,7 @@ class QueryServiceHandler : virtual public QueryServiceIf {
       }
       if (debugPrint_) {
         for (size_t i = 0; i < ids.size(); ++i) {
-          LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i];
+          LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i] << ( retExternId ? " " + externIds[i] : string(""));
           if (retObj) LOG(LIB_INFO) << objs[i]; 
         }
       }
@@ -234,13 +248,13 @@ class QueryServiceHandler : virtual public QueryServiceIf {
   }
 
   void knnQuery(ReplyEntryList& _return, const int32_t k, 
-                const std::string& queryObjStr, const bool retObj) {
+                const std::string& queryObjStr, const bool retExternId, const bool retObj) {
     // This will increase the counter and prevent modification of query time parameters.
     LockedCounterManager  mngr(counter_, mtx_);
 
     try {
       if (debugPrint_) {
-        LOG(LIB_INFO) << "Running a " << k << "-NN query";
+        LOG(LIB_INFO) << "Running a " << k << "-NN query" << " retExternId=" << retExternId << " retObj=" << retObj;
       }
       WallClockTimer wtm;
 
@@ -263,6 +277,7 @@ class QueryServiceHandler : virtual public QueryServiceIf {
       vector<IdType> ids;
       vector<double> dists;
       vector<string> objs;
+      vector<string> externIds;
 
      
       if (debugPrint_) { 
@@ -283,8 +298,17 @@ class QueryServiceHandler : virtual public QueryServiceIf {
           dists.insert(dists.begin(), e.dist);
         }
 
+        string externId;
+
+        if (retExternId || retObj) {
+          CHECK(e.id < externIds_.size());
+          externId = externIds_[e.id];
+          e.__set_externId(externId);
+          externIds.insert(externIds.begin(), e.externId);
+        }
+
         if (retObj) {
-          const string& s = space_->CreateStrFromObj(topObj);
+          const string& s = space_->CreateStrFromObj(topObj, externId);
           e.__set_obj(s);
           if (debugPrint_) {
             objs.insert(objs.begin(), s);
@@ -295,7 +319,7 @@ class QueryServiceHandler : virtual public QueryServiceIf {
       }
       if (debugPrint_) {
         for (size_t i = 0; i < ids.size(); ++i) {
-          LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i];
+          LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i] << ( retExternId ? " " + externIds[i] : string(""));
           if (retObj) LOG(LIB_INFO) << objs[i]; 
         }
       }
@@ -317,6 +341,7 @@ class QueryServiceHandler : virtual public QueryServiceIf {
   unique_ptr<Space<dist_t>>   space_;
   string                      methName_;
   unique_ptr<Index<dist_t>>   index_;
+  vector<string>              externIds_;
   ObjectVector                dataSet_; 
 
   int                         counter_; 

@@ -92,7 +92,7 @@ bool VectorSpace<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) co
 }
 
 template <typename dist_t>
-string VectorSpace<dist_t>::CreateStrFromObj(const Object* pObj) const {
+string VectorSpace<dist_t>::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
   stringstream out;
   const dist_t* p = reinterpret_cast<const dist_t*>(pObj->data());
   const size_t length = GetElemQty(pObj);
@@ -107,18 +107,14 @@ string VectorSpace<dist_t>::CreateStrFromObj(const Object* pObj) const {
 }
 
 template <typename dist_t>
-bool VectorSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label) const {
+bool VectorSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+  externId.clear();
   if (!inpState.inp_file_) return false;
   if (!getline(inpState.inp_file_, strObj)) return false;
   inpState.line_num_++;
   return true;
 }
 
-template <typename dist_t>
-void VectorSpace<dist_t>::WriteNextObj(const Object& obj, DataFileOutputState &outState) const {
-  string s = CreateStrFromObj(&obj);
-  outState.out_file_ << s << endl;
-}
 /** End of standard functions to read/write/create objects */ 
 
 template <typename dist_t>

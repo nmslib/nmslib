@@ -130,7 +130,7 @@ bool SpaceSqfd<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) cons
 }
 
 template <typename dist_t>
-string SpaceSqfd<dist_t>::CreateStrFromObj(const Object* pObj) const {
+string SpaceSqfd<dist_t>::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
   if (pObj->datalength() < 8) {
     PREPARE_RUNTIME_ERR(err) << "Bug: object size " << pObj->datalength() << " is smaller than 8 bytes!";
     THROW_RUNTIME_ERR(err);
@@ -247,12 +247,8 @@ unique_ptr<Object> SpaceSqfd<dist_t>::CreateObjFromStr(IdType id, LabelType labe
 }
 
 template <typename dist_t>
-void SpaceSqfd<dist_t>::WriteNextObj(const Object& obj, DataFileOutputState &outState) const {
-  outState.out_file_ << CreateStrFromObj(&obj) << endl;
-}
-
-template <typename dist_t>
-bool SpaceSqfd<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label) const {
+bool SpaceSqfd<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+  externId.clear();
   DataFileInputStateSQFD*  pInpState = NULL;
   pInpState = dynamic_cast<DataFileInputStateSQFD*>(&inpState);
   if (NULL == pInpState) {

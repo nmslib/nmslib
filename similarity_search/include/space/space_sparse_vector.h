@@ -78,7 +78,7 @@ public:
   // Create a string representation of an object.
   virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
                                               DataFileInputState* pInpState) const;
-  virtual string CreateStrFromObj(const Object* pObj) const;
+  virtual string CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const;
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
   virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
   // Open a file for writing, write a header (if there is any) and memorize an output state
@@ -88,13 +88,11 @@ public:
    * Read a string representation of the next object in a file as well
    * as its label. Return false, on EOF.
    */
-  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label) const;
-  // Write a string representation of the next object to a file 
-  virtual void WriteNextObj(const Object& obj, DataFileOutputState &) const;
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const;
   /** End of standard functions to read/write/create objects */
 
   /*
-   * Used only for debugging: compares objects approximately. Floating point numbers
+   * Used only for testing/debugging: compares objects approximately. Floating point numbers
    * should be nearly equal. Integers and strings should coincide exactly.
    */
   virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const;
@@ -111,7 +109,7 @@ public:
   virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const = 0;
 protected:
   virtual Space<dist_t>* HiddenClone() const = 0;
-  void ReadSparseVec(std::string line, IdType& label, vector<ElemType>& v) const;
+  void ReadSparseVec(std::string line, size_t line_num, IdType& label, vector<ElemType>& v) const;
   virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const  = 0;
 };
 

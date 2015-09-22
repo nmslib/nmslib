@@ -16,8 +16,8 @@ class QueryServiceIf {
  public:
   virtual ~QueryServiceIf() {}
   virtual void setQueryTimeParams(const std::string& queryTimeParams) = 0;
-  virtual void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retObj) = 0;
-  virtual void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retObj) = 0;
+  virtual void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retExternId, const bool retObj) = 0;
+  virtual void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj) = 0;
 };
 
 class QueryServiceIfFactory {
@@ -50,10 +50,10 @@ class QueryServiceNull : virtual public QueryServiceIf {
   void setQueryTimeParams(const std::string& /* queryTimeParams */) {
     return;
   }
-  void knnQuery(ReplyEntryList& /* _return */, const int32_t /* k */, const std::string& /* queryObj */, const bool /* retObj */) {
+  void knnQuery(ReplyEntryList& /* _return */, const int32_t /* k */, const std::string& /* queryObj */, const bool /* retExternId */, const bool /* retObj */) {
     return;
   }
-  void rangeQuery(ReplyEntryList& /* _return */, const double /* r */, const std::string& /* queryObj */, const bool /* retObj */) {
+  void rangeQuery(ReplyEntryList& /* _return */, const double /* r */, const std::string& /* queryObj */, const bool /* retExternId */, const bool /* retObj */) {
     return;
   }
 };
@@ -109,12 +109,16 @@ class QueryService_setQueryTimeParams_pargs {
   friend std::ostream& operator<<(std::ostream& out, const QueryService_setQueryTimeParams_pargs& obj);
 };
 
+typedef struct _QueryService_setQueryTimeParams_result__isset {
+  _QueryService_setQueryTimeParams_result__isset() : err(false) {}
+  bool err :1;
+} _QueryService_setQueryTimeParams_result__isset;
 
 class QueryService_setQueryTimeParams_result {
  public:
 
-  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
-  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+  static const char* ascii_fingerprint; // = "771E7EF40B572D2BFAB12C49547ADCBF";
+  static const uint8_t binary_fingerprint[16]; // = {0x77,0x1E,0x7E,0xF4,0x0B,0x57,0x2D,0x2B,0xFA,0xB1,0x2C,0x49,0x54,0x7A,0xDC,0xBF};
 
   QueryService_setQueryTimeParams_result(const QueryService_setQueryTimeParams_result&);
   QueryService_setQueryTimeParams_result& operator=(const QueryService_setQueryTimeParams_result&);
@@ -122,9 +126,16 @@ class QueryService_setQueryTimeParams_result {
   }
 
   virtual ~QueryService_setQueryTimeParams_result() throw();
+  QueryException err;
 
-  bool operator == (const QueryService_setQueryTimeParams_result & /* rhs */) const
+  _QueryService_setQueryTimeParams_result__isset __isset;
+
+  void __set_err(const QueryException& val);
+
+  bool operator == (const QueryService_setQueryTimeParams_result & rhs) const
   {
+    if (!(err == rhs.err))
+      return false;
     return true;
   }
   bool operator != (const QueryService_setQueryTimeParams_result &rhs) const {
@@ -139,15 +150,22 @@ class QueryService_setQueryTimeParams_result {
   friend std::ostream& operator<<(std::ostream& out, const QueryService_setQueryTimeParams_result& obj);
 };
 
+typedef struct _QueryService_setQueryTimeParams_presult__isset {
+  _QueryService_setQueryTimeParams_presult__isset() : err(false) {}
+  bool err :1;
+} _QueryService_setQueryTimeParams_presult__isset;
 
 class QueryService_setQueryTimeParams_presult {
  public:
 
-  static const char* ascii_fingerprint; // = "99914B932BD37A50B983C5E7C90AE93B";
-  static const uint8_t binary_fingerprint[16]; // = {0x99,0x91,0x4B,0x93,0x2B,0xD3,0x7A,0x50,0xB9,0x83,0xC5,0xE7,0xC9,0x0A,0xE9,0x3B};
+  static const char* ascii_fingerprint; // = "771E7EF40B572D2BFAB12C49547ADCBF";
+  static const uint8_t binary_fingerprint[16]; // = {0x77,0x1E,0x7E,0xF4,0x0B,0x57,0x2D,0x2B,0xFA,0xB1,0x2C,0x49,0x54,0x7A,0xDC,0xBF};
 
 
   virtual ~QueryService_setQueryTimeParams_presult() throw();
+  QueryException err;
+
+  _QueryService_setQueryTimeParams_presult__isset __isset;
 
   uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
 
@@ -158,22 +176,25 @@ class QueryService_setQueryTimeParams_presult {
 class QueryService_knnQuery_args {
  public:
 
-  static const char* ascii_fingerprint; // = "7E2C98E75504E1229F703BD18FE1300F";
-  static const uint8_t binary_fingerprint[16]; // = {0x7E,0x2C,0x98,0xE7,0x55,0x04,0xE1,0x22,0x9F,0x70,0x3B,0xD1,0x8F,0xE1,0x30,0x0F};
+  static const char* ascii_fingerprint; // = "67C8FAD6AD85FAD6B99875970D1F771E";
+  static const uint8_t binary_fingerprint[16]; // = {0x67,0xC8,0xFA,0xD6,0xAD,0x85,0xFA,0xD6,0xB9,0x98,0x75,0x97,0x0D,0x1F,0x77,0x1E};
 
   QueryService_knnQuery_args(const QueryService_knnQuery_args&);
   QueryService_knnQuery_args& operator=(const QueryService_knnQuery_args&);
-  QueryService_knnQuery_args() : k(0), queryObj(), retObj(0) {
+  QueryService_knnQuery_args() : k(0), queryObj(), retExternId(0), retObj(0) {
   }
 
   virtual ~QueryService_knnQuery_args() throw();
   int32_t k;
   std::string queryObj;
+  bool retExternId;
   bool retObj;
 
   void __set_k(const int32_t val);
 
   void __set_queryObj(const std::string& val);
+
+  void __set_retExternId(const bool val);
 
   void __set_retObj(const bool val);
 
@@ -182,6 +203,8 @@ class QueryService_knnQuery_args {
     if (!(k == rhs.k))
       return false;
     if (!(queryObj == rhs.queryObj))
+      return false;
+    if (!(retExternId == rhs.retExternId))
       return false;
     if (!(retObj == rhs.retObj))
       return false;
@@ -203,13 +226,14 @@ class QueryService_knnQuery_args {
 class QueryService_knnQuery_pargs {
  public:
 
-  static const char* ascii_fingerprint; // = "7E2C98E75504E1229F703BD18FE1300F";
-  static const uint8_t binary_fingerprint[16]; // = {0x7E,0x2C,0x98,0xE7,0x55,0x04,0xE1,0x22,0x9F,0x70,0x3B,0xD1,0x8F,0xE1,0x30,0x0F};
+  static const char* ascii_fingerprint; // = "67C8FAD6AD85FAD6B99875970D1F771E";
+  static const uint8_t binary_fingerprint[16]; // = {0x67,0xC8,0xFA,0xD6,0xAD,0x85,0xFA,0xD6,0xB9,0x98,0x75,0x97,0x0D,0x1F,0x77,0x1E};
 
 
   virtual ~QueryService_knnQuery_pargs() throw();
   const int32_t* k;
   const std::string* queryObj;
+  const bool* retExternId;
   const bool* retObj;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -226,8 +250,8 @@ typedef struct _QueryService_knnQuery_result__isset {
 class QueryService_knnQuery_result {
  public:
 
-  static const char* ascii_fingerprint; // = "A31F768594FC277DDE49DE4FA1E7399E";
-  static const uint8_t binary_fingerprint[16]; // = {0xA3,0x1F,0x76,0x85,0x94,0xFC,0x27,0x7D,0xDE,0x49,0xDE,0x4F,0xA1,0xE7,0x39,0x9E};
+  static const char* ascii_fingerprint; // = "0FB934CFA1E6389C2C7454E26D9D32BF";
+  static const uint8_t binary_fingerprint[16]; // = {0x0F,0xB9,0x34,0xCF,0xA1,0xE6,0x38,0x9C,0x2C,0x74,0x54,0xE2,0x6D,0x9D,0x32,0xBF};
 
   QueryService_knnQuery_result(const QueryService_knnQuery_result&);
   QueryService_knnQuery_result& operator=(const QueryService_knnQuery_result&);
@@ -273,8 +297,8 @@ typedef struct _QueryService_knnQuery_presult__isset {
 class QueryService_knnQuery_presult {
  public:
 
-  static const char* ascii_fingerprint; // = "A31F768594FC277DDE49DE4FA1E7399E";
-  static const uint8_t binary_fingerprint[16]; // = {0xA3,0x1F,0x76,0x85,0x94,0xFC,0x27,0x7D,0xDE,0x49,0xDE,0x4F,0xA1,0xE7,0x39,0x9E};
+  static const char* ascii_fingerprint; // = "0FB934CFA1E6389C2C7454E26D9D32BF";
+  static const uint8_t binary_fingerprint[16]; // = {0x0F,0xB9,0x34,0xCF,0xA1,0xE6,0x38,0x9C,0x2C,0x74,0x54,0xE2,0x6D,0x9D,0x32,0xBF};
 
 
   virtual ~QueryService_knnQuery_presult() throw();
@@ -292,22 +316,25 @@ class QueryService_knnQuery_presult {
 class QueryService_rangeQuery_args {
  public:
 
-  static const char* ascii_fingerprint; // = "7D0BBCA29FBD2916D88FFE0F182776DC";
-  static const uint8_t binary_fingerprint[16]; // = {0x7D,0x0B,0xBC,0xA2,0x9F,0xBD,0x29,0x16,0xD8,0x8F,0xFE,0x0F,0x18,0x27,0x76,0xDC};
+  static const char* ascii_fingerprint; // = "60E12AF76B11F08F5E27C7C34596DCDA";
+  static const uint8_t binary_fingerprint[16]; // = {0x60,0xE1,0x2A,0xF7,0x6B,0x11,0xF0,0x8F,0x5E,0x27,0xC7,0xC3,0x45,0x96,0xDC,0xDA};
 
   QueryService_rangeQuery_args(const QueryService_rangeQuery_args&);
   QueryService_rangeQuery_args& operator=(const QueryService_rangeQuery_args&);
-  QueryService_rangeQuery_args() : r(0), queryObj(), retObj(0) {
+  QueryService_rangeQuery_args() : r(0), queryObj(), retExternId(0), retObj(0) {
   }
 
   virtual ~QueryService_rangeQuery_args() throw();
   double r;
   std::string queryObj;
+  bool retExternId;
   bool retObj;
 
   void __set_r(const double val);
 
   void __set_queryObj(const std::string& val);
+
+  void __set_retExternId(const bool val);
 
   void __set_retObj(const bool val);
 
@@ -316,6 +343,8 @@ class QueryService_rangeQuery_args {
     if (!(r == rhs.r))
       return false;
     if (!(queryObj == rhs.queryObj))
+      return false;
+    if (!(retExternId == rhs.retExternId))
       return false;
     if (!(retObj == rhs.retObj))
       return false;
@@ -337,13 +366,14 @@ class QueryService_rangeQuery_args {
 class QueryService_rangeQuery_pargs {
  public:
 
-  static const char* ascii_fingerprint; // = "7D0BBCA29FBD2916D88FFE0F182776DC";
-  static const uint8_t binary_fingerprint[16]; // = {0x7D,0x0B,0xBC,0xA2,0x9F,0xBD,0x29,0x16,0xD8,0x8F,0xFE,0x0F,0x18,0x27,0x76,0xDC};
+  static const char* ascii_fingerprint; // = "60E12AF76B11F08F5E27C7C34596DCDA";
+  static const uint8_t binary_fingerprint[16]; // = {0x60,0xE1,0x2A,0xF7,0x6B,0x11,0xF0,0x8F,0x5E,0x27,0xC7,0xC3,0x45,0x96,0xDC,0xDA};
 
 
   virtual ~QueryService_rangeQuery_pargs() throw();
   const double* r;
   const std::string* queryObj;
+  const bool* retExternId;
   const bool* retObj;
 
   uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
@@ -360,8 +390,8 @@ typedef struct _QueryService_rangeQuery_result__isset {
 class QueryService_rangeQuery_result {
  public:
 
-  static const char* ascii_fingerprint; // = "A31F768594FC277DDE49DE4FA1E7399E";
-  static const uint8_t binary_fingerprint[16]; // = {0xA3,0x1F,0x76,0x85,0x94,0xFC,0x27,0x7D,0xDE,0x49,0xDE,0x4F,0xA1,0xE7,0x39,0x9E};
+  static const char* ascii_fingerprint; // = "0FB934CFA1E6389C2C7454E26D9D32BF";
+  static const uint8_t binary_fingerprint[16]; // = {0x0F,0xB9,0x34,0xCF,0xA1,0xE6,0x38,0x9C,0x2C,0x74,0x54,0xE2,0x6D,0x9D,0x32,0xBF};
 
   QueryService_rangeQuery_result(const QueryService_rangeQuery_result&);
   QueryService_rangeQuery_result& operator=(const QueryService_rangeQuery_result&);
@@ -407,8 +437,8 @@ typedef struct _QueryService_rangeQuery_presult__isset {
 class QueryService_rangeQuery_presult {
  public:
 
-  static const char* ascii_fingerprint; // = "A31F768594FC277DDE49DE4FA1E7399E";
-  static const uint8_t binary_fingerprint[16]; // = {0xA3,0x1F,0x76,0x85,0x94,0xFC,0x27,0x7D,0xDE,0x49,0xDE,0x4F,0xA1,0xE7,0x39,0x9E};
+  static const char* ascii_fingerprint; // = "0FB934CFA1E6389C2C7454E26D9D32BF";
+  static const uint8_t binary_fingerprint[16]; // = {0x0F,0xB9,0x34,0xCF,0xA1,0xE6,0x38,0x9C,0x2C,0x74,0x54,0xE2,0x6D,0x9D,0x32,0xBF};
 
 
   virtual ~QueryService_rangeQuery_presult() throw();
@@ -450,11 +480,11 @@ class QueryServiceClient : virtual public QueryServiceIf {
   void setQueryTimeParams(const std::string& queryTimeParams);
   void send_setQueryTimeParams(const std::string& queryTimeParams);
   void recv_setQueryTimeParams();
-  void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retObj);
-  void send_knnQuery(const int32_t k, const std::string& queryObj, const bool retObj);
+  void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retExternId, const bool retObj);
+  void send_knnQuery(const int32_t k, const std::string& queryObj, const bool retExternId, const bool retObj);
   void recv_knnQuery(ReplyEntryList& _return);
-  void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retObj);
-  void send_rangeQuery(const double r, const std::string& queryObj, const bool retObj);
+  void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj);
+  void send_rangeQuery(const double r, const std::string& queryObj, const bool retExternId, const bool retObj);
   void recv_rangeQuery(ReplyEntryList& _return);
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
@@ -517,23 +547,23 @@ class QueryServiceMultiface : virtual public QueryServiceIf {
     ifaces_[i]->setQueryTimeParams(queryTimeParams);
   }
 
-  void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retObj) {
+  void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retExternId, const bool retObj) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->knnQuery(_return, k, queryObj, retObj);
+      ifaces_[i]->knnQuery(_return, k, queryObj, retExternId, retObj);
     }
-    ifaces_[i]->knnQuery(_return, k, queryObj, retObj);
+    ifaces_[i]->knnQuery(_return, k, queryObj, retExternId, retObj);
     return;
   }
 
-  void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retObj) {
+  void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj) {
     size_t sz = ifaces_.size();
     size_t i = 0;
     for (; i < (sz - 1); ++i) {
-      ifaces_[i]->rangeQuery(_return, r, queryObj, retObj);
+      ifaces_[i]->rangeQuery(_return, r, queryObj, retExternId, retObj);
     }
-    ifaces_[i]->rangeQuery(_return, r, queryObj, retObj);
+    ifaces_[i]->rangeQuery(_return, r, queryObj, retExternId, retObj);
     return;
   }
 

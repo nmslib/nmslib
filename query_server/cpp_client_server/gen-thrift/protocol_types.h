@@ -26,24 +26,26 @@ class ReplyEntry;
 class QueryException;
 
 typedef struct _ReplyEntry__isset {
-  _ReplyEntry__isset() : obj(false) {}
+  _ReplyEntry__isset() : externId(false), obj(false) {}
+  bool externId :1;
   bool obj :1;
 } _ReplyEntry__isset;
 
 class ReplyEntry {
  public:
 
-  static const char* ascii_fingerprint; // = "A06EE678A1068D671ED12C1F350BE9D3";
-  static const uint8_t binary_fingerprint[16]; // = {0xA0,0x6E,0xE6,0x78,0xA1,0x06,0x8D,0x67,0x1E,0xD1,0x2C,0x1F,0x35,0x0B,0xE9,0xD3};
+  static const char* ascii_fingerprint; // = "88CBA07510E178963213D17442259E4C";
+  static const uint8_t binary_fingerprint[16]; // = {0x88,0xCB,0xA0,0x75,0x10,0xE1,0x78,0x96,0x32,0x13,0xD1,0x74,0x42,0x25,0x9E,0x4C};
 
   ReplyEntry(const ReplyEntry&);
   ReplyEntry& operator=(const ReplyEntry&);
-  ReplyEntry() : id(0), dist(0), obj() {
+  ReplyEntry() : id(0), dist(0), externId(), obj() {
   }
 
   virtual ~ReplyEntry() throw();
   int32_t id;
   double dist;
+  std::string externId;
   std::string obj;
 
   _ReplyEntry__isset __isset;
@@ -52,6 +54,8 @@ class ReplyEntry {
 
   void __set_dist(const double val);
 
+  void __set_externId(const std::string& val);
+
   void __set_obj(const std::string& val);
 
   bool operator == (const ReplyEntry & rhs) const
@@ -59,6 +63,10 @@ class ReplyEntry {
     if (!(id == rhs.id))
       return false;
     if (!(dist == rhs.dist))
+      return false;
+    if (__isset.externId != rhs.__isset.externId)
+      return false;
+    else if (__isset.externId && !(externId == rhs.externId))
       return false;
     if (__isset.obj != rhs.__isset.obj)
       return false;

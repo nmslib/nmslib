@@ -66,6 +66,7 @@ void ParseCommandLineForClient(int argc, char*argv[],
                       SearchType&             searchType,
                       int&                    k,
                       double&                 r,
+                      bool&                   retExternId,
                       bool&                   retObj,
                       string&                 queryTimeParams
                       ) {
@@ -82,6 +83,7 @@ void ParseCommandLineForClient(int argc, char*argv[],
                         "range for the range search")
     ("queryTimeParams,q", po::value<string>(&queryTimeParams)->default_value(""),
                         "Query time parameters")
+    ("retExternId,e",   "Return external IDs?")
     ("retObj,o",         "Return string representation of found objects?")
     ;
 
@@ -115,6 +117,8 @@ void ParseCommandLineForClient(int argc, char*argv[],
     exit(1);
   }
 
+  retExternId = vm.count("retExternId") != 0;
+
   retObj = vm.count("retObj") != 0;
 
   if (vm.count("help")  ) {
@@ -128,6 +132,7 @@ int main(int argc, char *argv[]) {
   int         port = 0;
   int         k;
   double      r;
+  bool        retExternId;
   bool        retObj;
   SearchType  searchType;
   string      queryTimeParams;
@@ -137,6 +142,7 @@ int main(int argc, char *argv[]) {
                       port,
                       searchType,
                       k, r,
+                      retExternId,
                       retObj,
                       queryTimeParams);
 
@@ -171,10 +177,10 @@ int main(int argc, char *argv[]) {
 
       if (kKNNSearch == searchType) {
         cout << "Running a " << k << "-NN query" << endl;;
-        client.knnQuery(res, k, queryObjStr, retObj);
+        client.knnQuery(res, k, queryObjStr, retExternId, retObj);
       } else {
         cout << "Running a range query with radius = " << r << endl;
-        client.rangeQuery(res, r, queryObjStr, retObj);
+        client.rangeQuery(res, r, queryObjStr, retExternId, retObj);
       }
 
       wtm.split();
@@ -182,7 +188,7 @@ int main(int argc, char *argv[]) {
       cout << "Finished in: " << wtm.elapsed() / 1e3f << " ms" << endl;
 
       for (auto e: res) {
-        cout << "id=" << e.id << " dist=" << e.dist << endl; 
+        cout << "id=" << e.id << " dist=" << e.dist << ( retExternId ? " externId=" + e.externId : string("")) << endl; 
         if (retObj) cout << e.obj << endl;
       }
     } catch (const QueryException& e) {

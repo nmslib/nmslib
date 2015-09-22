@@ -57,21 +57,29 @@ public class Client {
   private final static String RET_OBJ_SHORT_PARAM = "o";
   private final static String RET_OBJ_LONG_PARAM = "retObj";
   private final static String RET_OBJ_DESC = "Return string representation of found objects?";  
+
+  private final static String RET_EXTERN_ID_SHORT_PARAM = "e";
+  private final static String RET_EXTERN_ID_LONG_PARAM = "retExternId";
+  private final static String RET_EXTERN_ID_DESC = "Return external IDs?";  
+ 
   
   static void Usage(String err) {
     System.err.println("Error: " + err);
-    System.err.println(String.format("Usage: " + 
-                       "-%s [%s] %s \n" +
-                       "-%s [%s] %s \n" +
-                       "-%s [%s] %s \n" +
-                       "-%s [%s] %s \n" +
-                       "-%s [%s] %s \n" +
-                       "-%s [%s] %s \n",
+    System.err.println(String.format("Usage: \n" + 
+                       "-%s [%s] arg \t\t\t %s \n" +
+                       "-%s [%s] arg \t\t\t %s \n" +
+                       "-%s [%s] arg \t\t\t %s \n" +
+                       "-%s [%s] arg \t\t\t %s \n" +
+                       "-%s [%s] arg \t %s \n" +
+                       "-%s [%s] \t\t %s \n" +
+                       "-%s [%s] \t\t\t %s \n"
+                        ,
                        PORT_SHORT_PARAM, PORT_LONG_PARAM, PORT_DESC,
                        HOST_SHORT_PARAM, HOST_LONG_PARAM, HOST_DESC,
                        K_SHORT_PARAM, K_LONG_PARAM, K_DESC,
                        R_SHORT_PARAM, R_LONG_PARAM, R_DESC,
                        QUERY_TIME_SHORT_PARAM, QUERY_TIME_LONG_PARAM, QUERY_TIME_DESC,
+                       RET_EXTERN_ID_SHORT_PARAM, RET_EXTERN_ID_LONG_PARAM, RET_EXTERN_ID_DESC,
                        RET_OBJ_SHORT_PARAM, RET_OBJ_LONG_PARAM, RET_OBJ_DESC
                        
 ));
@@ -94,6 +102,7 @@ public class Client {
     opt.addOption(R_SHORT_PARAM, R_LONG_PARAM,       true, R_DESC);
     opt.addOption(QUERY_TIME_SHORT_PARAM, QUERY_TIME_LONG_PARAM, true, QUERY_TIME_DESC);
     opt.addOption(RET_OBJ_SHORT_PARAM, RET_OBJ_LONG_PARAM, false, RET_OBJ_DESC);
+    opt.addOption(RET_EXTERN_ID_SHORT_PARAM, RET_EXTERN_ID_LONG_PARAM, false, RET_EXTERN_ID_DESC);
     
     CommandLineParser parser = new org.apache.commons.cli.GnuParser();
     
@@ -114,7 +123,8 @@ public class Client {
         Usage("Port should be integer!");
       }
       
-      boolean retObj = cmd.hasOption(RET_OBJ_SHORT_PARAM);
+      boolean retObj      = cmd.hasOption(RET_OBJ_SHORT_PARAM);
+      boolean retExternId = cmd.hasOption(RET_EXTERN_ID_SHORT_PARAM);
       
       String queryTimeParams = cmd.getOptionValue(QUERY_TIME_SHORT_PARAM);
       if (null == queryTimeParams) queryTimeParams = "";
@@ -177,10 +187,10 @@ public class Client {
         
         if (searchType == SearchType.kKNNSearch) {
           System.out.println(String.format("Running a %d-NN search", k));
-          res = client.knnQuery(k, queryObj, retObj);
+          res = client.knnQuery(k, queryObj, retExternId, retObj);
         } else {
           System.out.println(String.format("Running a range search (r=%g)", r));
-          res = client.rangeQuery(r, queryObj, retObj);
+          res = client.rangeQuery(r, queryObj, retExternId, retObj);
         }
         
         long t2 = System.nanoTime();
@@ -188,7 +198,7 @@ public class Client {
         System.out.println(String.format("Finished in %g ms", (t2 - t1)/1e6));
         
         for (ReplyEntry e: res) {
-          System.out.println(String.format("id=%d dist=%g", e.getId(), e.getDist()));
+          System.out.println(String.format("id=%d dist=%g %s", e.getId(), e.getDist(), retExternId ? "externId="+e.getExternId():"" ));
           if (retObj) System.out.println(e.getObj());
         }
        

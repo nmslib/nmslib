@@ -26,13 +26,18 @@ void ReplyEntry::__set_dist(const double val) {
   this->dist = val;
 }
 
+void ReplyEntry::__set_externId(const std::string& val) {
+  this->externId = val;
+__isset.externId = true;
+}
+
 void ReplyEntry::__set_obj(const std::string& val) {
   this->obj = val;
 __isset.obj = true;
 }
 
-const char* ReplyEntry::ascii_fingerprint = "A06EE678A1068D671ED12C1F350BE9D3";
-const uint8_t ReplyEntry::binary_fingerprint[16] = {0xA0,0x6E,0xE6,0x78,0xA1,0x06,0x8D,0x67,0x1E,0xD1,0x2C,0x1F,0x35,0x0B,0xE9,0xD3};
+const char* ReplyEntry::ascii_fingerprint = "88CBA07510E178963213D17442259E4C";
+const uint8_t ReplyEntry::binary_fingerprint[16] = {0x88,0xCB,0xA0,0x75,0x10,0xE1,0x78,0x96,0x32,0x13,0xD1,0x74,0x42,0x25,0x9E,0x4C};
 
 uint32_t ReplyEntry::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -74,6 +79,14 @@ uint32_t ReplyEntry::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 3:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->externId);
+          this->__isset.externId = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
           xfer += iprot->readString(this->obj);
           this->__isset.obj = true;
         } else {
@@ -109,8 +122,13 @@ uint32_t ReplyEntry::write(::apache::thrift::protocol::TProtocol* oprot) const {
   xfer += oprot->writeDouble(this->dist);
   xfer += oprot->writeFieldEnd();
 
+  if (this->__isset.externId) {
+    xfer += oprot->writeFieldBegin("externId", ::apache::thrift::protocol::T_STRING, 3);
+    xfer += oprot->writeString(this->externId);
+    xfer += oprot->writeFieldEnd();
+  }
   if (this->__isset.obj) {
-    xfer += oprot->writeFieldBegin("obj", ::apache::thrift::protocol::T_STRING, 3);
+    xfer += oprot->writeFieldBegin("obj", ::apache::thrift::protocol::T_STRING, 4);
     xfer += oprot->writeString(this->obj);
     xfer += oprot->writeFieldEnd();
   }
@@ -124,6 +142,7 @@ void swap(ReplyEntry &a, ReplyEntry &b) {
   using ::std::swap;
   swap(a.id, b.id);
   swap(a.dist, b.dist);
+  swap(a.externId, b.externId);
   swap(a.obj, b.obj);
   swap(a.__isset, b.__isset);
 }
@@ -131,12 +150,14 @@ void swap(ReplyEntry &a, ReplyEntry &b) {
 ReplyEntry::ReplyEntry(const ReplyEntry& other0) {
   id = other0.id;
   dist = other0.dist;
+  externId = other0.externId;
   obj = other0.obj;
   __isset = other0.__isset;
 }
 ReplyEntry& ReplyEntry::operator=(const ReplyEntry& other1) {
   id = other1.id;
   dist = other1.dist;
+  externId = other1.externId;
   obj = other1.obj;
   __isset = other1.__isset;
   return *this;
@@ -146,6 +167,7 @@ std::ostream& operator<<(std::ostream& out, const ReplyEntry& obj) {
   out << "ReplyEntry(";
   out << "id=" << to_string(obj.id);
   out << ", " << "dist=" << to_string(obj.dist);
+  out << ", " << "externId="; (obj.__isset.externId ? (out << to_string(obj.externId)) : (out << "<null>"));
   out << ", " << "obj="; (obj.__isset.obj ? (out << to_string(obj.obj)) : (out << "<null>"));
   out << ")";
   return out;

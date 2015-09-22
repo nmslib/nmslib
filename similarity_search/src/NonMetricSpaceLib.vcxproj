@@ -192,6 +192,7 @@
     <ClInclude Include="..\include\factory\space\space_edist.h" />
     <ClInclude Include="..\include\factory\space\space_savch.h" />
     <ClInclude Include="..\include\factory\space\space_sqfd.h" />
+    <ClInclude Include="..\include\factory\space\space_word_embed.h" />
     <ClInclude Include="..\include\floatdiff.h" />
     <ClInclude Include="..\include\global.h" />
     <ClInclude Include="..\include\gold_standard.h" />
@@ -271,6 +272,7 @@
     <ClInclude Include="..\include\space\space_sparse_vector.h" />
     <ClInclude Include="..\include\space\space_sparse_vector_inter.h" />
     <ClInclude Include="..\include\space\space_vector.h" />
+    <ClInclude Include="..\include\space\space_word_embed.h" />
     <ClCompile Include="distcomp_bregman.cc" />
     <ClCompile Include="distcomp_edist.cc" />
     <ClCompile Include="distcomp_js.cc" />
@@ -309,6 +311,7 @@
     <ClCompile Include="space\space_sparse_vector.cc" />
     <ClCompile Include="space\space_sparse_vector_inter.cc" />
     <ClCompile Include="space\space_vector.cc" />
+    <ClCompile Include="space\space_word_embed.cc" />
     <ClCompile Include="method\bbtree.cc" />
     <ClCompile Include="method\dummy.cc" />
     <ClCompile Include="method\ghtree.cc" />

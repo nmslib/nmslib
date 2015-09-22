@@ -58,11 +58,11 @@ unique_ptr<DataFileOutputState> StringSpace<dist_t>::OpenWriteFileHeader(const O
 
 template <typename dist_t>
 bool StringSpace<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) const {
-  return CreateStrFromObj(&obj1) == CreateStrFromObj(&obj2);
+  return CreateStrFromObj(&obj1, "") == CreateStrFromObj(&obj2, "");
 }
 
 template <typename dist_t>
-string StringSpace<dist_t>::CreateStrFromObj(const Object* pObj) const {
+string StringSpace<dist_t>::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
   const char* p = reinterpret_cast<const char*>(pObj->data());
   // TODO double-check that sizeof(char) should always be 1 as guaranteed by the C++ standard
   // then sizeof can be removed
@@ -71,7 +71,8 @@ string StringSpace<dist_t>::CreateStrFromObj(const Object* pObj) const {
 }
 
 template <typename dist_t>
-bool StringSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label) const {
+bool StringSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+  externId.clear();
   if (!inpState.inp_file_) return false;
   string line;
   if (!getline(inpState.inp_file_, line)) return false;
@@ -81,8 +82,8 @@ bool StringSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& s
 }
 
 template <typename dist_t>
-void StringSpace<dist_t>::WriteNextObj(const Object& obj, DataFileOutputState &outState) const {
-  string s = CreateStrFromObj(&obj);
+void StringSpace<dist_t>::WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &outState) const {
+  string s = CreateStrFromObj(&obj, externId);
   outState.out_file_ << LABEL_PREFIX << obj.label() << " " << s << endl;
 }
 /** End of standard functions to read/write/create objects */ 

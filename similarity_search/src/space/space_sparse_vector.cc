@@ -33,7 +33,7 @@ namespace similarity {
 using namespace std;
 
 template <typename dist_t>
-void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, LabelType& label, vector<ElemType>& v) const
+void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, size_t line_num, LabelType& label, vector<ElemType>& v) const
 {
   v.clear();
   std::stringstream str(line);
@@ -59,19 +59,19 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, LabelType& label
 
       if (id == prevId) {
         stringstream err;
-        err << "Repeating ID: prevId = " << prevId << " current id: " << id;
+        err << "Repeating ID: prevId = " << prevId << " prev val: " << v[i-1].val_ << " current id: " << id << " val = " << v[i].val_ << " (i=" << i << ")";
         throw std::runtime_error(err.str());
       }
 
       if (id < prevId) {
         stringstream err;
-        err << "But: Ids are not sorted, prevId = " << prevId << " current id: " << id;
+        err << "But: Ids are not sorted, prevId = " << prevId << " prev val: " << v[i-1].val_ << " current id: " << id << " val = " << v[i].val_ << " (i=" << i << ")";
         throw std::runtime_error(err.str());
       }
     }
   } catch (const std::exception &e) {
     LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
+    LOG(LIB_FATAL) << "Failed to parse the line # " << line_num << ": '" << line << "'" << std::endl;
   }
 }
 
@@ -97,7 +97,7 @@ SpaceSparseVector<dist_t>::CreateObjFromStr(IdType id, LabelType label, const st
     THROW_RUNTIME_ERR(err);
   }
   vector<ElemType>  vec;
-  ReadSparseVec(s, label, vec);
+  ReadSparseVec(s, pInpStateBase->line_num_, label, vec);
   return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
 }
 
@@ -111,7 +111,7 @@ SpaceSparseVector<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) c
 }
 
 template <typename dist_t>
-string SpaceSparseVector<dist_t>::CreateStrFromObj(const Object* pObj) const {
+string SpaceSparseVector<dist_t>::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
   stringstream out;
 
   vector<ElemType> elems;
@@ -131,13 +131,8 @@ string SpaceSparseVector<dist_t>::CreateStrFromObj(const Object* pObj) const {
 
 
 template <typename dist_t>
-void SpaceSparseVector<dist_t>::WriteNextObj(const Object& obj, DataFileOutputState &outState) const {
-  string s = CreateStrFromObj(&obj);
-  outState.out_file_ << s << endl;
-}
-
-template <typename dist_t>
-bool SpaceSparseVector<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label) const {
+bool SpaceSparseVector<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+  externId.clear();
   if (!inpState.inp_file_) return false;
   if (!getline(inpState.inp_file_, strObj)) return false;
   inpState.line_num_++;

@@ -62,12 +62,13 @@ SpaceDummy<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& s
 }
 
 template <typename dist_t>
-string SpaceDummy<dist_t>::CreateStrFromObj(const Object* pObj) const {
+string SpaceDummy<dist_t>::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
   return "";
 }
 
 template <typename dist_t>
-bool SpaceDummy<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label) const {
+bool SpaceDummy<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+  externId.clear();
   if (!inpState.inp_file_) return false;
   if (!getline(inpState.inp_file_, strObj)) return false;
   inpState.line_num_++;
@@ -75,8 +76,8 @@ bool SpaceDummy<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& st
 }
 
 template <typename dist_t>
-void SpaceDummy<dist_t>::WriteNextObj(const Object& obj, DataFileOutputState &outState) const {
-  string s = CreateStrFromObj(&obj);
+void SpaceDummy<dist_t>::WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &outState) const {
+  string s = CreateStrFromObj(&obj, externId);
   outState.out_file_ << s << endl;
 }
 /** End of standard functions to read/write/create objects */ 

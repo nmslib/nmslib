@@ -22,6 +22,7 @@ class ReplyEntry:
   Attributes:
    - id
    - dist
+   - externId
    - obj
   """
 
@@ -29,12 +30,14 @@ class ReplyEntry:
     None, # 0
     (1, TType.I32, 'id', None, None, ), # 1
     (2, TType.DOUBLE, 'dist', None, None, ), # 2
-    (3, TType.STRING, 'obj', None, None, ), # 3
+    (3, TType.STRING, 'externId', None, None, ), # 3
+    (4, TType.STRING, 'obj', None, None, ), # 4
   )
 
-  def __init__(self, id=None, dist=None, obj=None,):
+  def __init__(self, id=None, dist=None, externId=None, obj=None,):
     self.id = id
     self.dist = dist
+    self.externId = externId
     self.obj = obj
 
   def read(self, iprot):
@@ -58,6 +61,11 @@ class ReplyEntry:
           iprot.skip(ftype)
       elif fid == 3:
         if ftype == TType.STRING:
+          self.externId = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
           self.obj = iprot.readString();
         else:
           iprot.skip(ftype)
@@ -79,8 +87,12 @@ class ReplyEntry:
       oprot.writeFieldBegin('dist', TType.DOUBLE, 2)
       oprot.writeDouble(self.dist)
       oprot.writeFieldEnd()
+    if self.externId is not None:
+      oprot.writeFieldBegin('externId', TType.STRING, 3)
+      oprot.writeString(self.externId)
+      oprot.writeFieldEnd()
     if self.obj is not None:
-      oprot.writeFieldBegin('obj', TType.STRING, 3)
+      oprot.writeFieldBegin('obj', TType.STRING, 4)
       oprot.writeString(self.obj)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -98,6 +110,7 @@ class ReplyEntry:
     value = 17
     value = (value * 31) ^ hash(self.id)
     value = (value * 31) ^ hash(self.dist)
+    value = (value * 31) ^ hash(self.externId)
     value = (value * 31) ^ hash(self.obj)
     return value
 

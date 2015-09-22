@@ -75,7 +75,7 @@ class SpaceDummy : public Space<dist_t> {
   virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
                                               DataFileInputState* pInpState) const;
   // Create a string representation of an object.
-  virtual string CreateStrFromObj(const Object* pObj) const;
+  virtual string CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const;
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
   virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
   // Open a file for writing, write a header (if there is any) and memorize an output state
@@ -85,17 +85,17 @@ class SpaceDummy : public Space<dist_t> {
    * Read a string representation of the next object in a file as well
    * as its label. Return false, on EOF.
    */
-  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label) const;
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const;
   /* 
    * Write a string representation of the next object to a file. We totally delegate
    * this to a Space object, because it may package the string representation, by
    * e.g., in the form of an XML fragment.
    */
-  virtual void WriteNextObj(const Object& obj, DataFileOutputState &) const;
+  virtual void WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &) const;
   /** End of standard functions to read/write/create objects */ 
 
   /*
-   * Used only for debugging: compares objects approximately. Floating point numbers
+   * Used only for testing/debugging: compares objects approximately. Floating point numbers
    * should be nearly equal. Integers and strings should coincide exactly.
    */
   virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const {

@@ -114,7 +114,20 @@ uint32_t QueryService_setQueryTimeParams_result::read(::apache::thrift::protocol
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->err.read(iprot);
+          this->__isset.err = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -129,6 +142,11 @@ uint32_t QueryService_setQueryTimeParams_result::write(::apache::thrift::protoco
 
   xfer += oprot->writeStructBegin("QueryService_setQueryTimeParams_result");
 
+  if (this->__isset.err) {
+    xfer += oprot->writeFieldBegin("err", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->err.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
@@ -157,7 +175,20 @@ uint32_t QueryService_setQueryTimeParams_presult::read(::apache::thrift::protoco
     if (ftype == ::apache::thrift::protocol::T_STOP) {
       break;
     }
-    xfer += iprot->skip(ftype);
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->err.read(iprot);
+          this->__isset.err = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
     xfer += iprot->readFieldEnd();
   }
 
@@ -184,6 +215,7 @@ uint32_t QueryService_knnQuery_args::read(::apache::thrift::protocol::TProtocol*
 
   bool isset_k = false;
   bool isset_queryObj = false;
+  bool isset_retExternId = false;
   bool isset_retObj = false;
 
   while (true)
@@ -212,6 +244,14 @@ uint32_t QueryService_knnQuery_args::read(::apache::thrift::protocol::TProtocol*
         break;
       case 3:
         if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->retExternId);
+          isset_retExternId = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
           xfer += iprot->readBool(this->retObj);
           isset_retObj = true;
         } else {
@@ -231,6 +271,8 @@ uint32_t QueryService_knnQuery_args::read(::apache::thrift::protocol::TProtocol*
     throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_queryObj)
     throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_retExternId)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_retObj)
     throw TProtocolException(TProtocolException::INVALID_DATA);
   return xfer;
@@ -249,7 +291,11 @@ uint32_t QueryService_knnQuery_args::write(::apache::thrift::protocol::TProtocol
   xfer += oprot->writeString(this->queryObj);
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeFieldBegin("retExternId", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeBool(this->retExternId);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 4);
   xfer += oprot->writeBool(this->retObj);
   xfer += oprot->writeFieldEnd();
 
@@ -277,7 +323,11 @@ uint32_t QueryService_knnQuery_pargs::write(::apache::thrift::protocol::TProtoco
   xfer += oprot->writeString((*(this->queryObj)));
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeFieldBegin("retExternId", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeBool((*(this->retExternId)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 4);
   xfer += oprot->writeBool((*(this->retObj)));
   xfer += oprot->writeFieldEnd();
 
@@ -463,6 +513,7 @@ uint32_t QueryService_rangeQuery_args::read(::apache::thrift::protocol::TProtoco
 
   bool isset_r = false;
   bool isset_queryObj = false;
+  bool isset_retExternId = false;
   bool isset_retObj = false;
 
   while (true)
@@ -491,6 +542,14 @@ uint32_t QueryService_rangeQuery_args::read(::apache::thrift::protocol::TProtoco
         break;
       case 3:
         if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->retExternId);
+          isset_retExternId = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
           xfer += iprot->readBool(this->retObj);
           isset_retObj = true;
         } else {
@@ -510,6 +569,8 @@ uint32_t QueryService_rangeQuery_args::read(::apache::thrift::protocol::TProtoco
     throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_queryObj)
     throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_retExternId)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_retObj)
     throw TProtocolException(TProtocolException::INVALID_DATA);
   return xfer;
@@ -528,7 +589,11 @@ uint32_t QueryService_rangeQuery_args::write(::apache::thrift::protocol::TProtoc
   xfer += oprot->writeString(this->queryObj);
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeFieldBegin("retExternId", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeBool(this->retExternId);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 4);
   xfer += oprot->writeBool(this->retObj);
   xfer += oprot->writeFieldEnd();
 
@@ -556,7 +621,11 @@ uint32_t QueryService_rangeQuery_pargs::write(::apache::thrift::protocol::TProto
   xfer += oprot->writeString((*(this->queryObj)));
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeFieldBegin("retExternId", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeBool((*(this->retExternId)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 4);
   xfer += oprot->writeBool((*(this->retObj)));
   xfer += oprot->writeFieldEnd();
 
@@ -774,16 +843,19 @@ void QueryServiceClient::recv_setQueryTimeParams()
   iprot_->readMessageEnd();
   iprot_->getTransport()->readEnd();
 
+  if (result.__isset.err) {
+    throw result.err;
+  }
   return;
 }
 
-void QueryServiceClient::knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retObj)
+void QueryServiceClient::knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retExternId, const bool retObj)
 {
-  send_knnQuery(k, queryObj, retObj);
+  send_knnQuery(k, queryObj, retExternId, retObj);
   recv_knnQuery(_return);
 }
 
-void QueryServiceClient::send_knnQuery(const int32_t k, const std::string& queryObj, const bool retObj)
+void QueryServiceClient::send_knnQuery(const int32_t k, const std::string& queryObj, const bool retExternId, const bool retObj)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("knnQuery", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -791,6 +863,7 @@ void QueryServiceClient::send_knnQuery(const int32_t k, const std::string& query
   QueryService_knnQuery_pargs args;
   args.k = &k;
   args.queryObj = &queryObj;
+  args.retExternId = &retExternId;
   args.retObj = &retObj;
   args.write(oprot_);
 
@@ -840,13 +913,13 @@ void QueryServiceClient::recv_knnQuery(ReplyEntryList& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "knnQuery failed: unknown result");
 }
 
-void QueryServiceClient::rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retObj)
+void QueryServiceClient::rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj)
 {
-  send_rangeQuery(r, queryObj, retObj);
+  send_rangeQuery(r, queryObj, retExternId, retObj);
   recv_rangeQuery(_return);
 }
 
-void QueryServiceClient::send_rangeQuery(const double r, const std::string& queryObj, const bool retObj)
+void QueryServiceClient::send_rangeQuery(const double r, const std::string& queryObj, const bool retExternId, const bool retObj)
 {
   int32_t cseqid = 0;
   oprot_->writeMessageBegin("rangeQuery", ::apache::thrift::protocol::T_CALL, cseqid);
@@ -854,6 +927,7 @@ void QueryServiceClient::send_rangeQuery(const double r, const std::string& quer
   QueryService_rangeQuery_pargs args;
   args.r = &r;
   args.queryObj = &queryObj;
+  args.retExternId = &retExternId;
   args.retObj = &retObj;
   args.write(oprot_);
 
@@ -946,6 +1020,9 @@ void QueryServiceProcessor::process_setQueryTimeParams(int32_t seqid, ::apache::
   QueryService_setQueryTimeParams_result result;
   try {
     iface_->setQueryTimeParams(args.queryTimeParams);
+  } catch (QueryException &err) {
+    result.err = err;
+    result.__isset.err = true;
   } catch (const std::exception& e) {
     if (this->eventHandler_.get() != NULL) {
       this->eventHandler_->handlerError(ctx, "QueryService.setQueryTimeParams");
@@ -998,7 +1075,7 @@ void QueryServiceProcessor::process_knnQuery(int32_t seqid, ::apache::thrift::pr
 
   QueryService_knnQuery_result result;
   try {
-    iface_->knnQuery(result.success, args.k, args.queryObj, args.retObj);
+    iface_->knnQuery(result.success, args.k, args.queryObj, args.retExternId, args.retObj);
     result.__isset.success = true;
   } catch (QueryException &err) {
     result.err = err;
@@ -1055,7 +1132,7 @@ void QueryServiceProcessor::process_rangeQuery(int32_t seqid, ::apache::thrift::
 
   QueryService_rangeQuery_result result;
   try {
-    iface_->rangeQuery(result.success, args.r, args.queryObj, args.retObj);
+    iface_->rangeQuery(result.success, args.r, args.queryObj, args.retExternId, args.retObj);
     result.__isset.success = true;
   } catch (QueryException &err) {
     result.err = err;

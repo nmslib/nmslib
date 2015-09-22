@@ -1197,8 +1197,9 @@ void TestSQFDGeneric(size_t N, size_t Rep, SqfdFunction<T>& func) {
     // Space will try to delete the function
     unique_ptr<SpaceSqfd<T>>  space(new SpaceSqfd<T>(func.Clone()));
     ObjectVector              elems;
+    vector<string>            tmp;
 
-    space->ReadDataset(elems, (sampleDataPrefix + "sqfd20_10k_10k.txt"), N); 
+    space->ReadDataset(elems, tmp, (sampleDataPrefix + "sqfd20_10k_10k.txt"), N); 
 
     N = min(N, elems.size());
 
@@ -1254,8 +1255,9 @@ void TestSQFDGaussian(size_t N, size_t Rep) {
 void TestLevenshtein(size_t N, size_t Rep) {
     unique_ptr<SpaceLevenshtein>  space(new SpaceLevenshtein);
     ObjectVector                  elems;
+    vector<string>                tmp;
 
-    space->ReadDataset(elems, (sampleDataPrefix + "dna32_4_5K.txt"), N); 
+    space->ReadDataset(elems, tmp, (sampleDataPrefix + "dna32_4_5K.txt"), N); 
 
     N = min(N, elems.size());
 
@@ -1291,8 +1293,9 @@ template <class T>
 void TestSparseLp(size_t N, size_t Rep, T power) {
     unique_ptr<SpaceSparseLp<T>>  space(new SpaceSparseLp<T>(power));
     ObjectVector                  elems;
+    vector<string>                tmp;
 
-    space->ReadDataset(elems, (sampleDataPrefix + "sparse_5K.txt"), N); 
+    space->ReadDataset(elems, tmp, (sampleDataPrefix + "sparse_5K.txt"), N); 
 
     N = min(N, elems.size());
 
@@ -1328,8 +1331,9 @@ template <class T>
 void TestSparseAngularDistance(const string& dataFile, size_t N, size_t Rep) {
     unique_ptr<SpaceSparseAngularDistance<T>>  space(new SpaceSparseAngularDistance<T>());
     ObjectVector                  elems;
+    vector<string>                tmp;
 
-    space->ReadDataset(elems, dataFile, N); 
+    space->ReadDataset(elems, tmp, dataFile, N); 
 
     N = min(N, elems.size());
 
@@ -1367,8 +1371,9 @@ void TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep
 
     unique_ptr<SpaceSparseCosineSimilarityFast>  space(new SpaceSparseCosineSimilarityFast());
     ObjectVector                                 elems;
+    vector<string>                tmp;
 
-    space->ReadDataset(elems, dataFile,  N); 
+    space->ReadDataset(elems, tmp, dataFile,  N); 
 
     N = min(N, elems.size());
 
@@ -1406,8 +1411,9 @@ void TestSparseAngularDistanceFast(const string& dataFile, size_t N, size_t Rep)
 
     unique_ptr<SpaceSparseAngularDistanceFast>  space(new SpaceSparseAngularDistanceFast());
     ObjectVector                                 elems;
+    vector<string>                tmp;
 
-    space->ReadDataset(elems, dataFile, N);
+    space->ReadDataset(elems, tmp, dataFile, N);
 
     N = min(N, elems.size());
 
@@ -1445,8 +1451,9 @@ template <class T>
 void TestSparseCosineSimilarity(const string& dataFile, size_t N, size_t Rep) {
     unique_ptr<SpaceSparseCosineSimilarity<T>>  space(new SpaceSparseCosineSimilarity<T>());
     ObjectVector                  elems;
+    vector<string>                tmp;
 
-    space->ReadDataset(elems, dataFile, N); 
+    space->ReadDataset(elems, tmp, dataFile, N); 
 
     N = min(N, elems.size());
 

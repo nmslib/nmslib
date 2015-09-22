@@ -24,7 +24,8 @@ parser.add_argument('-a', '--addr', help='TCP/IP server address', action='store'
 parser.add_argument('-k', '--knn', help='k for k-NN search', action='store', required=False,type=int)
 parser.add_argument('-r', '--range', help='range for the range search', action='store', required=False,type=float)
 parser.add_argument('-q', '--queryTimeParams', help='Query time parameter', action='store', default='')
-parser.add_argument('-o', '--retObj', help='Return string representation of found objects?', action='store_true', default=0)
+parser.add_argument('-o', '--retObj', help='Return string representation of found objects?', action='store_true', default=False)
+parser.add_argument('-e', '--retExternId', help='Return external IDs?', action='store_true', default=False)
 
 args = parser.parse_args()
 
@@ -32,6 +33,7 @@ host=args.addr
 port=args.port
 queryTimeParams=args.queryTimeParams
 retObj = args.retObj
+retExternId = args.retObj
 
 try:
   print "Host %s socket %d" % (host,port)
@@ -61,13 +63,13 @@ try:
     if not args.range is None:
       error_exit('Range search is not allowed if the KNN search is specified!')
     print "Running %d-NN search" % k
-    res = client.knnQuery(k, queryObj, retObj)
+    res = client.knnQuery(k, queryObj, retObj, retExternId)
   elif not args.range is None:
     r = args.range
     if not args.knn is None:
       error_exit('KNN search is not allowed if the range search is specified')
     print "Running range search, range=%f" % r
-    res = client.rangeQuery(r, queryObj, retObj)
+    res = client.rangeQuery(r, queryObj, retObj, retExternId)
   else: 
     error_exit("Wrong search type %s" % searchType)
 
@@ -80,7 +82,10 @@ try:
   print "Finished in %f ms" % elapsed
 
   for e in res:
-    print "id=%d dist=%f" % (e.id, e.dist)
+    s=''
+    if retExternId:
+      s='externId=' + e.externId
+    print "id=%d dist=%f %s" % (e.id, e.dist, s)
     if retObj:
       print e.obj
 

@@ -235,6 +235,7 @@
     <ClCompile Include="test_sqfd.cc" />
     <ClCompile Include="test_timer.cc" />
     <ClCompile Include="test_fp.cc" />
+    <ClCompile Include="test_space_serial.cc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)src\NonMetricSpaceLib.vcxproj">

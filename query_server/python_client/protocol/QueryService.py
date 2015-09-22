@@ -25,20 +25,22 @@ class Iface:
     """
     pass
 
-  def knnQuery(self, k, queryObj, retObj):
+  def knnQuery(self, k, queryObj, retExternId, retObj):
     """
     Parameters:
      - k
      - queryObj
+     - retExternId
      - retObj
     """
     pass
 
-  def rangeQuery(self, r, queryObj, retObj):
+  def rangeQuery(self, r, queryObj, retExternId, retObj):
     """
     Parameters:
      - r
      - queryObj
+     - retExternId
      - retObj
     """
     pass
@@ -82,21 +84,23 @@ class Client(Iface):
       raise result.err
     return
 
-  def knnQuery(self, k, queryObj, retObj):
+  def knnQuery(self, k, queryObj, retExternId, retObj):
     """
     Parameters:
      - k
      - queryObj
+     - retExternId
      - retObj
     """
-    self.send_knnQuery(k, queryObj, retObj)
+    self.send_knnQuery(k, queryObj, retExternId, retObj)
     return self.recv_knnQuery()
 
-  def send_knnQuery(self, k, queryObj, retObj):
+  def send_knnQuery(self, k, queryObj, retExternId, retObj):
     self._oprot.writeMessageBegin('knnQuery', TMessageType.CALL, self._seqid)
     args = knnQuery_args()
     args.k = k
     args.queryObj = queryObj
+    args.retExternId = retExternId
     args.retObj = retObj
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
@@ -119,21 +123,23 @@ class Client(Iface):
       raise result.err
     raise TApplicationException(TApplicationException.MISSING_RESULT, "knnQuery failed: unknown result");
 
-  def rangeQuery(self, r, queryObj, retObj):
+  def rangeQuery(self, r, queryObj, retExternId, retObj):
     """
     Parameters:
      - r
      - queryObj
+     - retExternId
      - retObj
     """
-    self.send_rangeQuery(r, queryObj, retObj)
+    self.send_rangeQuery(r, queryObj, retExternId, retObj)
     return self.recv_rangeQuery()
 
-  def send_rangeQuery(self, r, queryObj, retObj):
+  def send_rangeQuery(self, r, queryObj, retExternId, retObj):
     self._oprot.writeMessageBegin('rangeQuery', TMessageType.CALL, self._seqid)
     args = rangeQuery_args()
     args.r = r
     args.queryObj = queryObj
+    args.retExternId = retExternId
     args.retObj = retObj
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
@@ -200,7 +206,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = knnQuery_result()
     try:
-      result.success = self._handler.knnQuery(args.k, args.queryObj, args.retObj)
+      result.success = self._handler.knnQuery(args.k, args.queryObj, args.retExternId, args.retObj)
     except QueryException, err:
       result.err = err
     oprot.writeMessageBegin("knnQuery", TMessageType.REPLY, seqid)
@@ -214,7 +220,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = rangeQuery_result()
     try:
-      result.success = self._handler.rangeQuery(args.r, args.queryObj, args.retObj)
+      result.success = self._handler.rangeQuery(args.r, args.queryObj, args.retExternId, args.retObj)
     except QueryException, err:
       result.err = err
     oprot.writeMessageBegin("rangeQuery", TMessageType.REPLY, seqid)
@@ -363,6 +369,7 @@ class knnQuery_args:
   Attributes:
    - k
    - queryObj
+   - retExternId
    - retObj
   """
 
@@ -370,12 +377,14 @@ class knnQuery_args:
     None, # 0
     (1, TType.I32, 'k', None, None, ), # 1
     (2, TType.STRING, 'queryObj', None, None, ), # 2
-    (3, TType.BOOL, 'retObj', None, None, ), # 3
+    (3, TType.BOOL, 'retExternId', None, None, ), # 3
+    (4, TType.BOOL, 'retObj', None, None, ), # 4
   )
 
-  def __init__(self, k=None, queryObj=None, retObj=None,):
+  def __init__(self, k=None, queryObj=None, retExternId=None, retObj=None,):
     self.k = k
     self.queryObj = queryObj
+    self.retExternId = retExternId
     self.retObj = retObj
 
   def read(self, iprot):
@@ -399,6 +408,11 @@ class knnQuery_args:
           iprot.skip(ftype)
       elif fid == 3:
         if ftype == TType.BOOL:
+          self.retExternId = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.BOOL:
           self.retObj = iprot.readBool();
         else:
           iprot.skip(ftype)
@@ -420,8 +434,12 @@ class knnQuery_args:
       oprot.writeFieldBegin('queryObj', TType.STRING, 2)
       oprot.writeString(self.queryObj)
       oprot.writeFieldEnd()
+    if self.retExternId is not None:
+      oprot.writeFieldBegin('retExternId', TType.BOOL, 3)
+      oprot.writeBool(self.retExternId)
+      oprot.writeFieldEnd()
     if self.retObj is not None:
-      oprot.writeFieldBegin('retObj', TType.BOOL, 3)
+      oprot.writeFieldBegin('retObj', TType.BOOL, 4)
       oprot.writeBool(self.retObj)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -432,6 +450,8 @@ class knnQuery_args:
       raise TProtocol.TProtocolException(message='Required field k is unset!')
     if self.queryObj is None:
       raise TProtocol.TProtocolException(message='Required field queryObj is unset!')
+    if self.retExternId is None:
+      raise TProtocol.TProtocolException(message='Required field retExternId is unset!')
     if self.retObj is None:
       raise TProtocol.TProtocolException(message='Required field retObj is unset!')
     return
@@ -441,6 +461,7 @@ class knnQuery_args:
     value = 17
     value = (value * 31) ^ hash(self.k)
     value = (value * 31) ^ hash(self.queryObj)
+    value = (value * 31) ^ hash(self.retExternId)
     value = (value * 31) ^ hash(self.retObj)
     return value
 
@@ -547,6 +568,7 @@ class rangeQuery_args:
   Attributes:
    - r
    - queryObj
+   - retExternId
    - retObj
   """
 
@@ -554,12 +576,14 @@ class rangeQuery_args:
     None, # 0
     (1, TType.DOUBLE, 'r', None, None, ), # 1
     (2, TType.STRING, 'queryObj', None, None, ), # 2
-    (3, TType.BOOL, 'retObj', None, None, ), # 3
+    (3, TType.BOOL, 'retExternId', None, None, ), # 3
+    (4, TType.BOOL, 'retObj', None, None, ), # 4
   )
 
-  def __init__(self, r=None, queryObj=None, retObj=None,):
+  def __init__(self, r=None, queryObj=None, retExternId=None, retObj=None,):
     self.r = r
     self.queryObj = queryObj
+    self.retExternId = retExternId
     self.retObj = retObj
 
   def read(self, iprot):
@@ -583,6 +607,11 @@ class rangeQuery_args:
           iprot.skip(ftype)
       elif fid == 3:
         if ftype == TType.BOOL:
+          self.retExternId = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.BOOL:
           self.retObj = iprot.readBool();
         else:
           iprot.skip(ftype)
@@ -604,8 +633,12 @@ class rangeQuery_args:
       oprot.writeFieldBegin('queryObj', TType.STRING, 2)
       oprot.writeString(self.queryObj)
       oprot.writeFieldEnd()
+    if self.retExternId is not None:
+      oprot.writeFieldBegin('retExternId', TType.BOOL, 3)
+      oprot.writeBool(self.retExternId)
+      oprot.writeFieldEnd()
     if self.retObj is not None:
-      oprot.writeFieldBegin('retObj', TType.BOOL, 3)
+      oprot.writeFieldBegin('retObj', TType.BOOL, 4)
       oprot.writeBool(self.retObj)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -616,6 +649,8 @@ class rangeQuery_args:
       raise TProtocol.TProtocolException(message='Required field r is unset!')
     if self.queryObj is None:
       raise TProtocol.TProtocolException(message='Required field queryObj is unset!')
+    if self.retExternId is None:
+      raise TProtocol.TProtocolException(message='Required field retExternId is unset!')
     if self.retObj is None:
       raise TProtocol.TProtocolException(message='Required field retObj is unset!')
     return
@@ -625,6 +660,7 @@ class rangeQuery_args:
     value = 17
     value = (value * 31) ^ hash(self.r)
     value = (value * 31) ^ hash(self.queryObj)
+    value = (value * 31) ^ hash(self.retExternId)
     value = (value * 31) ^ hash(self.retObj)
     return value
 

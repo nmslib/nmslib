@@ -87,9 +87,10 @@ void benchProjection(size_t repeatQty,
                    << " should be a simple-storage dense vector space, e.g., l2";
   }
 
-  ObjectVector data;
+  ObjectVector      data;
+  vector<string>    tmp;
   LOG(LIB_INFO) << "maxNumData=" << maxNumData;
-  space->ReadDataset(data, inFile, maxNumData);
+  space->ReadDataset(data, tmp, inFile, maxNumData);
 
   size_t N = data.size();
 

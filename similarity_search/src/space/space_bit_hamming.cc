@@ -137,7 +137,7 @@ bool SpaceBitHamming::ApproxEqual(const Object& obj1, const Object& obj2) const 
 }
 
 
-string SpaceBitHamming::CreateStrFromObj(const Object* pObj) const {
+string SpaceBitHamming::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
   stringstream out;
   const uint32_t* p = reinterpret_cast<const uint32_t*>(pObj->data());
   const size_t length = pObj->datalength() / sizeof(uint32_t)
@@ -152,7 +152,8 @@ string SpaceBitHamming::CreateStrFromObj(const Object* pObj) const {
   return out.str();
 }
 
-bool SpaceBitHamming::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label) const {
+bool SpaceBitHamming::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+  externId.clear();
   if (!inpState.inp_file_) return false;
   if (!getline(inpState.inp_file_, strObj)) return false;
   inpState.line_num_++;
@@ -160,10 +161,6 @@ bool SpaceBitHamming::ReadNextObjStr(DataFileInputState &inpState, string& strOb
 }
 
 
-void SpaceBitHamming::WriteNextObj(const Object& obj, DataFileOutputState &outState) const {
-  string s = CreateStrFromObj(&obj);
-  outState.out_file_ << s << endl;
-}
 /** End of standard functions to read/write/create objects */ 
 
 }  // namespace similarity

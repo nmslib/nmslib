@@ -35,6 +35,7 @@
 #include "space/space_sparse_scalar_fast.h"
 #include "space/space_sparse_vector.h"
 #include "space/space_scalar.h"
+#include "space/space_word_embed.h"
 
 #define MAX_NUM_REC 10
 
@@ -43,12 +44,13 @@ namespace similarity {
 using namespace std;
 
 template <typename dist_t>
-bool fullTestCommon(const Space<dist_t>* pSpace, const ObjectVector& dataSet1, size_t maxNumRec, const string& tmpFileName) {
-  pSpace->WriteDataset(dataSet1, tmpFileName);
+bool fullTestCommon(const Space<dist_t>* pSpace, const ObjectVector& dataSet1, const vector<string>& vExternIds1, size_t maxNumRec, const string& tmpFileName,bool bTestExternId) {
+  pSpace->WriteDataset(dataSet1, vExternIds1, tmpFileName);
 
   ObjectVector dataSet2;
+  vector<string> vExternIds2;
 
-  pSpace->ReadDataset(dataSet2, tmpFileName);
+  pSpace->ReadDataset(dataSet2, vExternIds2, tmpFileName);
 
   if (maxNumRec != dataSet2.size()) {
     LOG(LIB_ERROR) << "Expected to read " << maxNumRec << " records from " 
@@ -56,21 +58,33 @@ bool fullTestCommon(const Space<dist_t>* pSpace, const ObjectVector& dataSet1, s
     return false;
   }
 
-  for (size_t i = 0; i < maxNumRec; ++i) 
-  if (!pSpace->ApproxEqual(*dataSet1[i], *dataSet2[i])) {
-    LOG(LIB_ERROR) << "Objects are different, i = " << i;
-    LOG(LIB_ERROR) << "Object 1 string representation produced by the space:" <<
-            pSpace->CreateStrFromObj(dataSet1[i]);
-    LOG(LIB_ERROR) << "Object 2 string representation produced by the space:" <<
-            pSpace->CreateStrFromObj(dataSet2[i]);
+  if (vExternIds2.size() != dataSet2.size()) {
+    LOG(LIB_ERROR) << "The number of external IDs (" << vExternIds1.size() << ") is different from the number of records: " << dataSet2.size();
     return false;
+  }
+
+  for (size_t i = 0; i < maxNumRec; ++i) {
+    if (bTestExternId) {
+      if (vExternIds1[i] != vExternIds2[i]) {
+        LOG(LIB_ERROR) << "External IDs are different, i = " << i << " id1 = '" << vExternIds1[i] << "' id2 = '" << vExternIds2[i] << "'" ;
+        return false;
+      }
+    }
+    if (!pSpace->ApproxEqual(*dataSet1[i], *dataSet2[i])) {
+      LOG(LIB_ERROR) << "Objects are different, i = " << i;
+      LOG(LIB_ERROR) << "Object 1 string representation produced by the space:" <<
+              pSpace->CreateStrFromObj(dataSet1[i], vExternIds1[i]);
+      LOG(LIB_ERROR) << "Object 2 string representation produced by the space:" <<
+              pSpace->CreateStrFromObj(dataSet2[i], vExternIds2[i]);
+      return false;
+    }
   }
 
   return true;
 }
 
 template <typename dist_t>
-bool fullTest(const string& dataSetFileName, size_t maxNumRec, const string& tmpFileName, const string& spaceName, const char* pSpaceParams[]) {
+bool fullTest(const string& dataSetFileName, size_t maxNumRec, const string& tmpFileName, const string& spaceName, const char* pSpaceParams[], bool bTestExternId) {
   vector<string> spaceParams;
 
   LOG(LIB_INFO) << "Space name: " << spaceName << " distance type: " << DistTypeName<dist_t>() << " data file: " << dataSetFileName << " maxNumRec=" << maxNumRec;
@@ -83,8 +97,9 @@ bool fullTest(const string& dataSetFileName, size_t maxNumRec, const string& tmp
                                   Instance().CreateSpace(spaceName, spaceParams));
 
   ObjectVector dataSet1;
+  vector<string> vExternIds1;
 
-  space->ReadDataset(dataSet1, sampleDataPrefix + dataSetFileName, maxNumRec);
+  space->ReadDataset(dataSet1, vExternIds1, sampleDataPrefix + dataSetFileName, maxNumRec);
 
   if (dataSet1.size() != maxNumRec) {
     LOG(LIB_ERROR) << "Bug or poorly designed test, expected to read " << maxNumRec << " records from " 
@@ -92,11 +107,11 @@ bool fullTest(const string& dataSetFileName, size_t maxNumRec, const string& tmp
     return false;
   }
 
-  return fullTestCommon(space.get(), dataSet1, maxNumRec, tmpFileName); 
+  return fullTestCommon(space.get(), dataSet1, vExternIds1, maxNumRec, tmpFileName, bTestExternId); 
 }
 
 template <typename dist_t>
-bool fullTest(const vector<string>& dataSetStr, size_t maxNumRec, const string& tmpFileName, const string& spaceName, const char* pSpaceParams[]) {
+bool fullTest(const vector<string>& dataSetStr, size_t maxNumRec, const string& tmpFileName, const string& spaceName, const char* pSpaceParams[], bool bTestExternId) {
   vector<string> spaceParams;
 
   LOG(LIB_INFO) << "Space name: " << spaceName << " maxNumRec=" << maxNumRec;
@@ -109,10 +124,16 @@ bool fullTest(const vector<string>& dataSetStr, size_t maxNumRec, const string& 
                                   Instance().CreateSpace(spaceName, spaceParams));
 
   ObjectVector dataSet1;
+  vector<string> vExternIds1;
 
   IdType id = 0;
   for (string s: dataSetStr) {
+    stringstream ss;
+    ss << id;
+      
     dataSet1.push_back(space->CreateObjFromStr(id++, -1, s, NULL).release());
+    vExternIds1.push_back(ss.str());
+    
     if (id >= maxNumRec) break;
   }
 
@@ -121,47 +142,58 @@ bool fullTest(const vector<string>& dataSetStr, size_t maxNumRec, const string& 
     return false;
   }
 
-  return fullTestCommon(space.get(), dataSet1, maxNumRec, tmpFileName); 
+  return fullTestCommon(space.get(), dataSet1, vExternIds1, maxNumRec, tmpFileName, bTestExternId); 
 }
 
 const char *emptyParams[] = {NULL};
+const char *paramsDistL2[]     = {"dist=" SPACE_WORD_EMBED_DIST_L2, NULL};
+const char *paramsDistCosine[] = {"dist=" SPACE_WORD_EMBED_DIST_COSINE, NULL};
+
+TEST(Test_WordEmbedSpace) {
+  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+    EXPECT_EQ(true, fullTest<float>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt", SPACE_WORD_EMBED, paramsDistL2, true));
+    EXPECT_EQ(true, fullTest<double>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt",SPACE_WORD_EMBED, paramsDistCosine, true));
+    EXPECT_EQ(true, fullTest<float>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt", SPACE_WORD_EMBED, paramsDistL2, true));
+    EXPECT_EQ(true, fullTest<double>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt",SPACE_WORD_EMBED, paramsDistCosine, true));
+  }
+}
 
 TEST(Test_DenseVectorSpace) {
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams));
-    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams));
+    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams, false));
+    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams, false));
   }
 }
 
 TEST(Test_DenseVectorKLDiv) {
   // Test KL-diverg. with and without precomputation of logarithms
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams));
-    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams));
-    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams));
-    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams));
+    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams, false));
+    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams, false));
+    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams, false));
+    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams, false));
   }
 }
 
 TEST(Test_SparseVectorSpace) {
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams));
-    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams));
-    EXPECT_EQ(true, fullTest<double>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams));
-    EXPECT_EQ(true, fullTest<double>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams));
+    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams, false));
+    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams, false));
+    EXPECT_EQ(true, fullTest<double>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams, false));
+    EXPECT_EQ(true, fullTest<double>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams, false));
   }
 }
 
 TEST(Test_SparseVectorSpaceFast) {
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse_fast", emptyParams));
-    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse_fast", emptyParams));
+    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse_fast", emptyParams, false));
+    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse_fast", emptyParams, false));
   }
 }
 
 TEST(Test_StringSpace) {
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<int>("dna32_4_5K.txt", maxNumRec, "tmp_out_file.txt", "leven", emptyParams));
+    EXPECT_EQ(true, fullTest<int>("dna32_4_5K.txt", maxNumRec, "tmp_out_file.txt", "leven", emptyParams, false));
   }
 }
 
@@ -178,15 +210,15 @@ TEST(Test_BitHamming) {
     testVect.push_back(ss.str());
   }
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<int>(testVect, maxNumRec, "tmp_out_file.txt", "bit_hamming", emptyParams));
+    EXPECT_EQ(true, fullTest<int>(testVect, maxNumRec, "tmp_out_file.txt", "bit_hamming", emptyParams, false));
   }
 }
 
 TEST(Test_SFQD) {
   const char* sqfdParams[] = {"alpha=1", NULL} ; 
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams));
-    EXPECT_EQ(true, fullTest<double>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams));
+    EXPECT_EQ(true, fullTest<float>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
+    EXPECT_EQ(true, fullTest<double>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
   }
 }
 
