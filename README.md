@@ -1,4 +1,4 @@
-Non-Metric Space Library
+Non-Metric Space Library (NMSLIB)
 =================
 Non-Metric Space Library is a cross-platform similarity search library and a toolkit for evaluation of similarity search methods.
 The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces.
