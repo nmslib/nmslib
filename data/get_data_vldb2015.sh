@@ -91,7 +91,7 @@ If you use it, please, consider citing:
 
 EOF
 
-#./download_wikipedia_sparse.sh
+./download_wikipedia_sparse.sh
 
 if [ "$?" != "0" ] ; then
   echo "Download of Wikipedia-sparse failed"
