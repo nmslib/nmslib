@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   float *M;
   char *vocab;
   if (argc < 2) {
-    printf("Usage: ./distance <FILE>\nwhere FILE contains word projections in the BINARY FORMAT\n");
+    printf("Usage: ./convert_word2vec <FILE>\nwhere FILE contains word projections in the BINARY FORMAT\n");
     return 0;
   }
   strcpy(file_name, argv[1]);
@@ -41,8 +41,12 @@ int main(int argc, char **argv) {
     printf("Input file not found\n");
     return -1;
   }
-  fscanf(f, "%lld", &words);
-  fscanf(f, "%lld", &size);
+  if (fscanf(f, "%lld", &words) != 1) {
+    fprintf(stderr, "Error reading from input file!");
+  }
+  if (fscanf(f, "%lld", &size) != 1) {
+    fprintf(stderr, "Error reading from input file!");
+  }
   vocab = (char *)malloc((long long)words * max_w * sizeof(char));
   M = (float *)malloc((long long)words * (long long)size * sizeof(float));
   if (M == NULL) {
@@ -50,8 +54,15 @@ int main(int argc, char **argv) {
     return -1;
   }
   for (b = 0; b < words; b++) {
-    fscanf(f, "%s%c", &vocab[b * max_w], &ch);
-    for (a = 0; a < size; a++) fread(&M[a + b * size], sizeof(float), 1, f);
+    if (fscanf(f, "%s%c", &vocab[b * max_w], &ch) != 2) {
+      fprintf(stderr, "Error reading from input file!");
+    }
+    
+    for (a = 0; a < size; a++) {
+      if (fread(&M[a + b * size], sizeof(float), 1, f) != 1) {
+        fprintf(stderr, "Error reading from input file!");
+      }
+    }
     len = 0;
     for (a = 0; a < size; a++) len += M[a + b * size] * M[a + b * size];
     len = sqrt(len);
@@ -63,7 +74,7 @@ int main(int argc, char **argv) {
   fprintf(stderr,"%lld %lld #File: %s\n",words,size,file_name);
   for (a = 0; a < words; a++){
     printf("%s ",&vocab[a * max_w]);
-    for (b = 0; b< size; b++){ printf("%f ",M[a*size + b]); }
+    for (b = 0; b< size; b++){ printf("%.9f ",M[a*size + b]); }
     printf("\n");
   }  
 
