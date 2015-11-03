@@ -171,6 +171,9 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
+  REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
+  REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
+  REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
 
   // An older version of Small-word (KNN-graph) with randomly generated neighborhood-networks
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_OLD, CreateSmallWorldRandOld)

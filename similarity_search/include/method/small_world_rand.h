@@ -32,6 +32,7 @@
 
 
 #define METH_SMALL_WORLD_RAND                 "small_world_rand"
+#define METH_SMALL_WORLD_RAND_SYN             "sw-graph"
 
 namespace similarity {
 
