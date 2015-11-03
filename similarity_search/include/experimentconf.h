@@ -37,7 +37,7 @@ using std::unordered_map;
 template <typename dist_t>
 class ExperimentConfig {
 public:
-  ExperimentConfig(const Space<dist_t>* space,
+  ExperimentConfig(Space<dist_t>* space,
                    const string& datafile,
                    const string& queryfile,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
@@ -73,7 +73,7 @@ public:
     }
   }
 
-  ExperimentConfig(const Space<dist_t>* space,
+  ExperimentConfig(Space<dist_t>* space,
                    const ObjectVector& externalData,
                    const ObjectVector& externalQuery,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
@@ -172,7 +172,7 @@ public:
 
   void ReadDataset();
 private:
-  const Space<dist_t>*    space_;
+  Space<dist_t>*    space_;
   ObjectVector      dataobjects_;
   ObjectVector      queryobjects_;
   ObjectVector      origData_;

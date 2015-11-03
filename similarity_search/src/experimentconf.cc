@@ -331,7 +331,10 @@ void ExperimentConfig<dist_t>::ReadDataset() {
         "The set of query objects in non-empty, did you read the data set already?");
 
   if (pExternalData_) CopyExternal(*pExternalData_, origData_, maxNumData_);
-  else space_->ReadDataset(origData_, tmp, datafile_, maxNumData_);
+  else {
+    unique_ptr<DataFileInputState> inpState(space_->ReadDataset(origData_, tmp, datafile_, maxNumData_));
+    space_->UpdateParamsFromFile(*inpState);
+  }
 
   /*
    * Note!!! 
@@ -345,7 +348,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     if (pExternalQuery_) 
       CopyExternal(*pExternalQuery_, queryobjects_, maxNumQuery_);
     else 
-      space_->ReadDataset(queryobjects_, tmp, queryfile_, maxNumQuery_);
+      space_->ReadDataset(queryobjects_, tmp, queryfile_, maxNumQueryToRun_);
 
     origQuery_ = queryobjects_;
   } else {

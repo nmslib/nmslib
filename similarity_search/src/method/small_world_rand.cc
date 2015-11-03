@@ -34,6 +34,7 @@
 #endif
 
 #define USE_BITSET_FOR_INDEXING 1
+//#define USE_ALTERNATIVE_FOR_INDEXING 
 
 namespace similarity {
 
@@ -254,7 +255,12 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
     priority_queue <dist_t>                     closestDistQueue;                      
     priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
 
+#ifdef USE_ALTERNATIVE_FOR_INDEXING
+    dist_t d = space->ProxyDistance(queryObj, provider->getData());
+    #pragma message "Using an alternative/proxy function for indexing, not the original one!"          
+#else
     dist_t d = space->IndexTimeDistance(queryObj, provider->getData());
+#endif
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
 
     candidateSet.push(ev);
@@ -321,7 +327,12 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
         if (visited.find((*iter)) == visited.end()) {
           visited.insert(*iter);
 #endif
+#ifdef USE_ALTERNATIVE_FOR_INDEXING
+          d = space->ProxyDistance(queryObj, (*iter)->getData());
+          #pragma message "Using an alternative/proxy function for indexing, not the original one!"          
+#else
           d = space->IndexTimeDistance(queryObj, (*iter)->getData());
+#endif
 
 
           closestDistQueue.push(d);

@@ -152,11 +152,13 @@ string SpaceBitHamming::CreateStrFromObj(const Object* pObj, const string& exter
   return out.str();
 }
 
-bool SpaceBitHamming::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+bool SpaceBitHamming::ReadNextObjStr(DataFileInputState &inpStateBase, string& strObj, LabelType& label, string& externId) const {
   externId.clear();
-  if (!inpState.inp_file_) return false;
-  if (!getline(inpState.inp_file_, strObj)) return false;
-  inpState.line_num_++;
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+  if (!pInpState->inp_file_) return false;
+  if (!getline(pInpState->inp_file_, strObj)) return false;
+  pInpState->line_num_++;
   return true;
 }
 

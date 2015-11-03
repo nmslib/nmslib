@@ -44,7 +44,7 @@ dist_t SpaceDummy<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2
 
 template <typename dist_t>
 unique_ptr<DataFileInputState> SpaceDummy<dist_t>::OpenReadFileHeader(const string& inpFileName) const {
-  return unique_ptr<DataFileInputState>(new DataFileInputState(inpFileName));
+  return unique_ptr<DataFileInputState>(new DataFileInputStateOneFile(inpFileName));
 }
 
 template <typename dist_t>
@@ -67,11 +67,13 @@ string SpaceDummy<dist_t>::CreateStrFromObj(const Object* pObj, const string& ex
 }
 
 template <typename dist_t>
-bool SpaceDummy<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+bool SpaceDummy<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string& strObj, LabelType& label, string& externId) const {
   externId.clear();
-  if (!inpState.inp_file_) return false;
-  if (!getline(inpState.inp_file_, strObj)) return false;
-  inpState.line_num_++;
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+  if (!pInpState->inp_file_) return false;
+  if (!getline(pInpState->inp_file_, strObj)) return false;
+  pInpState->line_num_++;
   return true;
 }
 

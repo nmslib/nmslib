@@ -38,6 +38,7 @@ public:
     ClassAccuracy_  .resize(TestSetQty);
     LogRelPosError_ .resize(TestSetQty);
     NumCloser_      .resize(TestSetQty);
+    RecallAt1_      .resize(TestSetQty);
     QueryTime_      .resize(TestSetQty);
     DistComp_       .resize(TestSetQty);
     ImprEfficiency_ .resize(TestSetQty);
@@ -62,6 +63,9 @@ public:
   }
   void AddNumCloser(size_t SetId, double NumCloser) {
     NumCloser_[SetId].push_back(NumCloser);
+  }
+  void AddRecallAt1(size_t SetId, double RecallAt1) {
+    RecallAt1_[SetId].push_back(RecallAt1);
   }
   void AddQueryTime(size_t SetId, double QueryTime) {
     QueryTime_[SetId].push_back(QueryTime);
@@ -91,6 +95,7 @@ public:
     ComputeOneSimple("ClassAccuracy", ClassAccuracy_, ClassAccuracyAvg, ClassAccuracyConfMin, ClassAccuracyConfMax);
     ComputeOneSimple("LogRelPosError", LogRelPosError_, LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax);
     ComputeOneSimple("NumCloser", NumCloser_, NumCloserAvg, NumCloserConfMin, NumCloserConfMax);
+    ComputeOneSimple("RecallAt1", RecallAt1_, RecallAt1Avg, RecallAt1ConfMin, RecallAt1ConfMax);
     ComputeOneMeta("QueryTime", QueryTime_, QueryTimeAvg, QueryTimeConfMin, QueryTimeConfMax);
     ComputeOneMeta("DistComp", DistComp_, DistCompAvg, DistCompConfMin, DistCompConfMax);
 
@@ -120,6 +125,10 @@ public:
   double GetNumCloserAvg() const { return NumCloserAvg;} 
   double GetNumCloserConfMin() const{return NumCloserConfMin;}; 
   double GetNumCloserConfMax() const { return NumCloserConfMax;}
+
+  double GetRecallAt1Avg() const { return RecallAt1Avg;} 
+  double GetRecallAt1ConfMin() const{return RecallAt1ConfMin;}; 
+  double GetRecallAt1ConfMax() const { return RecallAt1ConfMax;}
 
   double GetImprEfficiencyAvg() const { return ImprEfficiencyAvg;} 
   double GetImprEfficiencyConfMin() const{return ImprEfficiencyConfMin;}; 
@@ -154,6 +163,7 @@ double PrecisionOfApproxAvg, PrecisionOfApproxConfMin, PrecisionOfApproxConfMax;
 double ClassAccuracyAvg, ClassAccuracyConfMin, ClassAccuracyConfMax;
 double LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax;
 double NumCloserAvg, NumCloserConfMin, NumCloserConfMax;
+double RecallAt1Avg, RecallAt1ConfMin, RecallAt1ConfMax;
 double QueryTimeAvg, QueryTimeConfMin, QueryTimeConfMax;
 double DistCompAvg, DistCompConfMin, DistCompConfMax;
 double ImprEfficiencyAvg, ImprEfficiencyConfMin, ImprEfficiencyConfMax;
@@ -168,6 +178,7 @@ vector<vector<double>>   PrecisionOfApprox_;
 vector<vector<double>>   ClassAccuracy_; 
 vector<vector<double>>   LogRelPosError_; 
 vector<vector<double>>   NumCloser_; 
+vector<vector<double>>   RecallAt1_; 
 vector<vector<double>>   QueryTime_; 
 vector<vector<double>>   DistComp_; 
 vector<double>           ImprEfficiency_; 

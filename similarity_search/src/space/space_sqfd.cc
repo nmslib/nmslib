@@ -48,9 +48,9 @@ SpaceSqfd<dist_t>::~SpaceSqfd() {
   delete func_;
 }
 
-struct DataFileInputStateSQFD : public DataFileInputState {
+struct DataFileInputStateSQFD : public DataFileInputStateOneFile {
   DataFileInputStateSQFD(const string& inpFileName) : 
-                              DataFileInputState(inpFileName), 
+                              DataFileInputStateOneFile(inpFileName), 
                               num_clusters_(0), 
                               feature_dimension_(0),
                               num_rand_pixels_(0) { 
@@ -175,8 +175,8 @@ unique_ptr<Object> SpaceSqfd<dist_t>::CreateObjFromStr(IdType id, LabelType labe
 
   size_t currLine = 0;
 
-  if (pInpStateBase != NULL) {
-    currLine = pInpStateBase->line_num_;
+  if (pInpState != NULL) {
+    currLine = pInpState->line_num_;
     if (!currLine) {
       throw  runtime_error("Bug: got a zero line number while expecting a positive one!");
     }

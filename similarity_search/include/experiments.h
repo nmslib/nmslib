@@ -238,6 +238,7 @@ public:
     vector<double>    ClassAccuracy(MethQty);
     vector<double>    Recall(MethQty);
     vector<double>    NumCloser(MethQty);
+    vector<double>    RecallAt1(MethQty);
     vector<double>    LogPosErr(MethQty);
     vector<double>    PrecisionOfApprox(MethQty);
     vector<double>    SystemTimeElapsed(MethQty);
@@ -340,6 +341,7 @@ public:
           EvalResults<dist_t>     Eval(config.GetSpace(), pQuery, QueryGS);
 
           NumCloser[MethNum]    += Eval.GetNumCloser();
+          RecallAt1[MethNum]    += Eval.GetRecallAt1();
           LogPosErr[MethNum]    += Eval.GetLogRelPos();
           Recall[MethNum]       += Eval.GetRecall();
           double addAccuracy = (Eval.GetClassCorrect() == kClassCorrect ? 1:0);
@@ -351,6 +353,7 @@ public:
           ExpRes[MethNum]->AddClassAccuracy(TestSetId, addAccuracy);
           ExpRes[MethNum]->AddLogRelPosError(TestSetId, Eval.GetLogRelPos());
           ExpRes[MethNum]->AddNumCloser(TestSetId, Eval.GetNumCloser());
+          ExpRes[MethNum]->AddRecallAt1(TestSetId, Eval.GetRecallAt1());
 
         }
       }
@@ -407,6 +410,7 @@ public:
         EvalResults<dist_t>     Eval(config.GetSpace(), query.get(), QueryGS);
 
         NumCloser[MethNum]    += Eval.GetNumCloser();
+        RecallAt1[MethNum]    += Eval.GetRecallAt1();
         LogPosErr[MethNum]    += Eval.GetLogRelPos();
         Recall[MethNum]       += Eval.GetRecall();
         double addAccuracy = (Eval.GetClassCorrect() == kClassCorrect ? 1:0);
@@ -418,6 +422,7 @@ public:
         ExpRes[MethNum]->AddClassAccuracy(TestSetId, addAccuracy);
         ExpRes[MethNum]->AddLogRelPosError(TestSetId, Eval.GetLogRelPos());
         ExpRes[MethNum]->AddNumCloser(TestSetId, Eval.GetNumCloser());
+        ExpRes[MethNum]->AddRecallAt1(TestSetId, Eval.GetRecallAt1());
       }
     }
 #endif
@@ -454,6 +459,7 @@ public:
       Recall[MethNum]            /= static_cast<double>(numquery);
       ClassAccuracy[MethNum]     /= static_cast<double>(numquery);
       NumCloser[MethNum]         /= static_cast<double>(numquery);
+      RecallAt1[MethNum]         /= static_cast<double>(numquery);
       LogPosErr[MethNum]         /= static_cast<double>(numquery);
       PrecisionOfApprox[MethNum] /= static_cast<double>(numquery);
     
@@ -467,6 +473,7 @@ public:
         LOG(LIB_INFO) << ">>>> PrecisionOfApprox   = "           << PrecisionOfApprox[MethNum];
         LOG(LIB_INFO) << ">>>> RelPosError         = "           << exp(LogPosErr[MethNum]);
         LOG(LIB_INFO) << ">>>> NumCloser           = "           << NumCloser[MethNum];
+        LOG(LIB_INFO) << ">>>> RecallAt1           = "           << RecallAt1[MethNum];
         LOG(LIB_INFO) << ">>>> Class. accuracy     = "           << ClassAccuracy[MethNum];
       }
     }

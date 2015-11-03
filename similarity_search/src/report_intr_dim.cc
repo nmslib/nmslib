@@ -98,7 +98,8 @@ void TestSpace(
 
   ObjectVector    data;
   vector<string>  tmp;
-  space->ReadDataset(data, tmp, dataFile, maxNumData);
+  unique_ptr<DataFileInputState> inpState(space->ReadDataset(data, tmp, dataFile, maxNumData));
+  space->UpdateParamsFromFile(*inpState);
 
   // Prints the report
   ReportIntrinsicDimensionality("********", *space, data, sampleQty);

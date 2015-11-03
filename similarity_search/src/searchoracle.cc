@@ -154,7 +154,7 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
     vector<dist_t>                    range;
     // The cloned space will be in the indexing mode.
     // Otherwise, the tunning code will crash while accessing function IndexTimeDistance() 
-    unique_ptr<const Space<dist_t>>   clonedSpace(space_->Clone());
+    unique_ptr<Space<dist_t>>   clonedSpace(space_->Clone());
 
     if (pmgr.hasParam(TUNE_R_PARAM)) {
       dist_t r;

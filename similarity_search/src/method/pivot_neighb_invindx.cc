@@ -342,7 +342,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
     }
   }
 
-  size_t db_scan = computeDbScan(K);
+  size_t db_scan = computeDbScan(K, posting_lists_.size());
 
 
   Permutation perm_q;

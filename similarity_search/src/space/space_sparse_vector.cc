@@ -79,7 +79,7 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, size_t line_num,
 
 template <typename dist_t>
 unique_ptr<DataFileInputState> SpaceSparseVector<dist_t>::OpenReadFileHeader(const string& inpFileName) const {
-  return unique_ptr<DataFileInputState>(new DataFileInputState(inpFileName));
+  return unique_ptr<DataFileInputState>(new DataFileInputStateOneFile(inpFileName));
 }
 
 template <typename dist_t>
@@ -93,11 +93,14 @@ unique_ptr<Object>
 SpaceSparseVector<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& s,
                                       DataFileInputState* pInpStateBase) const {
   if (NULL == pInpStateBase) {
-    PREPARE_RUNTIME_ERR(err) << "Bug: unexpected NULL pointer type";
+    PREPARE_RUNTIME_ERR(err) << "Bug: unexpected NULL pointer";
     THROW_RUNTIME_ERR(err);
   }
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(pInpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+
   vector<ElemType>  vec;
-  ReadSparseVec(s, pInpStateBase->line_num_, label, vec);
+  ReadSparseVec(s, pInpState->line_num_, label, vec);
   return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
 }
 
@@ -131,11 +134,13 @@ string SpaceSparseVector<dist_t>::CreateStrFromObj(const Object* pObj, const str
 
 
 template <typename dist_t>
-bool SpaceSparseVector<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+bool SpaceSparseVector<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string& strObj, LabelType& label, string& externId) const {
   externId.clear();
-  if (!inpState.inp_file_) return false;
-  if (!getline(inpState.inp_file_, strObj)) return false;
-  inpState.line_num_++;
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected reference type");
+  if (!pInpState->inp_file_) return false;
+  if (!getline(pInpState->inp_file_, strObj)) return false;
+  pInpState->line_num_++;
   return true;
 }
 

@@ -71,13 +71,15 @@ string StringSpace<dist_t>::CreateStrFromObj(const Object* pObj, const string& e
 }
 
 template <typename dist_t>
-bool StringSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+bool StringSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string& strObj, LabelType& label, string& externId) const {
   externId.clear();
-  if (!inpState.inp_file_) return false;
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+  if (!pInpState->inp_file_) return false;
   string line;
-  if (!getline(inpState.inp_file_, line)) return false;
-  inpState.line_num_++;
-  ReadStr(line, label, strObj, &inpState.line_num_);
+  if (!getline(pInpState->inp_file_, line)) return false;
+  pInpState->line_num_++;
+  ReadStr(line, label, strObj, &pInpState->line_num_);
   return true;
 }
 

@@ -7,15 +7,15 @@
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
  * 
- * Copyright (c) 2014
+ * Copyright (c) 2015
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
 
-#ifndef _SPACE_H_
-#define _SPACE_H_
+#ifndef SPACE_H
+#define SPACE_H
 
 #include <string>
 #include <map>
@@ -74,8 +74,13 @@ template <typename dist_t>
 class Experiments;
 
 struct DataFileInputState {
+  virtual void Close() {};
+  virtual ~DataFileInputState(){};
+};
+
+struct DataFileInputStateOneFile : public DataFileInputState {
   virtual void Close() { inp_file_.close(); }
-  DataFileInputState(const string& inpFileName) :
+  DataFileInputStateOneFile(const string& inpFileName) :
                                           inp_file_(inpFileName.c_str()), line_num_(0) {
 
     if (!inp_file_) {
@@ -85,13 +90,13 @@ struct DataFileInputState {
 
     inp_file_.exceptions(ios::badbit);
   }
-  virtual ~DataFileInputState(){};
+  virtual ~DataFileInputStateOneFile(){};
   ifstream        inp_file_;
   size_t          line_num_;
 };
 
-struct DataFileInputStateVec : public DataFileInputState {
-  DataFileInputStateVec(const string& inpFileName) : DataFileInputState(inpFileName), dim_(0) { } 
+struct DataFileInputStateVec : public DataFileInputStateOneFile {
+  DataFileInputStateVec(const string& inpFileName) : DataFileInputStateOneFile(inpFileName), dim_(0) { } 
   unsigned        dim_;
 };
 
@@ -120,6 +125,10 @@ class Space {
                                  " function is accessible only during the indexing phase!");
     }
     return HiddenDistance(obj1, obj2);
+  }
+
+  virtual dist_t ProxyDistance(const Object* obj1, const Object* obj2) const {
+    throw runtime_error("Not supported!");
   }
 
   virtual string ToString() const = 0;
@@ -158,7 +167,12 @@ class Space {
   virtual void WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &outState) const {
     outState.out_file_ << CreateStrFromObj(&obj, externId) << endl;
   }
-  /** End of standard functions to read/write/create objects */ 
+  /*
+   * This function allows setting space parameters (and creating additional parameter-dependent data structures)
+   * based on the content of the input file.
+   */
+  virtual void UpdateParamsFromFile(DataFileInputState& inpState) {}
+  /** End of standard functions to read/write/create objects as well as update state parameters */ 
 
   /*
    * Used only for testing/debugging: compares objects approximately. Floating point numbers
@@ -166,7 +180,7 @@ class Space {
    */
   virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const = 0;
 
-  void ReadDataset(ObjectVector& dataset,
+  unique_ptr<DataFileInputState>  ReadDataset(ObjectVector& dataset,
                    vector<string>& vExternIds,
                    const string& inputFile,
                    const int MaxNumObjects = numeric_limits<int>::max()) const;

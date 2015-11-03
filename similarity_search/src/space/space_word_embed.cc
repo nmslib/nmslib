@@ -49,17 +49,19 @@ string WordEmbedSpace<dist_t>::CreateStrFromObj(const Object* pObj, const string
 }
 
 template <typename dist_t>
-bool WordEmbedSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+bool WordEmbedSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string& strObj, LabelType& label, string& externId) const {
   externId.clear();
-  if (!inpState.inp_file_) return false;
-  if (!getline(inpState.inp_file_, strObj)) return false;
-  inpState.line_num_++;
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+  if (!pInpState->inp_file_) return false;
+  if (!getline(pInpState->inp_file_, strObj)) return false;
+  pInpState->line_num_++;
   ssize_t pos = -1;
   for (size_t i = 0; i < strObj.size(); ++i) 
   if (isspace(strObj[i])) { pos = i ; break; }
 
   if (-1 == pos) {
-    PREPARE_RUNTIME_ERR(err) << "No white space in line #" << inpState.line_num_ << " line: 'strObj'";
+    PREPARE_RUNTIME_ERR(err) << "No white space in line #" << pInpState->line_num_ << " line: 'strObj'";
     THROW_RUNTIME_ERR(err);
   }
   externId = strObj.substr(0, pos);

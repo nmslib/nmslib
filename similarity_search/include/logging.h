@@ -69,11 +69,17 @@ class RuntimeErrorWrapper {
 #define LOG(severity) \
   Logger(severity, __FILE__, __LINE__, __FUNCTION__).stream()
 
-// always check
+
 #define CHECK(condition) \
   if (!(condition)) {\
     LOG(LIB_ERROR) << "Check failed: " << #condition;  \
     throw runtime_error("Check failed: it's either a bug or inconsistent data!"); \
+  }
+
+#define CHECK_MSG(condition,message) \
+  if (!(condition)) {\
+    LOG(LIB_ERROR) << "Check failed: " << #condition;  \
+    throw runtime_error("Check failed: " + string(message)); \
   }
 
 // debug only check and log

@@ -22,7 +22,7 @@ using std::vector;
 using std::string;
 
 template <typename dist_t>
-void Space<dist_t>::ReadDataset(ObjectVector& dataset,
+unique_ptr<DataFileInputState> Space<dist_t>::ReadDataset(ObjectVector& dataset,
                            vector<string>& vExternIds,
                            const string& inputFile,
                            const int MaxNumObjects) const {
@@ -36,6 +36,7 @@ void Space<dist_t>::ReadDataset(ObjectVector& dataset,
     vExternIds.push_back(externId);
   }
   inpState->Close();
+  return inpState;
 }
 
 template <typename dist_t>

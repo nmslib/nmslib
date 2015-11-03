@@ -77,6 +77,12 @@ public:
    *
    */
   double GetNumCloser()       const { return NumberCloser_;}
+
+  /*
+   * Recall of the closets (1-NN) entry
+   */
+  double GetRecallAt1()       const { return RecallAt1_;}
+
    /*
     * An average logarithm of a relative position error.
     * Just exponentiate to get a geometric mean of relative position errors.
@@ -175,6 +181,7 @@ private:
     ClassCorrect_      = kClassUnknown;
     Recall_            = EvalRecall<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
     NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    RecallAt1_         = NumberCloser_ > 0.1 ? 0.0 : 1;
     PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
     LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
 
@@ -201,6 +208,7 @@ private:
     }
   }
 
+  double                              RecallAt1_;
   double                              NumberCloser_;
   double                              LogRelPosError_;
   double                              Recall_;

@@ -65,7 +65,7 @@ VectorSpace<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& 
     if (pInpState->dim_ == 0) pInpState->dim_ = vec.size();
     else if (vec.size() != pInpState->dim_) {
       stringstream lineStr;
-      if (pInpStateBase != NULL) lineStr <<  " line:" << pInpStateBase->line_num_ << " ";
+      if (pInpStateBase != NULL) lineStr <<  " line:" << pInpState->line_num_ << " ";
       PREPARE_RUNTIME_ERR(err) << "The # of vector elements (" << vec.size() << ")" << lineStr.str() << 
                       " doesn't match the # of elements in previous lines. (" << pInpState->dim_ << " )";
       THROW_RUNTIME_ERR(err);
@@ -107,11 +107,13 @@ string VectorSpace<dist_t>::CreateStrFromObj(const Object* pObj, const string& e
 }
 
 template <typename dist_t>
-bool VectorSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpState, string& strObj, LabelType& label, string& externId) const {
+bool VectorSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string& strObj, LabelType& label, string& externId) const {
   externId.clear();
-  if (!inpState.inp_file_) return false;
-  if (!getline(inpState.inp_file_, strObj)) return false;
-  inpState.line_num_++;
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+  if (!pInpState->inp_file_) return false;
+  if (!getline(pInpState->inp_file_, strObj)) return false;
+  pInpState->line_num_++;
   return true;
 }
 

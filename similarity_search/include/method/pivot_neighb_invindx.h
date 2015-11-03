@@ -108,9 +108,11 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
 
   ObjectVector pivot_;
 
-  size_t computeDbScan(size_t K) {
+  size_t computeDbScan(size_t K, size_t chunkQty) {
     if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
-    return static_cast<size_t>(db_scan_frac_ * data_.size());
+    CHECK_MSG(chunkQty, "Bug or inconsistent parameters: the number of index chunks cannot be zero!");
+    size_t totalDbScan = static_cast<size_t>(db_scan_frac_ * data_.size());
+    return (totalDbScan + chunkQty - 1) / chunkQty;
   }
   
   vector<shared_ptr<vector<PostingListInt>>> posting_lists_;
