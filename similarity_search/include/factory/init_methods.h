@@ -19,8 +19,8 @@
 #include "methodfactory.h"
 
 
-#ifndef _MSC_VER
-// These guys won't work on Windows yet
+#ifndef WITHOUT_LSH
+// These guys won't work on Windows and MACOSX yet
 #include "factory/method/lsh.h"
 #include "factory/method/lsh_multiprobe.h"
 #endif
@@ -75,8 +75,8 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_LIST_CLUSTERS, CreateListClusters)
   REGISTER_METHOD_CREATOR(int,    METH_LIST_CLUSTERS, CreateListClusters)
 
-#ifndef _MSC_VER
-// These guys won't work on Windows yet
+#ifndef WITHOUT_LSH
+// These guys won't work on Windows and MACOSX yet
   // Regular LSH
   REGISTER_METHOD_CREATOR(float,  METH_LSH_CAUCHY, CreateLSHCauchy)
   REGISTER_METHOD_CREATOR(float,  METH_LSH_GAUSSIAN, CreateLSHGaussian)
@@ -197,6 +197,7 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_VPTREE, CreateVPTree)
   REGISTER_METHOD_CREATOR(double, METH_VPTREE, CreateVPTree)
 
+#ifndef WITHOUT_VPTREE_OLD
   // VP-tree (old version), piecewise-linear approximation of the decision rule
   REGISTER_METHOD_CREATOR(int,    METH_VPTREE_OLD, CreateVPTreeOldTriang)
   REGISTER_METHOD_CREATOR(float,  METH_VPTREE_OLD, CreateVPTreeOldTriang)
@@ -206,6 +207,7 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(int,    METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
   REGISTER_METHOD_CREATOR(float,  METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
   REGISTER_METHOD_CREATOR(double, METH_VPTREE_OLD_SAMPLE, CreateVPTreeOldSample)
+#endif     // WIHTOUT_VPTREE_OLD
 
   // A multi-index combination
   REGISTER_METHOD_CREATOR(float,  METH_MULT_INDEX, CreateMultiIndex)

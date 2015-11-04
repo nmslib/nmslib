@@ -13,6 +13,9 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+
+#ifndef WITHOUT_VPTREE_OLD
+
 #ifndef _VPTREE_OLD_H_
 #define _VPTREE_OLD_H_
 
@@ -101,3 +104,5 @@ class VPTreeOld : public Index<dist_t> {
 }   // namespace similarity
 
 #endif
+
+#endif    // WITHOUT_VPTREE_OLD

@@ -26,7 +26,7 @@ add_dependencies (bench_distfunc NonMetricSpaceLib)
 add_dependencies (test_integr NonMetricSpaceLib)
 add_dependencies (bunit NonMetricSpaceLib)
 
-if (NOT WIN32)
+if (NOT WITHOUT_LSH)
   add_executable (bench_projection bench_projection.cc)
 
   add_dependencies (bunit lshkit)
@@ -39,10 +39,10 @@ if (NOT WIN32)
 
   target_link_libraries (bench_projection NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
 else()
-# NO lshkit for Win32
+# NO lshkit for Win32 and MACOSX
   set(LSHKIT_LIB "")
   set(GSL_LIB "")
-  set(BOOST_LIB "")
+  set(BOOST_LIB ${Boost_LIBRARIES})
 endif()
 
 target_link_libraries (bunit NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
