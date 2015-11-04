@@ -102,11 +102,6 @@ dist_t WordEmbedSpace<dist_t>::HiddenDistance(const Object* obj1, const Object* 
   THROW_RUNTIME_ERR(err);
 }
 
-template <typename dist_t>
-Space<dist_t>* WordEmbedSpace<dist_t>::HiddenClone() const {
-  return new WordEmbedSpace<dist_t>(distType_);
-}
-
 /* 
  * Note that we don't instantiate vector spaces for types other than float & double
  */

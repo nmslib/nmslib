@@ -28,7 +28,7 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateProjectionIndexIncremental(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
+                           Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
   return new ProjectionIndexIncremental<dist_t>(PrintProgress,

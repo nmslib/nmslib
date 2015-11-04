@@ -34,6 +34,7 @@ namespace similarity {
 
 class SpaceBitHamming : public Space<int> {
  public:
+  explicit SpaceBitHamming() {}
   virtual ~SpaceBitHamming() {}
 
   /** Standard functions to read/write/create objects */ 
@@ -70,9 +71,10 @@ class SpaceBitHamming : public Space<int> {
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
   Object* CreateObjFromBitMaskVect(IdType id, LabelType label, const std::vector<uint32_t>& bitMaskVect) const;
-  virtual Space<int>* HiddenClone() const { return new SpaceBitHamming(); } // no parameters 
   virtual int HiddenDistance(const Object* obj1, const Object* obj2) const;
   void ReadBitMaskVect(std::string line, LabelType& label, std::vector<uint32_t>& v) const;
+
+  DISABLE_COPY_AND_ASSIGN(SpaceBitHamming);
 };
 
 }  // namespace similarity

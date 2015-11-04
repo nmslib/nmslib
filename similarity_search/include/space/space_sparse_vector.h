@@ -72,6 +72,7 @@ class SpaceSparseVector : public Space<dist_t> {
 public:
   typedef SparseVectElem<dist_t> ElemType;
 
+  explicit SpaceSparseVector() {}
   virtual ~SpaceSparseVector() {}
 
   /** Standard functions to read/write/create objects */ 
@@ -108,9 +109,9 @@ public:
 
   virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const = 0;
 protected:
-  virtual Space<dist_t>* HiddenClone() const = 0;
   void ReadSparseVec(std::string line, size_t line_num, IdType& label, vector<ElemType>& v) const;
   virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const  = 0;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseVector);
 };
 
 template <typename dist_t>
@@ -119,6 +120,7 @@ public:
   typedef SparseVectElem<dist_t> ElemType;
 
   virtual ~SpaceSparseVectorSimpleStorage() {}
+  explicit SpaceSparseVectorSimpleStorage() {}
 
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const {
@@ -143,6 +145,8 @@ public:
                             ComputeDistanceHelper(obj1, obj2, distObjNormSP);
   }
 protected:
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorSimpleStorage);
+
   virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const {
     const ElemType* beg = reinterpret_cast<const ElemType*>(obj->data());
     const ElemType* const end =
@@ -151,7 +155,6 @@ protected:
     v.resize(qty);
     for (size_t i = 0; i < qty; ++i) v[i] = beg[i];
   }
-  virtual Space<dist_t>* HiddenClone() const = 0;
 
   struct SpaceNormScalarProduct {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {

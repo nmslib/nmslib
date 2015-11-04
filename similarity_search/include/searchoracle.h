@@ -139,16 +139,17 @@ template <typename dist_t>
 class PolynomialPruner {
 public:
   static std::string GetName() { return "polynomial pruner"; }
-  PolynomialPruner(const Space<dist_t>* space, const ObjectVector& data, bool bPrintProgres) : 
+  PolynomialPruner(Space<dist_t>* space, const ObjectVector& data, bool bPrintProgres) : 
       space_(space), data_(data), printProgress_(bPrintProgres), alpha_left_(1), exp_left_(1), alpha_right_(1), exp_right_(1) {}
-  void SetParams(AnyParamManager& pmgr);
+  void SetQueryTimeParams(AnyParamManager& pmgr);
+  void SetIndexTimeParams(AnyParamManager& pmgr);
 
-  vector<string> GetParams() const {
-    vector<string> res = {ALPHA_LEFT_PARAM, EXP_LEFT_PARAM, ALPHA_RIGHT_PARAM, EXP_RIGHT_PARAM, 
-
+  vector<string> GetQueryTimeParamNames() const {
+    vector<string> res = {ALPHA_LEFT_PARAM, EXP_LEFT_PARAM, ALPHA_RIGHT_PARAM, EXP_RIGHT_PARAM};
+/*
                           MIN_EXP_PARAM, MAX_EXP_PARAM, DESIRED_RECALL_PARAM, TUNE_K_PARAM, TUNE_R_PARAM, TUNE_QTY_PARAM,
-
                           MAX_CACHE_GS_QTY_PARAM, MAX_ITER_PARAM, MAX_REC_DEPTH_PARAM, STEP_N_PARAM, ADD_RESTART_QTY_PARAM, FULL_FACTOR_PARAM};
+*/
     return res;
   }
   
@@ -189,7 +190,7 @@ public:
     return str.str();
   }
 private:
-  const Space<dist_t>*  space_;
+  Space<dist_t>*        space_;
   const ObjectVector    data_;
   bool                  printProgress_;
 

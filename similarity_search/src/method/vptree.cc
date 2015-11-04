@@ -40,7 +40,7 @@ using std::cerr;
 template <typename dist_t, typename SearchOracle>
 VPTree<dist_t, SearchOracle>::VPTree(
                        bool  PrintProgress,
-                       const Space<dist_t>* space,
+                       Space<dist_t>* space,
                        const ObjectVector& data,
                        const AnyParams& MethParams,
                        bool use_random_center) : 
@@ -58,11 +58,11 @@ VPTree<dist_t, SearchOracle>::VPTree(
   LOG(LIB_INFO) << "chunkBucket = " << ChunkBucket_;
 
   // Call this function *ONLY AFTER* the bucket size is obtained!
+  oracle_.SetIndexTimeParams(pmgr);
+  oracle_.LogParams();
   VPTree<dist_t,SearchOracle>::SetQueryTimeParamsInternal(pmgr);
 
   pmgr.CheckUnused();
-
-  oracle_.LogParams();
 
   unique_ptr<ProgressDisplay>   progress_bar(PrintProgress ? 
                                               new ProgressDisplay(data.size(), cerr):

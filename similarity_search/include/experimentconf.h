@@ -136,6 +136,7 @@ public:
   }
   size_t GetOrigDataQty() const { return origData_.size(); }
   const Space<dist_t>*  GetSpace() const { return space_; }
+  Space<dist_t>*  GetSpace() { return space_; }
   const ObjectVector& GetDataObjects() const { return dataobjects_; }
   const ObjectVector& GetQueryObjects() const { return queryobjects_; }
   const typename std::vector<unsigned>& GetKNN() const { return knn_; }

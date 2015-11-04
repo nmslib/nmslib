@@ -45,6 +45,7 @@ namespace similarity {
 template <typename dist_t>
 class BregmanDiv : public VectorSpace<dist_t> {
  public:
+  explicit BregmanDiv() {}
   virtual ~BregmanDiv() {}
 
   /* computes the Bregman generator function */
@@ -98,6 +99,7 @@ class BregmanDiv : public VectorSpace<dist_t> {
 template <typename dist_t>
 class KLDivAbstract : public BregmanDiv<dist_t> {
  public:
+  explicit KLDivAbstract() {}
   virtual ~KLDivAbstract() {}
 
   virtual dist_t Function(const Object* object) const;
@@ -115,6 +117,7 @@ class KLDivAbstract : public BregmanDiv<dist_t> {
 template <typename dist_t>
 class KLDivGenSlow : public KLDivAbstract<dist_t> {
  public:
+  explicit KLDivGenSlow() {}
   virtual ~KLDivGenSlow() {}
 
   virtual std::string ToString() const { return "Generalized Kullback-Leibler divergence"; }
@@ -122,14 +125,15 @@ class KLDivGenSlow : public KLDivAbstract<dist_t> {
 
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t); }
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new KLDivGenSlow<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
+  DISABLE_COPY_AND_ASSIGN(KLDivGenSlow);
 };
 
 template <typename dist_t>
 class KLDivGenFast : public KLDivAbstract<dist_t> {
  public:
+  explicit KLDivGenFast() {}
   virtual ~KLDivGenFast() {}
 
   virtual Object* InverseGradientFunction(const Object* object) const;
@@ -138,14 +142,15 @@ class KLDivGenFast : public KLDivAbstract<dist_t> {
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
   virtual Object* Mean(const ObjectVector& data) const;
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new KLDivGenFast<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
+  DISABLE_COPY_AND_ASSIGN(KLDivGenFast);
 };
 
 template <typename dist_t>
 class ItakuraSaitoFast : public BregmanDiv<dist_t> {
  public:
+  explicit ItakuraSaitoFast() {}
   virtual ~ItakuraSaitoFast() {}
 
   virtual dist_t Function(const Object* object) const;
@@ -157,14 +162,15 @@ class ItakuraSaitoFast : public BregmanDiv<dist_t> {
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
   virtual Object* Mean(const ObjectVector& data) const;
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new ItakuraSaitoFast<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
+  DISABLE_COPY_AND_ASSIGN(ItakuraSaitoFast);
 };
 
 template <typename dist_t>
 class KLDivGenFastRightQuery : public VectorSpace<dist_t> {
  public:
+  explicit KLDivGenFastRightQuery() {}
   virtual ~KLDivGenFastRightQuery() {}
 
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
@@ -177,14 +183,15 @@ class KLDivGenFastRightQuery : public VectorSpace<dist_t> {
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new KLDivGenFastRightQuery<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
+  DISABLE_COPY_AND_ASSIGN(KLDivGenFastRightQuery);
 };
 
 template <typename dist_t>
 class KLDivFast: public VectorSpace<dist_t> {
  public:
+  explicit KLDivFast() {}
   virtual ~KLDivFast() {}
 
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
@@ -197,14 +204,15 @@ class KLDivFast: public VectorSpace<dist_t> {
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new KLDivFast<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
+  DISABLE_COPY_AND_ASSIGN(KLDivFast);
 };
 
 template <typename dist_t>
 class KLDivFastRightQuery: public VectorSpace<dist_t> {
  public:
+  explicit KLDivFastRightQuery() {}
   virtual ~KLDivFastRightQuery() {}
 
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
@@ -217,9 +225,9 @@ class KLDivFastRightQuery: public VectorSpace<dist_t> {
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new KLDivFastRightQuery<dist_t>(); } // no parameters 
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
+  DISABLE_COPY_AND_ASSIGN(KLDivFastRightQuery);
 };
 
 }  // namespace similarity

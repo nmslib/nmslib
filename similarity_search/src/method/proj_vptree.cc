@@ -67,7 +67,7 @@ void ProjectionVPTree<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr)
 
 template <typename dist_t>
 ProjectionVPTree<dist_t>::ProjectionVPTree(
-    const Space<dist_t>* space,
+    Space<dist_t>* space,
     const ObjectVector& data,
     const AnyParams& AllParams) : 
       space_(space),
@@ -149,8 +149,8 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
     throw runtime_error(err.str());
   }
 
-  const VectorSpaceSimpleStorage<float>*  ps =
-      dynamic_cast<const VectorSpaceSimpleStorage<float>*>(tmpSpace.get());
+  VectorSpaceSimpleStorage<float>*  ps =
+      dynamic_cast<VectorSpaceSimpleStorage<float>*>(tmpSpace.get());
 
   if (NULL == ps) {
     stringstream err;

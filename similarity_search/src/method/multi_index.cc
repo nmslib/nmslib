@@ -34,7 +34,7 @@ using std::unique_ptr;
 template <typename dist_t>
 MultiIndex<dist_t>::MultiIndex(
          const string& SpaceType,
-         const Space<dist_t>* space, 
+         Space<dist_t>* space, 
          const ObjectVector& data,
          const AnyParams& AllParams) : space_(space) {
   bool            PrintProgress = false;

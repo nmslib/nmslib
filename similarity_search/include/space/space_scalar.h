@@ -39,17 +39,19 @@ namespace similarity {
 template <typename dist_t>
 class SpaceCosineSimilarity : public VectorSpaceSimpleStorage<dist_t> {
 public:
+  SpaceCosineSimilarity() {}
   virtual std::string ToString() const {
     return "CosineSimilarity";
   }
 protected:
-  virtual Space<dist_t>* HiddenClone() const { return new SpaceCosineSimilarity<dist_t>(); } // no parameters 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
+  DISABLE_COPY_AND_ASSIGN(SpaceCosineSimilarity);
 };
 
 template <typename dist_t>
 class SpaceAngularDistance : public VectorSpaceSimpleStorage<dist_t> {
 public:
+  SpaceAngularDistance() {}
   virtual std::string ToString() const {
     return "AngularDistance";
   }
@@ -63,8 +65,8 @@ public:
   }
 
 protected:
-  virtual Space<dist_t>* HiddenClone() const { return new SpaceAngularDistance<dist_t>(); } // no parameters 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
+  DISABLE_COPY_AND_ASSIGN(SpaceAngularDistance);
 };
 
 

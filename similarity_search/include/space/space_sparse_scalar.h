@@ -46,7 +46,6 @@ class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t>
   }
 
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new SpaceSparseAngularDistance<dist_t>(); } // no parameters 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     return SpaceSparseVectorSimpleStorage<dist_t>::
                         ComputeDistanceHelper(obj1, obj2, distObjAngular_);
@@ -61,6 +60,7 @@ class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t>
     }
   };
   SpaceAngularDist        distObjAngular_;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseAngularDistance);
 };
 
 template <typename dist_t>
@@ -74,7 +74,6 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t
   }
 
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new SpaceSparseCosineSimilarity<dist_t>(); } // no parameters 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     return SpaceSparseVectorSimpleStorage<dist_t>::
                   ComputeDistanceHelper(obj1, obj2, distObjCosineSimilarity_);
@@ -89,6 +88,7 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t
     }
   };
   SpaceCosineSimilarityDist        distObjCosineSimilarity_;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseCosineSimilarity);
 };
 
 

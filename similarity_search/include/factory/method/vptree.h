@@ -30,7 +30,7 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateVPTree(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
+                           Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
     return new VPTree<dist_t,PolynomialPruner<dist_t>>(PrintProgress,
@@ -43,7 +43,7 @@ Index<dist_t>* CreateVPTree(bool PrintProgress,
 template <typename dist_t>
 Index<dist_t>* CreateVPTreeOldTriang(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
+                           Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
     AnyParamManager pmgr(AllParams);
@@ -69,7 +69,7 @@ Index<dist_t>* CreateVPTreeOldTriang(bool PrintProgress,
 template <typename dist_t>
 Index<dist_t>* CreateVPTreeOldSample(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
+                           Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
     AnyParamManager pmgr(AllParams);

@@ -37,7 +37,7 @@ namespace similarity {
 template <typename dist_t>
 class ProjectionVPTree : public Index<dist_t> {
  public:
-  ProjectionVPTree(const Space<dist_t>* space,
+  ProjectionVPTree(Space<dist_t>* space,
                    const ObjectVector& data,
                    const AnyParams& MethPars);
 
@@ -57,7 +57,7 @@ class ProjectionVPTree : public Index<dist_t> {
   void SetQueryTimeParamsInternal(AnyParamManager& pmgr);
 
 
-  const Space<dist_t>*              space_;
+  Space<dist_t>*                    space_;
   const ObjectVector&               data_;
 
   size_t                            K_;
@@ -77,8 +77,8 @@ class ProjectionVPTree : public Index<dist_t> {
                                                    const Query<dist_t>* pQuery,
                                                    const Object* pSrcObj) const;
 
-  VPTree<float, PolynomialPruner<float>>*             VPTreeIndex_;
-  unique_ptr<const VectorSpaceSimpleStorage<float>>   VPTreeSpace_;
+  VPTree<float, PolynomialPruner<float>>*       VPTreeIndex_;
+  unique_ptr<VectorSpaceSimpleStorage<float>>   VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(ProjectionVPTree);

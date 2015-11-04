@@ -35,7 +35,7 @@ using std::unique_ptr;
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 PermutationVPTree<dist_t, RankCorrelDistFunc>::PermutationVPTree(
     bool  PrintProgress,
-    const Space<dist_t>* space,
+    Space<dist_t>* space,
     const ObjectVector& data,
     const AnyParams& AllParams) : 
       space_(space), data_(data),   // reference

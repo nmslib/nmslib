@@ -37,7 +37,7 @@ class MethodFactoryRegistry {
 public:
   typedef Index<dist_t>* (*CreateFuncPtr)(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
+                           Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& MethPars);
 
@@ -55,7 +55,7 @@ public:
   Index<dist_t>* CreateMethod(bool PrintProgress,
                             const string& MethName,
                             const string& SpaceType,
-                            const Space<dist_t>* space,
+                            Space<dist_t>* space,
                             const ObjectVector& DataObjects,
                             const AnyParams& MethPars) {
     if (Creators_.count(MethName)) {

@@ -46,7 +46,7 @@ template <typename dist_t, PivotIdType (*CorrelDistFunc)(const PivotIdType*, con
 class PermutationVPTree : public Index<dist_t> {
  public:
   PermutationVPTree(bool PrintProgress,
-                   const Space<dist_t>* space,
+                   Space<dist_t>* space,
                    const ObjectVector& data,
                    const AnyParams& MethPars);
 
@@ -72,8 +72,8 @@ class PermutationVPTree : public Index<dist_t> {
     db_scan_qty_ = max(size_t(1), static_cast<size_t>(DbScanFrac * data_.size()));
   }
 
-  VPTree<float, PolynomialPruner<float> >*          VPTreeIndex_;
-  const SpaceLp<float>*                             VPTreeSpace_;
+  VPTree<float, PolynomialPruner<float> >*    VPTreeIndex_;
+  SpaceLp<float>*                             VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationVPTree);

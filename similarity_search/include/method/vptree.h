@@ -40,7 +40,7 @@ template <typename dist_t, typename SearchOracle>
 class VPTree : public Index<dist_t> {
  public:
   VPTree(bool  PrintProgress,
-         const Space<dist_t>* space,
+         Space<dist_t>* space,
          const ObjectVector& data,
          const AnyParams& MethParams,
          bool use_random_center = true);
@@ -51,7 +51,7 @@ class VPTree : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
-  vector<string> GetQueryTimeParamNames() const { return oracle_.GetParams(); }
+  vector<string> GetQueryTimeParamNames() const { return oracle_.GetQueryTimeParamNames(); }
 
  private:
   // Call this function *ONLY AFTER* the bucket size is obtained!
@@ -60,7 +60,7 @@ class VPTree : public Index<dist_t> {
     // An Oracle may need to know the size of the bucket
     paramNew.AddChangeParam("BucketSize", BucketSize_);
     AnyParamManager pmgrNew(paramNew);
-    oracle_.SetParams(pmgrNew); 
+    oracle_.SetQueryTimeParams(pmgrNew); 
     pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
     pmgrNew.copySeen(pmgr);
   }

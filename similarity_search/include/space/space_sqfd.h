@@ -153,9 +153,8 @@ class SpaceSqfd : public Space<dist_t> {
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
-  virtual Space<dist_t>* HiddenClone() const {
-    return new SpaceSqfd<dist_t>(func_->Clone());
-  }
+  DISABLE_COPY_AND_ASSIGN(SpaceSqfd);
+
   dist_t HiddenDistance(
       const Object* obj1,
       const Object* obj2) const;

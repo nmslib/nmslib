@@ -44,7 +44,7 @@ enum EmbedDistSpace { kEmbedDistL2 = 0, kEmbedDistCosine = 1};
 template <typename dist_t>
 class WordEmbedSpace : public VectorSpaceSimpleStorage<dist_t> {
  public:
-  WordEmbedSpace(EmbedDistSpace distType) : distType_(distType) {}
+  explicit WordEmbedSpace(EmbedDistSpace distType) : distType_(distType) {}
   virtual ~WordEmbedSpace() {}
 
   /** Standard functions to read/write/create objects */ 
@@ -58,9 +58,10 @@ class WordEmbedSpace : public VectorSpaceSimpleStorage<dist_t> {
   /** End of standard functions to read/write/create objects */ 
   virtual string ToString() const;
  protected:
-  virtual Space<dist_t>* HiddenClone() const;
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
   EmbedDistSpace distType_;
+
+  DISABLE_COPY_AND_ASSIGN(WordEmbedSpace);
 };
 
 }  // namespace similarity

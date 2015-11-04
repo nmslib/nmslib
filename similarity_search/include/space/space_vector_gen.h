@@ -32,6 +32,7 @@ template <typename dist_t, typename DistObjType>
 class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
  public:
   virtual ~VectorSpaceGen() {}
+  explicit VectorSpaceGen() {}
 
   virtual void CreateDataset(ObjectVector& dataset, 
                             const vector<vector<dist_t>>& sourceData) {
@@ -50,11 +51,10 @@ class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
     return VectorSpace<dist_t>::CreateObjFromVect(id, label, InpVect);
   };
  protected:
+  DISABLE_COPY_AND_ASSIGN(VectorSpaceGen);
+
   DistObjType      distObj_;
 
-  virtual Space<dist_t>* HiddenClone() const { 
-    return new VectorSpaceGen<dist_t, DistObjType>(*this); 
-  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
     CHECK(obj1->datalength() == obj2->datalength());

@@ -28,7 +28,7 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateLSHCauchy(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
+                           Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
     unsigned  LSH_M = 20;
@@ -59,7 +59,7 @@ Index<dist_t>* CreateLSHCauchy(bool PrintProgress,
 template <typename dist_t>
 Index<dist_t>* CreateLSHGaussian(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
+                           Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
     unsigned  LSH_M = 20;
@@ -91,7 +91,7 @@ Index<dist_t>* CreateLSHGaussian(bool PrintProgress,
 template <typename dist_t>
 Index<dist_t>* CreateLSHThreshold(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
+                           Space<dist_t>* space,
                            const ObjectVector& DataObjects,
                            const AnyParams& AllParams) {
     unsigned  LSH_M = 20;

@@ -50,6 +50,7 @@ using std::vector;
 template <typename dist_t>
 class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
  public:
+  explicit SpaceSparseVectorInter(){}
   typedef SparseVectElem<dist_t> ElemType;
 
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
@@ -67,8 +68,8 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
                              obj2->data(), obj2->datalength());
   }
  protected:
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorInter);
 
-  virtual Space<dist_t>* HiddenClone() const = 0;
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 };
 

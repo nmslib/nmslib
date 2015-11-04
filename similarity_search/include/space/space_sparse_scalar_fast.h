@@ -38,22 +38,24 @@ namespace similarity {
 
 class SpaceSparseCosineSimilarityFast : public SpaceSparseVectorInter<float> {
 public:
+  explicit SpaceSparseCosineSimilarityFast(){}
   virtual std::string ToString() const {
     return "CosineSimilarity (fast)";
   }
 protected:
-  virtual Space<float>* HiddenClone() const { return new SpaceSparseCosineSimilarityFast(); } // no parameters 
   virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseCosineSimilarityFast);
 };
 
 class SpaceSparseAngularDistanceFast : public SpaceSparseVectorInter<float> {
 public:
+  explicit SpaceSparseAngularDistanceFast(){}
   virtual std::string ToString() const {
     return "AngularDistance (fast)";
   }
-  virtual Space<float>* HiddenClone() const { return new SpaceSparseAngularDistanceFast(); } // no parameters 
 protected:
   virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseAngularDistanceFast);
 };
 
 

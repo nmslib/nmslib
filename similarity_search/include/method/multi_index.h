@@ -43,7 +43,7 @@ template <typename dist_t>
 class MultiIndex : public Index<dist_t> {
  public:
   MultiIndex(const string& SpaceType,
-             const Space<dist_t>* space, 
+             Space<dist_t>* space, 
              const ObjectVector& data,
              const AnyParams& params);
   ~MultiIndex();
@@ -58,7 +58,7 @@ class MultiIndex : public Index<dist_t> {
   virtual void SetQueryTimeParamsInternal(AnyParamManager& pmgr);
 
   std::vector<Index<dist_t>*> indices_;
-  const Space<dist_t>*        space_;
+  Space<dist_t>*              space_;
   size_t                      IndexQty_;
   string                      MethodName_;
 };

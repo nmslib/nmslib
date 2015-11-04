@@ -79,13 +79,11 @@ class SpaceJSDiv : public SpaceJSBase<dist_t> {
   }
 
  protected:
-  virtual Space<dist_t>* HiddenClone() const { 
-    return new SpaceJSDiv<dist_t>(SpaceJSBase<dist_t>::GetType()); // one parameter
-  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     return SpaceJSBase<dist_t>::JensenShannonFunc(obj1, obj2);
   }
  private:
+  DISABLE_COPY_AND_ASSIGN(SpaceJSDiv);
 };
 
 template <typename dist_t>
@@ -100,13 +98,11 @@ class SpaceJSMetric : public SpaceJSBase<dist_t> {
     return stream.str();
   }
  protected:
-  virtual Space<dist_t>* HiddenClone() const { 
-    return new SpaceJSMetric<dist_t>(SpaceJSBase<dist_t>::GetType()); // only one parameter: type
-  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     return sqrt(SpaceJSBase<dist_t>::JensenShannonFunc(obj1, obj2));
   }
  private:
+  DISABLE_COPY_AND_ASSIGN(SpaceJSMetric);
 };
 
 

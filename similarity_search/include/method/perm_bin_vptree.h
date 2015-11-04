@@ -44,9 +44,9 @@ namespace similarity {
 template <typename dist_t, PivotIdType (*CorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 class PermBinVPTree : public Index<dist_t> {
  public:
-  PermBinVPTree(const Space<dist_t>* space,
-                   const ObjectVector& data,
-                   const AnyParams& MethPars);
+  PermBinVPTree(Space<dist_t>* space,
+                const ObjectVector& data,
+                const AnyParams& MethPars);
 
   ~PermBinVPTree();
 
@@ -62,7 +62,7 @@ class PermBinVPTree : public Index<dist_t> {
     VPTreeIndex_->SetQueryTimeParams(params);
   }
 
-  const Space<dist_t>*      space_;
+  Space<dist_t>*            space_;
   const ObjectVector&       data_;
   size_t                    bin_threshold_;
   size_t                    bin_perm_word_qty_;
@@ -71,7 +71,7 @@ class PermBinVPTree : public Index<dist_t> {
   ObjectVector              BinPermData_;
 
   VPTree<int, PolynomialPruner<int>>*   VPTreeIndex_;
-  const SpaceBitHamming*                VPTreeSpace_;
+  SpaceBitHamming*                      VPTreeSpace_;
 
   void SetQueryTimeParamsInternal(AnyParams params) { VPTreeIndex_->SetQueryTimeParams(params); }
 

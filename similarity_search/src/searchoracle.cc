@@ -40,7 +40,7 @@ using std::pow;
 using std::log;
 
 template <typename dist_t>
-void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
+void PolynomialPruner<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
   // Default values are for the classic triangle inequality
   alpha_left_  = 1.0;
   exp_left_    = MIN_EXP_DEFAULT;
@@ -50,7 +50,10 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
   pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, alpha_right_);
   pmgr.GetParamOptional(EXP_LEFT_PARAM, exp_left_);
   pmgr.GetParamOptional(EXP_RIGHT_PARAM, exp_right_);
+}
 
+template <typename dist_t>
+void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
   if (pmgr.hasParam(TUNE_R_PARAM) && pmgr.hasParam(TUNE_K_PARAM)) {
     stringstream err;
 
@@ -152,16 +155,13 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
 
     vector<unsigned>                  knn;
     vector<dist_t>                    range;
-    // The cloned space will be in the indexing mode.
-    // Otherwise, the tunning code will crash while accessing function IndexTimeDistance() 
-    unique_ptr<Space<dist_t>>   clonedSpace(space_->Clone());
 
     if (pmgr.hasParam(TUNE_R_PARAM)) {
       dist_t r;
       pmgr.GetParamRequired(TUNE_R_PARAM, r);
       range.push_back(r);
       
-      config.reset(new ExperimentConfig<dist_t>(clonedSpace.get(), 
+      config.reset(new ExperimentConfig<dist_t>(space_, 
                                       data_, emptyQueries, 
                                       TUNE_SPLIT_QTY,
                                       tuneQty, TUNE_QUERY_QTY,
@@ -174,7 +174,7 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
       pmgr.GetParamRequired(TUNE_K_PARAM, k);
       knn.push_back(k);
       
-      config.reset(new ExperimentConfig<dist_t>(clonedSpace.get(), 
+      config.reset(new ExperimentConfig<dist_t>(space_, 
                                       data_, emptyQueries, 
                                       TUNE_SPLIT_QTY,
                                       tuneQty, TUNE_QUERY_QTY,
