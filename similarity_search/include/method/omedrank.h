@@ -68,23 +68,24 @@ template <typename dist_t>
 class OMedRank : public Index<dist_t> {
  public:
   OMedRank(bool PrintProgress,
-           const Space<dist_t>* space,
-           const ObjectVector& data,
-           AnyParamManager &pmgr);
+           const Space<dist_t>& space,
+           const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams);
   virtual ~OMedRank(){};
 
   const std::string ToString() const { return "omedrank" ; }
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
-  virtual vector<string> GetQueryTimeParamNames() const;
-
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
  private:
   void IndexChunk(size_t chunkId, ProgressDisplay* displayBar);
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
   const ObjectVector&     data_;
-  const Space<dist_t>*    space_;
+  const Space<dist_t>&    space_;
+  bool                    PrintProgress_;
+
   size_t                  num_pivot_;
   size_t                  num_pivot_search_;
   size_t                  chunk_index_size_;

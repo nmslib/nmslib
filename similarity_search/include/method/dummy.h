@@ -37,26 +37,43 @@ template <typename dist_t>
 class DummyMethod : public Index<dist_t> {
  public:
   /*
-   * The constructor here accepts a pointer to the space, 
-   * a reference to an array of data objects,
-   * and a reference to the parameter manager,
-   * which is used to retrieve parameters.
-   *
-   * The constructor creates a search index (or calls a function to create it)!
-   * However, in this simple case, it simply memorizes a reference to the 
-   * array of data objects, which is guaranteed to exist through the complete
-   * test cycle.
-   *
-   * Note that we have a query time parameter here.
-   *
+   * The constructor here space and data-objects' references,
+   * which are guaranteed to be be valid during testing.
+   * So, we can memorize them safely.
    */
-  DummyMethod(const Space<dist_t>* space, 
-              const ObjectVector& data, 
-              AnyParamManager& pmgr) 
-              : data_(data) {
-    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch_);
-    SetQueryTimeParamsInternal(pmgr);
+  DummyMethod(Space<dist_t>& space, 
+              const ObjectVector& data) : data_(data), space_(space) {}
+
+  /*
+   * This function is supposed to create a search index (or call a 
+   * function to create it)!
+   */
+  void CreateIndex(const AnyParams& IndexParams) {
+    AnyParamManager  pmgr(IndexParams);
+    pmgr.GetParamOptional("doSeqSearch",  
+                          bDoSeqSearch_, 
+      // One should always specify the default value of an optional parameter!
+                          false
+                          );
+    // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
+    pmgr.CheckUnused();
   }
+
+  /*
+   * One can implement functions for index serialization and reading.
+   * However, this is not required.
+   */
+  // SaveIndex is not necessarily implemented
+  virtual void SaveIndex(const string& location) {
+    throw runtime_error("SaveIndex is not implemented for method: " + ToString());
+  }
+  // LoadIndex is not necessarily implemented
+  virtual void LoadIndex(const string& location) {
+    throw runtime_error("LoadIndex is not implemented for method: " + ToString());
+  }
+
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
+
   ~DummyMethod(){};
 
   /* 
@@ -74,12 +91,9 @@ class DummyMethod : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
-  virtual vector<string> GetQueryTimeParamNames() const;
-
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
-
   const ObjectVector&     data_;
+  Space<dist_t>&          space_;
   bool                    bDoSeqSearch_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(DummyMethod);

@@ -28,12 +28,9 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateDummy(bool PrintProgress,
                            const string& SpaceType,
-                           Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
-    AnyParamManager pmgr(AllParams);
-    
-    return new DummyMethod<dist_t>(space, DataObjects, pmgr);
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+    return new DummyMethod<dist_t>(space, DataObjects);
 }
 
 /*

@@ -54,11 +54,11 @@ public:
 
   friend class Projection<dist_t>;
 private:
-  ProjectionVectDense(const Space<dist_t>* space, size_t nDstDim) :
+  ProjectionVectDense(const Space<dist_t>& space, size_t nDstDim) :
     space_(space), dstDim_(nDstDim) {
   }
 
-  const Space<dist_t>* space_;
+  const Space<dist_t>& space_;
   size_t dstDim_;
 
 };
@@ -81,7 +81,7 @@ public:
      * For sparse vector spaces, we obtain an intermediate dense vector 
      * with projDim elements.
      */
-    size_t nDim = space_->GetElemQty(pObj);
+    size_t nDim = space_.GetElemQty(pObj);
     if (!nDim) nDim = projDim_;
     vector<dist_t> intermBuffer(nDim);
     Projection<dist_t>::fillIntermBuffer(space_,
@@ -100,7 +100,7 @@ public:
 
   friend class Projection<dist_t>;
 private:
-  ProjectionRand(const Space<dist_t>* space, const ObjectVector& data,
+  ProjectionRand(const Space<dist_t>& space, const ObjectVector& data,
                  size_t nProjDim, size_t nDstDim, bool bDoOrth) :
     space_(space), projDim_(nProjDim), dstDim_(nDstDim) {
     if (data.empty()) {
@@ -110,7 +110,7 @@ private:
              " without a single data point";
       throw runtime_error(err.str());
     }
-    size_t nDim = space->GetElemQty(data[0]);
+    size_t nDim = space.GetElemQty(data[0]);
     if (nDim == 0) {
       if (!projDim_) {
         throw runtime_error("Specify a non-zero value for the intermediate dimensionaity.");
@@ -122,7 +122,7 @@ private:
   }
 
   vector<vector<dist_t>>    _projMatr;
-  const Space<dist_t>* space_;
+  const Space<dist_t>& space_;
   size_t projDim_;
   size_t dstDim_;
 
@@ -146,7 +146,7 @@ public:
 
   friend class Projection<dist_t>;
 private:
-  ProjectionRandRefPoint(const Space<dist_t>* space,
+  ProjectionRandRefPoint(const Space<dist_t>& space,
                          const ObjectVector& data,
                          size_t nDstDim) :
                          space_(space), data_(data),
@@ -159,7 +159,7 @@ private:
 
   }
 
-  const Space<dist_t>*  space_;
+  const Space<dist_t>&  space_;
   const ObjectVector&   data_;
   ObjectVector          ref_pts_;
   size_t dstDim_;
@@ -181,7 +181,7 @@ public:
     Permutation perm;
 
     if (NULL == pQuery) {
-      GetPermutation(ref_pts_, space_, pObj, &perm);
+      GetPermutation(ref_pts_, &space_, pObj, &perm);
     } else {
       GetPermutation(ref_pts_, pQuery, &perm);
     }
@@ -195,13 +195,13 @@ public:
   friend class Projection<dist_t>;
 
 private:
-  ProjectionPermutation(const Space<dist_t>* space,
+  ProjectionPermutation(const Space<dist_t>& space,
                          const ObjectVector& data,
                          size_t nDstDim) : space_(space), data_(data),
                                            dstDim_(nDstDim) {
-    GetPermutationPivot(data_, space_, nDstDim, &ref_pts_);
+    GetPermutationPivot(data_, &space_, nDstDim, &ref_pts_);
   }
-  const Space<dist_t>*        space_;
+  const Space<dist_t>&        space_;
   const ObjectVector&         data_;
   ObjectVector                ref_pts_;
   size_t dstDim_;
@@ -216,7 +216,7 @@ public:
     Permutation perm;
 
     if (NULL == pQuery) {
-      GetPermutation(ref_pts_, space_, pObj, &perm);
+      GetPermutation(ref_pts_, &space_, pObj, &perm);
     } else {
       GetPermutation(ref_pts_, pQuery, &perm);
     }
@@ -230,7 +230,7 @@ public:
   friend class Projection<dist_t>;
 
 private:
-  ProjectionPermutationTrunc(const Space<dist_t>* space,
+  ProjectionPermutationTrunc(const Space<dist_t>& space,
                              const ObjectVector& data,
                              size_t nDstDim,
                              unsigned trunc_threshold) : space_(space), data_(data),
@@ -238,7 +238,7 @@ private:
                                            trunc_threshold_(trunc_threshold) {
     GetPermutationPivot(data_, space_, nDstDim, &ref_pts_);
   }
-  const Space<dist_t>*        space_;
+  const Space<dist_t>&        space_;
   const ObjectVector&         data_;
   ObjectVector                ref_pts_;
   size_t                      dstDim_;
@@ -255,7 +255,7 @@ public:
     Permutation perm;
 
     if (NULL == pQuery) {
-      GetPermutation(ref_pts_, space_, pObj, &perm);
+      GetPermutation(ref_pts_, &space_, pObj, &perm);
     } else {
       GetPermutation(ref_pts_, pQuery, &perm);
     }
@@ -270,16 +270,16 @@ public:
   friend class Projection<dist_t>;
 
 private:
-  ProjectionPermutationBin(const Space<dist_t>* space,
+  ProjectionPermutationBin(const Space<dist_t>& space,
                          const ObjectVector& data,
                          size_t nDstDim,
                          unsigned binThreshold)
                                           : space_(space), data_(data),
                                            dstDim_(nDstDim),
                                            binThreshold_(binThreshold) {
-    GetPermutationPivot(data_, space_, nDstDim, &ref_pts_);
+    GetPermutationPivot(data_, &space_, nDstDim, &ref_pts_);
   }
-  const Space<dist_t>*        space_;
+  const Space<dist_t>&        space_;
   const ObjectVector&         data_;
   ObjectVector                ref_pts_;
   size_t dstDim_;
@@ -339,7 +339,7 @@ private:
         }
         int pa = RandomInt() % data.size(),
             pb = RandomInt() % data.size();
-        dist_ab_[i] = space_->IndexTimeDistance(data[pa], data[pb]);
+        dist_ab_[i] = space_.IndexTimeDistance(data[pa], data[pb]);
         if (pivot_idx.count(pa) !=0 || pivot_idx.count(pb) !=0 ||
             fabs((double)dist_ab_[i]) < eps) continue;
         pivot_idx.insert(pa);
@@ -350,7 +350,7 @@ private:
       }
     }
   }
-  const Space<dist_t>*        space_;
+  const Space<dist_t>&        space_;
   const ObjectVector&         data_;
   ObjectVector                ref_pts_a_;
   ObjectVector                ref_pts_b_;
@@ -365,7 +365,7 @@ private:
 
 template <class dist_t>
 Projection<dist_t>*
-Projection<dist_t>::createProjection(const Space<dist_t>* space,
+Projection<dist_t>::createProjection(const Space<dist_t>& space,
                                      const ObjectVector& data,
                                      string projType,
                                      size_t nProjDim,

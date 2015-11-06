@@ -45,6 +45,8 @@ public:
     ImprDistComp_   .resize(TestSetQty);
     Mem_            .resize(TestSetQty);
     IndexTime_      .resize(TestSetQty);
+    LoadTime_       .resize(TestSetQty);
+    SaveTime_       .resize(TestSetQty);
     QueryPerSec_    .resize(TestSetQty);
   }
 
@@ -79,6 +81,12 @@ public:
   void SetIndexTime(size_t SetId, double IndexTime) {
     IndexTime_[SetId] = IndexTime;
   }
+  void SetLoadTime(size_t SetId, double LoadTime) {
+    LoadTime_[SetId] = LoadTime;
+  }
+  void SetSaveTime(size_t SetId, double SaveTime) {
+    SaveTime_[SetId] = SaveTime;
+  }
   void SetQueryPerSec(size_t SetId, double QueryPerSec) {
     QueryPerSec_[SetId] = QueryPerSec;
   }
@@ -103,6 +111,8 @@ public:
     ComputeOneSimple("ImprDistComp", ImprDistComp_, ImprDistCompAvg, ImprDistCompConfMin, ImprDistCompConfMax);
     ComputeOneSimple("MemUsage", Mem_, MemAvg, MemConfMin, MemConfMax);
     ComputeOneSimple("IndexTime", IndexTime_, IndexTimeAvg, IndexTimeConfMin, IndexTimeConfMax);
+    ComputeOneSimple("LoadTime", LoadTime_, LoadTimeAvg, LoadTimeConfMin, LoadTimeConfMax);
+    ComputeOneSimple("SaveTime", SaveTime_, SaveTimeAvg, SaveTimeConfMin, SaveTimeConfMax);
     ComputeOneSimple("QueryPerSec", QueryPerSec_, QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax);
   }
 
@@ -146,6 +156,14 @@ public:
   double GetIndexTimeConfMin() const{return IndexTimeConfMin;}; 
   double GetIndexTimeConfMax() const { return IndexTimeConfMax;}
 
+  double GetLoadTimeAvg() const { return LoadTimeAvg;} 
+  double GetLoadTimeConfMin() const{return LoadTimeConfMin;}; 
+  double GetLoadTimeConfMax() const { return LoadTimeConfMax;}
+
+  double GetSaveTimeAvg() const { return SaveTimeAvg;} 
+  double GetSaveTimeConfMin() const{return SaveTimeConfMin;}; 
+  double GetSaveTimeConfMax() const { return SaveTimeConfMax;}
+
   double GetQueryPerSecAvg() const { return QueryPerSecAvg;} 
   double GetQueryPerSecConfMin() const{return QueryPerSecConfMin;}; 
   double GetQueryPerSecConfMax() const { return QueryPerSecConfMax;}
@@ -170,6 +188,8 @@ double ImprEfficiencyAvg, ImprEfficiencyConfMin, ImprEfficiencyConfMax;
 double ImprDistCompAvg, ImprDistCompConfMin, ImprDistCompConfMax;
 double MemAvg, MemConfMin, MemConfMax;
 double IndexTimeAvg, IndexTimeConfMin, IndexTimeConfMax;
+double LoadTimeAvg, LoadTimeConfMin, LoadTimeConfMax;
+double SaveTimeAvg, SaveTimeConfMin, SaveTimeConfMax;
 double QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax;
 double zVal_;
 
@@ -185,6 +205,8 @@ vector<double>           ImprEfficiency_;
 vector<double>           ImprDistComp_; 
 vector<double>           Mem_; 
 vector<double>           IndexTime_; 
+vector<double>           LoadTime_; 
+vector<double>           SaveTime_; 
 vector<double>           QueryPerSec_; 
 
 MetaAnalysis(){} // be private!

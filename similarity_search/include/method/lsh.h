@@ -124,19 +124,19 @@ class ParameterCreator<TailRepeatHashGaussian> {
 template <typename dist_t, typename lsh_t, typename paramcreator_t>
 class LSH : public Index<dist_t> {
  public:
-  LSH(const Space<dist_t>* space,
+  LSH(const Space<dist_t>& space,
       const ObjectVector& data,
-      int P,      // lp (l1 or l2)
-      float W,    // window size (used only for LSHCauchy and LSHGaussian)
-      unsigned M, // # of hash functions
-      unsigned L, // # of hash tables
-      unsigned H  // hash table size
-      );
+      int P      // lp (l1 or l2)
+  );
+
+  void CreateIndex(const AnyParams& IndexParams);
+
   ~LSH();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType ) const;
+  void Search(KNNQuery<dist_t>* query, IdType ) const;
+  void SetQueryTimeParams(const AnyParams& params) {};
 
  private:
   typedef lshkit::LshIndex<TailRepeatHash<lsh_t>, unsigned> LshIndexType;

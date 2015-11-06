@@ -25,24 +25,38 @@
 namespace similarity {
 
 template <typename dist_t, typename lsh_t, typename paramcreator_t>
-LSH<dist_t, lsh_t, paramcreator_t>::LSH(const Space<dist_t>* space,
+LSH<dist_t, lsh_t, paramcreator_t>::LSH(const Space<dist_t>& space,
                                         const ObjectVector& data,
-                                        int P,
-                                        float W,
-                                        unsigned M,
-                                        unsigned L,
-                                        unsigned H)
-    : data_(data), p_(P) {
+                                        int P) : data_(data), p_(P) {
+
+}
+
+template <typename dist_t, typename lsh_t, typename paramcreator_t>
+void LSH<dist_t, lsh_t, paramcreator_t>::CreateIndex(const AnyParams& IndexParams) {
+  float     LSH_W;
+  unsigned  LSH_M;
+  unsigned  LSH_L;
+  unsigned  LSH_H;
+
+  AnyParamManager pmgr(IndexParams);
+
+  pmgr.GetParamOptional("W",  LSH_W, 20);
+  pmgr.GetParamOptional("M",  LSH_M, 20);
+  pmgr.GetParamOptional("L",  LSH_L, 50);
+  pmgr.GetParamOptional("H",  LSH_H, DataObjects.size() + 1);
+
   int is_float = std::is_same<float,dist_t>::value;
-  CHECK(is_float);
-  CHECK(sizeof(dist_t) == sizeof(float));
-  CHECK(!data.empty());
-  CHECK(P == 1 || P == 2);
+  CHECK_MSG(is_float, "LSH works only for single-precision numbers");
+  CHECK_MSG(sizeof(dist_t) == sizeof(float), "LSH works only for single-precision numbers");
+  CHECK_MSG(!data.empty(), "The data set shouldn't be empty");
+  CHECK_MSG(P == 1 || P == 2, "The value of the space selector should be either 1 or 2!");
+
   const size_t datalength = data[0]->datalength();
 
-  LOG(LIB_INFO) << "M (# of hash functions) : "  << M;
-  LOG(LIB_INFO) << "L (# of hash tables) :    "  << L;
-  LOG(LIB_INFO) << "H (# hash table size) :   "  << H;
+  LOG(LIB_INFO) << "W (window size (used only for LSHCauchy and LSHGaussian)) : "  << LSH_W;
+  LOG(LIB_INFO) << "M (# of hash functions) : "  << LSH_M;
+  LOG(LIB_INFO) << "L (# of hash tables) :    "  << LSH_L;
+  LOG(LIB_INFO) << "H (# hash table size) :   "  << LSH_H;
 
   const int dim = static_cast<int>(datalength / sizeof(float));
   matrix_ = new lshkit::FloatMatrix(dim, static_cast<int>(data.size()));
@@ -59,7 +73,7 @@ LSH<dist_t, lsh_t, paramcreator_t>::LSH(const Space<dist_t>* space,
   lshkit::FloatMatrix::Accessor accessor(*matrix_);
   lshkit::DefaultRng rng;
   index_ = new LshIndexType;
-  index_->init(paramcreator_t::GetParameter(*matrix_, H, M, W), rng, L);
+  index_->init(paramcreator_t::GetParameter(*matrix_, LSH_H, LSH_M, LSH_W), rng, LSH_L);
 
   for (int i = 0; i < matrix_->getSize(); ++i) {
     index_->insert(i, (*matrix_)[i]);
@@ -78,12 +92,12 @@ const std::string LSH<dist_t, lsh_t, paramcreator_t>::ToString() const {
 }
 
 template <typename dist_t, typename lsh_t, typename paramcreator_t>
-void LSH<dist_t, lsh_t, paramcreator_t>::Search(RangeQuery<dist_t>* query) {
+void LSH<dist_t, lsh_t, paramcreator_t>::Search(RangeQuery<dist_t>* query, IdType) {
   LOG(LIB_FATAL) << "Not applicable!";
 }
 
 template <typename dist_t, typename lsh_t, typename paramcreator_t>
-void LSH<dist_t, lsh_t, paramcreator_t>::Search(KNNQuery<dist_t>* query) {
+void LSH<dist_t, lsh_t, paramcreator_t>::Search(KNNQuery<dist_t>* query, IdType) {
   const size_t datalength = query->QueryObject()->datalength();
   const int dim = static_cast<int>(datalength / sizeof(float));
   CHECK(dim == matrix_->getDim());

@@ -96,7 +96,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tQueryPerSec\tMethodParams\tNumData" << std::endl;
+  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tMethodParams\tNumData" << std::endl;
 
   Data << "\"" << MethDescStr << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
@@ -110,6 +110,8 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << ExpRes.GetImprDistCompAvg() << "\t";
   Data << size_t(ExpRes.GetMemAvg()) << "\t";
   Data << ExpRes.GetIndexTimeAvg() << "\t";
+  Data << ExpRes.GetLoadTimeAvg() << "\t";
+  Data << ExpRes.GetSaveTimeAvg() << "\t";
   Data << ExpRes.GetQueryPerSecAvg() << "\t";
   Data << "\"" << MethParamStr << "\"" << "\t";
   Data << config.GetDataObjects().size();
@@ -122,23 +124,27 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 };
 
 template <typename dist_t>
-void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
-             const string                 SpaceType,
-             const shared_ptr<AnyParams>& SpaceParams,
-             unsigned                     dimension,
-             unsigned                     ThreadTestQty,
-             bool                         DoAppend, 
-             const string&                ResFilePrefix,
-             unsigned                     TestSetQty,
-             const string&                DataFile,
-             const string&                QueryFile,
-             const string&                CacheGSFilePrefix,
-             size_t                       MaxCacheGSQty,
-             unsigned                     MaxNumData,
-             unsigned                     MaxNumQuery,
-             const                        vector<unsigned>& knn,
-             const                        float eps,
-             const string&                RangeArg
+void RunExper(bool                                bPrintProgress,
+             const string&                        LoadIndexLoc,
+             const string&                        SaveIndexLoc, 
+             const string&                        MethodName,
+             const shared_ptr<AnyParams>&         IndexTimeParams,
+             const vector<shared_ptr<AnyParams>>& QueryTimeParams,
+             const string                         SpaceType,
+             const shared_ptr<AnyParams>&         SpaceParams,
+             unsigned                             ThreadTestQty,
+             bool                                 DoAppend, 
+             const string&                        ResFilePrefix,
+             unsigned                             TestSetQty,
+             const string&                        DataFile,
+             const string&                        QueryFile,
+             const string&                        CacheGSFilePrefix,
+             size_t                               MaxCacheGSQty,
+             unsigned                             MaxNumData,
+             unsigned                             MaxNumQuery,
+             const                                vector<unsigned>& knn,
+             const                                float eps,
+             const string&                        RangeArg
 )
 {
   LOG(LIB_INFO) << "### Append? : "       << DoAppend;
@@ -163,10 +169,10 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
   unique_ptr<Space<dist_t>> space (SpaceFactoryRegistry<dist_t>::
                                   Instance().CreateSpace(SpaceType, *SpaceParams));
 
-  ExperimentConfig<dist_t> config(space.get(),
+  ExperimentConfig<dist_t> config(*space,
                                   DataFile, QueryFile, TestSetQty,
                                   MaxNumData, MaxNumQuery,
-                                  dimension, knn, eps, range);
+                                  knn, eps, range);
 
   size_t cacheDataSetQty = 0;
   if (bCacheGS) {
@@ -255,19 +261,28 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
 
 
-  size_t MethNum = 0;
 
-  for (auto it = MethodsDesc.begin(); it != MethodsDesc.end(); ++it, ++MethNum) {
+  if (QueryTimeParams.empty()) 
+    QueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams({})));
+
+  // qtmParamId is the ID of the query time parameter set
+  for (size_t qtmParamId = 0; qtmParamId < QueryTimeParams.size(); ++qtmParamId) {
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
+      ExpResRange[i][qtmParamId] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
+      ExpResKNN[i][qtmParamId] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
   }
 
   for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
+
+    string indexLocAdd = "";
+
+    if (config.GetTestSetToRunQty() > 0) {
+      indexLocAdd = ConvertToString(TestSetId);
+    }
 
     // SelectTestSet must go before managerGS.Compute()!!!
 
@@ -294,100 +309,100 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
     //ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
-    vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
-    vector<bool>                       isNewIndex;
+    shared_ptr<Index<dist_t>>   IndexPtr;
 
     try {
+      const AnyParams& MethPars = methElem->methPars_;
+      const string& MethParStr = MethPars.ToString();
 
-      double prevMemUsed = 0;
-      double prevTimeUsed = 0;
+      LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
+      LOG(LIB_INFO) << ">>>> Parameters: " << MethParStr;
+
+      const double vmsize_before = mem_usage_measure.get_vmsize();
+
+      WallClockTimer wtm;
+
+      wtm.reset();
       
-      for (const auto& methElem: MethodsDesc) {
-        MethNum = &methElem - &MethodsDesc[0];
-        
-        const string& MethodName  = methElem->methName_;
-        const AnyParams& MethPars = methElem->methPars_;
-        const string& MethParStr = MethPars.ToString();
 
-        LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
-        LOG(LIB_INFO) << ">>>> Parameters: " << MethParStr;
-        const double vmsize_before = mem_usage_measure.get_vmsize();
+      IndexPtr = shared_ptr<Index<dist_t>>(
+                         MethodFactoryRegistry<dist_t>::Instance().
+                         CreateMethod(bPrintProgress,
+                                      MethodName, 
+                                      SpaceType, config.GetSpace(), 
+                                      config.GetDataObjects())
+                         );
 
+      bool bCreate = LoadIndexLoc.empty();
 
-        WallClockTimer wtm;
+      if (bCreate) {
+        LOG(LIB_INFO) << "Creating an index from scratch";
 
-        wtm.reset();
-        
-        bool bCreateNew = true;
-        
-        if (MethNum && MethodName == MethodsDesc[MethNum-1]->methName_) {
-          vector<string> exceptList = IndexPtrs.back()->GetQueryTimeParamNames();
-          
-          if (MethodsDesc[MethNum-1]->methPars_.equalsIgnoreInList(MethPars, exceptList)) {
-            bCreateNew = false;
-          }
-        }
+        IndexPtr->CreateIndex(IndexTimeParams);
+      } else {
+        string loc = LoadIndexLoc + indexLocAdd;
+        LOG(LIB_INFO) << "Loading an index for test set id " << TestSetId << " using location: " << loc;
+        IndexPtr->LoadIndex(loc);
+      }
 
-        LOG(LIB_INFO) << (bCreateNew ? "Creating a new index":"Using a previosuly created index");
+      LOG(LIB_INFO) << "==============================================";
 
-        isNewIndex.push_back(bCreateNew);
-        IndexPtrs.push_back(
-                bCreateNew ?
-                           shared_ptr<Index<dist_t>>(
-                           MethodFactoryRegistry<dist_t>::Instance().
-                           CreateMethod(true /* print progress */,
-                                        MethodName, 
-                                        SpaceType, config.GetSpace(), 
-                                        config.GetDataObjects(), MethPars)
-                           )
-                           :IndexPtrs.back());
+      const double vmsize_after = mem_usage_measure.get_vmsize();
 
-        LOG(LIB_INFO) << "==============================================";
+      wtm.split();
 
-        const double vmsize_after = mem_usage_measure.get_vmsize();
+      const double IndexTime = bCreate ? double(wtm.elapsed())/1e6 : 0;
+      const double LoadTime  = !bCreate ? double(wtm.elapsed())/1e6 : 0;
 
-        wtm.split();
-        const double TimeElapsed = double(wtm.elapsed())/1e6;
+      const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
+      const double TotalMemByMethod =  vmsize_after - vmsize_before + data_size;
+      double AdjustedMemByMethod = TotalMemByMethod;
 
-        const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
-        const double TotalMemByMethod = bCreateNew ? vmsize_after - vmsize_before + data_size : prevMemUsed;
-        const double TimeUsed = bCreateNew ? TimeElapsed : prevTimeUsed;
-    
-        prevMemUsed = TotalMemByMethod;
-        prevTimeUsed = TimeUsed;
+      if (IndexPtr->DuplicateData()) AdjustedMemByMethod -= data_size;
 
+      wtm.reset();
+      if (!SaveIndexLoc.empty()) {
+        string loc = SaveIndexLoc + indexLocAdd;
+        LOG(LIB_INFO) << "Saving an index for test set id " << TestSetId << " using location: " << loc;
+        IndexPtr->SaveIndexLoc(loc);
+      }
+      wtm.split();
+      const double SaveTime  = double(wtm.elapsed())/1e6;
+  
 
-        LOG(LIB_INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
-        LOG(LIB_INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
-        LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
-        LOG(LIB_INFO) << ">>>> Time elapsed:         " << TimeElapsed << " sec";
+      LOG(LIB_INFO) << ">>>> Process memory usage:  " << vmsize_after         << " MBs";
+      LOG(LIB_INFO) << ">>>> Virtual memory usage:  " << TotalMemByMethod     << " MBs";
+      LOG(LIB_INFO) << ">>>> Adjusted memory usage: " << AdjustedMemByMethod  << " MBs";
+      LOG(LIB_INFO) << ">>>> Data size:             " << data_size            << " MBs";
+      LOG(LIB_INFO) << ">>>> Indexing time:         " << IndexTime            << " sec";
+      LOG(LIB_INFO) << ">>>> Index loading time:    " << LoadTime             << " sec";
+      LOG(LIB_INFO) << ">>>> Index saving  time:    " << SaveTime             << " sec";
 
-
+      for (size_t qtmParamId = 0; qtmParamId < QueryTimeParams.size(); ++qtmParamId) {
         for (size_t i = 0; i < config.GetRange().size(); ++i) {
-          MetaAnalysis* res = ExpResRange[i][MethNum];
-          res->SetMem(TestSetId, TotalMemByMethod);
-          res->SetIndexTime(TestSetId, TimeUsed);
+          MetaAnalysis* res = ExpResRange[i][qtmParamId];
+          res->SetMem(TestSetId, AdjustedMemByMethod);
+          res->SetIndexTime(TestSetId, IndexTime);
+          res->SetLoadTime(TestSetId, LoadTime);
+          res->SetSaveTime(TestSetId, SaveTime);
         }
         for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-          MetaAnalysis* res = ExpResKNN[i][MethNum];
+          MetaAnalysis* res = ExpResKNN[i][qtmParamId];
           res->SetMem(TestSetId, TotalMemByMethod);
-          res->SetIndexTime(TestSetId, TimeUsed);
-        }
-
-        if (!TestSetId) {
-          MethDescStr.push_back(IndexPtrs.back()->ToString());
-          MethParams.push_back(MethParStr);
+          res->SetIndexTime(TestSetId, IndexTime);
+          res->SetLoadTime(TestSetId, LoadTime);
+          res->SetSaveTime(TestSetId, SaveTime);
         }
       }
 
-      Experiments<dist_t>::RunAll(true /* print info */,
-                                      ThreadTestQty, 
-                                      TestSetId,
-                                      managerGS,
-                                      ExpResRange, ExpResKNN,
-                                      config, 
-                                      IndexPtrs, isNewIndex,
-                                      MethodsDesc);
+      Experiments<dist_t>::RunAll(bPrintProgress,
+                                  ThreadTestQty, 
+                                  TestSetId,
+                                  managerGS,
+                                  ExpResRange, ExpResKNN,
+                                  config, 
+                                  *IndexPtr, 
+                                  QueryTimeParams);
 
 
     } catch (const std::exception& e) {
@@ -454,8 +469,11 @@ int main(int ac, char* av[]) {
   timer.reset();
 
 
+  bool                  bPrintProgress;
   string                LogFile;
   string                DistType;
+  string                LoadIndexLoc;
+  string                SaveIndexLoc;
   string                SpaceType;
   shared_ptr<AnyParams> SpaceParams;
   bool                  DoAppend;
@@ -469,18 +487,22 @@ int main(int ac, char* av[]) {
   unsigned              MaxNumQuery;
   vector<unsigned>      knn;
   string                RangeArg;
-  unsigned              dimension;
   float                 eps = 0.0;
   unsigned              ThreadTestQty;
 
-  try {
-    vector<shared_ptr<MethodWithParams>>        MethodsDesc;
+  shared_ptr<AnyParams>           IndexTimeParams;
+  vector<shared_ptr<AnyParams>>   QueryTimeParams;
 
-    ParseCommandLine(ac, av, LogFile,
+  try {
+    string                                  MethodName;
+
+    ParseCommandLine(ac, av, bPrintProgress,
+                         LogFile,
+                         LoadIndexLoc,
+                         SaveIndexLoc, 
                          DistType,
                          SpaceType,
                          SpaceParams,
-                         dimension,
                          ThreadTestQty,
                          DoAppend, 
                          ResFilePrefix,
@@ -494,7 +516,9 @@ int main(int ac, char* av[]) {
                          knn,
                          eps,
                          RangeArg,
-                         MethodsDesc);
+                         MethodName,
+                         IndexTimeParams,
+                         QueryTimeParams);
 
     initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
@@ -503,10 +527,14 @@ int main(int ac, char* av[]) {
     ToLower(DistType);
 
     if (DIST_TYPE_INT == DistType) {
-      RunExper<int>(MethodsDesc,
+      RunExper<int>(bPrintProgress,
+                    LoadIndexLoc,
+                    SaveIndexLoc,
+                    MethodName,
+                    IndexTimeParams,
+                    QueryTimeParams,
                     SpaceType,
                     SpaceParams,
-                    dimension,
                     ThreadTestQty,
                     DoAppend, 
                     ResFilePrefix,
@@ -522,10 +550,14 @@ int main(int ac, char* av[]) {
                     RangeArg
                    );
     } else if (DIST_TYPE_FLOAT == DistType) {
-      RunExper<float>(MethodsDesc,
+      RunExper<float>(bPrintProgress,
+                    LoadIndexLoc,
+                    SaveIndexLoc,
+                    MethodName,
+                    IndexTimeParams,
+                    QueryTimeParams,
                     SpaceType,
                     SpaceParams,
-                    dimension,
                     ThreadTestQty,
                     DoAppend, 
                     ResFilePrefix,
@@ -541,10 +573,14 @@ int main(int ac, char* av[]) {
                     RangeArg
                    );
     } else if (DIST_TYPE_DOUBLE == DistType) {
-      RunExper<double>(MethodsDesc,
+      RunExper<double>(bPrintProgress,
+                    LoadIndexLoc,
+                    SaveIndexLoc,
+                    MethodName,
+                    IndexTimeParams,
+                    QueryTimeParams,
                     SpaceType,
                     SpaceParams,
-                    dimension,
                     ThreadTestQty,
                     DoAppend, 
                     ResFilePrefix,

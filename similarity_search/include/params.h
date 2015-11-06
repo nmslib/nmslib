@@ -179,17 +179,9 @@ public:
     GetParam<ParamType>(Name, Value, true);
   }
 
-  /*
-   * The default Value should be set before calling this function.
-   * If the parameter not specified, the Value remains unchanged.
-   * For instance:
-   *    AnyParams ParamManager(SomeParams);
-   *    int val = 3;
-   *    ParamManager.GetParamOptional("name", val);  
-   *     // if name wasn't not present in SomeParams, val remains equal to 3.
-   */
   template <typename ParamType>
-  void GetParamOptional(const string&  Name, ParamType& Value) {
+  void GetParamOptional(const string&  Name, ParamType& Value, const ParamType& DefaultValue) {
+    Value=DefaultValue;
     GetParam<ParamType>(Name, Value, false);
   }
 
@@ -206,6 +198,27 @@ public:
     for (size_t i = 0; i < params.ParamNames.size(); ++i) {
       const string& name = params.ParamNames[i];
       if (except.count(name) == 0) { // Not on the exception list
+        names.push_back(name);
+        values.push_back(params.ParamValues[i]);
+        seen.insert(name);
+      }
+    }
+
+    return AnyParams(names, values);
+  }
+
+  /*
+   * Extract all parameter values, whose values are on the list.
+   * The extracted parameters are added to the list of parameters already seen.
+   */
+  AnyParams ExtractParameters(const vector<string>& CheckList) {
+    set<string> except(CheckList.begin(), CheckList.end());
+
+    vector<string> names, values;
+
+    for (size_t i = 0; i < params.ParamNames.size(); ++i) {
+      const string& name = params.ParamNames[i];
+      if (except.count(name)) { // On the list
         names.push_back(name);
         values.push_back(params.ParamValues[i]);
         seen.insert(name);
@@ -292,19 +305,10 @@ inline void AnyParamManager::ConvertStrToValue<string>(const string& str, string
   Value = str;
 }
 
-struct MethodWithParams {
-	string			methName_;
-	AnyParams		methPars_;
-	MethodWithParams(const string& methName, const vector<string>& methDesc) :
-					methName_(methName),
-					methPars_(methDesc) {}
-	MethodWithParams(const string& methName, const AnyParams& methPars) :
-	                    methName_(methName),
-	                    methPars_(methPars) {}				
-};
-
-void ParseSpaceArg(const string& str, string& SpaceType, vector<string>& SpaceDesc);
-void ParseMethodArg(const string& str, string& MethName, vector<string>& MethodDesc);
+/*
+ * Take a comma-separated list of parameters and split them.
+ */
+void ParseArg(const string& str, vector<string>& vDesc);
 
 };
 

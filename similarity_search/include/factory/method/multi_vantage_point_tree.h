@@ -28,11 +28,9 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateMultiVantagePointTree(bool PrintProgress,
                            const string& SpaceType,
-                           Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
-
-    return new MultiVantagePointTree<dist_t>(space, DataObjects, AllParams);
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+    return new MultiVantagePointTree<dist_t>(space, DataObjects);
 }
 
 /*

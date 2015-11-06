@@ -25,26 +25,30 @@
 namespace similarity {
 
 template <typename dist_t>
-GHTree<dist_t>::GHTree(const Space<dist_t>* space,
+GHTree<dist_t>::GHTree(const Space<dist_t>& space,
                        const ObjectVector& data,
-                       const AnyParams& MethParams,
-                       bool use_random_center)
+                       bool use_random_center) : 
+                                space_(space), 
+                                data_(data) {
+}
+
+template <typename dist_t>
+GHTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     : BucketSize_(50),
       MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT),
       ChunkBucket_(true) {
   AnyParamManager pmgr(MethParams);
 
-  pmgr.GetParamOptional("bucketSize", BucketSize_);
-  pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
+  pmgr.GetParamOptional("bucketSize", BucketSize_,    50);
+  pmgr.GetParamOptional("chunkBucket", ChunkBucket_,  true);
 
-  root_ = new GHNode(space, const_cast<ObjectVector&>(data),
+  root_.reset(new GHNode(&space_, data,
                      BucketSize_, ChunkBucket_,
-                     use_random_center, true);
+                     use_random_center, true));
 }
 
 template <typename dist_t>
-GHTree<dist_t>::~GHTree() { delete root_; }
+GHTree<dist_t>::~GHTree() { }
 
 template <typename dist_t>
 const std::string GHTree<dist_t>::ToString() const {
@@ -65,7 +69,7 @@ void GHTree<dist_t>::Search(KNNQuery<dist_t>* query) {
 
 template <typename dist_t>
 GHTree<dist_t>::GHNode::GHNode(
-    const Space<dist_t>* space, ObjectVector& data,
+    const Space<dist_t>* space, const ObjectVector& data,
     size_t bucket_size, bool chunk_bucket,
     const bool use_random_center, bool is_root)
   : pivot1_(NULL), pivot2_(NULL), left_child_(NULL), right_child_(NULL),

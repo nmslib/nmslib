@@ -44,25 +44,30 @@ namespace similarity {
 template <typename dist_t, PivotIdType (*CorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 class PermBinVPTree : public Index<dist_t> {
  public:
-  PermBinVPTree(Space<dist_t>* space,
-                const ObjectVector& data,
-                const AnyParams& MethPars);
+  PermBinVPTree(Space<dist_t>& space,
+                const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams);
 
   ~PermBinVPTree();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
-  vector<string> GetQueryTimeParamNames() const { return VPTreeIndex_->GetQueryTimeParamNames(); }
- private:
-  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-    AnyParams params;
-    pmgr.ExtractParametersExcept({});
-    VPTreeIndex_->SetQueryTimeParams(params);
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+    CHECK_MSG(VPTreeIndex_ != NULL, "Expecting non-null pointer for the VP-tree index in SetQueryTimeParams");
+    AnyParamManager pmgr(QueryTimeParams);
+
+    AnyParams vptreeQueryParams =
+      pmgr.ExtractParameters(VPTreeIndex_->getQueryTimeParams());
+    VPTreeIndex_->SetQueryTimeParams(vptreeQueryParams);
+
+    pmgr.CheckUnused();
   }
+ private:
 
-  Space<dist_t>*            space_;
+  Space<dist_t>&            space_;
   const ObjectVector&       data_;
   size_t                    bin_threshold_;
   size_t                    bin_perm_word_qty_;
@@ -70,10 +75,8 @@ class PermBinVPTree : public Index<dist_t> {
   ObjectVector              pivots_;
   ObjectVector              BinPermData_;
 
-  VPTree<int, PolynomialPruner<int>>*   VPTreeIndex_;
-  SpaceBitHamming*                      VPTreeSpace_;
-
-  void SetQueryTimeParamsInternal(AnyParams params) { VPTreeIndex_->SetQueryTimeParams(params); }
+  unique_ptr<VPTree<int, PolynomialPruner<int>>>   VPTreeIndex_;
+  unique_ptr<SpaceBitHamming>                      VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermBinVPTree);

@@ -45,20 +45,15 @@ void DummyMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
 
 template <typename dist_t>
 void 
-DummyMethod<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+DummyMethod<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
+  AnyParamManager pmgr(QueryTimeParams);
   int dummy;
   pmgr.GetParamOptional("dummyParam", dummy);
   LOG(LIB_INFO) << "Set dummy = " << dummy;
   pmgr.CheckUnused();
 }
 
-template <typename dist_t>
-vector<string>
-DummyMethod<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
-  names.push_back("dummyParam");
-  return names;
-}
 
 template class DummyMethod<float>;
 template class DummyMethod<double>;

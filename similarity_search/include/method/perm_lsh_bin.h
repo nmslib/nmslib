@@ -39,18 +39,21 @@ class PermutationIndexLSHBin : public Index<dist_t> {
  public:
   PermutationIndexLSHBin(
                  bool PrintProgress,
-                 const Space<dist_t>* space,
-                 const ObjectVector& data,
-                 const AnyParams& MethParams);
+                 const Space<dist_t>& space,
+                 const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& MethParams);
   ~PermutationIndexLSHBin();
 
   const std::string ToString() const { return "LSH (binary permutations)"; }
-  void Search(RangeQuery<dist_t>* query) {GenSearch(query);}
-  void Search(KNNQuery<dist_t>* query) {GenSearch(query);}
+  void Search(RangeQuery<dist_t>* query, IdType) const {GenSearch(query);}
+  void Search(KNNQuery<dist_t>* query, IdType) const {GenSearch(query);}
 
  private:
   const ObjectVector&   data_;
-  const Space<dist_t>*  space_;
+  const Space<dist_t>&  space_;
+  bool                  printProgress_;
+
   size_t                num_pivot_;
   size_t                bin_threshold_;
   size_t                bit_sample_qty_;
@@ -61,7 +64,7 @@ class PermutationIndexLSHBin : public Index<dist_t> {
 
   vector<vector<vector<IdType>*>> hash_tables_;
 
-  template <typename QueryType> void GenSearch(QueryType* query);
+  template <typename QueryType> void GenSearch(QueryType* query) const;
 
   /*
    * If pQuery is not NULL, distances are computed via the query.

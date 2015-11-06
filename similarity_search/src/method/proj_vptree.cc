@@ -45,31 +45,31 @@ Object* ProjectionVPTree<dist_t>::ProjectOneVect(size_t targSpaceId,
 }
 
 template <typename dist_t>
-void ProjectionVPTree<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  AnyParams params = pmgr.ExtractParametersExcept({});
+void ProjectionVPTree<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  CHECK(VPTreeIndex_ != NULL, "Expecting non-null pointer for the VP-tree index in SetQueryTimeParams");
+  AnyParamManager pmgr(QueryTimeParams);
+
+  AnyParams vptreeQueryParams = pmgr.ExtractParameters(VPTreeIndex_->getQueryTimeParams());
+  VPTreeIndex_->SetQueryTimeParams(vptreeQueryParams);
+
   if (VPTreeIndex_) VPTreeIndex_->SetQueryTimeParams(params);
 
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
   }
-  if (pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-  } else {
-    knn_amp_ = 0;
-  }
-  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-    knn_amp_ = 0;
-  }
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
-  pmgr.GetParamOptional("knnAmp",  knn_amp_);
+  
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_, 0);
+  pmgr.GetParamOptional("knnAmp",       knn_amp_,      0);
+
+  LOG(LIB_INFO) << "Set query-time parameters for ProjectionVPTree:";
+  LOG(LIB_INFO) << "dbScanFrac=" << db_scan_frac_;
+  LOG(LIB_INFO) << "knnAmp="     << knn_amp_;
 }
 
 template <typename dist_t>
 ProjectionVPTree<dist_t>::ProjectionVPTree(
-    Space<dist_t>* space,
-    const ObjectVector& data,
-    const AnyParams& AllParams) : 
+    Space<dist_t>& space,
+    const ObjectVector& data) :
       space_(space),
       data_(data),  // reference
       K_(0),
@@ -77,6 +77,11 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
       db_scan_frac_(0),
       VPTreeIndex_(NULL)
 {
+}
+
+
+template <typename dist_t>
+ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(AllParams);
   string          projSpaceType = "l2";
 
@@ -91,14 +96,10 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
   pmgr.GetParamOptional("binThreshold", binThreshold);
   pmgr.GetParamOptional("projSpaceType", projSpaceType);
 
-  SetQueryTimeParamsInternal(pmgr);
-
   AnyParams RemainParams;
 
   RemainParams = pmgr.ExtractParametersExcept(
-                        {"dbScanFrac",
-                         "knnAmp",
-
+                        {
                          "intermDim",
                          "projDim",
                          "projType",
@@ -111,8 +112,6 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
   LOG(LIB_INFO) << "projDim      = " << projDim_;
   LOG(LIB_INFO) << "intermDim    = " << intermDim;
   LOG(LIB_INFO) << "binThreshold = " << binThreshold;
-  LOG(LIB_INFO) << "dbDscanFrac  = " << db_scan_frac_;
-  LOG(LIB_INFO) << "knnAmp       = " << knn_amp_;
 
   /*
    * Let's extract all parameters before doing
@@ -195,7 +194,7 @@ const std::string ProjectionVPTree<dist_t>::ToString() const {
 }
 
 template <typename dist_t>
-void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query) {
+void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query, IdType) {
   if (db_scan_frac_ < 0.0 || db_scan_frac_ > 1.0) {
     stringstream err;
     err << METH_PROJ_VPTREE << " requires that dbScanFrac is in the range [0,1]";
@@ -222,7 +221,7 @@ void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query) {
 }
 
 template <typename dist_t>
-void ProjectionVPTree<dist_t>::Search(KNNQuery<dist_t>* query) {
+void ProjectionVPTree<dist_t>::Search(KNNQuery<dist_t>* query, IdType) {
   size_t db_scan_qty = computeDbScan(query->GetK());
   if (!db_scan_qty) {
     throw runtime_error("You need to specify knnAmp > 0 or a sufficiently large dbScanFrac!");

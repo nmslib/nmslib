@@ -39,31 +39,31 @@ template <typename dist_t> class Space;
 template <typename dist_t, typename SearchOracle>
 class VPTree : public Index<dist_t> {
  public:
-  VPTree(bool  PrintProgress,
-         Space<dist_t>* space,
-         const ObjectVector& data,
-         const AnyParams& MethParams,
-         bool use_random_center = true);
+  VPTree(bool PrintProgress,
+         Space<dist_t>& space,
+         const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams);
+
   ~VPTree();
 
   const std::string ToString() const;
 
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query) const;
+  void Search(KNNQuery<dist_t>* query) const;
 
-  vector<string> GetQueryTimeParamNames() const { return oracle_.GetQueryTimeParamNames(); }
+  const vector<string>& getQueryTimeParams() const { return QueryTimeParams_; }
 
- private:
-  // Call this function *ONLY AFTER* the bucket size is obtained!
-  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) { 
-    AnyParams paramNew(pmgr.GetAllParams());
-    // An Oracle may need to know the size of the bucket
-    paramNew.AddChangeParam("BucketSize", BucketSize_);
-    AnyParamManager pmgrNew(paramNew);
-    oracle_.SetQueryTimeParams(pmgrNew); 
-    pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
-    pmgrNew.copySeen(pmgr);
+
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+    AnyParamManager pmgr(QueryTimeParams);
+    oracle_.SetQueryTimeParams(pmgr); 
+    pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
+    LOG(LIB_INFO) << "Set VP-tree query-time parameters:";
+    LOG(LIB_INFO) << "maxLeavesToVisit" << MaxLeavesToVisit_;
+    pmgr.CheckUnused();
   }
+ private:
 
   class VPNode {
    public:
@@ -73,13 +73,13 @@ class VPTree : public Index<dist_t> {
     VPNode(unsigned level,
            ProgressDisplay* progress_bar,
            const SearchOracle&  oracle,
-           const Space<dist_t>* space, const ObjectVector& data,
+           const Space<dist_t>& space, const ObjectVector& data,
            size_t BucketSize, bool ChunkBucket,
            bool use_random_center, bool is_root);
     ~VPNode();
 
     template <typename QueryType>
-    void GenericSearch(QueryType* query, int& MaxLeavesToVisit);
+    void GenericSearch(QueryType* query, int& MaxLeavesToVisit) const;
 
    private:
     void CreateBucket(bool ChunkBucket, const ObjectVector& data, 
@@ -101,11 +101,18 @@ class VPTree : public Index<dist_t> {
     friend class VPTree;
   };
 
-  SearchOracle    oracle_;
-  VPNode*         root_;
-  size_t          BucketSize_;
-  int             MaxLeavesToVisit_;
-  bool            ChunkBucket_;
+  const ObjectVector& data_;
+  Space<dist_t>&      space_;
+  bool                PrintProgress_;
+
+  SearchOracle        oracle_;
+  unique_ptr<VPNode>  root_;
+  size_t              BucketSize_;
+  int                 MaxLeavesToVisit_;
+  bool                ChunkBucket_;
+
+  vector<string>  QueryTimeParams_;
+
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(VPTree);
 };

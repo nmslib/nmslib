@@ -56,9 +56,9 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
 
   ReadField(controlStream, SPACE, s);
 
-  if (s != space_->ToString()) {
+  if (s != space_.ToString()) {
     stringstream err;
-    err << "The specified space ('" << space_->ToString() << "' "
+    err << "The specified space ('" << space_.ToString() << "' "
         << " doesn't match the space ('"
         << s << ") in the gold standard cache (must be char-by-char equal).";
     throw runtime_error(err.str());
@@ -199,7 +199,7 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStream) {
-  WriteField(controlStream, SPACE, space_->ToString());
+  WriteField(controlStream, SPACE, space_.ToString());
   WriteField(controlStream, DATA_FILE, datafile_);
   WriteField(controlStream, DATA_FILE_QTY, ConvertToString(origData_.size()));
   WriteField(controlStream, QUERY_FILE, queryfile_);
@@ -321,7 +321,6 @@ template <typename dist_t>
 void ExperimentConfig<dist_t>::ReadDataset() {
   vector<string> tmp;
 
-  if (space_ == NULL) throw runtime_error("Space pointer should not be NULL!");
   if (!dataobjects_.empty())
     throw runtime_error(
         "The set of data objects in non-empty, did you read the data set already?");
@@ -332,8 +331,8 @@ void ExperimentConfig<dist_t>::ReadDataset() {
 
   if (pExternalData_) CopyExternal(*pExternalData_, origData_, maxNumData_);
   else {
-    unique_ptr<DataFileInputState> inpState(space_->ReadDataset(origData_, tmp, datafile_, maxNumData_));
-    space_->UpdateParamsFromFile(*inpState);
+    unique_ptr<DataFileInputState> inpState(space_.ReadDataset(origData_, tmp, datafile_, maxNumData_));
+    space_.UpdateParamsFromFile(*inpState);
   }
 
   /*
@@ -348,7 +347,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
     if (pExternalQuery_) 
       CopyExternal(*pExternalQuery_, queryobjects_, maxNumQuery_);
     else 
-      space_->ReadDataset(queryobjects_, tmp, queryfile_, maxNumQueryToRun_);
+      space_.ReadDataset(queryobjects_, tmp, queryfile_, maxNumQueryToRun_);
 
     origQuery_ = queryobjects_;
   } else {
@@ -396,7 +395,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::PrintInfo() const {
-  space_->PrintInfo();
+  space_.PrintInfo();
   LOG(LIB_INFO) << "distance type         = " << DistTypeName<dist_t>();
   LOG(LIB_INFO) << "data file             = " << datafile_;
   LOG(LIB_INFO) << "# of test sets        = " << GetTestSetTotalQty();

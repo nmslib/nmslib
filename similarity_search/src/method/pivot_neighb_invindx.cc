@@ -111,37 +111,30 @@ void postListUnion(const VectIdCount& lst1, const PostingListInt lst2, VectIdCou
 template <typename dist_t>
 PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     bool  PrintProgress,
-    const Space<dist_t>* space,
-    const ObjectVector& data,
-    const AnyParams& AllParams) 
-: data_(data),   // reference
-  space_(space), // pointer
-  chunk_index_size_(65536),
-  K_(0),
-  knn_amp_(0),
-  db_scan_frac_(0),
-  num_prefix_(32),
-  min_times_(2),
-  use_sort_(false),
-  skip_checking_(false),
-  index_thread_qty_(0),
-  num_pivot_(512),
-  inv_proc_alg_ (kScan) {
-  AnyParamManager pmgr(AllParams);
+    const Space<dist_t>& space,
+    const ObjectVector& data) 
+      : data_(data),  
+        space_(space), 
+        PrintProgress_(PrintProgress) {
+}
 
-  string inv_proc_alg = PERM_PROC_FAST_SCAN;
 
-  pmgr.GetParamOptional("numPivot", num_pivot_);
+template <typename dist_t>
+PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
+
+
+  pmgr.GetParamOptional("numPivot", num_pivot_, 512);
 
   if (pmgr.hasParam("numPivotIndex") && pmgr.hasParam("numPrefix")) {
     throw runtime_error("One shouldn't specify both parameters numPrefix and numPivotIndex, b/c they are synonyms!");
   }
-  pmgr.GetParamOptional("numPivotIndex", num_prefix_);
-  pmgr.GetParamOptional("numPrefix", num_prefix_);
+  pmgr.GetParamOptional("numPivotIndex", num_prefix_, 32);
+  pmgr.GetParamOptional("numPrefix",     num_prefix_, 32);
 
-  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
+  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 65536);
 
-  pmgr.GetParamOptional("indexThreadQty", index_thread_qty_);
+  pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  0);
 
   if (num_prefix_ > num_pivot_) {
     LOG(LIB_FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix "
@@ -152,8 +145,6 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   
   size_t indexQty = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
 
-  SetQueryTimeParamsInternal(pmgr);
-
   pmgr.CheckUnused();
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
@@ -161,12 +152,8 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   LOG(LIB_INFO) << "# of indexing thread          = " << index_thread_qty_;
   LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
   LOG(LIB_INFO) << "# pivots to index (numPrefix) = " << num_prefix_;
-  LOG(LIB_INFO) << "# pivots to search (minTimes) = " << min_times_;
-  LOG(LIB_INFO) << "# dbScanFrac              = " << db_scan_frac_;
-  LOG(LIB_INFO) << "# knnAmp                  = " << knn_amp_;
-  
 
-  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
+  GetPermutationPivot(data_, &space_, num_pivot_, &pivot_);
 
   posting_lists_.resize(indexQty);
 
@@ -184,7 +171,7 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   mutex                                               progressBarMutex;
 
   if (index_thread_qty_ <= 1) {
-    unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+    unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
                                 new ProgressDisplay(data.size(), cerr)
                                 :NULL);
     for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
@@ -258,19 +245,19 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* pr
     
 template <typename dist_t>
 void 
-PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  string inv_proc_alg = PERM_PROC_FAST_SCAN;
+PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  string inv_proc_alg;
   
-  pmgr.GetParamOptional("skipChecking", skip_checking_);
-  pmgr.GetParamOptional("useSort",      use_sort_);
-  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg);
+  pmgr.GetParamOptional("skipChecking", skip_checking_, false);
+  pmgr.GetParamOptional("useSort",      use_sort_,      false);
+  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg,   PERM_PROC_FAST_SCAN);
 
   if (pmgr.hasParam("minTimes") && pmgr.hasParam("numPivotSearch")) {
     throw runtime_error("One shouldn't specify both parameters minTimes and numPivotSearch, b/c they are synonyms!");
   }
 
-  pmgr.GetParamOptional("minTimes",        min_times_);
-  pmgr.GetParamOptional("numPivotSearch",  min_times_);
+  pmgr.GetParamOptional("minTimes",        min_times_, 2);
+  pmgr.GetParamOptional("numPivotSearch",  min_times_, 2);
   
   if (inv_proc_alg == PERM_PROC_FAST_SCAN) {
     inv_proc_alg_ = kScan; 
@@ -287,36 +274,20 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pm
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
   }
-  if (pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-  } else {
-    knn_amp_ = 0;
-  }
-  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-    knn_amp_ = 0;
-  }
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
-  pmgr.GetParamOptional("knnAmp",  knn_amp_);
-}
-
-template <typename dist_t>
-vector<string>
-PivotNeighbInvertedIndex<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
   
-  names.push_back("dbScanFrac");
-  names.push_back("knnAmp");
-  names.push_back("useSort");
-  names.push_back("skipChecking");
-  names.push_back("invProcAlg");
-  names.push_back("minTimes");
-  names.push_back("numPivotSearch");
-    
-  return names;
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_,  0);
+  pmgr.GetParamOptional("knnAmp",       knn_amp_,       0);
+
+  pmgr.CheckUnused();
+  
+  LOG(LIB_INFO) << "Set query-time parameters for PivotNeighbInvertedIndex:";
+  LOG(LIB_INFO) << "# pivots to search (minTimes) = " << min_times_;
+  LOG(LIB_INFO) << "# dbScanFrac                  = " << db_scan_frac_;
+  LOG(LIB_INFO) << "# knnAmp                      = " << knn_amp_;
+  LOG(LIB_INFO) << "# useSort                     = " << use_sort_;
+  LOG(LIB_INFO) << "invProcAlg (code)             = " << inv_proc_alg_ << "(" << toString(inv_proc_alg_) << ")";
+  LOG(LIB_INFO) << "# skipChecking                = " << skip_checking_;
 }
-    
-    
 
 template <typename dist_t>
 PivotNeighbInvertedIndex<dist_t>::~PivotNeighbInvertedIndex() {
@@ -331,7 +302,7 @@ const string PivotNeighbInvertedIndex<dist_t>::ToString() const {
 
 template <typename dist_t>
 template <typename QueryType>
-void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
+void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) const {
   // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
   // a strange error message that says: dbScanFrac should be in the range [0,1].
   if (!knn_amp_) {
@@ -478,14 +449,14 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
 }
 
 template <typename dist_t>
-void PivotNeighbInvertedIndex<dist_t>::Search(
-    RangeQuery<dist_t>* query) {
+void PivotNeighbInvertedIndex<dist_t>::Search const(
+    RangeQuery<dist_t>* query, IdType) {
   GenSearch(query, 0);
 }
 
 template <typename dist_t>
-void PivotNeighbInvertedIndex<dist_t>::Search(
-    KNNQuery<dist_t>* query) {
+void PivotNeighbInvertedIndex<dist_t>::Search const(
+    KNNQuery<dist_t>* query, IdType) {
   GenSearch(query, query->GetK());
 }
 

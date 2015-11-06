@@ -37,7 +37,7 @@ namespace similarity {
 template <typename dist_t>
 class ProjectionVPTree : public Index<dist_t> {
  public:
-  ProjectionVPTree(Space<dist_t>* space,
+  ProjectionVPTree(Space<dist_t>& space,
                    const ObjectVector& data,
                    const AnyParams& MethPars);
 
@@ -47,17 +47,11 @@ class ProjectionVPTree : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query);
   void Search(KNNQuery<dist_t>* query);
 
-  vector<string> GetQueryTimeParamNames() const { 
-    vector<string> res = VPTreeIndex_->GetQueryTimeParamNames();
-    res.push_back("dbScanFrac");
-    res.push_back("knnAmp");
-    return res;
-  }
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
  private:
-  void SetQueryTimeParamsInternal(AnyParamManager& pmgr);
 
 
-  Space<dist_t>*                    space_;
+  Space<dist_t>&                    space_;
   const ObjectVector&               data_;
 
   size_t                            K_;

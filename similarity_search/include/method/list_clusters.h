@@ -38,22 +38,21 @@ template <typename dist_t>
 class ListClusters : public Index<dist_t> {
  public:
   ListClusters(const Space<dist_t>* space,
-               const ObjectVector& data,
-               const AnyParams& MethParams);
+               const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& MethParams);
   ~ListClusters();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
-
-  virtual vector<string> GetQueryTimeParamNames() const;
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
   static const Object* SelectNextCenter(
       DistObjectPairVector<dist_t>& remaining,
       ListClustersStrategy strategy);
 
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
 
   template <typename QueryType>
   void GenSearch(QueryType* query);
@@ -81,6 +80,9 @@ class ListClusters : public Index<dist_t> {
     ObjectVector* bucket_;
     int MaxLeavesToVisit_;
   };
+
+  const Space<dist_t>&  space_;
+  const ObjectVector&   data_;
 
   std::vector<Cluster*> cluster_list_;
 

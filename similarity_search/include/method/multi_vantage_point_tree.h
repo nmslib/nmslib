@@ -36,14 +36,24 @@ class Space;
 template <typename dist_t>
 class MultiVantagePointTree : public Index<dist_t> {
  public:
-  MultiVantagePointTree(const Space<dist_t>* space,
-                        const ObjectVector& data,
-                        const AnyParams& MethParams);
+  MultiVantagePointTree(const Space<dist_t>& space,
+                        const ObjectVector& data);
+  void CreateIndex(const AnyParams& IndexParams);
   ~MultiVantagePointTree();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
+
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+    AnyParamManager pmgr(QueryTimeParams);
+    pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
+    LOG(LIB_INFO) << "Set MVP-tree query-time parameters:";
+    LOG(LIB_INFO) << "maxLeavesToVisit" << MaxLeavesToVisit_;
+    pmgr.CheckUnused();
+  }
+ 
+  
 
  private:
   struct Entry;
@@ -155,7 +165,9 @@ class MultiVantagePointTree : public Index<dist_t> {
   template <typename QueryType>
   void GenericSearch(Node* node, QueryType* query, Dists& path, size_t query_path_len, int& MaxLeavesToVisit);
 
-  Node* root_;               // root node
+  const Space<dist_t> space_;
+  const ObjectVector& data_;
+  unique_ptr<Node>    root_;               // root node
 
   size_t MaxPathLength_;   // the number of distances for the data
                              // points to be kept at the leaves (P)

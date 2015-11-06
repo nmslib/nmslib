@@ -28,13 +28,11 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreatePermutationIndexLSHBin(bool PrintProgress,
                            const string& SpaceType,
-                           Space<dist_t>* space,
-                           const ObjectVector& dataObjects,
-                           const AnyParams& allParams) {
+                           Space<dist_t>& space,
+                           const ObjectVector& dataObjects) {
   return new PermutationIndexLSHBin<dist_t>(PrintProgress,
                                             space,
-                                            dataObjects,
-                                            allParams);
+                                            dataObjects);
 
 }
 

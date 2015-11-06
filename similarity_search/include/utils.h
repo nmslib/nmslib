@@ -149,13 +149,9 @@ inline double round2(double x) { return round(x*100.0)/100.0; }
 inline double round3(double x) { return round(x*1000.0)/1000.0; }
 
 /*
- * This function will only work for strings without spaces
- * TODO(@leo) replace, perhaps, it with a more generic version
- * Another TODO is to get rid of all streams all together,
- * because they are horribly slow. Does it affect our performance?
- *
- * See, e.g. Leo's rant here:
- * http://searchivarius.org/blog/branchless-code-would-leave-you-speechless-c-streams-are-super-expensive
+ * This function will only work for strings without spaces and commas
+ * TODO(@leo) replace, perhaps, it with a more generic version.
+ * In particular, we want to be able to escape both spaces and commas.
  */
 template <typename ElemType>
 inline bool SplitStr(const std::string& str_, vector<ElemType>& res, const char SplitChar) {

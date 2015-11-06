@@ -29,15 +29,9 @@ template <typename dist_t>
 Index<dist_t>* CreatePermInvertedIndex(
     bool PrintProgress,
     const string& SpaceType,
-    Space<dist_t>* space,
-    const ObjectVector& DataObjects,
-    const AnyParams& AllParams) {
-  return new PermutationInvertedIndex<dist_t>(
-      PrintProgress,
-      space,
-      DataObjects,
-      AllParams
-  );
+    Space<dist_t>& space,
+    const ObjectVector& DataObjects) {
+  return new PermutationInvertedIndex<dist_t>(PrintProgress, space, DataObjects);
 }
 
 /*

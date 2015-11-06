@@ -19,6 +19,7 @@
 #include "rangequery.h"
 #include "method/list_clusters.h"
 #include "utils.h"
+#include "logging.h"
 
 #include <queue>
 #include <utility>
@@ -42,9 +43,12 @@ struct DistDistObjectTupleAscComparator {
     
 template <typename dist_t>
 void 
-ListClusters<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
-  //LOG(LIB_INFO) << "MaxLeavesToVisit_ is now set to " << MaxLeavesToVisit_;
+ListClusters<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager pmgr(QueryTimeParams);
+  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
+  LOG(LIB_INFO) << "Set list of clusters query-time parameters:";
+  LOG(LIB_INFO) << "maxLeavesToVisit = to " << MaxLeavesToVisit_;
+  pmgr.CheckUnused();
 }
 
 template <typename dist_t>
@@ -59,19 +63,16 @@ ListClusters<dist_t>::GetQueryTimeParamNames() const {
 template <typename dist_t>
 ListClusters<dist_t>::ListClusters(
     const Space<dist_t>* space,
-    const ObjectVector& data, 
-    const AnyParams& MethParams) : 
-                              Strategy_(ListClustersStrategy::kRandom),
-                              UseBucketSize_(true),
-                              BucketSize_(50),
-                              Radius_(1),
-                              MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT),
-                              ChunkBucket_(true) {
-  AnyParamManager pmgr(MethParams);
+    const ObjectVector& data) : space_(space), data_(data) { }
 
-  string sVal = "random";
+template <typename dist_t>
+void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams) 
+{
+  AnyParamManager pmgr(IndexParams);
 
-  pmgr.GetParamOptional("strategy", sVal);
+  string sVal; 
+
+  pmgr.GetParamOptional("strategy", "random");
 
   if (sVal == "random") {
     Strategy_ =  ListClustersStrategy::kRandom;
@@ -84,20 +85,21 @@ ListClusters<dist_t>::ListClusters(
   } else if (sVal == "maxSumDistPrevCenters") {
     Strategy_ = ListClustersStrategy::kMaxSumDistPrevCenters;
   } else {
-    LOG(LIB_FATAL) << "Incorrect value :'" << sVal << "' for parameter strategy ";
+    PREPARE_RUNTIME_ERR(err) << "Incorrect value :'" << sVal << "' for parameter strategy ";
+    THROW_RUNTIME_ERR(err);
   }
 
 
-  pmgr.GetParamOptional("useBucketSize", UseBucketSize_);
-  pmgr.GetParamOptional("bucketSize", BucketSize_);
-  pmgr.GetParamOptional("radius", Radius_);
-  pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
+  pmgr.GetParamOptional("useBucketSize", UseBucketSize_, true);
+  pmgr.GetParamOptional("bucketSize",    BucketSize_,    50);
+  pmgr.GetParamOptional("radius",        Radius_,        1);
+  pmgr.GetParamOptional("chunkBucket",   ChunkBucket_,   true);
 
-  SetQueryTimeParamsInternal(pmgr);
-    
+  pmgr.CheckUnused();
+
   // <distance to previous centers, object>
   DistObjectPairVector<dist_t> remaining;
-  for (const auto& object : data) {
+  for (const auto& object : data_) {
     remaining.push_back(std::make_pair(0, object));
   }
 
@@ -124,7 +126,7 @@ ListClusters<dist_t>::ListClusters(
           center_skipped = true;
         } else {
           dp.push_back(std::make_tuple(
-                  space->IndexTimeDistance(p.second, center), p.first, p.second));
+                  space_->IndexTimeDistance(p.second, center), p.first, p.second));
         }
       }
       std::sort(dp.begin(), dp.end(),
@@ -147,7 +149,7 @@ ListClusters<dist_t>::ListClusters(
           }
           center_skipped = true;
         } else {
-          const dist_t dist = space->IndexTimeDistance(p.second, center);
+          const dist_t dist = space_->IndexTimeDistance(p.second, center);
           if (dist < Radius_) {
             new_cluster->AddObject(p.second, dist);
           } else {
@@ -180,12 +182,12 @@ const std::string ListClusters<dist_t>::ToString() const {
 }
 
 template <typename dist_t>
-void ListClusters<dist_t>::Search(RangeQuery<dist_t>* query) {
+void ListClusters<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   GenSearch(query);
 }
 
 template <typename dist_t>
-void ListClusters<dist_t>::Search(KNNQuery<dist_t>* query) {
+void ListClusters<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   GenSearch(query);
 }
 

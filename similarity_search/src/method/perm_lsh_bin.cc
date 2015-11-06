@@ -31,21 +31,17 @@ template <typename dist_t>
 PermutationIndexLSHBin<dist_t>::PermutationIndexLSHBin(
     bool PrintProgress,
     const Space<dist_t>* space,
-    const ObjectVector& data,
-    const AnyParams& MethParams) 
-	: data_(data), 
-    space_(space),
-    num_pivot_(32), 
-    bin_threshold_(8), 
-    bit_sample_qty_(20), // for 1M records
-    num_hash_(50)
-{
+    const ObjectVector& data) : printProgress_(PrintProgress),
+                                space_(space), data_(data) {}
+
+template <typename dist_t>
+void PermutationIndexLSHBin<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(MethParams);
 
-  pmgr.GetParamOptional("numPivot",     num_pivot_);
-  pmgr.GetParamOptional("binThreshold", bin_threshold_);
-  pmgr.GetParamOptional("bitSampleQty", bit_sample_qty_);
-  pmgr.GetParamOptional("L",            num_hash_);
+  pmgr.GetParamOptional("numPivot",     num_pivot_,       32);
+  pmgr.GetParamOptional("binThreshold", bin_threshold_,   num_pivot_ / 2);
+  pmgr.GetParamOptional("bitSampleQty", bit_sample_qty_,  20 /* good for 1m records */);
+  pmgr.GetParamOptional("L",            num_hash_,        50);
 
   if (!bit_sample_qty_) {
     throw runtime_error("bitSampleQty should be non-zero");
@@ -69,7 +65,7 @@ PermutationIndexLSHBin<dist_t>::PermutationIndexLSHBin(
   bit_sample_flags_.resize(num_hash_);
 
   for (size_t i = 0; i < num_hash_; ++i) {
-    GetPermutationPivot(data, space, num_pivot_, &pivots_[i]);
+    GetPermutationPivot(data_, &space_, num_pivot_, &pivots_[i]);
     bit_sample_flags_[i].resize(num_pivot_);
 
 
@@ -113,7 +109,7 @@ PermutationIndexLSHBin<dist_t>::PermutationIndexLSHBin(
     hash_tables_[hashId].resize(hash_table_size_);
   }
 
-  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
                                 new ProgressDisplay(data.size(), cerr)
                                 :NULL);
   for (size_t id = 0; id < data.size(); ++id) {
@@ -138,7 +134,7 @@ PermutationIndexLSHBin<dist_t>::~PermutationIndexLSHBin() {
 
 template <typename dist_t>
 template <typename QueryType>
-void PermutationIndexLSHBin<dist_t>::GenSearch(QueryType* query) {
+void PermutationIndexLSHBin<dist_t>::GenSearch(QueryType* query) const {
   std::unordered_set<IdType> found;
 
   for (size_t hashId = 0; hashId < num_hash_; ++hashId) {

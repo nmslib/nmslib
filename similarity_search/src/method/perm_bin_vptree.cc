@@ -26,6 +26,7 @@
 #include "method/perm_bin_vptree.h"
 #include "utils.h"
 #include "distcomp.h"
+#include "logging.h"
 #include "report_intr_dim.h"
 
 namespace similarity {
@@ -34,48 +35,44 @@ using std::unique_ptr;
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
-    Space<dist_t>* space,
-    const ObjectVector& data,
-    const AnyParams& AllParams) : 
+    Space<dist_t>& space,
+    const ObjectVector& data) : 
       space_(space), data_(data),   // reference
       VPTreeSpace_(new SpaceBitHamming())
 {
-  AnyParamManager pmgr(AllParams);
 
-  double        DbScanFrac   = 0.05;
-  size_t        NumPivot     = 16;
-  bin_threshold_ = 8;
+template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
+void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
 
-  pmgr.GetParamOptional("dbScanFrac", DbScanFrac);
-  pmgr.GetParamOptional("numPivot", NumPivot);
-  pmgr.GetParamOptional("binThreshold", bin_threshold_);
+  double        DbScanFrac;
+  size_t        NumPivot;
+
+  pmgr.GetParamOptional("dbScanFrac", DbScanFrac, 0.05);
+  pmgr.GetParamOptional("numPivot",   NumPivot, 16);
+  pmgr.GetParamOptional("binThreshold", bin_threshold_, NumPivot / 2);
 
   bin_perm_word_qty_ = (NumPivot + 31)/32;
 
   if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
-    LOG(LIB_FATAL) << METH_PERM_BIN_VPTREE << " requires that dbScanFrac is in the range [0,1]";
+    PREPARE_RUNTIME_ERROR(err) << METH_PERM_BIN_VPTREE << " requires that dbScanFrac is in the range [0,1]";
+    THROW_RUNTIME_ERR(err);
   }
 
-  AnyParams RemainParams;
 
   LOG(LIB_INFO) << "# pivots                  = " << NumPivot;
   LOG(LIB_INFO) << "# binarization threshold = "  << bin_threshold_;
   LOG(LIB_INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
   LOG(LIB_INFO) << "db scan fraction = " << DbScanFrac;
 
-  double AlphaLeft = 1.0, AlphaRight = 1.0;
+  AnyParams RemainIndexParams = 
+      pmgr.ExtractParametersExcept( 
+            { "dbScanFrac", "numPivot", "binThreshold", 
+              ALPHA_LEFT_PARAM, ALPHA_RIGHT_PARAM,
+              EXP_LEFT_PARAM, EXP_RIGHT_PARAM
+            });
 
-  pmgr.GetParamOptional(ALPHA_LEFT_PARAM,  AlphaLeft);
-  pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, AlphaRight);
-
-  RemainParams = pmgr.ExtractParametersExcept(
-                        { "dbScanFrac",
-                         "numPivot",
-                         "binThreshold",
-
-                         ALPHA_LEFT_PARAM, 
-                         ALPHA_RIGHT_PARAM,
-                        });
+  pmgr.CheckUnused();
 
   // db_can_qty_ should always be > 0
   db_scan_qty_ = max(size_t(1), static_cast<size_t>(DbScanFrac * data.size())),
@@ -84,7 +81,7 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
 
   for (size_t i = 0; i < data.size(); ++i) {
     Permutation TmpPerm;
-    GetPermutation(pivots_, space_, data[i], &TmpPerm);
+    GetPermutation(pivots_, &space_, data[i], &TmpPerm);
     vector<uint32_t>  binPivot;
     Binarize(TmpPerm, bin_threshold_, binPivot);
     CHECK(binPivot.size() == bin_perm_word_qty_);
@@ -92,12 +89,12 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
   }
 
   ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, BinPermData_);
-  VPTreeIndex_ = new VPTree<int, PolynomialPruner<int>>(
+  VPTreeIndex_.reset(new VPTree<int, PolynomialPruner<int>>(
                                           true,
-                                          VPTreeSpace_,
-                                          BinPermData_,
-                                          RemainParams
-                                    );
+                                          *VPTreeSpace_,
+                                          BinPermData_));
+
+  VPTreeIndex_->CreateIndex(RemainIndexParams);
 }
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
@@ -105,8 +102,6 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::~PermBinVPTree() {
   for (size_t i = 0; i < data_.size(); ++i) {
     delete BinPermData_[i];
   }
-  delete VPTreeIndex_;
-  delete VPTreeSpace_;
 }
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>

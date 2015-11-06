@@ -42,20 +42,22 @@ class PermutationInvertedIndex : public Index<dist_t> {
   PermutationInvertedIndex(
                 bool  PrintProgress,
                 const Space<dist_t>* space,
-                const ObjectVector& data,
-                AnyParams params);
+                const ObjectVector& data);
+
+  void CreateIndex(AnyParams params);
   ~PermutationInvertedIndex();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
-
-  virtual vector<string> GetQueryTimeParamNames() const;
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
+  
+  virtual void SetQueryTimeParams(const AnyParams& params);
 
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+  const Space<dist_t>&  space_;
+  const ObjectVector&   data_;
+  bool                  PrintProgress_;
 
-  const ObjectVector& data_;
   float  db_scan_frac_;
   size_t num_pivot_;            // overall number of pivots
   size_t num_pivot_index_;      // ki in the original paper
@@ -84,7 +86,7 @@ class PermutationInvertedIndex : public Index<dist_t> {
   std::vector<PostingList> posting_lists_;
 
   // K==0 for range search
-  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationInvertedIndex);

@@ -34,20 +34,30 @@ class Space;
 template <typename dist_t>
 class GHTree : public Index<dist_t> {
  public:
-  GHTree(const Space<dist_t>* space,
+  GHTree(const Space<dist_t>& space,
          const ObjectVector& data,
-         const AnyParams& MethParams,
          bool use_random_center = true);
+
+  void CreateIndex(const AnyParams& IndexParams);
+
   ~GHTree();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType ) const;
+  void Search(KNNQuery<dist_t>* query, IdType ) const;
+
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+    AnyParamManager pmgr(QueryTimeParams);
+    pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
+    LOG(LIB_INFO) << "Set GH-tree query-time parameters:";
+    LOG(LIB_INFO) << "maxLeavesToVisit" << MaxLeavesToVisit_;
+    pmgr.CheckUnused();
+  }
 
  private:
   class GHNode {
    public:
-    GHNode(const Space<dist_t>* space, ObjectVector& data,
+    GHNode(const Space<dist_t>* space, const ObjectVector& data,
            size_t bucket_size, bool chunk_bucket,
            const bool use_random_center, bool is_root);
     ~GHNode();
@@ -66,7 +76,9 @@ class GHTree : public Index<dist_t> {
     friend class GHTree;
   };
 
-  GHNode* root_;
+  const ObjectVector& data_;
+  Space<dist_t>&      space_;
+  unique_ptr<GHNode>  root_;
 
   size_t                    BucketSize_;
   int                       MaxLeavesToVisit_;

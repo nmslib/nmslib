@@ -28,11 +28,10 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateGHTree(bool PrintProgress,
                            const string& SpaceType,
-                           Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
 
-    return new GHTree<dist_t>(space, DataObjects, AllParams);
+  return new GHTree<dist_t>(space, DataObjects);
 }
 
 /*

@@ -45,13 +45,23 @@ template <typename dist_t>
 class BBTree : public Index<dist_t> {
  public:
   BBTree(const Space<dist_t>* space,
-         const ObjectVector& data, 
-         const AnyParams& MethParams);
+         const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams);
+  void SetQueryTimeParams(const AnyParams& params) {
+    AnyParamManager pmgr(params);
+    pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
+
+    LOG(LIB_INFO) << "Set bbtree query-time parameters:";
+    LOG(LIB_INFO) << "maxLeavesToVisit" << MaxLeavesToVisit_;
+    pmgr.CheckUnused();
+  }
+
   ~BBTree();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
  private:
   class BBNode {
@@ -66,18 +76,18 @@ class BBTree : public Index<dist_t> {
     bool RecBinSearch(const BregmanDiv<dist_t>* div,
                       Object* query_gradient, 
                       QueryType* query, dist_t mindist_est,
-                      dist_t l=0.0, dist_t r=1.0, int depth=0);
+                      dist_t l=0.0, dist_t r=1.0, int depth=0) const;
 
     template <typename QueryType>
     bool NeedToSearch(const BregmanDiv<dist_t>* div,
                       Object* query_gradient, 
                       QueryType* query, dist_t mindist_est,
-                      dist_t div_query_to_center);
+                      dist_t div_query_to_center) const;
 
     template <typename QueryType>
     void LeftSearch(const BregmanDiv<dist_t>* div,
                     Object* query_gradient, QueryType* query,
-                    int& MaxLeavesToVisit_);
+                    int& MaxLeavesToVisit_) const;
 
     void SelectCenters(const ObjectVector& data, ObjectVector& centers);
 
@@ -100,7 +110,7 @@ class BBTree : public Index<dist_t> {
     DISABLE_COPY_AND_ASSIGN(BBNode);
   };
 
-  BBNode*                   root_node_;
+  unique_ptr<BBNode>        root_node_;
   size_t                    BucketSize_;
   int                       MaxLeavesToVisit_;
   bool                      ChunkBucket_;

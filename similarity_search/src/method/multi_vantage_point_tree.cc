@@ -27,37 +27,38 @@ namespace similarity {
 
 template <typename dist_t>
 MultiVantagePointTree<dist_t>::MultiVantagePointTree(
-    const Space<dist_t>* space,
-    const ObjectVector& data,
-    const AnyParams& MethParams) : 
-    root_(NULL),
-    MaxPathLength_(5),
-    BucketSize_(50),
-    ChunkBucket_(true),
-    MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT) {
-  AnyParamManager pmgr(MethParams);
+    const Space<dist_t>& space,
+    const ObjectVector& data) : space_(space), data_(data) {
+}
 
-  pmgr.GetParamOptional("maxPathLen", MaxPathLength_);
-  pmgr.GetParamOptional("bucketSize", BucketSize_);
-  pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
+template <typename dist_t>
+void MultiVantagePointTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
 
+  pmgr.GetParamOptional("maxPathLen", MaxPathLength_,  5);
+  pmgr.GetParamOptional("bucketSize", BucketSize_,     50);
+  pmgr.GetParamOptional("chunkBucket", ChunkBucket_,   true);
+
+  LOG(LIB_INFO) << "maxPathLen= " << MaxPathLength_;
+  LOG(LIB_INFO) << "bucketSize= " << BucketSize_;
+  LOG(LIB_INFO) << "chunkBucket=" << ChunkBucket_;
+
+  pmgr.CheckUnused();
 
   if (BucketSize_ < 2) {
      LOG(LIB_FATAL) << "The bucket size should be at least 2 (multi vantage point tree)";
   }
 
   Entries entries;
-  entries.reserve(data.size());
-  for (size_t i = 0; i < data.size(); ++i) {
-    entries.push_back(Entry(data[i]));
+  entries.reserve(data_.size());
+  for (size_t i = 0; i < data_.size(); ++i) {
+    entries.push_back(Entry(data_[i]));
   }
-  root_= BuildTree(space, entries);
+  root_.reset(BuildTree(&space_, entries));
 }
 
 template <typename dist_t>
 MultiVantagePointTree<dist_t>::~MultiVantagePointTree() {
-  delete root_;
 }
 
 template <typename dist_t>

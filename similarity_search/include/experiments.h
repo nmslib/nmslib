@@ -44,12 +44,6 @@
 #include "meta_analysis.h"
 #include "query_creator.h"
 
-/* 
- * If defined, we active the older effectiveness evaluation mode,
- * where effectiveness metrics such as recall were evaluated in a separate step.
- */
-//#define SEPARATE_EFFECTIVENESS_EVAL 
-
 namespace similarity {
 
 using std::vector;
@@ -67,16 +61,15 @@ class Experiments {
 public:
   typedef Index<dist_t> IndexType;
 
-  static void RunAll(bool LogInfo, 
-                     unsigned ThreadTestQty,
-                     size_t TestSetId,
-                     const GoldStandardManager<dist_t>& managerGS,
-                     vector<vector<MetaAnalysis*>>&   ExpResRange,
-                     vector<vector<MetaAnalysis*>>&   ExpResKNN,
-                     const ExperimentConfig<dist_t>&  config,
-                     const vector<shared_ptr<IndexType>>& IndexPtrs,
-                     const vector<bool>& isNewIndex,
-                     const vector<shared_ptr<MethodWithParams>>& MethodsDesc) {
+  static void RunAll(bool                                 LogInfo, 
+                     unsigned                             ThreadTestQty,
+                     size_t                               TestSetId,
+                     const GoldStandardManager<dist_t>&   managerGS,
+                     vector<vector<MetaAnalysis*>>&       ExpResRange,
+                     vector<vector<MetaAnalysis*>>&       ExpResKNN,
+                     const ExperimentConfig<dist_t>&      config,
+                     const IndexType&                     Method,
+                     const vector<shared_ptr<AnyParams>>& QueryTimeParams) {
 
     if (LogInfo) LOG(LIB_INFO) << ">>>> TestSetId: " << TestSetId;
     if (LogInfo) LOG(LIB_INFO) << ">>>> Will use: "  << ThreadTestQty << " threads in efficiency testing";
@@ -90,7 +83,7 @@ public:
                                                   ThreadTestQty, TestSetId,
                                                   managerGS.GetRangeGS(i),
                                                   ExpResRange[i], config, cr, 
-                                                  IndexPtrs, isNewIndex, MethodsDesc);
+                                                  Method, QueryTimeParams);
       }
     }
 
@@ -102,11 +95,10 @@ public:
                                               ThreadTestQty, TestSetId,
                                               managerGS.GetKNNGS(i),
                                               ExpResKNN[i], config, cr, 
-                                              IndexPtrs, isNewIndex, MethodsDesc);
+                                              Method, QueryTimeParams);
       }
     }
     if (LogInfo) LOG(LIB_INFO) << "experiment done at " << LibGetCurrentTime();
-
   }
 
   template <typename QueryType, typename QueryCreatorType>
@@ -119,7 +111,7 @@ public:
               std::vector<MetaAnalysis*>&     ExpRes,
               const ExperimentConfig<dist_t>& config,
               const QueryCreatorType&         QueryCreator,
-              Index<dist_t>&                  Method,
+              const Index<dist_t>&            Method,
               unsigned                        MethNum,
               vector<uint64_t>&               SearchTime,
               vector<double>&                 AvgNumDistComp,
@@ -150,7 +142,7 @@ public:
     std::vector<MetaAnalysis*>&     ExpRes_;
     const ExperimentConfig<dist_t>& config_;
     const QueryCreatorType&         QueryCreator_;
-    Index<dist_t>&                  Method_;
+    const Index<dist_t>&                  Method_;
     unsigned                        MethNum_;
     vector<uint64_t>&               SearchTime_;
 
@@ -158,11 +150,9 @@ public:
     vector<unsigned>&               max_result_size_;
     vector<double>&                 avg_result_size_;
     vector<uint64_t>&               DistCompQty_;
-#ifndef SEPARATE_EFFECTIVENESS_EVAL
+
     vector<size_t>                  queryIds;
     vector<unique_ptr<QueryType>>   queries; // queries with results
-#endif
-
   };
 
   template <typename QueryType, typename QueryCreatorType> 
@@ -199,10 +189,9 @@ public:
             if (query->ResultSize() > prm.max_result_size_[MethNum]) {
               prm.max_result_size_[MethNum] = query->ResultSize();
             }
-#ifndef SEPARATE_EFFECTIVENESS_EVAL
+
             prm.queryIds.push_back(q);
             prm.queries.push_back(std::move(query));
-#endif
           }
         }
       }
@@ -215,23 +204,15 @@ public:
                      std::vector<MetaAnalysis*>&                  ExpRes,
                      const ExperimentConfig<dist_t>&              config,
                      const QueryCreatorType&                      QueryCreator,
-                     const vector<shared_ptr<IndexType>>&         IndexPtrs,
-                     const vector<bool>&                          isNewIndex,
-                     const vector<shared_ptr<MethodWithParams>>&  MethodsDesc) {
+                     const IndexType&                             Method,
+                     const vector<shared_ptr><AnyParams>&         QueryTimeParams) {
     size_t numquery = config.GetQueryObjects().size();
+    unsigned MethQty = QueryTimeParams.size();
 
-      /*
-       *  We make 2 passes:
-       *    1) Only measure CPU time & # of distance computations
-       *    2) Compute effectiveness metrics for approximate methods & check correctness for exact ones
-       */
-
-    // 1-st pass
     if (LogInfo) LOG(LIB_INFO) << "##### Query type: " << QueryType::Type();
     if (LogInfo) LOG(LIB_INFO) << ">>>> query params = "  << QueryCreator.ParamsForPrint();
     if (LogInfo) LOG(LIB_INFO) << ">>>> Computing efficiency metrics ";
-
-    unsigned MethQty = IndexPtrs.size();
+    if (LogInfo) LOG(LIB_INFO) << ">>>> # of query time parameters: " << MethQty;
 
     vector<uint64_t>  SearchTime(MethQty); 
 
@@ -255,19 +236,13 @@ public:
 
     config.GetSpace()->SetQueryPhase();
 
-    for (auto it = IndexPtrs.begin(); it != IndexPtrs.end(); ++it) {
-      size_t MethNum = it - IndexPtrs.begin();
-      Index<dist_t>& Method = **it;
-      
+    for (size_t MethNum = 0; MethNum < QueryTimeParams.size(); ++MethNum) {
      /* 
-      * If we are reusing the same object instance of a method,
-      * we have to reset query time parameters.
-
       * Setting query time parameters must be done 
       * before running any tests, in particular, because
       * the function SetQueryTimeParams is NOT supposed to be THREAD-SAFE. 
       */
-      if (!isNewIndex[MethNum]) Method.SetQueryTimeParams(MethodsDesc[MethNum]->methPars_);
+      Method.SetQueryTimeParams(QueryTimeParams[MethNum]);
 
       if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 
@@ -292,7 +267,7 @@ public:
                                               config,
                                               QueryCreator,
                                               Method,
-                                              MethNum,
+                                              qtmParamId,
                                               SearchTime,
                                               AvgNumDistComp,
                                               max_result_size,
@@ -326,7 +301,6 @@ public:
 
       if (LogInfo) LOG(LIB_INFO) << ">>>> Computing effectiveness metrics for " << Method.ToString();
 
-#ifndef SEPARATE_EFFECTIVENESS_EVAL
       for (unsigned QueryPart = 0; QueryPart < ThreadTestQty; ++QueryPart) {
         const BenchmarkThreadParams<QueryType, QueryCreatorType>*   params = ThreadParams[QueryPart];
        
@@ -357,79 +331,21 @@ public:
 
         }
       }
-#endif
     }
 
     config.GetSpace()->SetIndexPhase();
 
-#ifndef SEPARATE_EFFECTIVENESS_EVAL
-     /* 
-      * Sequential search times should be computed only once.
-      * If we have multiple methods, they might be duplicated!
-      */
-     for (size_t q = 0; q < numquery; ++q) {
-        const GoldStandard<dist_t>&  QueryGS = goldStand[q];
-        SeqSearchTime     += QueryGS.GetSeqSearchTime();
-     }
-#else
-    // 2d pass
-    if (LogInfo) LOG(LIB_INFO) << ">>>> Computing effectiveness metrics " ;
-
+    /* 
+     * Sequential search times should be computed only once.
+     * If we have multiple methods, they might be duplicated!
+     */
     for (size_t q = 0; q < numquery; ++q) {
-      unique_ptr<QueryType> queryGS(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
-
       const GoldStandard<dist_t>&  QueryGS = goldStand[q];
-
       SeqSearchTime     += QueryGS.GetSeqSearchTime();
-
-      for (auto it = IndexPtrs.begin(); it != IndexPtrs.end(); ++it) {
-        size_t MethNum = it - IndexPtrs.begin();
-        Index<dist_t>& Method = **it;
-
-        /* 
-         * Reset the query-time parameters again,
-         * because they could have changed previously (also by answering
-         * another query during the effectiveness evaluation phase, i.e.,
-         * for smaller values of the query id (q) in the loop (see on level up)
-         */
-        /*
-         * !!!! NOTE (1) !!!!! If we ever make effectiveness testing multi-threaded,
-         *                 setting of parameters must be removed from here, b/c
-         *                 it's NOT THREAD-SAFE. See, how it's done in the 
-         *                 efficiency testing phase.
-         * !!! NOTE (2) !!!!! Now that we have an auto-tuning procedure for the VP-tree,
-         *                 we can't really use this evaluation mode, b/c the tunning procedure is
-         *                 invoked for each query.
-         */
-        Method.SetQueryTimeParams(MethodsDesc[MethNum]->methPars_);
-      
-        unique_ptr<QueryType> query(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
-        
-        Method.Search(query.get());
-
-        EvalResults<dist_t>     Eval(config.GetSpace(), query.get(), QueryGS);
-
-        NumCloser[MethNum]    += Eval.GetNumCloser();
-        RecallAt1[MethNum]    += Eval.GetRecallAt1();
-        LogPosErr[MethNum]    += Eval.GetLogRelPos();
-        Recall[MethNum]       += Eval.GetRecall();
-        double addAccuracy = (Eval.GetClassCorrect() == kClassCorrect ? 1:0);
-        ClassAccuracy[MethNum]+= addAccuracy;
-        PrecisionOfApprox[MethNum] += Eval.GetPrecisionOfApprox();
-
-        ExpRes[MethNum]->AddPrecisionOfApprox(TestSetId, Eval.GetPrecisionOfApprox());
-        ExpRes[MethNum]->AddRecall(TestSetId, Eval.GetRecall());
-        ExpRes[MethNum]->AddClassAccuracy(TestSetId, addAccuracy);
-        ExpRes[MethNum]->AddLogRelPosError(TestSetId, Eval.GetLogRelPos());
-        ExpRes[MethNum]->AddNumCloser(TestSetId, Eval.GetNumCloser());
-        ExpRes[MethNum]->AddRecallAt1(TestSetId, Eval.GetRecallAt1());
-      }
     }
-#endif
 
-    for (auto it = IndexPtrs.begin(); it != IndexPtrs.end(); ++it) {
+    for (size_t MethNum = 0; MethNum < QueryTimeParams.size(); ++MethNum) {
       size_t MethNum = it - IndexPtrs.begin();
-      Index<dist_t>& Method = **it;
 
       double timeSec = SearchTime[MethNum]/double(1e6);
       double queryPerSec = numquery / timeSec;

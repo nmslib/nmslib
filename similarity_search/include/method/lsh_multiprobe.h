@@ -34,8 +34,29 @@ class Space;
 template <typename dist_t>
 class MultiProbeLSH : public Index<dist_t> {
  public:
-  MultiProbeLSH(const Space<dist_t>* space,
-                const ObjectVector& data,
+  MultiProbeLSH(const Space<dist_t>& space,
+                const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams);
+  ~MultiProbeLSH();
+
+  const std::string ToString() const;
+  void Search(RangeQuery<dist_t>* query) const ;
+  void Search(KNNQuery<dist_t>* query) const ;
+
+  void SetQueryTimeParams(const AnyParams& params) {};
+
+ private:
+  typedef lshkit::MultiProbeLshIndex<unsigned> LshIndexType;
+
+  const ObjectVector& data_;
+  int dim_;
+  lshkit::FloatMatrix* matrix_;
+  LshIndexType* index_;
+  unsigned T_;
+  float R_;
+  
+  void CreateIndexInternal(
                 // for FitData()
                 unsigned N1,          // number of points to use
                 unsigned P,           // number of pairs to sample
@@ -52,21 +73,6 @@ class MultiProbeLSH : public Index<dist_t> {
                 int      M,           // # of hash functions
                 float  W              // width
                 );
-  ~MultiProbeLSH();
-
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
-
- private:
-  typedef lshkit::MultiProbeLshIndex<unsigned> LshIndexType;
-
-  const ObjectVector& data_;
-  int dim_;
-  lshkit::FloatMatrix* matrix_;
-  LshIndexType* index_;
-  unsigned T_;
-  float R_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(MultiProbeLSH);

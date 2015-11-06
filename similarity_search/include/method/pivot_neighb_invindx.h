@@ -71,23 +71,24 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
  public:
   PivotNeighbInvertedIndex(bool PrintProgress,
                            const Space<dist_t>* space,
-                           const ObjectVector& data,
-                           const AnyParams& AllParams);
+                           const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams);
 
   ~PivotNeighbInvertedIndex();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
   
-  virtual vector<string> GetQueryTimeParamNames() const;
-
   void IndexChunk(size_t chunkId, ProgressDisplay*, mutex&);
+  void SetQueryTimeParamsInternal(const AnyParams& QueryTimeParams);
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
-  const   ObjectVector& data_;
+  const   ObjectVector&   data_;
   const   Space<dist_t>*  space_;
+  bool    PrintProgress_;
+
   size_t  chunk_index_size_;
   size_t  K_;
   size_t  knn_amp_;
@@ -105,6 +106,13 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
     kMerge
   } inv_proc_alg_;
 
+  string toString(eAlgProctype type) {
+    if (type == kScan)   return PERM_PROC_FAST_SCAN;
+    if (type == kMap)    return PERM_PROC_MAP;
+    if (type == kMerge)  return PERM_PROC_MERGE;
+    return "unknown";
+  }
+
 
   ObjectVector pivot_;
 
@@ -120,7 +128,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   
   vector<shared_ptr<vector<PostingListInt>>> posting_lists_;
 
-  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PivotNeighbInvertedIndex);
