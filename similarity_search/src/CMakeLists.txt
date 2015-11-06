@@ -20,7 +20,7 @@ list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/report_intr_dim.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
 
 # NO lshkit for Win32 and MACOSX
-if (WITHOUT_LSH)
+if (WITHOUT_LSH OR WIN32)
 
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_multiprobe.cc)
@@ -41,7 +41,7 @@ else (Threads_FOUND)
 endif (Threads_FOUND)
 
 add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES})
-if (NOT WITHOUT_LSH)
+if ((NOT WITHOUT_LSH) AND (NOT WIN32))
   add_dependencies (NonMetricSpaceLib lshkit)
   set(LSHKIT_LIB "lshkit")
 else()

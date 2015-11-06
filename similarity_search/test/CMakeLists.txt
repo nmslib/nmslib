@@ -26,7 +26,7 @@ add_dependencies (bench_distfunc NonMetricSpaceLib)
 add_dependencies (test_integr NonMetricSpaceLib)
 add_dependencies (bunit NonMetricSpaceLib)
 
-if (NOT WITHOUT_LSH)
+if ((NOT WITHOUT_LSH) AND (NOT WIN32))
   add_executable (bench_projection bench_projection.cc)
 
   add_dependencies (bunit lshkit)

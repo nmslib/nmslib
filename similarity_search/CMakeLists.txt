@@ -104,7 +104,7 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 # GSL is needed by lshkit, yet NO lshkit for Win32 and MACOSX 
-if (NOT WITHOUT_LSH)
+if ((NOT WITHOUT_LSH) AND (NOT WIN32))
   find_package (GSL REQUIRED)
   if (GSL_FOUND)
       message (STATUS "Found GSL.")
