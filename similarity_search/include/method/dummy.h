@@ -88,8 +88,8 @@ class DummyMethod : public Index<dist_t> {
   /* 
    *  One needs to implement two search functions.
    */
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
  private:
   const ObjectVector&     data_;

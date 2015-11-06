@@ -28,11 +28,9 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateSATree(bool PrintProgress,
                            const string& SpaceType,
-                           Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
-
-    return new SpatialApproxTree<dist_t>(space, DataObjects);
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+  return new SpatialApproxTree<dist_t>(space, DataObjects);
 }
 
 /*

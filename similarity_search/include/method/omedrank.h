@@ -121,7 +121,7 @@ class OMedRank : public Index<dist_t> {
     return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
 
-  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(OMedRank);

@@ -41,17 +41,24 @@ class SpatialApproxTree : public Index<dist_t> {
   SpatialApproxTree(const Space<dist_t>* space,
                     const ObjectVector& data);
 
+  void CreateIndex(const AnyParams&);
+
   ~SpatialApproxTree();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
+
+  void SetQueryTimeParams(const AnyParams&){}
 
  private:
   struct SATKnn;
   class SATNode;
 
-  SATNode* root_;
+  const Space<dist_t>* space_;
+  const ObjectVector  data_;
+  
+  unique_ptr<SATNode> root_;
 };
 
 }    // namespace similarity

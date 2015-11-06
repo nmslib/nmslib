@@ -50,7 +50,7 @@ class GHTree : public Index<dist_t> {
     AnyParamManager pmgr(QueryTimeParams);
     pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
     LOG(LIB_INFO) << "Set GH-tree query-time parameters:";
-    LOG(LIB_INFO) << "maxLeavesToVisit" << MaxLeavesToVisit_;
+    LOG(LIB_INFO) << "maxLeavesToVisit=" << MaxLeavesToVisit_;
     pmgr.CheckUnused();
   }
 

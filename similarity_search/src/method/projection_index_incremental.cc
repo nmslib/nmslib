@@ -42,33 +42,29 @@ namespace similarity {
 template <typename dist_t>
 ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
     bool  PrintProgress,
-    const Space<dist_t>*  space,
-    const ObjectVector&   data,
-    const AnyParams&      AllParams)
-	: space_(space), data_(data) /* reference */,
-	  use_priority_queue_(false) ,
+    const Space<dist_t>&  space,
+    const ObjectVector&   data) 
+	    : space_(space), data_(data), PrintProgress_(PrintProgress) {
+}
+
+template <typename dist_t>
+ProjectionIndexIncremental<dist_t>::CreateIndex(
+    const AnyParams&      IndexParams) {
     K_(0),
     knn_amp_(0),
     db_scan_frac_(0),
     use_cosine_(false)
 {
+  AnyParamManager pmgr(IndexParams);
 
-  AnyParamManager pmgr(AllParams);
-
-  max_proj_dist_ = numeric_limits<float>::max();
-
-  size_t        intermDim = 0;
-
-  size_t        binThreshold = 0;
+  size_t        binThreshold;
   string        projType;
   string        projSpaceType;
 
-  pmgr.GetParamOptional("intermDim",      intermDim);
+  pmgr.GetParamOptional("intermDim",      intermDim,    0);
   pmgr.GetParamRequired("projDim",        proj_dim_);
   pmgr.GetParamRequired("projType",       proj_descr_);
-  pmgr.GetParamOptional("binThreshold",   binThreshold);
-
-  SetQueryTimeParamsInternal(pmgr);
+  pmgr.GetParamOptional("binThreshold",   binThreshold, 0);
 
   pmgr.CheckUnused();
 
@@ -77,12 +73,6 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
   LOG(LIB_INFO) << "projDim      = " << proj_dim_;
   LOG(LIB_INFO) << "intermDim    = " << intermDim;
   LOG(LIB_INFO) << "binThreshold = " << binThreshold;
-  LOG(LIB_INFO) << "dbDscanFrac  = " << db_scan_frac_;
-  LOG(LIB_INFO) << "knnAmp       = " << knn_amp_;
-  LOG(LIB_INFO) << "maxProjDist  = " << max_proj_dist_;
-  LOG(LIB_INFO) << "useQueue     = " << use_priority_queue_;
-  LOG(LIB_INFO) << "useCosine    = " << use_cosine_;
-
 
   /*
    * Let's extract all parameters before doing
@@ -95,8 +85,8 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
    */
 
   proj_obj_.reset(Projection<dist_t>::createProjection(
-                    space,
-                    data,
+                    space_,
+                    data_,
                     proj_descr_,
                     intermDim,
                     proj_dim_,
@@ -109,7 +99,7 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
   unique_ptr<AnyParams> projSpaceParams =
             unique_ptr<AnyParams>(new AnyParams(projSpaceDesc));
 
-  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
                                 new ProgressDisplay(data.size(), cerr)
                                 :NULL);
 
@@ -134,39 +124,27 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
     
 template <typename dist_t>
 void 
-ProjectionIndexIncremental<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  pmgr.GetParamOptional("useQueue", use_priority_queue_);
-  pmgr.GetParamOptional("maxProjDist", max_proj_dist_);
-  pmgr.GetParamOptional("useCosine", use_cosine_);
+ProjectionIndexIncremental<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager   pmgr(QueryTimeParams);
+
+  pmgr.GetParamOptional("useQueue", use_priority_queue_, false);
+  pmgr.GetParamOptional("maxProjDist", max_proj_dist_, numeric_limits<float>::max());
+  pmgr.GetParamOptional("useCosine",   use_cosine_,    false);
     
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
   }
-  if (pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-  } else {
-    knn_amp_ = 0;
-  }
-  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-    knn_amp_ = 0;
-  }
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
-  pmgr.GetParamOptional("knnAmp",  knn_amp_);
+  
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_,  0.05);
+  pmgr.GetParamOptional("knnAmp",       knn_amp_,       0);
+  pmgr.CheckUnused();
+  LOG(LIB_INFO) << "Set query-time parameters for ProjectionIndexIncremental:";
+  LOG(LIB_INFO) << "dbDscanFrac  = " << db_scan_frac_;
+  LOG(LIB_INFO) << "knnAmp       = " << knn_amp_;
+  LOG(LIB_INFO) << "maxProjDist  = " << max_proj_dist_;
+  LOG(LIB_INFO) << "useQueue     = " << use_priority_queue_;
+  LOG(LIB_INFO) << "useCosine    = " << use_cosine_;
 }
-
-template <typename dist_t>
-vector<string>
-ProjectionIndexIncremental<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
-  names.push_back("dbScanFrac");
-  names.push_back("knnAmp");
-  names.push_back("useCosine");
-  names.push_back("useQueue");
-  names.push_back("maxProjDist");
-  return names;
-}    
-    
 
 template <typename dist_t>
 ProjectionIndexIncremental<dist_t>::~ProjectionIndexIncremental() {
@@ -181,7 +159,7 @@ const std::string ProjectionIndexIncremental<dist_t>::ToString() const {
 
 template <typename dist_t> 
 template <typename QueryType>
-void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query, size_t K) {
+void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query, size_t K) const {
   // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
   // a strange error message that says: dbScanFrac should be in the range [0,1].
   if (!knn_amp_) {
@@ -256,13 +234,13 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query, size_t K) {
 
 template <typename dist_t>
 void ProjectionIndexIncremental<dist_t>::Search(
-    RangeQuery<dist_t>* query) {
+    RangeQuery<dist_t>* query, IdType) const {
   GenSearch(query, 0);
 }
 
 template <typename dist_t>
 void ProjectionIndexIncremental<dist_t>::Search(
-    KNNQuery<dist_t>* query) {
+    KNNQuery<dist_t>* query, IdType) const {
   GenSearch(query, query->GetK());
 }
 

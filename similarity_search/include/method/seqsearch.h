@@ -31,14 +31,16 @@ using std::string;
 template <typename dist_t>
 class SeqSearch : public Index<dist_t> {
  public:
-  SeqSearch(const ObjectVector& data, const AnyParams& params);
+  SeqSearch(const ObjectVector& data);
+  void CreateIndex(const AnyParams& );
   virtual ~SeqSearch();
 
   const std::string ToString() const { return "Sequential search"; }
 
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
+  void SetQueryTimeParams(const AnyParams& params){}
  private:
   const ObjectVector&     origData_;
   char*                   cacheOptimizedBucket_;

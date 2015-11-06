@@ -29,10 +29,6 @@
 #include <sstream>
 #include <typeinfo>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #define USE_BITSET_FOR_INDEXING 1
 //#define USE_ALTERNATIVE_FOR_INDEXING 
 
@@ -101,28 +97,20 @@ struct IndexThreadSW {
 template <typename dist_t>
 SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
                                        const Space<dist_t>* space,
-                                       const ObjectVector& data,
-                                       const AnyParams& MethParams) :
-                                                   NN_(5),
-                                                   initIndexAttempts_(2),
-                                                   initSearchAttempts_(10),
-                                                   indexThreadQty_(0),
-                                                   data_(data)
+                                       const ObjectVector& data) : 
+                                        space_(space), data_(data), PrintProgress_(PrintProgress) {}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams) 
 {
   AnyParamManager pmgr(MethParams);
 
-#ifdef _OPENMP
-  indexThreadQty_ = omp_get_max_threads();
-#endif
-
-  pmgr.GetParamOptional("NN", NN_);
-  pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_);
-  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
-  pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_);
+  pmgr.GetParamOptional("NN",                 NN_,                , 10);
+  pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   2);
+  pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
 
   LOG(LIB_INFO) << "NN                  = " << NN_;
   LOG(LIB_INFO) << "initIndexAttempts   = " << initIndexAttempts_;
-  LOG(LIB_INFO) << "initSearchAttempts  = " << initSearchAttempts_;
   LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
 
   pmgr.CheckUnused();
@@ -172,17 +160,12 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
 
 template <typename dist_t>
 void 
-SmallWorldRand<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
+SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager pmgr(QueryTimeParams);
+  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  3);
   pmgr.CheckUnused();
-}
-
-template <typename dist_t>
-vector<string>
-SmallWorldRand<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
-  names.push_back("initSearchAttempts");
-  return names;
+  LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
+  LOG(LIB_INFO) << "initSearchAttempts=" << initSearchAttempts_;
 }
 
 template <typename dist_t>

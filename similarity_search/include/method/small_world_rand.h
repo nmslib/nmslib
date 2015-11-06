@@ -157,16 +157,17 @@ template <typename dist_t>
 class SmallWorldRand : public Index<dist_t> {
 public:
   SmallWorldRand(bool PrintProgress,
-                 const Space<dist_t>* space,
-                 const ObjectVector& data,
-                 const AnyParams& MethParams);
+                 const Space<dist_t>& space,
+                 const ObjectVector& data);
+  void CreateIndex(const AnyParams& IndexParams);
+
   ~SmallWorldRand();
 
   typedef std::vector<MSWNode*> ElementList;
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
   MSWNode* getRandomEntryPoint() const;
   MSWNode* getRandomEntryPointLocked() const;
   size_t getEntryQtyLocked() const;
@@ -183,16 +184,17 @@ public:
     second->addFriend(first);
   }
 
-  virtual vector<string> GetQueryTimeParamNames() const;
-
+  void SetQueryTimeParams(const AnyParams& );
 private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
   size_t                NN_;
   size_t                initIndexAttempts_;
   size_t                initSearchAttempts_;
   size_t                indexThreadQty_;
+
+  const Space<dist_t>&  space_;
   const ObjectVector&   data_;
+  bool                  PrintProgress_;
 
   mutable mutex   ElListGuard_;
   ElementList     ElList_;

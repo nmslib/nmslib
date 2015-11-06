@@ -29,13 +29,11 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateVPTree(bool PrintProgress,
                            const string& SpaceType,
-                           Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
     return new VPTree<dist_t,PolynomialPruner<dist_t>>(PrintProgress,
                               space,
-                              DataObjects,
-                              AllParams
+                              DataObjects
                              );
 }
 

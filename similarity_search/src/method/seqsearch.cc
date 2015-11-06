@@ -22,9 +22,13 @@
 namespace similarity {
 
 template <typename dist_t>
-SeqSearch<dist_t>::SeqSearch(const ObjectVector& origData, const AnyParams& params) : 
+SeqSearch<dist_t>::SeqSearch(const ObjectVector& origData) : 
                       origData_(origData), cacheOptimizedBucket_(NULL), pData_(NULL) {
-  AnyParamManager pmgr(params);
+}
+
+template <typename dist_t>
+SeqSearch<dist_t>::SeqSearch(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
 
   bool bCopyMem = false;
 
@@ -45,7 +49,7 @@ SeqSearch<dist_t>::~SeqSearch() {
 }
 
 template <typename dist_t>
-void SeqSearch<dist_t>::Search(RangeQuery<dist_t>* query) {
+void SeqSearch<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   const ObjectVector& data = pData_ != NULL ? *pData_ : origData_;
   for (size_t i = 0; i < data.size(); ++i) {
     query->CheckAndAddToResult(data[i]);
@@ -53,7 +57,7 @@ void SeqSearch<dist_t>::Search(RangeQuery<dist_t>* query) {
 }
 
 template <typename dist_t>
-void SeqSearch<dist_t>::Search(KNNQuery<dist_t>* query) {
+void SeqSearch<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   const ObjectVector& data = pData_ != NULL ? *pData_ : origData_;
   for (size_t i = 0; i < data.size(); ++i) {
     query->CheckAndAddToResult(data[i]);

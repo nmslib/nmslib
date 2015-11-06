@@ -97,7 +97,7 @@ void OMedRank<dist_t>::CreateIndex(const AnyParams &IndexParams) {
 
 template <typename dist_t> 
 template <typename QueryType> 
-void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) {
+void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) const {
   // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
   // a strange error message that says: dbScanFrac should be in the range [0,1].
   if (!knn_amp_) {
@@ -221,12 +221,12 @@ void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) {
  
 
 template <typename dist_t>
-void OMedRank<dist_t>::Search(RangeQuery<dist_t>* query) {
+void OMedRank<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   GenSearch(query, 0);
 }
 
 template <typename dist_t>
-void OMedRank<dist_t>::Search(KNNQuery<dist_t>* query) {
+void OMedRank<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   GenSearch(query, query->GetK());
 }
 

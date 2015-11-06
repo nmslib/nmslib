@@ -60,7 +60,7 @@ class VPTree : public Index<dist_t> {
     oracle_.SetQueryTimeParams(pmgr); 
     pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
     LOG(LIB_INFO) << "Set VP-tree query-time parameters:";
-    LOG(LIB_INFO) << "maxLeavesToVisit" << MaxLeavesToVisit_;
+    LOG(LIB_INFO) << "maxLeavesToVisit=" << MaxLeavesToVisit_;
     pmgr.CheckUnused();
   }
  private:

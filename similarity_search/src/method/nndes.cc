@@ -66,42 +66,29 @@ template <typename dist_t>
 NNDescentMethod<dist_t>::NNDescentMethod(
     bool  PrintProgress,
     const Space<dist_t>* space,
-    const ObjectVector& data,
-    const AnyParams& AllParams) : 
-      space_(space), data_(data),   // reference
-      NN_(20), // default value from Wei Dong's code
-      searchNN_(20),
-      controlQty_(0), // default value from Wei Dong's code
-      iterationQty_(100), // default value from Wei Dong's code
-      rho_(1.0), // default value from Wei Dong's code
-      delta_(0.001), // default value from Wei Dong's code
+    const ObjectVector& data) :
+      space_(space), data_(data), PrintProgress_(PrintProgress),
       nndesOracle_(space, data),
-      initSearchAttempts_(10),
-      greedy_(false)
-{
+      controlQty_(0), // default value from Wei Dong's code
+{}
+
+template <typename dist_t>
+NNDescentMethod<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(AllParams);
 
-  pmgr.GetParamOptional("NN", NN_);
-  searchNN_ = NN_;
-  //pmgr.GetParamOptional("controlQty", controlQty_);
-  pmgr.GetParamOptional("iterationQty", iterationQty_);
-  pmgr.GetParamOptional("rho", rho_); // Fast rho is 0.5
-  pmgr.GetParamOptional("delta", delta_);
-  pmgr.GetParamOptional("greedy", greedy_);
+  pmgr.GetParamOptional("NN",           NN_,           20);// default value from Wei Dong's code
+  pmgr.GetParamOptional("iterationQty", iterationQty_, 100); // default value from Wei Dong's code
 
-  SetQueryTimeParamsInternal(pmgr);
+  pmgr.GetParamOptional("rho",          rho_,          1.0); // Fast rho is 0.5, 1.0 is from Wei Dong's code
+  pmgr.GetParamOptional("delta",        delta_,        0.001), // default value from Wei Dong's code
 
   LOG(LIB_INFO) <<  "NN           = " << NN_;
-  //LOG(LIB_INFO) <<  "controlQty   = " << controlQty_;
   LOG(LIB_INFO) <<  "iterationQty = " << iterationQty_;
   LOG(LIB_INFO) <<  "rho          = " << rho_;
   LOG(LIB_INFO) <<  "delta        = " << delta_;
 
-  LOG(LIB_INFO) <<  "(initial) initSearchAttempts= " << initSearchAttempts_;
-  LOG(LIB_INFO) <<  "(initial) greedy       = " << greedy_;
+  SetQueryTimeParams(AnyParams({})); // reset query-time parameter
 
-
-  LOG(LIB_INFO) <<  "(initial) searchNN = " << searchNN_;
 
   LOG(LIB_INFO) << "Starting NN-Descent...";
 
@@ -139,12 +126,12 @@ NNDescentMethod<dist_t>::NNDescentMethod(
 }
 
 template <typename dist_t>
-void NNDescentMethod<dist_t>::Search(RangeQuery<dist_t>* query) {
+void NNDescentMethod<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   throw runtime_error("Range search is not supported!");
 }
 
 template <typename dist_t>
-void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
+void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   greedy_ ? SearchGreedy(query) : SearchSmallWorld(query);
 }
 
@@ -258,20 +245,16 @@ void NNDescentMethod<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) {
 
 template <typename dist_t>
 void 
-NNDescentMethod<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_);
-  pmgr.GetParamOptional("searchNN", searchNN_);
-  pmgr.GetParamOptional("greedy", greedy_);
-}
-
-template <typename dist_t>
-vector<string>
-NNDescentMethod<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
-  names.push_back("initSearchAttempts");
-  names.push_back("searchNN");
-  names.push_back("greedy");
-  return names;
+NNDescentMethod<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager pmgr(QueryTimeParams);
+  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  3);
+  pmgr.GetParamOptional("searchNN",           searchNN_,            NN_);
+  pmgr.GetParamOptional("greedy",             greedy_,              false);
+  pmgr.CheckUnused();
+  LOG(LIB_INFO) << "Set NNDescentMethod query-time parameters:";
+  LOG(LIB_INFO) << "initSearchAttempts=" << initSearchAttempts_;
+  LOG(LIB_INFO) << "searchNN="           << searchNN_;
+  LOG(LIB_INFO) << "greedy="             << greedy_;
 }
 
 template class NNDescentMethod<float>;

@@ -48,9 +48,9 @@ template <typename dist_t>
 class NNDescentMethod : public Index<dist_t> {
  public:
   NNDescentMethod(bool PrintProgress,
-                  const Space<dist_t>* space, 
-                  const ObjectVector& data, 
-                  const AnyParams& AllParams);
+                  const Space<dist_t>& space, 
+                  const ObjectVector& data);
+  void CreateIndex(const AnyParams& IndexParams);
   ~NNDescentMethod(){};
 
   /* 
@@ -62,10 +62,10 @@ class NNDescentMethod : public Index<dist_t> {
     return str.str();
   }
 
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
-  virtual vector<string> GetQueryTimeParamNames() const;
+ virtual void SetQueryTimeParams(const AnyParams& QueryTimeParams);
 
   class SpaceOracle {
   public:
@@ -84,7 +84,6 @@ class NNDescentMethod : public Index<dist_t> {
 
   typedef pair<dist_t, IdType>      EvaluatedNode;
 
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
   const Space<dist_t>*    space_;
   const ObjectVector&     data_;

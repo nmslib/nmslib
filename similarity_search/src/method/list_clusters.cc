@@ -47,7 +47,7 @@ ListClusters<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   AnyParamManager pmgr(QueryTimeParams);
   pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
   LOG(LIB_INFO) << "Set list of clusters query-time parameters:";
-  LOG(LIB_INFO) << "maxLeavesToVisit = to " << MaxLeavesToVisit_;
+  LOG(LIB_INFO) << "maxLeavesToVisit=" << MaxLeavesToVisit_;
   pmgr.CheckUnused();
 }
 
