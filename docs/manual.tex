@@ -2003,6 +2003,8 @@ which are concatenated to produce an integer hash value.  \\
                    & Common parameters: \ttt{W}, \ttt{M}, \ttt{H}, and \ttt{L} \\
 \ttt{T}            & a number of probes \\
 \ttt{desiredRecall}& a desired recall \\
+\ttt{numSamplePairs}& a number of samples (P in lshkit)\\
+\ttt{numSampleQueries}& a number of sample queries (Q in lshkit)\\
 \ttt{tuneK}        & find optimal parameter for \knn, search
                      where $k$ is defined by this parameter \\
 \cmidrule(l){1-2} 
@@ -3580,7 +3582,7 @@ the graph construction and the search algorithm, but we have not incorporated it
 Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
 and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
 We also thank 
-Lawrence Cayton for providing the data sets,
+Lawrence Cayton for providing data sets (and allowing us to make them public),
 Nikita Avrelin for implementing the first version of the SW-graph
 and Daniel Lemire for contributing 
 the implementation of the original Schlegel~et~al.~\cite{schlegel2011fast}

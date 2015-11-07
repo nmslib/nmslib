@@ -66,7 +66,7 @@ class PermutationInvertedIndex : public Index<dist_t> {
   size_t knn_amp_;
   ObjectVector pivot_;
 
-  size_t computeDbScan(size_t K) {
+  size_t computeDbScan(size_t K) const {
     if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
     return static_cast<size_t>(db_scan_frac_ * data_.size());
   }

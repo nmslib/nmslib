@@ -174,7 +174,7 @@ void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   VPTreeIndex_.reset(new VPTree<float, PolynomialPruner<float>>(
                                           PrintProgress_,
                                           *VPTreeSpace_,
-                                          projData_));
+                                          projData_, true /* use random centers */));
   VPTreeIndex_->CreateIndex(RemainParams);
 }
 

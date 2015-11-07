@@ -82,8 +82,8 @@ class OMedRank : public Index<dist_t> {
  private:
   void IndexChunk(size_t chunkId, ProgressDisplay* displayBar);
 
-  const ObjectVector&     data_;
   const Space<dist_t>&    space_;
+  const ObjectVector&     data_;
   bool                    PrintProgress_;
 
   size_t                  num_pivot_;

@@ -62,6 +62,7 @@ class MultiIndex : public Index<dist_t> {
   std::vector<Index<dist_t>*> indices_;
   Space<dist_t>&              space_;
   const ObjectVector&         data_;
+  string                      SpaceType_;
   bool                        PrintProgress_;
   size_t                      IndexQty_;
   string                      MethodName_;

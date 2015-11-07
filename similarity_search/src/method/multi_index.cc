@@ -36,12 +36,11 @@ MultiIndex<dist_t>::MultiIndex(
          bool PrintProgress,
          const string& SpaceType,
          Space<dist_t>& space, 
-         const ObjectVector& data) : space_(space), data_(data), PrintProgress_(PrintProgress) {}
+         const ObjectVector& data) : space_(space), data_(data), SpaceType_(SpaceType), PrintProgress_(PrintProgress) {}
 
 
 template <typename dist_t>
-MultiIndex<dist_t>::CreateIndex(
-         const AnyParams& IndexParams) {
+void MultiIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
   pmgr.GetParamRequired("indexQty", IndexQty_);
@@ -53,13 +52,14 @@ MultiIndex<dist_t>::CreateIndex(
     LOG(LIB_INFO) << "Method: " << MethodName_ << " index # " << (i+1) << " out of " << IndexQty_;
     indices_.push_back(MethodFactoryRegistry<dist_t>::Instance().CreateMethod(PrintProgress_, 
                                                                  MethodName_,
-                                                                 SpaceType,
-                                                                 space,
-                                                                 data,
-                                                                 RemainParams));
+                                                                 SpaceType_,
+                                                                 space_,
+                                                                 data_));
+
+    indices_.back()->CreateIndex(RemainParams);
   }
 
-  SetQueryTimeParams(AnyParams({})); // reset query time parameters
+  this->ResetQueryTimeParams(); // reset query time parameters
 }
 
 template <typename dist_t>
@@ -84,7 +84,7 @@ const std::string MultiIndex<dist_t>::ToString() const {
 }
 
 template <typename dist_t>
-void MultiIndex<dist_t>::Search(RangeQuery<dist_t>* query) {
+void MultiIndex<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   /* 
    * There may be duplicates: the same object coming from 
    * different indices. The set found is used to filter them out.
@@ -109,7 +109,7 @@ void MultiIndex<dist_t>::Search(RangeQuery<dist_t>* query) {
 }
 
 template <typename dist_t>
-void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
+void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   /* 
    * There may be duplicates: the same object coming from 
    * different indices. The set found is used to filter them out.

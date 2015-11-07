@@ -87,7 +87,7 @@ void OMedRank<dist_t>::CreateIndex(const AnyParams &IndexParams) {
   }
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                              new ProgressDisplay(data.size(), cerr)
+                              new ProgressDisplay(data_.size(), cerr)
                               :NULL);
 
   for (size_t chunkId = 0; chunkId < index_qty_; ++chunkId) {
@@ -256,17 +256,7 @@ void OMedRank<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   LOG(LIB_INFO) << "# knnAmp                      = " << knn_amp_;
   LOG(LIB_INFO) << "# minFreq                     = " << min_freq_;
   LOG(LIB_INFO) << "# numPivotSearch              = " << num_pivot_search_;
-  LOG(LIB_INFO) << "# skipChecking                = " << skip_checking_;
-}
-
-template <typename dist_t>
-vector<string>
-OMedRank<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
-  names.push_back("dbScanFrac");
-  names.push_back("knnAmp");
-  names.push_back("minFreq");
-  return names;
+  LOG(LIB_INFO) << "# skipChecking                = " << skip_check_;
 }
 
 template <typename dist_t>

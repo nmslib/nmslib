@@ -41,7 +41,8 @@ class VPTree : public Index<dist_t> {
  public:
   VPTree(bool PrintProgress,
          Space<dist_t>& space,
-         const ObjectVector& data);
+         const ObjectVector& data,
+         bool use_random_center);
 
   void CreateIndex(const AnyParams& IndexParams);
 
@@ -75,7 +76,7 @@ class VPTree : public Index<dist_t> {
            const SearchOracle&  oracle,
            const Space<dist_t>& space, const ObjectVector& data,
            size_t BucketSize, bool ChunkBucket,
-           bool use_random_center, bool is_root);
+           bool use_random_center);
     ~VPNode();
 
     template <typename QueryType>
@@ -101,9 +102,10 @@ class VPTree : public Index<dist_t> {
     friend class VPTree;
   };
 
-  const ObjectVector& data_;
   Space<dist_t>&      space_;
+  const ObjectVector& data_;
   bool                PrintProgress_;
+  bool                use_random_center_;
 
   SearchOracle        oracle_;
   unique_ptr<VPNode>  root_;

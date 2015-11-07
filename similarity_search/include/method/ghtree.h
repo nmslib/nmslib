@@ -57,9 +57,9 @@ class GHTree : public Index<dist_t> {
  private:
   class GHNode {
    public:
-    GHNode(const Space<dist_t>* space, const ObjectVector& data,
+    GHNode(const Space<dist_t>& space, const ObjectVector& data,
            size_t bucket_size, bool chunk_bucket,
-           const bool use_random_center, bool is_root);
+           const bool use_random_center);
     ~GHNode();
 
     template <typename QueryType>
@@ -76,9 +76,10 @@ class GHTree : public Index<dist_t> {
     friend class GHTree;
   };
 
-  const ObjectVector& data_;
-  Space<dist_t>&      space_;
-  unique_ptr<GHNode>  root_;
+  const Space<dist_t>& space_;
+  const ObjectVector&  data_;
+  bool                 use_random_center_;
+  unique_ptr<GHNode>   root_;
 
   size_t                    BucketSize_;
   int                       MaxLeavesToVisit_;

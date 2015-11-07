@@ -25,35 +25,34 @@
 namespace similarity {
 
 template <typename dist_t>
-MultiProbeLSH<dist_t>::MultiProbeLSH(const Space<dist_t>* space,
-                                     const ObjectVector& data)
-    : data_(data) {
+MultiProbeLSH<dist_t>::MultiProbeLSH(const Space<dist_t>& space,
+                                     const ObjectVector& data) : data_(data) {
 }
 
 template <typename dist_t>
-MultiProbeLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+void MultiProbeLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     unsigned  LSH_M = 20;
     unsigned  LSH_L = 50;
     unsigned  LSH_H = 1017881;
     float     LSH_W = 20;
     unsigned  LSH_T = 10;
     unsigned  LSH_TuneK = 1;
-    float     DesiredRecall = 0.5;
+    float     DesiredRecall = 0.9;
 
     AnyParamManager pmgr(IndexParams);
 
-    pmgr.GetParamOptional("M",  LSH_M);
-    pmgr.GetParamOptional("L",  LSH_L);
-    pmgr.GetParamOptional("H",  LSH_H);
-    pmgr.GetParamOptional("W",  LSH_W);
-    pmgr.GetParamOptional("T",  LSH_T);
-    pmgr.GetParamOptional("tuneK",  LSH_TuneK);
-    pmgr.GetParamOptional("desiredRecall",  DesiredRecall);
+    pmgr.GetParamOptional("M",  LSH_M,  20);
+    pmgr.GetParamOptional("L",  LSH_L,  50);
+    pmgr.GetParamOptional("H",  LSH_H,  data_.size() + 1);
+    pmgr.GetParamOptional("W",  LSH_W,  20);
+    pmgr.GetParamOptional("T",  LSH_T,  10);
+    pmgr.GetParamOptional("tuneK",  LSH_TuneK, 1);
+    pmgr.GetParamOptional("desiredRecall",  DesiredRecall, 0.9);
 
 
     // For FitData():
     // number of points to use
-    unsigned N1 = DataObjects.size();
+    unsigned N1 = data_.size();
     // number of pairs to sample
     unsigned P = 10000;
     // number of queries to sample
@@ -61,20 +60,32 @@ MultiProbeLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     // search for K neighbors neighbors
     unsigned K = LSH_TuneK;
 
-    pmgr.GetParamOptional("numSamplePairs",  P);
-    pmgr.GetParamOptional("numSampleQueries",  Q);
+    pmgr.GetParamOptional("numSamplePairs",    P,  10000);
+    pmgr.GetParamOptional("numSampleQueries",  Q,  1000);
 
-    LOG(LIB_INFO) << "lshTuneK: " << K;
+    pmgr.CheckUnused();
+
+
+    LOG(LIB_INFO) << "M (# of hash functions) = "  << LSH_M;
+    LOG(LIB_INFO) << "L (# of hash tables)    = "  << LSH_L;
+    LOG(LIB_INFO) << "H (# hash table size)   = "  << LSH_H;
+    LOG(LIB_INFO) << "W (window size)         = "  << LSH_W;
+    LOG(LIB_INFO) << "T (# of probes)         = "  << LSH_T;
+    LOG(LIB_INFO) << "desiredRecall (desired recall)            = "  << DesiredRecall;
+    LOG(LIB_INFO) << "numSamplePairs   (# of sample pairs, P)   = "  << P;
+    LOG(LIB_INFO) << "numSampleQueries (# of sample queries, Q) = "  << Q;
+    LOG(LIB_INFO) << "lshTuneK                                  = " << K;
+
+    this->ResetQueryTimeParams(); // set query-time parameters to default values
+
     // divide the sample to F folds
     unsigned F = 10;
     // For MPLSHTune():
     // dataset size
-    unsigned N2 = DataObjects.size();
+    unsigned N2 = data_.size();
     // desired recall
 
     CreateIndexInternal(
-                  space,
-                  DataObjects,
                   N1, P, Q, K, F, N2,
                   DesiredRecall,
                   LSH_L,
@@ -86,7 +97,7 @@ MultiProbeLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 }
 
 template <typename dist_t>
-MultiProbeLSH<dist_t>::CreateIndexInternal(
+void MultiProbeLSH<dist_t>::CreateIndexInternal(
                                      unsigned N1,
                                      unsigned P,
                                      unsigned Q,
@@ -102,20 +113,20 @@ MultiProbeLSH<dist_t>::CreateIndexInternal(
   int is_float = std::is_same<float,dist_t>::value;
   CHECK(is_float);
   CHECK(sizeof(dist_t) == sizeof(float));
-  CHECK(!data.empty());
-  const size_t datalength = data[0]->datalength();
+  CHECK(!data_.empty());
+  const size_t datalength = data_[0]->datalength();
   dim_ = static_cast<int>(datalength / sizeof(float));
-  matrix_ = new lshkit::FloatMatrix(dim_, static_cast<int>(data.size()));
-  for (size_t i = 0; i < data.size(); ++i) {
-    CHECK(datalength == data[i]->datalength());
-    const float* x = reinterpret_cast<const float*>(data[i]->data());
+  matrix_ = new lshkit::FloatMatrix(dim_, static_cast<int>(data_.size()));
+  for (size_t i = 0; i < data_.size(); ++i) {
+    CHECK(datalength == data_[i]->datalength());
+    const float* x = reinterpret_cast<const float*>(data_[i]->data());
     for (int j = 0; j < dim_; ++j) {
       (*matrix_)[i][j] = x[j];
     }
   }
   T_ = T;
 
-  CHECK_MSG(W > 0, "LshW must be > 0");
+  CHECK_MSG(W > 0, "W must be > 0");
 
 #define TUNE_MPLSH_PARAMS
 #ifdef TUNE_MPLSH_PARAMS
@@ -125,15 +136,6 @@ MultiProbeLSH<dist_t>::CreateIndexInternal(
 
   lshkit::MPLSHTune(N2, fit_data, T_, L, R, K, M, W);
 #endif
-
-  LOG(LIB_INFO) << "M (# of hash functions) : "  << M;
-  LOG(LIB_INFO) << "L (# of hash tables) :    "  << L;
-  LOG(LIB_INFO) << "H (# hash table size) :   "  << H;
-  LOG(LIB_INFO) << "W (width) :               "  << W;
-  LOG(LIB_INFO) << "T (# of probes) :         "  << T;
-  LOG(LIB_INFO) << "R (desired recall) :      "  << R;
-  LOG(LIB_INFO) << "P (# of sample pairs) :   "  << P;
-  LOG(LIB_INFO) << "Q (# of sample queries) : "  << Q;
 
   lshkit::FloatMatrix::Accessor accessor(*matrix_);
   LshIndexType::Parameter param;

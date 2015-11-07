@@ -46,7 +46,7 @@ PermutationInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeP
   pmgr.GetParamOptional("knnAmp",       knn_amp_,       0);
 
 
-  pmgr.GetParamOptional("numPivotSearch", num_pivot_search_, max(1, num_pivot_index_ / 2));
+  pmgr.GetParamOptional("numPivotSearch", num_pivot_search_, max<size_t>(1, num_pivot_index_ / 2));
   pmgr.GetParamOptional("maxPosDiff",     max_pos_diff_,     num_pivot_);
 
   if (num_pivot_search_ > num_pivot_index_) {
@@ -83,7 +83,7 @@ void PermutationInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   pmgr.CheckUnused();
 
-  SetQueryTimeParams(AnyParams({})); // reset query-time parameters
+  this->ResetQueryTimeParams(); // set query-time parameters to default
 
   if (num_pivot_index_ > num_pivot_) {
     stringstream err;
@@ -99,19 +99,19 @@ void PermutationInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
   LOG(LIB_INFO) << "# dbScanFrac              = "         << db_scan_frac_;
   LOG(LIB_INFO) << "# knnAmp                  = "         << knn_amp_;
 
-  unique_ptr<ProgressDisplay>   progress_bar(PrintProgress ? 
+  unique_ptr<ProgressDisplay>   progress_bar(PrintProgress_ ? 
                                               new ProgressDisplay(data_.size(), cerr):
                                               NULL);
 
 
-  GetPermutationPivot(data_, &space_, num_pivot_, &pivot_);
+  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
 
   posting_lists_.resize(num_pivot_);
 
 
-  for (size_t id = 0; id < data.size(); ++id) {
+  for (size_t id = 0; id < data_.size(); ++id) {
     Permutation perm;
-    GetPermutation(pivot_, &space_, data[id], &perm);
+    GetPermutation(pivot_, space_, data_[id], &perm);
     for (size_t j = 0; j < perm.size(); ++j) {
       if (perm[j] < num_pivot_index_) {
         posting_lists_[j].push_back(ObjectInvEntry(id, perm[j]));
@@ -156,8 +156,8 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
 
   Permutation perm_q;
   GetPermutation(pivot_, query, &perm_q);
-  vector<typename vector<typename PermutationInvertedIndex<dist_t>::ObjectInvEntry>::iterator>  iterBegs;
-  vector<typename vector<typename PermutationInvertedIndex<dist_t>::ObjectInvEntry>::iterator>  iterEnds;
+  vector<typename vector<typename PermutationInvertedIndex<dist_t>::ObjectInvEntry>::const_iterator>  iterBegs;
+  vector<typename vector<typename PermutationInvertedIndex<dist_t>::ObjectInvEntry>::const_iterator>  iterEnds;
 
   size_t maxScanQty = 0;
 
@@ -263,14 +263,12 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
 }
 
 template <typename dist_t>
-void PermutationInvertedIndex<dist_t>::Search const (
-    RangeQuery<dist_t>* query, IdType ) {
+void PermutationInvertedIndex<dist_t>::Search (RangeQuery<dist_t>* query, IdType ) const {
   GenSearch(query, 0);
 }
 
 template <typename dist_t>
-void PermutationInvertedIndex<dist_t>::Search const (
-    KNNQuery<dist_t>* query, IdType ) {
+void PermutationInvertedIndex<dist_t>::Search (KNNQuery<dist_t>* query, IdType ) const {
   GenSearch(query, query->GetK());
 }
 
