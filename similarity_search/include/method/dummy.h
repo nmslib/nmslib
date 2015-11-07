@@ -57,6 +57,8 @@ class DummyMethod : public Index<dist_t> {
                           );
     // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
     pmgr.CheckUnused();
+    // Always call ResetQueryTimeParams() to set query-time parameters to their default values
+    this->ResetQueryTimeParams();
   }
 
   /*

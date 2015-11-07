@@ -27,7 +27,7 @@ template <typename dist_t>
 class RangeCreator {
 public:
   RangeCreator(dist_t radius) : radius_(radius){}
-  RangeQuery<dist_t>* operator()(const Space<dist_t>* space,
+  RangeQuery<dist_t>* operator()(const Space<dist_t>& space,
                                  const Object* query_object) const {
     return new RangeQuery<dist_t>(space, query_object, radius_);
   }
@@ -43,7 +43,7 @@ template <typename dist_t>
 class KNNCreator {
 public:
   KNNCreator(size_t K, float eps) : K_(K), eps_(eps) {}
-  KNNQuery<dist_t>* operator()(const Space<dist_t>* space,
+  KNNQuery<dist_t>* operator()(const Space<dist_t>& space,
                                const Object* query_object) const {
     return new KNNQuery<dist_t>(space, query_object, K_, eps_);
   }

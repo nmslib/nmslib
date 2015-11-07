@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <thread>
 
 #include "experimentconf.h"
 #include "searchoracle.h"
@@ -32,10 +33,6 @@
 #include "experimentconf.h"
 #include "space.h"
 #include "index.h"
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 //#define DETAILED_PRINT_INFO
 
@@ -56,7 +53,8 @@ void GetOptimalAlphas(bool bPrintProgres,
                       float desiredRecall,
                       const string&                 SpaceType,
                       const string&                 methodName,
-                      AnyParams                     MethPars, 
+                      const AnyParams&              IndexParams, 
+                      AnyParams                     QueryTimeParams, 
                       float                         StepFactor, 
                       float                         alpha_left_base,
                       float                         alpha_right_base,
@@ -86,8 +84,8 @@ void GetOptimalAlphas(bool bPrintProgres,
     cout << "================================================================" << endl;
   }
 
-  MethPars.AddChangeParam(EXP_LEFT_PARAM, exp_left);
-  MethPars.AddChangeParam(EXP_RIGHT_PARAM, exp_right);
+  QueryTimeParams.AddChangeParam(EXP_LEFT_PARAM, exp_left);
+  QueryTimeParams.AddChangeParam(EXP_RIGHT_PARAM, exp_right);
 
   for (unsigned iter = 0; iter < MaxIter; ++iter) {
     if (bPrintProgres) {
@@ -100,8 +98,8 @@ void GetOptimalAlphas(bool bPrintProgres,
       for (int right = -StepN; right < StepN; ++right) {
         float alphaLeftCurr = alpha_left_base * pow(StepFactor, left);
         float alphaRightCurr = alpha_right_base * pow(StepFactor, right);
-        MethPars.AddChangeParam(ALPHA_LEFT_PARAM, alphaLeftCurr);
-        MethPars.AddChangeParam(ALPHA_RIGHT_PARAM, alphaRightCurr);
+        QueryTimeParams.AddChangeParam(ALPHA_LEFT_PARAM, alphaLeftCurr);
+        QueryTimeParams.AddChangeParam(ALPHA_RIGHT_PARAM, alphaRightCurr);
 
 #ifdef DETAILED_PRINT_INFO
         if (bPrintProgres) {
@@ -148,14 +146,14 @@ void GetOptimalAlphas(bool bPrintProgres,
           
           if (!MethodPtr.get()) {
             if (bPrintProgres) {
-              cout << "Creating a new index, params: " << MethPars.ToString() << endl;
+              cout << "Creating a new index, params: " << IndexParams.ToString() << endl;
             }
             MethodPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
                                            CreateMethod(false, /* don't print the progress info, it's gonna be quick */
                                                         methodName,
                                                         SpaceType, config.GetSpace(), 
-                                                        config.GetDataObjects(), 
-                                                        MethPars) );
+                                                        config.GetDataObjects()));
+            MethodPtr->CreateIndex(IndexParams);
             vIndexForAllSetsPtrs[TestSetId] = MethodPtr;
           } else {
 #ifdef DETAILED_PRINT_INFO
@@ -163,21 +161,11 @@ void GetOptimalAlphas(bool bPrintProgres,
               cout << "Reusing an existing index, only reseting params" << endl;
             }
 #endif
-            MethodPtr->SetQueryTimeParams(MethPars);
           }
 
-          vector<shared_ptr<Index<dist_t>>>          IndexPtrs;
-          vector<bool>                               isNewIndex;
-          vector<shared_ptr<MethodWithParams>>       MethodsDesc;
-          
-          IndexPtrs.push_back(MethodPtr);
-          MethodsDesc.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(methodName, MethPars)));
-          isNewIndex.push_back(true);
-          
-          size_t ThreadTestQty = 1;
-#ifdef _OPENMP
-          ThreadTestQty = omp_get_max_threads();
-#endif
+          size_t ThreadTestQty = thread::hardware_concurrency();
+          vector<shared_ptr<AnyParams>> vQueryTimeParams;
+          vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(QueryTimeParams)));
 
           Experiments<dist_t>::RunAll(false /* don't print info */, 
                                       ThreadTestQty,
@@ -185,8 +173,8 @@ void GetOptimalAlphas(bool bPrintProgres,
                                       *vManagerGS[TestSetId],
                                       ExpResRange, ExpResKNN,
                                       config, 
-                                      IndexPtrs, isNewIndex,
-                                      MethodsDesc);
+                                      *MethodPtr,
+                                      vQueryTimeParams);
         }
         Stat.ComputeAll();
         double impr_val = (metric == IMPR_DIST_COMP) ? Stat.GetImprDistCompAvg() : Stat.GetImprEfficiencyAvg();
@@ -250,7 +238,7 @@ void GetOptimalAlphas(bool bPrintProgres,
                    config, 
                    metric, desiredRecall,
                    SpaceType, methodName,
-                   MethPars, 
+                   IndexParams, QueryTimeParams,
                    sqrt(StepFactor), alpha_left_best, alpha_right_best,
                    vManagerGS, vIndexForAllSetsPtrs,
                    recall, time_best, impr_best,
@@ -283,7 +271,7 @@ void GetOptimalAlphas(bool bPrintProgres,
                    config, 
                    metric, desiredRecall,
                    SpaceType, methodName,
-                   MethPars, 
+                   IndexParams, QueryTimeParams,
                    sqrt(StepFactor), alpha_left_best, alpha_right_best,
                    vManagerGS, vIndexForAllSetsPtrs,
                    recall, time_best, impr_best,
@@ -307,7 +295,8 @@ void GetOptimalAlphas(bool bPrintProgres,
                       float                     desiredRecall,
                       const string&             SpaceType,
                       const string&             methodName,
-                      AnyParams                 AllParams, 
+                      const AnyParams           IndexParams, 
+                      AnyParams                 QueryTimeParams, 
                       float& recall, float& time_best, float& impr_best,
                       float& alpha_left_best,  unsigned exp_left,
                       float& alpha_right_best, unsigned exp_right,
@@ -325,7 +314,8 @@ void GetOptimalAlphas(bool bPrintProgres,
   }
 
   if (bPrintProgres) {
-    cout << "Method parameters: " << AllParams.ToString() << endl;
+    cout << "Method index parameters:      " << IndexParams.ToString() << endl;
+    cout << "Method query-time parameters: " << QueryTimeParams.ToString() << endl;
   }
 
   vector<shared_ptr<GoldStandardManager<dist_t>>>  vManagerGS(config.GetTestSetToRunQty());
@@ -335,7 +325,7 @@ void GetOptimalAlphas(bool bPrintProgres,
                    config, 
                    metric, desiredRecall,
                    SpaceType, methodName,
-                   AllParams,
+                   IndexParams, QueryTimeParams,
                    pow(FullFactor, 1.0/StepN), alpha_left_best, alpha_right_best,
                    vManagerGS, vIndexForAllSetsPtrs,
                    recall, time_best, impr_best,

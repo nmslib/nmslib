@@ -69,24 +69,26 @@ class NNDescentMethod : public Index<dist_t> {
 
   class SpaceOracle {
   public:
-    SpaceOracle(const Space<dist_t>* space, const ObjectVector& data) :
+    SpaceOracle(const Space<dist_t>& space, const ObjectVector& data) :
                 space_(space), data_(data) {}
     inline dist_t operator()(IdType id1, IdType id2) const {
-      return space_->IndexTimeDistance(data_.at(id1), data_.at(id2));
+      return space_.IndexTimeDistance(data_.at(id1), data_.at(id2));
     }
   private:
-    const Space<dist_t>*    space_;
+    const Space<dist_t>&    space_;
     const ObjectVector&     data_;
   };
  private:
-  void SearchGreedy(KNNQuery<dist_t>* query);
-  void SearchSmallWorld(KNNQuery<dist_t>* query);
+  void SearchGreedy(KNNQuery<dist_t>* query) const;
+  void SearchSmallWorld(KNNQuery<dist_t>* query) const;
 
   typedef pair<dist_t, IdType>      EvaluatedNode;
 
 
-  const Space<dist_t>*    space_;
+  const Space<dist_t>&    space_;
   const ObjectVector&     data_;
+  bool                    PrintProgress_;
+
   size_t                  NN_; // K in the original Wei Dong's code nndes.cpp
   size_t                  searchNN_;
   size_t                  controlQty_; // control in the original Wei Dong's code nndes.cpp

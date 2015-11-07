@@ -75,15 +75,15 @@ PermutationInvertedIndex<dist_t>::PermutationInvertedIndex(
 
 
 template <typename dist_t>
-void PermutationInvertedIndex<dist_t>::LoadIndex(AnyParams IndexParams) {
+void PermutationInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
   pmgr.GetParamOptional("numPivot",      num_pivot_,        512);
   pmgr.GetParamOptional("numPivotIndex", num_pivot_index_,  16);
 
-  SetQueryTimeParamsInternal(pmgr);
-
   pmgr.CheckUnused();
+
+  SetQueryTimeParams(AnyParams({})); // reset query-time parameters
 
   if (num_pivot_index_ > num_pivot_) {
     stringstream err;

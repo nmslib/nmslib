@@ -68,6 +68,8 @@ VPTree<dist_t, SearchOracle>::CreateIndex(
 
   pmgr.CheckUnused();
 
+  SetQueryTimeParams(AnyParams({})); // reset query-time parameters
+
   unique_ptr<ProgressDisplay>   progress_bar(PrintProgress ? 
                                               new ProgressDisplay(data.size(), cerr):
                                               NULL);

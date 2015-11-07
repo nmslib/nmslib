@@ -133,10 +133,10 @@ SpatialApproxTree<dist_t>::SATNode::~SATNode() {
 }
 
 template <typename dist_t>
-void SpatialApproxTree<dist_t>::SATNode::Search const(
+void SpatialApproxTree<dist_t>::SATNode::Search (
     RangeQuery<dist_t>* query,
     dist_t dist_qp,
-    dist_t mind) {
+    dist_t mind) const {
   if (dist_qp <= covering_radius_ + query->Radius()) {
     query->CheckAndAddToResult(dist_qp, pivot_);
 
@@ -163,15 +163,15 @@ SpatialApproxTree<dist_t>::SpatialApproxTree(
 }
 
 template <typename dist_t>
-SpatialApproxTree<dist_t>::CreateIndex(const AnyParams& ) {
-  size_t index = RandomInt() % data.size();
-  const Object* pivot = data[index];
+void SpatialApproxTree<dist_t>::CreateIndex(const AnyParams& ) {
+  size_t index = RandomInt() % data_.size();
+  const Object* pivot = data_[index];
 
   DistObjectPairVector<dist_t> dp;
-  for (size_t i = 0; i < data.size(); ++i) {
+  for (size_t i = 0; i < data_.size(); ++i) {
     if (i != index) {
       dp.push_back(
-          make_pair(space_.IndexTimeDistance(data_[i], pivot), data[i]));
+          make_pair(space_.IndexTimeDistance(data_[i], pivot), data_[i]));
     }
   }
 
@@ -194,7 +194,7 @@ void SpatialApproxTree<dist_t>::Search(KNNQuery<dist_t>* query, IdType const)  c
   priority_queue<SATKnn> heap;
   dist_t dist_qp = query->DistanceObjLeft(root_->pivot_);
   heap.push(SATKnn((max(kZERO, dist_qp - root_->covering_radius_)),
-                   dist_qp, dist_qp, root_));
+                   dist_qp, dist_qp, root_.get()));
 
   while (!heap.empty()) {
     SATKnn top = heap.top();

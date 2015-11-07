@@ -49,7 +49,8 @@ DummyMethod<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
   AnyParamManager pmgr(QueryTimeParams);
   int dummy;
-  pmgr.GetParamOptional("dummyParam", dummy);
+  // Note that GetParamOptional() should always have a default value
+  pmgr.GetParamOptional("dummyParam", dummy, -1);
   LOG(LIB_INFO) << "Set dummy = " << dummy;
   pmgr.CheckUnused();
 }

@@ -44,22 +44,18 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
     bool  PrintProgress,
     const Space<dist_t>&  space,
     const ObjectVector&   data) 
-	    : space_(space), data_(data), PrintProgress_(PrintProgress) {
+      :  space_(space), data_(data), PrintProgress_(PrintProgress),
+         K_(0) {
 }
 
 template <typename dist_t>
-ProjectionIndexIncremental<dist_t>::CreateIndex(
-    const AnyParams&      IndexParams) {
-    K_(0),
-    knn_amp_(0),
-    db_scan_frac_(0),
-    use_cosine_(false)
-{
+void ProjectionIndexIncremental<dist_t>::CreateIndex(const AnyParams&      IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
   size_t        binThreshold;
   string        projType;
   string        projSpaceType;
+  size_t        intermDim;
 
   pmgr.GetParamOptional("intermDim",      intermDim,    0);
   pmgr.GetParamRequired("projDim",        proj_dim_);
@@ -67,6 +63,7 @@ ProjectionIndexIncremental<dist_t>::CreateIndex(
   pmgr.GetParamOptional("binThreshold",   binThreshold, 0);
 
   pmgr.CheckUnused();
+  this->ResetQueryTimeParams();
 
 
   LOG(LIB_INFO) << "projType     = " << proj_descr_;
@@ -100,14 +97,14 @@ ProjectionIndexIncremental<dist_t>::CreateIndex(
             unique_ptr<AnyParams>(new AnyParams(projSpaceDesc));
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data.size(), cerr)
+                                new ProgressDisplay(data_.size(), cerr)
                                 :NULL);
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
-  proj_vects_.resize(data.size() * proj_dim_);
+  proj_vects_.resize(data_.size() * proj_dim_);
   vector<float> TmpVect(proj_dim_);
 
-  for (size_t i = 0, start = 0; i < data.size(); ++i, start += proj_dim_) {
+  for (size_t i = 0, start = 0; i < data_.size(); ++i, start += proj_dim_) {
     proj_obj_->compProj(NULL, data_[i], &TmpVect[0]);
     memcpy(&proj_vects_[start], &TmpVect[0], sizeof(proj_vects_[0])*proj_dim_); 
     if (progress_bar) ++(*progress_bar);

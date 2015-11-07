@@ -231,7 +231,9 @@ void OMedRank<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 }
 
 template <typename dist_t>
-void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+void OMedRank<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager pmgr(QueryTimeParams);
+
   pmgr.GetParamOptional("skipChecking",   skip_check_, false);
 
   pmgr.GetParamOptional("minFreq",        min_freq_, 0.5);

@@ -27,7 +27,7 @@ class Space;
 template <typename dist_t>
 class Query {
  public:
-  Query(const Space<dist_t>* space, const Object* query_object);
+  Query(const Space<dist_t>& space, const Object* query_object);
   virtual ~Query();
 
   const Object* QueryObject() const;
@@ -46,7 +46,7 @@ class Query {
   virtual void Print() const = 0;
 
  protected:
-  const Space<dist_t>* space_;
+  const Space<dist_t>& space_;
   const Object* query_object_;
   mutable uint64_t distance_computations_;
 

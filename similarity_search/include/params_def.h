@@ -46,8 +46,8 @@
 #define SAVE_INDEX_PARAM_MSG    "a location to save the index to "
 #define SAVE_INDEX_PARAM_DEFAULT ""
 
-#define CACHE_PREFIX_GS_OPT     "cachePrefixGS"
-#define CACHE_PREFIX_GS_MSG     "a prefix of gold standard cache files"
+#define CACHE_PREFIX_GS_PARAM_OPT     "cachePrefixGS"
+#define CACHE_PREFIX_GS_PARAM_MSG     "a prefix of gold standard cache files"
 #define CACHE_PREFIX_GS_PARAM_DEFAULT ""
 
 #define MAX_CACHE_GS_QTY_PARAM_OPT "maxCacheGSQty"

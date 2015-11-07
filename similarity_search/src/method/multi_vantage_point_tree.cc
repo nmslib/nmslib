@@ -144,17 +144,17 @@ MultiVantagePointTree<dist_t>::BuildTree(
 }
 
 template <typename dist_t>
-void MultiVantagePointTree<dist_t>::Search(RangeQuery<dist_t>* query) {
+void MultiVantagePointTree<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
   Dists path(MaxPathLength_);
-  GenericSearch(root_, query, path, 0, mx);
+  GenericSearch(root_.get(), query, path, 0, mx);
 }
 
 template <typename dist_t>
-void MultiVantagePointTree<dist_t>::Search(KNNQuery<dist_t>* query) {
+void MultiVantagePointTree<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
   Dists path(MaxPathLength_);
-  GenericSearch(root_, query, path, 0, mx);
+  GenericSearch(root_.get(), query, path, 0, mx);
 }
 
 // Range search algorithm
@@ -165,7 +165,7 @@ void MultiVantagePointTree<dist_t>::GenericSearch(
     QueryType* query,
     Dists& path,
     size_t query_path_len,
-    int& MaxLeavesToVisit) {
+    int& MaxLeavesToVisit) const {
   if (node == NULL) {
     return;
   }

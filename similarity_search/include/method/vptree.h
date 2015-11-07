@@ -49,8 +49,8 @@ class VPTree : public Index<dist_t> {
 
   const std::string ToString() const;
 
-  void Search(RangeQuery<dist_t>* query) const;
-  void Search(KNNQuery<dist_t>* query) const;
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
   const vector<string>& getQueryTimeParams() const { return QueryTimeParams_; }
 

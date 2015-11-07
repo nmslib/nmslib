@@ -38,7 +38,7 @@ class Space;
 template <typename dist_t>
 class SpatialApproxTree : public Index<dist_t> {
  public:
-  SpatialApproxTree(const Space<dist_t>* space,
+  SpatialApproxTree(const Space<dist_t>& space,
                     const ObjectVector& data);
 
   void CreateIndex(const AnyParams&);
@@ -55,7 +55,7 @@ class SpatialApproxTree : public Index<dist_t> {
   struct SATKnn;
   class SATNode;
 
-  const Space<dist_t>* space_;
+  const Space<dist_t>& space_;
   const ObjectVector  data_;
   
   unique_ptr<SATNode> root_;

@@ -44,7 +44,7 @@ class BregmanDiv;
 template <typename dist_t>
 class BBTree : public Index<dist_t> {
  public:
-  BBTree(const Space<dist_t>* space,
+  BBTree(const Space<dist_t>& space,
          const ObjectVector& data);
 
   void CreateIndex(const AnyParams& IndexParams);

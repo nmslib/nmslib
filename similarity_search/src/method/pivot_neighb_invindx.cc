@@ -120,7 +120,7 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
 
 
 template <typename dist_t>
-PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
 
@@ -146,6 +146,7 @@ PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   size_t indexQty = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
 
   pmgr.CheckUnused();
+  this->ResetQueryTimeParams();
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
   LOG(LIB_INFO) << "# of index chunks             = " << indexQty;
@@ -153,7 +154,7 @@ PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
   LOG(LIB_INFO) << "# pivots to index (numPrefix) = " << num_prefix_;
 
-  GetPermutationPivot(data_, &space_, num_pivot_, &pivot_);
+  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
 
   posting_lists_.resize(indexQty);
 
@@ -172,7 +173,7 @@ PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
   if (index_thread_qty_ <= 1) {
     unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data.size(), cerr)
+                                new ProgressDisplay(data_.size(), cerr)
                                 :NULL);
     for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
       IndexChunk(chunkId, progress_bar.get(), progressBarMutex);
@@ -187,8 +188,8 @@ PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
     LOG(LIB_INFO) << "Will create " << index_thread_qty_ << " indexing threads";;
 
-    unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
-                                new ProgressDisplay(data.size(), cerr)
+    unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
+                                new ProgressDisplay(data_.size(), cerr)
                                 :NULL);
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
@@ -246,6 +247,7 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* pr
 template <typename dist_t>
 void 
 PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager pmgr(QueryTimeParams);
   string inv_proc_alg;
   
   pmgr.GetParamOptional("skipChecking", skip_checking_, false);
@@ -449,14 +451,12 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
 }
 
 template <typename dist_t>
-void PivotNeighbInvertedIndex<dist_t>::Search const(
-    RangeQuery<dist_t>* query, IdType) {
+void PivotNeighbInvertedIndex<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   GenSearch(query, 0);
 }
 
 template <typename dist_t>
-void PivotNeighbInvertedIndex<dist_t>::Search const(
-    KNNQuery<dist_t>* query, IdType) {
+void PivotNeighbInvertedIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   GenSearch(query, query->GetK());
 }
 

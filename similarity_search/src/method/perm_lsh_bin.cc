@@ -30,13 +30,13 @@ namespace similarity {
 template <typename dist_t>
 PermutationIndexLSHBin<dist_t>::PermutationIndexLSHBin(
     bool PrintProgress,
-    const Space<dist_t>* space,
-    const ObjectVector& data) : printProgress_(PrintProgress),
-                                space_(space), data_(data) {}
+    const Space<dist_t>& space,
+    const ObjectVector& data) : 
+                                space_(space), data_(data), printProgress_(PrintProgress) {}
 
 template <typename dist_t>
 void PermutationIndexLSHBin<dist_t>::CreateIndex(const AnyParams& IndexParams) {
-  AnyParamManager pmgr(MethParams);
+  AnyParamManager pmgr(IndexParams);
 
   pmgr.GetParamOptional("numPivot",     num_pivot_,       32);
   pmgr.GetParamOptional("binThreshold", bin_threshold_,   num_pivot_ / 2);
@@ -61,11 +61,14 @@ void PermutationIndexLSHBin<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   LOG(LIB_INFO) << "bin threshold    = " << bin_threshold_;
   LOG(LIB_INFO) << "bit sample qty   = " << bit_sample_qty_;
 
+  pmgr.CheckUnused();
+  SetQueryTimeParams(getEmptyParams());
+
   pivots_.resize(num_hash_);
   bit_sample_flags_.resize(num_hash_);
 
   for (size_t i = 0; i < num_hash_; ++i) {
-    GetPermutationPivot(data_, &space_, num_pivot_, &pivots_[i]);
+    GetPermutationPivot(data_, space_, num_pivot_, &pivots_[i]);
     bit_sample_flags_[i].resize(num_pivot_);
 
 
@@ -109,12 +112,12 @@ void PermutationIndexLSHBin<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     hash_tables_[hashId].resize(hash_table_size_);
   }
 
-  unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data.size(), cerr)
+  unique_ptr<ProgressDisplay> progress_bar(printProgress_ ?
+                                new ProgressDisplay(data_.size(), cerr)
                                 :NULL);
-  for (size_t id = 0; id < data.size(); ++id) {
+  for (size_t id = 0; id < data_.size(); ++id) {
     for (size_t hashId = 0; hashId < num_hash_; ++hashId) {
-      size_t val = computeHashValue(hashId, data[id], NULL); // Already <= hash_table_size_;
+      size_t val = computeHashValue(hashId, data_[id], NULL); // Already <= hash_table_size_;
       //cout << val << endl;
       if (!hash_tables_[hashId][val]) {
         hash_tables_[hashId][val] = new vector<IdType>();

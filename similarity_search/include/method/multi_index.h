@@ -44,10 +44,11 @@ class MultiIndex : public Index<dist_t> {
  public:
   MultiIndex(bool PrintProgress,
              const string& SpaceType,
-             Space<dist_t>* space, 
+             Space<dist_t>& space, 
              const ObjectVector& data);
 
   void CreateIndex(const AnyParams& IndexParams);
+
   ~MultiIndex();
 
   const std::string ToString() const;

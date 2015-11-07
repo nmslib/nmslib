@@ -80,11 +80,11 @@ void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
     (HELP_PARAM_OPT,          HELP_PARAM_MSG)
-    (SPACE_TYPE_PARAM_OPT,    po::value<string>(&SpaceType)->required(),                    SPACE_TYPE_PARAM_MSG)
+    (SPACE_TYPE_PARAM_OPT,    po::value<string>(&spaceParamStr)->required(),                SPACE_TYPE_PARAM_MSG)
     (DIST_TYPE_PARAM_OPT,     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG)
     (DATA_FILE_PARAM_OPT,     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG)
     (MAX_NUM_DATA_PARAM_OPT,  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG)
-    (QUERY_FILE_PARAM_OPT,    po::value<string>(&QueryFile)->default_value(QUERY_FILE_PARAM_OPT_DEFAULT),  QUERY_FILE_PARAM_MSG)
+    (QUERY_FILE_PARAM_OPT,    po::value<string>(&QueryFile)->default_value(QUERY_FILE_PARAM_DEFAULT),  QUERY_FILE_PARAM_MSG)
     (LOAD_INDEX_PARAM_OPT,    po::value<string>(&LoadIndexLoc)->default_value(LOAD_INDEX_PARAM_DEFAULT),   LOAD_INDEX_PARAM_MSG)
     (SAVE_INDEX_PARAM_OPT,    po::value<string>(&SaveIndexLoc)->default_value(SAVE_INDEX_PARAM_DEFAULT),   SAVE_INDEX_PARAM_MSG)
     (CACHE_PREFIX_GS_PARAM_OPT,  po::value<string>(&CacheGSFilePrefix)->default_value(CACHE_PREFIX_GS_PARAM_DEFAULT),  CACHE_PREFIX_GS_PARAM_MSG)
@@ -96,8 +96,8 @@ void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
     (RANGE_PARAM_OPT,         po::value<string>(&RangeArg),                                 RANGE_PARAM_MSG)
     (EPS_PARAM_OPT,           po::value<double>(&epsTmp)->default_value(EPS_PARAM_DEFAULT), EPS_PARAM_MSG)
     (QUERY_TIME_PARAMS_PARAM_OPT, po::value< vector<string> >(&vQueryTimeParamStr)->multitoken()->zero_tokens(), QUERY_TIME_PARAMS_PARAM_MSG)
-    (INDEX_TIME_PARAMS_PARAM_OPT, po::value< vector<string> >(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG)
-    (METHOD_PARAM_OPT,        po::value< vector<string> >(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG)
+    (INDEX_TIME_PARAMS_PARAM_OPT, po::value<string>(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG)
+    (METHOD_PARAM_OPT,        po::value<string>(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG)
     (THREAD_PARAM_OPT,        po::value<unsigned>(&ThreadTestQty)->default_value(THREAD_PARAM_DEFAULT), THREAD_PARAM_MSG)
     (OUT_FILE_PREFIX_PARAM_OPT, po::value<string>(&ResFilePrefix)->default_value(OUT_FILE_PREFIX_PARAM_DEFAULT), OUT_FILE_PREFIX_PARAM_MSG)
     (APPEND_TO_REF_FILE_PARAM_OPT, po::value<bool>(&AppendToResFile)->default_value(APPEND_TO_REF_FILE_PARAM_DEFAULT), APPEND_TO_REF_FILE_PARAM_MSG)
@@ -121,13 +121,13 @@ void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
   }
 
   ToLower(DistType);
-  ToLower(SpaceType);
+  ToLower(spaceParamStr);
   ToLower(MethodName);
   
   try {
     {
       vector<string>     desc;
-      ParseArg(spaceParamStr, desc);
+      ParseSpaceArg(spaceParamStr, SpaceType, desc);
       SpaceParams = shared_ptr<AnyParams>(new AnyParams(desc));
     }
 

@@ -81,8 +81,8 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
       throw runtime_error(err.str());
     }
 
-    size_t tuneQty = TUNE_QTY_DEFAULT;
-    pmgr.GetParamOptional(TUNE_QTY_PARAM, tuneQty);
+    size_t tuneQty;
+    pmgr.GetParamOptional(TUNE_QTY_PARAM, tuneQty, TUNE_QTY_DEFAULT);
 
     if (tuneQty < MIN_TUNE_QTY) {
       stringstream err;
@@ -118,27 +118,26 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
                      " bucket size: " << bucketSizeAdjusted << 
                      " recall: " << desiredRecallAdjusted;
 
-    vector<string>                methodDesc;
-    stringstream                  methStrDesc;
+    vector<string>                paramDesc;
+    stringstream                  methParamDesc;
     string                        methName;
 
-    methStrDesc << METH_VPTREE << ":bucketSize=" << bucketSizeAdjusted;
+    methParamDesc << "bucketSize=" << bucketSizeAdjusted;
 
-    ParseMethodArg(methStrDesc.str(), methName, methodDesc);
-    shared_ptr<MethodWithParams>  method = shared_ptr<MethodWithParams>(new MethodWithParams(methName, methodDesc));
+    ParseArg(methParamDesc.str(), paramDesc);
 
-    size_t minExp = MIN_EXP_DEFAULT, maxExp = MAX_EXP_DEFAULT;
+    size_t minExp = 0, maxExp = 0;
 
-    pmgr.GetParamOptional(MIN_EXP_PARAM, minExp);
-    pmgr.GetParamOptional(MAX_EXP_PARAM, maxExp);
+    pmgr.GetParamOptional(MIN_EXP_PARAM, minExp, MIN_EXP_DEFAULT);
+    pmgr.GetParamOptional(MAX_EXP_PARAM, maxExp, MAX_EXP_DEFAULT);
 
     if (!maxExp) throw runtime_error(string(MIN_EXP_PARAM) + " can't be zero!");
     if (maxExp < minExp) throw runtime_error(string(MAX_EXP_PARAM) + " can't be < " + string(MIN_EXP_PARAM));
 
 
-    string metricName = OPTIM_METRIC_DEFAULT; 
+    string metricName;
 
-    pmgr.GetParamOptional(OPTIM_METRIC_PARAMETER, metricName);
+    pmgr.GetParamOptional(OPTIM_METRIC_PARAMETER, metricName, OPTIM_METRIC_DEFAULT);
 
     OptimMetric metric = getOptimMetric(metricName);
 
@@ -169,7 +168,7 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
                                       data_, emptyQueries, 
                                       TUNE_SPLIT_QTY,
                                       tuneQty, TUNE_QUERY_QTY,
-                                      0, knn, eps, range));
+                                      knn, eps, range));
   
     }
 
@@ -182,7 +181,7 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
                                       data_, emptyQueries, 
                                       TUNE_SPLIT_QTY,
                                       tuneQty, TUNE_QUERY_QTY,
-                                      0, knn, eps, range));
+                                      knn, eps, range));
   
     }
 
@@ -190,18 +189,18 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
 
     config->ReadDataset();
 
-    size_t maxCacheGSQty = MAX_CACHE_GS_QTY_DEFAULT;
-    pmgr.GetParamOptional(MAX_CACHE_GS_QTY_PARAM, maxCacheGSQty);
-    size_t maxIter = MAX_ITER_DEFAULT;
-    pmgr.GetParamOptional(MAX_ITER_PARAM, maxIter);
-    size_t maxRecDepth = MAX_REC_DEPTH_DEFAULT;
-    pmgr.GetParamOptional(MAX_REC_DEPTH_PARAM, maxRecDepth);
-    size_t stepN = STEP_N_DEFAULT;
-    pmgr.GetParamOptional(STEP_N_PARAM, stepN);
-    size_t addRestartQty = ADD_RESTART_QTY_DEFAULT;
-    pmgr.GetParamOptional(ADD_RESTART_QTY_PARAM, addRestartQty);
-    float fullFactor = FULL_FACTOR_DEFAULT;
-    pmgr.GetParamOptional(FULL_FACTOR_PARAM, fullFactor);
+    size_t maxCacheGSQty;
+    pmgr.GetParamOptional(MAX_CACHE_GS_QTY_PARAM, maxCacheGSQty, MAX_CACHE_GS_QTY_DEFAULT);
+    size_t maxIter = 0;
+    pmgr.GetParamOptional(MAX_ITER_PARAM, maxIter, MAX_ITER_DEFAULT);
+    size_t maxRecDepth = 0;
+    pmgr.GetParamOptional(MAX_REC_DEPTH_PARAM, maxRecDepth, MAX_REC_DEPTH_DEFAULT);
+    size_t stepN = 0;
+    pmgr.GetParamOptional(STEP_N_PARAM, stepN, STEP_N_DEFAULT);
+    size_t addRestartQty = 0;
+    pmgr.GetParamOptional(ADD_RESTART_QTY_PARAM, addRestartQty, ADD_RESTART_QTY_DEFAULT);
+    float fullFactor = 0;
+    pmgr.GetParamOptional(FULL_FACTOR_PARAM, fullFactor, (float)FULL_FACTOR_DEFAULT);
 
     float recall = 0, time_best = 0, impr_best = -1, alpha_left = 0, alpha_right = 0; 
     unsigned exp_left = 0, exp_right = 0;
@@ -231,7 +230,7 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
                      metric, desiredRecallAdjusted,
                      SpaceType, 
                      METH_VPTREE, 
-                     method->methPars_, 
+                     AnyParams(paramDesc), getEmptyParams(),
                      recall_loc, 
                      time_best_loc, impr_best_loc,
                      alpha_left_loc, expLeft, alpha_right_loc, expRight,

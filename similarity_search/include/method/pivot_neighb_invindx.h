@@ -70,7 +70,7 @@ template <typename dist_t>
 class PivotNeighbInvertedIndex : public Index<dist_t> {
  public:
   PivotNeighbInvertedIndex(bool PrintProgress,
-                           const Space<dist_t>* space,
+                           const Space<dist_t>& space,
                            const ObjectVector& data);
 
   void CreateIndex(const AnyParams& IndexParams);
@@ -82,11 +82,11 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query, IdType) const;
   
   void IndexChunk(size_t chunkId, ProgressDisplay*, mutex&);
-  void SetQueryTimeParamsInternal(const AnyParams& QueryTimeParams);
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
  private:
 
   const   ObjectVector&   data_;
-  const   Space<dist_t>*  space_;
+  const   Space<dist_t>&  space_;
   bool    PrintProgress_;
 
   size_t  chunk_index_size_;
@@ -116,7 +116,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
 
   ObjectVector pivot_;
 
-  size_t computeDbScan(size_t K, size_t chunkQty) {
+  size_t computeDbScan(size_t K, size_t chunkQty) const {
     size_t totalDbScan = static_cast<size_t>(db_scan_frac_ * data_.size());
     if (knn_amp_) { 
       totalDbScan = K * knn_amp_;

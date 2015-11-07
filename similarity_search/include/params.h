@@ -164,6 +164,11 @@ public:
 
 };
 
+const AnyParams& getEmptyParams() {
+  static AnyParams empty;
+  return empty;
+}
+
 class AnyParamManager {
 public:
   AnyParamManager(const AnyParams& params) : params(params), seen() {
@@ -179,8 +184,8 @@ public:
     GetParam<ParamType>(Name, Value, true);
   }
 
-  template <typename ParamType>
-  void GetParamOptional(const string&  Name, ParamType& Value, const ParamType& DefaultValue) {
+  template <typename ParamType, typename DefaultType>
+  void GetParamOptional(const string&  Name, ParamType& Value, const DefaultType& DefaultValue) {
     Value=DefaultValue;
     GetParam<ParamType>(Name, Value, false);
   }
@@ -305,9 +310,9 @@ inline void AnyParamManager::ConvertStrToValue<string>(const string& str, string
   Value = str;
 }
 
-/*
- * Take a comma-separated list of parameters and split them.
- */
+// Parse space name/parameters
+void ParseSpaceArg(const string& str, string& SpaceType, vector<string>& SpaceDesc);
+// Take a comma-separated list of parameters and split them.
 void ParseArg(const string& str, vector<string>& vDesc);
 
 };

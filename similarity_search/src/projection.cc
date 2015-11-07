@@ -181,7 +181,7 @@ public:
     Permutation perm;
 
     if (NULL == pQuery) {
-      GetPermutation(ref_pts_, &space_, pObj, &perm);
+      GetPermutation(ref_pts_, space_, pObj, &perm);
     } else {
       GetPermutation(ref_pts_, pQuery, &perm);
     }
@@ -199,7 +199,7 @@ private:
                          const ObjectVector& data,
                          size_t nDstDim) : space_(space), data_(data),
                                            dstDim_(nDstDim) {
-    GetPermutationPivot(data_, &space_, nDstDim, &ref_pts_);
+    GetPermutationPivot(data_, space_, nDstDim, &ref_pts_);
   }
   const Space<dist_t>&        space_;
   const ObjectVector&         data_;
@@ -216,7 +216,7 @@ public:
     Permutation perm;
 
     if (NULL == pQuery) {
-      GetPermutation(ref_pts_, &space_, pObj, &perm);
+      GetPermutation(ref_pts_, space_, pObj, &perm);
     } else {
       GetPermutation(ref_pts_, pQuery, &perm);
     }
@@ -255,7 +255,7 @@ public:
     Permutation perm;
 
     if (NULL == pQuery) {
-      GetPermutation(ref_pts_, &space_, pObj, &perm);
+      GetPermutation(ref_pts_, space_, pObj, &perm);
     } else {
       GetPermutation(ref_pts_, pQuery, &perm);
     }
@@ -277,7 +277,7 @@ private:
                                           : space_(space), data_(data),
                                            dstDim_(nDstDim),
                                            binThreshold_(binThreshold) {
-    GetPermutationPivot(data_, &space_, nDstDim, &ref_pts_);
+    GetPermutationPivot(data_, space_, nDstDim, &ref_pts_);
   }
   const Space<dist_t>&        space_;
   const ObjectVector&         data_;
@@ -320,7 +320,7 @@ public:
   friend class Projection<dist_t>;
 
 private:
-  ProjectionFastMap(const Space<dist_t>* space,
+  ProjectionFastMap(const Space<dist_t>& space,
                     const ObjectVector& data,
                     size_t nDstDim) : space_(space), data_(data),
                                       dstDim_(nDstDim) {

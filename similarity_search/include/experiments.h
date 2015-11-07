@@ -68,7 +68,7 @@ public:
                      vector<vector<MetaAnalysis*>>&       ExpResRange,
                      vector<vector<MetaAnalysis*>>&       ExpResKNN,
                      const ExperimentConfig<dist_t>&      config,
-                     const IndexType&                     Method,
+                     IndexType&                           Method,
                      const vector<shared_ptr<AnyParams>>& QueryTimeParams) {
 
     if (LogInfo) LOG(LIB_INFO) << ">>>> TestSetId: " << TestSetId;
@@ -204,8 +204,8 @@ public:
                      std::vector<MetaAnalysis*>&                  ExpRes,
                      const ExperimentConfig<dist_t>&              config,
                      const QueryCreatorType&                      QueryCreator,
-                     const IndexType&                             Method,
-                     const vector<shared_ptr><AnyParams>&         QueryTimeParams) {
+                     IndexType&                                   Method,
+                     const vector<shared_ptr<AnyParams>>&         QueryTimeParams) {
     size_t numquery = config.GetQueryObjects().size();
     unsigned MethQty = QueryTimeParams.size();
 
@@ -234,7 +234,7 @@ public:
 
     mutex             UpdateStat;
 
-    config.GetSpace()->SetQueryPhase();
+    config.GetSpace().SetQueryPhase();
 
     for (size_t MethNum = 0; MethNum < QueryTimeParams.size(); ++MethNum) {
      /* 
@@ -242,7 +242,7 @@ public:
       * before running any tests, in particular, because
       * the function SetQueryTimeParams is NOT supposed to be THREAD-SAFE. 
       */
-      Method.SetQueryTimeParams(QueryTimeParams[MethNum]);
+      Method.SetQueryTimeParams(*QueryTimeParams[MethNum]);
 
       if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 
@@ -267,7 +267,7 @@ public:
                                               config,
                                               QueryCreator,
                                               Method,
-                                              qtmParamId,
+                                              MethNum,
                                               SearchTime,
                                               AvgNumDistComp,
                                               max_result_size,
@@ -333,7 +333,7 @@ public:
       }
     }
 
-    config.GetSpace()->SetIndexPhase();
+    config.GetSpace().SetIndexPhase();
 
     /* 
      * Sequential search times should be computed only once.
@@ -345,8 +345,6 @@ public:
     }
 
     for (size_t MethNum = 0; MethNum < QueryTimeParams.size(); ++MethNum) {
-      size_t MethNum = it - IndexPtrs.begin();
-
       double timeSec = SearchTime[MethNum]/double(1e6);
       double queryPerSec = numquery / timeSec;
 

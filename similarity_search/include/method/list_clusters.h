@@ -37,7 +37,7 @@ class Space;
 template <typename dist_t>
 class ListClusters : public Index<dist_t> {
  public:
-  ListClusters(const Space<dist_t>* space,
+  ListClusters(const Space<dist_t>& space,
                const ObjectVector& data);
 
   void CreateIndex(const AnyParams& MethParams);
@@ -55,7 +55,7 @@ class ListClusters : public Index<dist_t> {
   void SetQueryTimeParams(const AnyParams& QueryTimeParams);
 
   template <typename QueryType>
-  void GenSearch(QueryType* query);
+  void GenSearch(QueryType* query) const;
 
   class Cluster {
    public:

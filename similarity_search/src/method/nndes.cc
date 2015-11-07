@@ -65,16 +65,16 @@ namespace similarity {
 template <typename dist_t>
 NNDescentMethod<dist_t>::NNDescentMethod(
     bool  PrintProgress,
-    const Space<dist_t>* space,
+    const Space<dist_t>& space,
     const ObjectVector& data) :
       space_(space), data_(data), PrintProgress_(PrintProgress),
-      nndesOracle_(space, data),
       controlQty_(0), // default value from Wei Dong's code
+      nndesOracle_(space, data)
 {}
 
 template <typename dist_t>
-NNDescentMethod<dist_t>::CreateIndex(const AnyParams& IndexParams) {
-  AnyParamManager pmgr(AllParams);
+void NNDescentMethod<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
 
   pmgr.GetParamOptional("NN",           NN_,           20);// default value from Wei Dong's code
   pmgr.GetParamOptional("iterationQty", iterationQty_, 100); // default value from Wei Dong's code
@@ -87,7 +87,7 @@ NNDescentMethod<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   LOG(LIB_INFO) <<  "rho          = " << rho_;
   LOG(LIB_INFO) <<  "delta        = " << delta_;
 
-  SetQueryTimeParams(AnyParams({})); // reset query-time parameter
+  SetQueryTimeParams(getEmptyParams()); // reset query-time parameter
 
 
   LOG(LIB_INFO) << "Starting NN-Descent...";
@@ -101,7 +101,7 @@ NNDescentMethod<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     cout.precision(5);
     cout.setf(ios::fixed);
     for (int it = 0; it < iterationQty_; ++it) {
-        int t = nndesObj_->iterate(PrintProgress);
+        int t = nndesObj_->iterate(PrintProgress_);
         float rate = float(t) / (NN_ * data_.size());
 
 // TODO @leo computation of recall needs to be re-written, can't use original Wei Dong's code
@@ -136,7 +136,7 @@ void NNDescentMethod<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 }
 
 template <typename dist_t>
-void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
+void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) const {
   const vector<KNN> &nn = nndesObj_->getNN();
 
 #if USE_BITSET_FOR_SEARCHING
@@ -213,7 +213,7 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) {
 
 
 template <typename dist_t>
-void NNDescentMethod<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) {
+void NNDescentMethod<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) const {
   const vector<KNN> &nn = nndesObj_->getNN();
 
   for (size_t i=0; i < initSearchAttempts_; i++) {

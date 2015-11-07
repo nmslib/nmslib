@@ -27,17 +27,18 @@ SeqSearch<dist_t>::SeqSearch(const ObjectVector& origData) :
 }
 
 template <typename dist_t>
-SeqSearch<dist_t>::SeqSearch(const AnyParams& IndexParams) {
+void SeqSearch<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
-  bool bCopyMem = false;
-
-  pmgr.GetParamOptional("copyMem", bCopyMem);
+  bool bCopyMem;
+  pmgr.GetParamOptional("copyMem", bCopyMem, false);
 
   LOG(LIB_INFO) << "copyMem = " << bCopyMem;
 
+  SetQueryTimeParams(getEmptyParams());
+
   if (bCopyMem) {
-    CreateCacheOptimizedBucket(origData, cacheOptimizedBucket_, pData_);
+    CreateCacheOptimizedBucket(origData_, cacheOptimizedBucket_, pData_);
   }
 }
 

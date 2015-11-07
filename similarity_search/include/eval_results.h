@@ -43,16 +43,16 @@ using std::sort;
 template <class dist_t>
 class EvalResults {
 public:
-  EvalResults(const typename similarity::Space<dist_t>* space,
-                   const typename similarity::KNNQuery<dist_t>* query,
-                   const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
+  EvalResults(const typename similarity::Space<dist_t>& space,
+              const typename similarity::KNNQuery<dist_t>* query,
+              const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
     GetKNNData(query);
     ComputeMetrics(query->QueryObject()->label());
   }
 
-  EvalResults(const typename similarity::Space<dist_t>* space,
-                   const typename similarity::RangeQuery<dist_t>* query,
-                   const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
+  EvalResults(const typename similarity::Space<dist_t>& space,
+              const typename similarity::RangeQuery<dist_t>* query,
+              const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
     GetRangeData(query);
     ComputeMetrics(query->QueryObject()->label());
   }

@@ -63,6 +63,8 @@ class Index {
   virtual const string ToString() const = 0;
   // Set query-time parameters
   virtual void SetQueryTimeParams(const AnyParams& params) = 0;
+  // Reset query-time parameters so that they have default values
+  virtual void ResetQueryTimeParams() { SetQueryTimeParams(getEmptyParams()); }
   /*
    * In rare cases, mostly when we wrap up 3rd party methods,
    * we simply duplicate the data set. This function

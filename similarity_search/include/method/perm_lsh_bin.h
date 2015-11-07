@@ -49,9 +49,10 @@ class PermutationIndexLSHBin : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query, IdType) const {GenSearch(query);}
   void Search(KNNQuery<dist_t>* query, IdType) const {GenSearch(query);}
 
+  void SetQueryTimeParams(const AnyParams&);
  private:
-  const ObjectVector&   data_;
   const Space<dist_t>&  space_;
+  const ObjectVector&   data_;
   bool                  printProgress_;
 
   size_t                num_pivot_;
@@ -69,7 +70,7 @@ class PermutationIndexLSHBin : public Index<dist_t> {
   /*
    * If pQuery is not NULL, distances are computed via the query.
    */
-  size_t  computeHashValue(size_t hashId, const Object* pObj, Query<dist_t>* pQuery) {
+  size_t  computeHashValue(size_t hashId, const Object* pObj, Query<dist_t>* pQuery) const {
     Permutation perm_q;
     if (pQuery) {
       GetPermutation(pivots_[hashId], pQuery, &perm_q);

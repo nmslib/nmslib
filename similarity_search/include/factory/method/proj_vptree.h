@@ -32,7 +32,7 @@ Index<dist_t>* CreateProjVPTree(bool PrintProgress,
                            const string& SpaceType,
                            Space<dist_t>& space,
                            const ObjectVector& DataObjects) {
-    return new ProjectionVPTree<dist_t>(space, DataObjects);
+    return new ProjectionVPTree<dist_t>(PrintProgress, space, DataObjects);
 }
 
 /*

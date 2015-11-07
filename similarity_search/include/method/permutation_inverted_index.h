@@ -41,10 +41,10 @@ class PermutationInvertedIndex : public Index<dist_t> {
  public:
   PermutationInvertedIndex(
                 bool  PrintProgress,
-                const Space<dist_t>* space,
+                const Space<dist_t>& space,
                 const ObjectVector& data);
 
-  void CreateIndex(AnyParams params);
+  void CreateIndex(const AnyParams& params);
   ~PermutationInvertedIndex();
 
   const std::string ToString() const;

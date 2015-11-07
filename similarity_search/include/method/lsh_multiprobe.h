@@ -41,8 +41,8 @@ class MultiProbeLSH : public Index<dist_t> {
   ~MultiProbeLSH();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query) const ;
-  void Search(KNNQuery<dist_t>* query) const ;
+  void Search(RangeQuery<dist_t>* query, IdType) const ;
+  void Search(KNNQuery<dist_t>* query, IdType) const ;
 
   void SetQueryTimeParams(const AnyParams& params) {};
 

@@ -36,7 +36,7 @@ namespace similarity {
 
 template <typename dist_t>
 struct IndexThreadParamsSW {
-  const Space<dist_t>*                        space_;
+  const Space<dist_t>&                        space_;
   SmallWorldRand<dist_t>&                     index_;
   const ObjectVector&                         data_;
   size_t                                      index_every_;
@@ -46,7 +46,7 @@ struct IndexThreadParamsSW {
   size_t                                      progress_update_qty_;
   
   IndexThreadParamsSW(
-                     const Space<dist_t>*             space,
+                     const Space<dist_t>&             space,
                      SmallWorldRand<dist_t>&          index, 
                      const ObjectVector&              data,
                      size_t                           index_every,
@@ -78,7 +78,7 @@ struct IndexThreadSW {
     for (size_t id = 1; id < prm.data_.size(); ++id) {
       if (prm.index_every_ == id % prm.out_of_) {
         MSWNode* node = new MSWNode(prm.data_[id], id);
-        prm.index_.add(prm.space_, node);
+        prm.index_.add(node);
       
         if ((id + 1 >= min(prm.data_.size(), nextQty)) && progress_bar) {
           unique_lock<mutex> lock(display_mutex);
@@ -96,16 +96,16 @@ struct IndexThreadSW {
 
 template <typename dist_t>
 SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
-                                       const Space<dist_t>* space,
+                                       const Space<dist_t>& space,
                                        const ObjectVector& data) : 
-                                        space_(space), data_(data), PrintProgress_(PrintProgress) {}
+                                       space_(space), data_(data), PrintProgress_(PrintProgress) {}
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams) 
 {
-  AnyParamManager pmgr(MethParams);
+  AnyParamManager pmgr(IndexParams);
 
-  pmgr.GetParamOptional("NN",                 NN_,                , 10);
+  pmgr.GetParamOptional("NN",                 NN_,                  10);
   pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   2);
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
 
@@ -115,21 +115,23 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   pmgr.CheckUnused();
 
-  if (data.empty()) return;
+  SetQueryTimeParams(getEmptyParams());
+
+  if (data_.empty()) return;
 
   // 2) One entry should be added before all the threads are started, or else add() will not work properly
-  addCriticalSection(new MSWNode(data[0], 0 /* id == 0 */));
+  addCriticalSection(new MSWNode(data_[0], 0 /* id == 0 */));
 
-  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
-                                new ProgressDisplay(data.size(), cerr)
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
+                                new ProgressDisplay(data_.size(), cerr)
                                 :NULL);
 
   if (indexThreadQty_ <= 1) {
     // Skip the first element, one element is already added
     if (progress_bar) ++(*progress_bar);
-    for (size_t id = 1; id < data.size(); ++id) {
-      MSWNode* node = new MSWNode(data[id], id);
-      add(space, node);
+    for (size_t id = 1; id < data_.size(); ++id) {
+      MSWNode* node = new MSWNode(data_[id], id);
+      add(node);
       if (progress_bar) ++(*progress_bar);
     }
   } else {
@@ -139,7 +141,7 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
-                              new IndexThreadParamsSW<dist_t>(space, *this, data, i, indexThreadQty_,
+                              new IndexThreadParamsSW<dist_t>(space_, *this, data_, i, indexThreadQty_,
                                                               progress_bar.get(), progressBarMutex, 200)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
@@ -207,8 +209,7 @@ MSWNode* SmallWorldRand<dist_t>::getRandomEntryPoint() const {
 
 template <typename dist_t>
 void 
-SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space, 
-                                                    const Object* queryObj, 
+SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Object* queryObj, 
                                                     size_t NN, 
                                                     size_t initIndexAttempts,
                                                     priority_queue<EvaluatedMSWNodeDirect<dist_t>>& resultSet) const
@@ -239,10 +240,10 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
     priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
 
 #ifdef USE_ALTERNATIVE_FOR_INDEXING
-    dist_t d = space->ProxyDistance(queryObj, provider->getData());
+    dist_t d = space_.ProxyDistance(queryObj, provider->getData());
     #pragma message "Using an alternative/proxy function for indexing, not the original one!"          
 #else
-    dist_t d = space->IndexTimeDistance(queryObj, provider->getData());
+    dist_t d = space_.IndexTimeDistance(queryObj, provider->getData());
 #endif
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
 
@@ -311,10 +312,10 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
           visited.insert(*iter);
 #endif
 #ifdef USE_ALTERNATIVE_FOR_INDEXING
-          d = space->ProxyDistance(queryObj, (*iter)->getData());
+          d = space_.ProxyDistance(queryObj, (*iter)->getData());
           #pragma message "Using an alternative/proxy function for indexing, not the original one!"          
 #else
-          d = space->IndexTimeDistance(queryObj, (*iter)->getData());
+          d = space_.IndexTimeDistance(queryObj, (*iter)->getData());
 #endif
 
 
@@ -338,7 +339,7 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Space<dist_t>* space,
 
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::add(const Space<dist_t>* space, MSWNode *newElement){
+void SmallWorldRand<dist_t>::add(MSWNode *newElement){
   newElement->removeAllFriends(); 
 
   bool isEmpty = false;
@@ -357,7 +358,7 @@ void SmallWorldRand<dist_t>::add(const Space<dist_t>* space, MSWNode *newElement
   {
     priority_queue<EvaluatedMSWNodeDirect<dist_t>> resultSet;
 
-    kSearchElementsWithAttempts(space, newElement->getData(), NN_, initIndexAttempts_, resultSet);
+    kSearchElementsWithAttempts(newElement->getData(), NN_, initIndexAttempts_, resultSet);
 
     // TODO actually we might need to add elements in the reverse order in the future.
     // For the current implementation, however, the order doesn't seem to matter
@@ -378,13 +379,13 @@ void SmallWorldRand<dist_t>::addCriticalSection(MSWNode *newElement){
 }
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::Search(RangeQuery<dist_t>* query) {
+void SmallWorldRand<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   throw runtime_error("Range search is not supported!");
 }
 
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query) {
+void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 /*
  * The trick of using large dense bitsets instead of unordered_set was 
  * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph

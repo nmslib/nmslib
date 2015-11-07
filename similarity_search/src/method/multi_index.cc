@@ -58,6 +58,7 @@ MultiIndex<dist_t>::CreateIndex(
                                                                  data,
                                                                  RemainParams));
   }
+
   SetQueryTimeParams(AnyParams({})); // reset query time parameters
 }
 

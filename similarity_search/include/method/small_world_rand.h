@@ -172,11 +172,10 @@ public:
   MSWNode* getRandomEntryPointLocked() const;
   size_t getEntryQtyLocked() const;
    
-  void kSearchElementsWithAttempts(const Space<dist_t>* space, 
-                                   const Object* queryObj, size_t NN, 
+  void kSearchElementsWithAttempts(const Object* queryObj, size_t NN, 
                                    size_t initAttempts, 
                                    std::priority_queue<EvaluatedMSWNodeDirect<dist_t>>& resultSet) const;
-  void add(const Space<dist_t>* space, MSWNode *newElement);
+  void add(MSWNode *newElement);
   void addCriticalSection(MSWNode *newElement);
   void link(MSWNode* first, MSWNode* second){
     // addFriend checks for duplicates

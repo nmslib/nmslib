@@ -39,24 +39,26 @@ template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const Pi
 class PermutationIndexIncrementalBin : public Index<dist_t> {
  public:
   PermutationIndexIncrementalBin(bool PrintProgress,
-                              const Space<dist_t>* space,
-                              const ObjectVector& data,
-                              AnyParams params);
+                              const Space<dist_t>& space,
+                              const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams);
   ~PermutationIndexIncrementalBin();
 
   const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const;
+  void Search(KNNQuery<dist_t>* query, IdType) const;
 
-  virtual vector<string> GetQueryTimeParamNames() const {
-    return vector<string>({"dbScanFrac", "knnAmp", "useSort", "skipChecking", "maxHammingDist"  });
-  };
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& pmgr);
+  virtual void SetQueryTimeParams(const AnyParams& QueryTimeParams);
 
  private:
-  const ObjectVector& data_;
+  const Space<dist_t>&  space_;
+  const ObjectVector&   data_;
+  bool                  PrintProgress_;
+
   ObjectVector        pivot_;
 
+  size_t        num_pivot_;
   size_t        bin_threshold_;
   float         db_scan_frac_; 
   size_t        knn_amp_;
@@ -67,12 +69,12 @@ class PermutationIndexIncrementalBin : public Index<dist_t> {
 
   std::vector<uint32_t> permtable_;
   
-  size_t computeDbScan(size_t K) {
+  size_t computeDbScan(size_t K) const {
     if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
     return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
 
-  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationIndexIncrementalBin);

@@ -33,6 +33,22 @@ namespace similarity {
 using std::multimap;
 using std::string;
 
+void ParseSpaceArg(const string& descStr, string& SpaceType, vector<string>& SpaceDesc) {
+  vector<string> tmp;
+  if (!SplitStr(descStr, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
+    throw runtime_error("Wrong format of the space argument: '" + descStr + "'");
+  }
+
+  SpaceType = tmp[0];
+  SpaceDesc.clear();
+
+  if (tmp.size() == 2) {
+    if (!SplitStr(tmp[1], SpaceDesc, ',')) {
+      throw runtime_error("Cannot split space arguments in: '" + tmp[1] + "'");
+    }
+  }
+}
+
 void ParseArg(const string& descStr, vector<string>& vDesc) {
   vDesc.clear();
 

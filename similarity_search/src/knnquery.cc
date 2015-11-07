@@ -31,7 +31,7 @@ namespace similarity {
 using std::unique_ptr;
 
 template <typename dist_t>
-KNNQuery<dist_t>::KNNQuery(const Space<dist_t>* space, const Object* query_object, const unsigned K, float eps)
+KNNQuery<dist_t>::KNNQuery(const Space<dist_t>& space, const Object* query_object, const unsigned K, float eps)
     : Query<dist_t>(space, query_object),
       K_(K), eps_(eps),
       result_(new KNNQueue<dist_t>(K)) {
@@ -126,7 +126,7 @@ void KNNQuery<dist_t>::Print() const {
       const Object* object = reinterpret_cast<const Object*>(clone->TopObject());
       std::cerr << object->id() << "("
                 << clone->TopDistance() << " "
-                << this->space_->IndexTimeDistance(object, this->QueryObject()) << ") ";
+                << this->space_.IndexTimeDistance(object, this->QueryObject()) << ") ";
     }
     clone->Pop();
   }

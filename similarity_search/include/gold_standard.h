@@ -92,7 +92,7 @@ template <class dist_t>
 class GoldStandard {
 public:
   GoldStandard(){}
-  GoldStandard(const typename similarity::Space<dist_t>* space,
+  GoldStandard(const typename similarity::Space<dist_t>& space,
               const ObjectVector& datapoints,
               const typename similarity::Query<dist_t>* query,
               size_t maxKeepEntryQty
@@ -141,7 +141,7 @@ public:
    */
   const vector<ResultEntry<dist_t>>&   GetSortedEntries() const { return  SortedAllEntries_;}
 private:
-  void DoSeqSearch(const Space<dist_t>* space,
+  void DoSeqSearch(const Space<dist_t>& space,
                    const ObjectVector&  datapoints,
                    const Object*        query) {
     WallClockTimer  wtm;
@@ -154,7 +154,7 @@ private:
       // Distance can be asymmetric, but the query is always on the right side
       SortedAllEntries_[i] = ResultEntry<dist_t>(datapoints[i]->id(),
                                                  datapoints[i]->label(),
-                                                 space->IndexTimeDistance(datapoints[i], query));
+                                                 space.IndexTimeDistance(datapoints[i], query));
     }
 
     wtm.split();

@@ -142,7 +142,7 @@ template <typename dist_t>
 class PolynomialPruner {
 public:
   static std::string GetName() { return "polynomial pruner"; }
-  PolynomialPruner(Space<dist_t>* space, const ObjectVector& data, bool bPrintProgres) : 
+  PolynomialPruner(Space<dist_t>& space, const ObjectVector& data, bool bPrintProgres) : 
       space_(space), data_(data), printProgress_(bPrintProgres), 
        alpha_left_(1), exp_left_(1), alpha_right_(1), exp_right_(1),
        alpha_left_default_(1), exp_left_default_(1), alpha_right_default_(1), exp_right_default_(1) {}
@@ -193,19 +193,19 @@ public:
     return str.str();
   }
 private:
-  Space<dist_t>*        space_;
+  Space<dist_t>&        space_;
   const ObjectVector    data_;
   bool                  printProgress_;
-
-  double    alpha_left_default_;
-  unsigned  exp_left_default_;
-  double    alpha_right_default_;
-  unsigned  exp_right_default_;
 
   double    alpha_left_;
   unsigned  exp_left_;
   double    alpha_right_;
   unsigned  exp_right_;
+
+  double    alpha_left_default_;
+  unsigned  exp_left_default_;
+  double    alpha_right_default_;
+  unsigned  exp_right_default_;
 };
 
 

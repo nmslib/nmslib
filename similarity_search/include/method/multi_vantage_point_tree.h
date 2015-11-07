@@ -163,9 +163,9 @@ class MultiVantagePointTree : public Index<dist_t> {
   Node* BuildTree(const Space<dist_t>* space, Entries& entries);
 
   template <typename QueryType>
-  void GenericSearch(Node* node, QueryType* query, Dists& path, size_t query_path_len, int& MaxLeavesToVisit);
+  void GenericSearch(Node* node, QueryType* query, Dists& path, size_t query_path_len, int& MaxLeavesToVisit) const;
 
-  const Space<dist_t> space_;
+  const Space<dist_t>& space_;
   const ObjectVector& data_;
   unique_ptr<Node>    root_;               // root node
 

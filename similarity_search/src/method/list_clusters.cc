@@ -51,18 +51,10 @@ ListClusters<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   pmgr.CheckUnused();
 }
 
-template <typename dist_t>
-vector<string>
-ListClusters<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
-  names.push_back("maxLeavesToVisit");
-  return names;
-}    
-    
 
 template <typename dist_t>
 ListClusters<dist_t>::ListClusters(
-    const Space<dist_t>* space,
+    const Space<dist_t>& space,
     const ObjectVector& data) : space_(space), data_(data) { }
 
 template <typename dist_t>
@@ -72,7 +64,7 @@ void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   string sVal; 
 
-  pmgr.GetParamOptional("strategy", "random");
+  pmgr.GetParamOptional("strategy", sVal, "random");
 
   if (sVal == "random") {
     Strategy_ =  ListClustersStrategy::kRandom;
@@ -96,6 +88,8 @@ void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams)
   pmgr.GetParamOptional("chunkBucket",   ChunkBucket_,   true);
 
   pmgr.CheckUnused();
+
+  this->ResetQueryTimeParams();
 
   // <distance to previous centers, object>
   DistObjectPairVector<dist_t> remaining;
@@ -126,7 +120,7 @@ void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams)
           center_skipped = true;
         } else {
           dp.push_back(std::make_tuple(
-                  space_->IndexTimeDistance(p.second, center), p.first, p.second));
+                  space_.IndexTimeDistance(p.second, center), p.first, p.second));
         }
       }
       std::sort(dp.begin(), dp.end(),
@@ -149,7 +143,7 @@ void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams)
           }
           center_skipped = true;
         } else {
-          const dist_t dist = space_->IndexTimeDistance(p.second, center);
+          const dist_t dist = space_.IndexTimeDistance(p.second, center);
           if (dist < Radius_) {
             new_cluster->AddObject(p.second, dist);
           } else {
@@ -193,7 +187,7 @@ void ListClusters<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 
 template <typename dist_t>
 template <typename QueryType>
-void ListClusters<dist_t>::GenSearch(QueryType* query) {
+void ListClusters<dist_t>::GenSearch(QueryType* query) const {
   if (MaxLeavesToVisit_ == FAKE_MAX_LEAVES_TO_VISIT) {
     for (const auto& cluster : cluster_list_) {
       const dist_t dist_qc = query->DistanceObjLeft(cluster->GetCenter());

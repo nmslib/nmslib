@@ -25,7 +25,7 @@
 namespace similarity {
 
 template <typename dist_t>
-Query<dist_t>::Query(const Space<dist_t>* space, const Object* query_object)
+Query<dist_t>::Query(const Space<dist_t>& space, const Object* query_object)
     : space_(space),
       query_object_(query_object),
       distance_computations_(0) {
@@ -55,7 +55,7 @@ dist_t Query<dist_t>::Distance(
     const Object* object1,
     const Object* object2) const {
   ++distance_computations_;
-  return space_->HiddenDistance(object1, object2);
+  return space_.HiddenDistance(object1, object2);
 }
 
 template <typename dist_t>
