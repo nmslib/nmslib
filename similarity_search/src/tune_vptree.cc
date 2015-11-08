@@ -42,7 +42,6 @@
 #include "tune.h"
 #include "method/vptree.h"
 #include "method/proj_vptree.h"
-#include "method/permutation_vptree.h"
 #include "method/perm_bin_vptree.h"
 #include "logging.h"
 #include "spacefactory.h"
@@ -100,7 +99,7 @@ void RunExper(unsigned AddRestartQty,
     }
   }
 
-  vector<string>  vAllowedMeth = {METH_VPTREE, METH_PROJ_VPTREE, METH_PERMUTATION_VPTREE, METH_PERM_BIN_VPTREE};
+  vector<string>  vAllowedMeth = {METH_VPTREE, METH_PROJ_VPTREE, METH_PERM_BIN_VPTREE};
   string          allowedMethList;
 
   for (string s: vAllowedMeth) allowedMethList += s + " ";

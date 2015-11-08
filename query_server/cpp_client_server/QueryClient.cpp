@@ -28,9 +28,6 @@
 
 #include <boost/program_options.hpp>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 
 using std::string;

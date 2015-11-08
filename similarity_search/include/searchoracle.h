@@ -188,7 +188,7 @@ public:
   string Dump() { 
     stringstream str;
 
-    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << " ExponentLeft: " << exp_left_ << 
+    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << " ExponentLeft: " << exp_left_ << " " <<
            ALPHA_RIGHT_PARAM << ": " << alpha_right_ << " ExponentRight: " << exp_right_ ;
     return str.str();
   }

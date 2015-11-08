@@ -42,10 +42,6 @@
 #include "init.h"
 #include "ztimer.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #define MAX_SPIN_LOCK_QTY 1000000
 #define SLEEP_DURATION    10
 
@@ -370,10 +366,8 @@ void ParseCommandLineForServer(int argc, char*argv[],
 
   string          methParams;
   size_t          defaultThreadQty = THREAD_COEFF; 
-#ifdef _OPENMP
-  defaultThreadQty = omp_get_max_threads() * THREAD_COEFF;
-#endif
 
+  defaultThreadQty = 2 * thread::hardware_concurrency();
 
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()

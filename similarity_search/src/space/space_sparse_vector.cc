@@ -36,16 +36,16 @@ template <typename dist_t>
 void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, size_t line_num, LabelType& label, vector<ElemType>& v) const
 {
   v.clear();
+
+  label = Object::extractLabel(line);
+
+  ReplaceSomePunct(line); 
   std::stringstream str(line);
 
   str.exceptions(std::ios::badbit);
 
   uint32_t id;
   dist_t   val;
-
-  label = Object::extractLabel(line);
-
-  ReplaceSomePunct(line); 
 
   try {
     while (str >> id && str >> val) {

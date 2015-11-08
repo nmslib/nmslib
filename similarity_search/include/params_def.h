@@ -79,7 +79,7 @@
 #define QUERY_TIME_PARAMS_PARAM_OPT "queryTimeParams"
 #define QUERY_TIME_PARAMS_PARAM_MSG "query-time method(s) parameters in the format:\nparam1=value1,param2=value2,...,paramK=valueK"
 
-#define INDEX_TIME_PARAMS_PARAM_OPT "indexTimeParams"
+#define INDEX_TIME_PARAMS_PARAM_OPT "createIndex"
 #define INDEX_TIME_PARAMS_PARAM_MSG "index-time method(s) parameters in the format:\nparam1=value1,param2=value2,...,paramK=valueK"
 
 #define METHOD_PARAM_OPT         "method,m"

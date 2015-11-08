@@ -52,8 +52,10 @@ void ParseSpaceArg(const string& descStr, string& SpaceType, vector<string>& Spa
 void ParseArg(const string& descStr, vector<string>& vDesc) {
   vDesc.clear();
 
+  if (descStr.empty()) return;
+
   if (!SplitStr(descStr, vDesc, ',')) {
-    throw runtime_error("Cannot split space arguments in: '" + descStr + "'");
+    throw runtime_error("Cannot split arguments in: '" + descStr + "'");
   }
 }
 

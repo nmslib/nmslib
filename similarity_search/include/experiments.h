@@ -245,7 +245,7 @@ public:
       const AnyParams& qtp = *QueryTimeParams[MethNum];
       Method.SetQueryTimeParams(qtp);
 
-      LOG(LIB_INFO) << ">>>> Index Time Parameters: " << qtp.ToString();
+      LOG(LIB_INFO) << ">>>> Query-Time Parameters: " << qtp.ToString();
 
       if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 

@@ -308,154 +308,160 @@ void RunExper(bool                                bPrintProgress,
 
     //ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
-    unique_ptr<Index<dist_t>>   IndexPtr;
+    if (MethodName.empty()) {
+      LOG(LIB_INFO) << "No method is specified, so we will not run any tests...";
+    } else {
+      unique_ptr<Index<dist_t>>   IndexPtr;
 
-    try {
-      LOG(LIB_INFO) << ">>>> Index type : "           << MethodName;
-      LOG(LIB_INFO) << ">>>> Index Time Parameters: " << IndexTimeParams->ToString();
+      try {
+        LOG(LIB_INFO) << ">>>> Index type : "           << MethodName;
+        LOG(LIB_INFO) << ">>>> Index Time Parameters: " << IndexTimeParams->ToString();
 
-      const double vmsize_before = mem_usage_measure.get_vmsize();
+        const double vmsize_before = mem_usage_measure.get_vmsize();
 
-      WallClockTimer wtm;
+        WallClockTimer wtm;
 
-      wtm.reset();
-      
+        wtm.reset();
+        
+          IndexPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
+                       CreateMethod(bPrintProgress,
+                                    MethodName, 
+                                    SpaceType, config.GetSpace(), 
+                                    config.GetDataObjects()));
 
-      IndexPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
-                     CreateMethod(bPrintProgress,
-                                  MethodName, 
-                                  SpaceType, config.GetSpace(), 
-                                  config.GetDataObjects()));
+        bool bCreate = LoadIndexLoc.empty();
 
-      bool bCreate = LoadIndexLoc.empty();
+        if (bCreate) {
+          LOG(LIB_INFO) << "Creating an index from scratch";
 
-      if (bCreate) {
-        LOG(LIB_INFO) << "Creating an index from scratch";
-
-        IndexPtr->CreateIndex(*IndexTimeParams);
-      } else {
-        string loc = LoadIndexLoc + indexLocAdd;
-        LOG(LIB_INFO) << "Loading an index for test set id " << TestSetId << " using location: " << loc;
-        IndexPtr->LoadIndex(loc);
-      }
-
-      if (!TestSetId) MethodDescStr = IndexPtr->ToString();
-
-      LOG(LIB_INFO) << "==============================================";
-
-      const double vmsize_after = mem_usage_measure.get_vmsize();
-
-      wtm.split();
-
-      const double IndexTime = bCreate ? double(wtm.elapsed())/1e6 : 0;
-      const double LoadTime  = !bCreate ? double(wtm.elapsed())/1e6 : 0;
-
-      const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
-      const double TotalMemByMethod =  vmsize_after - vmsize_before + data_size;
-      double AdjustedMemByMethod = TotalMemByMethod;
-
-      if (IndexPtr->DuplicateData()) AdjustedMemByMethod -= data_size;
-
-      wtm.reset();
-      if (!SaveIndexLoc.empty()) {
-        string loc = SaveIndexLoc + indexLocAdd;
-        LOG(LIB_INFO) << "Saving an index for test set id " << TestSetId << " using location: " << loc;
-        IndexPtr->SaveIndex(loc);
-      }
-      wtm.split();
-      const double SaveTime  = double(wtm.elapsed())/1e6;
-  
-
-      LOG(LIB_INFO) << ">>>> Process memory usage:  " << vmsize_after         << " MBs";
-      LOG(LIB_INFO) << ">>>> Virtual memory usage:  " << TotalMemByMethod     << " MBs";
-      LOG(LIB_INFO) << ">>>> Adjusted memory usage: " << AdjustedMemByMethod  << " MBs";
-      LOG(LIB_INFO) << ">>>> Data size:             " << data_size            << " MBs";
-      LOG(LIB_INFO) << ">>>> Indexing time:         " << IndexTime            << " sec";
-      LOG(LIB_INFO) << ">>>> Index loading time:    " << LoadTime             << " sec";
-      LOG(LIB_INFO) << ">>>> Index saving  time:    " << SaveTime             << " sec";
-
-      for (size_t qtmParamId = 0; qtmParamId < QueryTimeParams.size(); ++qtmParamId) {
-        for (size_t i = 0; i < config.GetRange().size(); ++i) {
-          MetaAnalysis* res = ExpResRange[i][qtmParamId];
-          res->SetMem(TestSetId, AdjustedMemByMethod);
-          res->SetIndexTime(TestSetId, IndexTime);
-          res->SetLoadTime(TestSetId, LoadTime);
-          res->SetSaveTime(TestSetId, SaveTime);
+          IndexPtr->CreateIndex(*IndexTimeParams);
+        } else {
+          string loc = LoadIndexLoc + indexLocAdd;
+          LOG(LIB_INFO) << "Loading an index for test set id " << TestSetId << " using location: " << loc;
+          IndexPtr->LoadIndex(loc);
         }
-        for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-          MetaAnalysis* res = ExpResKNN[i][qtmParamId];
-          res->SetMem(TestSetId, TotalMemByMethod);
-          res->SetIndexTime(TestSetId, IndexTime);
-          res->SetLoadTime(TestSetId, LoadTime);
-          res->SetSaveTime(TestSetId, SaveTime);
+
+        if (!TestSetId) MethodDescStr = IndexPtr->ToString();
+
+        LOG(LIB_INFO) << "==============================================";
+
+        const double vmsize_after = mem_usage_measure.get_vmsize();
+
+        wtm.split();
+
+        const double IndexTime = bCreate ? double(wtm.elapsed())/1e6 : 0;
+        const double LoadTime  = !bCreate ? double(wtm.elapsed())/1e6 : 0;
+
+        const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
+        const double TotalMemByMethod =  vmsize_after - vmsize_before + data_size;
+        double AdjustedMemByMethod = TotalMemByMethod;
+
+        if (IndexPtr->DuplicateData()) AdjustedMemByMethod -= data_size;
+
+        wtm.reset();
+        if (!SaveIndexLoc.empty()) {
+          string loc = SaveIndexLoc + indexLocAdd;
+          LOG(LIB_INFO) << "Saving an index for test set id " << TestSetId << " using location: " << loc;
+          IndexPtr->SaveIndex(loc);
         }
+        wtm.split();
+        const double SaveTime  = double(wtm.elapsed())/1e6;
+    
+
+        LOG(LIB_INFO) << ">>>> Process memory usage:  " << vmsize_after         << " MBs";
+        LOG(LIB_INFO) << ">>>> Virtual memory usage:  " << TotalMemByMethod     << " MBs";
+        LOG(LIB_INFO) << ">>>> Adjusted memory usage: " << AdjustedMemByMethod  << " MBs";
+        LOG(LIB_INFO) << ">>>> Data size:             " << data_size            << " MBs";
+        LOG(LIB_INFO) << ">>>> Indexing time:         " << IndexTime            << " sec";
+        LOG(LIB_INFO) << ">>>> Index loading time:    " << LoadTime             << " sec";
+        LOG(LIB_INFO) << ">>>> Index saving  time:    " << SaveTime             << " sec";
+
+        for (size_t qtmParamId = 0; qtmParamId < QueryTimeParams.size(); ++qtmParamId) {
+          for (size_t i = 0; i < config.GetRange().size(); ++i) {
+            MetaAnalysis* res = ExpResRange[i][qtmParamId];
+            res->SetMem(TestSetId, AdjustedMemByMethod);
+            res->SetIndexTime(TestSetId, IndexTime);
+            res->SetLoadTime(TestSetId, LoadTime);
+            res->SetSaveTime(TestSetId, SaveTime);
+          }
+          for (size_t i = 0; i < config.GetKNN().size(); ++i) {
+            MetaAnalysis* res = ExpResKNN[i][qtmParamId];
+            res->SetMem(TestSetId, TotalMemByMethod);
+            res->SetIndexTime(TestSetId, IndexTime);
+            res->SetLoadTime(TestSetId, LoadTime);
+            res->SetSaveTime(TestSetId, SaveTime);
+          }
+        }
+
+        Experiments<dist_t>::RunAll(bPrintProgress,
+                                    ThreadTestQty, 
+                                    TestSetId,
+                                    managerGS,
+                                    ExpResRange, ExpResKNN,
+                                    config, 
+                                    *IndexPtr, 
+                                    QueryTimeParams);
+
+
+      } catch (const std::exception& e) {
+        LOG(LIB_ERROR) << "Exception: " << e.what();
+        bFail = true;
+      } catch (...) {
+        LOG(LIB_ERROR) << "Unknown exception";
+        bFail = true;
       }
 
-      Experiments<dist_t>::RunAll(bPrintProgress,
-                                  ThreadTestQty, 
-                                  TestSetId,
-                                  managerGS,
-                                  ExpResRange, ExpResKNN,
-                                  config, 
-                                  *IndexPtr, 
-                                  QueryTimeParams);
-
-
-    } catch (const std::exception& e) {
-      LOG(LIB_ERROR) << "Exception: " << e.what();
-      bFail = true;
-    } catch (...) {
-      LOG(LIB_ERROR) << "Unknown exception";
-      bFail = true;
-    }
-
-    if (bFail) {
-      LOG(LIB_FATAL) << "Failure due to an exception!";
+      if (bFail) {
+        LOG(LIB_FATAL) << "Failure due to an exception!";
+      }
     }
   }
 
-  for (size_t MethNum = 0; MethNum < QueryTimeParams.size(); ++MethNum) {
-    // Don't overwrite file after we output data at least for one method!
-    bool DoAppendHere = DoAppend || MethNum;
+  // Don't save results, if the method wasn't specified
+  if (!MethodName.empty()) {
+    for (size_t MethNum = 0; MethNum < QueryTimeParams.size(); ++MethNum) {
+      // Don't overwrite file after we output data at least for one method!
+      bool DoAppendHere = DoAppend || MethNum;
 
-    string Print, Data, Header;
+      string Print, Data, Header;
 
-    for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      MetaAnalysis* res = ExpResRange[i][MethNum];
+      for (size_t i = 0; i < config.GetRange().size(); ++i) {
+        MetaAnalysis* res = ExpResRange[i][MethNum];
 
-      ProcessResults(config, *res, MethodDescStr,
-                    IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
-                    Print, Header, Data);
-      LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
-      LOG(LIB_INFO) << Print;
-      LOG(LIB_INFO) << "Data: " << Header << Data;
+        ProcessResults(config, *res, MethodDescStr,
+                      IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
+                      Print, Header, Data);
+        LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
+        LOG(LIB_INFO) << Print;
+        LOG(LIB_INFO) << "Data: " << Header << Data;
 
-      if (!ResFilePrefix.empty()) {
-        stringstream str;
-        str << ResFilePrefix << "_r=" << config.GetRange()[i];
-        OutData(DoAppendHere, str.str(), Print, Header, Data);
+        if (!ResFilePrefix.empty()) {
+          stringstream str;
+          str << ResFilePrefix << "_r=" << config.GetRange()[i];
+          OutData(DoAppendHere, str.str(), Print, Header, Data);
+        }
+
+        delete res;
       }
 
-      delete res;
-    }
+      for (size_t i = 0; i < config.GetKNN().size(); ++i) {
+        MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-    for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      MetaAnalysis* res = ExpResKNN[i][MethNum];
+        ProcessResults(config, *res, MethodDescStr,
+                      IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
+                      Print, Header, Data);
+        LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
+        LOG(LIB_INFO) << Print;
+        LOG(LIB_INFO) << "Data: " << Header << Data;
 
-      ProcessResults(config, *res, MethodDescStr,
-                    IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
-                    Print, Header, Data);
-      LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
-      LOG(LIB_INFO) << Print;
-      LOG(LIB_INFO) << "Data: " << Header << Data;
+        if (!ResFilePrefix.empty()) {
+          stringstream str;
+          str << ResFilePrefix << "_K=" << config.GetKNN()[i];
+          OutData(DoAppendHere, str.str(), Print, Header, Data);
+        }
 
-      if (!ResFilePrefix.empty()) {
-        stringstream str;
-        str << ResFilePrefix << "_K=" << config.GetKNN()[i];
-        OutData(DoAppendHere, str.str(), Print, Header, Data);
+        delete res;
       }
-
-      delete res;
     }
   }
 }

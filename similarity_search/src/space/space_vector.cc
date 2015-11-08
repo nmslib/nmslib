@@ -126,13 +126,13 @@ void VectorSpace<dist_t>::ReadVec(string line, LabelType& label, vector<dist_t>&
 
   label = Object::extractLabel(line);
 
+  ReplaceSomePunct(line); 
   stringstream str(line);
 
   str.exceptions(ios::badbit);
 
   dist_t val;
 
-  ReplaceSomePunct(line); 
 
   try {
     while (str >> val) {
