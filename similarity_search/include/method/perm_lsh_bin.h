@@ -49,7 +49,7 @@ class PermutationIndexLSHBin : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query, IdType) const {GenSearch(query);}
   void Search(KNNQuery<dist_t>* query, IdType) const {GenSearch(query);}
 
-  void SetQueryTimeParams(const AnyParams&);
+  void SetQueryTimeParams(const AnyParams &) {}
  private:
   const Space<dist_t>&  space_;
   const ObjectVector&   data_;

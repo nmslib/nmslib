@@ -242,7 +242,10 @@ public:
       * before running any tests, in particular, because
       * the function SetQueryTimeParams is NOT supposed to be THREAD-SAFE. 
       */
-      Method.SetQueryTimeParams(*QueryTimeParams[MethNum]);
+      const AnyParams& qtp = *QueryTimeParams[MethNum];
+      Method.SetQueryTimeParams(qtp);
+
+      LOG(LIB_INFO) << ">>>> Index Time Parameters: " << qtp.ToString();
 
       if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 

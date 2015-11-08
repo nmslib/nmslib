@@ -70,7 +70,7 @@ class BBTree : public Index<dist_t> {
            const ObjectVector& data, size_t bucket_size, bool use_optim);
     ~BBNode();
 
-    inline bool IsLeaf();
+    inline bool IsLeaf() const;
 
     template <typename QueryType>
     bool RecBinSearch(const BregmanDiv<dist_t>* div,
@@ -109,6 +109,8 @@ class BBTree : public Index<dist_t> {
     BBNode*       right_child_;
     DISABLE_COPY_AND_ASSIGN(BBNode);
   };
+
+  const ObjectVector&       data_;
 
   unique_ptr<BBNode>        root_node_;
   size_t                    BucketSize_;

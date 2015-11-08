@@ -62,7 +62,7 @@ void PermutationIndexLSHBin<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   LOG(LIB_INFO) << "bit sample qty   = " << bit_sample_qty_;
 
   pmgr.CheckUnused();
-  SetQueryTimeParams(getEmptyParams());
+  this->ResetQueryTimeParams();
 
   pivots_.resize(num_hash_);
   bit_sample_flags_.resize(num_hash_);

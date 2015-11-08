@@ -87,8 +87,9 @@ void OutData(bool DoAppend, const string& FilePrefix,
 template <typename dist_t>
 void ProcessResults(const ExperimentConfig<dist_t>& config,
                     MetaAnalysis& ExpRes,
-                    const string& MethDescStr,
-                    const string& MethParamStr,
+                    const string& MethodName,
+                    const string& IndexParamStr,
+                    const string& QueryTimeParamStr,
                     string& PrintStr, // For display
                     string& HeaderStr,
                     string& DataStr   /* to be processed by a script */) {
@@ -96,9 +97,9 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tMethodParams\tNumData" << std::endl;
+  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tIndexParams\tQueryTimeParams\tNumData" << std::endl;
 
-  Data << "\"" << MethDescStr << "\"\t";
+  Data << "\"" << MethodName << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
   Data << ExpRes.GetPrecisionOfApproxAvg() << "\t";
   Data << ExpRes.GetRelPosErrorAvg() << "\t";
@@ -113,11 +114,12 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << ExpRes.GetLoadTimeAvg() << "\t";
   Data << ExpRes.GetSaveTimeAvg() << "\t";
   Data << ExpRes.GetQueryPerSecAvg() << "\t";
-  Data << "\"" << MethParamStr << "\"" << "\t";
+  Data << "\"" << IndexParamStr << "\"" << "\t";
+  Data << "\"" << QueryTimeParamStr << "\"" << "\t";
   Data << config.GetDataObjects().size();
   Data << std::endl;
 
-  PrintStr  = produceHumanReadableReport(config, ExpRes, MethDescStr, MethParamStr);
+  PrintStr  = produceHumanReadableReport(config, ExpRes, MethodName, IndexParamStr, QueryTimeParamStr);
 
   DataStr   = Data.str();
   HeaderStr = Header.str();
@@ -248,22 +250,19 @@ void RunExper(bool                                bPrintProgress,
   MemUsage  mem_usage_measure;
 
 
-  std::vector<std::string>          MethDescStr;
-  std::vector<std::string>          MethParams;
   vector<double>                    MemUsage;
 
+  CHECK_MSG(!QueryTimeParams.empty(), "The array of query-time parameters shouldn't be empty!");
+
   vector<vector<MetaAnalysis*>> ExpResRange(config.GetRange().size(),
-                                                vector<MetaAnalysis*>(MethodsDesc.size()));
+                                                vector<MetaAnalysis*>(QueryTimeParams.size()));
   vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
-                                              vector<MetaAnalysis*>(MethodsDesc.size()));
+                                              vector<MetaAnalysis*>(QueryTimeParams.size()));
 
   GoldStandardManager<dist_t> managerGS(config);
 
 
-
-
-  if (QueryTimeParams.empty()) 
-    QueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams({})));
+  string MethodDescStr;
 
   // qtmParamId is the ID of the query time parameter set
   for (size_t qtmParamId = 0; qtmParamId < QueryTimeParams.size(); ++qtmParamId) {
@@ -309,14 +308,11 @@ void RunExper(bool                                bPrintProgress,
 
     //ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
-    shared_ptr<Index<dist_t>>   IndexPtr;
+    unique_ptr<Index<dist_t>>   IndexPtr;
 
     try {
-      const AnyParams& MethPars = methElem->methPars_;
-      const string& MethParStr = MethPars.ToString();
-
-      LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
-      LOG(LIB_INFO) << ">>>> Parameters: " << MethParStr;
+      LOG(LIB_INFO) << ">>>> Index type : "           << MethodName;
+      LOG(LIB_INFO) << ">>>> Index Time Parameters: " << IndexTimeParams->ToString();
 
       const double vmsize_before = mem_usage_measure.get_vmsize();
 
@@ -325,25 +321,25 @@ void RunExper(bool                                bPrintProgress,
       wtm.reset();
       
 
-      IndexPtr = shared_ptr<Index<dist_t>>(
-                         MethodFactoryRegistry<dist_t>::Instance().
-                         CreateMethod(bPrintProgress,
-                                      MethodName, 
-                                      SpaceType, config.GetSpace(), 
-                                      config.GetDataObjects())
-                         );
+      IndexPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
+                     CreateMethod(bPrintProgress,
+                                  MethodName, 
+                                  SpaceType, config.GetSpace(), 
+                                  config.GetDataObjects()));
 
       bool bCreate = LoadIndexLoc.empty();
 
       if (bCreate) {
         LOG(LIB_INFO) << "Creating an index from scratch";
 
-        IndexPtr->CreateIndex(IndexTimeParams);
+        IndexPtr->CreateIndex(*IndexTimeParams);
       } else {
         string loc = LoadIndexLoc + indexLocAdd;
         LOG(LIB_INFO) << "Loading an index for test set id " << TestSetId << " using location: " << loc;
         IndexPtr->LoadIndex(loc);
       }
+
+      if (!TestSetId) MethodDescStr = IndexPtr->ToString();
 
       LOG(LIB_INFO) << "==============================================";
 
@@ -364,7 +360,7 @@ void RunExper(bool                                bPrintProgress,
       if (!SaveIndexLoc.empty()) {
         string loc = SaveIndexLoc + indexLocAdd;
         LOG(LIB_INFO) << "Saving an index for test set id " << TestSetId << " using location: " << loc;
-        IndexPtr->SaveIndexLoc(loc);
+        IndexPtr->SaveIndex(loc);
       }
       wtm.split();
       const double SaveTime  = double(wtm.elapsed())/1e6;
@@ -418,9 +414,7 @@ void RunExper(bool                                bPrintProgress,
     }
   }
 
-  for (auto it = MethDescStr.begin(); it != MethDescStr.end(); ++it) {
-    size_t MethNum = it - MethDescStr.begin();
-
+  for (size_t MethNum = 0; MethNum < QueryTimeParams.size(); ++MethNum) {
     // Don't overwrite file after we output data at least for one method!
     bool DoAppendHere = DoAppend || MethNum;
 
@@ -429,7 +423,9 @@ void RunExper(bool                                bPrintProgress,
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       MetaAnalysis* res = ExpResRange[i][MethNum];
 
-      ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
+      ProcessResults(config, *res, MethodDescStr,
+                    IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
+                    Print, Header, Data);
       LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
       LOG(LIB_INFO) << Print;
       LOG(LIB_INFO) << "Data: " << Header << Data;
@@ -446,7 +442,9 @@ void RunExper(bool                                bPrintProgress,
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
       MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-      ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
+      ProcessResults(config, *res, MethodDescStr,
+                    IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
+                    Print, Header, Data);
       LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
       LOG(LIB_INFO) << Print;
       LOG(LIB_INFO) << "Data: " << Header << Data;

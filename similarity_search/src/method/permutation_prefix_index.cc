@@ -222,23 +222,24 @@ PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(
 }
 
 template <typename dist_t>
-PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(const AnyParams& IndexParams) {
+void PermutationPrefixIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
   bool chunkBucket;
 
   pmgr.GetParamOptional("numPivot",     num_pivot_,       16);
   pmgr.GetParamOptional("chunkBucket",  chunkBucket,      true);
-  pmgr.GetParamOptional("prefixLength", prefix_length_,   max(1, num_pivot_/4));
+  pmgr.GetParamOptional("prefixLength", prefix_length_,   max<size_t>(1, num_pivot_/4));
 
   pmgr.CheckUnused();
+  this->ResetQueryTimeParams();
 
   LOG(LIB_INFO) << "# pivots         = " << num_pivot_;
   LOG(LIB_INFO) << "prefix length    = " << prefix_length_;
   LOG(LIB_INFO) << "ChunkBucket      = " << chunkBucket;
 
-  GetPermutationPivot(data_, &space_, num_pivot_, &pivot_);
-  prefixtree_ = new PrefixTree;
+  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
+  prefixtree_.reset(new PrefixTree);
   Permutation permutation;
 
 
@@ -246,9 +247,9 @@ PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(const AnyParams& IndexPar
                                 new ProgressDisplay(data_.size(), cerr)
                                 :NULL);
 
-  for (const auto& it : data) {
+  for (const auto& it : data_) {
     permutation.clear();
-    GetPermutationPPIndex(pivot_, &space_, it, &permutation);
+    GetPermutationPPIndex(pivot_, space_, it, &permutation);
     prefixtree_->Insert(permutation, it, prefix_length_);
 
     if (progress_bar) ++(*progress_bar);
@@ -268,7 +269,7 @@ const std::string PermutationPrefixIndex<dist_t>::ToString() const {
 
 template <typename dist_t>
 template <typename QueryType>
-void PermutationPrefixIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
+void PermutationPrefixIndex<dist_t>::GenSearch(QueryType* query, size_t K) const {
   if (prefix_length_ == 0 || prefix_length_ > num_pivot_) {
     stringstream err;
     err << METH_PERMUTATION_PREFIX_IND
@@ -299,12 +300,12 @@ void PermutationPrefixIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
 }
 
 template <typename dist_t>
-void PermutationPrefixIndex<dist_t>::Search(RangeQuery<dist_t>* query) {
+void PermutationPrefixIndex<dist_t>::Search(RangeQuery<dist_t>* query, IdType ) const {
   GenSearch(query, 0);
 }
 
 template <typename dist_t>
-void PermutationPrefixIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
+void PermutationPrefixIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType ) const {
   GenSearch(query, query->GetK());
 }
 

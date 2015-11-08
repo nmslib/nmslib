@@ -37,51 +37,37 @@ template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*,
 PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
     Space<dist_t>& space,
     const ObjectVector& data) : 
-      space_(space), data_(data),   // reference
+      space_(space), data_(data),   
       VPTreeSpace_(new SpaceBitHamming())
-{
+{}
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
-  double        DbScanFrac;
   size_t        NumPivot;
 
-  pmgr.GetParamOptional("dbScanFrac", DbScanFrac, 0.05);
   pmgr.GetParamOptional("numPivot",   NumPivot, 16);
   pmgr.GetParamOptional("binThreshold", bin_threshold_, NumPivot / 2);
 
   bin_perm_word_qty_ = (NumPivot + 31)/32;
 
-  if (DbScanFrac < 0.0 || DbScanFrac > 1.0) {
-    PREPARE_RUNTIME_ERROR(err) << METH_PERM_BIN_VPTREE << " requires that dbScanFrac is in the range [0,1]";
-    THROW_RUNTIME_ERR(err);
-  }
-
 
   LOG(LIB_INFO) << "# pivots                  = " << NumPivot;
   LOG(LIB_INFO) << "# binarization threshold = "  << bin_threshold_;
   LOG(LIB_INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
-  LOG(LIB_INFO) << "db scan fraction = " << DbScanFrac;
 
-  AnyParams RemainIndexParams = 
-      pmgr.ExtractParametersExcept( 
-            { "dbScanFrac", "numPivot", "binThreshold", 
-              ALPHA_LEFT_PARAM, ALPHA_RIGHT_PARAM,
-              EXP_LEFT_PARAM, EXP_RIGHT_PARAM
-            });
+  AnyParams RemainParams = pmgr.ExtractParametersExcept({ "numPivot", "binThreshold"});
 
   pmgr.CheckUnused();
+  this->ResetQueryTimeParams(); // set query-time parameters to default values
 
-  // db_can_qty_ should always be > 0
-  db_scan_qty_ = max(size_t(1), static_cast<size_t>(DbScanFrac * data.size())),
-  GetPermutationPivot(data, space, NumPivot, &pivots_);
-  BinPermData_.resize(data.size());
+  GetPermutationPivot(data_, space_, NumPivot, &pivots_);
+  BinPermData_.resize(data_.size());
 
-  for (size_t i = 0; i < data.size(); ++i) {
+  for (size_t i = 0; i < data_.size(); ++i) {
     Permutation TmpPerm;
-    GetPermutation(pivots_, &space_, data[i], &TmpPerm);
+    GetPermutation(pivots_, space_, data_[i], &TmpPerm);
     vector<uint32_t>  binPivot;
     Binarize(TmpPerm, bin_threshold_, binPivot);
     CHECK(binPivot.size() == bin_perm_word_qty_);
@@ -94,8 +80,33 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& Ind
                                           *VPTreeSpace_,
                                           BinPermData_));
 
-  VPTreeIndex_->CreateIndex(RemainIndexParams);
+  VPTreeIndex_->CreateIndex(RemainParams);
 }
+
+template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
+void PermBinVPTree<dist_t, RankCorrelDistFunc>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager pmgr(QueryTimeParams);
+
+  AnyParams vptreeQueryParams = pmgr.ExtractParameters(VPTreeIndex_->getQueryTimeParams());
+  VPTreeIndex_->SetQueryTimeParams(vptreeQueryParams);
+
+  float dbScanFrac = 0;
+
+  pmgr.GetParamOptional("dbScanFrac",   dbScanFrac, 0.05);
+
+  if (dbScanFrac < 0.0 || dbScanFrac > 1.0) {
+    PREPARE_RUNTIME_ERR(err) << METH_PERM_BIN_VPTREE << " requires that dbScanFrac is in the range [0,1]";
+    THROW_RUNTIME_ERR(err);
+  }
+
+  db_scan_qty_ = max(size_t(1), static_cast<size_t>(dbScanFrac * data_.size()));
+
+  LOG(LIB_INFO) << "Set query-time parameters for PermBinVPTree:";
+  LOG(LIB_INFO) << "dbScanFrac=" << dbScanFrac;
+
+  pmgr.CheckUnused();
+}
+
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 PermBinVPTree<dist_t, RankCorrelDistFunc>::~PermBinVPTree() {
@@ -112,7 +123,7 @@ const std::string PermBinVPTree<dist_t, RankCorrelDistFunc>::ToString() const {
 }
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
-void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* query) {
+void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* query, IdType) const {
   Permutation perm_q;
   GetPermutation(pivots_, query, &perm_q);
 
@@ -122,9 +133,9 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* query
 
   unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, -1, binPivot));
 
-  unique_ptr<KNNQuery<int>> VPTreeQuery(new KNNQuery<int>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
+  unique_ptr<KNNQuery<int>> VPTreeQuery(new KNNQuery<int>(*VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 
-  VPTreeIndex_->Search(VPTreeQuery.get());
+  VPTreeIndex_->Search(VPTreeQuery.get(), -1);
 
   unique_ptr<KNNQueue<int>> ResQueue(VPTreeQuery->Result()->Clone());
 
@@ -136,7 +147,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* query
 }
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
-void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* query) {
+void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* query, IdType) const {
   Permutation perm_q;
   GetPermutation(pivots_, query, &perm_q);
 
@@ -146,9 +157,9 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* query) 
 
   unique_ptr<Object>  QueryObject(VPTreeSpace_->CreateObjFromVect(0, -1, binPivot));
 
-  unique_ptr<KNNQuery<int>> VPTreeQuery(new KNNQuery<int>(VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
+  unique_ptr<KNNQuery<int>> VPTreeQuery(new KNNQuery<int>(*VPTreeSpace_, QueryObject.get(), db_scan_qty_, 0.0));
 
-  VPTreeIndex_->Search(VPTreeQuery.get());
+  VPTreeIndex_->Search(VPTreeQuery.get(), -1);
 
   unique_ptr<KNNQueue<int>> ResQueue(VPTreeQuery->Result()->Clone());
 

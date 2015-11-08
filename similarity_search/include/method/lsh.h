@@ -138,6 +138,8 @@ class LSH : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query, IdType ) const;
   void SetQueryTimeParams(const AnyParams& params) {};
 
+  // LSH does copy all data
+  virtual bool DuplicateData() { return true; }
  private:
   typedef lshkit::LshIndex<TailRepeatHash<lsh_t>, unsigned> LshIndexType;
 

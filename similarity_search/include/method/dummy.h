@@ -93,7 +93,18 @@ class DummyMethod : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query, IdType) const;
   void Search(KNNQuery<dist_t>* query, IdType) const;
 
+  /*
+   * In rare cases, mostly when we wrap up 3rd party methods,
+   * we simply duplicate the data set. This function
+   * let the experimentation code know this, so it could
+   * adjust the memory consumption of the index.
+   *
+   * Note, however, that this method doesn't create any data duplicates.
+   */
+  virtual bool DuplicateData() { return false; }
+
  private:
+  bool                    data_duplicate_;
   const ObjectVector&     data_;
   Space<dist_t>&          space_;
   bool                    bDoSeqSearch_;

@@ -43,13 +43,13 @@ using std::unique_ptr;
 template <typename dist_t>
 BBTree<dist_t>::BBTree(
     const Space<dist_t>& space, 
-    const ObjectVector& data)  {
+    const ObjectVector& data)  : data_(data) {
   BregmanDivSpace_ = BregmanDiv<dist_t>::ConvertFrom(&space); // Should be the special space!
 }
 
 
 template <typename dist_t>
-BBTree<dist_t>::CreateIndex(const AnyParams& MethParams) {
+void BBTree<dist_t>::CreateIndex(const AnyParams& MethParams) {
   AnyParamManager pmgr(MethParams);
 
   pmgr.GetParamOptional("bucketSize", BucketSize_, 50);
@@ -61,7 +61,7 @@ BBTree<dist_t>::CreateIndex(const AnyParams& MethParams) {
 
   pmgr.CheckUnused();
 
-  root_node_.reset(new BBNode(BregmanDivSpace_, data, BucketSize_, ChunkBucket_));
+  root_node_.reset(new BBNode(BregmanDivSpace_, data_, BucketSize_, ChunkBucket_));
 }
 
 template <typename dist_t>
@@ -159,7 +159,7 @@ BBTree<dist_t>::BBNode::~BBNode() {
 }
 
 template <typename dist_t>
-bool BBTree<dist_t>::BBNode::IsLeaf() {
+bool BBTree<dist_t>::BBNode::IsLeaf() const {
   return is_leaf_;
 }
 
@@ -228,7 +228,7 @@ template <typename QueryType>
 void BBTree<dist_t>::BBNode::LeftSearch(const BregmanDiv<dist_t>* div, 
                                         Object* query_gradient, 
                                         QueryType* query,
-                                        int& MaxLeavesToVisit) {
+                                        int& MaxLeavesToVisit) const {
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (IsLeaf()) {
     --MaxLeavesToVisit;

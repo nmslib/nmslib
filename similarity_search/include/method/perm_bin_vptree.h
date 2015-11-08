@@ -55,16 +55,7 @@ class PermBinVPTree : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query, IdType) const;
   void Search(KNNQuery<dist_t>* query, IdType) const;
 
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams) {
-    CHECK_MSG(VPTreeIndex_ != NULL, "Expecting non-null pointer for the VP-tree index in SetQueryTimeParams");
-    AnyParamManager pmgr(QueryTimeParams);
-
-    AnyParams vptreeQueryParams =
-      pmgr.ExtractParameters(VPTreeIndex_->getQueryTimeParams());
-    VPTreeIndex_->SetQueryTimeParams(vptreeQueryParams);
-
-    pmgr.CheckUnused();
-  }
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
  private:
 
   Space<dist_t>&            space_;

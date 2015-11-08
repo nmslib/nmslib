@@ -34,13 +34,15 @@ namespace similarity {
                     const ExperimentConfig<dist_t>& config,
                     MetaAnalysis& ExpRes,
                     const string& MethDescStr,
-                    const string& MethParamStr) {
+                    const string& IndexParamStr,
+                    const string& QueryTimeParamStr) {
     stringstream  Print;
 
     Print << std::endl << 
             "===================================" << std::endl;
     Print << MethDescStr << std::endl;
-    Print << MethParamStr << std::endl;
+    Print << "Index parameters:      " << IndexParamStr     << std::endl;
+    Print << "Query-time parameters: " << QueryTimeParamStr << std::endl;
     Print << "===================================" << std::endl;
     Print << "# of points: " << config.GetDataObjects().size() << std::endl;
     Print << "# of queries: " << config.GetQueryToRunQty() << std::endl;

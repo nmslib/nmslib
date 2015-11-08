@@ -164,7 +164,7 @@ public:
 
 };
 
-const AnyParams& getEmptyParams() {
+const inline AnyParams& getEmptyParams() {
   static AnyParams empty;
   return empty;
 }

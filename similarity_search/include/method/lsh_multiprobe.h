@@ -46,6 +46,8 @@ class MultiProbeLSH : public Index<dist_t> {
 
   void SetQueryTimeParams(const AnyParams& params) {};
 
+  // LSH does copy all data
+  virtual bool DuplicateData() { return true; }
  private:
   typedef lshkit::MultiProbeLshIndex<unsigned> LshIndexType;
 

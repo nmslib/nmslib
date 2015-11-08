@@ -42,7 +42,7 @@ class VPTree : public Index<dist_t> {
   VPTree(bool PrintProgress,
          Space<dist_t>& space,
          const ObjectVector& data,
-         bool use_random_center);
+         bool use_random_center = true);
 
   void CreateIndex(const AnyParams& IndexParams);
 
