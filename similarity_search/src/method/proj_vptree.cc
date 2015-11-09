@@ -112,7 +112,6 @@ void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   LOG(LIB_INFO) << "intermDim    = " << intermDim;
   LOG(LIB_INFO) << "binThreshold = " << binThreshold;
 
-  this->ResetQueryTimeParams();
 
   /*
    * Let's extract all parameters before doing
@@ -176,6 +175,9 @@ void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
                                           *VPTreeSpace_,
                                           projData_, true /* use random centers */));
   VPTreeIndex_->CreateIndex(RemainParams);
+
+  // Reset parameters only after the VP-tree index is created!
+  this->ResetQueryTimeParams();
 }
 
 template <typename dist_t>

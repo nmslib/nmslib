@@ -59,8 +59,6 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& Ind
 
   AnyParams RemainParams = pmgr.ExtractParametersExcept({ "numPivot", "binThreshold"});
 
-  pmgr.CheckUnused();
-  this->ResetQueryTimeParams(); // set query-time parameters to default values
 
   GetPermutationPivot(data_, space_, NumPivot, &pivots_);
   BinPermData_.resize(data_.size());
@@ -81,6 +79,8 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& Ind
                                           BinPermData_));
 
   VPTreeIndex_->CreateIndex(RemainParams);
+  // Reset parameters only after the VP-tree index is created!
+  this->ResetQueryTimeParams();
 }
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>

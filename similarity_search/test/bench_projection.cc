@@ -109,7 +109,7 @@ void benchProjection(size_t repeatQty,
     LOG(LIB_INFO) << "Creating projection object set " << (rr + 1) << " out of " << repeatQty;
     projObj.reset(
       Projection<dist_t>::createProjection(
-                        space.get(),
+                        *space,
                         data,
                         projType,
                         nIntermDim,
@@ -139,7 +139,7 @@ void benchProjection(size_t repeatQty,
     for (size_t i = 0; i < sampleKNNQueryQty; ++i) {
       IdType id1 = RandomInt() % N;
 
-      KNNQuery<dist_t> query(space.get(), data[id1], knn);
+      KNNQuery<dist_t> query(*space, data[id1], knn);
 
       // Brute force search
       for (size_t i = 0; i < N; ++i) {
