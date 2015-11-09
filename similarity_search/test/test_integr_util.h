@@ -23,6 +23,7 @@
 #include <map>
 
 #include "utils.h"
+#include "bunit.h"
 #include "report.h"
 #include "params_def.h"
 #include "params_cmdline.h"
@@ -79,6 +80,8 @@ struct MethodTestCase {
                    mSpaceType(spaceType),
                    mDataSet(dataSet),
                    mMethodName(methodName),
+                   mIndexParams(indexParams),
+                   mQueryTimeParams(queryTimeParams),
                    mRecallMin(recallMin),
                    mRecallMax(recallMax),
                    mNumCloserMin(numCloserMin),
@@ -189,13 +192,19 @@ inline string getFirstParam(const string& paramDef) {
   vector<string>  vParDefs;
   // LIB_FATAL is Ok here
   if (!SplitStr(paramDef, vParDefs, ',')) {
-    LOG(LIB_FATAL) << "Cannot comma-split the parameter definition: '" << paramDef << "'";
+    PREPARE_RUNTIME_ERR(err) << "Cannot comma-split the parameter definition: '" << paramDef << "'";
+    THROW_RUNTIME_ERR(err);
   }
   if (vParDefs.empty()) {
-    LOG(LIB_FATAL) << "Empty definition list in the parameter definition: '" << paramDef << "'";
+    PREPARE_RUNTIME_ERR(err) << "Empty definition list in the parameter definition: '" << paramDef << "'";
+    THROW_RUNTIME_ERR(err);
   }
-  return vParDefs[0];  
+  return "--" + vParDefs[0];  
 }
+
+inline string quoteEmpty(const string& str) {
+  return str.empty() ? string("\"\"") : str;
+};
 
 string CreateCmdStr(
              const MethodTestCase&        testCase,
@@ -218,7 +227,6 @@ string CreateCmdStr(
       << getFirstParam(DIST_TYPE_PARAM_OPT)    << " " << DistType << " " 
       << getFirstParam(SPACE_TYPE_PARAM_OPT)   << " " << SpaceTypeStr << " " 
       << getFirstParam(THREAD_PARAM_OPT)       << " " << ThreadTestQty << " " 
-      << getFirstParam(SPACE_TYPE_PARAM_OPT)   << " " << SpaceTypeStr << " " 
       << getFirstParam(EPS_PARAM_OPT)          << " " << eps << " " ;
    if (QueryFile.empty())
      res << getFirstParam(TEST_SET_QTY_PARAM_OPT) << " " << TestSetQty << " " ;
@@ -226,10 +234,10 @@ string CreateCmdStr(
      res << getFirstParam(QUERY_FILE_PARAM_OPT) << " " << QueryFile << " " ;
 
   res << getFirstParam(MAX_NUM_QUERY_PARAM_OPT) << " " << MaxNumQuery << " " 
-      << getFirstParam(isRange ? RANGE_PARAM_OPT : KNN_PARAM_OPT)    << " " << DistType << " " 
+      << getFirstParam(isRange ? RANGE_PARAM_OPT : KNN_PARAM_OPT)    << " " << rangeOrKnnArg << " " 
       << getFirstParam(METHOD_PARAM_OPT)        << " " << testCase.mMethodName << " " 
-      << getFirstParam(INDEX_TIME_PARAMS_PARAM_OPT) << " " << testCase.mIndexParams << " " 
-      << getFirstParam(QUERY_TIME_PARAMS_PARAM_OPT) << " " << testCase.mQueryTimeParams;
+      << getFirstParam(INDEX_TIME_PARAMS_PARAM_OPT) << " " << quoteEmpty(testCase.mIndexParams) << " " 
+      << getFirstParam(QUERY_TIME_PARAMS_PARAM_OPT) << " " << quoteEmpty(testCase.mQueryTimeParams);
 
   return res.str();
 };
@@ -260,13 +268,15 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 
   if (!KnnArg.empty()) {
     if (!SplitStr(KnnArg, knn, ',')) {
-      LOG(LIB_FATAL) << "Wrong format of the knn argument: '" << KnnArg << "' Should be a list of coma-separated int > 0 values.";
+      PREPARE_RUNTIME_ERR(err) << "Wrong format of the knn argument: '" << KnnArg << "' Should be a list of coma-separated int > 0 values.";
+      THROW_RUNTIME_ERR(err);
     }
   }
 
   if (!RangeArg.empty()) {
     if (!SplitStr(RangeArg, range, ',')) {
-      LOG(LIB_FATAL) << "Wrong format of the range argument: '" << RangeArg << "' Should be a list of coma-separated distance-type values.";
+      PREPARE_RUNTIME_ERR(err) << "Wrong format of the range argument: '" << RangeArg << "' Should be a list of coma-separated distance-type values.";
+      THROW_RUNTIME_ERR(err);
     }
   }
 
@@ -286,7 +296,8 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                                   Instance().CreateSpace(SpaceType, *SpaceParams));
 
   if (NULL == space.get()) {
-    LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
+    PREPARE_RUNTIME_ERR(err) << "Cannot create space: '" << SpaceType;
+    THROW_RUNTIME_ERR(err);
   }
  
   ExperimentConfig<dist_t> config(*space,
@@ -322,102 +333,99 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 
     LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
 
-    ReportIntrinsicDimensionality("Main data set" , config.GetSpace(), config.GetDataObjects());
+    GoldStandardManager<dist_t> managerGS(config);
+    managerGS.Compute(0); // Keeping all GS entries, should be Ok here because our data sets are smallish
+    
+    for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
+      const string& MethodName  = vTestCases[MethNum].mMethodName;
 
-    bool bFailDueExcept = false;
+      shared_ptr<AnyParams>           IndexParams; 
+      vector<shared_ptr<AnyParams>>   vQueryTimeParams;
 
-    try {
+      {
+        vector<string>     desc;
+        ParseArg(vTestCases[MethNum].mIndexParams, desc);
+        IndexParams = shared_ptr<AnyParams>(new AnyParams(desc));
+      }
 
-      GoldStandardManager<dist_t> managerGS(config);
-      managerGS.Compute(0); // Keeping all GS entries, should be Ok here because our data sets are smallish
+      {
+        vector<string>     desc;
+        ParseArg(vTestCases[MethNum].mQueryTimeParams, desc);
+        vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(desc)));
+      }
+
+      LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
+      LOG(LIB_INFO) << ">>>> Index-time parameters: " << IndexParams->ToString();
+
+      const double vmsize_before = mem_usage_measure.get_vmsize();
+
+      WallClockTimer wtm;
+
+      wtm.reset();
       
-      for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
-        const string& MethodName  = vTestCases[MethNum].mMethodName;
 
-        shared_ptr<AnyParams>           IndexParams; 
-        vector<shared_ptr<AnyParams>>   vQueryTimeParams;
+      LOG(LIB_INFO) << "Creating a new index" ;
 
-        {
-          vector<string>     desc;
-          ParseArg(vTestCases[MethNum].mIndexParams, desc);
-          IndexParams = shared_ptr<AnyParams>(new AnyParams(desc));
-        }
+      shared_ptr<Index<dist_t>> IndexPtr(
+                         MethodFactoryRegistry<dist_t>::Instance().
+                         CreateMethod(false /* don't print progress */,
+                                      MethodName, 
+                                      SpaceType, config.GetSpace(), 
+                                      config.GetDataObjects())
+                         );
 
-        {
-          vector<string>     desc;
-          ParseArg(vTestCases[MethNum].mQueryTimeParams, desc);
-          vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(desc)));
-        }
+      IndexPtr->CreateIndex(*IndexParams);
 
-        LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
-        LOG(LIB_INFO) << ">>>> Index-time parameters: " << IndexParams->ToString();
+      LOG(LIB_INFO) << "==============================================";
 
-        const double vmsize_before = mem_usage_measure.get_vmsize();
+      const double vmsize_after = mem_usage_measure.get_vmsize();
 
-        WallClockTimer wtm;
+      const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
 
-        wtm.reset();
-        
+      const double TotalMemByMethod = vmsize_after - vmsize_before + data_size;
 
-        LOG(LIB_INFO) << "Creating a new index" ;
+      wtm.split();
 
-        shared_ptr<Index<dist_t>> IndexPtr(
-                           MethodFactoryRegistry<dist_t>::Instance().
-                           CreateMethod(false /* don't print progress */,
-                                        MethodName, 
-                                        SpaceType, config.GetSpace(), 
-                                        config.GetDataObjects())
-                           );
+      LOG(LIB_INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
+      LOG(LIB_INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
+      LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
+      LOG(LIB_INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
 
-        IndexPtr->CreateIndex(*IndexParams);
+      /* 
+       * We need to repackage MetaAnalysis arrays:
+       * RunAll will deal with only a single method and 
+       * a single set of query-time parameters.
+       */ 
 
-        LOG(LIB_INFO) << "==============================================";
-
-        const double vmsize_after = mem_usage_measure.get_vmsize();
-
-        const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
-
-        const double TotalMemByMethod = vmsize_after - vmsize_before + data_size;
-
-        wtm.split();
-
-        LOG(LIB_INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
-        LOG(LIB_INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
-        LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
-        LOG(LIB_INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
+      vector<vector<MetaAnalysis*>> ExpResRangeTmp(config.GetRange().size(), vector<MetaAnalysis*>(1));
+      vector<vector<MetaAnalysis*>> ExpResKNNTmp(config.GetKNN().size(), vector<MetaAnalysis*>(1));
 
 
-        for (size_t i = 0; i < config.GetRange().size(); ++i) {
-          MetaAnalysis* res = ExpResRange[i][MethNum];
-          res->SetMem(TestSetId, TotalMemByMethod);
-        }
-        for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-          MetaAnalysis* res = ExpResKNN[i][MethNum];
-          res->SetMem(TestSetId, TotalMemByMethod);
-        }
+      for (size_t i = 0; i < config.GetRange().size(); ++i) {
+        MetaAnalysis* res = ExpResRange[i][MethNum];
+        res->SetMem(TestSetId, TotalMemByMethod);
+        ExpResRangeTmp[i][0] = res;
+      }
+      for (size_t i = 0; i < config.GetKNN().size(); ++i) {
+        MetaAnalysis* res = ExpResKNN[i][MethNum];
+        res->SetMem(TestSetId, TotalMemByMethod);
+        ExpResKNNTmp[i][0] = res;
+      }
 
-        Experiments<dist_t>::RunAll(true /* print progress */, 
-                                    ThreadTestQty,
-                                    TestSetId,
-                                    managerGS,
-                                    ExpResRange, ExpResKNN,
-                                    config, 
-                                    *IndexPtr, 
-                                    vQueryTimeParams);
+      CHECK_MSG(vQueryTimeParams.size() == 1, 
+                "Test integration code is currently can execute only one set of query-time parameters!");
+
+      Experiments<dist_t>::RunAll(true /* print progress */, 
+                                  ThreadTestQty,
+                                  TestSetId,
+                                  managerGS,
+                                  ExpResRangeTmp, ExpResKNNTmp,
+                                  config, 
+                                  *IndexPtr, 
+                                  vQueryTimeParams);
 
       }
 
-    } catch (const std::exception& e) {
-      LOG(LIB_ERROR) << "Exception: " << e.what();
-      bFailDueExcept = true;
-    } catch (...) {
-      LOG(LIB_ERROR) << "Unknown exception";
-      bFailDueExcept = true;
-    }
-
-    if (bFailDueExcept) {
-      LOG(LIB_FATAL) << "Failure due to an exception!";
-    }
   }
 
   for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
@@ -426,7 +434,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       MetaAnalysis* res = ExpResRange[i][MethNum];
 
-      if (!ProcessAndCheckResults(CreateCmdStr(vTestCases[MethNum],
+      string cmdStr = CreateCmdStr(vTestCases[MethNum],
                                              true,
                                              ConvertToString(config.GetRange()[i]),
                                              DistType, 
@@ -437,10 +445,16 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                                              QueryFile,
                                              MaxNumData,
                                              MaxNumQuery,
-                                             eps), 
+                                             eps);
+      cout << cmdStr << endl;
+      LOG(LIB_INFO) << "Command line params: " << cmdStr;
+      if (!ProcessAndCheckResults(cmdStr, 
                                   DistType, SpaceType, 
                                   vTestCases[MethNum], config, *res, Print)) {
         nFail++;
+        cout << red << "failed" << no_color << " (see logs for more details) " << endl;
+      } else {
+        cout << green << "passed" << no_color << endl;
       }
       LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
       LOG(LIB_INFO) << Print;
@@ -452,7 +466,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
       MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-      if (!ProcessAndCheckResults(CreateCmdStr(vTestCases[MethNum],
+      string cmdStr = CreateCmdStr(vTestCases[MethNum],
                                              false,
                                              ConvertToString(config.GetKNN()[i]),
                                              DistType, 
@@ -463,10 +477,17 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                                              QueryFile,
                                              MaxNumData,
                                              MaxNumQuery,
-                                             eps),
+                                             eps);
+
+      cout << cmdStr << endl;
+      LOG(LIB_INFO) << "Command line params: " << cmdStr;
+      if (!ProcessAndCheckResults(cmdStr,
                                   DistType, SpaceType, 
                                   vTestCases[MethNum], config, *res, Print)) {
+        cout << red << "failed" << no_color << " (see logs for more details) " << endl;
         nFail++;
+      } else {
+        cout << green << "passed" << no_color << endl;
       }
       LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
       LOG(LIB_INFO) << Print;
@@ -536,7 +557,8 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   RangeArg
                  );
   } else {
-    LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
+    PREPARE_RUNTIME_ERR(err) << "Unknown distance value type: " << DistType;
+    THROW_RUNTIME_ERR(err);
   }
 
   return bTestRes;

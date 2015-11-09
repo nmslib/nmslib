@@ -61,7 +61,7 @@ using std::stringstream;
 vector<MethodTestCase>    vTestCaseDesc = {
   // *************** NEW versions of permutation & projection-based filtering method tests ******************** //
 #if !defined(_MSC_VER)
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", "NN=10,rho=0.5,delta=0.001", "",
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", "NN=10,rho=0.5,delta=0.001", "initSearchAttempts=10",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
 #endif
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "small_world_rand", "NN=10,initIndexAttempts=1", "initSearchAttempts=1",
@@ -296,90 +296,99 @@ int main(int ac, char* av[]) {
 
   size_t nTest = 0;
   size_t nFail = 0;
-  /* 
-   * 1. Let's iterate over all combinations of data sets,
-   * distance, and space types. 
-   * 2. For each combination, we select test cases 
-   * with exactly same data set, distance and space type. 
-   * 3. Create an array of arguments in the same format
-   *    as used by the main benchmarking utility.
-   * 4. Use a standard function to parse these arguments.
-   */
-  for (string dataSet  : setDataSet)
-  for (string distType : setDistType)
-  for (string spaceType: setSpaceType) {
-    string dataFile = sampleDataPrefix + dataSet;
 
-    for (unsigned K: setKNN) {
-      vector<MethodTestCase>  vTestCases; 
+  try {
+    /* 
+     * 1. Let's iterate over all combinations of data sets,
+     * distance, and space types. 
+     * 2. For each combination, we select test cases 
+     * with exactly same data set, distance and space type. 
+     * 3. Create an array of arguments in the same format
+     *    as used by the main benchmarking utility.
+     * 4. Use a standard function to parse these arguments.
+     */
+    for (string dataSet  : setDataSet)
+    for (string distType : setDistType)
+    for (string spaceType: setSpaceType) {
+      string dataFile = sampleDataPrefix + dataSet;
 
-      // Select appropriate test cases to share the same gold-standard data
-      for (const auto& testCase: vTestCaseDesc) {
-        if (testCase.mDataSet == dataSet &&
-            testCase.mDistType == distType && 
-            testCase.mSpaceType == spaceType &&
-            testCase.mKNN  == K) {
-          vTestCases.push_back(MethodTestCase(testCase));
+      for (unsigned K: setKNN) {
+        vector<MethodTestCase>  vTestCases; 
+
+        // Select appropriate test cases to share the same gold-standard data
+        for (const auto& testCase: vTestCaseDesc) {
+          if (testCase.mDataSet == dataSet &&
+              testCase.mDistType == distType && 
+              testCase.mSpaceType == spaceType &&
+              testCase.mKNN  == K) {
+            vTestCases.push_back(MethodTestCase(testCase));
+          }
+        }
+
+        if (!vTestCases.empty())  { // Not all combinations of spaces, data sets, and search types are non-empty
+          for (size_t threadQty = 1; threadQty <= MAX_THREAD_QTY; ++threadQty) {
+            nTest += vTestCases.size();
+            nFail += RunOneTest(vTestCases, 
+                                distType,
+                                spaceType,
+                                threadQty,
+                                TEST_SET_QTY,
+                                dataFile,
+                                "",
+                                0,
+                                MAX_NUM_QUERY,
+                                ConvertToString(K),
+                                0,
+                                ""
+                               );
+          }
         }
       }
 
-      if (!vTestCases.empty())  { // Not all combinations of spaces, data sets, and search types are non-empty
-        for (size_t threadQty = 1; threadQty <= MAX_THREAD_QTY; ++threadQty) {
-          nTest += vTestCases.size();
-          nFail += RunOneTest(vTestCases, 
-                              distType,
-                              spaceType,
-                              threadQty,
-                              TEST_SET_QTY,
-                              dataFile,
-                              "",
-                              0,
-                              MAX_NUM_QUERY,
-                              ConvertToString(K),
-                              0,
-                              ""
-                             );
+      for (float R: setRange) {
+        vector<MethodTestCase>  vTestCases; 
+
+
+        // Select appropriate test cases to share the same gold-standard data
+        for (const auto& testCase: vTestCaseDesc) {
+          if (testCase.mDataSet == dataSet &&
+              testCase.mDistType == distType && 
+              testCase.mSpaceType == spaceType &&
+              testCase.mRange  == R) {
+            vTestCases.push_back(MethodTestCase(testCase));
+          }
         }
+
+        if (!vTestCases.empty())  { // Not all combinations of spaces, data sets, and search types are non-empty
+          for (size_t threadQty = 1; threadQty <= MAX_THREAD_QTY; ++threadQty) {
+            nTest += vTestCases.size();
+            nFail += RunOneTest(vTestCases, 
+                                distType,
+                                spaceType,
+                                threadQty,
+                                TEST_SET_QTY,
+                                dataFile,
+                                "",
+                                0,
+                                MAX_NUM_QUERY,
+                                "",
+                                0,
+                                ConvertToString(R)
+                               );
+          }
+        }
+
       }
+
     }
 
-    for (float R: setRange) {
-      vector<MethodTestCase>  vTestCases; 
-
-
-      // Select appropriate test cases to share the same gold-standard data
-      for (const auto& testCase: vTestCaseDesc) {
-        if (testCase.mDataSet == dataSet &&
-            testCase.mDistType == distType && 
-            testCase.mSpaceType == spaceType &&
-            testCase.mRange  == R) {
-          vTestCases.push_back(MethodTestCase(testCase));
-        }
-      }
-
-      if (!vTestCases.empty())  { // Not all combinations of spaces, data sets, and search types are non-empty
-        for (size_t threadQty = 1; threadQty <= MAX_THREAD_QTY; ++threadQty) {
-          nTest += vTestCases.size();
-          nFail += RunOneTest(vTestCases, 
-                              distType,
-                              spaceType,
-                              threadQty,
-                              TEST_SET_QTY,
-                              dataFile,
-                              "",
-                              0,
-                              MAX_NUM_QUERY,
-                              "",
-                              0,
-                              ConvertToString(R)
-                             );
-        }
-      }
-
-    }
-
+  } catch (const std::exception& e) {
+    cout << red << "Failure to test due to exception: " << e.what() << no_color << endl;
+    ++nFail;
+  } catch (...) {
+    ++nFail;
+    cout << red << "Failure to test due to unknown exception: " << no_color << endl;
   }
-
 
   timer.split();
 
