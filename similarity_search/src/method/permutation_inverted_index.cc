@@ -38,11 +38,8 @@ PermutationInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeP
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
   }
-  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
-    throw runtime_error("One should specify either dbScanFrac or knnAmp");
-  }
   
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_,  0);
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_,  0.05);
   pmgr.GetParamOptional("knnAmp",       knn_amp_,       0);
 
 

@@ -31,7 +31,7 @@ Index<dist_t>* CreatePermutationBinVPTree(bool PrintProgress,
                            Space<dist_t>& space,
                            const ObjectVector& DataObjects) {
 
-    return new PermBinVPTree<dist_t, SpearmanRhoSIMD>(space, DataObjects);
+    return new PermBinVPTree<dist_t, SpearmanRhoSIMD>(PrintProgress, space, DataObjects);
 }
 
 /*

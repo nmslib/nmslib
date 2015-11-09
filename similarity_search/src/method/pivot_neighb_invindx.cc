@@ -130,15 +130,16 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
     throw runtime_error("One shouldn't specify both parameters numPrefix and numPivotIndex, b/c they are synonyms!");
   }
   pmgr.GetParamOptional("numPivotIndex", num_prefix_, 32);
-  pmgr.GetParamOptional("numPrefix",     num_prefix_, 32);
+  pmgr.GetParamOptional("numPrefix",     num_prefix_, num_prefix_);
 
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 65536);
 
   pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  0);
 
   if (num_prefix_ > num_pivot_) {
-    LOG(LIB_FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix "
-               << "should be less than or equal to numPivot";
+    PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix (" << num_prefix_ << ") "
+                             << "should be less than or equal to numPivot (" << num_pivot_ << ")";
+    THROW_RUNTIME_ERR(err);
   }
 
   CHECK(num_prefix_ <= num_pivot_);
@@ -385,7 +386,8 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
           }
         }
       } else {
-        LOG(LIB_FATAL) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        PREPARE_RUNTIME_ERR(err) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        THROW_RUNTIME_ERR(err);
       }
 
       IncrementalQuickSelect<IntInt> quick_select(candidates);
@@ -444,7 +446,8 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
           }
         }
       } else {
-        LOG(LIB_FATAL) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        PREPARE_RUNTIME_ERR(err) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        THROW_RUNTIME_ERR(err);
       }
     }
   }

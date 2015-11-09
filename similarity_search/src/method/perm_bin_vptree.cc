@@ -35,9 +35,11 @@ using std::unique_ptr;
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
+    bool PrintProgress,
     Space<dist_t>& space,
     const ObjectVector& data) : 
       space_(space), data_(data),   
+      PrintProgress_(PrintProgress),
       VPTreeSpace_(new SpaceBitHamming())
 {}
 
@@ -74,7 +76,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& Ind
 
   ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, BinPermData_);
   VPTreeIndex_.reset(new VPTree<int, PolynomialPruner<int>>(
-                                          true,
+                                          PrintProgress_,
                                           *VPTreeSpace_,
                                           BinPermData_));
 

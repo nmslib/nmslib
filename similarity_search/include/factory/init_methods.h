@@ -91,6 +91,11 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_PERM_BIN_VPTREE, CreatePermutationBinVPTree)
   REGISTER_METHOD_CREATOR(int,    METH_PERM_BIN_VPTREE, CreatePermutationBinVPTree)
 
+  // Sequential-search binarized permutation index with incremental sorting
+  REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
+  REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
+  REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
+
   // LSH based on binarized permutations
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)
   REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)

@@ -58,8 +58,9 @@ public:
     if (Creators_.count(MethName)) {
       return Creators_[MethName](PrintProgress, SpaceType, space, DataObjects);
     } else {
-      LOG(LIB_FATAL) << "It looks like the method " << MethName << 
+      PREPARE_RUNTIME_ERR(err) << "It looks like the method " << MethName << 
                     " is not defined for the distance type : " << DistTypeName<dist_t>();
+      THROW_RUNTIME_ERR(err);
     }
     return NULL;
   }

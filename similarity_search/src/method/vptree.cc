@@ -46,7 +46,10 @@ VPTree<dist_t, SearchOracle>::VPTree(
                               data_(data),
                               PrintProgress_(PrintProgress),
                               use_random_center_(use_random_center),
-                              oracle_(space, data, PrintProgress) { }
+                              oracle_(space, data, PrintProgress),
+                              QueryTimeParams_(oracle_.GetQueryTimeParamNames()) { 
+                                QueryTimeParams_.push_back("maxLeavesToVisit");
+                              }
 
 template <typename dist_t, typename SearchOracle>
 void VPTree<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParams) {

@@ -44,7 +44,8 @@ namespace similarity {
 template <typename dist_t, PivotIdType (*CorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 class PermBinVPTree : public Index<dist_t> {
  public:
-  PermBinVPTree(Space<dist_t>& space,
+  PermBinVPTree(bool PrintProgress,
+                Space<dist_t>& space,
                 const ObjectVector& data);
 
   void CreateIndex(const AnyParams& IndexParams);
@@ -60,6 +61,7 @@ class PermBinVPTree : public Index<dist_t> {
 
   Space<dist_t>&            space_;
   const ObjectVector&       data_;
+  bool                      PrintProgress_;
   size_t                    bin_threshold_;
   size_t                    bin_perm_word_qty_;
   size_t                    db_scan_qty_;
