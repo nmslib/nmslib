@@ -54,7 +54,7 @@ using std::string;
 using std::stringstream;
 
 //#define MAX_THREAD_QTY 4
-#define MAX_THREAD_QTY 2
+#define MAX_THREAD_QTY 1
 #define TEST_SET_QTY   20
 #define MAX_NUM_QUERY  100
 
@@ -127,7 +127,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // *************** omedrank tests ******************** //
 
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "omedrank", "numPivot=4,chunkIndexSize=16536", "dbScanFrac=0.01,minFreq=0.5",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.97, 0.1, 1, 70, 120),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.97, 0.1, 2, 70, 120),  
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "omedrank", "numPivot=4,chunkIndexSize=16536", "dbScanFrac=0.01,minFreq=0.5",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.9, 0.2, 3, 70, 120),  
 
