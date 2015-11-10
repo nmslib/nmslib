@@ -166,7 +166,7 @@ const std::string MultiProbeLSH<dist_t>::ToString() const {
 
 template <typename dist_t>
 void MultiProbeLSH<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
-  LOG(LIB_FATAL) << "Not applicable";
+  throw runtime_error("Range search isn't supported by LSH");
 }
 
 template <typename dist_t>

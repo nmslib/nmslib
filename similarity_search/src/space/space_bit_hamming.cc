@@ -60,13 +60,15 @@ void SpaceBitHamming::ReadBitMaskVect(std::string line, LabelType& label, std::v
   try {
     while (str >> val) {
       if (val != 0 && val != 1) {
-        LOG(LIB_FATAL) << "Only zeros and ones are allowed, line: '" << line << "'";
+        throw runtime_error("Only zeros and ones are allowed");
       }
       v.push_back(val);
     }
   } catch (const std::exception &e) {
     LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
+    PREPARE_RUNTIME_ERR(err) << "Failed to parse the line: '" << line << "'";
+    LOG(LIB_ERROR) << err.stream().str() << std::endl;
+    THROW_RUNTIME_ERR(err);
   }
   Binarize(v, 1, binVect);      // Create the binary vector
   binVect.push_back(v.size());   // Put the number of elements in the end
@@ -109,10 +111,10 @@ SpaceBitHamming::CreateObjFromStr(IdType id, LabelType label, const string& s,
       THROW_RUNTIME_ERR(err);
     }
   }
-  return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
+  return unique_ptr<Object>(CreateObjFromVectInternal(id, label, vec));
 }
 
-Object* SpaceBitHamming::CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const {
+Object* SpaceBitHamming::CreateObjFromVectInternal(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const {
   return new Object(id, label, InpVect.size() * sizeof(uint32_t), &InpVect[0]);
 };
 

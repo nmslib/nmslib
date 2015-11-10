@@ -46,7 +46,7 @@ class ParameterCreator {
   static typename lsh_t::Parameter GetParameter(
     const lshkit::FloatMatrix& matrix,
     unsigned H, unsigned M, float W) {
-    LOG(LIB_FATAL) << "not allowed dummy parameter creator";
+    throw runtime_error("not allowed: dummy parameter creator");
     return lsh_t::Parameter();
   }
 

@@ -86,9 +86,9 @@
 #define METHOD_PARAM_MSG         "method name"
 #define METHOD_PARAM_DEFAULT     ""
 
-#define THREAD_PARAM_OPT         "threadQty"
-#define THREAD_PARAM_MSG         "# of threads during querying"
-#define THREAD_PARAM_DEFAULT     1
+#define THREAD_TEST_QTY_PARAM_OPT         "threadTestQty"
+#define THREAD_TEST_QTY_PARAM_MSG         "# of threads during querying"
+#define THREAD_TEST_QTY_PARAM_DEFAULT     1
 
 #define OUT_FILE_PREFIX_PARAM_OPT      "outFilePrefix,o"
 #define OUT_FILE_PREFIX_PARAM_MSG      "output file prefix"

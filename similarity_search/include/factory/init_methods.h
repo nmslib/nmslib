@@ -95,6 +95,9 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
   REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
   REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_INC_SORT_BIN, CreatePermutationIndexIncrementalBin)
+  REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_INC_SORT_BIN_SYN, CreatePermutationIndexIncrementalBin)
+  REGISTER_METHOD_CREATOR(double, METH_PERMUTATION_INC_SORT_BIN_SYN, CreatePermutationIndexIncrementalBin)
+  REGISTER_METHOD_CREATOR(int,    METH_PERMUTATION_INC_SORT_BIN_SYN, CreatePermutationIndexIncrementalBin)
 
   // LSH based on binarized permutations
   REGISTER_METHOD_CREATOR(float,  METH_PERMUTATION_LSH_BIN, CreatePermutationIndexLSHBin)

@@ -46,7 +46,7 @@ void MultiVantagePointTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   pmgr.CheckUnused();
 
   if (BucketSize_ < 2) {
-     LOG(LIB_FATAL) << "The bucket size should be at least 2 (multi vantage point tree)";
+     throw runtime_error("Bug: The bucket size should be at least 2 (multi vantage point tree)");
   }
 
   Entries entries;

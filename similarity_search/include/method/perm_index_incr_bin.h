@@ -22,7 +22,8 @@
 #include "permutation_utils.h"
 
 
-#define METH_PERMUTATION_INC_SORT_BIN   "perm_incsort_bin"
+#define METH_PERMUTATION_INC_SORT_BIN       "perm_incsort_bin"
+#define METH_PERMUTATION_INC_SORT_BIN_SYN   "perm_bin_incsort"
 
 namespace similarity {
 

@@ -49,8 +49,9 @@ public:
     if (Creators_.count(SpaceType)) {
       return Creators_[SpaceType](SpaceParams);
     } else {
-      LOG(LIB_FATAL) << "It looks like the space " << SpaceType << 
-                    " is not defined for the distance type : " << DistTypeName<dist_t>();
+      PREPARE_RUNTIME_ERR(err) << "It looks like the space " << SpaceType << 
+                                  " is not defined for the distance type : " << DistTypeName<dist_t>();
+      THROW_RUNTIME_ERR(err);
     }
     return NULL;
   }

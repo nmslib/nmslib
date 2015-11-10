@@ -78,9 +78,10 @@ class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
       if (!dim) dim = currDim;
       else {
         if (dim != currDim) {
-            LOG(LIB_FATAL) << "The # of vector elements (" << currDim << ")" <<
+          PREPARE_RUNTIME_ERR(err) << "The # of vector elements (" << currDim << ")" <<
                       " doesn't match the # of elements in previous lines. (" << dim << " )" <<
                       "Found mismatch, index : " << (index + 1);
+          THROW_RUNTIME_ERR(err);
         }
       }
       LabelType label = pLabels ? (*pLabels)[index] :  -1 ;

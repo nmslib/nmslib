@@ -54,8 +54,8 @@ using std::string;
 using std::stringstream;
 
 //#define MAX_THREAD_QTY 4
-#define MAX_THREAD_QTY 1
-#define TEST_SET_QTY   10
+#define MAX_THREAD_QTY 2
+#define TEST_SET_QTY   20
 #define MAX_NUM_QUERY  100
 
 vector<MethodTestCase>    vTestCaseDesc = {
@@ -243,7 +243,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // *************** multi-probe LSH tests ******************** //
   // knn
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", "desiredRecall=0.5,tuneK=1,T=5,L=25,H=16535", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.45, 0.6, 55, 75, 90, 130),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.45, 0.6, 45, 80, 90, 130),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", "desiredRecall=0.5,tuneK=10,T=5,L=25,H=16535", "",
                 10 /* KNN-10 */, 0 /* no range search */ , 0.45, 0.6, 10, 40, 80, 120),  
   // *************** Guassian LSH tests ******************** //

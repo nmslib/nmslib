@@ -86,9 +86,8 @@ class BregmanDiv : public VectorSpace<dist_t> {
     if (div != NULL) {
       return div;
     } else {
-      LOG(LIB_FATAL) << "Space " << space->ToString()
-          << " is not Bregman divergence";
-      return NULL;
+      PREPARE_RUNTIME_ERR(err) << "Space " << space->ToString() << " is not Bregman divergence";
+      THROW_RUNTIME_ERR(err);
     }
   }
  protected:

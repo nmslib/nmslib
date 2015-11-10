@@ -59,7 +59,7 @@ void ComputeMuDeffect(const Space<dist_t>& space,
       dist_t d2 = space.IndexTimeDistance(q, b);
       dist_t d3 = space.IndexTimeDistance(a, b);
       if (ISNAN(d1) || ISNAN(d2) || ISNAN(d3)) {
-        LOG(LIB_FATAL) << "!!! Bug: a distance returned NAN!";
+        throw runtime_error("!!! Bug: a distance returned NAN!");
       }
       if (d3 != 0) {
         dright = max(dright, (double)fabs(double(d1)-double(d2))/double(d3));
@@ -70,7 +70,7 @@ void ComputeMuDeffect(const Space<dist_t>& space,
       dist_t d2 = space.IndexTimeDistance(b, q);
       dist_t d3 = space.IndexTimeDistance(b, a);
       if (ISNAN(d1) || ISNAN(d2) || ISNAN(d3)) {
-        LOG(LIB_FATAL) << "!!! Bug: a distance returned NAN!";
+        throw runtime_error("!!! Bug: a distance returned NAN!");
       }
       if (d3 != 0) {
         dleft = max(dleft, (double)fabs(double(d1)-double(d2))/double(d3));
@@ -146,7 +146,8 @@ int main(int argc, char* argv[]) {
     po::notify(vm);
 
     if (!DoesFileExist(dataFile)) {
-      LOG(LIB_FATAL) << "data file " << dataFile << " doesn't exist";
+      PREPARE_RUNTIME_ERR(err) << "data file " << dataFile << " doesn't exist";
+      THROW_RUNTIME_ERR(err);
     }
 
     initLibrary(LIB_LOGSTDERR);

@@ -190,7 +190,7 @@ bool ProcessAndCheckResults(
 
 inline string getFirstParam(const string& paramDef) {
   vector<string>  vParDefs;
-  // LIB_FATAL is Ok here
+  
   if (!SplitStr(paramDef, vParDefs, ',')) {
     PREPARE_RUNTIME_ERR(err) << "Cannot comma-split the parameter definition: '" << paramDef << "'";
     THROW_RUNTIME_ERR(err);
@@ -226,7 +226,7 @@ string CreateCmdStr(
       << getFirstParam(MAX_NUM_DATA_PARAM_OPT) << " " << MaxNumData << " " 
       << getFirstParam(DIST_TYPE_PARAM_OPT)    << " " << DistType << " " 
       << getFirstParam(SPACE_TYPE_PARAM_OPT)   << " " << SpaceTypeStr << " " 
-      << getFirstParam(THREAD_PARAM_OPT)       << " " << ThreadTestQty << " " 
+      << getFirstParam(THREAD_TEST_QTY_PARAM_OPT)<< " " << ThreadTestQty << " " 
       << getFirstParam(EPS_PARAM_OPT)          << " " << eps << " " ;
    if (QueryFile.empty())
      res << getFirstParam(TEST_SET_QTY_PARAM_OPT) << " " << TestSetQty << " " ;

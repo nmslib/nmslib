@@ -55,8 +55,8 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& Ind
   bin_perm_word_qty_ = (NumPivot + 31)/32;
 
 
-  LOG(LIB_INFO) << "# pivots                  = " << NumPivot;
-  LOG(LIB_INFO) << "# binarization threshold = "  << bin_threshold_;
+  LOG(LIB_INFO) << "NumPivot     = " << NumPivot;
+  LOG(LIB_INFO) << "binThreshold = "  << bin_threshold_;
   LOG(LIB_INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
 
   AnyParams RemainParams = pmgr.ExtractParametersExcept({ "numPivot", "binThreshold"});
@@ -101,10 +101,13 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::SetQueryTimeParams(const AnyPara
     THROW_RUNTIME_ERR(err);
   }
 
-  db_scan_qty_ = max(size_t(1), static_cast<size_t>(dbScanFrac * data_.size()));
 
   LOG(LIB_INFO) << "Set query-time parameters for PermBinVPTree:";
   LOG(LIB_INFO) << "dbScanFrac=" << dbScanFrac;
+
+  db_scan_qty_ = max(size_t(1), static_cast<size_t>(dbScanFrac * data_.size()));
+
+  LOG(LIB_INFO) << "db_scan_qty_=" << db_scan_qty_;
 
   pmgr.CheckUnused();
 }

@@ -98,7 +98,7 @@ void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
     (QUERY_TIME_PARAMS_PARAM_OPT, po::value< vector<string> >(&vQueryTimeParamStr)->multitoken()->zero_tokens(), QUERY_TIME_PARAMS_PARAM_MSG)
     (INDEX_TIME_PARAMS_PARAM_OPT, po::value<string>(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG)
     (METHOD_PARAM_OPT,        po::value<string>(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG)
-    (THREAD_PARAM_OPT,        po::value<unsigned>(&ThreadTestQty)->default_value(THREAD_PARAM_DEFAULT), THREAD_PARAM_MSG)
+    (THREAD_TEST_QTY_PARAM_OPT,po::value<unsigned>(&ThreadTestQty)->default_value(THREAD_TEST_QTY_PARAM_DEFAULT), THREAD_TEST_QTY_PARAM_MSG)
     (OUT_FILE_PREFIX_PARAM_OPT, po::value<string>(&ResFilePrefix)->default_value(OUT_FILE_PREFIX_PARAM_DEFAULT), OUT_FILE_PREFIX_PARAM_MSG)
     (APPEND_TO_REF_FILE_PARAM_OPT, po::value<bool>(&AppendToResFile)->default_value(APPEND_TO_REF_FILE_PARAM_DEFAULT), APPEND_TO_REF_FILE_PARAM_MSG)
     (PRINT_PROGRESS_PARAM_OPT, po::value<bool>(&bPrintProgress)->default_value(PRINT_PROGRESS_PARAM_DEFAULT), PRINT_PROGRESS_PARAM_MSG)

@@ -52,7 +52,7 @@ void ComputeIntrinsicDimensionality(const Space<dist_t>& space,
        *            vectors, dense vectors and other objects
        *            can implement their own dump function.
        */
-      LOG(LIB_FATAL) << "!!! Bug: a distance returned NAN!";
+      throw runtime_error("!!! Bug: a distance returned NAN!");
     }
     DistMean += d;
   }

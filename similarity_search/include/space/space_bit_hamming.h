@@ -61,15 +61,18 @@ class SpaceBitHamming : public Space<int> {
    */
   virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const;
 
-  virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const;
-
   virtual std::string ToString() const { return "Hamming (bit-storage) space"; }
   virtual void CreateDenseVectFromObj(const Object* obj, int* pVect,
                                       size_t nElem) const {
     throw runtime_error("Cannot create a dense vector for the space: " + ToString());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, std::vector<uint32_t>& InpVect) const {
+    InpVect.push_back(InpVect.size());
+    return CreateObjFromVectInternal(id, label, InpVect);
+  }
  protected:
+  virtual Object* CreateObjFromVectInternal(IdType id, LabelType label, const std::vector<uint32_t>& InpVect) const;
   Object* CreateObjFromBitMaskVect(IdType id, LabelType label, const std::vector<uint32_t>& bitMaskVect) const;
   virtual int HiddenDistance(const Object* obj1, const Object* obj2) const;
   void ReadBitMaskVect(std::string line, LabelType& label, std::vector<uint32_t>& v) const;

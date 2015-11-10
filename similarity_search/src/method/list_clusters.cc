@@ -115,7 +115,8 @@ void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams)
         if (p.second == center) {
           // sanity check
           if (center_skipped) {
-            LOG(LIB_FATAL) << "found skipped center again" << std::endl;
+            PREPARE_RUNTIME_ERR(err) << "found skipped center again" << std::endl;
+            THROW_RUNTIME_ERR(err);
           }
           center_skipped = true;
         } else {
@@ -139,7 +140,8 @@ void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams)
         if (p.second == center) {
           // sanity check
           if (center_skipped) {
-            LOG(LIB_FATAL) << "found skipped center again" << std::endl;
+            PREPARE_RUNTIME_ERR(err) << "found skipped center again" << std::endl;
+            THROW_RUNTIME_ERR(err);
           }
           center_skipped = true;
         } else {
@@ -289,7 +291,7 @@ const Object* ListClusters<dist_t>::SelectNextCenter(
       return remaining[idx].second;
   }
 
-  LOG(LIB_FATAL) << "Unknown CenterStrategy";
+  throw runtime_error("Unknown CenterStrategy");
   return remaining[0].second;
 }
 

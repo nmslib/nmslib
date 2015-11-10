@@ -146,13 +146,15 @@ class Object {
         stringstream numstr(fileLine.substr(labelPrefix.size(), p - labelPrefix.size()));
 
         if (!(numstr >> res) || !numstr.eof()) {
-          LOG(LIB_FATAL) << "Cannot extract label from the file line: '" << fileLine << "'";
+          PREPARE_RUNTIME_ERR(err) << "Cannot extract label from the file line: '" << fileLine << "'";
+          THROW_RUNTIME_ERR(err);
         }
 
         fileLine = fileLine.substr(j);
        
       } else {
-        LOG(LIB_FATAL) << "No space is found after the label definition in the file line: '" << fileLine << "'";
+        PREPARE_RUNTIME_ERR(err) << "No space is found after the label definition in the file line: '" << fileLine << "'";
+        THROW_RUNTIME_ERR(err);
       }
     }
     return res;
