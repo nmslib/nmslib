@@ -40,6 +40,8 @@ Index<dist_t>* CreateVPTree(bool PrintProgress,
                              );
 }
 
+#ifndef WITHOUT_VPTREE_OLD
+
 template <typename dist_t>
 Index<dist_t>* CreateVPTreeOldTriang(bool PrintProgress,
                            const string& SpaceType,
@@ -114,6 +116,8 @@ Index<dist_t>* CreateVPTreeOldSample(bool PrintProgress,
                                                  RemainParams
                                                  );
 }
+
+#endif     // WITHOUT_VPTREE_OLD
 
 /*
  * End of creating functions.

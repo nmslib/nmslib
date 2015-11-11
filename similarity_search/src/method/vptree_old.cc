@@ -13,6 +13,8 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+#ifndef WITHOUT_VPTREE_OLD
+
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -282,3 +284,4 @@ template class VPTreeOld<int, SamplingOracle<int>, SamplingOracleCreator<int> >;
 
 }   // namespace similarity
 
+#endif   // WITHOUT_VPTREE_OLD
