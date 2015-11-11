@@ -266,7 +266,7 @@ public:
       * before running any tests, in particular, because
       * the function SetQueryTimeParams is NOT supposed to be THREAD-SAFE. 
       */
-      if (!isNewIndex[MethNum]) Method.SetQueryTimeParams(MethodsDesc[MethNum]->methPars_);
+      Method.SetQueryTimeParams(MethodsDesc[MethNum]->methPars_);
 
       if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.ToString();
 
