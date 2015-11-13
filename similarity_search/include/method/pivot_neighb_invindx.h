@@ -73,7 +73,9 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
                            const Space<dist_t>& space,
                            const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& IndexParams);
+  virtual void CreateIndex(const AnyParams& IndexParams) override;
+  virtual void SaveIndex(const string &location) override;
+  virtual void LoadIndex(const string &location) override;
 
   ~PivotNeighbInvertedIndex();
 
@@ -114,7 +116,8 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   }
 
 
-  ObjectVector pivot_;
+  ObjectVector    pivot_;
+  vector<IdType>  pivot_pos_;
 
   size_t computeDbScan(size_t K, size_t chunkQty) const {
     size_t totalDbScan = static_cast<size_t>(db_scan_frac_ * data_.size());

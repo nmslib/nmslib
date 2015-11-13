@@ -18,6 +18,7 @@
 #include <sstream>
 #include <thread>
 #include <memory>
+#include <fstream>
 #include <unordered_map>
 
 #include "space.h"
@@ -155,7 +156,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
   LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
   LOG(LIB_INFO) << "# pivots to index (numPrefix) = " << num_prefix_;
 
-  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
+  GetPermutationPivot(data_, space_, num_pivot_, &pivot_, &pivot_pos_);
 
   posting_lists_.resize(indexQty);
 
@@ -301,6 +302,82 @@ const string PivotNeighbInvertedIndex<dist_t>::ToString() const {
   stringstream str;
   str <<  "permutation (inverted index over neighboring pivots)";
   return str.str();
+}
+
+template <typename dist_t>
+void PivotNeighbInvertedIndex<dist_t>::SaveIndex(const string &location) {
+  ofstream outFile(location);
+  CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
+
+  // Save main parameters
+
+  WriteField(outFile, "numPivot", num_pivot_);
+  WriteField(outFile, "numPivotIndex", num_prefix_);
+  WriteField(outFile, "chunkIndexSize", chunk_index_size_);
+  WriteField(outFile, "indexQty", posting_lists_.size());
+
+  // Save pivots positions
+  outFile << MergeIntoStr(pivot_pos_, ' ') << endl;
+
+  for(size_t i = 0; i < posting_lists_.size(); ++i) {
+    WriteField(outFile, "chunkId", i);
+    CHECK(posting_lists_[i]->size() == num_pivot_);
+    for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
+      outFile << MergeIntoStr((*posting_lists_[i])[pivotId], ' ') << endl;
+    }
+  }
+
+  outFile.close();
+}
+
+template <typename dist_t>
+void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
+  ifstream inFile(location);
+
+  CHECK_MSG(inFile, "Cannot open file '" + location + "' for reading");
+
+  size_t lineNum = 1;
+  ReadField(inFile, "numPivot", num_pivot_); lineNum++;
+  ReadField(inFile, "numPivotIndex", num_prefix_); lineNum++;
+  ReadField(inFile, "chunkIndexSize", chunk_index_size_); lineNum++;
+  size_t indexQty;
+  ReadField(inFile, "indexQty", indexQty);  lineNum++;
+
+  string line;
+  // Read pivot positions
+  CHECK_MSG(getline(inFile, line),
+            "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
+  pivot_pos_.clear();
+  CHECK_MSG(SplitStr(line, pivot_pos_, ' '),
+            "Failed to extract pivot IDs from line #" + ConvertToString(lineNum) + " from " + location);
+  CHECK_MSG(pivot_pos_.size() == num_pivot_,
+            "# of extracted pivots IDs from line #" + ConvertToString(lineNum) + " (" + ConvertToString(pivot_pos_.size()) + ")"
+            " doesn't match the number of pivots (" + ConvertToString(num_pivot_) + " from the header (location  " + location + ")");
+  pivot_.resize(num_pivot_);
+  for (size_t i = 0; i < pivot_pos_.size(); ++i) pivot_[i] = data_[pivot_pos_[i]];
+  ++lineNum;
+
+  posting_lists_.resize(indexQty);
+
+  for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
+    size_t tmp;
+    ReadField(inFile, "chunkId", tmp);
+    CHECK_MSG(tmp == chunkId, "The chunkId (" + ConvertToString(tmp) + " read from line " + ConvertToString(lineNum) +
+              " doesn't match the expected chunk ID " + ConvertToString(chunkId));
+    ++lineNum;
+    posting_lists_[chunkId] = shared_ptr<vector<PostingListInt>>(new vector<PostingListInt>());
+    (*posting_lists_[chunkId]).resize(num_pivot_);
+    for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
+      CHECK_MSG(getline(inFile, line),
+                "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
+      CHECK_MSG(SplitStr(line, (*posting_lists_[chunkId])[pivotId], ' '),
+                "Failed to extract object IDs from line #" + ConvertToString(lineNum) +
+                " chunkId " + ConvertToString(chunkId) + " location: " + location);
+      ++lineNum;
+    }
+  }
+
+  inFile.close();
 }
 
 template <typename dist_t>

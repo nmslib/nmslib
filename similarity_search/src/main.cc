@@ -359,6 +359,8 @@ void RunExper(bool                                bPrintProgress,
         if (IndexPtr->DuplicateData()) AdjustedMemByMethod -= data_size;
 
         wtm.reset();
+        // We won't save the index if it was loaded, but not created!
+        //if (bCreate && !SaveIndexLoc.empty()) {
         if (!SaveIndexLoc.empty()) {
           string loc = SaveIndexLoc + indexLocAdd;
           LOG(LIB_INFO) << "Saving an index for test set id " << TestSetId << " using location: " << loc;

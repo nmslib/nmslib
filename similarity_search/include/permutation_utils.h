@@ -41,7 +41,8 @@ template <typename dist_t>
 void GetPermutationPivot(const ObjectVector& data,
                          const Space<dist_t>& space,
                          const size_t num_pivot,
-                         ObjectVector* pivot) {
+                         ObjectVector* pivot,
+                         std::vector<IdType>* pivot_pos = NULL) {
   if (num_pivot >= data.size()) {
     throw runtime_error("The data set in the space " + space.ToString() +
                         "is to small to select enough pivots");
@@ -56,6 +57,7 @@ void GetPermutationPivot(const ObjectVector& data,
       p = RandomInt() % data.size();
     }
     pivot_idx.insert(p);
+    if (pivot_pos != NULL) pivot_pos->push_back(p);
     pivot->push_back(data[p]);
   }
 }

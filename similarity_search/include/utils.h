@@ -156,6 +156,9 @@ inline double round3(double x) { return round(x*1000.0)/1000.0; }
 template <typename ElemType>
 inline bool SplitStr(const std::string& str_, vector<ElemType>& res, const char SplitChar) {
   res.clear();
+
+  if (str_.empty()) return true;
+
   std::string str = str_;
 
   for (auto it = str.begin(); it != str.end(); ++it) {
@@ -174,13 +177,51 @@ inline bool SplitStr(const std::string& str_, vector<ElemType>& res, const char 
   return true;
 }
 
-  /*
-   * "fields" each occupy a single line, they are in the format:
-   * fieldName:fieldValue.
-   */
+template <typename ElemType>
+inline std::string MergeIntoStr(const std::vector<ElemType>& ve, char MergeChar) {
+  std::stringstream res;
 
-// Returns false if the line is empty
-inline void ReadField(istream &in, const string& fieldName, string& fieldValue) {
+  for (size_t i = 0; i < ve.size(); ++i) {
+    if (i) res << MergeChar;
+    res << ve[i];
+  }
+
+  return res.str();
+}
+
+template <typename obj_type>
+inline string ConvertToString(const obj_type& o) {
+  std::stringstream str;
+  str << o;
+  return str.str();
+}
+
+template <>
+inline string ConvertToString<string>(const string& o) {
+  return o;
+}
+
+template <typename obj_type>
+inline void ConvertFromString(const string& s, obj_type& o) {
+  std::stringstream str(s);
+  if (!(str >> o) || !str.eof()) {
+    throw runtime_error("Cannot convert '" + s +
+                        "' to the type:" + string(typeid(obj_type).name()));
+  }
+}
+
+template <>
+inline void ConvertFromString<string>(const string& s, string& o) {
+  o = s;
+}
+
+/*
+ * "fields" each occupy a single line, they are in the format:
+ * fieldName:fieldValue.
+ */
+
+template <typename FieldType>
+inline void ReadField(istream &in, const string& fieldName, FieldType& fieldValue) {
   string s;
   if (!getline(in, s)) throw runtime_error("Error reading a field value");
   if (s.empty()) {
@@ -194,29 +235,14 @@ inline void ReadField(istream &in, const string& fieldName, string& fieldValue) 
     throw runtime_error("Expected field '" + fieldName + "' but got: '"
                         + gotFieldName + "'");
   }
-  fieldValue = s.substr(p + 1);
+  ConvertFromString(s.substr(p + 1), fieldValue);
 }
 
-inline void WriteField(ostream& out, const string& fieldName, const string& fieldValue) {
+template <typename FieldType>
+inline void WriteField(ostream& out, const string& fieldName, const FieldType& fieldValue) {
   if (!(out << fieldName << ":" << fieldValue << std::endl)) {
     throw
-      runtime_error("Error writing to an output stream, field name: " + fieldName);
-  }
-}
-
-template <typename obj_type>
-string ConvertToString(const obj_type& o) {
-  std::stringstream str;
-  str << o;
-  return str.str();
-}
-
-template <typename obj_type>
-void ConvertFromString(const string& s, obj_type& o) {
-  std::stringstream str(s);
-  if (!(str >> o) || !str.eof()) {
-    throw runtime_error("Cannot convert '" + s +
-                        "' to the type:" + string(typeid(obj_type).name()));
+        runtime_error("Error writing to an output stream, field name: " + fieldName);
   }
 }
 
