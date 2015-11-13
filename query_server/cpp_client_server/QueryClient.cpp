@@ -25,6 +25,7 @@
 #include "QueryService.h"
 
 #include "ztimer.h"
+#include "params_def.h"
 
 #include <boost/program_options.hpp>
 
@@ -69,19 +70,14 @@ void ParseCommandLineForClient(int argc, char*argv[],
                       ) {
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
-    ("help,h", "produce help message")
-    ("port,p",          po::value<int>(&port)->required(),
-                        "TCP/IP server port number")
-    ("addr,a",          po::value<string>(&host)->required(),
-                        "TCP/IP server address")
-    ("knn,k",             po::value<int>(&k),
-                        "k for k-NN search")
-    ("range,r",         po::value<double>(&r),
-                        "range for the range search")
-    ("queryTimeParams,q", po::value<string>(&queryTimeParams)->default_value(""),
-                        "Query time parameters")
-    ("retExternId,e",   "Return external IDs?")
-    ("retObj,o",         "Return string representation of found objects?")
+    (HELP_PARAM_OPT,    HELP_PARAM_MSG)
+    (PORT_PARAM_OPT,    po::value<int>(&port)->required(), PORT_PARAM_MSG)
+    (ADDR_PARAM_OPT,    po::value<string>(&host)->required(), ADDR_PARAM_MSG)
+    (KNN_PARAM_OPT,     po::value<int>(&k), KNN_PARAM_MSG)
+    (RANGE_PARAM_OPT,   po::value<double>(&r), RANGE_PARAM_MSG)
+    (QUERY_TIME_PARAMS_PARAM_OPT, po::value<string>(&queryTimeParams)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG)
+    (RET_EXT_ID_PARAM_OPT,   RET_EXT_ID_PARAM_MSG)
+    (RET_OBJ_PARAM_OPT, RET_EXT_ID_PARAM_MSG)
     ;
 
   po::variables_map vm;

@@ -48,8 +48,9 @@ using StringVector = std::vector<std::string>;
 
 static PyMethodDef nmslibMethods[] = {
   {"initIndex", initIndex, METH_VARARGS},
-  {"setData", setData, METH_VARARGS},
+  {"addDataPoint", addDataPoint, METH_VARARGS},
   {"buildIndex", buildIndex, METH_VARARGS},
+  {"setQueryTimeParams", setQueryTimeParams, METH_VARARGS},
   {"knnQuery", knnQuery, METH_VARARGS},
   {"freeIndex", freeIndex, METH_VARARGS},
   {NULL, NULL}
@@ -75,20 +76,17 @@ using BoolObject = std::pair<bool,const Object*>;
 typedef BoolObject (*DataParserFunc)(PyObject*,int,int);
 BoolObject readVector(PyObject* data, int id, int dist_type);
 BoolObject readString(PyObject* data, int id, int dist_type);
-BoolObject readSqfd(PyObject* data, int id, int dist_type);
 
 const int kDataVector = 1;
 const int kDataString = 2;
-const int kDataSqfd = 3;
+
 const std::map<std::string, int> NMSLIB_DATA_TYPES = {
   {"VECTOR", kDataVector},
   {"STRING", kDataString},
-  {"SQFD", kDataSqfd}
 };
 const std::map<int, DataParserFunc> NMSLIB_DATA_PARSERS = {
   {kDataVector, &readVector},
   {kDataString, &readString},
-  {kDataSqfd, &readSqfd}
 };
 
 const int kDistFloat = 4;
@@ -189,27 +187,18 @@ BoolObject readString(PyObject* data, int id, int dist_type) {
   return std::make_pair(true, z);
 }
 
-BoolObject readSqfd(PyObject* data, int id, int dist_type) {
-  raise << "readSqfd: not implemented yet";
-  return std::make_pair(false, nullptr);
-}
-
 template <typename T>
 class IndexWrapper {
  public:
-  IndexWrapper(int dist_type, int data_type, int sz,
+  IndexWrapper(int dist_type, int data_type, 
                const char* space_type,
                const AnyParams& space_param,
-               const char* method_name,
-               const AnyParams& method_param)
+               const char* method_name)
       : dist_type_(dist_type),
         data_type_(data_type),
-        sz_(sz),
         space_type_(space_type),
         method_name_(method_name),
-        method_param_(method_param),
         index_(nullptr) {
-    data_.resize(sz);
     space_ = SpaceFactoryRegistry<T>::Instance()
         .CreateSpace(space_type_.c_str(), space_param);
   }
@@ -229,23 +218,27 @@ class IndexWrapper {
 
   inline int GetDistType() { return dist_type_; }
   inline int GetDataType() { return data_type_; }
-  inline int GetDataSize() { return sz_; }
+  inline size_t GetDataPointQty() { return data_.size(); }
 
-  void SetData(size_t pos, const Object* z) {
-    assert(pos < data_.size());
-    data_[pos] = z;
+  void AddDataPoint(const Object* z) {
+    data_.push_back(z);
   }
 
-  void Build() {
+  void Build(const AnyParams& index_params) {
     index_ = MethodFactoryRegistry<T>::Instance()
         .CreateMethod(true /* let's print progress bars for now */, 
                       method_name_, space_type_,
-                      space_, data_, method_param_);
+                      *space_, data_);
+    index_->CreateIndex(index_params);
+  }
+
+  void SetQueryTimeParams(const AnyParams& p) {
+    index_->SetQueryTimeParams(p);
   }
 
   PyObject* KnnQuery(int k, const Object* query) {
-    KNNQuery<T> knn(space_, query, k);
-    index_->Search(&knn);
+    KNNQuery<T> knn(*space_, query, k);
+    index_->Search(&knn, -1);
     KNNQueue<T>* res = knn.Result()->Clone();
     IntVector ids;
     while (!res->Empty()) {
@@ -271,10 +264,9 @@ class IndexWrapper {
  private:
   const int dist_type_;
   const int data_type_;
-  const int sz_;
   const std::string space_type_;
   const std::string method_name_;
-  const AnyParams method_param_;
+  const AnyParams method_index_param_;
   Index<T>* index_;
   Space<T>* space_;
   ObjectVector data_;
@@ -287,14 +279,13 @@ inline bool IsDistFloat(PyObject* ptr) {
 template <typename T>
 PyObject* _initIndex(int dist_type,
                      int data_type,
-                     int sz,
                      const char* space_type,
                      const AnyParams& space_param,
-                     const char* method_name,
-                     const AnyParams& method_param) {
-  IndexWrapper<T>* index(new IndexWrapper<T>(
-      dist_type, data_type, sz, space_type, space_param,
-      method_name, method_param));
+                     const char* method_name) {
+  IndexWrapper<T>* 
+      index(new IndexWrapper<T>(dist_type, data_type, 
+                                space_type, space_param, 
+                                method_name));
   if (!index) {
     raise << "failed to create IndexWrapper";
     return NULL;
@@ -303,98 +294,127 @@ PyObject* _initIndex(int dist_type,
 }
 
 PyObject* initIndex(PyObject* self, PyObject* args) {
-  int sz;
   char* space_type;
   PyListObject* space_param_list;
   char* method_name;
-  PyListObject* method_param_list;
   int dist_type, data_type;
-  if (!PyArg_ParseTuple(args, "isO!sO!ii",
-          &sz, &space_type, &PyList_Type, &space_param_list, &method_name,
-          &PyList_Type, &method_param_list, &data_type, &dist_type)) {
-    return NULL;
-  }
-  if (sz <= 0) {
-    raise << "# of objects sould be greater than 0";
+  if (!PyArg_ParseTuple(args, "sO!sii",
+          &space_type, &PyList_Type, &space_param_list, 
+          &method_name,
+          &data_type, &dist_type)) {
+    raise << "Error reading parameters (expecting: space type, space parameter list, index/method name, data type, distance value type)";
     return NULL;
   }
   StringVector space_param;
   if (!readList(space_param_list, space_param, PyString_AsString)) {
     return NULL;
   }
-  StringVector method_param;
-  if (!readList(method_param_list, method_param, PyString_AsString)) {
-    return NULL;
-  }
   switch (dist_type) {
     case kDistFloat:
       return _initIndex<float>(
-          dist_type, data_type, sz, space_type, space_param,
-          method_name, method_param);
+          dist_type, data_type, space_type, space_param,
+          method_name);
     case kDistInt:
       return _initIndex<int>(
-          dist_type, data_type, sz, space_type, space_param,
-          method_name, method_param);
+          dist_type, data_type, space_type, space_param,
+          method_name);
     default:
       raise << "unknown dist type - " << dist_type;
       return NULL;
   }
 }
 template <typename T>
-PyObject* _setData(PyObject* ptr, int pos, PyObject* data) {
+PyObject* _addDataPoint(PyObject* ptr, PyObject* data) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
-  if (pos < 0 || pos >= index->GetDataSize()) {
-    raise << "pos (" << pos << ") should be in [0, "
-          << index->GetDataSize() << ")";
-    return NULL;
-  }
   auto iter = NMSLIB_DATA_PARSERS.find(index->GetDataType());
   if (iter == NMSLIB_DATA_PARSERS.end()) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
   }
-  auto res = (*iter->second)(data, pos, index->GetDistType());
+  auto res = (*iter->second)(data, index->GetDataPointQty(), index->GetDistType());
   if (!res.first) {
+    raise << "Cannot create a data-point object!";
     return NULL;
   }
-  index->SetData(pos, res.second);
+  index->AddDataPoint(res.second);
   Py_INCREF(Py_None);
   return Py_None;
 }
 
-PyObject* setData(PyObject* self, PyObject* args) {
+PyObject* addDataPoint(PyObject* self, PyObject* args) {
   PyObject* ptr;
   PyObject* data;
-  int pos;
-  if (!PyArg_ParseTuple(args, "OiO", &ptr, &pos, &data)) {
+  if (!PyArg_ParseTuple(args, "OO", &ptr, &data)) {
+    raise << "Error reading parameters (expecting: index ref, object (as a string))";
     return NULL;
   }
   if (IsDistFloat(ptr)) {
-    return _setData<float>(ptr, pos, data);
+    return _addDataPoint<float>(ptr, data);
   } else {
-    return _setData<int>(ptr, pos, data);
+    return _addDataPoint<int>(ptr, data);
   }
 }
 
 template <typename T>
-void _buildIndex(PyObject* ptr) {
+void _buildIndex(PyObject* ptr, const AnyParams& index_params) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
-  index->Build();
+  index->Build(index_params);
 }
 
 PyObject* buildIndex(PyObject* self, PyObject* args) {
-  PyObject* ptr;
-  if (!PyArg_ParseTuple(args, "O", &ptr)) {
+  PyObject*     ptr;
+  PyListObject* param_list;
+
+  if (!PyArg_ParseTuple(args, "OO!", &ptr, &PyList_Type, &param_list)) {
+    raise << "Error reading parameters (expecting: index ref, parameter list)";
     return NULL;
   }
+
+  StringVector index_params;
+  if (!readList(param_list, index_params, PyString_AsString)) {
+    raise << "Cannot convert an argument to a list";
+    return NULL;
+  }
+
   if (IsDistFloat(ptr)) {
-    _buildIndex<float>(ptr);
+    _buildIndex<float>(ptr, index_params);
   } else {
-    _buildIndex<int>(ptr);
+    _buildIndex<int>(ptr, index_params);
   }
   Py_RETURN_NONE;
+}
+
+template <typename T>
+void _setQueryTimeParams(PyObject* ptr, const AnyParams& qp) {
+  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+      PyLong_AsVoidPtr(ptr));
+  index->SetQueryTimeParams(qp);
+}
+
+PyObject* setQueryTimeParams(PyObject* self, PyObject* args) {
+  PyListObject* param_list;
+  PyObject*     ptr;
+
+  if (!PyArg_ParseTuple(args, "OO!", &ptr, &PyList_Type, &param_list)) {
+    raise << "Error reading parameters (expecting: index ref, parameter list)";
+    return NULL;
+  }
+
+  StringVector query_time_params;
+  if (!readList(param_list, query_time_params, PyString_AsString)) {
+    raise << "Cannot convert an argument to a list";
+    return NULL;
+  }
+
+  if (IsDistFloat(ptr)) {
+    _setQueryTimeParams<float>(ptr, query_time_params);
+  } else {
+    _setQueryTimeParams<int>(ptr, query_time_params);
+  }
+
+  return Py_None;
 }
 
 template <typename T>
@@ -419,6 +439,7 @@ PyObject* knnQuery(PyObject* self, PyObject* args) {
   int k;
   PyObject* data;
   if (!PyArg_ParseTuple(args, "OiO", &ptr, &k, &data)) {
+    raise << "Error reading parameters (expecting: index ref, K as in-KNN, query)";
     return NULL;
   }
   if (k < 1) {

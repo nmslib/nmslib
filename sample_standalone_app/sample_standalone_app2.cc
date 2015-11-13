@@ -98,32 +98,43 @@ int main(int argc, char* argv[]) {
   // Create an instance of our custom space that uses L2-distance
   AnyParams empty;
   Space<float>    *space = SpaceFactoryRegistry<float>::Instance().CreateSpace(spaceName, empty);
+  vector<string>   vExternIds;
 
   space->ReadDataset(dataSet,
-                      NULL, // we don't need config here
+                      vExternIds,
                       dataFile,
                       0);
 
   space->ReadDataset(querySet,
-                      NULL, // we don't need config here
+                      vExternIds,
                       queryFile,
                       0);
+
+  AnyParams IndexParams(
+            {
+            "NN=17",
+            "initIndexAttempts=3",
+            "indexThreadQty=4", /* 4 indexing threads */
+            }
+            );
+
+  AnyParams QueryTimeParams(
+            {
+            "initSearchAttempts=1",
+            }
+            );
 
   Index<float>*   indexSmallWorld =  
                         MethodFactoryRegistry<float>::Instance().
                                 CreateMethod(true /* print progress */,
                                         "small_world_rand",
-                                        "custom", space,
-                                        dataSet, 
-                                        AnyParams(
-                                                  {
-                                                  "NN=17",
-                                                  "initIndexAttempts=3",
-                                                  "initSearchAttempts=1",
-                                                  "indexThreadQty=4", /* 4 indexing threads */
-                                                  }
-                                                  )
+                                        "custom", 
+                                        *space,
+                                        dataSet 
                                         );
+
+  indexSmallWorld->CreateIndex(IndexParams);
+  indexSmallWorld->SetQueryTimeParams(QueryTimeParams);
 
   cout << "Small-world index is created!" << endl;
 
@@ -131,10 +142,12 @@ int main(int argc, char* argv[]) {
                         MethodFactoryRegistry<float>::Instance().
                                 CreateMethod(false /* don't print progress */,
                                         "seq_search",
-                                        "custom", space,
-                                        dataSet, 
-                                        AnyParams()
+                                        "custom", 
+                                        *space,
+                                        dataSet 
                                         );
+
+  indexSeqSearch->CreateIndex(getEmptyParams());
 
   cout << "SEQ-search index is created!" << endl;
 
@@ -147,7 +160,7 @@ int main(int argc, char* argv[]) {
 
     for (const Object* queryObj: querySet) {
       unsigned K = 5; // 5-NN query
-      KNNQuery<float>   knnQ(space, queryObj, K);
+      KNNQuery<float>   knnQ(*space, queryObj, K);
 
       res += doSearch(method, &knnQ);
     }
@@ -168,7 +181,7 @@ int main(int argc, char* argv[]) {
 
     for (const Object* queryObj: querySet) {
       float R = 100.0;
-      RangeQuery<float>   knnQ(space, queryObj, R);
+      RangeQuery<float>   knnQ(*space, queryObj, R);
 
       res += doSearch(method, &knnQ);
     }

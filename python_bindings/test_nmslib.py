@@ -1,4 +1,4 @@
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
+#!/usr/bin/python
 
 import sys
 import nmslib
@@ -8,26 +8,24 @@ def read_data(f):
         yield [float(v) for v in line.strip().split()]
 
 def test_vector():
-    n = 4500
     space_type = 'cosinesimil'
     space_param = []
     method_name = 'small_world_rand'
-    method_param = ['NN=17', 'initIndexAttempts=3', 'initSearchAttempts=1', 'indexThreadQty=4']
-    index = nmslib.initIndex(n,
+    index = nmslib.initIndex(
                              space_type,
                              space_param,
                              method_name,
-                             method_param,
                              nmslib.DataType.VECTOR,
                              nmslib.DistType.FLOAT)
 
     for pos, data in enumerate(read_data('sample_dataset.txt')):
-        if pos >= n:
-            break
-        #print pos, data
-        nmslib.setData(index, pos, data)
-    print 'here'
-    nmslib.buildIndex(index)
+        nmslib.addDataPoint(index, data)
+
+    index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
+    query_time_param = ['initSearchAttempts=3']
+
+    nmslib.buildIndex(index, index_param)
+    nmslib.setQueryTimeParams(index,query_time_param)
 
     k = 2
     for idx, data in enumerate(read_data('sample_queryset.txt')):
@@ -46,18 +44,20 @@ def test_string():
     space_type = 'leven'
     space_param = []
     method_name = 'small_world_rand'
-    method_param = ['NN=17', 'initIndexAttempts=3', 'initSearchAttempts=1', 'indexThreadQty=4']
-    index = nmslib.initIndex(len(DATA_STRS),
+    index = nmslib.initIndex(
                              space_type,
                              space_param,
                              method_name,
-                             method_param,
                              nmslib.DataType.STRING,
                              nmslib.DistType.INT)
     for pos, data in enumerate(DATA_STRS):
-        #print pos, data
-        nmslib.setData(index, pos, data)
-    nmslib.buildIndex(index)
+        nmslib.addDataPoint(index, data)
+
+    index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
+    query_time_param = ['initSearchAttempts=3']
+
+    nmslib.buildIndex(index, index_param)
+    nmslib.setQueryTimeParams(index, query_time_param)
 
     k = 2
     for idx, data in enumerate(QUERY_STRS):
@@ -68,13 +68,8 @@ if __name__ == '__main__':
 
     print nmslib.DataType.VECTOR
     print nmslib.DataType.STRING
-    print nmslib.DataType.SQFD
-    #print nmslib.test([5,2,[1,2],[3,4],[5,6],[7,8],[9,10]])
-    #print nmslib.test([0,1,2,3,4,5,7,8,9])
-    #print nmslib.test('abcdef ghij')
     print nmslib.DistType.INT
     print nmslib.DistType.FLOAT
-    #sys.exit(0)
 
     test_vector()
     test_string()

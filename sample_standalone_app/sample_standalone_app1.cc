@@ -112,6 +112,7 @@ int main(int argc, char* argv[]) {
 
   // Create an instance of our custom space that uses L2-distance
   VectorSpaceGen<float, DistL2>   customSpace;
+  vector<string>                  vExternIds;
 
   const char* fileName = NULL;
   if (argc == 2 || argc == 3) {
@@ -119,10 +120,8 @@ int main(int argc, char* argv[]) {
     // Here we will read data from a file
     int MaxNumObjects = 100; // read at most 100 objects, if 0 all objects are read
     if (argc == 3) MaxNumObjects = atol(argv[2]);
-    customSpace.ReadDataset(dataSet,
-                      NULL, // we don't need config here
-                      fileName,
-                      MaxNumObjects);
+    customSpace.ReadDataset(dataSet, vExternIds, fileName, MaxNumObjects);
+    cout << "Read: "<< dataSet.size() << " objects" << endl;
     if (dataSet.size() < 2) {
       cerr << "Too few data elements in " << fileName << endl; 
       return 1;
@@ -146,7 +145,7 @@ int main(int argc, char* argv[]) {
   queryObj = dataSet[0];
   dataSet.erase(dataSet.begin());
 
-  cout << "Using the first object as the query vector" << endl;
+  cout << "Using the first object as the query vector (this object is removed from the dataset)" << endl;
   cout << "The number of remaining objects is: " << dataSet.size() << " "; 
 
   if (fileName == NULL) cout << " created from vector<vector<...>> "; 
@@ -173,66 +172,76 @@ int main(int argc, char* argv[]) {
   if (LOG_OPTION == 3)
     initLibrary(LIB_LOGSTDERR, NULL);
 
+  AnyParams IndexParams(
+                        {
+                        "NN=11",
+                        "initIndexAttempts=3",
+                        "indexThreadQty=4" /* 4 indexing threads */
+                        });
+
+  AnyParams QueryTimeParams( { "initSearchAttempts=3" });
+                          
   Index<float>*   indexSmallWorld =  
                         MethodFactoryRegistry<float>::Instance().
                                 CreateMethod(true /* print progress */,
                                         "small_world_rand",
-                                        "custom", &customSpace,
-                                        dataSet, 
-                                        AnyParams(
-                                                  {
-                                                  "NN=11",
-                                                  "initIndexAttempts=3",
-                                                  "initSearchAttempts=3",
-                                                  "indexThreadQty=4", /* 4 indexing threads */
-                                                  }
-                                                  )
-                                        );
+                                        "custom",
+                                         customSpace,
+                                         dataSet);
+
+  // Creating an index
+  indexSmallWorld->CreateIndex(IndexParams);
+  // Setting query-time parameters
+  indexSmallWorld->SetQueryTimeParams(QueryTimeParams);
 
   cout << "Small-world index is created!" << endl;
+
+  IndexParams     = getEmptyParams();
+  QueryTimeParams = AnyParams({"alphaLeft=1.0", "alphaRight=1.0"});
 
   Index<float>*   indexVPTree = 
                         MethodFactoryRegistry<float>::Instance().
                                 CreateMethod(false /* don't print progress */,
                                         "vptree",
-                                        "custom", &customSpace,
-                                        dataSet, 
-                                        AnyParams(
-                                                  {
-                                                  "alphaLeft=1.0",
-                                                  "alphaRight=1.0",
-                                                  }
-                                                  )
-                                        );
+                                        "custom",
+                                        customSpace,
+                                        dataSet);
+
+  indexVPTree->CreateIndex(IndexParams);
+  indexVPTree->SetQueryTimeParams(QueryTimeParams);
 
   cout << "VP-tree index is created!" << endl;
+
+  IndexParams= AnyParams({ "projDim=16",   // Projection dimensionality
+                           "projType=perm", // using permutations => the number of pivots is equal to projDim and should be < #of objects
+                         });
+
+  QueryTimeParams = AnyParams({ "dbScanFrac=0.2", // A fraction of the data set to scan
+                             });
 
   Index<float>*   indexPerm = 
                            MethodFactoryRegistry<float>::Instance().
                                 CreateMethod(false /* don't print progress */,
-                                        "perm_incsort",
-                                        "custom", &customSpace,
-                                        dataSet, 
-                                        AnyParams(
-                                                  {
-                                                  "dbScanFrac=0.2", // A fraction of the data set to scan
-                                                  "numPivot=16",   // Number of pivots (should be < the # of objects)
-                                                  }
-                                                  )
-                                        );
+                                        "proj_incsort",
+                                        "custom",
+                                         customSpace,
+                                         dataSet);
+
+  indexPerm->CreateIndex(IndexParams);
+  indexPerm->SetQueryTimeParams(QueryTimeParams);
 
   cout << "Permutation index is created!" << endl;
 
   /* Now let's try some searches */
   float radius = 0.12;
-  RangeQuery<float>   rangeQ(&customSpace, queryObj, radius);
+  RangeQuery<float>   rangeQ(customSpace, queryObj, radius);
 
   //doSearch(indexSmallWorld, &rangeQ); not supported for small world method
   doSearch(indexVPTree, &rangeQ, REP_QTY);
   doSearch(indexPerm, &rangeQ, REP_QTY);
 
   unsigned K = 5; // 5-NN query
-  KNNQuery<float>   knnQ(&customSpace, queryObj, K);
+  KNNQuery<float>   knnQ(customSpace, queryObj, K);
 
   cout << "Setting one value of a query-time param (small  world)" << endl;
   indexSmallWorld->SetQueryTimeParams(AnyParams({ "initSearchAttempts=3" }));
@@ -252,7 +261,10 @@ int main(int argc, char* argv[]) {
 
   cout << "Saving vectors to a file: " << endl;
 
-  customSpace.WriteDataset(dataSet, "testdataset.txt");
+  // The number of external IDs must match the number of objects, even if these external
+  // IDs are ignored by the space API.
+  vExternIds.resize(dataSet.size()); 
+  customSpace.WriteDataset(dataSet, vExternIds, "testdataset.txt");
 
   cout << "Deleting objects..." << endl;
 

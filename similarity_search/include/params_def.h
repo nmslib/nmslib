@@ -20,7 +20,6 @@
 #define HELP_PARAM_OPT  "help,h"
 #define HELP_PARAM_MSG "produce help message"
 
-
 #define SPACE_TYPE_PARAM_OPT    "spaceType,s"
 #define SPACE_TYPE_PARAM_MSG    "space type, e.g., l1, l2, lp"
 
@@ -46,7 +45,7 @@
 #define SAVE_INDEX_PARAM_MSG    "a location to save the index to "
 #define SAVE_INDEX_PARAM_DEFAULT ""
 
-#define CACHE_PREFIX_GS_PARAM_OPT     "cachePrefixGS"
+#define CACHE_PREFIX_GS_PARAM_OPT     "cachePrefixGS,g"
 #define CACHE_PREFIX_GS_PARAM_MSG     "a prefix of gold standard cache files"
 #define CACHE_PREFIX_GS_PARAM_DEFAULT ""
 
@@ -76,14 +75,14 @@
 #define EPS_PARAM_MSG            "the parameter for the eps-approximate k-NN search."
 #define EPS_PARAM_DEFAULT        0.0
 
-#define QUERY_TIME_PARAMS_PARAM_OPT "queryTimeParams"
+#define QUERY_TIME_PARAMS_PARAM_OPT "queryTimeParams,t"
 #define QUERY_TIME_PARAMS_PARAM_MSG "query-time method(s) parameters in the format:\nparam1=value1,param2=value2,...,paramK=valueK"
 
-#define INDEX_TIME_PARAMS_PARAM_OPT "createIndex"
+#define INDEX_TIME_PARAMS_PARAM_OPT "createIndex,c"
 #define INDEX_TIME_PARAMS_PARAM_MSG "index-time method(s) parameters in the format:\nparam1=value1,param2=value2,...,paramK=valueK"
 
 #define METHOD_PARAM_OPT         "method,m"
-#define METHOD_PARAM_MSG         "method name"
+#define METHOD_PARAM_MSG         "method/index name"
 #define METHOD_PARAM_DEFAULT     ""
 
 #define THREAD_TEST_QTY_PARAM_OPT         "threadTestQty"
@@ -94,14 +93,30 @@
 #define OUT_FILE_PREFIX_PARAM_MSG      "output file prefix"
 #define OUT_FILE_PREFIX_PARAM_DEFAULT  ""
 
-#define APPEND_TO_REF_FILE_PARAM_OPT      "appendToResFile"
-#define APPEND_TO_REF_FILE_PARAM_MSG      "do not override information in results files, append new data"
-#define APPEND_TO_REF_FILE_PARAM_DEFAULT  false
+#define APPEND_TO_RES_FILE_PARAM_OPT      "appendToResFile,a"
+#define APPEND_TO_RES_FILE_PARAM_MSG      "do not override information in results files, append new data"
 
-#define PRINT_PROGRESS_PARAM_OPT          "printProgress,p"
-#define PRINT_PROGRESS_PARAM_MSG          "display (mostly indexing) progress (for some methods)"
-#define PRINT_PROGRESS_PARAM_DEFAULT      true
+#define NO_PROGRESS_PARAM_OPT     "noProgressBar"
+#define NO_PROGRESS_PARAM_MSG     "suppress displaying (mostly indexing) progress bars (for some methods)"
 
-    
+// Server/client parameters    
+
+#define DEBUG_PARAM_OPT "debug,D"
+#define DEBUG_PARAM_MSG "Print debug messages?"
+
+#define PORT_PARAM_OPT  "port,p"
+#define PORT_PARAM_MSG  "TCP/IP port number"
+
+#define ADDR_PARAM_OPT  "addr,a"
+#define ADDR_PARAM_MSG  "TCP/IP server address"
+
+#define THREAD_PARAM_OPT "threadQty"
+#define THREAD_PARAM_MSG "A number of server threads"
+
+#define RET_EXT_ID_PARAM_OPT "retExternId,e"
+#define RET_EXT_ID_PARAM_MSG "Return external IDs?"
+
+#define RET_OBJ_PARAM_OPT    "retObj,o"
+#define RET_OBJ_PARAM_MSG    "Return string representation of found objects?"
 
 #endif

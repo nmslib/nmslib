@@ -38,6 +38,8 @@
 #define PROJ_TYPE_PERM_BIN        "permbin"
 // Dense vectors remain unchanged, sparsed vectors are "hashed" into dense ones
 #define PROJ_TYPE_VECTOR_DENSE    "densevect"
+// Trivial projection
+#define PROJ_TYPE_NONE            "none"
 
 namespace similarity {
 

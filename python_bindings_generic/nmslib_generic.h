@@ -22,6 +22,7 @@ extern "C" void initnmslib_generic();
 PyObject* initIndex(PyObject* self, PyObject* args);
 PyObject* addDataPoint(PyObject* self, PyObject* args);
 PyObject* buildIndex(PyObject* self, PyObject* args);
+PyObject* setQueryTimeParams(PyObject* self, PyObject* args);
 PyObject* knnQuery(PyObject* self, PyObject* args);
 PyObject* freeIndex(PyObject* self, PyObject* args);
 

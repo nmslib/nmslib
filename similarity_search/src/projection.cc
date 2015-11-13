@@ -358,6 +358,63 @@ private:
   size_t dstDim_;
 };
 
+template <class dist_t>
+class ProjectionNone : public Projection<dist_t> {
+public:
+  virtual void compProj(const Query<dist_t>* pQuery,
+                        const Object* pObj,
+                        float* pDstVect) const {
+    if (NULL == pObj) pObj = pQuery->QueryObject();
+    /*
+     * For dense vector spaces, we ignore the specified "projection"
+     * dimensionality and use an actual number of vector elements. 
+     * For sparse vector spaces, we obtain an intermediate dense vector 
+     * with projDim elements.
+     */
+    size_t nDim = space_.GetElemQty(pObj);
+    if (!nDim) nDim = projDim_;
+    vector<dist_t> intermBuffer(nDim);
+    Projection<dist_t>::fillIntermBuffer(space_,
+                                         pObj,
+                                         nDim,
+                                         intermBuffer);
+
+    CHECK(nDim == dstDim_);
+
+    for (size_t i = 0; i < dstDim_; ++i)
+      pDstVect[i] = static_cast<float>(intermBuffer[i]);
+  }
+
+  friend class Projection<dist_t>;
+private:
+  ProjectionNone(const Space<dist_t>& space, const ObjectVector& data,
+                 size_t nProjDim, size_t nDstDim) :
+    space_(space), projDim_(nProjDim), dstDim_(nDstDim) {
+    if (data.empty()) {
+      stringstream err;
+      err << "Cannot initialize projection type '" <<
+             PROJ_TYPE_RAND << "'" <<
+             " without a single data point";
+      throw runtime_error(err.str());
+    }
+    size_t nDim = space.GetElemQty(data[0]);
+    if (nDim == 0) {
+      if (!projDim_) {
+        throw runtime_error("Specify a non-zero value for the intermediate dimensionaity.");
+      }
+      nDim = projDim_;
+    }
+    if (nDim != dstDim_) {
+      throw runtime_error("The dimensionality of the projected space should be equal to either source or to the intermediate dimensionality!");
+    }
+  }
+
+  const Space<dist_t>& space_;
+  size_t projDim_;
+  size_t dstDim_;
+
+};
+
 
 /*
  * Projection factory function.
@@ -387,6 +444,8 @@ Projection<dist_t>::createProjection(const Space<dist_t>& space,
     return new ProjectionVectDense<dist_t>(space, nDstDim);
   } else if (PROJ_TYPE_FAST_MAP == projType) {
     return new ProjectionFastMap<dist_t>(space, data, nDstDim);
+  } else if (PROJ_TYPE_NONE == projType) {
+    return new ProjectionNone<dist_t>(space, data, nProjDim, nDstDim);
   }
 
   throw runtime_error("Unknown projection type '" + projType + "'");
@@ -414,6 +473,10 @@ template class ProjectionPermutation<int>;
 template class ProjectionFastMap<float>;
 template class ProjectionFastMap<double>;
 template class ProjectionFastMap<int>;
+
+template class ProjectionNone<float>;
+template class ProjectionNone<double>;
+template class ProjectionNone<int>;
 
 }
 

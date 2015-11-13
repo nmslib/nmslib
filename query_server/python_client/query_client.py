@@ -23,7 +23,7 @@ parser.add_argument('-p', '--port', help='TCP/IP server port number', action='st
 parser.add_argument('-a', '--addr', help='TCP/IP server address', action='store', required=True)
 parser.add_argument('-k', '--knn', help='k for k-NN search', action='store', required=False,type=int)
 parser.add_argument('-r', '--range', help='range for the range search', action='store', required=False,type=float)
-parser.add_argument('-q', '--queryTimeParams', help='Query time parameter', action='store', default='')
+parser.add_argument('-t', '--queryTimeParams', help='Query time parameter', action='store', default='')
 parser.add_argument('-o', '--retObj', help='Return string representation of found objects?', action='store_true', default=False)
 parser.add_argument('-e', '--retExternId', help='Return external IDs?', action='store_true', default=False)
 

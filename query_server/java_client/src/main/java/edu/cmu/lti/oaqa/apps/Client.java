@@ -50,7 +50,7 @@ public class Client {
   private final static String R_LONG_PARAM = "range";
   private final static String R_DESC = "range for the range search";  
 
-  private final static String QUERY_TIME_SHORT_PARAM = "q";
+  private final static String QUERY_TIME_SHORT_PARAM = "t";
   private final static String QUERY_TIME_LONG_PARAM = "queryTimeParams";
   private final static String QUERY_TIME_DESC = "Query time parameters";  
 

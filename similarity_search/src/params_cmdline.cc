@@ -77,6 +77,10 @@ void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
   // Conversion to double is due to an Intel's bug with __builtin_signbit being undefined for float
   double          epsTmp;
 
+  bPrintProgress  = true;
+
+  bool bSuppressPrintProgress;
+
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
     (HELP_PARAM_OPT,          HELP_PARAM_MSG)
@@ -100,8 +104,8 @@ void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
     (METHOD_PARAM_OPT,        po::value<string>(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG)
     (THREAD_TEST_QTY_PARAM_OPT,po::value<unsigned>(&ThreadTestQty)->default_value(THREAD_TEST_QTY_PARAM_DEFAULT), THREAD_TEST_QTY_PARAM_MSG)
     (OUT_FILE_PREFIX_PARAM_OPT, po::value<string>(&ResFilePrefix)->default_value(OUT_FILE_PREFIX_PARAM_DEFAULT), OUT_FILE_PREFIX_PARAM_MSG)
-    (APPEND_TO_REF_FILE_PARAM_OPT, po::value<bool>(&AppendToResFile)->default_value(APPEND_TO_REF_FILE_PARAM_DEFAULT), APPEND_TO_REF_FILE_PARAM_MSG)
-    (PRINT_PROGRESS_PARAM_OPT, po::value<bool>(&bPrintProgress)->default_value(PRINT_PROGRESS_PARAM_DEFAULT), PRINT_PROGRESS_PARAM_MSG)
+    (APPEND_TO_RES_FILE_PARAM_OPT, po::bool_switch(&AppendToResFile), APPEND_TO_RES_FILE_PARAM_MSG)
+    (NO_PROGRESS_PARAM_OPT,   po::bool_switch(&bSuppressPrintProgress), NO_PROGRESS_PARAM_MSG)
     ;
 
   po::variables_map vm;
@@ -112,6 +116,8 @@ void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
     Usage(argv[0], ProgOptDesc);
     LOG(LIB_FATAL) << e.what();
   }
+
+  bPrintProgress = !bSuppressPrintProgress;
 
   eps = epsTmp;
 

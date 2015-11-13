@@ -31,6 +31,7 @@
 #include <boost/program_options.hpp>
 
 #include "params.h"
+#include "params_def.h"
 #include "utils.h"
 #include "space.h"
 #include "spacefactory.h"
@@ -89,9 +90,13 @@ class QueryServiceHandler : virtual public QueryServiceIf {
                       const AnyParams&                   SpaceParams,
                       const string&                      DataFile,
                       unsigned                           MaxNumData,
-                      const MethodWithParams&            MethodParams 
-  ) :
+                      const string&                      MethodName,
+                      const string&                      LoadIndexLoc,
+                      const string&                      SaveIndexLoc,
+                      const AnyParams&                   IndexParams,
+                      const AnyParams&                   QueryTimeParams) :
     debugPrint_(debugPrint),
+    methName_(MethodName),
     space_(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, SpaceParams)),
     counter_(0)
 
@@ -103,36 +108,47 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
     CHECK(dataSet_.size() == externIds_.size());
 
-    methName_ = MethodParams.methName_;
-
     index_.reset(MethodFactoryRegistry<dist_t>::Instance().
                                 CreateMethod(true /* print progress */,
-                                        MethodParams.methName_,
+                                        methName_,
                                         SpaceType,
-                                        space_.get(),
-                                        dataSet_, 
-                                        MethodParams.methPars_
-                                        ));
+                                        *space_.get(),
+                                        dataSet_));
 
-    LOG(LIB_INFO) << "The index is created!" << endl;
+    if (!LoadIndexLoc.empty()) {
+      LOG(LIB_INFO) << "Loading index from location: " << LoadIndexLoc; 
+      index_->LoadIndex(LoadIndexLoc);
+      LOG(LIB_INFO) << "The index is loaded!";
+    } else {
+      LOG(LIB_INFO) << "Creating a new index copy"; 
+      index_->CreateIndex(IndexParams);      
+      LOG(LIB_INFO) << "The index is created!";
+      if (!SaveIndexLoc.empty()) {
+        LOG(LIB_INFO) << "Saving the index";
+        index_->SaveIndex(SaveIndexLoc);
+        LOG(LIB_INFO) << "The index is saved!";
+      }
+    }
+
+    LOG(LIB_INFO) << "Setting query-time parameters";
+    index_->SetQueryTimeParams(QueryTimeParams);
   }
 
   ~QueryServiceHandler() {
     for (auto e: dataSet_) delete e;
   }
 
-  void setQueryTimeParams(const string& queryTimeParams) {
+  void setQueryTimeParams(const string& queryTimeParamStr) {
     try {
       // Query time parameters are essentially spin-locked
       while (true) {
         for (size_t i = 0; i < MAX_SPIN_LOCK_QTY; ++i) {
           unique_lock<mutex> lock(mtx_);
           if (0 == counter_) {
-            string          s;
             vector<string>  desc;
-            ParseMethodArg(methName_ + ":" + queryTimeParams, s, desc);
+            ParseArg(queryTimeParamStr, desc);
             if (debugPrint_) {
-              LOG(LIB_INFO) << "Setting query time parameters (" << queryTimeParams << ")";
+              LOG(LIB_INFO) << "Setting query time parameters (" << queryTimeParamStr << ")";
               for (string s: desc) {
                 LOG(LIB_INFO) << s;
               }
@@ -170,8 +186,8 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
       unique_ptr<Object>  queryObj(space_->CreateObjFromStr(0, -1, queryObjStr, NULL));
 
-      RangeQuery<dist_t> range(space_.get(), queryObj.get(), r);
-      index_->Search(&range);
+      RangeQuery<dist_t> range(*space_, queryObj.get(), r);
+      index_->Search(&range, -1);
 
       _return.clear();
 
@@ -258,8 +274,8 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
       unique_ptr<Object>  queryObj(space_->CreateObjFromStr(0, -1, queryObjStr, NULL));
 
-      KNNQuery<dist_t> knn(space_.get(), queryObj.get(), k);
-      index_->Search(&knn);
+      KNNQuery<dist_t> knn(*space_, queryObj.get(), k);
+      index_->Search(&knn, -1);
       unique_ptr<KNNQueue<dist_t>> res(knn.Result()->Clone());
 
       _return.clear();
@@ -334,8 +350,8 @@ class QueryServiceHandler : virtual public QueryServiceIf {
 
  private:
   bool                        debugPrint_;
-  unique_ptr<Space<dist_t>>   space_;
   string                      methName_;
+  unique_ptr<Space<dist_t>>   space_;
   unique_ptr<Index<dist_t>>   index_;
   vector<string>              externIds_;
   ObjectVector                dataSet_; 
@@ -353,7 +369,9 @@ static void Usage(const char *prog,
 }
 
 void ParseCommandLineForServer(int argc, char*argv[],
-                      int&                    debugPrint,
+                      bool&                   debugPrint,
+                      string&                 LoadIndexLoc,
+                      string&                 SaveIndexLoc,
                       int&                    port,
                       size_t&                 threadQty,
                       string&                 LogFile,
@@ -362,35 +380,32 @@ void ParseCommandLineForServer(int argc, char*argv[],
                       std::shared_ptr<AnyParams>&  SpaceParams,
                       string&                 DataFile,
                       unsigned&               MaxNumData,
-                      std::shared_ptr<MethodWithParams>& pars) {
-
+                      string&                         MethodName,
+                      std::shared_ptr<AnyParams>&     IndexTimeParams,
+                      std::shared_ptr<AnyParams>&     QueryTimeParams) {
   string          methParams;
-  size_t          defaultThreadQty = THREAD_COEFF; 
+  size_t          defaultThreadQty = THREAD_COEFF * thread::hardware_concurrency();
 
-  defaultThreadQty = 2 * thread::hardware_concurrency();
+  string          indexTimeParamStr;
+  string          queryTimeParamStr;
+  string          spaceParamStr;
 
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
-    ("help,h", "produce help message")
-    ("debug,d",         po::value<int>(&debugPrint)->default_value(0),
-                        "Print debug messages?")
-    ("port,p",          po::value<int>(&port)->required(),
-                        "TCP/IP port number")
-    ("threadQty",       po::value<size_t>(&threadQty)->default_value(defaultThreadQty),
-                        "A number of server threads")
-    ("logFile,l",       po::value<string>(&LogFile)->default_value(""),
-                        "log file")
-    ("spaceType,s",     po::value<string>(&SpaceType)->required(),
-                        "space type, e.g., l1, l2, lp:p=0.5")
-    ("distType",        po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT),
-                        "distance value type: int, float, double")
-    ("dataFile,i",      po::value<string>(&DataFile)->required(),
-                        "input data file")
-    ("maxNumData",      po::value<unsigned>(&MaxNumData)->default_value(0),
-                        "if non-zero, only the first maxNumData elements are used")
-    ("method,m",        po::value<string>(&methParams)->required(),
-                        "one method with comma-separated parameters in the format:\n"
-                        "<method name>:<param1>,<param2>,...,<paramK>")
+    (HELP_PARAM_OPT,    HELP_PARAM_MSG)
+    (DEBUG_PARAM_OPT,   po::bool_switch(&debugPrint), DEBUG_PARAM_MSG)
+    (PORT_PARAM_OPT,    po::value<int>(&port)->required(), PORT_PARAM_MSG)
+    (THREAD_PARAM_OPT,  po::value<size_t>(&threadQty)->default_value(defaultThreadQty), THREAD_PARAM_MSG)
+    (LOG_FILE_PARAM_OPT,po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT), LOG_FILE_PARAM_MSG)
+    (SPACE_TYPE_PARAM_OPT,    po::value<string>(&spaceParamStr)->required(),                SPACE_TYPE_PARAM_MSG)
+    (DIST_TYPE_PARAM_OPT,     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG)
+    (DATA_FILE_PARAM_OPT,     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG)
+    (MAX_NUM_DATA_PARAM_OPT,  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG)
+    (METHOD_PARAM_OPT,        po::value<string>(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG)
+    (LOAD_INDEX_PARAM_OPT,    po::value<string>(&LoadIndexLoc)->default_value(LOAD_INDEX_PARAM_DEFAULT),   LOAD_INDEX_PARAM_MSG)
+    (SAVE_INDEX_PARAM_OPT,    po::value<string>(&SaveIndexLoc)->default_value(SAVE_INDEX_PARAM_DEFAULT),   SAVE_INDEX_PARAM_MSG)
+    (QUERY_TIME_PARAMS_PARAM_OPT, po::value<string>(&queryTimeParamStr)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG)
+    (INDEX_TIME_PARAMS_PARAM_OPT, po::value<string>(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG)
     ;
 
   po::variables_map vm;
@@ -413,20 +428,28 @@ void ParseCommandLineForServer(int argc, char*argv[],
   }
 
   ToLower(DistType);
-  ToLower(SpaceType);
-  
+  ToLower(spaceParamStr);
+  ToLower(MethodName);
+ 
   try {
     {
-      vector<string> SpaceDesc;
-      string str = SpaceType;
-      ParseSpaceArg(str, SpaceType, SpaceDesc);
-      SpaceParams = std::shared_ptr<AnyParams>(new AnyParams(SpaceDesc));
+      vector<string>     desc;
+      ParseSpaceArg(spaceParamStr, SpaceType, desc);
+      SpaceParams = shared_ptr<AnyParams>(new AnyParams(desc));
     }
 
-    string          MethName;
-    vector<string>  MethodDesc;
-    ParseMethodArg(methParams, MethName, MethodDesc);
-    pars = std::shared_ptr<MethodWithParams>(new MethodWithParams(MethName, MethodDesc));
+    {
+      vector<string>     desc;
+      ParseArg(indexTimeParamStr, desc);
+      IndexTimeParams = shared_ptr<AnyParams>(new AnyParams(desc));
+    }
+
+    {
+      vector<string>  desc;
+
+      ParseArg(queryTimeParamStr, desc);
+      QueryTimeParams = shared_ptr<AnyParams>(new AnyParams(desc));
+    }
     
     if (DataFile.empty()) {
       LOG(LIB_FATAL) << "data file is not specified!";
@@ -441,7 +464,7 @@ void ParseCommandLineForServer(int argc, char*argv[],
 }
 
 int main(int argc, char *argv[]) {
-  int         debugPrint = 0;
+  bool        debugPrint = 0;
   int         port = 0;
   size_t      threadQty = 0;
   string      LogFile;
@@ -450,10 +473,18 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<AnyParams>  SpaceParams;
   string      DataFile;
   unsigned    MaxNumData;
-  std::shared_ptr<MethodWithParams> MethodParams;
+  
+  string                         MethodName;
+  std::shared_ptr<AnyParams>     IndexParams;
+  std::shared_ptr<AnyParams>     QueryTimeParams;
+
+  string      LoadIndexLoc;
+  string      SaveIndexLoc;
 
   ParseCommandLineForServer(argc, argv,
                       debugPrint,
+                      LoadIndexLoc,
+                      SaveIndexLoc,
                       port,
                       threadQty,
                       LogFile,
@@ -462,7 +493,10 @@ int main(int argc, char *argv[]) {
                       SpaceParams,
                       DataFile,
                       MaxNumData,
-                      MethodParams);
+                      MethodName,
+                      IndexParams,
+                      QueryTimeParams
+  );
 
   initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
@@ -471,26 +505,39 @@ int main(int argc, char *argv[]) {
   unique_ptr<QueryServiceIf>   queryHandler;
 
   if (DIST_TYPE_INT == DistType) {
-    queryHandler.reset(new QueryServiceHandler<int>(debugPrint != 0,
+    queryHandler.reset(new QueryServiceHandler<int>(debugPrint,
                                                     SpaceType,
                                                     *SpaceParams,
                                                     DataFile,
                                                     MaxNumData,
-                                                    *MethodParams));
+                                                    MethodName,
+                                                    LoadIndexLoc,
+                                                    SaveIndexLoc,
+                                                    *IndexParams,
+                                                    *QueryTimeParams));
   } else if (DIST_TYPE_FLOAT == DistType) {
-    queryHandler.reset(new QueryServiceHandler<float>(debugPrint != 0,
+    queryHandler.reset(new QueryServiceHandler<float>(debugPrint,
                                                     SpaceType,
                                                     *SpaceParams,
                                                     DataFile,
                                                     MaxNumData,
-                                                    *MethodParams));
+                                                    MethodName,
+                                                    LoadIndexLoc,
+                                                    SaveIndexLoc,
+                                                    *IndexParams,
+                                                    *QueryTimeParams));
   } else if (DIST_TYPE_DOUBLE == DistType) {
-    queryHandler.reset(new QueryServiceHandler<double>(debugPrint != 0,
+    queryHandler.reset(new QueryServiceHandler<double>(debugPrint,
                                                     SpaceType,
                                                     *SpaceParams,
                                                     DataFile,
                                                     MaxNumData,
-                                                    *MethodParams));
+                                                    MethodName,
+                                                    LoadIndexLoc,
+                                                    SaveIndexLoc,
+                                                    *IndexParams,
+                                                    *QueryTimeParams));
+  
   } else {
     LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
   }

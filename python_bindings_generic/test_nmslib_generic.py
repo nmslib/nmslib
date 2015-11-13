@@ -1,4 +1,4 @@
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
+#!/usr/bin/python
 
 import sys
 import nmslib_generic
@@ -9,24 +9,26 @@ def read_data(file_name):
         yield line.strip()
 
 def test_vector():
-    n = 4500
     space_type = 'cosinesimil'
     space_param = []
     method_name = 'small_world_rand'
-    method_param = ['NN=17', 'initIndexAttempts=3', 'initSearchAttempts=1', 'indexThreadQty=4']
-    index = nmslib_generic.initIndex(n,
+
+    index = nmslib_generic.initIndex(
                              space_type,
                              space_param,
                              method_name,
-                             method_param,
                              nmslib_generic.DistType.FLOAT)
 
     for pos, data in enumerate(read_data('sample_dataset.txt')):
-        if pos >= n:
-            break
-        nmslib_generic.addDataPoint(index, pos, data)
+      nmslib_generic.addDataPoint(index, data)
     print 'Let\'s invoke the index-build process'
-    nmslib_generic.buildIndex(index)
+
+    index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
+    query_time_param = ['initSearchAttempts=3']
+
+    nmslib_generic.buildIndex(index, index_param)
+    nmslib_generic.setQueryTimeParams(index,query_time_param)
+
     print 'The index is created'
 
     k = 2
@@ -46,18 +48,23 @@ def test_string():
     space_type = 'leven'
     space_param = []
     method_name = 'small_world_rand'
-    method_param = ['NN=17', 'initIndexAttempts=3', 'initSearchAttempts=1', 'indexThreadQty=4']
-    index = nmslib_generic.initIndex(len(DATA_STRS),
+
+    index = nmslib_generic.initIndex(
                              space_type,
                              space_param,
                              method_name,
-                             method_param,
                              nmslib_generic.DistType.INT)
     for pos, data in enumerate(DATA_STRS):
         nmslib_generic.addDataPoint(index, pos, data)
 
     print 'Let\'s invoke the index-build process'
-    nmslib_generic.buildIndex(index)
+
+    index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
+    query_time_param = ['initSearchAttempts=1']
+
+    nmslib_generic.buildIndex(index, index_param)
+    nmslib_generic.setQueryTimeParams(index,query_time_param)
+
     print 'The index is created'
 
     k = 2
