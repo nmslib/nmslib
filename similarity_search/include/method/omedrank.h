@@ -74,7 +74,7 @@ class OMedRank : public Index<dist_t> {
   void CreateIndex(const AnyParams& IndexParams);
   virtual ~OMedRank(){};
 
-  const std::string ToString() const { return "omedrank" ; }
+  const std::string StrDesc() const { return "omedrank" ; }
   void Search(RangeQuery<dist_t>* query, IdType) const;
   void Search(KNNQuery<dist_t>* query, IdType) const;
 

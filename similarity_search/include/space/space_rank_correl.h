@@ -36,7 +36,7 @@ class RankCorrelVectorSpace : public VectorSpace<PivotIdType> {
  public:
   explicit RankCorrelVectorSpace() {}
 
-  virtual std::string ToString() const { return "rank correlation vector space"; }
+  virtual std::string StrDesc() const { return "rank correlation vector space"; }
  protected:
   // Should not be directly accessible
   virtual PivotIdType HiddenDistance(const Object* obj1, const Object* obj2) const {

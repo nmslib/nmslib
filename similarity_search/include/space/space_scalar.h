@@ -40,7 +40,7 @@ template <typename dist_t>
 class SpaceCosineSimilarity : public VectorSpaceSimpleStorage<dist_t> {
 public:
   SpaceCosineSimilarity() {}
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "CosineSimilarity";
   }
 protected:
@@ -52,7 +52,7 @@ template <typename dist_t>
 class SpaceAngularDistance : public VectorSpaceSimpleStorage<dist_t> {
 public:
   SpaceAngularDistance() {}
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "AngularDistance";
   }
   virtual size_t GetElemQty(const Object* object) const {

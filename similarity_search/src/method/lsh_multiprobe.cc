@@ -160,7 +160,7 @@ MultiProbeLSH<dist_t>::~MultiProbeLSH() {
 }
 
 template <typename dist_t>
-const std::string MultiProbeLSH<dist_t>::ToString() const {
+const std::string MultiProbeLSH<dist_t>::StrDesc() const {
   return "multiprobe lsh";
 }
 

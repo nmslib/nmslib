@@ -97,7 +97,7 @@ void doSearch(Index<float>* index, QueryType* qobj, int repQty) {
 
   timer.split();
 
-  cout << "Search " << qobj->Type() << " using index: " << index->ToString() 
+  cout << "Search " << qobj->Type() << " using index: " << index->StrDesc() 
 	   << " repeated: " << repQty << " times " << endl;
   cout << "Avg time:  " << timer.elapsed()/1000.0/repQty << " ms" << endl;
   cout << "# of results: " << qobj->ResultSize() << endl;

@@ -148,7 +148,7 @@ ProjectionIndexIncremental<dist_t>::~ProjectionIndexIncremental() {
 }
 
 template <typename dist_t>
-const std::string ProjectionIndexIncremental<dist_t>::ToString() const {
+const std::string ProjectionIndexIncremental<dist_t>::StrDesc() const {
   std::stringstream str;
   str <<  "projection (" << proj_descr_ << ") incr. sorting";
   return str.str();

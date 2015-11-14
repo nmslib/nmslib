@@ -50,7 +50,7 @@ class ParameterCreator {
     return lsh_t::Parameter();
   }
 
-  static std::string ToString() {
+  static std::string StrDesc() {
     return "ParameterCreator<dummy>";
   }
 };
@@ -77,7 +77,7 @@ class ParameterCreator<TailRepeatHashThreshold> {
     return param;
   }
 
-  static std::string ToString() {
+  static std::string StrDesc() {
     return "ParameterCreator<TailRepeatHashThreshold> (l1 distance)";
   }
 };
@@ -96,7 +96,7 @@ class ParameterCreator<TailRepeatHashCauchy> {
     return param;
   }
 
-  static std::string ToString() {
+  static std::string StrDesc() {
     return "ParameterCreator<TailRepeatHashCauchy> (l1 distance)";
   }
 };
@@ -115,7 +115,7 @@ class ParameterCreator<TailRepeatHashGaussian> {
     return param;
   }
 
-  static std::string ToString() {
+  static std::string StrDesc() {
     return "ParameterCreator<TailRepeatHashGaussian> (l2 distance)";
   }
 };
@@ -133,7 +133,7 @@ class LSH : public Index<dist_t> {
 
   ~LSH();
 
-  const std::string ToString() const;
+  const std::string StrDesc() const;
   void Search(RangeQuery<dist_t>* query, IdType ) const;
   void Search(KNNQuery<dist_t>* query, IdType ) const;
   void SetQueryTimeParams(const AnyParams& params) {};

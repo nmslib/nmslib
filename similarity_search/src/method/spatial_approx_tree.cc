@@ -184,7 +184,7 @@ SpatialApproxTree<dist_t>::~SpatialApproxTree() {
 }
 
 template <typename dist_t>
-const string SpatialApproxTree<dist_t>::ToString() const {
+const string SpatialApproxTree<dist_t>::StrDesc() const {
   return "satree";
 }
 

@@ -45,7 +45,7 @@ class PermutationIndexLSHBin : public Index<dist_t> {
   void CreateIndex(const AnyParams& MethParams);
   ~PermutationIndexLSHBin();
 
-  const std::string ToString() const { return "LSH (binary permutations)"; }
+  const std::string StrDesc() const { return "LSH (binary permutations)"; }
   void Search(RangeQuery<dist_t>* query, IdType) const {GenSearch(query);}
   void Search(KNNQuery<dist_t>* query, IdType) const {GenSearch(query);}
 

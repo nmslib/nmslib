@@ -188,7 +188,7 @@ ProjectionVPTree<dist_t>::~ProjectionVPTree() {
 }
 
 template <typename dist_t>
-const std::string ProjectionVPTree<dist_t>::ToString() const {
+const std::string ProjectionVPTree<dist_t>::StrDesc() const {
   std::stringstream str;
   str <<  "projection (vptree)";
   return str.str();

@@ -1227,7 +1227,7 @@ void TestSQFDGeneric(size_t N, size_t Rep, SqfdFunction<T>& func) {
 
     LOG(LIB_INFO) << "Ignore: " << DiffSum;
     LOG(LIB_INFO) <<  typeid(T).name() << " Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of " << space->ToString() << " distances per second: " << (1e6/tDiff) * N * Rep ;
+            " # of " << space->StrDesc() << " distances per second: " << (1e6/tDiff) * N * Rep ;
 
 }
 

@@ -67,11 +67,11 @@ class DummyMethod : public Index<dist_t> {
    */
   // SaveIndex is not necessarily implemented
   virtual void SaveIndex(const string& location) {
-    throw runtime_error("SaveIndex is not implemented for method: " + ToString());
+    throw runtime_error("SaveIndex is not implemented for method: " + StrDesc());
   }
   // LoadIndex is not necessarily implemented
   virtual void LoadIndex(const string& location) {
-    throw runtime_error("LoadIndex is not implemented for method: " + ToString());
+    throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
   }
 
   void SetQueryTimeParams(const AnyParams& QueryTimeParams);
@@ -81,7 +81,7 @@ class DummyMethod : public Index<dist_t> {
   /* 
    * Just the name of the method, consider printing crucial parameter values
    */
-  const std::string ToString() const { 
+  const std::string StrDesc() const { 
     stringstream str;
     str << "Dummy method: " << (bDoSeqSearch_ ? " does seq. search " : " does nothing (really dummy)"); 
     return str.str();

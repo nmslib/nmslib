@@ -41,7 +41,7 @@ class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t>
   explicit SpaceSparseAngularDistance() {}
   virtual ~SpaceSparseAngularDistance() {}
 
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "AngularDistance";
   }
 
@@ -69,7 +69,7 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t
   explicit SpaceSparseCosineSimilarity() {}
   virtual ~SpaceSparseCosineSimilarity() {}
 
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "CosineSimilarity";
   }
 

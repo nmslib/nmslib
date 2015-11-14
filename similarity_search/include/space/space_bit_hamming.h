@@ -61,10 +61,10 @@ class SpaceBitHamming : public Space<int> {
    */
   virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const;
 
-  virtual std::string ToString() const { return "Hamming (bit-storage) space"; }
+  virtual std::string StrDesc() const { return "Hamming (bit-storage) space"; }
   virtual void CreateDenseVectFromObj(const Object* obj, int* pVect,
                                       size_t nElem) const {
-    throw runtime_error("Cannot create a dense vector for the space: " + ToString());
+    throw runtime_error("Cannot create a dense vector for the space: " + StrDesc());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
   virtual Object* CreateObjFromVect(IdType id, LabelType label, std::vector<uint32_t>& InpVect) const {

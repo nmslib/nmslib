@@ -90,7 +90,7 @@ VPTree<dist_t, SearchOracle>::~VPTree() {
 }
 
 template <typename dist_t,typename SearchOracle>
-const std::string VPTree<dist_t, SearchOracle>::ToString() const {
+const std::string VPTree<dist_t, SearchOracle>::StrDesc() const {
   return "vptree: " + SearchOracle::GetName();
 }
 

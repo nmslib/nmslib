@@ -77,7 +77,7 @@ MultiIndex<dist_t>::~MultiIndex() {
 }
 
 template <typename dist_t>
-const std::string MultiIndex<dist_t>::ToString() const {
+const std::string MultiIndex<dist_t>::StrDesc() const {
   std::stringstream str;
   str << "" << indices_.size() << " copies of " << MethodName_;
   return str.str();

@@ -79,7 +79,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
 
   ~PivotNeighbInvertedIndex();
 
-  const std::string ToString() const;
+  const std::string StrDesc() const;
   void Search(RangeQuery<dist_t>* query, IdType) const;
   void Search(KNNQuery<dist_t>* query, IdType) const;
   

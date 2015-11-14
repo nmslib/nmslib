@@ -44,7 +44,7 @@ void GetPermutationPivot(const ObjectVector& data,
                          ObjectVector* pivot,
                          std::vector<IdType>* pivot_pos = NULL) {
   if (num_pivot >= data.size()) {
-    throw runtime_error("The data set in the space " + space.ToString() +
+    throw runtime_error("The data set in the space " + space.StrDesc() +
                         "is to small to select enough pivots");
   }
   std::unordered_set<int> pivot_idx;

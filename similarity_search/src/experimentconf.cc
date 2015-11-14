@@ -56,11 +56,11 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
 
   ReadField(controlStream, SPACE, s);
 
-  if (s != space_.ToString()) {
+  if (s != space_.StrDesc()) {
     stringstream err;
-    err << "The specified space ('" << space_.ToString() << "' "
-        << " doesn't match the space ('"
-        << s << ") in the gold standard cache (must be char-by-char equal).";
+    err << "The specified space ('" << space_.StrDesc() << "' "
+    << " doesn't match the space ('"
+    << s << ") in the gold standard cache (must be char-by-char equal).";
     throw runtime_error(err.str());
   }
 
@@ -199,7 +199,7 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStream) {
-  WriteField(controlStream, SPACE, space_.ToString());
+  WriteField(controlStream, SPACE, space_.StrDesc());
   WriteField(controlStream, DATA_FILE, datafile_);
   WriteField(controlStream, DATA_FILE_QTY, ConvertToString(origData_.size()));
   WriteField(controlStream, QUERY_FILE, queryfile_);
@@ -395,7 +395,7 @@ void ExperimentConfig<dist_t>::ReadDataset() {
 
 template <typename dist_t>
 void ExperimentConfig<dist_t>::PrintInfo() const {
-  space_.PrintInfo();
+  LOG(LIB_INFO) << space_.StrDesc();
   LOG(LIB_INFO) << "distance type         = " << DistTypeName<dist_t>();
   LOG(LIB_INFO) << "data file             = " << datafile_;
   LOG(LIB_INFO) << "# of test sets        = " << GetTestSetTotalQty();

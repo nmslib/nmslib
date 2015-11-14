@@ -39,7 +39,7 @@ namespace similarity {
 class SpaceSparseCosineSimilarityFast : public SpaceSparseVectorInter<float> {
 public:
   explicit SpaceSparseCosineSimilarityFast(){}
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "CosineSimilarity (fast)";
   }
 protected:
@@ -50,7 +50,7 @@ protected:
 class SpaceSparseAngularDistanceFast : public SpaceSparseVectorInter<float> {
 public:
   explicit SpaceSparseAngularDistanceFast(){}
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "AngularDistance (fast)";
   }
 protected:

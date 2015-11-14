@@ -263,7 +263,7 @@ PermutationPrefixIndex<dist_t>::~PermutationPrefixIndex() {
 }
 
 template <typename dist_t>
-const std::string PermutationPrefixIndex<dist_t>::ToString() const {
+const std::string PermutationPrefixIndex<dist_t>::StrDesc() const {
   return "permutation (pref. index)";
 }
 

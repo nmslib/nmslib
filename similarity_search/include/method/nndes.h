@@ -56,7 +56,7 @@ class NNDescentMethod : public Index<dist_t> {
   /* 
    * Just the name of the method, consider printing crucial parameter values
    */
-  const std::string ToString() const { 
+  const std::string StrDesc() const { 
     stringstream str;
     str << "NNDescentMethod method: ";
     return str.str();

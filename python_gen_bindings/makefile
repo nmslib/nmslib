@@ -22,7 +22,8 @@ install: all
 
 .PHONY: clean 
 
-$(FINALLIB): $(OBJECTS)
+$(FINALLIB): $(OBJECTS) $(NON_METRIC_SPACE_LIBRARY_LIB)/libNonMetricSpaceLib.a
+
 	$(CXX) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(FINALLIB)
 
 .cc.o:

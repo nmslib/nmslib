@@ -17,7 +17,7 @@
 #ifndef _PY_NMSLIB_H_
 #define _PY_NMSLIB_H_
 
-extern "C" void initnmslib();
+extern "C" void initnmslib_vector();
 
 PyObject* initIndex(PyObject* self, PyObject* args);
 PyObject* addDataPoint(PyObject* self, PyObject* args);

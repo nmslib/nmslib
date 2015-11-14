@@ -73,7 +73,7 @@ bool WordEmbedSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, st
 /** End of standard functions to read/write/create objects */ 
 
 template <typename dist_t>
-string WordEmbedSpace<dist_t>::ToString() const {
+string WordEmbedSpace<dist_t>::StrDesc() const {
   string distType;
   if (distType_ == kEmbedDistL2) {
     distType=SPACE_WORD_EMBED_DIST_L2;

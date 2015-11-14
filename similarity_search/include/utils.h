@@ -85,9 +85,9 @@ const char* GetFileName(const char* fullpath);
 
 bool CreateDir(const char* name, int mode = 0777);
 
-bool DoesFileExist(const char* filename);
+bool DoesFileExists(const char *filename);
 
-inline bool DoesFileExist(const string& filename) { return DoesFileExist(filename.c_str()); }
+inline bool DoesFileExist(const string &filename) { return DoesFileExists(filename.c_str()); }
 
 inline int RandomInt() {
     // Static is thread-safe in C++ 11

@@ -32,7 +32,7 @@
 
 namespace similarity {
 
-void ParseCommandLine(int argc, char *av[], bool& bPrintProgress,
+void ParseCommandLine(int argc, char *argv[], bool& bPrintProgress,
                       string&                         LogFile,
                       string&                         LoadIndexLoc,
                       string&                         SaveIndexLoc,

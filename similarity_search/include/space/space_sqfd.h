@@ -43,7 +43,7 @@ class SqfdFunction {
  public:
   virtual ~SqfdFunction() {}
   virtual dist_t f(const dist_t* p1, const dist_t* p2, const int sz) const = 0;
-  virtual std::string ToString() const = 0;
+  virtual std::string StrDesc() const = 0;
   virtual SqfdFunction<dist_t>* Clone() const = 0;
 };
 
@@ -53,7 +53,7 @@ class SqfdMinusFunction : public SqfdFunction<dist_t> {
   dist_t f(const dist_t* p1, const dist_t* p2, const int sz) const {
     return -L2NormSIMD(p1, p2, sz);
   }
-  std::string ToString() const {
+  std::string StrDesc() const {
     return "minus function";
   }
   virtual SqfdFunction<dist_t>* Clone() const {
@@ -68,7 +68,7 @@ class SqfdHeuristicFunction : public SqfdFunction<dist_t> {
   dist_t f(const dist_t* p1, const dist_t* p2, const int sz) const {
     return 1.0 / (alpha_ + L2NormSIMD(p1, p2, sz));
   }
-  std::string ToString() const {
+  std::string StrDesc() const {
     std::stringstream stream;
     stream << "heuristic function alpha=" << alpha_;
     return stream.str();
@@ -88,7 +88,7 @@ class SqfdGaussianFunction : public SqfdFunction<dist_t> {
     const dist_t d = L2NormSIMD(p1, p2, sz);
     return exp(-alpha_ * d * d);
   }
-  std::string ToString() const {
+  std::string StrDesc() const {
     std::stringstream stream;
     stream << "gaussian function alpha=" << alpha_;
     return stream.str();
@@ -106,7 +106,7 @@ class SpaceSqfd : public Space<dist_t> {
   SpaceSqfd(SqfdFunction<dist_t>* func);
   virtual ~SpaceSqfd();
 
-  std::string ToString() const;
+  std::string StrDesc() const;
 
   /** Standard functions to read/write/create objects */ 
   /*
@@ -149,7 +149,7 @@ class SpaceSqfd : public Space<dist_t> {
    */
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                    size_t nElem) const {
-    throw runtime_error("Cannot create vector for the space: " + ToString());
+    throw runtime_error("Cannot create vector for the space: " + StrDesc());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:

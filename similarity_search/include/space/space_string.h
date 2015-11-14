@@ -67,10 +67,10 @@ class StringSpace : public Space<dist_t> {
    */
   virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const;
 
-  virtual string ToString() const = 0;
+  virtual string StrDesc() const = 0;
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const {
-    throw runtime_error("Cannot create vector for the space: " + ToString());
+    throw runtime_error("Cannot create vector for the space: " + StrDesc());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:

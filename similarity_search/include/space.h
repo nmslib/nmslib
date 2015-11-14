@@ -127,8 +127,7 @@ class Space {
     throw runtime_error("Not supported!");
   }
 
-  virtual string ToString() const = 0;
-  virtual void PrintInfo() const { LOG(LIB_INFO) << ToString(); }
+  virtual string StrDesc() const = 0;
 
   /** Standard functions to read/write/create objects */ 
   /*

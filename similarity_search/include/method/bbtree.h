@@ -59,7 +59,7 @@ class BBTree : public Index<dist_t> {
 
   ~BBTree();
 
-  const std::string ToString() const;
+  const std::string StrDesc() const;
   void Search(RangeQuery<dist_t>* query, IdType) const;
   void Search(KNNQuery<dist_t>* query, IdType) const;
 

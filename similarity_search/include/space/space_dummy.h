@@ -46,7 +46,7 @@ class SpaceDummy : public Space<dist_t> {
  public:
   // A constructor can have arbitrary params
   explicit SpaceDummy(int param1, int param2) : param1_(param1), param2_(param2) {
-    LOG(LIB_INFO) << "Created " << ToString();
+    LOG(LIB_INFO) << "Created " << StrDesc();
   }
   virtual ~SpaceDummy() {}
 
@@ -55,7 +55,7 @@ class SpaceDummy : public Space<dist_t> {
    * Consider, including all the parameters where you
    * print the space name:
    */
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     stringstream  str;
     str << "DummySpace param1=" << param1_ << " param2=" << param2_;
     return str.str();
@@ -109,7 +109,7 @@ class SpaceDummy : public Space<dist_t> {
    */
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                    size_t nElem) const {
-    throw runtime_error("Cannot create vector for the space: " + ToString());
+    throw runtime_error("Cannot create vector for the space: " + StrDesc());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:

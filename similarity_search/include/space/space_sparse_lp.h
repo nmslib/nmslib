@@ -42,7 +42,7 @@ class SpaceSparseLp : public SpaceSparseVectorSimpleStorage<dist_t> {
   explicit SpaceSparseLp(dist_t p) : distObj_(p) {}
   virtual ~SpaceSparseLp() {}
 
-  virtual std::string ToString() const;
+  virtual std::string StrDesc() const;
 
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;

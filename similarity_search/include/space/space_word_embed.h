@@ -56,7 +56,7 @@ class WordEmbedSpace : public VectorSpaceSimpleStorage<dist_t> {
      */
     virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const;
   /** End of standard functions to read/write/create objects */ 
-  virtual string ToString() const;
+  virtual string StrDesc() const;
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
   EmbedDistSpace distType_;

@@ -69,7 +69,7 @@ BBTree<dist_t>::~BBTree() {
 }
 
 template <typename dist_t>
-const std::string BBTree<dist_t>::ToString() const {
+const std::string BBTree<dist_t>::StrDesc() const {
   return "bbtree";
 }
 

@@ -46,7 +46,7 @@ class SpaceJSBase : public VectorSpace<dist_t> {
   explicit SpaceJSBase(JSType type) : type_(type) {}
   virtual ~SpaceJSBase() {}
 
-  virtual std::string ToString() const = 0;
+  virtual std::string StrDesc() const = 0;
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
 
   virtual size_t GetElemQty(const Object* object) const {
@@ -72,7 +72,7 @@ class SpaceJSDiv : public SpaceJSBase<dist_t> {
   explicit SpaceJSDiv(typename SpaceJSBase<dist_t>::JSType type) : SpaceJSBase<dist_t>(type) {}
   virtual ~SpaceJSDiv() {}
 
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     std::stringstream stream;
     stream << "Jensen-Shannon divergence: type code = " << SpaceJSBase<dist_t>::GetType();
     return stream.str();
@@ -92,7 +92,7 @@ class SpaceJSMetric : public SpaceJSBase<dist_t> {
   explicit SpaceJSMetric(typename SpaceJSBase<dist_t>::JSType type) : SpaceJSBase<dist_t>(type) {}
   virtual ~SpaceJSMetric() {}
 
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     std::stringstream stream;
     stream << "Jensen-Shannon metric: type code = " << SpaceJSBase<dist_t>::GetType();
     return stream.str();

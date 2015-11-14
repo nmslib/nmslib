@@ -35,7 +35,7 @@ class SeqSearch : public Index<dist_t> {
   void CreateIndex(const AnyParams& );
   virtual ~SeqSearch();
 
-  const std::string ToString() const { return "Sequential search"; }
+  const std::string StrDesc() const { return "Sequential search"; }
 
   void Search(RangeQuery<dist_t>* query, IdType) const;
   void Search(KNNQuery<dist_t>* query, IdType) const;

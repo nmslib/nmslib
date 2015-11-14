@@ -329,19 +329,20 @@ void RunExper(bool                                bPrintProgress,
                                     SpaceType, config.GetSpace(), 
                                     config.GetDataObjects()));
 
-        bool bCreate = LoadIndexLoc.empty();
+        string adjLoadLoc = LoadIndexLoc + indexLocAdd;
+
+        bool bCreate = LoadIndexLoc.empty() || !DoesFileExist(adjLoadLoc);
 
         if (bCreate) {
           LOG(LIB_INFO) << "Creating an index from scratch";
 
           IndexPtr->CreateIndex(*IndexTimeParams);
         } else {
-          string loc = LoadIndexLoc + indexLocAdd;
-          LOG(LIB_INFO) << "Loading an index for test set id " << TestSetId << " using location: " << loc;
-          IndexPtr->LoadIndex(loc);
+          LOG(LIB_INFO) << "Loading an index for test set id " << TestSetId << " using location: " << adjLoadLoc;
+          IndexPtr->LoadIndex(adjLoadLoc);
         }
 
-        if (!TestSetId) MethodDescStr = IndexPtr->ToString();
+        if (!TestSetId) MethodDescStr = IndexPtr->StrDesc();
 
         LOG(LIB_INFO) << "==============================================";
 
@@ -359,12 +360,11 @@ void RunExper(bool                                bPrintProgress,
         if (IndexPtr->DuplicateData()) AdjustedMemByMethod -= data_size;
 
         wtm.reset();
-        // We won't save the index if it was loaded, but not created!
-        //if (bCreate && !SaveIndexLoc.empty()) {
-        if (!SaveIndexLoc.empty()) {
-          string loc = SaveIndexLoc + indexLocAdd;
-          LOG(LIB_INFO) << "Saving an index for test set id " << TestSetId << " using location: " << loc;
-          IndexPtr->SaveIndex(loc);
+        // We won't save the index if it is already created
+        string adjSaveLoc = SaveIndexLoc + indexLocAdd;
+        if (!SaveIndexLoc.empty() && !DoesFileExist(adjSaveLoc)) {
+          LOG(LIB_INFO) << "Saving an index for test set id " << TestSetId << " using location: " << adjSaveLoc;
+          IndexPtr->SaveIndex(adjSaveLoc);
         }
         wtm.split();
         const double SaveTime  = double(wtm.elapsed())/1e6;
@@ -525,6 +525,15 @@ int main(int ac, char* av[]) {
                          MethodName,
                          IndexTimeParams,
                          QueryTimeParams);
+
+    if ((!LoadIndexLoc.empty() || !SaveIndexLoc.empty()) &&
+         CacheGSFilePrefix.empty() &&
+         MaxNumQuery != 0 &&
+         QueryFile.empty()) {
+      throw
+          runtime_error(string("If there is i) no query file ii) # of queries > 0 iii) you ask to save/load the index,")+
+                        "then you have to specify the gold-standard cache file!");
+    }
 
     initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 

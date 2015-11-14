@@ -66,7 +66,7 @@ void OMedRank<dist_t>::CreateIndex(const AnyParams &IndexParams) {
 
   if (projection_.get() == NULL) {
     throw runtime_error("Cannot create projection class '" + proj_type_ + "'" +
-                        " for the space: '" + space_.ToString() +"' " +
+                        " for the space: '" + space_.StrDesc() +"' " +
                         " distance value type: '" + DistTypeName<dist_t>() + "'");
   }
 

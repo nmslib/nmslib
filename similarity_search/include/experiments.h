@@ -247,7 +247,7 @@ public:
 
       LOG(LIB_INFO) << ">>>> Query-Time Parameters: " << qtp.ToString();
 
-      if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.ToString();
+      if (LogInfo) LOG(LIB_INFO) << ">>>> Efficiency test for: "<< Method.StrDesc();
 
       WallClockTimer wtm;
 
@@ -302,7 +302,7 @@ public:
 
       avg_result_size[MethNum] /= static_cast<double>(numquery);
 
-      if (LogInfo) LOG(LIB_INFO) << ">>>> Computing effectiveness metrics for " << Method.ToString();
+      if (LogInfo) LOG(LIB_INFO) << ">>>> Computing effectiveness metrics for " << Method.StrDesc();
 
       for (unsigned QueryPart = 0; QueryPart < ThreadTestQty; ++QueryPart) {
         const BenchmarkThreadParams<QueryType, QueryCreatorType>*   params = ThreadParams[QueryPart];
@@ -353,7 +353,7 @@ public:
 
       if (LogInfo) {
         LOG(LIB_INFO) << "=========================================";
-        LOG(LIB_INFO) << ">>>> Index type is "<< Method.ToString();
+        LOG(LIB_INFO) << ">>>> Index type is "<< Method.StrDesc();
         LOG(LIB_INFO) << "=========================================";
         LOG(LIB_INFO) << ">>>> max # results = " << max_result_size[MethNum];
         LOG(LIB_INFO) << ">>>> avg # results = " << avg_result_size[MethNum];

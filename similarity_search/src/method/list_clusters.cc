@@ -173,7 +173,7 @@ ListClusters<dist_t>::~ListClusters() {
 }
 
 template <typename dist_t>
-const std::string ListClusters<dist_t>::ToString() const {
+const std::string ListClusters<dist_t>::StrDesc() const {
   return "list of clusters";
 }
 

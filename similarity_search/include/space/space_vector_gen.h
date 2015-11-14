@@ -44,7 +44,7 @@ class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
                             const vector<LabelType>& labels) {
     fillDataSet(dataset, sourceData, &labels);
   }
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "custom space";
   }
   Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {

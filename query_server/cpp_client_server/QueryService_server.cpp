@@ -115,7 +115,7 @@ class QueryServiceHandler : virtual public QueryServiceIf {
                                         *space_.get(),
                                         dataSet_));
 
-    if (!LoadIndexLoc.empty()) {
+    if (!LoadIndexLoc.empty() && DoesFileExist(LoadIndexLoc)) {
       LOG(LIB_INFO) << "Loading index from location: " << LoadIndexLoc; 
       index_->LoadIndex(LoadIndexLoc);
       LOG(LIB_INFO) << "The index is loaded!";
@@ -123,11 +123,12 @@ class QueryServiceHandler : virtual public QueryServiceIf {
       LOG(LIB_INFO) << "Creating a new index copy"; 
       index_->CreateIndex(IndexParams);      
       LOG(LIB_INFO) << "The index is created!";
-      if (!SaveIndexLoc.empty()) {
-        LOG(LIB_INFO) << "Saving the index";
-        index_->SaveIndex(SaveIndexLoc);
-        LOG(LIB_INFO) << "The index is saved!";
-      }
+    }
+
+    if (!SaveIndexLoc.empty() && !DoesFileExist(SaveIndexLoc)) {
+      LOG(LIB_INFO) << "Saving the index";
+      index_->SaveIndex(SaveIndexLoc);
+      LOG(LIB_INFO) << "The index is saved!";
     }
 
     LOG(LIB_INFO) << "Setting query-time parameters";

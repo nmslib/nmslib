@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
 
     timer.split();
     cout << "KNN-search" << endl;
-    cout << "Method:       " << method->ToString() << endl;
+    cout << "Method:       " << method->StrDesc() << endl;
     cout << "Avg time:     " << timer.elapsed()/1000.0/querySet.size() << " ms" << endl;
     cout << "Avg distance: " << res/querySet.size() << endl;
   }
@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
 
     timer.split();
     cout << "Range-search" << endl;
-    cout << "Method:       " << method->ToString() << endl;
+    cout << "Method:       " << method->StrDesc() << endl;
     cout << "Avg time:     " << timer.elapsed()/1000.0/querySet.size() << " ms" << endl;
     cout << "Avg distance: " << res/querySet.size() << endl;
   }

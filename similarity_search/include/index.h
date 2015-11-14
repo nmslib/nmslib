@@ -28,6 +28,14 @@ namespace similarity {
 using std::string;
 using std::vector;
 
+/*
+ * This error message is used to report the situation
+ * when a previously used index is used with a different
+ * data set
+ */
+const string DATA_MUTATION_ERROR_MSG =
+    "A previously saved index is apparently used with a different data set or a different data set split!";
+
 template <typename dist_t>
 class RangeQuery;
 
@@ -44,11 +52,11 @@ class Index {
   virtual void CreateIndex(const AnyParams& indexParams) = 0;
   // SaveIndex is not necessarily implemented
   virtual void SaveIndex(const string& location) {
-    throw runtime_error("SaveIndex is not implemented for method: " + ToString());
+    throw runtime_error("SaveIndex is not implemented for method: " + StrDesc());
   }
   // LoadIndex is not necessarily implemented
   virtual void LoadIndex(const string& location) {
-    throw runtime_error("LoadIndex is not implemented for method: " + ToString());
+    throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
   }
   virtual ~Index() {}
   /*
@@ -59,8 +67,8 @@ class Index {
    */
   virtual void Search(RangeQuery<dist_t>* query, IdType startObj = -1) const = 0;
   virtual void Search(KNNQuery<dist_t>* query, IdType startObj = -1) const = 0;
-  // Get the name of the method
-  virtual const string ToString() const = 0;
+  // Get the description of the method
+  virtual const string StrDesc() const = 0;
   // Set query-time parameters
   virtual void SetQueryTimeParams(const AnyParams& params) = 0;
   // Reset query-time parameters so that they have default values

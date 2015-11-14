@@ -43,7 +43,7 @@ static void Usage(const char *prog,
               << desc << std::endl;
 }
 
-void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
+void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                       string&                 LogFile,
                       string&                 LoadIndexLoc,
                       string&                 SaveIndexLoc,
@@ -142,11 +142,6 @@ void ParseCommandLine(int argc, char*argv[], bool& bPrintProgress,
       vector<string>     desc;
       ParseArg(indexTimeParamStr, desc);
       IndexTimeParams = shared_ptr<AnyParams>(new AnyParams(desc));
-    }
-
-    if (!indexTimeParamStr.empty() && !LoadIndexLoc.empty()) {
-      Usage(argv[0], ProgOptDesc);
-      LOG(LIB_FATAL) << "You cannot specify both the indexing parameters and the location to load the index!";
     }
 
     if (vQueryTimeParamStr.empty())

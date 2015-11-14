@@ -332,9 +332,9 @@ dist_t SpaceSqfd<dist_t>::HiddenDistance(
 }
 
 template <typename dist_t>
-string SpaceSqfd<dist_t>::ToString() const {
+string SpaceSqfd<dist_t>::StrDesc() const {
   stringstream stream;
-  stream << "SpaceSqfd: " << func_->ToString();
+  stream << "SpaceSqfd: " << func_->StrDesc();
   return stream.str();
 }
 

@@ -62,7 +62,7 @@ MultiVantagePointTree<dist_t>::~MultiVantagePointTree() {
 }
 
 template <typename dist_t>
-const std::string MultiVantagePointTree<dist_t>::ToString() const {
+const std::string MultiVantagePointTree<dist_t>::StrDesc() const {
   return "mvp-tree";
 }
 

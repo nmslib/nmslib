@@ -171,7 +171,7 @@ SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
 }
 
 template <typename dist_t>
-const std::string SmallWorldRand<dist_t>::ToString() const {
+const std::string SmallWorldRand<dist_t>::StrDesc() const {
   return "small_world_rand";
 }
 

@@ -50,7 +50,7 @@ const char* GetFileName(const char* fullpath) {
   return fullpath;
 }
 
-bool DoesFileExist(const char* filename) {
+bool DoesFileExists(const char *filename) {
 #ifdef _MSC_VER
   return _access(filename, F_OK) == 0;
 #else

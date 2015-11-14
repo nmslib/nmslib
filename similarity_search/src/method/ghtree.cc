@@ -55,7 +55,7 @@ template <typename dist_t>
 GHTree<dist_t>::~GHTree() { }
 
 template <typename dist_t>
-const std::string GHTree<dist_t>::ToString() const {
+const std::string GHTree<dist_t>::StrDesc() const {
   return "ghtree";
 }
 

@@ -121,7 +121,7 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::~PermBinVPTree() {
 }
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
-const std::string PermBinVPTree<dist_t, RankCorrelDistFunc>::ToString() const {
+const std::string PermBinVPTree<dist_t, RankCorrelDistFunc>::StrDesc() const {
   std::stringstream str;
   str <<  "binarized permutation (vptree)";
   return str.str();

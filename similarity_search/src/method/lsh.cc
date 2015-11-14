@@ -69,7 +69,7 @@ void LSH<dist_t, lsh_t, paramcreator_t>::CreateIndex(const AnyParams& IndexParam
     }
   }
 
-  LOG(LIB_INFO) << paramcreator_t::ToString();
+  LOG(LIB_INFO) << paramcreator_t::StrDesc();
   lshkit::FloatMatrix::Accessor accessor(*matrix_);
   lshkit::DefaultRng rng;
   index_ = new LshIndexType;
@@ -87,7 +87,7 @@ LSH<dist_t, lsh_t, paramcreator_t>::~LSH() {
 }
 
 template <typename dist_t, typename lsh_t, typename paramcreator_t>
-const std::string LSH<dist_t, lsh_t, paramcreator_t>::ToString() const {
+const std::string LSH<dist_t, lsh_t, paramcreator_t>::StrDesc() const {
   return "lsh";
 }
 

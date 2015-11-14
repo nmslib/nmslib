@@ -43,7 +43,7 @@ class ListClusters : public Index<dist_t> {
   void CreateIndex(const AnyParams& MethParams);
   ~ListClusters();
 
-  const std::string ToString() const;
+  const std::string StrDesc() const;
   void Search(RangeQuery<dist_t>* query, IdType) const;
   void Search(KNNQuery<dist_t>* query, IdType) const;
 

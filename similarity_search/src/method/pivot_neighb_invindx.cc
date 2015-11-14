@@ -298,7 +298,7 @@ PivotNeighbInvertedIndex<dist_t>::~PivotNeighbInvertedIndex() {
 }
 
 template <typename dist_t>
-const string PivotNeighbInvertedIndex<dist_t>::ToString() const {
+const string PivotNeighbInvertedIndex<dist_t>::StrDesc() const {
   stringstream str;
   str <<  "permutation (inverted index over neighboring pivots)";
   return str.str();
@@ -318,6 +318,11 @@ void PivotNeighbInvertedIndex<dist_t>::SaveIndex(const string &location) {
 
   // Save pivots positions
   outFile << MergeIntoStr(pivot_pos_, ' ') << endl;
+  vector<IdType> oIDs;
+  for (const Object* pObj: pivot_)
+    oIDs.push_back(pObj->id());
+  // Save pivot IDs
+  outFile << MergeIntoStr(oIDs, ' ') << endl;
 
   for(size_t i = 0; i < posting_lists_.size(); ++i) {
     WriteField(outFile, "chunkId", i);
@@ -349,13 +354,38 @@ void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
             "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
   pivot_pos_.clear();
   CHECK_MSG(SplitStr(line, pivot_pos_, ' '),
-            "Failed to extract pivot IDs from line #" + ConvertToString(lineNum) + " from " + location);
+            "Failed to extract pivot indices from line #" + ConvertToString(lineNum) + " from " + location);
   CHECK_MSG(pivot_pos_.size() == num_pivot_,
-            "# of extracted pivots IDs from line #" + ConvertToString(lineNum) + " (" + ConvertToString(pivot_pos_.size()) + ")"
+            "# of extracted pivots indices from line #" + ConvertToString(lineNum) + " (" + ConvertToString(pivot_pos_.size()) + ")"
             " doesn't match the number of pivots (" + ConvertToString(num_pivot_) + " from the header (location  " + location + ")");
   pivot_.resize(num_pivot_);
-  for (size_t i = 0; i < pivot_pos_.size(); ++i) pivot_[i] = data_[pivot_pos_[i]];
+  for (size_t i = 0; i < pivot_pos_.size(); ++i) {
+    CHECK_MSG(pivot_pos_[i] < data_.size(), DATA_MUTATION_ERROR_MSG +" (detected an object index >= #of data points");
+    pivot_[i] = data_[pivot_pos_[i]];
+  }
   ++lineNum;
+  // Read pivot object IDs
+  vector<IdType> oIDs;
+  CHECK_MSG(getline(inFile, line),
+            "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
+  CHECK_MSG(SplitStr(line, oIDs, ' '),
+            "Failed to extract pivot IDs from line #" + ConvertToString(lineNum) + " from " + location);
+  CHECK_MSG(oIDs.size() == num_pivot_,
+            "# of extracted pivots IDs from line #" + ConvertToString(lineNum) + " (" + ConvertToString(pivot_pos_.size()) + ")"
+                " doesn't match the number of pivots (" + ConvertToString(num_pivot_) + " from the header (location  " + location + ")");
+  for (size_t i = 0; i < num_pivot_; ++i) {
+    if (oIDs[i] != pivot_[i]->id()) {
+      PREPARE_RUNTIME_ERR(err) << DATA_MUTATION_ERROR_MSG <<
+          " (different pivot IDs detected, old: " << oIDs[i] << " new: " << pivot_[i]->id() << " pivot index: " << i << ")";
+      THROW_RUNTIME_ERR(err);
+    }
+  }
+  ++lineNum;
+  /*
+   * Now let's make a quick sanity-check to see if the pivot IDs match what was saved previously.
+   * If the user used a different data set, or a different test split (and a different gold-standard file),
+   * we cannot re-use the index
+   */
 
   posting_lists_.resize(indexQty);
 

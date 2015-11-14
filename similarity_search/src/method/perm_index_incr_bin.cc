@@ -105,7 +105,7 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::~PermutationIndexIncrementalB
 }
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
-const std::string PermutationIndexIncrementalBin<dist_t, perm_func>::ToString() const {
+const std::string PermutationIndexIncrementalBin<dist_t, perm_func>::StrDesc() const {
   std::stringstream str;
   str <<  "permutation binarized (incr. sorting)";
   return str.str();
