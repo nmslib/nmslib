@@ -552,11 +552,11 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
                 " line: " + ConvertToString(lineNum)
       );
       CHECK_MSG(nodeID >= 0 && nodeID < data_.size(),
-                DATA_MUTATION_ERROR_MSG + "(unexpected node ID " + ConvertToString(nodeID) +
+                DATA_MUTATION_ERROR_MSG + " (unexpected node ID " + ConvertToString(nodeID) +
                 " for object ID " + ConvertToString(objID) +
                 " data_.size() = " + ConvertToString(data_.size()) + ")");
       CHECK_MSG(data_[nodeID]->id() == objID,
-                DATA_MUTATION_ERROR_MSG + "(unexpected object ID " + ConvertToString(data_[nodeID]) +
+                DATA_MUTATION_ERROR_MSG + " (unexpected object ID " + ConvertToString(data_[nodeID]->id()) +
                 " for data element with ID " + ConvertToString(nodeID) +
                 " expected object ID: " + ConvertToString(objID) + ")"
       );
