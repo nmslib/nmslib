@@ -29,6 +29,8 @@
 #include <sstream>
 #include <typeinfo>
 
+#define START_WITH_E0
+
 #define USE_BITSET_FOR_INDEXING 1
 //#define USE_ALTERNATIVE_FOR_INDEXING 
 
@@ -239,7 +241,11 @@ SmallWorldRand<dist_t>::kSearchElementsWithAttempts(const Object* queryObj,
     /**
      * Search for the k most closest elements to the query.
      */
+#ifdef START_WITH_E0
+    MSWNode* provider = i ? getRandomEntryPointLocked() : ElList_[0];
+#else
     MSWNode* provider = getRandomEntryPointLocked();
+#endif
 
     priority_queue <dist_t>                     closestDistQueue;                      
     priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
@@ -391,6 +397,7 @@ void SmallWorldRand<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
+  if (ElList_.empty()) return;
 /*
  * The trick of using large dense bitsets instead of unordered_set was 
  * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
@@ -406,7 +413,12 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   /**
    * Search of most k-closest elements to the query.
    */
+#ifdef START_WITH_E0
+    MSWNode* provider = i ? getRandomEntryPoint(): ElList_[0];
+#else
     MSWNode* provider = getRandomEntryPoint();
+#endif
+    //MSWNode* provider = getRandomEntryPoint();
 
     priority_queue <dist_t>                          closestDistQueue; //The set of all elements which distance was calculated
     priority_queue <EvaluatedMSWNodeReverse<dist_t>> candidateQueue; //the set of elements which we can use to evaluate
