@@ -29,7 +29,7 @@
 #define DATA_FILE_PARAM_OPT     "dataFile,i"
 #define DATA_FILE_PARAM_MSG     "input data file"
 
-#define MAX_NUM_DATA_PARAM_OPT  "maxNumData"
+#define MAX_NUM_DATA_PARAM_OPT  "maxNumData,D"
 #define MAX_NUM_DATA_PARAM_MSG  "if non-zero, only the first maxNumData elements are used"
 #define MAX_NUM_DATA_PARAM_DEFAULT 0
 
@@ -37,11 +37,11 @@
 #define QUERY_FILE_PARAM_MSG    "query file"
 #define QUERY_FILE_PARAM_DEFAULT ""
 
-#define LOAD_INDEX_PARAM_OPT    "loadIndex"
+#define LOAD_INDEX_PARAM_OPT    "loadIndex,L"
 #define LOAD_INDEX_PARAM_MSG    "a location to load the index from "
 #define LOAD_INDEX_PARAM_DEFAULT ""
 
-#define SAVE_INDEX_PARAM_OPT    "saveIndex"
+#define SAVE_INDEX_PARAM_OPT    "saveIndex,S"
 #define SAVE_INDEX_PARAM_MSG    "a location to save the index to "
 #define SAVE_INDEX_PARAM_DEFAULT ""
 
@@ -57,7 +57,7 @@
 #define LOG_FILE_PARAM_MSG       "log file"
 #define LOG_FILE_PARAM_DEFAULT   ""
 
-#define MAX_NUM_QUERY_PARAM_OPT   "maxNumQuery"
+#define MAX_NUM_QUERY_PARAM_OPT   "maxNumQuery,Q"
 #define MAX_NUM_QUERY_PARAM_MSG   "if non-zero, use maxNumQuery query elements (required in the case of bootstrapping)"
 #define MAX_NUM_QUERY_PARAM_DEFAULT 0
 
