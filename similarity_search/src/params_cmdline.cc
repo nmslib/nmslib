@@ -176,6 +176,9 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
     if (!MaxNumQuery && QueryFile.empty()) {
       LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
     }
+
+    CHECK_MSG(MaxNumData < MAX_DATASET_QTY, "The maximum number of points should not exceed" + ConvertToString(MAX_DATASET_QTY));
+    CHECK_MSG(MaxNumQuery < MAX_DATASET_QTY, "The maximum number of queries should not exceed" + ConvertToString(MAX_DATASET_QTY));
   } catch (const exception& e) {
     LOG(LIB_FATAL) << "Exception: " << e.what();
   }

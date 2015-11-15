@@ -79,6 +79,7 @@ inline void initMethods() {
 
   // Multiprobe LSH
   REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE, CreateLSHMultiprobe)
+  REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE_SYN, CreateLSHMultiprobe)
 #endif
 
   // Multi-vantage point tree

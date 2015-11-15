@@ -71,14 +71,19 @@ public:
   }
   /* 
    * 1. The list of friend pointers is sorted.
-   * 2. addFriend checks for duplicates using binary searching
+   * 2. If bCheckForDup == true addFriend checks for
+   *    duplicates using binary searching (via pointer comparison).
    */
-  void addFriend(MSWNode* element) {
+  void addFriend(MSWNode* element, bool bCheckForDup) {
     unique_lock<mutex> lock(accessGuard_);
 
-    auto it = lower_bound(friends.begin(), friends.end(), element);
-    if (it == friends.end() || (*it) != element) {
-      friends.insert(it, element);
+    if (bCheckForDup) {
+      auto it = lower_bound(friends.begin(), friends.end(), element);
+      if (it == friends.end() || (*it) != element) {
+        friends.insert(it, element);
+      }
+    } else {
+      friends.push_back(element);
     }
   }
   const Object* getData() const {
@@ -156,6 +161,10 @@ private:
 template <typename dist_t>
 class SmallWorldRand : public Index<dist_t> {
 public:
+  virtual void SaveIndex(const string &location) override;
+
+  virtual void LoadIndex(const string &location) override;
+
   SmallWorldRand(bool PrintProgress,
                  const Space<dist_t>& space,
                  const ObjectVector& data);
@@ -178,9 +187,9 @@ public:
   void add(MSWNode *newElement);
   void addCriticalSection(MSWNode *newElement);
   void link(MSWNode* first, MSWNode* second){
-    // addFriend checks for duplicates
-    first->addFriend(second);
-    second->addFriend(first);
+    // addFriend checks for duplicates if the second argument is true
+    first->addFriend(second, true);
+    second->addFriend(first, true);
   }
 
   void SetQueryTimeParams(const AnyParams& );

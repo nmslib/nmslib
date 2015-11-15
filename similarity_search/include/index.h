@@ -35,6 +35,8 @@ using std::vector;
  */
 const string DATA_MUTATION_ERROR_MSG =
     "A previously saved index is apparently used with a different data set or a different data set split!";
+const string METHOD_DESC="MethodDesc";
+const string LINE_QTY="LineQty";
 
 template <typename dist_t>
 class RangeQuery;

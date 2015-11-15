@@ -34,6 +34,8 @@
 
 namespace similarity {
 
+using namespace std;
+
 template <typename dist_t>
 struct IndexThreadParamsSW {
   const Space<dist_t>&                        space_;
@@ -468,6 +470,114 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   }
 }
 
+template <typename dist_t>
+void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
+  ofstream outFile(location);
+  CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
+  outFile.exceptions(std::ios::badbit);
+  size_t lineNum = 0;
+
+  WriteField(outFile, METHOD_DESC, StrDesc()); lineNum++;
+  WriteField(outFile, "NN", NN_); lineNum++;
+
+  for (const MSWNode* pNode: ElList_) {
+    IdType nodeID = pNode->getId();
+    CHECK_MSG(nodeID >= 0 && nodeID < data_.size(),
+              "Bug: unexpected node ID " + ConvertToString(nodeID) +
+              " for object ID " + ConvertToString(pNode->getData()->id()) +
+              "data_.size() = " + ConvertToString(data_.size()));
+    outFile << nodeID << ":" << pNode->getData()->id() << ":";
+    for (const MSWNode* pNodeFriend: pNode->getAllFriends()) {
+      IdType nodeFriendID = pNodeFriend->getId();
+      CHECK_MSG(nodeFriendID >= 0 && nodeFriendID < data_.size(),
+                "Bug: unexpected node ID " + ConvertToString(nodeFriendID) +
+                " for object ID " + ConvertToString(pNodeFriend->getData()->id()) +
+                "data_.size() = " + ConvertToString(data_.size()));
+      outFile << ' ' << nodeFriendID;
+    }
+    outFile << endl; lineNum++;
+  }
+  outFile << endl; lineNum++; // The empty line indicates the end of data entries
+  WriteField(outFile, LINE_QTY, lineNum + 1 /* including this line */);
+  outFile.close();
+}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
+  vector<MSWNode *> ptrMapper(data_.size());
+
+  for (unsigned pass = 0; pass < 2; ++ pass) {
+    ifstream inFile(location);
+    CHECK_MSG(inFile, "Cannot open file '" + location + "' for reading");
+    inFile.exceptions(std::ios::badbit);
+
+    size_t lineNum = 1;
+    string methDesc;
+    ReadField(inFile, METHOD_DESC, methDesc);
+    lineNum++;
+    CHECK_MSG(methDesc == StrDesc(),
+              "Looks like you try to use an index created by a different method: " + StrDesc());
+    ReadField(inFile, "NN", NN_);
+    lineNum++;
+
+    string line;
+    while (getline(inFile, line)) {
+      if (line.empty()) {
+        lineNum++; break;
+      }
+      stringstream str(line);
+      str.exceptions(std::ios::badbit);
+      char c1, c2;
+      IdType nodeID, objID;
+      CHECK_MSG((str >> nodeID) && (str >> c1) && (str >> objID) && (str >> c2),
+                "Bug or inconsitent data, wrong format, line: " + ConvertToString(lineNum)
+      );
+      CHECK_MSG(c1 == ':' && c2 == ':',
+                string("Bug or inconsitent data, wrong format, c1=") + c1 + ",c2=" + c2 +
+                " line: " + ConvertToString(lineNum)
+      );
+      CHECK_MSG(nodeID >= 0 && nodeID < data_.size(),
+                DATA_MUTATION_ERROR_MSG + "(unexpected node ID " + ConvertToString(nodeID) +
+                " for object ID " + ConvertToString(objID) +
+                " data_.size() = " + ConvertToString(data_.size()) + ")");
+      CHECK_MSG(data_[nodeID]->id() == objID,
+                DATA_MUTATION_ERROR_MSG + "(unexpected object ID " + ConvertToString(data_[nodeID]) +
+                " for data element with ID " + ConvertToString(nodeID) +
+                " expected object ID: " + ConvertToString(objID) + ")"
+      );
+      if (pass == 0) {
+        unique_ptr<MSWNode> node(new MSWNode(data_[nodeID], nodeID));
+        ptrMapper[nodeID] = node.get();
+        ElList_.push_back(node.release());
+      } else {
+        MSWNode *pNode = ptrMapper[nodeID];
+        CHECK_MSG(pNode != NULL,
+                  "Bug, got NULL pointer in the second pass for nodeID " + ConvertToString(nodeID));
+        IdType nodeFriendID;
+        while (str >> nodeFriendID) {
+          CHECK_MSG(nodeFriendID >= 0 && nodeFriendID < data_.size(),
+                    "Bug: unexpected node ID " + ConvertToString(nodeFriendID) +
+                    "data_.size() = " + ConvertToString(data_.size()));
+          MSWNode *pFriendNode = ptrMapper[nodeFriendID];
+          CHECK_MSG(pFriendNode != NULL,
+                    "Bug, got NULL pointer in the second pass for nodeID " + ConvertToString(nodeFriendID));
+          pNode->addFriend(pFriendNode, false /* don't check for duplicates */);
+        }
+        CHECK_MSG(str.eof(),
+                  "It looks like there is some extract erroneous stuff in the end of the line " +
+                  ConvertToString(lineNum));
+      }
+      ++lineNum;
+    }
+
+    size_t ExpLineNum;
+    ReadField(inFile, LINE_QTY, ExpLineNum);
+    CHECK_MSG(lineNum == ExpLineNum,
+              DATA_MUTATION_ERROR_MSG + " (expected number of lines " + ConvertToString(ExpLineNum) +
+              " read so far doesn't match the number of read lines: " + ConvertToString(lineNum) + ")");
+    inFile.close();
+  }
+}
 
 template class SmallWorldRand<float>;
 template class SmallWorldRand<double>;

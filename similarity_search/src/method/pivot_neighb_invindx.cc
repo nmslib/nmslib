@@ -308,40 +308,47 @@ template <typename dist_t>
 void PivotNeighbInvertedIndex<dist_t>::SaveIndex(const string &location) {
   ofstream outFile(location);
   CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
+  outFile.exceptions(std::ios::badbit);
 
+  size_t lineNum = 0;
   // Save main parameters
-
-  WriteField(outFile, "numPivot", num_pivot_);
-  WriteField(outFile, "numPivotIndex", num_prefix_);
-  WriteField(outFile, "chunkIndexSize", chunk_index_size_);
-  WriteField(outFile, "indexQty", posting_lists_.size());
+  WriteField(outFile, METHOD_DESC, StrDesc()); lineNum++;
+  WriteField(outFile, "numPivot", num_pivot_); lineNum++;
+  WriteField(outFile, "numPivotIndex", num_prefix_); lineNum++;
+  WriteField(outFile, "chunkIndexSize", chunk_index_size_); lineNum++;
+  WriteField(outFile, "indexQty", posting_lists_.size()); lineNum++;
 
   // Save pivots positions
-  outFile << MergeIntoStr(pivot_pos_, ' ') << endl;
+  outFile << MergeIntoStr(pivot_pos_, ' ') << endl; lineNum++;
   vector<IdType> oIDs;
   for (const Object* pObj: pivot_)
     oIDs.push_back(pObj->id());
   // Save pivot IDs
-  outFile << MergeIntoStr(oIDs, ' ') << endl;
+  outFile << MergeIntoStr(oIDs, ' ') << endl; lineNum++;
 
   for(size_t i = 0; i < posting_lists_.size(); ++i) {
-    WriteField(outFile, "chunkId", i);
+    WriteField(outFile, "chunkId", i); lineNum++;
     CHECK(posting_lists_[i]->size() == num_pivot_);
     for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
-      outFile << MergeIntoStr((*posting_lists_[i])[pivotId], ' ') << endl;
+      outFile << MergeIntoStr((*posting_lists_[i])[pivotId], ' ') << endl; lineNum++;
     }
   }
 
+  WriteField(outFile, LINE_QTY, lineNum + 1 /* including this line */);
   outFile.close();
 }
 
 template <typename dist_t>
 void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
   ifstream inFile(location);
-
   CHECK_MSG(inFile, "Cannot open file '" + location + "' for reading");
+  inFile.exceptions(std::ios::badbit);
 
   size_t lineNum = 1;
+  string methDesc;
+  ReadField(inFile, METHOD_DESC, methDesc); lineNum++;
+  CHECK_MSG(methDesc == StrDesc(),
+            "Looks like you try to use an index created by a different method: " + StrDesc());
   ReadField(inFile, "numPivot", num_pivot_); lineNum++;
   ReadField(inFile, "numPivotIndex", num_prefix_); lineNum++;
   ReadField(inFile, "chunkIndexSize", chunk_index_size_); lineNum++;
@@ -406,7 +413,11 @@ void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
       ++lineNum;
     }
   }
-
+  size_t ExpLineNum;
+  ReadField(inFile, LINE_QTY, ExpLineNum);
+  CHECK_MSG(lineNum == ExpLineNum,
+            DATA_MUTATION_ERROR_MSG + " (expected number of lines " + ConvertToString(ExpLineNum) +
+            " read so far doesn't match the number of read lines: " + ConvertToString(lineNum));
   inFile.close();
 }
 

@@ -25,12 +25,13 @@ template <typename dist_t>
 unique_ptr<DataFileInputState> Space<dist_t>::ReadDataset(ObjectVector& dataset,
                            vector<string>& vExternIds,
                            const string& inputFile,
-                           const int MaxNumObjects) const {
+                           const IdTypeUnsigned MaxNumObjects) const {
+  CHECK_MSG(MaxNumObjects >=0, "Bug: MaxNumObjects should be >= 0");
   unique_ptr<DataFileInputState> inpState(OpenReadFileHeader(inputFile));
   string line;
   IdType label;
   string externId;
-  for (int id = 0; id < MaxNumObjects || !MaxNumObjects; ++id) {
+  for (size_t id = 0; id < MaxNumObjects || !MaxNumObjects; ++id) {
     if (!ReadNextObjStr(*inpState, line, label, externId)) break;
     dataset.push_back(CreateObjFromStr(id, label, line, inpState.get()).release());
     vExternIds.push_back(externId);
@@ -43,13 +44,14 @@ template <typename dist_t>
 void Space<dist_t>::WriteDataset(const ObjectVector& dataset,
                            const vector<string>& vExternIds,
                            const string& outputFile,
-                           const int MaxNumObjects) const {
+                           const IdTypeUnsigned MaxNumObjects) const {
+  CHECK_MSG(MaxNumObjects >=0, "Bug: MaxNumObjects should be >= 0");
   if (dataset.size() != vExternIds.size()) {
     PREPARE_RUNTIME_ERR(err) << "Bug, dataset.size() != vExternIds.size(): " << dataset.size() << " != " << vExternIds.size();
     THROW_RUNTIME_ERR(err);
   }
   unique_ptr<DataFileOutputState> outState(OpenWriteFileHeader(dataset, outputFile));
-  for (int i = 0; i < MaxNumObjects && i < dataset.size(); ++i) {
+  for (size_t i = 0; i < MaxNumObjects && i < dataset.size(); ++i) {
     WriteNextObj(*dataset[i], vExternIds[i], *outState);
   }
   outState->Close();

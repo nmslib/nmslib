@@ -394,6 +394,9 @@ void ParseCommandLineForTuning(int argc, char*argv[],
       LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
     }
 
+    CHECK_MSG(MaxNumData < MAX_DATASET_QTY, "The maximum number of points should not exceed" + ConvertToString(MAX_DATASET_QTY));
+    CHECK_MSG(MaxNumQuery < MAX_DATASET_QTY, "The maximum number of queries should not exceed" + ConvertToString(MAX_DATASET_QTY));
+
     {
       vector<string>     desc;
       ParseArg(indexTimeParamStr, desc);

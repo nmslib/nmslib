@@ -21,7 +21,8 @@
 #include "space.h"
 #include "lshkit.h"
 
-#define METH_LSH_MULTIPROBE         "lsh_multiprobe"
+#define METH_LSH_MULTIPROBE_SYN       "lsh_multiprobe"
+#define METH_LSH_MULTIPROBE           "mplsh"
 
 namespace similarity {
 
