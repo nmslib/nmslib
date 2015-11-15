@@ -79,8 +79,8 @@ void RunExper(unsigned AddRestartQty,
              unsigned                       TestSetQty,
              const string&                  DataFile,
              const string&                  QueryFile,
-             unsigned                       MaxNumData,
-             unsigned                       MaxNumQuery,
+             IdTypeUnsign                   MaxNumData,
+             IdTypeUnsign                   MaxNumQuery,
              vector<unsigned>               knnAll,
              float                          eps,
              const string&                  RangeArg,
@@ -427,8 +427,8 @@ int main(int ac, char* av[]) {
   string                  DataFile;
   string                  QueryFile;
   size_t                  MaxCacheGSQty;
-  unsigned                MaxNumData;
-  unsigned                MaxNumQuery;
+  IdTypeUnsign            MaxNumData;
+  IdTypeUnsign            MaxNumQuery;
   vector<unsigned>        knn;
   string                  RangeArg;
   float                   eps;

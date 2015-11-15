@@ -41,8 +41,8 @@ public:
                    const string& datafile,
                    const string& queryfile,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
-                   unsigned MaxNumData,
-                   unsigned MaxNumQueryToRun,
+                   IdTypeUnsign MaxNumData,
+                   IdTypeUnsign MaxNumQueryToRun,
                    const typename std::vector<unsigned>& knn,
                    float eps,
                    const typename std::vector<dist_t>& range)
@@ -75,8 +75,8 @@ public:
                    const ObjectVector& externalData,
                    const ObjectVector& externalQuery,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
-                   unsigned MaxNumData,
-                   unsigned MaxNumQueryToRun,
+                   IdTypeUnsign MaxNumData,
+                   IdTypeUnsign MaxNumQueryToRun,
                    const typename std::vector<unsigned>& knn,
                    float eps,
                    const typename std::vector<dist_t>& range)
@@ -176,9 +176,10 @@ private:
   bool              noQueryData_;
   unsigned          testSetToRunQty_;
   unsigned          testSetQty_;
-  unsigned          maxNumData_;
-  unsigned          maxNumQuery_;
-  unsigned          maxNumQueryToRun_;
+
+  IdTypeUnsign      maxNumData_;
+  IdTypeUnsign      maxNumQuery_;
+  IdTypeUnsign      maxNumQueryToRun_;
 
 
   vector<dist_t>    range_;  // range search parameter

@@ -25,13 +25,14 @@
 namespace similarity {
 
 using std::string;
+using std::vector;
 
 // Sequential search
 
 template <typename dist_t>
 class SeqSearch : public Index<dist_t> {
  public:
-  SeqSearch(const ObjectVector& data);
+  SeqSearch(Space<dist_t>& space, const ObjectVector& data);
   void CreateIndex(const AnyParams& );
   virtual ~SeqSearch();
 
@@ -42,9 +43,16 @@ class SeqSearch : public Index<dist_t> {
 
   void SetQueryTimeParams(const AnyParams& params){}
  private:
+  Space<dist_t>&          space_;
   const ObjectVector&     origData_;
   char*                   cacheOptimizedBucket_;
+
   ObjectVector*           pData_;
+  bool                    multiThread_;
+  IdTypeUnsign            threadQty_;
+  vector<ObjectVector>    vvThreadData;
+
+  const ObjectVector& getData() const { return pData_ != NULL ? *pData_ : origData_; }
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(SeqSearch);
 };

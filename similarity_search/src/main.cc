@@ -142,8 +142,8 @@ void RunExper(bool                                bPrintProgress,
              const string&                        QueryFile,
              const string&                        CacheGSFilePrefix,
              size_t                               MaxCacheGSQty,
-             unsigned                             MaxNumData,
-             unsigned                             MaxNumQuery,
+             IdTypeUnsign                         MaxNumData,
+             IdTypeUnsign                         MaxNumQuery,
              const                                vector<unsigned>& knn,
              const                                float eps,
              const string&                        RangeArg
@@ -489,8 +489,8 @@ int main(int ac, char* av[]) {
   string                QueryFile;
   string                CacheGSFilePrefix;
   size_t                MaxCacheGSQty;
-  unsigned              MaxNumData;
-  unsigned              MaxNumQuery;
+  IdTypeUnsign          MaxNumData;
+  IdTypeUnsign          MaxNumQuery;
   vector<unsigned>      knn;
   string                RangeArg;
   float                 eps = 0.0;

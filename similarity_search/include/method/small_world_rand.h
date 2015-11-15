@@ -196,6 +196,7 @@ public:
 private:
 
   size_t                NN_;
+  size_t                NNSearch_;
   size_t                initIndexAttempts_;
   size_t                initSearchAttempts_;
   size_t                indexThreadQty_;

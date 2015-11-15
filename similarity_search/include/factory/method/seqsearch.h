@@ -30,7 +30,7 @@ Index<dist_t>* CreateSeqSearch(bool PrintProgress,
                            const string& SpaceType,
                            Space<dist_t>& space,
                            const ObjectVector& DataObjects) {
-  return new SeqSearch<dist_t>(DataObjects);
+  return new SeqSearch<dist_t>(space, DataObjects);
 }
 
 /*

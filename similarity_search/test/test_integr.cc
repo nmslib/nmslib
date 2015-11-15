@@ -60,13 +60,21 @@ using std::stringstream;
 
 vector<MethodTestCase>    vTestCaseDesc = {
   // *************** NEW versions of permutation & projection-based filtering method tests ******************** //
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", "", "",
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0, 0, 1, 1),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", "", "",
+                0 /* no-knn search */, 0.2 /* range 0.2 */ , 1.0, 1.0, 0, 0, 1, 1),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", "multiThread=1,threadQty=4", "",
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0, 0, 1, 1),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", "multiThread=1,threadQty=4", "",
+                0 /* no-knn search */, 0.2 /* range 0.2 */ , 1.0, 1.0, 0, 0, 1, 1),  
+#if 1
 #if !defined(_MSC_VER)
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", "NN=10,rho=0.5,delta=0.001", "initSearchAttempts=10",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
 #endif
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "small_world_rand", "NN=10,initIndexAttempts=1", "initSearchAttempts=1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 40, 52),  
-#if 1
   // 4 different types of projections
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", "projType=perm,projDim=4", "dbScanFrac=1.0",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  

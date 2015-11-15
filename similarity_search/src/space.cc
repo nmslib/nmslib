@@ -25,7 +25,7 @@ template <typename dist_t>
 unique_ptr<DataFileInputState> Space<dist_t>::ReadDataset(ObjectVector& dataset,
                            vector<string>& vExternIds,
                            const string& inputFile,
-                           const IdTypeUnsigned MaxNumObjects) const {
+                           const IdTypeUnsign MaxNumObjects) const {
   CHECK_MSG(MaxNumObjects >=0, "Bug: MaxNumObjects should be >= 0");
   unique_ptr<DataFileInputState> inpState(OpenReadFileHeader(inputFile));
   string line;
@@ -44,7 +44,7 @@ template <typename dist_t>
 void Space<dist_t>::WriteDataset(const ObjectVector& dataset,
                            const vector<string>& vExternIds,
                            const string& outputFile,
-                           const IdTypeUnsigned MaxNumObjects) const {
+                           const IdTypeUnsign MaxNumObjects) const {
   CHECK_MSG(MaxNumObjects >=0, "Bug: MaxNumObjects should be >= 0");
   if (dataset.size() != vExternIds.size()) {
     PREPARE_RUNTIME_ERR(err) << "Bug, dataset.size() != vExternIds.size(): " << dataset.size() << " != " << vExternIds.size();

@@ -108,6 +108,7 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
   AnyParamManager pmgr(IndexParams);
 
   pmgr.GetParamOptional("NN",                 NN_,                  10);
+  NNSearch_ = NN_;
   pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   2);
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
 
@@ -167,9 +168,11 @@ void
 SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   AnyParamManager pmgr(QueryTimeParams);
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  3);
+  pmgr.GetParamOptional("NNSearch", NNSearch_, NN_);
   pmgr.CheckUnused();
   LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
   LOG(LIB_INFO) << "initSearchAttempts=" << initSearchAttempts_;
+  LOG(LIB_INFO) << "NNSearch=" << NNSearch_;
 }
 
 template <typename dist_t>
@@ -459,7 +462,7 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
             
           visitedBitset[nodeId] = true;
           closestDistQueue.emplace(d);
-          if (closestDistQueue.size() > NN_) { 
+          if (closestDistQueue.size() > NNSearch_) { 
             closestDistQueue.pop(); 
           }
           candidateQueue.emplace(d, *iter);

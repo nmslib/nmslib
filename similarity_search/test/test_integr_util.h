@@ -216,8 +216,8 @@ string CreateCmdStr(
              unsigned                     TestSetQty,
              const string&                DataFile,
              const string&                QueryFile,
-             unsigned                     MaxNumData,
-             unsigned                     MaxNumQuery,
+             IdTypeUnsign                 MaxNumData,
+             IdTypeUnsign                 MaxNumQuery,
              const                        float eps) {
   stringstream res;
   // our test data files shouldn't have spaces, so we won't escape them
@@ -254,8 +254,8 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
              unsigned                     TestSetQty,
              const string&                DataFile,
              const string&                QueryFile,
-             unsigned                     MaxNumData,
-             unsigned                     MaxNumQuery,
+             IdTypeUnsign                 MaxNumData,
+             IdTypeUnsign                 MaxNumQuery,
              const string&                KnnArg,
              const                        float eps,
              const string&                RangeArg
@@ -507,8 +507,8 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                unsigned                     TestSetQty,
                const string&                DataFile,
                const string&                QueryFile,
-               unsigned                     MaxNumData,
-               unsigned                     MaxNumQuery,
+               IdTypeUnsign                 MaxNumData,
+               IdTypeUnsign                 MaxNumQuery,
                const string&                KnnArg,
                const                        float eps,
                const string&                RangeArg) {

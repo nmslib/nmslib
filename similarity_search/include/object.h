@@ -50,11 +50,16 @@ using std::numeric_limits;
 
 /* 
  * We are not gonna have billions of records or labels in the foreseeable future
- * Negative values would represent missing labels and ids
+ * Negative values would represent missing labels and ids. In principle, it is probably
+ * easy to switch to 8-byte IDs by simply changing below typedef declarations.
+ * However, some caution needs to be excecised because
+ * 1) We want to preserve alignment (extra padding in the Object may be needed (see the comment above).
+ * 2) We need to carefully check all the contexts where IDs are used. It is not impossible that some
+ *    code declares IDs as int-type.
  */
 typedef int32_t  IdType;
-typedef uint32_t IdTypeUnsigned;
-const IdTypeUnsigned MAX_DATASET_QTY = numeric_limits<IdType>::max();
+typedef uint32_t IdTypeUnsign;
+const IdTypeUnsign MAX_DATASET_QTY = numeric_limits<IdType>::max();
 
 typedef int32_t LabelType;
 
@@ -294,7 +299,7 @@ inline void CreateObjIdToPosMapper(const ObjectVector& data, std::vector<IdType>
   }
   mapper.resize(maxId);
   std::fill(mapper.begin(), mapper.end(), -1);
-  for (IdTypeUnsigned i = 0; i < data.size(); ++i) {
+  for (IdTypeUnsign i = 0; i < data.size(); ++i) {
     mapper[data[i]->id()] = i;
   }
 }

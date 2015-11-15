@@ -178,11 +178,11 @@ class Space {
   unique_ptr<DataFileInputState>  ReadDataset(ObjectVector& dataset,
                    vector<string>& vExternIds,
                    const string& inputFile,
-                   const IdTypeUnsigned MaxNumObjects = MAX_DATASET_QTY) const;
+                   const IdTypeUnsign MaxNumObjects = MAX_DATASET_QTY) const;
   void WriteDataset(const ObjectVector& dataset,
                    const vector<string>& vExternIds,
                    const string& inputFile,
-                   const IdTypeUnsigned MaxNumObjects = MAX_DATASET_QTY) const;
+                   const IdTypeUnsign MaxNumObjects = MAX_DATASET_QTY) const;
 
   /*
    * For some real-valued or integer-valued *DENSE* vector spaces this function
