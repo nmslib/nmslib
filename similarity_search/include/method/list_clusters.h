@@ -29,6 +29,9 @@ namespace similarity {
  * E. Chavez and G. Navarro.
  * A compact space decomposition for effective a metric indexing. 
  * Pattern Recognition Letters, 26(9):1363-1376, 2005
+ *
+ * The method resembles canopy clustering: https://en.wikipedia.org/wiki/Canopy_clustering_algorithm
+ *
  */
 
 template <typename dist_t>
