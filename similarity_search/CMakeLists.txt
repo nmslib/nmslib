@@ -57,15 +57,35 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if (CXX_COMPILER_VERSION VERSION_LESS 4.2.1)
         message(FATAL_ERROR "Clang version must be at least 3.4 (GCC >= 4.2.1 equivalent)!")
     endif()
-    set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wcast-align -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X -fopenmp -march=native")
-    set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wcast-align -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X -fopenmp -march=native")
+    if (CMAKE_SYSTEM_NAME MATCHES Darwin)
+        # MACOSX
+        set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wcast-align -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X")
+        set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wcast-align -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X")
+        set (WITHOUT_LSH YES)
+        set (WITHOUT_SIMD YES)
+    else()
+        set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wcast-align -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X -fopenmp -march=native")
+        set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wcast-align -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X -fopenmp -march=native")
+    endif()
+    #message(FATAL_ERROR "CLANG ${CMAKE_SYSTEM_NAME}")
 elseif(WIN32)
     # TODO add support for later versions?
     if(NOT MSVC12)
          message(FATAL_ERROR "On Windows, only MSVC version 12 is supported!") 
     endif()
+    set (WITHOUT_LSH YES)
 else ()
     message(FATAL_ERROR "Please, use GCC, Clang, or the Intel compiler!")
+endif()
+
+if (WITHOUT_LSH)
+    message(STATUS "Will build without LSH")
+    add_definitions (-DWITHOUT_LSH=1)
+endif()
+
+if (WITHOUT_SIMD)
+    message(STATUS "Will build without SIMD")
+    add_definitions (-DWITHOUT_SIMD=1)
 endif()
 
 
@@ -76,8 +96,8 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-# GSL is needed by lshkit, yet NO lshkit for Win32
-if (NOT WIN32)
+# GSL is needed by lshkit, yet NO lshkit for Win32 and MACOSX 
+if ((NOT WITHOUT_LSH) AND (NOT WIN32))
   find_package (GSL REQUIRED)
   if (GSL_FOUND)
       message (STATUS "Found GSL.")

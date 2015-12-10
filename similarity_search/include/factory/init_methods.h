@@ -18,9 +18,8 @@
 
 #include "methodfactory.h"
 
-
-#ifndef _MSC_VER
-// These guys won't work on Windows yet
+#if !defined(WITHOUT_LSH) && !defined(_MSC_VER)
+// These guys won't work on Windows and MACOSX yet
 #include "factory/method/lsh.h"
 #include "factory/method/lsh_multiprobe.h"
 #endif
@@ -70,8 +69,8 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_LIST_CLUSTERS, CreateListClusters)
   REGISTER_METHOD_CREATOR(int,    METH_LIST_CLUSTERS, CreateListClusters)
 
-#ifndef _MSC_VER
-// These guys won't work on Windows yet
+#if !defined(WITHOUT_LSH) && !defined(_MSC_VER)
+// These guys won't work on Windows and MACOSX yet
   // Regular LSH
   REGISTER_METHOD_CREATOR(float,  METH_LSH_CAUCHY, CreateLSHCauchy)
   REGISTER_METHOD_CREATOR(float,  METH_LSH_GAUSSIAN, CreateLSHGaussian)

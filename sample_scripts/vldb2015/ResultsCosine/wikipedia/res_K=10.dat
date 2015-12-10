@@ -1,0 +1,177 @@
+MethodName	Recall	PrecisionOfApprox	RelPosError	NumCloser	ClassAccuracy	QueryTime	DistComp	ImprEfficiency	ImprDistComp	Mem	MethodParams	NumData
+"small_world_rand"	0.6426	0.669774	3.06302	82.372	0	6.4942	3328.35	295.308	1201.5	6098	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=1"	3999000
+"small_world_rand"	0.7426	0.771932	1.88029	24.356	0	12.4456	6171.39	154.096	647.99	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=2"	3999000
+"small_world_rand"	0.8072	0.834366	1.44229	6.102	0	17.0961	8284.9	112.18	482.686	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=3"	3999000
+"small_world_rand"	0.8282	0.856277	1.34535	2.604	0	22.7502	10672.5	84.2976	374.701	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=4"	3999000
+"small_world_rand"	0.8278	0.85495	1.37754	3.89	0	27.2061	12629.1	70.4919	316.648	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=5"	3999000
+"small_world_rand"	0.8632	0.888432	1.2236	0.866	0	30.7406	14133.5	62.388	282.945	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=6"	3999000
+"small_world_rand"	0.8634	0.889355	1.23338	1.554	0	35.7022	16216.5	53.7168	246.601	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=7"	3999000
+"small_world_rand"	0.8686	0.894546	1.21653	1.504	0	40.051	18034.3	47.8858	221.744	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=8"	3999000
+"small_world_rand"	0.8744	0.900225	1.19017	0.818	0	44.0937	19663.1	43.4946	203.376	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=9"	3999000
+"small_world_rand"	0.8774	0.903664	1.18175	0.564	0	47.9411	21240.9	40.0056	188.269	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=10"	3999000
+"small_world_rand"	0.8918	0.91436	1.16077	0.56	0	67.9363	28874.8	28.231	138.495	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=15"	3999000
+"small_world_rand"	0.899	0.921805	1.13467	0.264	0	87.5247	35961.1	21.9124	111.203	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=20"	3999000
+"small_world_rand"	0.9068	0.92814	1.12271	0.344	0	106.143	42280.2	18.0688	94.5834	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=25"	3999000
+"small_world_rand"	0.9044	0.927534	1.12273	0.262	0	125.82	48853.3	15.2427	81.8574	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=30"	3999000
+"small_world_rand"	0.9106	0.93172	1.11118	0.214	0	144.949	55310.7	13.231	72.3007	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=35"	3999000
+"small_world_rand"	0.9072	0.930134	1.1183	0.286	0	162.092	60817.7	11.8318	65.7539	3794	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=40"	3999000
+"small_world_rand"	0.655	0.694874	1.9525	55.045	0	4.25858	2195.83	240.757	910.726	3399	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=1"	1999800
+"small_world_rand"	0.7005	0.745009	1.78326	14.265	0	8.65175	4349.31	118.51	459.798	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=2"	1999800
+"small_world_rand"	0.777	0.819764	1.42902	3.49	0	12.0266	5972.19	85.2388	334.852	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=3"	1999800
+"small_world_rand"	0.8155	0.852944	1.31675	1.675	0	15.5024	7610.38	66.1421	262.773	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=4"	1999800
+"small_world_rand"	0.8145	0.850616	1.32983	3.44	0	19.0954	9181.61	53.6914	217.805	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=5"	1999800
+"small_world_rand"	0.8285	0.863916	1.28401	1.5	0	21.9645	10558.3	46.677	189.405	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=6"	1999800
+"small_world_rand"	0.85	0.881459	1.22009	1	0	25.694	12163.8	39.9073	164.406	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=7"	1999800
+"small_world_rand"	0.857	0.888461	1.20182	0.715	0	28.2867	13297.3	36.2447	150.391	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=8"	1999800
+"small_world_rand"	0.843	0.876829	1.22892	0.855	0	31.4331	14633.1	32.6204	136.663	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=9"	1999800
+"small_world_rand"	0.852	0.883799	1.20918	0.66	0	33.5577	15694.6	30.5537	127.42	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=10"	1999800
+"small_world_rand"	0.8595	0.889478	1.19746	0.715	0	49.1371	22068.5	20.8673	90.6178	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=15"	1999800
+"small_world_rand"	0.864	0.89239	1.20034	0.8	0	63.9459	27990.4	16.0353	71.4459	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=20"	1999800
+"small_world_rand"	0.8755	0.903992	1.16831	0.55	0	77.3762	33284.7	13.2516	60.0816	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=25"	1999800
+"small_world_rand"	0.8805	0.904417	1.16615	0.68	0	92.1264	38522.2	11.1302	51.9129	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=30"	1999800
+"small_world_rand"	0.8875	0.914134	1.14144	0.445	0	106.204	43408.2	9.65476	46.0697	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=35"	1999800
+"small_world_rand"	0.883	0.911508	1.15531	0.62	0	121.435	48984.1	8.4437	40.8255	2199	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=40"	1999800
+"small_world_rand"	0.665	0.69267	2.06491	36.615	0	3.80816	2026.57	155.584	493.346	1891	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=1"	999800
+"small_world_rand"	0.766	0.792566	1.54308	9.73	0	6.75403	3486.22	87.7404	286.786	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=2"	999800
+"small_world_rand"	0.7975	0.822798	1.42114	3.215	0	9.83228	4948.72	60.2711	202.032	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=3"	999800
+"small_world_rand"	0.844	0.869656	1.27812	1.9	0	12.5821	6257.86	47.0981	159.767	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=4"	999800
+"small_world_rand"	0.846	0.869029	1.26252	1.045	0	15.3702	7488.8	38.5541	133.506	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=5"	999800
+"small_world_rand"	0.855	0.879764	1.25107	1.3	0	18.8055	8949.36	31.5153	111.717	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=6"	999800
+"small_world_rand"	0.8625	0.886364	1.22433	0.84	0	21.6413	10251.6	27.3867	97.526	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=7"	999800
+"small_world_rand"	0.8815	0.902211	1.16976	0.495	0	24.0322	11222.4	24.6619	89.0897	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=8"	999800
+"small_world_rand"	0.87	0.892016	1.20378	1.07	0	26.5527	12326.3	22.3206	81.1109	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=9"	999800
+"small_world_rand"	0.888	0.910469	1.15261	0.38	0	29.4377	13564.7	20.134	73.7058	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=10"	999800
+"small_world_rand"	0.8925	0.914791	1.13622	0.305	0	42.0224	18760.7	14.1045	53.2924	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=15"	999800
+"small_world_rand"	0.9115	0.931712	1.10314	0.11	0	54.1196	23569.6	10.9524	42.419	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=20"	999800
+"small_world_rand"	0.9195	0.93887	1.08725	0.065	0	66.0024	28184.3	8.98059	35.4736	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=25"	999800
+"small_world_rand"	0.9215	0.94036	1.08723	0.13	0	76.9828	32464.1	7.69983	30.7971	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=30"	999800
+"small_world_rand"	0.9215	0.938653	1.08744	0.165	0	90.6121	37229.6	6.54147	26.855	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=35"	999800
+"small_world_rand"	0.93	0.948334	1.06921	0.085	0	103.739	41538.4	5.714	24.0693	1339	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=40"	999800
+"small_world_rand"	0.667	0.700474	1.97674	52.04	0	2.67525	1398.3	129.008	357.434	1185	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=1"	499800
+"small_world_rand"	0.7855	0.816967	1.42109	3.675	0	5.59332	2821.61	61.6857	177.133	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=2"	499800
+"small_world_rand"	0.816	0.846672	1.35166	2.01	0	8.20697	4006.84	42.0433	124.737	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=3"	499800
+"small_world_rand"	0.848	0.870225	1.26706	1.18	0	10.777	5152.82	32.0188	96.9953	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=4"	499800
+"small_world_rand"	0.8635	0.885371	1.20453	0.99	0	13.3881	6222.14	25.7754	80.3261	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=5"	499800
+"small_world_rand"	0.882	0.90433	1.15897	0.58	0	16.1084	7401.84	21.4223	67.5238	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=6"	499800
+"small_world_rand"	0.8775	0.899173	1.18255	3.26	0	18.2668	8297.85	18.8932	60.2325	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=7"	499800
+"small_world_rand"	0.905	0.92409	1.10771	0.19	0	21.0536	9424.27	16.3908	53.0333	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=8"	499800
+"small_world_rand"	0.9065	0.923265	1.11049	0.2	0	23.4166	10401	14.7357	48.0531	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=9"	499800
+"small_world_rand"	0.8985	0.916309	1.12543	0.27	0	25.943	11424.9	13.3015	43.7465	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=10"	499800
+"small_world_rand"	0.9125	0.929485	1.10154	0.205	0	36.4424	15773.3	9.46983	31.6864	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=15"	499800
+"small_world_rand"	0.916	0.931727	1.09529	0.205	0	48.2601	20330.9	7.15067	24.5833	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=20"	499800
+"small_world_rand"	0.921	0.934926	1.08693	0.09	0	57.7596	24147.5	5.975	20.6978	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=25"	499800
+"small_world_rand"	0.931	0.942924	1.07612	0.11	0	67.0922	27893.4	5.14126	17.9182	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=30"	499800
+"small_world_rand"	0.929	0.942577	1.07822	0.115	0	77.4594	31877.2	4.45443	15.6789	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=35"	499800
+"small_world_rand"	0.938	0.949645	1.06605	0.105	0	87.8268	35718.9	3.92883	13.9926	829	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=40"	499800
+"small_world_rand"	0.76	0.780107	1.55572	19.715	0	2.86465	1434.88	75.0801	174.091	793	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=1"	249800
+"small_world_rand"	0.845	0.860089	1.26604	2.585	0	5.81548	2798.19	36.9808	89.272	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=2"	249800
+"small_world_rand"	0.866	0.884332	1.20021	0.605	0	8.45112	3972.49	25.4491	62.8826	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=3"	249800
+"small_world_rand"	0.872	0.891054	1.17898	0.58	0	10.9947	5104.6	19.5238	48.9363	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=4"	249800
+"small_world_rand"	0.892	0.906814	1.1534	0.42	0	13.3248	6101.55	16.1272	40.9404	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=5"	249800
+"small_world_rand"	0.912	0.923796	1.10977	0.225	0	15.8952	7158.98	13.5173	34.8932	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=6"	249800
+"small_world_rand"	0.9035	0.918593	1.12126	0.255	0	18.03	8131.79	11.909	30.7189	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=7"	249800
+"small_world_rand"	0.9075	0.922738	1.11359	0.245	0	20.5208	9143.8	10.4725	27.3191	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=8"	249800
+"small_world_rand"	0.921	0.931595	1.09421	0.15	0	22.6148	10043.2	9.49386	24.8725	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=9"	249800
+"small_world_rand"	0.9175	0.932182	1.09872	0.24	0	25.0824	11054.6	8.56173	22.5969	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=10"	249800
+"small_world_rand"	0.9315	0.941513	1.07947	0.125	0	34.5483	15120.6	6.22169	16.5205	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=15"	249800
+"small_world_rand"	0.9405	0.950799	1.06528	0.085	0	44.3515	19234	4.84438	12.9875	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=20"	249800
+"small_world_rand"	0.94	0.949221	1.0665	0.08	0	52.5012	22661.9	4.09507	11.0229	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=25"	249800
+"small_world_rand"	0.952	0.961164	1.048	0.055	0	60.2771	26001.9	3.56727	9.607	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=30"	249800
+"small_world_rand"	0.956	0.9629	1.04574	0.055	0	68.4192	29397.6	3.14288	8.4973	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=35"	249800
+"small_world_rand"	0.954	0.963235	1.04495	0.035	0	75.958	32560.9	2.83186	7.67177	503	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=40"	249800
+"small_world_rand"	0.7495	0.777297	1.50777	28.45	0	2.66638	1374.88	44.3995	90.7712	572	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=1"	124800
+"small_world_rand"	0.847	0.868139	1.23037	5.925	0	5.45067	2642.15	21.7197	47.2343	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=2"	124800
+"small_world_rand"	0.8775	0.895721	1.18293	2.955	0	8.0914	3803.5	14.6302	32.8119	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=3"	124800
+"small_world_rand"	0.899	0.917338	1.12256	0.265	0	11.1208	5160.59	10.6457	24.1833	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=4"	124800
+"small_world_rand"	0.9055	0.919658	1.11415	0.225	0	13.1432	6024.49	9.00743	20.7154	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=5"	124800
+"small_world_rand"	0.9075	0.924497	1.10707	0.16	0	15.6784	7044.82	7.55045	17.7151	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=6"	124800
+"small_world_rand"	0.9195	0.936259	1.08674	0.12	0	17.7252	7895.53	6.67928	15.8064	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=7"	124800
+"small_world_rand"	0.9165	0.93124	1.09453	0.175	0	19.849	8831.27	5.96454	14.1316	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=8"	124800
+"small_world_rand"	0.9235	0.940036	1.07944	0.13	0	22.0697	9703.42	5.36427	12.8614	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=9"	124800
+"small_world_rand"	0.932	0.947558	1.06869	0.11	0	24.1193	10494.2	4.90846	11.8923	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=10"	124800
+"small_world_rand"	0.9405	0.952213	1.06424	0.115	0	33.5551	14270.1	3.52662	8.74555	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=15"	124800
+"small_world_rand"	0.9495	0.962155	1.04747	0.07	0	42.1561	17646.8	2.80834	7.07211	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=20"	124800
+"small_world_rand"	0.9515	0.963208	1.04654	0.075	0	49.6288	20601.9	2.38271	6.05768	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=25"	124800
+"small_world_rand"	0.954	0.965039	1.04323	0.055	0	56.8703	23403.5	2.0797	5.33253	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=30"	124800
+"small_world_rand"	0.9585	0.969278	1.03718	0.045	0	63.1921	26031.6	1.87183	4.79417	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=35"	124800
+"small_world_rand"	0.9615	0.970777	1.03544	0.045	0	69.255	28461.2	1.70858	4.38491	283	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=40"	124800
+"small_world_rand"	0.8445	0.858284	1.23752	27.98	0	2.3059	1085.73	28.9437	55.0779	449	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=1"	59800
+"small_world_rand"	0.927	0.931389	1.09534	0.22	0	4.55064	2090.12	14.669	28.6108	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=2"	59800
+"small_world_rand"	0.939	0.942653	1.0793	0.195	0	7.02914	3118.42	9.49668	19.1764	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=3"	59800
+"small_world_rand"	0.9435	0.946412	1.07588	0.165	0	8.88491	3894.61	7.511	15.3546	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=4"	59800
+"small_world_rand"	0.947	0.951073	1.07332	0.465	0	11.0074	4734.19	6.06219	12.6315	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=5"	59800
+"small_world_rand"	0.9525	0.955866	1.05834	0.125	0	12.815	5477.03	5.20731	10.9183	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=6"	59800
+"small_world_rand"	0.96	0.96378	1.04615	0.12	0	14.752	6255.12	4.52311	9.56017	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=7"	59800
+"small_world_rand"	0.9585	0.963055	1.04632	0.09	0	16.2539	6899.38	4.10171	8.66745	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=8"	59800
+"small_world_rand"	0.9615	0.964712	1.0444	0.1	0	17.9068	7565.17	3.72689	7.90465	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=9"	59800
+"small_world_rand"	0.9665	0.969995	1.03728	0.08	0	19.715	8271.02	3.38204	7.23006	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=10"	59800
+"small_world_rand"	0.971	0.974506	1.03113	0.065	0	27.0985	11253.2	2.46099	5.31403	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=15"	59800
+"small_world_rand"	0.9765	0.980291	1.0239	0.045	0	33.538	13938.5	1.98964	4.29028	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=20"	59800
+"small_world_rand"	0.984	0.988953	1.01274	0.015	0	39.0255	16090.6	1.70932	3.71644	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=25"	59800
+"small_world_rand"	0.983	0.988014	1.01377	0.015	0	44.5422	18315.4	1.4978	3.26502	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=30"	59800
+"small_world_rand"	0.982	0.986489	1.01582	0.02	0	49.5771	20200.9	1.34614	2.96027	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=35"	59800
+"small_world_rand"	0.981	0.986166	1.01676	0.025	0	54.2244	22060.9	1.2306	2.71068	161	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=40"	59800
+"small_world_rand"	0.877	0.885739	1.20829	1.11	0	2.22241	823.835	20.9778	36.1723	391	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=1"	29800
+"small_world_rand"	0.914	0.92173	1.11789	0.27	0	4.34215	1594.03	10.7404	18.6948	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=2"	29800
+"small_world_rand"	0.9415	0.947549	1.07177	0.13	0	6.51913	2366.38	7.15458	12.5931	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=3"	29800
+"small_world_rand"	0.9475	0.951913	1.06372	0.135	0	8.50155	3128.68	5.48663	9.5248	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=4"	29800
+"small_world_rand"	0.953	0.957075	1.05569	0.105	0	10.457	3818.96	4.45875	7.80317	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=5"	29800
+"small_world_rand"	0.96	0.964091	1.04564	0.07	0	12.2644	4484.02	3.80215	6.64583	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=6"	29800
+"small_world_rand"	0.959	0.963155	1.04655	0.075	0	14.0926	5109.27	3.30935	5.83254	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=7"	29800
+"small_world_rand"	0.964	0.968467	1.03986	0.065	0	15.6545	5689.4	2.97924	5.23781	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=8"	29800
+"small_world_rand"	0.9665	0.971249	1.03584	0.065	0	17.3387	6290.98	2.69011	4.73694	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=9"	29800
+"small_world_rand"	0.966	0.967849	1.03933	0.06	0	18.8998	6858.9	2.46796	4.34472	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=10"	29800
+"small_world_rand"	0.9775	0.98259	1.02068	0.02	0	25.8124	9366.67	1.8069	3.18149	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=15"	29800
+"small_world_rand"	0.9825	0.985271	1.01712	0.005	0	31.1488	11346.5	1.4973	2.62635	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=20"	29800
+"small_world_rand"	0.985	0.986827	1.01505	0.02	0	36.2508	13240.2	1.28661	2.25072	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=25"	29800
+"small_world_rand"	0.987	0.990574	1.01065	0.01	0	40.3189	14728.1	1.15679	2.02334	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=30"	29800
+"small_world_rand"	0.9865	0.988487	1.01306	0.01	0	43.9337	16086.7	1.06138	1.85246	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=35"	29800
+"small_world_rand"	0.9895	0.990573	1.01066	0.015	0	47.3885	17304.1	0.983992	1.72214	103	"NN=17,initIndexAttempts=3,indexThreadQty=4,initSearchAttempts=40"	29800
+"permutation (inverted index over neighboring pivots)"	0.9616	0.97177	1.03729	0.046	0	1241.51	2.19648e+06	1.54531	1.82064	4594	"numPivot=1000,numPivotIndex=32,numPivotSearch=1,indexThreadQty=4,useSort=0,dbScanFrac=0"	3999000
+"permutation (inverted index over neighboring pivots)"	0.9128	0.931332	1.10422	0.134	0	743.065	1.10517e+06	2.58188	3.61845	3794	"numPivot=1000,numPivotIndex=32,numPivotSearch=2,indexThreadQty=4,useSort=0,dbScanFrac=0"	3999000
+"permutation (inverted index over neighboring pivots)"	0.8704	0.894338	1.18037	0.262	0	448.877	589642	4.274	6.78208	3794	"numPivot=1000,numPivotIndex=32,numPivotSearch=3,indexThreadQty=4,useSort=0,dbScanFrac=0"	3999000
+"permutation (inverted index over neighboring pivots)"	0.8242	0.852248	1.28473	0.58	0	291.185	355401	6.58856	11.2521	3794	"numPivot=1000,numPivotIndex=32,numPivotSearch=4,indexThreadQty=4,useSort=0,dbScanFrac=0"	3999000
+"permutation (inverted index over neighboring pivots)"	0.7868	0.820132	1.37578	0.812	0	206.178	240797	9.30499	16.6074	3794	"numPivot=1000,numPivotIndex=32,numPivotSearch=5,indexThreadQty=4,useSort=0,dbScanFrac=0"	3999000
+"permutation (inverted index over neighboring pivots)"	0.7444	0.780026	1.51918	1.374	0	156.787	177794	12.2362	22.4923	3794	"numPivot=1000,numPivotIndex=32,numPivotSearch=6,indexThreadQty=4,useSort=0,dbScanFrac=0"	3999000
+"permutation (inverted index over neighboring pivots)"	0.956	0.966664	1.04255	0.035	0	667.232	1.12675e+06	1.53762	1.77484	2743	"numPivot=1000,numPivotIndex=32,numPivotSearch=1,indexThreadQty=4,useSort=0,dbScanFrac=0"	1999800
+"permutation (inverted index over neighboring pivots)"	0.9	0.928544	1.10231	0.125	0	409.559	594684	2.50499	3.36279	2199	"numPivot=1000,numPivotIndex=32,numPivotSearch=2,indexThreadQty=4,useSort=0,dbScanFrac=0"	1999800
+"permutation (inverted index over neighboring pivots)"	0.858	0.894356	1.16987	0.31	0	255.982	334329	4.00787	5.98153	2199	"numPivot=1000,numPivotIndex=32,numPivotSearch=3,indexThreadQty=4,useSort=0,dbScanFrac=0"	1999800
+"permutation (inverted index over neighboring pivots)"	0.8095	0.852422	1.26192	0.455	0	169.644	207454	6.04757	9.63971	2199	"numPivot=1000,numPivotIndex=32,numPivotSearch=4,indexThreadQty=4,useSort=0,dbScanFrac=0"	1999800
+"permutation (inverted index over neighboring pivots)"	0.7655	0.808579	1.38951	0.62	0	120.398	140629	8.5211	14.2204	2199	"numPivot=1000,numPivotIndex=32,numPivotSearch=5,indexThreadQty=4,useSort=0,dbScanFrac=0"	1999800
+"permutation (inverted index over neighboring pivots)"	0.719	0.76714	1.53569	1.11	0	90.8149	102668	11.2968	19.4784	2199	"numPivot=1000,numPivotIndex=32,numPivotSearch=6,indexThreadQty=4,useSort=0,dbScanFrac=0"	1999800
+"permutation (inverted index over neighboring pivots)"	0.967	0.974438	1.0319	0.035	0	376.038	550477	1.57721	1.81624	1627	"numPivot=1000,numPivotIndex=32,numPivotSearch=1,indexThreadQty=4,useSort=0,dbScanFrac=0"	999800
+"permutation (inverted index over neighboring pivots)"	0.916	0.934489	1.0942	0.145	0	231.979	297800	2.55664	3.35729	1339	"numPivot=1000,numPivotIndex=32,numPivotSearch=2,indexThreadQty=4,useSort=0,dbScanFrac=0"	999800
+"permutation (inverted index over neighboring pivots)"	0.87	0.89736	1.1621	0.355	0	145.495	168294	4.0763	5.94081	1339	"numPivot=1000,numPivotIndex=32,numPivotSearch=3,indexThreadQty=4,useSort=0,dbScanFrac=0"	999800
+"permutation (inverted index over neighboring pivots)"	0.828	0.858436	1.24415	0.61	0	96.6893	104578	6.13386	9.56037	1339	"numPivot=1000,numPivotIndex=32,numPivotSearch=4,indexThreadQty=4,useSort=0,dbScanFrac=0"	999800
+"permutation (inverted index over neighboring pivots)"	0.7875	0.825101	1.3248	0.765	0	68.3668	70404.7	8.67487	14.2008	1339	"numPivot=1000,numPivotIndex=32,numPivotSearch=5,indexThreadQty=4,useSort=0,dbScanFrac=0"	999800
+"permutation (inverted index over neighboring pivots)"	0.7545	0.794039	1.41643	0.9	0	51.5625	51590.6	11.5019	19.3795	1339	"numPivot=1000,numPivotIndex=32,numPivotSearch=6,indexThreadQty=4,useSort=0,dbScanFrac=0"	999800
+"permutation (inverted index over neighboring pivots)"	0.9645	0.972911	1.03341	0.02	0	215.462	276405	1.60265	1.80822	1117	"numPivot=1000,numPivotIndex=32,numPivotSearch=1,indexThreadQty=4,useSort=0,dbScanFrac=0"	499800
+"permutation (inverted index over neighboring pivots)"	0.932	0.946049	1.07095	0.045	0	133.295	153525	2.59055	3.25549	829	"numPivot=1000,numPivotIndex=32,numPivotSearch=2,indexThreadQty=4,useSort=0,dbScanFrac=0"	499800
+"permutation (inverted index over neighboring pivots)"	0.888	0.91024	1.12634	0.13	0	85.3812	90435.6	4.04426	5.52658	829	"numPivot=1000,numPivotIndex=32,numPivotSearch=3,indexThreadQty=4,useSort=0,dbScanFrac=0"	499800
+"permutation (inverted index over neighboring pivots)"	0.8425	0.871097	1.20392	0.215	0	57.8783	58091.7	5.96594	8.60364	829	"numPivot=1000,numPivotIndex=32,numPivotSearch=4,indexThreadQty=4,useSort=0,dbScanFrac=0"	499800
+"permutation (inverted index over neighboring pivots)"	0.8005	0.832912	1.29979	0.48	0	41.9138	40777.9	8.23817	12.2567	829	"numPivot=1000,numPivotIndex=32,numPivotSearch=5,indexThreadQty=4,useSort=0,dbScanFrac=0"	499800
+"permutation (inverted index over neighboring pivots)"	0.758	0.796252	1.40616	0.845	0	32.1581	30755.2	10.7372	16.2509	829	"numPivot=1000,numPivotIndex=32,numPivotSearch=6,indexThreadQty=4,useSort=0,dbScanFrac=0"	499800
+"permutation (inverted index over neighboring pivots)"	0.9705	0.976756	1.02776	0.015	0	127.404	128766	1.68916	1.93995	791	"numPivot=1000,numPivotIndex=32,numPivotSearch=1,indexThreadQty=4,useSort=0,dbScanFrac=0"	249800
+"permutation (inverted index over neighboring pivots)"	0.9365	0.947772	1.0666	0.055	0	84.8881	79742.3	2.53514	3.13259	503	"numPivot=1000,numPivotIndex=32,numPivotSearch=2,indexThreadQty=4,useSort=0,dbScanFrac=0"	249800
+"permutation (inverted index over neighboring pivots)"	0.9115	0.926325	1.10495	0.105	0	59.4258	53311.2	3.62135	4.68569	503	"numPivot=1000,numPivotIndex=32,numPivotSearch=3,indexThreadQty=4,useSort=0,dbScanFrac=0"	249800
+"permutation (inverted index over neighboring pivots)"	0.8865	0.903781	1.14817	0.18	0	43.3478	38056.2	4.96445	6.56397	503	"numPivot=1000,numPivotIndex=32,numPivotSearch=4,indexThreadQty=4,useSort=0,dbScanFrac=0"	249800
+"permutation (inverted index over neighboring pivots)"	0.8545	0.872717	1.20946	0.275	0	32.8597	28744.2	6.54889	8.69045	503	"numPivot=1000,numPivotIndex=32,numPivotSearch=5,indexThreadQty=4,useSort=0,dbScanFrac=0"	249800
+"permutation (inverted index over neighboring pivots)"	0.8195	0.841487	1.28565	0.53	0	25.8216	22881.3	8.33381	10.9172	503	"numPivot=1000,numPivotIndex=32,numPivotSearch=6,indexThreadQty=4,useSort=0,dbScanFrac=0"	249800
+"permutation (inverted index over neighboring pivots)"	0.959	0.968284	1.04176	0.075	0	66.0344	57885.8	1.79371	2.15597	427	"numPivot=1000,numPivotIndex=32,numPivotSearch=1,indexThreadQty=4,useSort=0,dbScanFrac=0"	124800
+"permutation (inverted index over neighboring pivots)"	0.9335	0.944439	1.0747	0.11	0	46.6927	39631.3	2.53669	3.14902	283	"numPivot=1000,numPivotIndex=32,numPivotSearch=2,indexThreadQty=4,useSort=0,dbScanFrac=0"	124800
+"permutation (inverted index over neighboring pivots)"	0.911	0.927377	1.10247	0.125	0	34.5068	29140.6	3.43246	4.28269	283	"numPivot=1000,numPivotIndex=32,numPivotSearch=3,indexThreadQty=4,useSort=0,dbScanFrac=0"	124800
+"permutation (inverted index over neighboring pivots)"	0.891	0.909561	1.13309	0.14	0	26.3642	22456	4.49247	5.55753	283	"numPivot=1000,numPivotIndex=32,numPivotSearch=4,indexThreadQty=4,useSort=0,dbScanFrac=0"	124800
+"permutation (inverted index over neighboring pivots)"	0.8695	0.890968	1.16963	0.23	0	20.8264	18117.6	5.68686	6.88833	283	"numPivot=1000,numPivotIndex=32,numPivotSearch=5,indexThreadQty=4,useSort=0,dbScanFrac=0"	124800
+"permutation (inverted index over neighboring pivots)"	0.8395	0.866294	1.22693	0.295	0	16.9085	15027.3	7.00442	8.3049	283	"numPivot=1000,numPivotIndex=32,numPivotSearch=6,indexThreadQty=4,useSort=0,dbScanFrac=0"	124800
+"permutation (inverted index over neighboring pivots)"	0.9785	0.9858	1.0172	0.025	0	38.9827	28976.6	1.71295	2.06373	172	"numPivot=1000,numPivotIndex=32,numPivotSearch=1,indexThreadQty=4,useSort=0,dbScanFrac=0"	59800
+"permutation (inverted index over neighboring pivots)"	0.953	0.961816	1.05057	0.065	0	27.7481	19648.4	2.40644	3.0435	161	"numPivot=1000,numPivotIndex=32,numPivotSearch=2,indexThreadQty=4,useSort=0,dbScanFrac=0"	59800
+"permutation (inverted index over neighboring pivots)"	0.933	0.9467	1.07525	0.11	0	20.4567	14258.9	3.26406	4.19387	161	"numPivot=1000,numPivotIndex=32,numPivotSearch=3,indexThreadQty=4,useSort=0,dbScanFrac=0"	59800
+"permutation (inverted index over neighboring pivots)"	0.918	0.93324	1.0964	0.185	0	15.6379	10948.7	4.26972	5.46181	161	"numPivot=1000,numPivotIndex=32,numPivotSearch=4,indexThreadQty=4,useSort=0,dbScanFrac=0"	59800
+"permutation (inverted index over neighboring pivots)"	0.9005	0.91452	1.13072	0.35	0	12.2916	8600.56	5.43184	6.95304	161	"numPivot=1000,numPivotIndex=32,numPivotSearch=5,indexThreadQty=4,useSort=0,dbScanFrac=0"	59800
+"permutation (inverted index over neighboring pivots)"	0.885	0.901026	1.15679	0.395	0	10.0625	7172.28	6.63494	8.33765	161	"numPivot=1000,numPivotIndex=32,numPivotSearch=6,indexThreadQty=4,useSort=0,dbScanFrac=0"	59800
+"permutation (inverted index over neighboring pivots)"	0.9925	0.995598	1.00495	0.005	0	34.9593	19580	1.33454	1.52197	109	"numPivot=1000,numPivotIndex=32,numPivotSearch=1,indexThreadQty=4,useSort=0,dbScanFrac=0"	29800
+"permutation (inverted index over neighboring pivots)"	0.979	0.982563	1.02009	0.025	0	24.9731	12924.4	1.86815	2.30571	103	"numPivot=1000,numPivotIndex=32,numPivotSearch=2,indexThreadQty=4,useSort=0,dbScanFrac=0"	29800
+"permutation (inverted index over neighboring pivots)"	0.964	0.971415	1.03457	0.03	0	18.1352	8917.37	2.57245	3.34179	103	"numPivot=1000,numPivotIndex=32,numPivotSearch=3,indexThreadQty=4,useSort=0,dbScanFrac=0"	29800
+"permutation (inverted index over neighboring pivots)"	0.9345	0.946036	1.06895	0.06	0	13.4517	6423.71	3.46799	4.63906	103	"numPivot=1000,numPivotIndex=32,numPivotSearch=4,indexThreadQty=4,useSort=0,dbScanFrac=0"	29800
+"permutation (inverted index over neighboring pivots)"	0.9055	0.920554	1.11008	0.12	0	10.2555	4846.02	4.54863	6.14938	103	"numPivot=1000,numPivotIndex=32,numPivotSearch=5,indexThreadQty=4,useSort=0,dbScanFrac=0"	29800
+"permutation (inverted index over neighboring pivots)"	0.872	0.890858	1.16673	0.3	0	8.04475	3807.24	5.79842	7.8272	103	"numPivot=1000,numPivotIndex=32,numPivotSearch=6,indexThreadQty=4,useSort=0,dbScanFrac=0"	29800
