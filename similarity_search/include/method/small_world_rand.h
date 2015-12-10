@@ -168,22 +168,21 @@ public:
   SmallWorldRand(bool PrintProgress,
                  const Space<dist_t>& space,
                  const ObjectVector& data);
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
 
   ~SmallWorldRand();
 
   typedef std::vector<MSWNode*> ElementList;
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
   MSWNode* getRandomEntryPoint() const;
   MSWNode* getRandomEntryPointLocked() const;
   size_t getEntryQtyLocked() const;
    
-  void kSearchElementsWithAttempts(const Object* queryObj, size_t NN, 
-                                   size_t initAttempts, 
-                                   std::priority_queue<EvaluatedMSWNodeDirect<dist_t>>& resultSet) const;
+  void searchForIndexing(const Object *queryObj,
+                         std::priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet) const;
   void add(MSWNode *newElement);
   void addCriticalSection(MSWNode *newElement);
   void link(MSWNode* first, MSWNode* second){
@@ -192,11 +191,12 @@ public:
     second->addFriend(first, true);
   }
 
-  void SetQueryTimeParams(const AnyParams& );
+  void SetQueryTimeParams(const AnyParams& ) override;
 private:
 
   size_t                NN_;
-  size_t                NNSearch_;
+  size_t                efConstruction_;
+  size_t                efSearch_;
   size_t                initIndexAttempts_;
   size_t                initSearchAttempts_;
   size_t                indexThreadQty_;

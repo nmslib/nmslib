@@ -340,7 +340,6 @@ public:
 
     /* 
      * Sequential search times should be computed only once.
-     * If we have multiple methods, they might be duplicated!
      */
     for (size_t q = 0; q < numquery; ++q) {
       const GoldStandard<dist_t>&  QueryGS = goldStand[q];

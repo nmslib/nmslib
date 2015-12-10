@@ -35,5 +35,13 @@ service QueryService {
                           2: required string queryObj, // a string representation of a query object 
                           3: required bool retExternId,// if true, we will return an external ID
                           4: required bool retObj)     // if true, we will return a string representation of each answer object
+  throws (1: QueryException err),
+
+  /*
+   * Compute the distance between two objects represented as strings. 
+   * This function is intended to be used for debugging purproses.
+   */
+  double getDistance(1: required string obj1,
+                     2: required string obj2)
   throws (1: QueryException err)
 }

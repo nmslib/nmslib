@@ -30,7 +30,7 @@ namespace similarity {
  * A compact space decomposition for effective a metric indexing. 
  * Pattern Recognition Letters, 26(9):1363-1376, 2005
  *
- * The method resembles canopy clustering: https://en.wikipedia.org/wiki/Canopy_clustering_algorithm
+ * The method also resembles canopy clustering: https://en.wikipedia.org/wiki/Canopy_clustering_algorithm
  *
  */
 
@@ -43,19 +43,20 @@ class ListClusters : public Index<dist_t> {
   ListClusters(const Space<dist_t>& space,
                const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& MethParams);
+  void CreateIndex(const AnyParams& MethParams) override;
   ~ListClusters();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
   static const Object* SelectNextCenter(
       DistObjectPairVector<dist_t>& remaining,
       ListClustersStrategy strategy);
 
+  virtual bool DuplicateData() const override { return ChunkBucket_; }
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
 
   template <typename QueryType>
   void GenSearch(QueryType* query) const;

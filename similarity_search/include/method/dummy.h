@@ -48,7 +48,7 @@ class DummyMethod : public Index<dist_t> {
    * This function is supposed to create a search index (or call a 
    * function to create it)!
    */
-  void CreateIndex(const AnyParams& IndexParams) {
+  void CreateIndex(const AnyParams& IndexParams) override {
     AnyParamManager  pmgr(IndexParams);
     pmgr.GetParamOptional("doSeqSearch",  
                           bDoSeqSearch_, 
@@ -66,22 +66,22 @@ class DummyMethod : public Index<dist_t> {
    * However, this is not required.
    */
   // SaveIndex is not necessarily implemented
-  virtual void SaveIndex(const string& location) {
+  virtual void SaveIndex(const string& location) override {
     throw runtime_error("SaveIndex is not implemented for method: " + StrDesc());
   }
   // LoadIndex is not necessarily implemented
-  virtual void LoadIndex(const string& location) {
+  virtual void LoadIndex(const string& location) override {
     throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
   }
 
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
 
   ~DummyMethod(){};
 
   /* 
    * Just the name of the method, consider printing crucial parameter values
    */
-  const std::string StrDesc() const { 
+  const std::string StrDesc() const override { 
     stringstream str;
     str << "Dummy method: " << (bDoSeqSearch_ ? " does seq. search " : " does nothing (really dummy)"); 
     return str.str();
@@ -90,8 +90,8 @@ class DummyMethod : public Index<dist_t> {
   /* 
    *  One needs to implement two search functions.
    */
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
   /*
    * In rare cases, mostly when we wrap up 3rd party methods,
@@ -101,7 +101,7 @@ class DummyMethod : public Index<dist_t> {
    *
    * Note, however, that this method doesn't create any data duplicates.
    */
-  virtual bool DuplicateData() { return false; }
+  virtual bool DuplicateData() const override { return false; }
 
  private:
   bool                    data_duplicate_;

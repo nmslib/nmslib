@@ -42,14 +42,14 @@ class PermutationIndexLSHBin : public Index<dist_t> {
                  const Space<dist_t>& space,
                  const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& MethParams);
+  void CreateIndex(const AnyParams& MethParams) override;
   ~PermutationIndexLSHBin();
 
-  const std::string StrDesc() const { return "LSH (binary permutations)"; }
-  void Search(RangeQuery<dist_t>* query, IdType) const {GenSearch(query);}
-  void Search(KNNQuery<dist_t>* query, IdType) const {GenSearch(query);}
+  const std::string StrDesc() const override { return "LSH (binary permutations)"; }
+  void Search(RangeQuery<dist_t>* query, IdType) const override {GenSearch(query);}
+  void Search(KNNQuery<dist_t>* query, IdType) const override {GenSearch(query);}
 
-  void SetQueryTimeParams(const AnyParams &) {}
+  void SetQueryTimeParams(const AnyParams &) override {}
  private:
   const Space<dist_t>&  space_;
   const ObjectVector&   data_;

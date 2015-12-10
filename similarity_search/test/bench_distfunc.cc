@@ -1199,7 +1199,8 @@ void TestSQFDGeneric(size_t N, size_t Rep, SqfdFunction<T>& func) {
     ObjectVector              elems;
     vector<string>            tmp;
 
-    space->ReadDataset(elems, tmp, (sampleDataPrefix + "sqfd20_10k_10k.txt"), N); 
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, (sampleDataPrefix + "sqfd20_10k_10k.txt"), N)); 
+    space->UpdateParamsFromFile(*inpState);
 
     N = min(N, elems.size());
 
@@ -1257,7 +1258,8 @@ void TestLevenshtein(size_t N, size_t Rep) {
     ObjectVector                  elems;
     vector<string>                tmp;
 
-    space->ReadDataset(elems, tmp, (sampleDataPrefix + "dna32_4_5K.txt"), N); 
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, (sampleDataPrefix + "dna32_4_5K.txt"), N)); 
+    space->UpdateParamsFromFile(*inpState);
 
     N = min(N, elems.size());
 
@@ -1295,7 +1297,8 @@ void TestSparseLp(size_t N, size_t Rep, T power) {
     ObjectVector                  elems;
     vector<string>                tmp;
 
-    space->ReadDataset(elems, tmp, (sampleDataPrefix + "sparse_5K.txt"), N); 
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, (sampleDataPrefix + "sparse_5K.txt"), N)); 
+    space->UpdateParamsFromFile(*inpState);
 
     N = min(N, elems.size());
 
@@ -1333,7 +1336,8 @@ void TestSparseAngularDistance(const string& dataFile, size_t N, size_t Rep) {
     ObjectVector                  elems;
     vector<string>                tmp;
 
-    space->ReadDataset(elems, tmp, dataFile, N); 
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile, N)); 
+    space->UpdateParamsFromFile(*inpState);
 
     N = min(N, elems.size());
 
@@ -1373,7 +1377,8 @@ void TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep
     ObjectVector                                 elems;
     vector<string>                tmp;
 
-    space->ReadDataset(elems, tmp, dataFile,  N); 
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile,  N)); 
+    space->UpdateParamsFromFile(*inpState);
 
     N = min(N, elems.size());
 
@@ -1413,7 +1418,8 @@ void TestSparseAngularDistanceFast(const string& dataFile, size_t N, size_t Rep)
     ObjectVector                                 elems;
     vector<string>                tmp;
 
-    space->ReadDataset(elems, tmp, dataFile, N);
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile, N));
+    space->UpdateParamsFromFile(*inpState);
 
     N = min(N, elems.size());
 
@@ -1453,7 +1459,8 @@ void TestSparseCosineSimilarity(const string& dataFile, size_t N, size_t Rep) {
     ObjectVector                  elems;
     vector<string>                tmp;
 
-    space->ReadDataset(elems, tmp, dataFile, N); 
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile, N)); 
+    space->UpdateParamsFromFile(*inpState);
 
     N = min(N, elems.size());
 

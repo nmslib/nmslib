@@ -38,15 +38,15 @@ class GHTree : public Index<dist_t> {
          const ObjectVector& data,
          bool use_random_center = true);
 
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
 
   ~GHTree();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType ) const;
-  void Search(KNNQuery<dist_t>* query, IdType ) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType ) const override;
+  void Search(KNNQuery<dist_t>* query, IdType ) const override;
 
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override {
     AnyParamManager pmgr(QueryTimeParams);
     pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
     LOG(LIB_INFO) << "Set GH-tree query-time parameters:";

@@ -50,22 +50,22 @@ class NNDescentMethod : public Index<dist_t> {
   NNDescentMethod(bool PrintProgress,
                   const Space<dist_t>& space, 
                   const ObjectVector& data);
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
   ~NNDescentMethod(){};
 
   /* 
    * Just the name of the method, consider printing crucial parameter values
    */
-  const std::string StrDesc() const { 
+  const std::string StrDesc() const override { 
     stringstream str;
     str << "NNDescentMethod method: ";
     return str.str();
   }
 
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
- virtual void SetQueryTimeParams(const AnyParams& QueryTimeParams);
+ virtual void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
 
   class SpaceOracle {
   public:

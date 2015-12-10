@@ -129,17 +129,17 @@ class LSH : public Index<dist_t> {
       int P      // lp (l1 or l2)
   );
 
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
 
   ~LSH();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType ) const;
-  void Search(KNNQuery<dist_t>* query, IdType ) const;
-  void SetQueryTimeParams(const AnyParams& params) {};
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType ) const override;
+  void Search(KNNQuery<dist_t>* query, IdType ) const override;
+  void SetQueryTimeParams(const AnyParams& params)  override {};
 
   // LSH does copy all data
-  virtual bool DuplicateData() { return true; }
+  virtual bool DuplicateData() const override { return true; }
  private:
   typedef lshkit::LshIndex<TailRepeatHash<lsh_t>, unsigned> LshIndexType;
 

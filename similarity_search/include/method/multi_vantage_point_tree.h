@@ -38,23 +38,22 @@ class MultiVantagePointTree : public Index<dist_t> {
  public:
   MultiVantagePointTree(const Space<dist_t>& space,
                         const ObjectVector& data);
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
   ~MultiVantagePointTree();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override {
     AnyParamManager pmgr(QueryTimeParams);
     pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
     LOG(LIB_INFO) << "Set MVP-tree query-time parameters:";
     LOG(LIB_INFO) << "maxLeavesToVisit" << MaxLeavesToVisit_;
     pmgr.CheckUnused();
   }
- 
-  
 
+  virtual bool DuplicateData() const override { return ChunkBucket_; }
  private:
   struct Entry;
 

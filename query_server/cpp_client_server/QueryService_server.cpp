@@ -101,10 +101,11 @@ class QueryServiceHandler : virtual public QueryServiceIf {
     counter_(0)
 
   {
-    space_->ReadDataset(dataSet_,
-                       externIds_,
-                       DataFile,
-                       MaxNumData);
+    unique_ptr<DataFileInputState> inpState(space_->ReadDataset(dataSet_,
+                                                                externIds_,
+                                                                DataFile,
+                                                                MaxNumData));
+    space_->UpdateParamsFromFile(*inpState);
 
     CHECK(dataSet_.size() == externIds_.size());
 
@@ -249,6 +250,39 @@ class QueryServiceHandler : virtual public QueryServiceIf {
           if (retObj) LOG(LIB_INFO) << objs[i]; 
         }
       }
+    } catch (const exception& e) {
+        QueryException qe;
+        qe.__set_message(e.what());
+        throw qe;
+    } catch (...) {
+        QueryException qe;
+        qe.__set_message("Unknown exception");
+        throw qe;
+    }
+  }
+
+  double getDistance(const std::string& objStr1, const std::string& objStr2) {
+    try {
+      if (debugPrint_) {
+        LOG(LIB_INFO) << "Computing the distance between two objects";
+      }
+
+      WallClockTimer wtm;
+
+      wtm.reset();
+
+      unique_ptr<Object>  obj1(space_->CreateObjFromStr(0, -1, objStr1, NULL));
+      unique_ptr<Object>  obj2(space_->CreateObjFromStr(0, -1, objStr2, NULL));
+
+      double res = space_->IndexTimeDistance(obj1.get(), obj2.get());
+
+      wtm.split();
+
+      if (debugPrint_) {
+        LOG(LIB_INFO) << "Result: " << res;
+        LOG(LIB_INFO) << "Finished in: " << wtm.elapsed() / 1e3f << " ms ";
+      }
+      return res;
     } catch (const exception& e) {
         QueryException qe;
         qe.__set_message(e.what());

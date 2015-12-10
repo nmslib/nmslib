@@ -33,6 +33,8 @@
 #include <climits>
 #include <stdexcept>
 
+#include "idtype.h"
+
 // compiler_warning.h
 #define STRINGISE_IMPL(x) #x
 #define STRINGISE(x) STRINGISE_IMPL(x)
@@ -85,16 +87,16 @@ const char* GetFileName(const char* fullpath);
 
 bool CreateDir(const char* name, int mode = 0777);
 
-bool DoesFileExists(const char *filename);
+bool DoesFileExist(const char *filename);
 
-inline bool DoesFileExist(const string &filename) { return DoesFileExists(filename.c_str()); }
+inline bool DoesFileExist(const string &filename) { return DoesFileExist(filename.c_str()); }
 
 inline int RandomInt() {
     // Static is thread-safe in C++ 11
     static random_device rdev;
     static mt19937 gen(rdev());
     static std::uniform_int_distribution<int> distr(0, std::numeric_limits<int>::max());
-  
+   
     return distr(gen); 
 }
 

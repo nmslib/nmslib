@@ -71,14 +71,14 @@ class OMedRank : public Index<dist_t> {
            const Space<dist_t>& space,
            const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
   virtual ~OMedRank(){};
 
-  const std::string StrDesc() const { return "omedrank" ; }
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override { return "omedrank" ; }
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
   void IndexChunk(size_t chunkId, ProgressDisplay* displayBar);
 

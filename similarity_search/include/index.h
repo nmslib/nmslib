@@ -49,7 +49,7 @@ class KNNQuery;
  */
 template <typename dist_t>
 class Index {
- public:
+public:
   // Create an index using given parameters
   virtual void CreateIndex(const AnyParams& indexParams) = 0;
   // SaveIndex is not necessarily implemented
@@ -81,7 +81,12 @@ class Index {
    * let the experimentation code know this, so it could
    * adjust the memory consumption of the index.
    */
-  virtual bool DuplicateData() { return false; }
+  virtual bool DuplicateData() const { return false; }
+
+private:
+  template <typename QueryType>
+  void GenericSearch(QueryType* query, IdType) const;
+
 };
 
 }  // namespace similarity

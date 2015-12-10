@@ -79,12 +79,12 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
 
   ~PivotNeighbInvertedIndex();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
   
   void IndexChunk(size_t chunkId, ProgressDisplay*, mutex&);
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
 
   const   ObjectVector&   data_;

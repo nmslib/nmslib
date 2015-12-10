@@ -19,6 +19,7 @@
 #include <thread>
 #include <memory>
 #include <fstream>
+#include <thread>
 #include <unordered_map>
 
 #include "space.h"
@@ -135,7 +136,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 65536);
 
-  pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  0);
+  pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  thread::hardware_concurrency());
 
   if (num_prefix_ > num_pivot_) {
     PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix (" << num_prefix_ << ") "

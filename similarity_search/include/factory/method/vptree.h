@@ -34,7 +34,6 @@ Index<dist_t>* CreateVPTree(bool PrintProgress,
     return new VPTree<dist_t,PolynomialPruner<dist_t>>(PrintProgress, space, DataObjects);
 }
 
-
 /*
  * End of creating functions.
  */

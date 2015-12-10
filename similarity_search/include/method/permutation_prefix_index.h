@@ -44,14 +44,15 @@ class PermutationPrefixIndex : public Index<dist_t> {
                         const Space<dist_t>& space,
                         const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
   ~PermutationPrefixIndex();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
+  virtual bool DuplicateData() const override { return chunkBucket_; }
  private:
 
   size_t computeDbScan(size_t K) const {
@@ -75,6 +76,7 @@ class PermutationPrefixIndex : public Index<dist_t> {
   // min # of candidates to be selected (z in the original paper)
   ObjectVector pivot_;
   unique_ptr<PrefixTree> prefixtree_;
+  bool                   chunkBucket_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationPrefixIndex);

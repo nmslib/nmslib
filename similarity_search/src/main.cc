@@ -388,7 +388,7 @@ void RunExper(bool                                bPrintProgress,
           }
           for (size_t i = 0; i < config.GetKNN().size(); ++i) {
             MetaAnalysis* res = ExpResKNN[i][qtmParamId];
-            res->SetMem(TestSetId, TotalMemByMethod);
+            res->SetMem(TestSetId, AdjustedMemByMethod);
             res->SetIndexTime(TestSetId, IndexTime);
             res->SetLoadTime(TestSetId, LoadTime);
             res->SetSaveTime(TestSetId, SaveTime);

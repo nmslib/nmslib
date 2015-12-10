@@ -18,6 +18,7 @@
 
 #include "methodfactory.h"
 
+
 #if !defined(WITHOUT_LSH) && !defined(_MSC_VER)
 // These guys won't work on Windows and MACOSX yet
 #include "factory/method/lsh.h"
@@ -149,6 +150,9 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_SEQ_SEARCH, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(double, METH_SEQ_SEARCH, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(int,    METH_SEQ_SEARCH, CreateSeqSearch)
+  REGISTER_METHOD_CREATOR(float,  METH_SEQ_SEARCH_SYN, CreateSeqSearch)
+  REGISTER_METHOD_CREATOR(double, METH_SEQ_SEARCH_SYN, CreateSeqSearch)
+  REGISTER_METHOD_CREATOR(int,    METH_SEQ_SEARCH_SYN, CreateSeqSearch)
 
   // Small-word (KNN-graph) with randomly generated neighborhood-networks
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
@@ -157,6 +161,10 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
+
+  REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
+  REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
+  REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
 
 #if !defined(_MSC_VER)
   // Another KNN-graph, which is computed via NN-descent

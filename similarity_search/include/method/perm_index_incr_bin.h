@@ -43,14 +43,14 @@ class PermutationIndexIncrementalBin : public Index<dist_t> {
                               const Space<dist_t>& space,
                               const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
   ~PermutationIndexIncrementalBin();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  virtual void SetQueryTimeParams(const AnyParams& QueryTimeParams);
+  virtual void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
 
  private:
   const Space<dist_t>&  space_;

@@ -45,6 +45,14 @@ class Iface:
     """
     pass
 
+  def getDistance(self, obj1, obj2):
+    """
+    Parameters:
+     - obj1
+     - obj2
+    """
+    pass
+
 
 class Client(Iface):
   def __init__(self, iprot, oprot=None):
@@ -162,6 +170,41 @@ class Client(Iface):
       raise result.err
     raise TApplicationException(TApplicationException.MISSING_RESULT, "rangeQuery failed: unknown result");
 
+  def getDistance(self, obj1, obj2):
+    """
+    Parameters:
+     - obj1
+     - obj2
+    """
+    self.send_getDistance(obj1, obj2)
+    return self.recv_getDistance()
+
+  def send_getDistance(self, obj1, obj2):
+    self._oprot.writeMessageBegin('getDistance', TMessageType.CALL, self._seqid)
+    args = getDistance_args()
+    args.obj1 = obj1
+    args.obj2 = obj2
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getDistance(self):
+    iprot = self._iprot
+    (fname, mtype, rseqid) = iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(iprot)
+      iprot.readMessageEnd()
+      raise x
+    result = getDistance_result()
+    result.read(iprot)
+    iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.err is not None:
+      raise result.err
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getDistance failed: unknown result");
+
 
 class Processor(Iface, TProcessor):
   def __init__(self, handler):
@@ -170,6 +213,7 @@ class Processor(Iface, TProcessor):
     self._processMap["setQueryTimeParams"] = Processor.process_setQueryTimeParams
     self._processMap["knnQuery"] = Processor.process_knnQuery
     self._processMap["rangeQuery"] = Processor.process_rangeQuery
+    self._processMap["getDistance"] = Processor.process_getDistance
 
   def process(self, iprot, oprot):
     (name, type, seqid) = iprot.readMessageBegin()
@@ -224,6 +268,20 @@ class Processor(Iface, TProcessor):
     except QueryException, err:
       result.err = err
     oprot.writeMessageBegin("rangeQuery", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_getDistance(self, seqid, iprot, oprot):
+    args = getDistance_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getDistance_result()
+    try:
+      result.success = self._handler.getDistance(args.obj1, args.obj2)
+    except QueryException, err:
+      result.err = err
+    oprot.writeMessageBegin("getDistance", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -733,6 +791,166 @@ class rangeQuery_result:
       for iter13 in self.success:
         iter13.write(oprot)
       oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.err is not None:
+      oprot.writeFieldBegin('err', TType.STRUCT, 1)
+      self.err.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __hash__(self):
+    value = 17
+    value = (value * 31) ^ hash(self.success)
+    value = (value * 31) ^ hash(self.err)
+    return value
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getDistance_args:
+  """
+  Attributes:
+   - obj1
+   - obj2
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'obj1', None, None, ), # 1
+    (2, TType.STRING, 'obj2', None, None, ), # 2
+  )
+
+  def __init__(self, obj1=None, obj2=None,):
+    self.obj1 = obj1
+    self.obj2 = obj2
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.obj1 = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.obj2 = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getDistance_args')
+    if self.obj1 is not None:
+      oprot.writeFieldBegin('obj1', TType.STRING, 1)
+      oprot.writeString(self.obj1)
+      oprot.writeFieldEnd()
+    if self.obj2 is not None:
+      oprot.writeFieldBegin('obj2', TType.STRING, 2)
+      oprot.writeString(self.obj2)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.obj1 is None:
+      raise TProtocol.TProtocolException(message='Required field obj1 is unset!')
+    if self.obj2 is None:
+      raise TProtocol.TProtocolException(message='Required field obj2 is unset!')
+    return
+
+
+  def __hash__(self):
+    value = 17
+    value = (value * 31) ^ hash(self.obj1)
+    value = (value * 31) ^ hash(self.obj2)
+    return value
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getDistance_result:
+  """
+  Attributes:
+   - success
+   - err
+  """
+
+  thrift_spec = (
+    (0, TType.DOUBLE, 'success', None, None, ), # 0
+    (1, TType.STRUCT, 'err', (QueryException, QueryException.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, success=None, err=None,):
+    self.success = success
+    self.err = err
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.DOUBLE:
+          self.success = iprot.readDouble();
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.err = QueryException()
+          self.err.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getDistance_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.DOUBLE, 0)
+      oprot.writeDouble(self.success)
       oprot.writeFieldEnd()
     if self.err is not None:
       oprot.writeFieldBegin('err', TType.STRUCT, 1)

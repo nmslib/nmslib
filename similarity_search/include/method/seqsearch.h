@@ -20,7 +20,8 @@
 
 #include "index.h"
 
-#define METH_SEQ_SEARCH             "seq_search"
+#define METH_SEQ_SEARCH                 "brute_force"
+#define METH_SEQ_SEARCH_SYN             "seq_search"
 
 namespace similarity {
 
@@ -33,15 +34,15 @@ template <typename dist_t>
 class SeqSearch : public Index<dist_t> {
  public:
   SeqSearch(Space<dist_t>& space, const ObjectVector& data);
-  void CreateIndex(const AnyParams& );
+  void CreateIndex(const AnyParams& ) override;
   virtual ~SeqSearch();
 
-  const std::string StrDesc() const { return "Sequential search"; }
+  const std::string StrDesc() const override { return "Sequential search"; }
 
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  void SetQueryTimeParams(const AnyParams& params){}
+  void SetQueryTimeParams(const AnyParams& params) override {}
  private:
   Space<dist_t>&          space_;
   const ObjectVector&     origData_;

@@ -29,6 +29,7 @@
 #include <cstdint>
 
 #include "global.h"
+#include "idtype.h"
 #include "logging.h"
 
 namespace similarity {
@@ -47,30 +48,6 @@ using std::numeric_limits;
  *
  * See also http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
  */
-
-/* 
- * We are not gonna have billions of records or labels in the foreseeable future
- * Negative values would represent missing labels and ids. In principle, it is probably
- * easy to switch to 8-byte IDs by simply changing below typedef declarations.
- * However, some caution needs to be excecised because
- * 1) We want to preserve alignment (extra padding in the Object may be needed (see the comment above).
- * 2) We need to carefully check all the contexts where IDs are used. It is not impossible that some
- *    code declares IDs as int-type.
- */
-typedef int32_t  IdType;
-typedef uint32_t IdTypeUnsign;
-const IdTypeUnsign MAX_DATASET_QTY = numeric_limits<IdType>::max();
-
-typedef int32_t LabelType;
-
-
-
-#define LABEL_PREFIX "label:"
-#define EMPTY_LABEL  numeric_limits<LabelType>::min()
-
-const size_t ID_SIZE         = sizeof(IdType);
-const size_t LABEL_SIZE      = sizeof(LabelType);
-const size_t DATALENGTH_SIZE = sizeof(size_t);
 
 class Object {
  public:

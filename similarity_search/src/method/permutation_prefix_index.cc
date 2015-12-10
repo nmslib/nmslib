@@ -225,10 +225,8 @@ template <typename dist_t>
 void PermutationPrefixIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
-  bool chunkBucket;
-
   pmgr.GetParamOptional("numPivot",     num_pivot_,       16);
-  pmgr.GetParamOptional("chunkBucket",  chunkBucket,      true);
+  pmgr.GetParamOptional("chunkBucket",  chunkBucket_,      true);
   pmgr.GetParamOptional("prefixLength", prefix_length_,   max<size_t>(1, num_pivot_/4));
 
   pmgr.CheckUnused();
@@ -236,7 +234,7 @@ void PermutationPrefixIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
   LOG(LIB_INFO) << "# pivots         = " << num_pivot_;
   LOG(LIB_INFO) << "prefix length    = " << prefix_length_;
-  LOG(LIB_INFO) << "ChunkBucket      = " << chunkBucket;
+  LOG(LIB_INFO) << "ChunkBucket      = " << chunkBucket_;
 
   GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
   prefixtree_.reset(new PrefixTree);
@@ -255,7 +253,7 @@ void PermutationPrefixIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     if (progress_bar) ++(*progress_bar);
   }
   // Store elements in leaves/buckets contiguously
-  if (chunkBucket) prefixtree_->ChunkBuckets();
+  if (chunkBucket_) prefixtree_->ChunkBuckets();
 }
 
 template <typename dist_t>

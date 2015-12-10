@@ -38,17 +38,17 @@ class MultiProbeLSH : public Index<dist_t> {
   MultiProbeLSH(const Space<dist_t>& space,
                 const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
   ~MultiProbeLSH();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const ;
-  void Search(KNNQuery<dist_t>* query, IdType) const ;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const  override;
+  void Search(KNNQuery<dist_t>* query, IdType) const  override;
 
-  void SetQueryTimeParams(const AnyParams& params) {};
+  void SetQueryTimeParams(const AnyParams& params)  override {};
 
   // LSH does copy all data
-  virtual bool DuplicateData() { return true; }
+  virtual bool DuplicateData() const override { return true; }
  private:
   typedef lshkit::MultiProbeLshIndex<unsigned> LshIndexType;
 

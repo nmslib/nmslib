@@ -47,8 +47,8 @@ class BBTree : public Index<dist_t> {
   BBTree(const Space<dist_t>& space,
          const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& IndexParams);
-  void SetQueryTimeParams(const AnyParams& params) {
+  void CreateIndex(const AnyParams& IndexParams) override;
+  void SetQueryTimeParams(const AnyParams& params) override {
     AnyParamManager pmgr(params);
     pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
 
@@ -59,10 +59,11 @@ class BBTree : public Index<dist_t> {
 
   ~BBTree();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
+  virtual bool DuplicateData() const override { return ChunkBucket_; }
  private:
   class BBNode {
    public:

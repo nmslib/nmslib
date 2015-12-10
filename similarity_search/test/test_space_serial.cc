@@ -44,13 +44,14 @@ namespace similarity {
 using namespace std;
 
 template <typename dist_t>
-bool fullTestCommon(const Space<dist_t>* pSpace, const ObjectVector& dataSet1, const vector<string>& vExternIds1, size_t maxNumRec, const string& tmpFileName,bool bTestExternId) {
+bool fullTestCommon(Space<dist_t>* pSpace, const ObjectVector& dataSet1, const vector<string>& vExternIds1, size_t maxNumRec, const string& tmpFileName,bool bTestExternId) {
   pSpace->WriteDataset(dataSet1, vExternIds1, tmpFileName);
 
   ObjectVector dataSet2;
   vector<string> vExternIds2;
 
-  pSpace->ReadDataset(dataSet2, vExternIds2, tmpFileName);
+  unique_ptr<DataFileInputState> inpState(pSpace->ReadDataset(dataSet2, vExternIds2, tmpFileName));
+  pSpace->UpdateParamsFromFile(*inpState);
 
   if (maxNumRec != dataSet2.size()) {
     LOG(LIB_ERROR) << "Expected to read " << maxNumRec << " records from " 
@@ -99,7 +100,8 @@ bool fullTest(const string& dataSetFileName, size_t maxNumRec, const string& tmp
   ObjectVector dataSet1;
   vector<string> vExternIds1;
 
-  space->ReadDataset(dataSet1, vExternIds1, sampleDataPrefix + dataSetFileName, maxNumRec);
+  unique_ptr<DataFileInputState> inpState(space->ReadDataset(dataSet1, vExternIds1, sampleDataPrefix + dataSetFileName, maxNumRec));
+  space->UpdateParamsFromFile(*inpState);
 
   if (dataSet1.size() != maxNumRec) {
     LOG(LIB_ERROR) << "Bug or poorly designed test, expected to read " << maxNumRec << " records from " 

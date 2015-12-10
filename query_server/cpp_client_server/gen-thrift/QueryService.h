@@ -18,6 +18,7 @@ class QueryServiceIf {
   virtual void setQueryTimeParams(const std::string& queryTimeParams) = 0;
   virtual void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retExternId, const bool retObj) = 0;
   virtual void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj) = 0;
+  virtual double getDistance(const std::string& obj1, const std::string& obj2) = 0;
 };
 
 class QueryServiceIfFactory {
@@ -55,6 +56,10 @@ class QueryServiceNull : virtual public QueryServiceIf {
   }
   void rangeQuery(ReplyEntryList& /* _return */, const double /* r */, const std::string& /* queryObj */, const bool /* retExternId */, const bool /* retObj */) {
     return;
+  }
+  double getDistance(const std::string& /* obj1 */, const std::string& /* obj2 */) {
+    double _return = (double)0;
+    return _return;
   }
 };
 
@@ -452,6 +457,134 @@ class QueryService_rangeQuery_presult {
   friend std::ostream& operator<<(std::ostream& out, const QueryService_rangeQuery_presult& obj);
 };
 
+
+class QueryService_getDistance_args {
+ public:
+
+  static const char* ascii_fingerprint; // = "07A9615F837F7D0A952B595DD3020972";
+  static const uint8_t binary_fingerprint[16]; // = {0x07,0xA9,0x61,0x5F,0x83,0x7F,0x7D,0x0A,0x95,0x2B,0x59,0x5D,0xD3,0x02,0x09,0x72};
+
+  QueryService_getDistance_args(const QueryService_getDistance_args&);
+  QueryService_getDistance_args& operator=(const QueryService_getDistance_args&);
+  QueryService_getDistance_args() : obj1(), obj2() {
+  }
+
+  virtual ~QueryService_getDistance_args() throw();
+  std::string obj1;
+  std::string obj2;
+
+  void __set_obj1(const std::string& val);
+
+  void __set_obj2(const std::string& val);
+
+  bool operator == (const QueryService_getDistance_args & rhs) const
+  {
+    if (!(obj1 == rhs.obj1))
+      return false;
+    if (!(obj2 == rhs.obj2))
+      return false;
+    return true;
+  }
+  bool operator != (const QueryService_getDistance_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const QueryService_getDistance_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_getDistance_args& obj);
+};
+
+
+class QueryService_getDistance_pargs {
+ public:
+
+  static const char* ascii_fingerprint; // = "07A9615F837F7D0A952B595DD3020972";
+  static const uint8_t binary_fingerprint[16]; // = {0x07,0xA9,0x61,0x5F,0x83,0x7F,0x7D,0x0A,0x95,0x2B,0x59,0x5D,0xD3,0x02,0x09,0x72};
+
+
+  virtual ~QueryService_getDistance_pargs() throw();
+  const std::string* obj1;
+  const std::string* obj2;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_getDistance_pargs& obj);
+};
+
+typedef struct _QueryService_getDistance_result__isset {
+  _QueryService_getDistance_result__isset() : success(false), err(false) {}
+  bool success :1;
+  bool err :1;
+} _QueryService_getDistance_result__isset;
+
+class QueryService_getDistance_result {
+ public:
+
+  static const char* ascii_fingerprint; // = "505FDFAFB3792C9C02EC411D1B8DBD35";
+  static const uint8_t binary_fingerprint[16]; // = {0x50,0x5F,0xDF,0xAF,0xB3,0x79,0x2C,0x9C,0x02,0xEC,0x41,0x1D,0x1B,0x8D,0xBD,0x35};
+
+  QueryService_getDistance_result(const QueryService_getDistance_result&);
+  QueryService_getDistance_result& operator=(const QueryService_getDistance_result&);
+  QueryService_getDistance_result() : success(0) {
+  }
+
+  virtual ~QueryService_getDistance_result() throw();
+  double success;
+  QueryException err;
+
+  _QueryService_getDistance_result__isset __isset;
+
+  void __set_success(const double val);
+
+  void __set_err(const QueryException& val);
+
+  bool operator == (const QueryService_getDistance_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(err == rhs.err))
+      return false;
+    return true;
+  }
+  bool operator != (const QueryService_getDistance_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const QueryService_getDistance_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_getDistance_result& obj);
+};
+
+typedef struct _QueryService_getDistance_presult__isset {
+  _QueryService_getDistance_presult__isset() : success(false), err(false) {}
+  bool success :1;
+  bool err :1;
+} _QueryService_getDistance_presult__isset;
+
+class QueryService_getDistance_presult {
+ public:
+
+  static const char* ascii_fingerprint; // = "505FDFAFB3792C9C02EC411D1B8DBD35";
+  static const uint8_t binary_fingerprint[16]; // = {0x50,0x5F,0xDF,0xAF,0xB3,0x79,0x2C,0x9C,0x02,0xEC,0x41,0x1D,0x1B,0x8D,0xBD,0x35};
+
+
+  virtual ~QueryService_getDistance_presult() throw();
+  double* success;
+  QueryException err;
+
+  _QueryService_getDistance_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+  friend std::ostream& operator<<(std::ostream& out, const QueryService_getDistance_presult& obj);
+};
+
 class QueryServiceClient : virtual public QueryServiceIf {
  public:
   QueryServiceClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) {
@@ -486,6 +619,9 @@ class QueryServiceClient : virtual public QueryServiceIf {
   void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj);
   void send_rangeQuery(const double r, const std::string& queryObj, const bool retExternId, const bool retObj);
   void recv_rangeQuery(ReplyEntryList& _return);
+  double getDistance(const std::string& obj1, const std::string& obj2);
+  void send_getDistance(const std::string& obj1, const std::string& obj2);
+  double recv_getDistance();
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -504,12 +640,14 @@ class QueryServiceProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_setQueryTimeParams(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_knnQuery(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_rangeQuery(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_getDistance(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   QueryServiceProcessor(boost::shared_ptr<QueryServiceIf> iface) :
     iface_(iface) {
     processMap_["setQueryTimeParams"] = &QueryServiceProcessor::process_setQueryTimeParams;
     processMap_["knnQuery"] = &QueryServiceProcessor::process_knnQuery;
     processMap_["rangeQuery"] = &QueryServiceProcessor::process_rangeQuery;
+    processMap_["getDistance"] = &QueryServiceProcessor::process_getDistance;
   }
 
   virtual ~QueryServiceProcessor() {}
@@ -565,6 +703,15 @@ class QueryServiceMultiface : virtual public QueryServiceIf {
     }
     ifaces_[i]->rangeQuery(_return, r, queryObj, retExternId, retObj);
     return;
+  }
+
+  double getDistance(const std::string& obj1, const std::string& obj2) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->getDistance(obj1, obj2);
+    }
+    return ifaces_[i]->getDistance(obj1, obj2);
   }
 
 };

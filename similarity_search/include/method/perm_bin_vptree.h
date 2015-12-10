@@ -48,15 +48,15 @@ class PermBinVPTree : public Index<dist_t> {
                 Space<dist_t>& space,
                 const ObjectVector& data);
 
-  void CreateIndex(const AnyParams& IndexParams);
+  void CreateIndex(const AnyParams& IndexParams) override;
 
   ~PermBinVPTree();
 
-  const std::string StrDesc() const;
-  void Search(RangeQuery<dist_t>* query, IdType) const;
-  void Search(KNNQuery<dist_t>* query, IdType) const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams);
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
 
   Space<dist_t>&            space_;
