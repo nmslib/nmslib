@@ -101,6 +101,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   bool    skip_checking_;
   size_t  index_thread_qty_;
   size_t  num_pivot_;
+  string  pivot_file_;
 
   enum eAlgProctype {
     kScan,
@@ -115,9 +116,10 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
     return "unknown";
   }
 
-
   ObjectVector    pivot_;
   vector<IdType>  pivot_pos_;
+
+  ObjectVector    genPivot_; // generated pivots
 
   size_t computeDbScan(size_t K, size_t chunkQty) const {
     size_t totalDbScan = static_cast<size_t>(db_scan_frac_ * data_.size());
