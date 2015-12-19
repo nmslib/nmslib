@@ -94,15 +94,15 @@ template <typename dist_t>
 unique_ptr<Object> 
 SpaceSparseVector<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& s,
                                       DataFileInputState* pInpStateBase) const {
-  if (NULL == pInpStateBase) {
-    PREPARE_RUNTIME_ERR(err) << "Bug: unexpected NULL pointer";
-    THROW_RUNTIME_ERR(err);
+  size_t line_num = 0;
+  if (NULL != pInpStateBase) {
+    DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(pInpStateBase);
+    CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+    line_num = pInpState->line_num_; 
   }
-  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(pInpStateBase);
-  CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
 
   vector<ElemType>  vec;
-  ReadSparseVec(s, pInpState->line_num_, label, vec);
+  ReadSparseVec(s, line_num, label, vec);
   return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
 }
 
