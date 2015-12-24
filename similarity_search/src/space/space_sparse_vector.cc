@@ -75,6 +75,8 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, size_t line_num,
     LOG(LIB_ERROR) << err.stream().str() << std::endl;
     THROW_RUNTIME_ERR(err);
   }
+
+  CHECK_MSG(!v.empty(), "Encountered an empty sparse vector: this is not allowed!");
 }
 
 /** Standard functions to read/write/create objects */ 
@@ -142,6 +144,10 @@ bool SpaceSparseVector<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase,
   CHECK_MSG(pInpState != NULL, "Bug: unexpected reference type");
   if (!pInpState->inp_file_) return false;
   if (!getline(pInpState->inp_file_, strObj)) return false;
+  if (strObj.empty()) {
+    PREPARE_RUNTIME_ERR(err) << "Encountered an empty line (not allowed), line # " << pInpState->line_num_; 
+    THROW_RUNTIME_ERR(err);
+  }
   pInpState->line_num_++;
   return true;
 }
