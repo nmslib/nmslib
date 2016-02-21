@@ -31,8 +31,8 @@
 #include <queue>
 
 
-#define METH_SMALL_WORLD_RAND                 "small_world_rand"
-#define METH_SMALL_WORLD_RAND_SYN             "sw-graph"
+#define METH_SMALL_WORLD_RAND                 "sw-graph"
+#define METH_SMALL_WORLD_RAND_SYN             "small_world_rand"
 
 namespace similarity {
 
@@ -200,9 +200,11 @@ private:
   size_t                initIndexAttempts_;
   size_t                initSearchAttempts_;
   size_t                indexThreadQty_;
+  string                pivotFile_;
+  ObjectVector          pivots_;
 
   const Space<dist_t>&  space_;
-  const ObjectVector&   data_;
+  ObjectVector          data_; // We copy all the data
   bool                  PrintProgress_;
 
   mutable mutex   ElListGuard_;

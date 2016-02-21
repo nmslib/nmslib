@@ -30,6 +30,7 @@
 #include <typeinfo>
 
 //#define START_WITH_E0
+#define START_WITH_E0_AT_QUERY_TIME
 
 //#define USE_ALTERNATIVE_FOR_INDEXING
 
@@ -186,7 +187,7 @@ SmallWorldRandSplit<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams
 
 template <typename dist_t>
 const std::string SmallWorldRandSplit<dist_t>::StrDesc() const {
-  return "small_world_rand";
+  return METH_SMALL_WORLD_RAND_SPLIT;
 }
 
 template <typename dist_t>
@@ -333,13 +334,14 @@ SmallWorldRandSplit<dist_t>::searchForIndexing(const Object *queryObj,
           d = space_.IndexTimeDistance(queryObj, pNeighbor->getData());
 #endif
 
-
-          closestDistQueue.push(d);
-          if (closestDistQueue.size() > efConstruction_) {
-            closestDistQueue.pop();
+          if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
+            closestDistQueue.push(d);
+            if (closestDistQueue.size() > efConstruction_) {
+              closestDistQueue.pop();
+            }
+            candidateSet.emplace(d, pNeighbor);
           }
-          EvaluatedMSWNodeReverse evE1(d, pNeighbor);
-          candidateSet.push(evE1);
+
           if (resultSet.size() < NN_ || resultSet.top().getDistance() > d) {
             resultSet.emplace(d, pNeighbor);
             if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
@@ -377,8 +379,8 @@ void SmallWorldRandSplit<dist_t>::add(MSWNode *newElement,
 #ifdef START_WITH_E0
     randomEntryPointEnd = chunkStart + 1;
 #else
-    // don't think that we can every have a data set so this would cause an overflow, also
-    // we ensure that chunkIndexSize_ <= data_.size()
+    // don't think that we can ever have a data set so large that this summation would cause an overflow,
+    // also we ensure that chunkIndexSize_ <= data_.size()
     randomEntryPointEnd = min(ElList_.size(), chunkStart + chunkIndexSize_);
 #endif
     insertIndex = ElList_.size();
@@ -451,7 +453,12 @@ void SmallWorldRandSplit<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const 
       priority_queue <dist_t>                  closestDistQueue; //The set of all elements which distance was calculated
       priority_queue <EvaluatedMSWNodeReverse> candidateQueue; //the set of elements which we can use to evaluate
 
-      MSWNode *provider = getRandomEntryPoint(start, end);
+#ifdef START_WITH_E0_AT_QUERY_TIME
+      size_t randomEntryPointEnd = start + 1;
+#else
+      size_t randomEntryPointEnd = end;
+#endif
+      MSWNode *provider = getRandomEntryPoint(start, randomEntryPointEnd);
 
       const Object* currObj = provider->getData();
       dist_t d = query->DistanceObjLeft(currObj);
@@ -494,11 +501,15 @@ void SmallWorldRandSplit<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const 
             dist_t d = query->DistanceObjLeft(currObj);
 
             visitedBitset[nodeIdDiff] = true;
-            closestDistQueue.emplace(d);
-            if (closestDistQueue.size() > efSearch_) {
-              closestDistQueue.pop();
+
+            if (closestDistQueue.size() < efSearch_ || d < closestDistQueue.top()) {
+              closestDistQueue.emplace(d);
+              if (closestDistQueue.size() > efSearch_) {
+                  closestDistQueue.pop(); 
+              }
+              candidateQueue.emplace(d, *iter);
             }
-            candidateQueue.emplace(d, *iter);
+
             query->CheckAndAddToResult(d, currObj);
           }
         }
@@ -516,6 +527,7 @@ void SmallWorldRandSplit<dist_t>::SaveIndex(const string &location) {
 
   WriteField(outFile, METHOD_DESC, StrDesc()); lineNum++;
   WriteField(outFile, "NN", NN_); lineNum++;
+  WriteField(outFile, "chunkIndexSize", chunkIndexSize_); lineNum++;
 
   for (const MSWNode* pNode: ElList_) {
     IdType nodeID = pNode->getId();
@@ -553,8 +565,12 @@ void SmallWorldRandSplit<dist_t>::LoadIndex(const string &location) {
     ReadField(inFile, METHOD_DESC, methDesc);
     lineNum++;
     CHECK_MSG(methDesc == StrDesc(),
-              "Looks like you try to use an index created by a different method: " + StrDesc());
+              "Looks like you try to use an index created by a different method: " + methDesc);
     ReadField(inFile, "NN", NN_);
+    lineNum++;
+
+    ReadField(inFile, "chunkIndexSize", chunkIndexSize_);
+    CHECK_MSG(chunkIndexSize_ <= data_.size(), "chunkIndexSize is larger than the # of data points, did you create this index for a larger data set?");
     lineNum++;
 
     string line;

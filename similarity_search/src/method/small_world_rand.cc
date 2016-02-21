@@ -30,6 +30,7 @@
 #include <typeinfo>
 
 //#define START_WITH_E0
+#define START_WITH_E0_AT_QUERY_TIME
 
 #define USE_BITSET_FOR_INDEXING 1
 //#define USE_ALTERNATIVE_FOR_INDEXING 
@@ -114,17 +115,36 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
   efSearch_ = NN_;
   pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   2);
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
+  pmgr.GetParamOptional("pivotFile",          pivotFile_,           "");
 
   LOG(LIB_INFO) << "NN                  = " << NN_;
   LOG(LIB_INFO) << "efConstruction_     = " << efConstruction_;
   LOG(LIB_INFO) << "initIndexAttempts   = " << initIndexAttempts_;
   LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
+  LOG(LIB_INFO) << "pivotFile           ="  << pivotFile_;
 
   pmgr.CheckUnused();
 
   SetQueryTimeParams(getEmptyParams());
 
   if (data_.empty()) return;
+
+  if (!pivotFile_.empty()) {
+    vector<string> vExternIds;
+    space_.ReadDataset(pivots_, vExternIds, pivotFile_, 0);
+    // IdType is signed!
+    for (IdType i = 0; i < pivots_.size(); ++i) {
+      const Object* pOldObj = pivots_[i];
+      // Almost cloneining, just the label is different!
+      pivots_[i] = new Object(-(i+1), pOldObj->label(), pOldObj->datalength(), pOldObj->data());
+      delete pOldObj;
+    }
+    // Simply add pivots to the data array
+    for (size_t i = 1; i <= pivots_.size(); ++i) {
+      data_.insert(data_.begin(), pivots_[pivots_.size()-i]);
+    }
+    LOG(LIB_INFO) << "Read and processed, " << pivots_.size() << " pivots, now data_.size()= " << data_.size();
+  }
 
   // 2) One entry should be added before all the threads are started, or else add() will not work properly
   addCriticalSection(new MSWNode(data_[0], 0 /* id == 0 */));
@@ -181,11 +201,12 @@ SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
 
 template <typename dist_t>
 const std::string SmallWorldRand<dist_t>::StrDesc() const {
-  return "small_world_rand";
+  return METH_SMALL_WORLD_RAND;
 }
 
 template <typename dist_t>
 SmallWorldRand<dist_t>::~SmallWorldRand() {
+  for (const Object* o: pivots_) delete o;
 }
 
 template <typename dist_t>
@@ -340,13 +361,14 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
           d = space_.IndexTimeDistance(queryObj, pNeighbor->getData());
 #endif
 
-
-          closestDistQueue.push(d);
-          if (closestDistQueue.size() > efConstruction_) {
-            closestDistQueue.pop();
+          if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
+            closestDistQueue.push(d);
+            if (closestDistQueue.size() > efConstruction_) {
+              closestDistQueue.pop();
+            }
+            candidateSet.emplace(d, pNeighbor);
           }
-          EvaluatedMSWNodeReverse<dist_t> evE1(d, pNeighbor);
-          candidateSet.push(evE1);
+
           if (resultSet.size() < NN_ || resultSet.top().getDistance() > d) {
             resultSet.emplace(d, pNeighbor);
             if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
@@ -424,7 +446,7 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   /**
    * Search of most k-closest elements to the query.
    */
-#ifdef START_WITH_E0
+#ifdef START_WITH_E0_AT_QUERY_TIME
     MSWNode* provider = i ? getRandomEntryPoint(): ElList_[0];
 #else
     MSWNode* provider = getRandomEntryPoint();
@@ -436,7 +458,8 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 
     const Object* currObj = provider->getData();
     dist_t d = query->DistanceObjLeft(currObj);
-    query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
+    if (currObj->id()>=0) // Exclude pivots
+      query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
 
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
     candidateQueue.push(ev);
@@ -457,10 +480,8 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
       auto iter = candidateQueue.top(); // This one was already compared to the query
       const EvaluatedMSWNodeReverse<dist_t>& currEv = iter;
  
-      dist_t lowerBound = closestDistQueue.top();
-
       // Did we reach a local minimum?
-      if (currEv.getDistance() > lowerBound) {
+      if (currEv.getDistance() > closestDistQueue.top()) {
         break;
       }
 
@@ -482,14 +503,18 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
         if (!visitedBitset[nodeId]) {
           currObj = (*iter)->getData();
           d = query->DistanceObjLeft(currObj);
-            
           visitedBitset[nodeId] = true;
-          closestDistQueue.emplace(d);
-          if (closestDistQueue.size() > efSearch_) {
-            closestDistQueue.pop(); 
+
+          if (closestDistQueue.size() < efSearch_ || d < closestDistQueue.top()) {
+            closestDistQueue.emplace(d);
+            if (closestDistQueue.size() > efSearch_) {
+                closestDistQueue.pop(); 
+            }
+            candidateQueue.emplace(d, *iter);
           }
-          candidateQueue.emplace(d, *iter);
-          query->CheckAndAddToResult(d, currObj);
+
+          if (currObj->id()>=0) // Exclude pivots
+            query->CheckAndAddToResult(d, currObj);
         }
       }
     }
@@ -542,7 +567,7 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
     ReadField(inFile, METHOD_DESC, methDesc);
     lineNum++;
     CHECK_MSG(methDesc == StrDesc(),
-              "Looks like you try to use an index created by a different method: " + StrDesc());
+              "Looks like you try to use an index created by a different method: " + methDesc);
     ReadField(inFile, "NN", NN_);
     lineNum++;
 
