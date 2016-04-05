@@ -18,7 +18,7 @@
 #include <random>
 #include <cmath>
 #include <unordered_map>
-
+#include <functional>
 #include <cluster_util.h>
 #include <utils.h>
 #include <ported_boost_progress.h>
