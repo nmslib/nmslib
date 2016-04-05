@@ -128,6 +128,9 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointModel>Fast</FloatingPointModel>
       <OpenMPSupport>true</OpenMPSupport>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -289,6 +292,10 @@
     <ClCompile Include="knnquery.cc" />
     <ClCompile Include="logging.cc" />
     <ClCompile Include="memory.cc" />
+    <ClCompile Include="method\hnsw.cc">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="method\hnsw_distfunc_opt.cc" />
     <ClCompile Include="method\nndes.cc" />
     <ClCompile Include="method\omedrank.cc" />
     <ClCompile Include="method\permutation_inverted_index.cc" />
