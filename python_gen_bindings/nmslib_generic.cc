@@ -283,9 +283,10 @@ PyObject* initIndex(PyObject* self, PyObject* args) {
 
 PyObject* addDataPoint(PyObject* self, PyObject* args) {
   PyObject* ptr;
+  int32_t   id;
   PyObject* dataPoint;
 
-  if (!PyArg_ParseTuple(args, "OO", &ptr, &dataPoint)) {
+  if (!PyArg_ParseTuple(args, "OiO", &ptr, &id, &dataPoint)) {
     raise << "Error reading parameters (expecting: index ref, object (as a string))";
     return NULL;
   }
@@ -299,7 +300,6 @@ PyObject* addDataPoint(PyObject* self, PyObject* args) {
     return NULL;
   }
 
-  IdType id = pIndex->GetDataPointQty(); 
   pIndex->AddDataPoint(pIndex->CreateObjFromStr(res.second, id).release());
   Py_INCREF(Py_None);
   return Py_None;

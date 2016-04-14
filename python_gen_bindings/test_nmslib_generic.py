@@ -19,8 +19,8 @@ def test_vector():
                              method_name,
                              nmslib_generic.DistType.FLOAT)
 
-    for pos, data in enumerate(read_data('sample_dataset.txt')):
-      nmslib_generic.addDataPoint(index, data)
+    for id, data in enumerate(read_data('sample_dataset.txt')):
+      nmslib_generic.addDataPoint(index, id, data)
     print 'Let\'s invoke the index-build process'
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
@@ -54,8 +54,8 @@ def test_string():
                              space_param,
                              method_name,
                              nmslib_generic.DistType.INT)
-    for pos, data in enumerate(DATA_STRS):
-        nmslib_generic.addDataPoint(index, pos, data)
+    for id, data in enumerate(DATA_STRS):
+        nmslib_generic.addDataPoint(index, id, data)
 
     print 'Let\'s invoke the index-build process'
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     print nmslib_generic.DistType.FLOAT
 
     test_vector()
-    #test_string()
+    test_string()
 
 
 

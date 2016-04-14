@@ -18,8 +18,8 @@ def test_vector():
                              nmslib_vector.DataType.VECTOR,
                              nmslib_vector.DistType.FLOAT)
 
-    for pos, data in enumerate(read_data('sample_dataset.txt')):
-        nmslib_vector.addDataPoint(index, data)
+    for id, data in enumerate(read_data('sample_dataset.txt')):
+        nmslib_vector.addDataPoint(index, id, data)
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
@@ -50,8 +50,8 @@ def test_string():
                              method_name,
                              nmslib_vector.DataType.STRING,
                              nmslib_vector.DistType.INT)
-    for pos, data in enumerate(DATA_STRS):
-        nmslib_vector.addDataPoint(index, data)
+    for id, data in enumerate(DATA_STRS):
+        nmslib_vector.addDataPoint(index, id, data)
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']

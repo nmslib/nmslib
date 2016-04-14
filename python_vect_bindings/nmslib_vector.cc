@@ -324,7 +324,7 @@ PyObject* initIndex(PyObject* self, PyObject* args) {
   }
 }
 template <typename T>
-PyObject* _addDataPoint(PyObject* ptr, PyObject* data) {
+PyObject* _addDataPoint(PyObject* ptr, IdType id, PyObject* data) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
   auto iter = NMSLIB_DATA_PARSERS.find(index->GetDataType());
@@ -332,7 +332,7 @@ PyObject* _addDataPoint(PyObject* ptr, PyObject* data) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
   }
-  auto res = (*iter->second)(data, index->GetDataPointQty(), index->GetDistType());
+  auto res = (*iter->second)(data, id, index->GetDistType());
   if (!res.first) {
     raise << "Cannot create a data-point object!";
     return NULL;
@@ -345,14 +345,15 @@ PyObject* _addDataPoint(PyObject* ptr, PyObject* data) {
 PyObject* addDataPoint(PyObject* self, PyObject* args) {
   PyObject* ptr;
   PyObject* data;
-  if (!PyArg_ParseTuple(args, "OO", &ptr, &data)) {
+  int32_t   id;
+  if (!PyArg_ParseTuple(args, "OiO", &ptr, &id, &data)) {
     raise << "Error reading parameters (expecting: index ref, object (as a string))";
     return NULL;
   }
   if (IsDistFloat(ptr)) {
-    return _addDataPoint<float>(ptr, data);
+    return _addDataPoint<float>(ptr, id, data);
   } else {
-    return _addDataPoint<int>(ptr, data);
+    return _addDataPoint<int>(ptr, id, data);
   }
 }
 
