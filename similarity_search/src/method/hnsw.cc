@@ -47,7 +47,7 @@
 #endif
 
 #define USE_BITSET_FOR_INDEXING 1
-#define EXTEND_USE_EXTENDED_NEIGHB_AT_CONSTR (1)
+#define EXTEND_USE_EXTENDED_NEIGHB_AT_CONSTR (0) // 0 is faster build, 1 is faster search on clustered data
 
 #if defined(__GNUC__)
 #define PORTABLE_ALIGN16 __attribute__((aligned(16)))
@@ -76,9 +76,13 @@ namespace similarity {
 
         pmgr.GetParamOptional("M", M_, 16);
 
-        pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, omp_get_max_threads());
-        pmgr.GetParamOptional("searchMethod", searchMethod_, 0);
-        pmgr.GetParamOptional("efConstruction", efConstruction_, 0);
+#ifdef _OPENMP
+        indexThreadQty_ = omp_get_max_threads();
+#endif
+        pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, indexThreadQty_);
+        pmgr.GetParamOptional("searchMethod", searchMethod_, 3);
+        pmgr.GetParamOptional("efConstruction", efConstruction_, 200);
+		pmgr.GetParamOptional("ef", ef_, 20);
 
         pmgr.GetParamOptional("maxM", maxM_, M_);
         pmgr.GetParamOptional("maxM0", maxM0_, M_ * 2);
@@ -86,7 +90,7 @@ namespace similarity {
         pmgr.GetParamOptional("delaunay_type", delaunay_type_, 1);
         int skip_optimized_index = 0;
         pmgr.GetParamOptional("skip_optimized_index", skip_optimized_index, 0);
-
+		SetQueryTimeParams(IndexParams);
         LOG(LIB_INFO) << "M                  = " << M_;
         LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
         LOG(LIB_INFO) << "efConstruction      = " << efConstruction_;
@@ -94,8 +98,7 @@ namespace similarity {
         LOG(LIB_INFO) << "maxM			      = " << maxM_;
         LOG(LIB_INFO) << "maxM0			      = " << maxM0_;
         LOG(LIB_INFO) << "searchMethod		  = " << searchMethod_;
-        SetQueryTimeParams(getEmptyParams());
-        omp_set_num_threads(indexThreadQty_);
+        
         if (data_.empty()) return;
 
         // One entry should be added before all the threads are started, or else add() will not work properly
@@ -109,7 +112,7 @@ namespace similarity {
 
         unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
 
-#pragma omp parallel for schedule(dynamic,128)
+#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
         for (int id = 1; id < data_.size(); ++id) {
             HnswNode* node = new HnswNode(data_[id], id);
             add(&space_, node); 
@@ -119,9 +122,6 @@ namespace similarity {
         }
 
 
-
-
-        // Дальше едет код для отладки
         data_level0_memory_ = NULL;
         linkLists_ = NULL;
         if (skip_optimized_index)
@@ -236,10 +236,10 @@ namespace similarity {
     void Hnsw<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
         AnyParamManager pmgr(QueryTimeParams);
 
-        pmgr.GetParamOptional("ef", ef_, M_);
-        pmgr.GetParamOptional("searchMethod", searchMethod_, 0);
+        pmgr.GetParamOptional("ef", ef_, ef_);
+        pmgr.GetParamOptional("searchMethod", searchMethod_, searchMethod_);
         pmgr.CheckUnused();
-        LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
+        LOG(LIB_INFO) << "Set HNSW query-time parameters:";
         LOG(LIB_INFO) << "ef           =" << ef_;
         LOG(LIB_INFO) << "searchMethod       =" << searchMethod_;
     }
