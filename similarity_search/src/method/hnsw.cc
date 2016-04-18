@@ -90,7 +90,7 @@ namespace similarity {
         pmgr.GetParamOptional("delaunay_type", delaunay_type_, 1);
         int skip_optimized_index = 0;
         pmgr.GetParamOptional("skip_optimized_index", skip_optimized_index, 0);
-		SetQueryTimeParams(IndexParams);
+		SetQueryTimeParams(getEmptyParams());
         LOG(LIB_INFO) << "M                  = " << M_;
         LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
         LOG(LIB_INFO) << "efConstruction      = " << efConstruction_;
