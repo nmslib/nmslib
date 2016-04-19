@@ -298,7 +298,7 @@ void RunExper(bool                                bPrintProgress,
     string indexLocAdd = "";
 
     if (QueryFile.empty() && config.GetTestSetToRunQty() > 0) {
-      indexLocAdd = ConvertToString(TestSetId);
+      indexLocAdd = "_" + ConvertToString(TestSetId);
     }
 
     // SelectTestSet must go before managerGS.Compute()!!!
