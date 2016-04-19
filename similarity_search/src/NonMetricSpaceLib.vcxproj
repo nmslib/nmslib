@@ -58,6 +58,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</IntDir>
+    <IncludePath>C:\local\boost_1_59_0;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\local\boost_1_59_0\lib64-msvc-14.0;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
@@ -111,7 +113,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -122,10 +124,13 @@
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName)$(TargetExt)_compile.pdb</ProgramDataBaseFileName>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointModel>Fast</FloatingPointModel>
       <OpenMPSupport>true</OpenMPSupport>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <StructMemberAlignment>16Bytes</StructMemberAlignment>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -273,6 +278,7 @@
     <ClInclude Include="..\include\space\space_sparse_vector_inter.h" />
     <ClInclude Include="..\include\space\space_vector.h" />
     <ClInclude Include="..\include\space\space_word_embed.h" />
+    <ClCompile Include="cluster_util.cc" />
     <ClCompile Include="distcomp_bregman.cc" />
     <ClCompile Include="distcomp_edist.cc" />
     <ClCompile Include="distcomp_js.cc" />
@@ -286,17 +292,25 @@
     <ClCompile Include="knnquery.cc" />
     <ClCompile Include="logging.cc" />
     <ClCompile Include="memory.cc" />
+    <ClCompile Include="method\hnsw.cc">
+      <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
+    <ClCompile Include="method\hnsw_distfunc_opt.cc" />
+    <ClCompile Include="method\nndes.cc" />
     <ClCompile Include="method\omedrank.cc" />
+    <ClCompile Include="method\permutation_inverted_index.cc" />
+    <ClCompile Include="method\permutation_prefix_index.cc" />
     <ClCompile Include="method\perm_lsh_bin.cc" />
     <ClCompile Include="method\projection_index_incremental.cc" />
-    <ClCompile Include="method\small_world_rand_old.cc" />
-    <ClCompile Include="method\vptree_old.cc" />
+    <ClCompile Include="method\small_world_rand_split.cc" />
     <ClCompile Include="params.cc" />
+    <ClCompile Include="params_cmdline.cc" />
     <ClCompile Include="projection.cc" />
     <ClCompile Include="query.cc" />
     <ClCompile Include="randproj_util.cc" />
     <ClCompile Include="rangequery.cc" />
     <ClCompile Include="searchoracle.cc" />
+    <ClCompile Include="space.cc" />
     <ClCompile Include="space\space_sqfd.cc" />
     <ClCompile Include="space\space_string.cc" />
     <ClCompile Include="utils.cc" />
@@ -318,11 +332,6 @@
     <ClCompile Include="method\list_clusters.cc" />
     <ClCompile Include="method\multi_index.cc" />
     <ClCompile Include="method\multi_vantage_point_tree.cc" />
-    <ClCompile Include="method\permutation_index.cc" />
-    <ClCompile Include="method\permutation_index_incremental.cc" />
-    <ClCompile Include="method\permutation_inverted_index.cc" />
-    <ClCompile Include="method\permutation_prefix_index.cc" />
-    <ClCompile Include="method\permutation_vptree.cc" />
     <ClCompile Include="method\perm_bin_vptree.cc" />
     <ClCompile Include="method\perm_index_incr_bin.cc" />
     <ClCompile Include="method\pivot_neighb_invindx.cc" />

@@ -40,9 +40,11 @@
 #include "factory/method/projection_index_incremental.h"
 #include "factory/method/seqsearch.h"
 #include "factory/method/small_world_rand.h"
+#include "factory/method/hnsw.h"
 #include "factory/method/spatial_approx_tree.h"
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
+#include "factory/method/hnsw.h"
 #if !defined(_MSC_VER)
 #include "factory/method/nndes.h"
 #endif
@@ -161,6 +163,10 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
+
+  REGISTER_METHOD_CREATOR(float, METH_HNSW, CreateHnsw)
+  REGISTER_METHOD_CREATOR(double, METH_HNSW, CreateHnsw)
+  REGISTER_METHOD_CREATOR(int, METH_HNSW, CreateHnsw)
 
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)

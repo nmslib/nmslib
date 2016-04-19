@@ -94,21 +94,6 @@
     <ClCompile Include="method\multi_vantage_point_tree.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="method\permutation_index.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="method\permutation_index_incremental.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="method\permutation_inverted_index.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="method\permutation_prefix_index.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="method\permutation_vptree.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="method\perm_bin_vptree.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -154,12 +139,6 @@
     <ClCompile Include="method\projection_index_incremental.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="method\small_world_rand_old.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="method\vptree_old.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="distcomp_edist.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -170,6 +149,34 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="params.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="space\space_word_embed.cc" />
+    <ClCompile Include="method\small_world_rand_split.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cluster_util.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="params_cmdline.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="space.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\nndes.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\permutation_inverted_index.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\permutation_prefix_index.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\hnsw.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="method\hnsw_distfunc_opt.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -449,6 +456,8 @@
     <ClInclude Include="..\include\method\projection_index_incremental.h" />
     <ClInclude Include="..\include\method\small_world_rand_old.h" />
     <ClInclude Include="..\include\method\vptree_old.h" />
+    <ClInclude Include="..\include\factory\space\space_word_embed.h" />
+    <ClInclude Include="..\include\space\space_word_embed.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
