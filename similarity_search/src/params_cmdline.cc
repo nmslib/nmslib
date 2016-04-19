@@ -57,7 +57,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                       string&                 DataFile,
                       string&                 QueryFile,
                       string&                 CacheGSFilePrefix,
-                      size_t&                 maxCacheGSQty,
+                      float&                  maxCacheGSRelativeQty,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,
@@ -92,7 +92,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
     (LOAD_INDEX_PARAM_OPT,    po::value<string>(&LoadIndexLoc)->default_value(LOAD_INDEX_PARAM_DEFAULT),   LOAD_INDEX_PARAM_MSG)
     (SAVE_INDEX_PARAM_OPT,    po::value<string>(&SaveIndexLoc)->default_value(SAVE_INDEX_PARAM_DEFAULT),   SAVE_INDEX_PARAM_MSG)
     (CACHE_PREFIX_GS_PARAM_OPT,  po::value<string>(&CacheGSFilePrefix)->default_value(CACHE_PREFIX_GS_PARAM_DEFAULT),  CACHE_PREFIX_GS_PARAM_MSG)
-    (MAX_CACHE_GS_QTY_PARAM_OPT, po::value<size_t>(&maxCacheGSQty)->default_value(MAX_CACHE_GS_QTY_PARAM_DEFAULT),    MAX_CACHE_GS_QTY_PARAM_MSG)
+    (MAX_CACHE_GS_QTY_PARAM_OPT, po::value<float>(&maxCacheGSRelativeQty)->default_value(MAX_CACHE_GS_QTY_PARAM_DEFAULT),    MAX_CACHE_GS_QTY_PARAM_MSG)
     (LOG_FILE_PARAM_OPT,      po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT),          LOG_FILE_PARAM_MSG)
     (MAX_NUM_QUERY_PARAM_OPT, po::value<unsigned>(&MaxNumQuery)->default_value(MAX_NUM_QUERY_PARAM_DEFAULT), MAX_NUM_QUERY_PARAM_MSG)
     (TEST_SET_QTY_PARAM_OPT,  po::value<unsigned>(&TestSetQty)->default_value(TEST_SET_QTY_PARAM_DEFAULT),   TEST_SET_QTY_PARAM_MSG)

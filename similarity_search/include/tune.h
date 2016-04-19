@@ -68,7 +68,7 @@ void GetOptimalAlphas(bool bPrintProgres,
                       unsigned MaxIter,
                       unsigned MaxRecDepth,
                       int StepN,
-                      unsigned maxCacheGSQty,
+                      float    maxCacheGSRelativeQty,
                       unsigned recLevel) {
   if (recLevel >= MaxRecDepth) {
     if (bPrintProgres) {
@@ -76,6 +76,8 @@ void GetOptimalAlphas(bool bPrintProgres,
     }
     return;
   }
+
+  size_t ThreadTestQty = thread::hardware_concurrency();
 
   if (bPrintProgres) {
     cout << "================================================================" << endl;
@@ -133,7 +135,7 @@ void GetOptimalAlphas(bool bPrintProgres,
 #endif
           if (!vManagerGS[TestSetId].get()) {
             vManagerGS[TestSetId].reset(new GoldStandardManager<dist_t>(config));
-            vManagerGS[TestSetId]->Compute(maxCacheGSQty); 
+            vManagerGS[TestSetId]->Compute(ThreadTestQty, maxCacheGSRelativeQty);
           } else {
 #ifdef DETAILED_PRINT_INFO
             if (bPrintProgres) {
@@ -163,7 +165,6 @@ void GetOptimalAlphas(bool bPrintProgres,
 #endif
           }
 
-          size_t ThreadTestQty = thread::hardware_concurrency();
           vector<shared_ptr<AnyParams>> vQueryTimeParams;
           vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(QueryTimeParams)));
 
@@ -244,7 +245,7 @@ void GetOptimalAlphas(bool bPrintProgres,
                    recall, time_best, impr_best,
                    alpha_left_best, exp_left,
                    alpha_right_best, exp_right,
-                   MaxIter, MaxRecDepth, StepN, maxCacheGSQty,
+                   MaxIter, MaxRecDepth, StepN, maxCacheGSRelativeQty,
                    recLevel + 1);
         return;
       }
@@ -277,7 +278,7 @@ void GetOptimalAlphas(bool bPrintProgres,
                    recall, time_best, impr_best,
                    alpha_left_best, exp_right,
                    alpha_right_best, exp_right,
-                   MaxIter, MaxRecDepth, StepN, maxCacheGSQty,
+                   MaxIter, MaxRecDepth, StepN, maxCacheGSRelativeQty,
                    recLevel + 1);
       return;
     }
@@ -304,7 +305,7 @@ void GetOptimalAlphas(bool bPrintProgres,
                       unsigned               MaxRecDepth,
                       unsigned               StepN,
                       float                  FullFactor,
-                      unsigned               maxCacheGSQty) {
+                      float                  maxCacheGSRelativeQty) {
   time_best = std::numeric_limits<float>::max();
   impr_best = 0;
   recall = 0;
@@ -331,7 +332,7 @@ void GetOptimalAlphas(bool bPrintProgres,
                    recall, time_best, impr_best,
                    alpha_left_best, exp_right,
                    alpha_right_best, exp_right,
-                   MaxIter, MaxRecDepth, StepN, maxCacheGSQty,
+                   MaxIter, MaxRecDepth, StepN, maxCacheGSRelativeQty,
                    0 /* recLevel */);
 }
 

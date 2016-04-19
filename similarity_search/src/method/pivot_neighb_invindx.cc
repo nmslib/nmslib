@@ -35,14 +35,6 @@ using std::vector;
 using std::pair;
 using std::mutex;
 
-struct IdCount {
-  size_t id;
-  size_t qty;
-  IdCount(size_t id=0, int    qty=0) : id(id), qty(qty) {}
-};
-
-typedef vector<IdCount> VectIdCount;
-
 template <typename dist_t>
 struct IndexThreadParamsPNII {
   PivotNeighbInvertedIndex<dist_t>&           index_;
@@ -80,36 +72,6 @@ struct IndexThreadPNII {
   }
 };
 
-void postListUnion(const VectIdCount& lst1, const PostingListInt lst2, VectIdCount& res) {
-  res.clear();
-  res.reserve((lst1.size() + lst2.size())/2);
-  auto i1 = lst1.begin();
-  auto i2 = lst2.begin();
-
-  while (i1 != lst1.end() && i2 != lst2.end()) {
-    size_t id2 = static_cast<size_t>(*i2);
-    if (i1->id < id2) {
-      res.push_back(*i1);
-      ++i1;
-    } else if (i1->id > id2) {
-      res.push_back(IdCount(id2, 1));
-      ++i2;
-    } else {
-      res.push_back(IdCount(i1->id, i1->qty + 1));
-      ++i1;
-      ++i2;
-    }
-  }
-  while (i1 != lst1.end()) {
-      res.push_back(*i1);
-    ++i1;
-  }
-  while (i2 != lst2.end()) {
-      res.push_back(IdCount(*i2, 1));
-      ++i2;
-  }
-}
-
 template <typename dist_t>
 PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     bool  PrintProgress,
@@ -117,7 +79,8 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     const ObjectVector& data) 
       : data_(data),  
         space_(space), 
-        PrintProgress_(PrintProgress) {
+        PrintProgress_(PrintProgress),
+        recreate_points_(false)  {
 }
 
 
@@ -137,6 +100,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
   pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 65536);
 
   pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  thread::hardware_concurrency());
+  pmgr.GetParamOptional("recreatePoints", recreate_points_,  false);
 
   if (num_prefix_ > num_pivot_) {
     PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix (" << num_prefix_ << ") "
@@ -159,6 +123,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
   LOG(LIB_INFO) << "# pivotFile                   = " << pivot_file_;
   LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
   LOG(LIB_INFO) << "# pivots to index (numPrefix) = " << num_prefix_;
+  LOG(LIB_INFO) << "Do we recreate points during indexing when computing distances to pivots?  = " << recreate_points_;
 
   if (pivot_file_.empty())
     GetPermutationPivot(data_, space_, num_pivot_, &pivot_, &pivot_pos_);
@@ -236,10 +201,19 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* pr
 
   auto & chunkPostLists = *posting_lists_[chunkId];
   chunkPostLists.resize(num_pivot_);
+  string externId;
 
   for (size_t id = 0; id < maxId - minId; ++id) {
     Permutation perm;
-    GetPermutationPPIndex(pivot_, space_, data_[minId + id], &perm);
+    const Object* pObj = data_[minId + id];
+
+    unique_ptr<Object> extObj;
+    if (recreate_points_) {
+      extObj=space_.CreateObjFromStr(-1, -1, space_.CreateStrFromObj(pObj, externId), NULL);
+      pObj=extObj.get();
+    }
+
+    GetPermutationPPIndex(pivot_, space_, pObj, &perm);
     for (size_t j = 0; j < num_prefix_; ++j) {
       chunkPostLists[perm[j]].push_back(id);
     }
@@ -367,7 +341,7 @@ void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
   string methDesc;
   ReadField(inFile, METHOD_DESC, methDesc); lineNum++;
   CHECK_MSG(methDesc == StrDesc(),
-            "Looks like you try to use an index created by a different method: " + StrDesc());
+            "Looks like you try to use an index created by a different method: " + methDesc);
   ReadField(inFile, "numPivot", num_pivot_); lineNum++;
   ReadField(inFile, "numPivotIndex", num_prefix_); lineNum++;
   ReadField(inFile, "chunkIndexSize", chunk_index_size_); lineNum++;

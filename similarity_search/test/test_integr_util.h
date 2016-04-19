@@ -334,7 +334,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
 
     GoldStandardManager<dist_t> managerGS(config);
-    managerGS.Compute(0); // Keeping all GS entries, should be Ok here because our data sets are smallish
+    managerGS.Compute(ThreadTestQty, 0); // Keeping all GS entries, should be Ok here because our data sets are smallish
     
     for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
       const string& MethodName  = vTestCases[MethNum].mMethodName;

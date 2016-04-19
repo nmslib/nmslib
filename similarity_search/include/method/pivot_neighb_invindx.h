@@ -27,9 +27,7 @@
 #define METH_PIVOT_NEIGHB_INVINDEX      "pivot_neighb_invindx"
 #define METH_PIVOT_NEIGHB_INVINDEX_SYN  "napp"
 
-#define PERM_PROC_FAST_SCAN       "scan"
-#define PERM_PROC_MAP             "map"
-#define PERM_PROC_MERGE           "merge"
+#include <method/pivot_neighb_common.h>
 
 namespace similarity {
 
@@ -64,8 +62,6 @@ using std::mutex;
  *        IEEE 24th International Conference on, pp. 257-266. IEEE, 2008.
  */
 
-typedef vector<int> PostingListInt;
-
 template <typename dist_t>
 class PivotNeighbInvertedIndex : public Index<dist_t> {
  public:
@@ -90,6 +86,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   const   ObjectVector&   data_;
   const   Space<dist_t>&  space_;
   bool    PrintProgress_;
+  bool    recreate_points_;
 
   size_t  chunk_index_size_;
   size_t  K_;

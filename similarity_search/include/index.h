@@ -34,7 +34,7 @@ using std::vector;
  * data set
  */
 const string DATA_MUTATION_ERROR_MSG =
-    "A previously saved index is apparently used with a different data set or a different data set split!";
+    "A previously saved index is apparently used with a different data set, a different data set split, and/or a different gold standard file!";
 const string METHOD_DESC="MethodDesc";
 const string LINE_QTY="LineQty";
 

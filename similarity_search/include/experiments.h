@@ -200,12 +200,12 @@ public:
 
   template <typename QueryType, typename QueryCreatorType>
   static void Execute(bool LogInfo, unsigned ThreadTestQty, size_t TestSetId,
-                     const vector<GoldStandard<dist_t>> &         goldStand,
-                     std::vector<MetaAnalysis*>&                  ExpRes,
-                     const ExperimentConfig<dist_t>&              config,
-                     const QueryCreatorType&                      QueryCreator,
-                     IndexType&                                   Method,
-                     const vector<shared_ptr<AnyParams>>&         QueryTimeParams) {
+                     const vector<unique_ptr<GoldStandard<dist_t>>> &goldStand,
+                     std::vector<MetaAnalysis*>&                    ExpRes,
+                     const ExperimentConfig<dist_t>&                config,
+                     const QueryCreatorType&                        QueryCreator,
+                     IndexType&                                     Method,
+                     const vector<shared_ptr<AnyParams>>&           QueryTimeParams) {
     size_t numquery = config.GetQueryObjects().size();
     unsigned MethQty = QueryTimeParams.size();
 
@@ -313,7 +313,7 @@ public:
 
           unique_ptr<QueryType> queryGS(QueryCreator(config.GetSpace(), config.GetQueryObjects()[q]));
 
-          const GoldStandard<dist_t>&  QueryGS = goldStand[q];
+          const GoldStandard<dist_t>&  QueryGS = *goldStand[q];
 
           EvalResults<dist_t>     Eval(config.GetSpace(), pQuery, QueryGS);
 
@@ -342,7 +342,7 @@ public:
      * Sequential search times should be computed only once.
      */
     for (size_t q = 0; q < numquery; ++q) {
-      const GoldStandard<dist_t>&  QueryGS = goldStand[q];
+      const GoldStandard<dist_t>&  QueryGS = *goldStand[q];
       SeqSearchTime     += QueryGS.GetSeqSearchTime();
     }
 

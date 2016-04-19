@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <cmath>
+#include <thread>
 
 #include "object.h"
 #include "query_creator.h"
@@ -32,6 +34,7 @@
 #define SEQ_GS_QTY             "GoldStandQty"
 #define GS_NOTE_FIELD          "Note"
 #define GS_TEST_SET_ID         "TestSetId"
+#define GS_THREAD_TEST_QTY     "ThreadTestQty"
 
 namespace similarity {
 
@@ -39,6 +42,9 @@ using std::vector;
 using std::ostream;
 using std::istream;
 using std::unique_ptr;
+using std::thread;
+using std::ref;
+
 
 template <class dist_t>
 struct ResultEntry {
@@ -94,13 +100,18 @@ public:
   GoldStandard(){}
   GoldStandard(const typename similarity::Space<dist_t>& space,
               const ObjectVector& datapoints,
-              const typename similarity::Query<dist_t>* query,
-              size_t maxKeepEntryQty
+              typename similarity::Query<dist_t>* query,
+              float maxKeepEntryCoeff
               ) {
-    DoSeqSearch(space, datapoints, query->QueryObject());
-    if (maxKeepEntryQty != 0 && maxKeepEntryQty < SortedAllEntries_.size()) {
+    DoSeqSearch(space, datapoints, query);
+    size_t maxKeepEntryQty =
+        std::min((size_t)std::round(query->ResultSize()*maxKeepEntryCoeff),
+                 SortedAllEntries_.size());
+
+    if (maxKeepEntryQty != 0) {
+      CHECK(maxKeepEntryQty <= SortedAllEntries_.size())
       vector<ResultEntry<dist_t>>         tmp(SortedAllEntries_.begin(),
-                                             SortedAllEntries_.begin() + maxKeepEntryQty);
+                                              SortedAllEntries_.begin() + maxKeepEntryQty);
       /* 
        * The swap trick actually leads to memory being freed.
        * If we simply erase the extra entries, vector still keeps the memory!
@@ -111,13 +122,11 @@ public:
   /*
    * See the endianness comment.
    */
-  void Write(ostream& controlStream, ostream& binaryStream,
-             size_t MaxCacheGSQty) const {
-    size_t qty = min(MaxCacheGSQty, SortedAllEntries_.size());
+  void Write(ostream& controlStream, ostream& binaryStream) const {
+
     WriteField(controlStream, SEQ_SEARCH_TIME, ConvertToString(SeqSearchTime_));
-    WriteField(controlStream, SEQ_GS_QTY, ConvertToString(qty));
-    for (size_t i = 0; i < qty; // Note that qty <= SortedAllEntries_.size()
-         ++i) {
+    WriteField(controlStream, SEQ_GS_QTY, ConvertToString(SortedAllEntries_.size()));
+    for (size_t i = 0; i < SortedAllEntries_.size(); ++i) {
       SortedAllEntries_[i].writeBinary(binaryStream);
     }
   }
@@ -143,18 +152,20 @@ public:
 private:
   void DoSeqSearch(const Space<dist_t>& space,
                    const ObjectVector&  datapoints,
-                   const Object*        query) {
+                   typename similarity::Query<dist_t>* pQuery) {
     WallClockTimer  wtm;
 
     wtm.reset();
 
     SortedAllEntries_.resize(datapoints.size());
+    const Object* pQueryObj = pQuery->QueryObject();
 
     for (size_t i = 0; i < datapoints.size(); ++i) {
       // Distance can be asymmetric, but the query is always on the right side
       SortedAllEntries_[i] = ResultEntry<dist_t>(datapoints[i]->id(),
                                                  datapoints[i]->label(),
-                                                 space.IndexTimeDistance(datapoints[i], query));
+                                                 space.IndexTimeDistance(datapoints[i], pQueryObj));
+      pQuery->CheckAndAddToResult(SortedAllEntries_[i].mDist, datapoints[i]);
     }
 
     wtm.split();
@@ -169,6 +180,48 @@ private:
   vector<ResultEntry<dist_t>>         SortedAllEntries_;
 };
 
+template <typename dist_t, typename QueryCreatorType>
+struct GoldStandardThreadParams {
+  const ExperimentConfig<dist_t>&             config_;
+  const QueryCreatorType&                     QueryCreator_;
+  float                                       maxKeepEntryCoeff_;
+  const unsigned                              ThreadQty_;
+  const unsigned                              GoldStandPart_;
+  vector<unique_ptr<GoldStandard<dist_t>>>&   vGoldStand_;
+  GoldStandardThreadParams(const ExperimentConfig<dist_t>& config,
+                           const QueryCreatorType& QueryCreator,
+                           float maxKeepEntryCoeff,
+                           unsigned ThreadQty,
+                           unsigned GoldStandPart,
+                           vector<unique_ptr<GoldStandard<dist_t>>>& vGoldStand) : config_(config),
+                                                                                   QueryCreator_(QueryCreator),
+                                                                                   maxKeepEntryCoeff_(maxKeepEntryCoeff),
+                                                                                   ThreadQty_(ThreadQty),
+                                                                                   GoldStandPart_(GoldStandPart),
+                                                                                   vGoldStand_(vGoldStand) {}
+};
+
+template <typename dist_t, typename QueryCreatorType>
+struct GoldStandardThread {
+  void operator ()(GoldStandardThreadParams<dist_t,QueryCreatorType>& prm) {
+    size_t numquery = prm.config_.GetQueryObjects().size();
+
+    unsigned GoldStandPart = prm.GoldStandPart_;
+    unsigned ThreadQty = prm.ThreadQty_;
+
+    for (size_t q = 0; q < numquery; ++q) {
+      if ((q % ThreadQty) == GoldStandPart) {
+        unique_ptr<Query<dist_t>> query(prm.QueryCreator_(prm.config_.GetSpace(),
+                                                          prm.config_.GetQueryObjects()[q]));
+
+        prm.vGoldStand_[q].reset(new GoldStandard<dist_t>(prm.config_.GetSpace(),
+                                                          prm.config_.GetDataObjects(),
+                                                          query.get(),
+                                                          prm.maxKeepEntryCoeff_));
+      }
+    }
+  }
+};
 
 template <class dist_t>
 class GoldStandardManager {
@@ -178,29 +231,32 @@ public:
                       vvGoldStandardRange_(config_.GetRange().size()),
                       vvGoldStandardKNN_(config_.GetKNN().size()) {}
   // Both read and Compute can be called multiple times
-  // if maxKeepEntryQty is non-zero, we keep only maxKeepEntryQty GS entries
-  void Compute(size_t maxKeepEntryQty) {
-    LOG(LIB_INFO) << "Computing gold standard data, at most " << maxKeepEntryQty << " entries";;
+  // if maxKeepEntryCoeff is non-zero, it defines how many GS entries (relative to the result set size) we memorize
+  void Compute(size_t threadQty, float maxKeepEntryCoeff) {
+    threadQty = std::max(size_t(1), threadQty);
+    LOG(LIB_INFO) << "Computing gold standard data using " << threadQty << " threads, keeping " << maxKeepEntryCoeff<< " times result set size entries";;
     for (size_t i = 0; i < config_.GetRange().size(); ++i) {
       vvGoldStandardRange_[i].clear();
       const dist_t radius = config_.GetRange()[i];
       RangeCreator<dist_t>  cr(radius);
-      procOneSet(cr, vvGoldStandardRange_[i], maxKeepEntryQty);
+      procOneSet(cr, vvGoldStandardRange_[i], threadQty, maxKeepEntryCoeff);
     }
     for (size_t i = 0; i < config_.GetKNN().size(); ++i) {
       vvGoldStandardKNN_[i].clear();
       const size_t K = config_.GetKNN()[i];
       KNNCreator<dist_t>  cr(K, config_.GetEPS());
-      procOneSet(cr, vvGoldStandardKNN_[i], maxKeepEntryQty);
+      procOneSet(cr, vvGoldStandardKNN_[i], threadQty, maxKeepEntryCoeff);
     }
   }
   void Read(istream& controlStream, istream& binaryStream,
             size_t queryQty,
-            size_t& testSetId) {
+            size_t& testSetId,
+            size_t& savedThreadQty) {
     LOG(LIB_INFO) << "Reading gold standard data from cache";
     string s;
     ReadField(controlStream, GS_TEST_SET_ID, s);
     ConvertFromString(s, testSetId);
+    ReadField(controlStream, GS_THREAD_TEST_QTY, savedThreadQty);
     for (size_t i = 0; i < vvGoldStandardRange_.size(); ++i) {
       ReadField(controlStream, GS_NOTE_FIELD, s);
       vvGoldStandardRange_[i].clear();
@@ -215,67 +271,89 @@ public:
     }
   }
   void Write(ostream& controlStream, ostream& binaryStream,
-             size_t testSetId, size_t MaxCacheGSQty) {
+             size_t testSetId, size_t threadTestQty) {
     WriteField(controlStream, GS_TEST_SET_ID, ConvertToString(testSetId));
+    WriteField(controlStream,GS_THREAD_TEST_QTY, threadTestQty);
     // GS_NOTE_FIELD & GS_TEST_SET_ID are for informational purposes only
     for (size_t i = 0; i < vvGoldStandardRange_.size(); ++i) {
       WriteField(controlStream, GS_NOTE_FIELD,
                 "range radius=" + ConvertToString(config_.GetRange()[i]));
       writeOneGS(controlStream, binaryStream,
-                 vvGoldStandardRange_[i], MaxCacheGSQty);
+                 vvGoldStandardRange_[i]);
     }
     for (size_t i = 0; i < vvGoldStandardKNN_.size(); ++i) {
       WriteField(controlStream, GS_NOTE_FIELD,
                 "k=" + ConvertToString(config_.GetKNN()[i]) +
                 "eps=" + ConvertToString(config_.GetEPS()));
       writeOneGS(controlStream, binaryStream,
-                 vvGoldStandardKNN_[i], MaxCacheGSQty);
+                 vvGoldStandardKNN_[i]);
     }
   }
-  const vector<GoldStandard<dist_t>> &GetRangeGS(size_t i) const {
+  const vector<unique_ptr<GoldStandard<dist_t>>> &GetRangeGS(size_t i) const {
     return vvGoldStandardRange_[i];
   }
-  const vector<GoldStandard<dist_t>> &GetKNNGS(size_t i) const {
+  const vector<unique_ptr<GoldStandard<dist_t>>> &GetKNNGS(size_t i) const {
     return vvGoldStandardKNN_[i];
   }
 private:
   const ExperimentConfig<dist_t>&         config_;
-  vector<vector<GoldStandard<dist_t>>>    vvGoldStandardRange_;
-  vector<vector<GoldStandard<dist_t>>>    vvGoldStandardKNN_;
+  vector<vector<unique_ptr<GoldStandard<dist_t>>>>    vvGoldStandardRange_;
+  vector<vector<unique_ptr<GoldStandard<dist_t>>>>    vvGoldStandardKNN_;
 
   void writeOneGS(ostream& controlStream, ostream& binaryStream,
-                  const vector<GoldStandard<dist_t>>& oneGS,
-                  size_t MaxCacheGSQty) {
-    for(const GoldStandard<dist_t>& obj : oneGS) {
-      obj.Write(controlStream, binaryStream, MaxCacheGSQty);
+                  const vector<unique_ptr<GoldStandard<dist_t>>>& oneGS) {
+    for(const unique_ptr<GoldStandard<dist_t>>& obj : oneGS) {
+      obj->Write(controlStream, binaryStream);
     }
   }
 
   void readOneGS(istream& controlStream, istream& binaryStream,
                  size_t queryQty,
-                 vector<GoldStandard<dist_t>>& oneGS) {
+                 vector<unique_ptr<GoldStandard<dist_t>>>& oneGS) {
+    oneGS.resize(queryQty);
     for (size_t k = 0; k < queryQty; ++k) {
-      GoldStandard<dist_t>  gs;
-      gs.Read(controlStream, binaryStream);
-      oneGS.push_back(gs);
+      unique_ptr<GoldStandard<dist_t>>  gs(new GoldStandard<dist_t>());
+      gs->Read(controlStream, binaryStream);
+      oneGS[k].reset(gs.release());
     }
   }
 
   template <typename QueryCreatorType>
-  void procOneSet(const QueryCreatorType&       QueryCreator,
-                  vector<GoldStandard<dist_t>>& vGoldStand,
-                  size_t maxKeepEntryQty) {
-    for (size_t q = 0; q < config_.GetQueryObjects().size(); ++q) {
-      unique_ptr<Query<dist_t>> query(QueryCreator(config_.GetSpace(),
-                                      config_.GetQueryObjects()[q]));
-      vGoldStand.push_back(GoldStandard<dist_t>(config_.GetSpace(),
-                                                config_.GetDataObjects(),
-                                                query.get(),
-                                                maxKeepEntryQty));
+  void procOneSet(const QueryCreatorType&                   QueryCreator,
+                  vector<unique_ptr<GoldStandard<dist_t>>>& vGoldStand,
+                  size_t                                    threadQty,
+                  float                                     maxKeepEntryCoeff) {
+    size_t queryQty = config_.GetQueryObjects().size();
+    vGoldStand.resize(queryQty);
+
+    vector<unique_ptr<GoldStandardThreadParams<dist_t,QueryCreatorType>>> GoldStandParams(threadQty);
+
+    for (unsigned GoldPart = 0; GoldPart < threadQty; ++GoldPart) {
+      GoldStandParams[GoldPart].reset(
+          new GoldStandardThreadParams<dist_t, QueryCreatorType>(config_,
+                                                                 QueryCreator,
+                                                                 maxKeepEntryCoeff,
+                                                                 threadQty,
+                                                                 GoldPart,
+                                                                 vGoldStand));
     }
 
+    if (threadQty == 1) {
+      GoldStandardThread<dist_t, QueryCreatorType>()(*GoldStandParams[0]);
+    } else {
+      vector<thread> Threads(threadQty);
+
+      for (unsigned GoldPart = 0; GoldPart < threadQty; ++GoldPart) {
+        Threads[GoldPart] = thread(GoldStandardThread<dist_t,QueryCreatorType>(),ref(*GoldStandParams[GoldPart]));
+      }
+
+      for (unsigned GoldPart = 0; GoldPart < threadQty; ++GoldPart) {
+        Threads[GoldPart].join();
+      }
+    }
   }
 };
+
 
 }
 

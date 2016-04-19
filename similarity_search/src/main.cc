@@ -14,12 +14,11 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <cmath>
+
 #include <limits>
 #include <string>
 #include <sstream>
@@ -97,10 +96,11 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tIndexParams\tQueryTimeParams\tNumData" << std::endl;
+  Header << "MethodName\tRecall\tRecall@1\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tIndexParams\tQueryTimeParams\tNumData" << std::endl;
 
   Data << "\"" << MethodName << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
+  Data << ExpRes.GetRecallAt1Avg() << "\t";
   Data << ExpRes.GetPrecisionOfApproxAvg() << "\t";
   Data << ExpRes.GetRelPosErrorAvg() << "\t";
   Data << ExpRes.GetNumCloserAvg() << "\t";
@@ -141,7 +141,7 @@ void RunExper(bool                                bPrintProgress,
              const string&                        DataFile,
              const string&                        QueryFile,
              const string&                        CacheGSFilePrefix,
-             size_t                               MaxCacheGSQty,
+             float                                maxCacheGSRelativeQty,
              IdTypeUnsign                         MaxNumData,
              IdTypeUnsign                         MaxNumQuery,
              const                                vector<unsigned>& knn,
@@ -177,9 +177,22 @@ void RunExper(bool                                bPrintProgress,
                                   knn, eps, range);
 
   size_t cacheDataSetQty = 0;
+
+  const string& cacheGSIncompleteFlagName = CacheGSFilePrefix + "_incomplete.flag";
+
   if (bCacheGS) {
     const string& cacheGSControlName = CacheGSFilePrefix + "_ctrl.txt";
     const string& cacheGSBinaryName  = CacheGSFilePrefix + "_data.bin";
+
+    if (DoesFileExist(cacheGSIncompleteFlagName) ||
+        (DoesFileExist(cacheGSControlName) != DoesFileExist(cacheGSBinaryName))
+        ) {
+      LOG(LIB_INFO) << "Incomplete cache file detected! Removing incomplete entries...";
+      if (DoesFileExist(cacheGSBinaryName))
+        CHECK_MSG(std::remove(cacheGSBinaryName.c_str())==0, "Error removing the file: " + cacheGSBinaryName);
+      if (DoesFileExist(cacheGSControlName))
+        CHECK_MSG(std::remove(cacheGSControlName.c_str())==0, "Error removing the file: " + cacheGSControlName);
+    }
 
     if (DoesFileExist(cacheGSControlName)) {
     // Cache exists => reuse it
@@ -202,13 +215,18 @@ void RunExper(bool                                bPrintProgress,
                             cacheGSControlName + "' but there is binary data file: '" +
                             cacheGSBinaryName + "'");
       }
-    // No cache => create new file
+    // No cache => create new file, but first mark cache as incomplete!
+      ofstream flag_file(cacheGSIncompleteFlagName.c_str());
+      CHECK_MSG(flag_file, "Error creating file: " + cacheGSIncompleteFlagName);
+      flag_file.close();
+
       cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
                                         std::ios::trunc | std::ios::out));
       cacheGSBinary.reset(new fstream(cacheGSBinaryName.c_str(),
                                         std::ios::trunc | std::ios::out |
                                         // On Windows you don't get a proper binary stream without ios::binary!
                                         ios::binary));
+
       bWriteGSCache = true;
     }
 
@@ -242,9 +260,9 @@ void RunExper(bool                                bPrintProgress,
    * after reading the data set.
    */
   if (bWriteGSCache) {
+
     config.Write(*cacheGSControl, *cacheGSBinary);
   }
-
 
 
   MemUsage  mem_usage_measure;
@@ -279,16 +297,17 @@ void RunExper(bool                                bPrintProgress,
 
     string indexLocAdd = "";
 
-    if (config.GetTestSetToRunQty() > 0) {
+    if (QueryFile.empty() && config.GetTestSetToRunQty() > 0) {
       indexLocAdd = ConvertToString(TestSetId);
     }
 
     // SelectTestSet must go before managerGS.Compute()!!!
 
     if (bReadGSCache) {
-      size_t cacheTestId = 0;
+      size_t cacheTestId = 0, savedThreadQty = 0;
       managerGS.Read(*cacheGSControl, *cacheGSBinary,
-                     config.GetTotalQueryQty(), cacheTestId);
+                     config.GetTotalQueryQty(),
+                     cacheTestId, savedThreadQty);
       if (cacheTestId != TestSetId) {
         stringstream err;
         err << "Perhaps, the input file is corrput (or is incompatible with "
@@ -296,11 +315,17 @@ void RunExper(bool                                bPrintProgress,
             << "but obtained " << cacheTestId;
         throw runtime_error(err.str());
       }
+      CHECK_MSG(savedThreadQty == ThreadTestQty,
+                "Error: the gold standard was computed using " +ConvertToString(savedThreadQty) + " threads, but the current test will use "  +
+                ConvertToString(ThreadTestQty) + " threads. You have to use the same number of threads while compute gold standard data and testing!");
     } else {
-      managerGS.Compute(MaxCacheGSQty);
+      managerGS.Compute(ThreadTestQty, maxCacheGSRelativeQty);
       if (bWriteGSCache) {
-        LOG(LIB_INFO) << "Saving the cache, at most: " << MaxCacheGSQty << " entries";
-        managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId, MaxCacheGSQty);
+        LOG(LIB_INFO) << "Saving the cache";
+        managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId, ThreadTestQty);
+
+        // Remove the incomplete-file flag
+        CHECK_MSG(std::remove(cacheGSIncompleteFlagName.c_str())==0, "Error removing the file: " + cacheGSIncompleteFlagName);
       }
     }
 
@@ -488,7 +513,7 @@ int main(int ac, char* av[]) {
   string                DataFile;
   string                QueryFile;
   string                CacheGSFilePrefix;
-  size_t                MaxCacheGSQty;
+  float                 maxCacheGSRelativeQty;
   IdTypeUnsign          MaxNumData;
   IdTypeUnsign          MaxNumQuery;
   vector<unsigned>      knn;
@@ -516,7 +541,7 @@ int main(int ac, char* av[]) {
                          DataFile,
                          QueryFile,
                          CacheGSFilePrefix,
-                         MaxCacheGSQty,
+                         maxCacheGSRelativeQty,
                          MaxNumData,
                          MaxNumQuery,
                          knn,
@@ -557,7 +582,7 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                    MaxCacheGSQty,
+                    maxCacheGSRelativeQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -580,7 +605,7 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                    MaxCacheGSQty,
+                      maxCacheGSRelativeQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -603,7 +628,7 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                    MaxCacheGSQty,
+                       maxCacheGSRelativeQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,

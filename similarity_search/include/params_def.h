@@ -49,9 +49,9 @@
 #define CACHE_PREFIX_GS_PARAM_MSG     "a prefix of gold standard cache files"
 #define CACHE_PREFIX_GS_PARAM_DEFAULT ""
 
-#define MAX_CACHE_GS_QTY_PARAM_OPT "maxCacheGSQty"
-#define MAX_CACHE_GS_QTY_PARAM_MSG "a maximum number of gold standard entries to compute/cache"
-#define MAX_CACHE_GS_QTY_PARAM_DEFAULT     1000
+#define MAX_CACHE_GS_QTY_PARAM_OPT "maxCacheGSRelativeQty"
+#define MAX_CACHE_GS_QTY_PARAM_MSG "a maximum number of gold standard entries to compute/cache, note that it is relative to the number of result entries."
+#define MAX_CACHE_GS_QTY_PARAM_DEFAULT     10.0
 
 #define LOG_FILE_PARAM_OPT       "logFile,l"
 #define LOG_FILE_PARAM_MSG       "log file"

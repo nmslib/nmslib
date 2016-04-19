@@ -91,7 +91,7 @@ void RunExper(unsigned AddRestartQty,
              unsigned                       MaxRecDepth,
              unsigned                       StepN,
              float                          FullFactor,
-             unsigned                       maxCacheGSQty
+             float                          maxCacheGSRelativeQty
 )
 {
   vector<dist_t> rangeAll;
@@ -215,7 +215,7 @@ void RunExper(unsigned AddRestartQty,
                      recall_loc, 
                      time_best_loc, impr_best_loc,
                      alpha_left_loc, expLeft, alpha_right_loc, expRight,
-                     MaxIter, MaxRecDepth, StepN, FullFactor, maxCacheGSQty);
+                     MaxIter, MaxRecDepth, StepN, FullFactor, maxCacheGSRelativeQty);
 
       if (impr_best_loc > impr_best) {
         recall = recall_loc; 
@@ -278,7 +278,7 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                       unsigned&               TestSetQty,
                       string&                 DataFile,
                       string&                 QueryFile,
-                      size_t&                 maxCacheGSQty,
+                      float&                  MaxCacheGSRelativeQty,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,
@@ -314,7 +314,7 @@ void ParseCommandLineForTuning(int argc, char*argv[],
     (DATA_FILE_PARAM_OPT,     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG)
     (MAX_NUM_DATA_PARAM_OPT,  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG)
     (QUERY_FILE_PARAM_OPT,    po::value<string>(&QueryFile)->default_value(QUERY_FILE_PARAM_DEFAULT),  QUERY_FILE_PARAM_MSG)
-    (MAX_CACHE_GS_QTY_PARAM_OPT, po::value<size_t>(&maxCacheGSQty)->default_value(MAX_CACHE_GS_QTY_PARAM_DEFAULT),    MAX_CACHE_GS_QTY_PARAM_MSG)
+    (MAX_CACHE_GS_QTY_PARAM_OPT, po::value<float>(&MaxCacheGSRelativeQty)->default_value(MAX_CACHE_GS_QTY_PARAM_DEFAULT),    MAX_CACHE_GS_QTY_PARAM_MSG)
     (LOG_FILE_PARAM_OPT,      po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT),          LOG_FILE_PARAM_MSG)
     (MAX_NUM_QUERY_PARAM_OPT, po::value<unsigned>(&MaxNumQuery)->default_value(MAX_NUM_QUERY_PARAM_DEFAULT), MAX_NUM_QUERY_PARAM_MSG)
     (TEST_SET_QTY_PARAM_OPT,  po::value<unsigned>(&TestSetQty)->default_value(TEST_SET_QTY_PARAM_DEFAULT),   TEST_SET_QTY_PARAM_MSG)
@@ -426,7 +426,7 @@ int main(int ac, char* av[]) {
   unsigned                TestSetQty;
   string                  DataFile;
   string                  QueryFile;
-  size_t                  MaxCacheGSQty;
+  float                   MaxCacheGSRelativeQty;
   IdTypeUnsign            MaxNumData;
   IdTypeUnsign            MaxNumQuery;
   vector<unsigned>        knn;
@@ -453,7 +453,7 @@ int main(int ac, char* av[]) {
                        TestSetQty,
                        DataFile,
                        QueryFile,
-                       MaxCacheGSQty,
+                       MaxCacheGSRelativeQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
@@ -504,7 +504,7 @@ int main(int ac, char* av[]) {
                   MaxRecDepth,
                   StepN,
                   FullFactor,
-                  MaxCacheGSQty 
+                  MaxCacheGSRelativeQty
                  );
   } else if (DIST_TYPE_FLOAT == DistType) {
     RunExper<float>(AddRestartQty, 
@@ -526,7 +526,7 @@ int main(int ac, char* av[]) {
                   MaxRecDepth,
                   StepN,
                   FullFactor,
-                  MaxCacheGSQty
+                  MaxCacheGSRelativeQty
                  );
   } else if (DIST_TYPE_DOUBLE == DistType) {
     RunExper<double>(AddRestartQty, 
@@ -548,7 +548,7 @@ int main(int ac, char* av[]) {
                   MaxRecDepth,
                   StepN,
                   FullFactor,
-                  MaxCacheGSQty
+                  MaxCacheGSRelativeQty
                  );
   } else {
     LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;

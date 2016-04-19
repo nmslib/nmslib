@@ -120,7 +120,7 @@ bool VectorSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, strin
 /** End of standard functions to read/write/create objects */ 
 
 template <typename dist_t>
-void VectorSpace<dist_t>::ReadVec(string line, LabelType& label, vector<dist_t>& v) const
+void VectorSpace<dist_t>::ReadVec(string line, LabelType& label, vector<dist_t>& v)
 {
   v.clear();
 

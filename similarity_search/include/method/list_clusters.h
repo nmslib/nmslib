@@ -32,6 +32,13 @@ namespace similarity {
  *
  * The method also resembles canopy clustering: https://en.wikipedia.org/wiki/Canopy_clustering_algorithm
  *
+ * Note that similar ideas were also proposed earlier:
+ *
+ * 1) DynDex: a dynamic and non-metric space indexer, KS Goh, B Li, E Chang, 2002.
+ * 2) C. Li, E. Chang, H. Garcia-Molina, and G. Wiederhold. 
+ *    Clustering for approximate similarity search in high-dimensional
+ * 3) E. Chavez and G. Navarro.  
+ *    A compact space decomposition for effective a metric indexing. 2005
  */
 
 template <typename dist_t>

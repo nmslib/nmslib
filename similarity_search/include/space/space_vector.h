@@ -67,11 +67,14 @@ class VectorSpace : public Space<dist_t> {
   virtual size_t GetElemQty(const Object* object) const = 0;
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const = 0;
- protected:
+
+  static void ReadVec(std::string line, LabelType& label, std::vector<dist_t>& v);
+
+protected:
   DISABLE_COPY_AND_ASSIGN(VectorSpace);
 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
-  void ReadVec(std::string line, LabelType& label, std::vector<dist_t>& v) const;
+
   void CreateVectFromObjSimpleStorage(const char *pFuncName,
                                  const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {

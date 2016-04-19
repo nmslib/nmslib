@@ -205,7 +205,7 @@ void ClusterUtils<dist_t>::doFIRMAL(bool PrintProgress,
         /*
          * Here, we start from iterStartCent, because all the points "had a chance" to be connected to these clusters.
          * In additions, all vTmpClustCenter elements are non-NULL for the current iteration, but this is not true
-         * for clusters from previous iteratoins. Specifically, when we find empty clusters in the end of the iteration,
+         * for clusters from previous iterations. Specifically, when we find empty clusters in the end of the iteration,
          * we NULLify respective elements of vTmpClustCenter and return cluster centers into the game (so that they
          * can be linked/clustered in subsequent iterations).
          * An alternative version where we start from zero seems to be too slow (ALSO don't forget that some clusters may be NULLs)

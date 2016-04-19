@@ -61,7 +61,7 @@ bool WordEmbedSpace<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, st
   if (isspace(strObj[i])) { pos = i ; break; }
 
   if (-1 == pos) {
-    PREPARE_RUNTIME_ERR(err) << "No white space in line #" << pInpState->line_num_ << " line: 'strObj'";
+    PREPARE_RUNTIME_ERR(err) << "No white space in line #" << pInpState->line_num_ << " line: '" << strObj << "'";
     THROW_RUNTIME_ERR(err);
   }
   externId = strObj.substr(0, pos);

@@ -43,6 +43,7 @@ class Query {
   virtual void Reset() = 0;
   virtual dist_t Radius() const = 0;
   virtual unsigned ResultSize() const = 0;
+  virtual bool CheckAndAddToResult(const dist_t distance, const Object* object) = 0;
   virtual void Print() const = 0;
 
  protected:
