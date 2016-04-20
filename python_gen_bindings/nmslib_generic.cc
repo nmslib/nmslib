@@ -37,6 +37,8 @@
 #include "logging.h"
 #include "nmslib_generic.h"
 
+const bool PRINT_PROGRESS=true;
+
 #define raise PyException ex;\
               ex.stream()
 
@@ -47,9 +49,11 @@ using FloatVector = std::vector<float>;
 using StringVector = std::vector<std::string>;
 
 static PyMethodDef nmslibMethods[] = {
-  {"initIndex", initIndex, METH_VARARGS},
+  {"init", init, METH_VARARGS},
   {"addDataPoint", addDataPoint, METH_VARARGS},
-  {"buildIndex", buildIndex, METH_VARARGS},
+  {"createIndex", createIndex, METH_VARARGS},
+  {"saveIndex", saveIndex, METH_VARARGS},
+  {"loadIndex", loadIndex, METH_VARARGS},
   {"setQueryTimeParams", setQueryTimeParams, METH_VARARGS},
   {"knnQuery", knnQuery, METH_VARARGS},
   {"freeIndex", freeIndex, METH_VARARGS},
@@ -149,7 +153,9 @@ class IndexWrapperBase {
   inline int GetDistType() { return dist_type_; }
   inline size_t GetDataPointQty() { return data_.size(); }
   
-  virtual void Build(const AnyParams&) = 0;
+  virtual void CreateIndex(const AnyParams&) = 0;
+  virtual void SaveIndex(const string&) = 0;
+  virtual void LoadIndex(const string&) = 0;
   virtual void SetQueryTimeParams(const AnyParams&) = 0;
   virtual void AddDataPoint(const Object* z) { data_.push_back(z); }
   virtual PyObject* KnnQuery(int k, const Object* query) = 0;
@@ -175,7 +181,9 @@ class IndexWrapper : public IndexWrapperBase {
                const AnyParams& space_param,
                const char* method_name)
       : IndexWrapperBase(dist_type, space_type, method_name),
-        index_(nullptr) {
+        index_(nullptr),
+        space_(nullptr) 
+  {
     space_ = SpaceFactoryRegistry<T>::Instance()
         .CreateSpace(space_type_.c_str(), space_param);
   }
@@ -186,15 +194,29 @@ class IndexWrapper : public IndexWrapperBase {
   }
 
 
-  void Build(const AnyParams& index_params) {
+  void CreateIndex(const AnyParams& index_params) override {
+    delete index_;
     index_ = MethodFactoryRegistry<T>::Instance()
-        .CreateMethod(true /* let's print progress bars for now */, 
+        .CreateMethod(PRINT_PROGRESS,
                       method_name_, space_type_,
                       *space_, data_);
     index_->CreateIndex(index_params);
   }
 
-  void SetQueryTimeParams(const AnyParams& p) {
+  void SaveIndex(const string& fileName) override {
+    index_->SaveIndex(fileName);
+  }
+
+  void LoadIndex(const string& fileName) override {
+    delete index_;
+    index_ = MethodFactoryRegistry<T>::Instance()
+        .CreateMethod(PRINT_PROGRESS,
+                      method_name_, space_type_,
+                      *space_, data_);
+    index_->LoadIndex(fileName);
+  }
+
+  void SetQueryTimeParams(const AnyParams& p) override {
     index_->SetQueryTimeParams(p);
   }
 
@@ -233,7 +255,7 @@ class IndexWrapper : public IndexWrapperBase {
 };
 
 template <typename T>
-PyObject* _initIndex(DistType dist_type,
+PyObject* _init(DistType dist_type,
                      const char* space_type,
                      const AnyParams& space_param,
                      const char* method_name) {
@@ -247,7 +269,7 @@ PyObject* _initIndex(DistType dist_type,
   return PyLong_FromVoidPtr(reinterpret_cast<void*>(static_cast<IndexWrapperBase*>(index)));
 }
 
-PyObject* initIndex(PyObject* self, PyObject* args) {
+PyObject* init(PyObject* self, PyObject* args) {
   char* space_type;
   PyListObject* space_param_list;
   char* method_name;
@@ -266,12 +288,12 @@ PyObject* initIndex(PyObject* self, PyObject* args) {
 
   switch (dist_type) {
     case kDistFloat:
-      return _initIndex<float>(
+      return _init<float>(
           dist_type, 
           space_type, space_param,
           method_name);
     case kDistInt:
-      return _initIndex<int>(
+      return _init<int>(
           dist_type, 
           space_type, space_param,
           method_name);
@@ -306,7 +328,7 @@ PyObject* addDataPoint(PyObject* self, PyObject* args) {
 }
 
 
-PyObject* buildIndex(PyObject* self, PyObject* args) {
+PyObject* createIndex(PyObject* self, PyObject* args) {
   PyObject*     ptr;
   PyListObject* param_list;
 
@@ -322,7 +344,35 @@ PyObject* buildIndex(PyObject* self, PyObject* args) {
   }
 
   IndexWrapperBase* pIndex = reinterpret_cast<IndexWrapperBase*>(PyLong_AsVoidPtr(ptr));
-  pIndex->Build(index_params);
+  pIndex->CreateIndex(index_params);
+  Py_RETURN_NONE;
+}
+
+PyObject* saveIndex(PyObject* self, PyObject* args) {
+  PyObject*     ptr;
+  char*         file_name;
+
+  if (!PyArg_ParseTuple(args, "Os", &ptr, &file_name)) {
+    raise << "Error reading parameters (expecting: index ref, file name)";
+    return NULL;
+  }
+
+  IndexWrapperBase* pIndex = reinterpret_cast<IndexWrapperBase*>(PyLong_AsVoidPtr(ptr));
+  pIndex->SaveIndex(file_name);
+  Py_RETURN_NONE;
+}
+
+PyObject* loadIndex(PyObject* self, PyObject* args) {
+  PyObject*     ptr;
+  char*         file_name;
+
+  if (!PyArg_ParseTuple(args, "Os", &ptr, &file_name)) {
+    raise << "Error reading parameters (expecting: index ref, file name)";
+    return NULL;
+  }
+
+  IndexWrapperBase* pIndex = reinterpret_cast<IndexWrapperBase*>(PyLong_AsVoidPtr(ptr));
+  pIndex->LoadIndex(file_name);
   Py_RETURN_NONE;
 }
 

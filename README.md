@@ -12,7 +12,7 @@ Because exact solutions are hardly efficient in high dimensions and/or non-metri
 Some of the implemented approaches are quite efficient. For example, according to the results of [a public evaluation](https://github.com/erikbern/ann-benchmarks), our implementation of the SW-graph outperforms other methods in most cases. 
 
 
-**Contributors** (including people whose code we incorporated): Bilegsaikhan Naidan, Leonid Boytsov, Lawrence Cayton, Wei Dong, Avrelin Nikita, Alexander Ponomarenko, Yury Malkov, Daniel Lemire.
+**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
 Leo(nid) Boytsov is a maintainer.
 

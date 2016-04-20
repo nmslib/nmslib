@@ -37,6 +37,8 @@
 #include "logging.h"
 #include "nmslib_vector.h"
 
+const bool PRINT_PROGRESS=true;
+
 #define raise PyException ex;\
               ex.stream()
 
@@ -47,9 +49,11 @@ using FloatVector = std::vector<float>;
 using StringVector = std::vector<std::string>;
 
 static PyMethodDef nmslibMethods[] = {
-  {"initIndex", initIndex, METH_VARARGS},
+  {"init", init, METH_VARARGS},
   {"addDataPoint", addDataPoint, METH_VARARGS},
-  {"buildIndex", buildIndex, METH_VARARGS},
+  {"createIndex", createIndex, METH_VARARGS},
+  {"saveIndex", saveIndex, METH_VARARGS},
+  {"loadIndex", loadIndex, METH_VARARGS},
   {"setQueryTimeParams", setQueryTimeParams, METH_VARARGS},
   {"knnQuery", knnQuery, METH_VARARGS},
   {"freeIndex", freeIndex, METH_VARARGS},
@@ -135,6 +139,7 @@ PyMODINIT_FUNC initnmslib_vector() {
   Py_INCREF(&NmslibDist_Type);
   PyModule_AddObject(module, "DistType",
         reinterpret_cast<PyObject*>(&NmslibDist_Type));
+
   initLibrary(LIB_LOGSTDERR, NULL);
   //initLibrary(LIB_LOGNONE, NULL);
 }
@@ -198,7 +203,9 @@ class IndexWrapper {
         data_type_(data_type),
         space_type_(space_type),
         method_name_(method_name),
-        index_(nullptr) {
+        index_(nullptr),
+        space_(nullptr)
+    {
     space_ = SpaceFactoryRegistry<T>::Instance()
         .CreateSpace(space_type_.c_str(), space_param);
   }
@@ -224,12 +231,28 @@ class IndexWrapper {
     data_.push_back(z);
   }
 
-  void Build(const AnyParams& index_params) {
+  void CreateIndex(const AnyParams& index_params) {
+    // Delete previously created index
+    delete index_;
     index_ = MethodFactoryRegistry<T>::Instance()
-        .CreateMethod(true /* let's print progress bars for now */, 
+        .CreateMethod(PRINT_PROGRESS,
                       method_name_, space_type_,
                       *space_, data_);
     index_->CreateIndex(index_params);
+  }
+
+  void SaveIndex(const string& fileName) {
+    index_->SaveIndex(fileName);
+  }
+
+  void LoadIndex(const string& fileName) {
+    // Delete previously created index
+    delete index_;
+    index_ = MethodFactoryRegistry<T>::Instance()
+        .CreateMethod(PRINT_PROGRESS,
+                      method_name_, space_type_,
+                      *space_, data_);
+    index_->LoadIndex(fileName);
   }
 
   void SetQueryTimeParams(const AnyParams& p) {
@@ -277,7 +300,7 @@ inline bool IsDistFloat(PyObject* ptr) {
 }
 
 template <typename T>
-PyObject* _initIndex(int dist_type,
+PyObject* _init(int dist_type,
                      int data_type,
                      const char* space_type,
                      const AnyParams& space_param,
@@ -293,7 +316,7 @@ PyObject* _initIndex(int dist_type,
   return PyLong_FromVoidPtr(reinterpret_cast<void*>(index));
 }
 
-PyObject* initIndex(PyObject* self, PyObject* args) {
+PyObject* init(PyObject* self, PyObject* args) {
   char* space_type;
   PyListObject* space_param_list;
   char* method_name;
@@ -305,17 +328,19 @@ PyObject* initIndex(PyObject* self, PyObject* args) {
     raise << "Error reading parameters (expecting: space type, space parameter list, index/method name, data type, distance value type)";
     return NULL;
   }
+
   StringVector space_param;
   if (!readList(space_param_list, space_param, PyString_AsString)) {
     return NULL;
   }
+
   switch (dist_type) {
     case kDistFloat:
-      return _initIndex<float>(
+      return _init<float>(
           dist_type, data_type, space_type, space_param,
           method_name);
     case kDistInt:
-      return _initIndex<int>(
+      return _init<int>(
           dist_type, data_type, space_type, space_param,
           method_name);
     default:
@@ -358,13 +383,13 @@ PyObject* addDataPoint(PyObject* self, PyObject* args) {
 }
 
 template <typename T>
-void _buildIndex(PyObject* ptr, const AnyParams& index_params) {
+void _createIndex(PyObject* ptr, const AnyParams& index_params) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
-  index->Build(index_params);
+  index->CreateIndex(index_params);
 }
 
-PyObject* buildIndex(PyObject* self, PyObject* args) {
+PyObject* createIndex(PyObject* self, PyObject* args) {
   PyObject*     ptr;
   PyListObject* param_list;
 
@@ -380,9 +405,57 @@ PyObject* buildIndex(PyObject* self, PyObject* args) {
   }
 
   if (IsDistFloat(ptr)) {
-    _buildIndex<float>(ptr, index_params);
+    _createIndex<float>(ptr, index_params);
   } else {
-    _buildIndex<int>(ptr, index_params);
+    _createIndex<int>(ptr, index_params);
+  }
+  Py_RETURN_NONE;
+}
+
+template <typename T>
+void _saveIndex(PyObject* ptr, const string& fileName) {
+  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+      PyLong_AsVoidPtr(ptr));
+  index->SaveIndex(fileName);
+}
+
+PyObject* saveIndex(PyObject* self, PyObject* args) {
+  PyObject*     ptr;
+  char*         file_name;
+
+  if (!PyArg_ParseTuple(args, "Os", &ptr, &file_name)) {
+    raise << "Error reading parameters (expecting: index ref, file name)";
+    return NULL;
+  }
+
+  if (IsDistFloat(ptr)) {
+    _saveIndex<float>(ptr, file_name);
+  } else {
+    _saveIndex<int>(ptr, file_name);
+  }
+  Py_RETURN_NONE;
+}
+
+template <typename T>
+void _loadIndex(PyObject* ptr, const string& fileName) {
+  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+      PyLong_AsVoidPtr(ptr));
+  index->LoadIndex(fileName);
+}
+
+PyObject* loadIndex(PyObject* self, PyObject* args) {
+  PyObject*     ptr;
+  char*         file_name;
+
+  if (!PyArg_ParseTuple(args, "Os", &ptr, &file_name)) {
+    raise << "Error reading parameters (expecting: index ref, file name)";
+    return NULL;
+  }
+
+  if (IsDistFloat(ptr)) {
+    _loadIndex<float>(ptr, file_name);
+  } else {
+    _loadIndex<int>(ptr, file_name);
   }
   Py_RETURN_NONE;
 }
