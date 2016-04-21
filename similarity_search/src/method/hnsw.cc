@@ -500,7 +500,7 @@ namespace similarity {
         if (!data_level0_memory_)
             throw runtime_error("Storing non-optimized index is not supported yet!");
 
-        std::ofstream output(location, std::ios::binary | ios::trunc| ios::out);
+        std::ofstream output(location, std::ios::binary);
         streampos position;
         totalElementsStored_ = ElList_.size();        
         output.write((char*)&totalElementsStored_, sizeof(size_t));
@@ -537,7 +537,7 @@ namespace similarity {
     template <typename dist_t>
     void Hnsw<dist_t>::LoadIndex(const string &location) {
         cout << "Loading index from "<<location<<endl;
-        std::ifstream input(location, std::ios::binary| std::ios::beg| ios::in);
+        std::ifstream input(location, std::ios::binary);
         streampos position;
         
         //input.seekg(0, std::ios::beg);
