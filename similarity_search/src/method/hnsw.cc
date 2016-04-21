@@ -175,7 +175,7 @@ namespace similarity {
             cout << "No appropriate custom distance function for " << space_.StrDesc() << "\n";
             if (searchMethod_ != 0 && searchMethod_ != 1)
                 searchMethod_ = 0;
-            return;
+            return; // No optimized index
         }
 
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
@@ -539,7 +539,7 @@ namespace similarity {
         cout << "Loading index from "<<location<<endl;
         std::ifstream input(location, std::ios::binary| std::ios::beg| ios::in);
         streampos position;
-        size_t dist_func_type = 0;
+        
         //input.seekg(0, std::ios::beg);
 
         input.read((char*)(&totalElementsStored_), sizeof(size_t)); 
@@ -552,11 +552,11 @@ namespace similarity {
         input.read((char*)&maxM0_, sizeof(size_t));
         input.read((char*)&dist_func_type_, sizeof(size_t));
         
-        if (dist_func_type == 1)
+        if (dist_func_type_ == 1)
              fstdistfunc_ = L2SqrSIMD16Ext;
-        else if (dist_func_type == 2)
+        else if (dist_func_type_ == 2)
             fstdistfunc_ = L2SqrSIMDExt;
-        else if (dist_func_type == 3)
+        else if (dist_func_type_ == 3)
             fstdistfunc_ = NormScalarProductSIMD;
 
 
