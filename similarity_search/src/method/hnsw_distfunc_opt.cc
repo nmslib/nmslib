@@ -298,16 +298,11 @@ namespace similarity {
 		unsigned int currentV = vl->curV;
 
 
-		HnswNode* provider;
-		int maxlevel1 = enterpoint_->level;
-		provider = enterpoint_;
 
-		const Object* currObj = provider->getData();
-
-		dist_t d = query->DistanceObjLeft(currObj);
-		dist_t curdist = d;
-		HnswNode *curNode = provider;
-		int curNodeNum = curNode->getId();
+		int maxlevel1 = maxlevel_;
+        int curNodeNum = enterpointId_;		
+		dist_t curdist = (fstdistfunc_(pVectq, (float *)(data_level0_memory_ + enterpointId_*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+		
 
 		for (int i = maxlevel1; i > 0; i--) {
 			bool changed = true;
@@ -325,7 +320,7 @@ namespace similarity {
 				for (int j = 1; j <= size; j++) {
 					int tnum = *(data + j);
 
-					d = (fstdistfunc_(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+                    dist_t d = (fstdistfunc_(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
 					if (d < curdist) {
 						curdist = d;
 						curNodeNum = tnum;
@@ -336,7 +331,7 @@ namespace similarity {
 
 			}
 		}
-		curNode = ElList_[curNodeNum];
+		
 		priority_queue <EvaluatedMSWNodeInt<dist_t>> candidateQueuei; //the set of elements which we can use to evaluate													
 
 		priority_queue <EvaluatedMSWNodeInt<dist_t>> closestDistQueuei; //The set of closest found elements 
@@ -378,7 +373,7 @@ namespace similarity {
 #endif
 					massVisited[tnum] = currentV;
 					char *currObj1 = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
-					d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
+                    dist_t d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
 					if (closestDistQueuei.top().getDistance() > d || closestDistQueuei.size() < ef_) {
 						candidateQueuei.emplace(-d, tnum);
 						_mm_prefetch(data_level0_memory_ + candidateQueuei.top().element*memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
@@ -406,132 +401,121 @@ namespace similarity {
 	void Hnsw<dist_t>::SearchCosineNormalized(KNNQuery<dist_t>* query) {
 		
 		float *pVectq = (float *)((char *)query->QueryObject()->data());
-        
-		if (iscosine_) 
-        {
-            
-				float *v = pVectq;
-				float sum = 0;
-				for (int i = 0; i < vectorlength_; i++) {
-					sum += v[i] * v[i];
-				}
-				if (sum != 0.0) {
-					sum = 1 / sqrt(sum);
-					for (int i = 0; i < vectorlength_; i++) {
-						v[i] *= sum;
-					}
-				}			
-		}
-		float PORTABLE_ALIGN16 TmpRes[4];
-		size_t qty = query->QueryObject()->datalength() >> 2;
+        float PORTABLE_ALIGN16 TmpRes[4];
+        size_t qty = query->QueryObject()->datalength() >> 2;
+
+
+        float *v = pVectq;
+        float sum = 0;
+        for (int i = 0; i < qty; i++) {
+            sum += v[i] * v[i];
+        }
+        if (sum != 0.0) {
+            sum = 1 / sqrt(sum);
+            for (int i = 0; i < qty; i++) {
+                v[i] *= sum;
+            }
+        }
+
+
+
 
 		VisitedList * vl = visitedlistpool->getFreeVisitedList();
 		unsigned int *massVisited = vl->mass;
 		unsigned int currentV = vl->curV;
 
 
-		HnswNode* provider;
-		int maxlevel1 = enterpoint_->level;
-		provider = enterpoint_;
+        int maxlevel1 = maxlevel_;
+        int curNodeNum = enterpointId_;
+        dist_t curdist = (ScalarProductSIMD(pVectq, (float *)(data_level0_memory_ + enterpointId_*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
 
-		const Object* currObj = provider->getData();
 
-		dist_t d = query->DistanceObjLeft(currObj);
-		dist_t curdist = d;
-		HnswNode *curNode = provider;
-		int curNodeNum = curNode->getId();
-
-		for (int i = maxlevel1; i > 0; i--) {
-			bool changed = true;
-			while (changed) {
-				changed = false;
-				//int  *data = (int *)(memory + curNodeNum*memoryPerObject_ + offsetLevel_ + (maxM_ + 1)*i*sizeof(int));
-				int  *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1)*(i - 1)*sizeof(int));
-				int size = *data;
-				for (int j = 1; j <= size; j++) {
-					_mm_prefetch(data_level0_memory_ + (*(data + j))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
-				}
+        for (int i = maxlevel1; i > 0; i--) {
+            bool changed = true;
+            while (changed) {
+                changed = false;
+                int  *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1)*(i - 1)*sizeof(int));
+                int size = *data;
+                for (int j = 1; j <= size; j++) {
+                    _mm_prefetch(data_level0_memory_ + (*(data + j))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+                }
 #ifdef DIST_CALC
-				query->distance_computations_ += size;
+                query->distance_computations_ += size;
 #endif
 
-				for (int j = 1; j <= size; j++) {
-					int tnum = *(data + j);
+                for (int j = 1; j <= size; j++) {
+                    int tnum = *(data + j);
 
-					//d = (fstdistfunc_(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
-					d = (ScalarProductSIMD(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
-					if (d < curdist) {
-						curdist = d;
-						curNodeNum = tnum;
-						changed = true;
-					}
-				}
+                    dist_t d = (ScalarProductSIMD(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+                    if (d < curdist) {
+                        curdist = d;
+                        curNodeNum = tnum;
+                        changed = true;
+                    }
+                }
 
 
-			}
-		}
-		curNode = ElList_[curNodeNum];
-		priority_queue <EvaluatedMSWNodeInt<dist_t>> candidateQueuei; //the set of elements which we can use to evaluate													
+            }
+        }
 
-		priority_queue <EvaluatedMSWNodeInt<dist_t>> closestDistQueuei; //The set of closest found elements 
-																		//EvaluatedMSWNodeInt<dist_t> evi(curdist, curNodeNum);
-		candidateQueuei.emplace(-curdist, curNodeNum);
+        priority_queue <EvaluatedMSWNodeInt<dist_t>> candidateQueuei; //the set of elements which we can use to evaluate													
 
-		closestDistQueuei.emplace(curdist, curNodeNum);
+        priority_queue <EvaluatedMSWNodeInt<dist_t>> closestDistQueuei; //The set of closest found elements 
+                                                                        //EvaluatedMSWNodeInt<dist_t> evi(curdist, curNodeNum);
+        candidateQueuei.emplace(-curdist, curNodeNum);
 
-		query->CheckAndAddToResult(curdist, new Object(data_level0_memory_ + (curNodeNum)*memoryPerObject_ + offsetData_));
-		massVisited[curNodeNum] = currentV;
+        closestDistQueuei.emplace(curdist, curNodeNum);
 
-		while (!candidateQueuei.empty()) {
+        query->CheckAndAddToResult(curdist, new Object(data_level0_memory_ + (curNodeNum)*memoryPerObject_ + offsetData_));
+        massVisited[curNodeNum] = currentV;
 
-			EvaluatedMSWNodeInt<dist_t> currEv = candidateQueuei.top(); // This one was already compared to the query
+        while (!candidateQueuei.empty()) {
 
-			dist_t lowerBound = closestDistQueuei.top().getDistance();
-			if ((-currEv.getDistance()) > lowerBound) {
-				break;
-			}
+            EvaluatedMSWNodeInt<dist_t> currEv = candidateQueuei.top(); // This one was already compared to the query
 
-			candidateQueuei.pop();
-			curNodeNum = currEv.element;
-			int  *data = (int *)(data_level0_memory_ + curNodeNum*memoryPerObject_ + offsetLevel0_);
-			int size = *data;
-			_mm_prefetch((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
-			_mm_prefetch((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
-			_mm_prefetch(data_level0_memory_ + (*(data + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
-			_mm_prefetch((char *)(data + 2), _MM_HINT_T0);
+            dist_t lowerBound = closestDistQueuei.top().getDistance();
+            if ((-currEv.getDistance()) > lowerBound) {
+                break;
+            }
 
-			for (int j = 1; j <= size; j++) {
-				int tnum = *(data + j);
-				_mm_prefetch((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
-				_mm_prefetch(data_level0_memory_ + (*(data + j + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
-				//_mm_prefetch((char *)(data + j + 2), _MM_HINT_T0);
-				if (!(massVisited[tnum] == currentV))
-				{
+            candidateQueuei.pop();
+            curNodeNum = currEv.element;
+            int  *data = (int *)(data_level0_memory_ + curNodeNum*memoryPerObject_ + offsetLevel0_);
+            int size = *data;
+            _mm_prefetch((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
+            _mm_prefetch((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
+            _mm_prefetch(data_level0_memory_ + (*(data + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+            _mm_prefetch((char *)(data + 2), _MM_HINT_T0);
+
+            for (int j = 1; j <= size; j++) {
+                int tnum = *(data + j);
+                _mm_prefetch((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
+                _mm_prefetch(data_level0_memory_ + (*(data + j + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+                if (!(massVisited[tnum] == currentV))
+                {
 
 #ifdef DIST_CALC
-					query->distance_computations_++;
+                    query->distance_computations_++;
 #endif
-					massVisited[tnum] = currentV;
-					char *currObj1 = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
-					//d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
-					d = (ScalarProductSIMD(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
-					if (closestDistQueuei.top().getDistance() > d || closestDistQueuei.size() < ef_) {
-						candidateQueuei.emplace(-d, tnum);
-						_mm_prefetch(data_level0_memory_ + candidateQueuei.top().element*memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
-						query->CheckAndAddToResult(d, new Object(currObj1));
-						closestDistQueuei.emplace(d, tnum);
+                    massVisited[tnum] = currentV;
+                    char *currObj1 = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+                    dist_t d = (ScalarProductSIMD(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
+                    if (closestDistQueuei.top().getDistance() > d || closestDistQueuei.size() < ef_) {
+                        candidateQueuei.emplace(-d, tnum);
+                        _mm_prefetch(data_level0_memory_ + candidateQueuei.top().element*memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
+                        query->CheckAndAddToResult(d, new Object(currObj1));
+                        closestDistQueuei.emplace(d, tnum);
 
-						if (closestDistQueuei.size() > ef_) {
-							closestDistQueuei.pop();
-						}
+                        if (closestDistQueuei.size() > ef_) {
+                            closestDistQueuei.pop();
+                        }
 
-					}
+                    }
 
-				}
-			}
-		}
-		visitedlistpool->releaseVisitedList(vl);
-
+                }
+            }
+        }
+        visitedlistpool->releaseVisitedList(vl);
 
 
 	}

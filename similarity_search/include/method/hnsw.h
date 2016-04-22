@@ -460,6 +460,8 @@ namespace similarity {
         double                mult_;
         int                   maxlevel_;
         HnswNode           *enterpoint_;
+        unsigned int enterpointId_;
+        unsigned int totalElementsStored_;
 
         const ObjectVector&   data_;// We do not copy objects
         //ObjectVector          data_; // We copy all the data
@@ -469,8 +471,9 @@ namespace similarity {
         ElementList           ElList_;
 
         int                   vectorlength_ = 0;
+        int dist_func_type_;
         bool                  iscosine_ = false;
-        size_t                offsetLevel_, offsetData_, offsetLevel0_;
+        size_t                offsetData_, offsetLevel0_;
         char                  *data_level0_memory_;
         char                  **linkLists_;
         size_t                memoryPerObject_;

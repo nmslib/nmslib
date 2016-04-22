@@ -145,10 +145,12 @@ namespace similarity {
             if (vectorlength_ % 16 == 0) {
                 cout << "Thus using an optimised function for base 16\n";
                 fstdistfunc_ = L2SqrSIMD16Ext;
+                dist_func_type_ = 1;
             }
             else {
                 cout << "Thus using function with any base\n";
                 fstdistfunc_ = L2SqrSIMDExt;
+                dist_func_type_ = 2;
             }
         }
         else if (space_.StrDesc().compare("CosineSimilarity") == 0 && sizeof(dist_t) == 4)
@@ -160,19 +162,20 @@ namespace similarity {
             if (vectorlength_ % 4 == 0) {
                 cout << "Thus using an optimised function for base 4\n";
                 fstdistfunc_ = NormScalarProductSIMD;
+                dist_func_type_ = 3;
             }
             else {
                 cout << "Thus using function with any base\n";
                 cout << "Search method 4 is not allowed in this case\n";
                 fstdistfunc_ = NormScalarProductSIMD;
-
+                dist_func_type_ = 3;
             }
         }
         else {
             cout << "No appropriate custom distance function for " << space_.StrDesc() << "\n";
             if (searchMethod_ != 0 && searchMethod_ != 1)
                 searchMethod_ = 0;
-            return;
+            return; // No optimized index
         }
 
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
@@ -182,7 +185,7 @@ namespace similarity {
 
         offsetLevel0_ = dataSectionSize;
         offsetData_ = 0;
-        offsetLevel_ = offsetLevel0_ + (maxM0_ - maxM_)*sizeof(int);
+       
 
         memset(data_level0_memory_, 1, memoryPerObject_*ElList_.size());
         cout << "Making optimized index\n";
@@ -226,6 +229,7 @@ namespace similarity {
             linkLists_[i] = linkList;
             ElList_[i]->copyHigherLevelLinksToOptIndex(linkList, 0);
         };
+        enterpointId_ = enterpoint_->getId();
         cout << "Finished making optimized index\n";
         cout << "Maximum level = " << enterpoint_->level << "\r\n";
         cout << "Total memory allocated for optimized index+data: " << (total_memory_allocated >> 20) << " Mb\n";
@@ -254,13 +258,13 @@ namespace similarity {
         
         delete visitedlistpool;
         if (data_level0_memory_)
-            delete data_level0_memory_;
+            free(data_level0_memory_);
         if (linkLists_) {
             for (int i = 0; i < ElList_.size(); i++) {
                 if (linkLists_[i])
-                    delete linkLists_[i];
+                    free(linkLists_[i]);
             }
-            delete linkLists_;
+            free(linkLists_);
         }
         for (int i = 0; i < ElList_.size(); i++)
             delete ElList_[i];
@@ -472,15 +476,20 @@ namespace similarity {
         switch (searchMethod_) {
             		case 0:
                     default:
+                        /// Basic search using Nmslib strutures:
                         const_cast<Hnsw*>(this)->baseSearchAlgorithm(query);
             			break;
             		case 1:
+                        /// Experimental search using Nmslib strutures(should not be used):
                         const_cast<Hnsw*>(this)->listPassingModifiedAlgorithm(query);
             			break;
             		case 3:
+                        /// Basic search using optimized index(cosine+L2)
                         const_cast<Hnsw*>(this)->SearchL2Custom(query);
             			break;
             		case 4:
+                        /// Basic search using optimized index with one-time normalized cosine similarity
+                        /// Only for cosine similarity!
                         const_cast<Hnsw*>(this)->SearchCosineNormalized(query);
             			break;
             		};
@@ -488,12 +497,95 @@ namespace similarity {
 
     template <typename dist_t>
     void Hnsw<dist_t>::SaveIndex(const string &location) {
-        throw runtime_error("Storing index is not supported yet!");
+        if (!data_level0_memory_)
+            throw runtime_error("Storing non-optimized index is not supported yet!");
+
+        std::ofstream output(location, std::ios::binary);
+        streampos position;
+        totalElementsStored_ = ElList_.size();        
+        output.write((char*)&totalElementsStored_, sizeof(size_t));
+        output.write((char*)&memoryPerObject_, sizeof(size_t));
+        output.write((char*)&offsetLevel0_, sizeof(size_t));
+        output.write((char*)&offsetData_, sizeof(size_t));
+        output.write((char*)&maxlevel_, sizeof(size_t));
+        output.write((char*)&enterpointId_, sizeof(size_t));
+        output.write((char*)&maxM_, sizeof(size_t));
+        output.write((char*)&maxM0_, sizeof(size_t));
+        output.write((char*)&dist_func_type_, sizeof(size_t));       
+
+            
+            
+        size_t data_plus_links0_size = memoryPerObject_*totalElementsStored_;
+        printf("writing %d bytes\n", data_plus_links0_size);
+        output.write(data_level0_memory_, data_plus_links0_size);
+        
+        //output.write(data_level0_memory_, memoryPerObject_*totalElementsStored_);
+        
+
+        size_t total_memory_allocated = 0;
+        for (size_t i = 0; i < totalElementsStored_; i++) {            
+            unsigned int sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);       
+            output.write((char*)&sizemass, sizeof(unsigned int));
+            if((sizemass))
+                output.write(linkLists_[i], sizemass);
+        };        
+        output.close();
+
+
     }
 
     template <typename dist_t>
     void Hnsw<dist_t>::LoadIndex(const string &location) {
-        throw runtime_error("Storing index is not supported yet!");
+        cout << "Loading index from "<<location<<endl;
+        std::ifstream input(location, std::ios::binary);
+        streampos position;
+        
+        //input.seekg(0, std::ios::beg);
+
+        input.read((char*)(&totalElementsStored_), sizeof(size_t)); 
+        input.read((char*)(&memoryPerObject_), sizeof(size_t));
+        input.read((char*)&offsetLevel0_, sizeof(size_t));
+        input.read((char*)&offsetData_, sizeof(size_t));
+        input.read((char*)&maxlevel_, sizeof(size_t));
+        input.read((char*)&enterpointId_, sizeof(size_t));
+        input.read((char*)&maxM_, sizeof(size_t));
+        input.read((char*)&maxM0_, sizeof(size_t));
+        input.read((char*)&dist_func_type_, sizeof(size_t));
+        
+        if (dist_func_type_ == 1)
+             fstdistfunc_ = L2SqrSIMD16Ext;
+        else if (dist_func_type_ == 2)
+            fstdistfunc_ = L2SqrSIMDExt;
+        else if (dist_func_type_ == 3)
+            fstdistfunc_ = NormScalarProductSIMD;
+
+
+  
+//        cout>> input.tellg()>>"\n";
+        printf("Total:%d, Memory per object:%d\n", totalElementsStored_, memoryPerObject_);
+        size_t data_plus_links0_size = memoryPerObject_*totalElementsStored_;
+        data_level0_memory_ = (char*)malloc(data_plus_links0_size);        
+        input.read(data_level0_memory_, data_plus_links0_size);            
+        linkLists_ = (char**)malloc(sizeof(void*)*totalElementsStored_);
+
+        for (size_t i = 0; i < totalElementsStored_; i++) {
+            unsigned int linkListSize;
+            input.read((char*)&linkListSize, sizeof(unsigned int));
+            position = input.tellg();
+            if (linkListSize == 0) {
+                linkLists_[i] = nullptr;
+            }
+            else {
+                linkLists_[i] = (char *) malloc(linkListSize);
+                input.read(linkLists_[i], linkListSize);
+            }
+
+        }
+        cout << "Finished loading index\n";
+        visitedlistpool = new VisitedListPool(1, totalElementsStored_);
+      
+        input.close();
+
     }
 
 
@@ -598,6 +690,7 @@ namespace similarity {
     		visitedlistpool->releaseVisitedList(vl);
     
     	}
+        // Experimental search algorithm
     	template <typename dist_t>
     	void Hnsw<dist_t>::listPassingModifiedAlgorithm(KNNQuery<dist_t>* query) {
     		int efSearchL = 4;
