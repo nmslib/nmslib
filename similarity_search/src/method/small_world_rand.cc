@@ -22,6 +22,7 @@
 #include "rangequery.h"
 #include "ported_boost_progress.h"
 #include "method/small_world_rand.h"
+#include "sort_arr_bi.h"
 
 #include <vector>
 #include <set>
@@ -115,36 +116,17 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
   efSearch_ = NN_;
   pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   2);
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
-  pmgr.GetParamOptional("pivotFile",          pivotFile_,           "");
 
   LOG(LIB_INFO) << "NN                  = " << NN_;
   LOG(LIB_INFO) << "efConstruction_     = " << efConstruction_;
   LOG(LIB_INFO) << "initIndexAttempts   = " << initIndexAttempts_;
   LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
-  LOG(LIB_INFO) << "pivotFile           ="  << pivotFile_;
 
   pmgr.CheckUnused();
 
   SetQueryTimeParams(getEmptyParams());
 
   if (data_.empty()) return;
-
-  if (!pivotFile_.empty()) {
-    vector<string> vExternIds;
-    space_.ReadDataset(pivots_, vExternIds, pivotFile_, 0);
-    // IdType is signed!
-    for (IdType i = 0; i < pivots_.size(); ++i) {
-      const Object* pOldObj = pivots_[i];
-      // Almost cloneining, just the label is different!
-      pivots_[i] = new Object(-(i+1), pOldObj->label(), pOldObj->datalength(), pOldObj->data());
-      delete pOldObj;
-    }
-    // Simply add pivots to the data array
-    for (size_t i = 1; i <= pivots_.size(); ++i) {
-      data_.insert(data_.begin(), pivots_[pivots_.size()-i]);
-    }
-    LOG(LIB_INFO) << "Read and processed, " << pivots_.size() << " pivots, now data_.size()= " << data_.size();
-  }
 
   // 2) One entry should be added before all the threads are started, or else add() will not work properly
   addCriticalSection(new MSWNode(data_[0], 0 /* id == 0 */));
@@ -193,6 +175,14 @@ SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   AnyParamManager pmgr(QueryTimeParams);
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  3);
   pmgr.GetParamOptional("efSearch", efSearch_, NN_);
+  string tmp;
+  pmgr.GetParamOptional("algoType", tmp, "v1merge"); 
+  ToLower(tmp);
+  if (tmp == "v1merge") searchAlgoType_ = kV1Merge;
+  else if (tmp == "old") searchAlgoType_ = kOld;
+  else {
+    throw runtime_error("algoType should be one of the following: old, v1merge");
+  }
   pmgr.CheckUnused();
   LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
   LOG(LIB_INFO) << "initSearchAttempts =" << initSearchAttempts_;
@@ -206,7 +196,6 @@ const std::string SmallWorldRand<dist_t>::StrDesc() const {
 
 template <typename dist_t>
 SmallWorldRand<dist_t>::~SmallWorldRand() {
-  for (const Object* o: pivots_) delete o;
 }
 
 template <typename dist_t>
@@ -427,12 +416,18 @@ void SmallWorldRand<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   throw runtime_error("Range search is not supported!");
 }
 
-
 template <typename dist_t>
 void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
+  if (searchAlgoType_ == kV1Merge) SearchV1Merge(query);
+  else SearchOld(query);
+}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
   if (ElList_.empty()) return;
+  CHECK_MSG(efSearch_ > 0, "efSearch should be > 0");
 /*
- * The trick of using large dense bitsets instead of unordered_set was 
+ * The trick of using large dense bitsets instead of unordered_set was
  * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
  *
  * This trick works really well even in a multi-threaded mode. Indeed, the amount
@@ -443,9 +438,113 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   vector<bool>                        visitedBitset(ElList_.size());
 
   for (size_t i=0; i < initSearchAttempts_; i++) {
-  /**
-   * Search of most k-closest elements to the query.
-   */
+    /**
+     * Search of most k-closest elements to the query.
+     */
+#ifdef START_WITH_E0_AT_QUERY_TIME
+    MSWNode* currNode = i ? getRandomEntryPoint(): ElList_[0];
+#else
+    MSWNode* currNode = getRandomEntryPoint();
+#endif
+    SortArrBI<dist_t,MSWNode*> sortedArr(efSearch_);
+
+    const Object* currObj = currNode->getData();
+    dist_t d = query->DistanceObjLeft(currObj);
+    sortedArr.push_unsorted_grow(d, currNode); // It won't grow
+
+    size_t nodeId = currNode->getId();
+    // data_.size() is guaranteed to be equal to ElList_.size()
+    CHECK(nodeId < data_.size());
+
+    visitedBitset[nodeId] = true;
+
+    int_fast32_t  currElem = 0;
+
+    typedef typename SortArrBI<dist_t,MSWNode*>::Item  QueueItem;
+
+    vector<QueueItem>& queueData = sortedArr.get_data();
+    vector<QueueItem>  itemBuff(8*NN_);
+
+    //LOG(LIB_INFO) << "@@@ start size = " << queueData.size();
+    while(currElem < sortedArr.size()){
+      auto& e = queueData[currElem];
+      CHECK(!e.used);
+      e.used = true;
+      currNode = e.data;
+      ++currElem;
+
+      for (MSWNode* neighbor : currNode->getAllFriends()) {
+        _mm_prefetch(neighbor->getData(), _MM_HINT_T0);
+      }
+      for (MSWNode* neighbor : currNode->getAllFriends()) {
+        _mm_prefetch(neighbor->getData()->data(), _MM_HINT_T0);
+      }
+
+      if (currNode->getAllFriends().size() > itemBuff.size())
+        itemBuff.resize(currNode->getAllFriends().size());
+
+      size_t itemQty = 0;
+      dist_t topKey = sortedArr.top_key();
+      //calculate distance to each neighbor
+      for (MSWNode* neighbor : currNode->getAllFriends()) {
+        nodeId = neighbor->getId();
+        // data_.size() is guaranteed to be equal to ElList_.size()
+        CHECK(nodeId < data_.size());
+
+        if (!visitedBitset[nodeId]) {
+          currObj = neighbor->getData();
+          d = query->DistanceObjLeft(currObj);
+          visitedBitset[nodeId] = true;
+          if (d < topKey) {
+            itemBuff[itemQty++]=QueueItem(d, neighbor);
+          }
+        }
+      }
+
+      if (itemQty) {
+        _mm_prefetch(&itemBuff[0], _MM_HINT_T0);
+        std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+        size_t insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+        if (insIndex < currElem) {
+          //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
+          currElem = insIndex;
+        }
+      }
+
+      //LOG(LIB_INFO) << "@@@ " << itemQty << " out of " << currNode->getAllFriends().size() << " queue size: " << sortedArr.size();
+
+      // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+      while (currElem < sortedArr.size() && queueData[currElem].used == true)
+        ++currElem;
+    }
+
+    for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+      query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
+    }
+  }
+}
+
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
+  if (ElList_.empty()) return;
+  CHECK_MSG(efSearch_ > 0, "efSearch should be > 0");
+/*
+ * The trick of using large dense bitsets instead of unordered_set was
+ * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
+ *
+ * This trick works really well even in a multi-threaded mode. Indeed, the amount
+ * of allocated memory is small. For example, if one has 8M entries, the size of
+ * the bitmap is merely 1 MB. Furthermore, setting 1MB of entries to zero via memset would take only
+ * a fraction of millisecond.
+ */
+  vector<bool>                        visitedBitset(ElList_.size());
+
+  for (size_t i=0; i < initSearchAttempts_; i++) {
+    /**
+     * Search of most k-closest elements to the query.
+     */
 #ifdef START_WITH_E0_AT_QUERY_TIME
     MSWNode* provider = i ? getRandomEntryPoint(): ElList_[0];
 #else
@@ -458,8 +557,7 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 
     const Object* currObj = provider->getData();
     dist_t d = query->DistanceObjLeft(currObj);
-    if (currObj->id()>=0) // Exclude pivots
-      query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
+    query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
 
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
     candidateQueue.push(ev);
@@ -473,16 +571,23 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
       LOG(LIB_INFO) << err.str();
       throw runtime_error(err.str());
     }
-    visitedBitset[nodeId] = true; 
+    visitedBitset[nodeId] = true;
 
     while(!candidateQueue.empty()){
 
       auto iter = candidateQueue.top(); // This one was already compared to the query
       const EvaluatedMSWNodeReverse<dist_t>& currEv = iter;
- 
+
       // Did we reach a local minimum?
       if (currEv.getDistance() > closestDistQueue.top()) {
         break;
+      }
+
+      for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
+        _mm_prefetch(neighbor->getData(), _MM_HINT_T0);
+      }
+      for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
+        _mm_prefetch(neighbor->getData()->data(), _MM_HINT_T0);
       }
 
       const vector<MSWNode*>& neighbor = (currEv.getMSWNode())->getAllFriends();
@@ -508,17 +613,17 @@ void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
           if (closestDistQueue.size() < efSearch_ || d < closestDistQueue.top()) {
             closestDistQueue.emplace(d);
             if (closestDistQueue.size() > efSearch_) {
-                closestDistQueue.pop(); 
+              closestDistQueue.pop();
             }
             candidateQueue.emplace(d, *iter);
           }
 
-          if (currObj->id()>=0) // Exclude pivots
-            query->CheckAndAddToResult(d, currObj);
+          query->CheckAndAddToResult(d, currObj);
         }
       }
     }
   }
+
 }
 
 template <typename dist_t>

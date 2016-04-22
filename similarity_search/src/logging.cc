@@ -67,7 +67,7 @@ Logger::Logger(LogSeverity severity, const std::string& _file, int line, const c
 Logger::~Logger() {
   stream() << '\n';
   if (severity_ == LIB_FATAL) {
-    // stream() << std::flush;
+    stream().flush();
     if (logfile_.is_open())
       logfile_.close();
     // TODO(@leo/@bileg) do we want to abort here?

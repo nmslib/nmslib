@@ -210,6 +210,14 @@ private:
   mutable mutex   ElListGuard_;
   ElementList     ElList_;
 
+
+  void SearchOld(KNNQuery<dist_t>* query) const;
+  void SearchV1Merge(KNNQuery<dist_t>* query) const;
+  
+  enum AlgoType { kOld, kV1Merge };
+
+  AlgoType               searchAlgoType_;
+
 protected:
 
   DISABLE_COPY_AND_ASSIGN(SmallWorldRand);
