@@ -227,7 +227,7 @@ void ComputeOneSimple(const string& Name,
     LOG(INFO) << ".... " << Name  << " " << avg << " qty: " << vals.size();
 #endif
   double var = vals.size()> 1 ? Variance(&vals[0], vals.size(), avg) : 0;
-  double sigma = sqrt(var)/vals.size();
+  double sigma = sqrt(var/vals.size());
   // 5% confidence interval (assuming normal distrbution).
   ConfMin = avg - zVal_ * sigma;
   ConfMax = avg + zVal_ * sigma;

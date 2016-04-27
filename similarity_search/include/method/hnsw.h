@@ -542,7 +542,7 @@ namespace similarity {
             pool.push_front(vl);
         };
         ~VisitedListPool() {
-            cout << "Total " << pool.size() << " lists allocated" << "\n";
+            LOG(LIB_INFO) << "Total " << pool.size() << " lists allocated";
             while (pool.size()) {
                 VisitedList *rez = pool.front();
                 pool.pop_front();

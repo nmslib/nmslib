@@ -82,7 +82,7 @@ void ClusterUtils<dist_t>::doFIRMAL(bool PrintProgress,
   unique_ptr<ProgressDisplay> progress_bar;
 
   if (PrintProgress) {
-    cerr << "Sampling progress: ";
+    LOG(LIB_INFO) << "Sampling progress: ";
     progress_bar.reset(new ProgressDisplay(SampleDistQty, cerr));
   }
 
@@ -331,7 +331,6 @@ void ClusterUtils<dist_t>::doFIRMAL(bool PrintProgress,
     }
     // Don't forget to sort IDs (that we have to delete) in the **DESCENDING** order!
     // otherwise the deletion algorithm will fail miserably
-    //cerr << "########## "; for (IdTypeUnsign i : vDelIds) cerr << i << " "; cerr << endl;
     sort(vDelIds.begin(), vDelIds.end(), std::greater<IdTypeUnsign>());
     CHECK(vDelIds.size() < 2 || (vDelIds[0] > vDelIds[1]));
 
@@ -675,11 +674,6 @@ void ClusterUtils<dist_t>::doReductiveCLARANS(bool PrintProgress,
               maxIterQty,
               errMinDiff);
 
-/*
-    cerr << "#############################################" << endl;
-    ClusterUtils<dist_t>::printAndVerifyClusterStat(space, vCentersMetaIter, vClusterAssignMetaIter, 10000);
-    cerr << "#############################################" << endl;
-*/
 
     ObjectVector newData;
 
@@ -691,7 +685,6 @@ void ClusterUtils<dist_t>::doReductiveCLARANS(bool PrintProgress,
         vClusterAssignGlobal.push_back(vClusterAssignMetaIter[cid]);
       } else {
         size_t keepSize = (size_t) round(keepFrac * vClusterAssignMetaIter[cid]->size());
-        //cerr << "@@@@@@@@@@ " << keepSize << " -> " << vClusterAssignMetaIter[cid]->size() << endl;
         shared_ptr<DistObjectPairVector<dist_t>> keepAssign(new DistObjectPairVector<dist_t>());
 
 /*        for (IdTypeUnsign i = 0; i < keepSize; ++i) {
@@ -737,7 +730,7 @@ void ClusterUtils<dist_t>::printClusterStat(const Space<dist_t> &space,
                                             IdTypeUnsign sampleQty) {
   static std::mt19937       randGen;
   for (IdTypeUnsign cid = 0; cid < vClustAssign.size(); ++cid) {
-    cerr << "Cluster id: " << cid << endl;
+    LOG(LIB_INFO) << "Cluster id: " << cid ;
     vector<dist_t>    dists;
 
     dists.reserve(sampleQty);
@@ -748,21 +741,21 @@ void ClusterUtils<dist_t>::printClusterStat(const Space<dist_t> &space,
       dists.push_back(vClustElem[i].first);
     }
 
-    cerr << "# of elements: " << vClustElem.size() << endl;
+    LOG(LIB_INFO) << "# of elements: " << vClustElem.size() ;
     if (!vClustElem.empty())
-      cerr << "90% percentile: " << dists[size_t(floor((dists.size() - 1) * 0.9))] << endl;
-    cerr << "Distance quantiles:" << endl;
-    cerr << "[" << endl;
+      LOG(LIB_INFO) << "90% percentile: " << dists[size_t(floor((dists.size() - 1) * 0.9))] ;
+    LOG(LIB_INFO) << "Distance quantiles:" ;
+    LOG(LIB_INFO) << "[" ;
     if (!dists.empty()) {
       for (size_t i = 0; i < 10; ++i) {
         for (size_t k = 0; k < 10; ++k) {
           auto num = i * 10 + k;
-          cerr << num << ":" << dists[size_t(floor((dists.size() - 1) * num / 100.0))] << " ";
+          LOG(LIB_INFO) << num << ":" << dists[size_t(floor((dists.size() - 1) * num / 100.0))] << " ";
         }
-        cerr << endl;
+        LOG(LIB_INFO) ;
       }
     }
-    cerr << "]" << endl;
+    LOG(LIB_INFO) << "]" ;
   }
 
 }
@@ -774,7 +767,7 @@ void ClusterUtils<dist_t>::printAndVerifyClusterStat(const Space<dist_t> &space,
                                                      IdTypeUnsign sampleQty) {
   //static std::mt19937       randGen;
   for (IdTypeUnsign cid = 0; cid < vClustAssign.size(); ++cid) {
-    cerr << "Cluster id: " << cid << " objId=" << vCenters[cid]->id() << endl;
+    LOG(LIB_INFO) << "Cluster id: " << cid << " objId=" << vCenters[cid]->id() ;
     vector<dist_t>    dists;
 
     dists.reserve(sampleQty);
@@ -792,21 +785,21 @@ void ClusterUtils<dist_t>::printAndVerifyClusterStat(const Space<dist_t> &space,
       dists.push_back(vClustElem[i].first);
     }
 
-    cerr << "# of elements: " << vClustElem.size() << endl;
+    LOG(LIB_INFO) << "# of elements: " << vClustElem.size() ;
     if (!vClustElem.empty())
-      cerr << "90% percentile: " << dists[size_t(floor((dists.size() - 1) * 0.9))] << endl;
-    cerr << "Distance quantiles:" << endl;
-    cerr << "[" << endl;
+      LOG(LIB_INFO) << "90% percentile: " << dists[size_t(floor((dists.size() - 1) * 0.9))] ;
+    LOG(LIB_INFO) << "Distance quantiles:" ;
+    LOG(LIB_INFO) << "[" ;
     if (!dists.empty()) {
       for (size_t i = 0; i < 10; ++i) {
         for (size_t k = 0; k < 10; ++k) {
           auto num = i * 10 + k;
-          cerr << num << ":" << dists[size_t(floor((dists.size() - 1) * num / 100.0))] << " ";
+          LOG(LIB_INFO) << num << ":" << dists[size_t(floor((dists.size() - 1) * num / 100.0))] << " ";
         }
-        cerr << endl;
+        LOG(LIB_INFO) ;
       }
     }
-    cerr << "]" << endl;
+    LOG(LIB_INFO) << "]" ;
   }
 
 }

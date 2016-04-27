@@ -16,6 +16,7 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
+#include <mmintrin.h>
 
 #include "space.h"
 #include "knnquery.h"
@@ -474,10 +475,10 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
       ++currElem;
 
       for (MSWNode* neighbor : currNode->getAllFriends()) {
-        _mm_prefetch(neighbor->getData(), _MM_HINT_T0);
+        _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
       }
       for (MSWNode* neighbor : currNode->getAllFriends()) {
-        _mm_prefetch(neighbor->getData()->data(), _MM_HINT_T0);
+        _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
       }
 
       if (currNode->getAllFriends().size() > itemBuff.size())
@@ -502,7 +503,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
       }
 
       if (itemQty) {
-        _mm_prefetch(&itemBuff[0], _MM_HINT_T0);
+        _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
         std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
         size_t insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
 
@@ -584,10 +585,10 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
       }
 
       for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
-        _mm_prefetch(neighbor->getData(), _MM_HINT_T0);
+        _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
       }
       for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
-        _mm_prefetch(neighbor->getData()->data(), _MM_HINT_T0);
+        _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
       }
 
       const vector<MSWNode*>& neighbor = (currEv.getMSWNode())->getAllFriends();

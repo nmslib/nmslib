@@ -28,6 +28,7 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
+#include <mmintrin.h>
 
 #include "space.h"
 #include "knnquery.h"
@@ -139,43 +140,43 @@ namespace similarity {
         // Selecting custom made functions 
         if (space_.StrDesc().compare("SpaceLp: p = 2 do we have a special implementation for this p? : 1") == 0 && sizeof(dist_t) == 4)
         {
-            cout << "\nThe vectorspace is Euclidian\n";
+            LOG(LIB_INFO) << "\nThe vectorspace is Euclidian";
             vectorlength_ = ((dataSectionSize - 16) >> 2);
-            cout << "Vector length=" << vectorlength_ << "\n";
+            LOG(LIB_INFO) << "Vector length=" << vectorlength_;
             if (vectorlength_ % 16 == 0) {
-                cout << "Thus using an optimised function for base 16\n";
+                LOG(LIB_INFO) << "Thus using an optimised function for base 16";
                 fstdistfunc_ = L2SqrSIMD16Ext;
                 dist_func_type_ = 1;
             }
             else {
-                cout << "Thus using function with any base\n";
+                LOG(LIB_INFO) << "Thus using function with any base";
                 fstdistfunc_ = L2SqrSIMDExt;
                 dist_func_type_ = 2;
             }
         }
         else if (space_.StrDesc().compare("CosineSimilarity") == 0 && sizeof(dist_t) == 4)
         {
-            cout << "\nThe vectorspace is Cosine Similarity\n";
+            LOG(LIB_INFO) << "\nThe vectorspace is Cosine Similarity";
             vectorlength_ = ((dataSectionSize - 16) >> 2);
-            cout << "Vector length=" << vectorlength_ << "\n";
+            LOG(LIB_INFO) << "Vector length=" << vectorlength_;
             iscosine_ = true;
             if (vectorlength_ % 4 == 0) {
-                cout << "Thus using an optimised function for base 4\n";
+                LOG(LIB_INFO) << "Thus using an optimised function for base 4";
                 fstdistfunc_ = NormScalarProductSIMD;
                 dist_func_type_ = 3;
             }
             else {
-                cout << "Thus using function with any base\n";
-                cout << "Search method 4 is not allowed in this case\n";
+                LOG(LIB_INFO) << "Thus using function with any base";
+                LOG(LIB_INFO) << "Search method 4 is not allowed in this case";
                 fstdistfunc_ = NormScalarProductSIMD;
                 dist_func_type_ = 3;
             }
         }
         else {
-            cout << "No appropriate custom distance function for " << space_.StrDesc() << "\n";
+            LOG(LIB_INFO) << "No appropriate custom distance function for " << space_.StrDesc();
             if (searchMethod_ != 0 && searchMethod_ != 1)
                 searchMethod_ = 0;
-            return; // No optimized index
+            //return; // No optimized index
         }
 
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
@@ -188,7 +189,7 @@ namespace similarity {
        
 
         memset(data_level0_memory_, 1, memoryPerObject_*ElList_.size());
-        cout << "Making optimized index\n";
+        LOG(LIB_INFO) << "Making optimized index";
         for (long i = 0; i < ElList_.size(); i++) {            
             ElList_[i]->copyDataAndLevel0LinksToOptIndex(data_level0_memory_ + (size_t)i*memoryPerObject_, offsetLevel0_, offsetData_);
         };
@@ -230,9 +231,9 @@ namespace similarity {
             ElList_[i]->copyHigherLevelLinksToOptIndex(linkList, 0);
         };
         enterpointId_ = enterpoint_->getId();
-        cout << "Finished making optimized index\n";
-        cout << "Maximum level = " << enterpoint_->level << "\r\n";
-        cout << "Total memory allocated for optimized index+data: " << (total_memory_allocated >> 20) << " Mb\n";
+        LOG(LIB_INFO) << "Finished making optimized index";
+        LOG(LIB_INFO) << "Maximum level = " << enterpoint_->level;
+        LOG(LIB_INFO) << "Total memory allocated for optimized index+data: " << (total_memory_allocated >> 20) << " Mb";
 
     }
 
@@ -476,11 +477,11 @@ namespace similarity {
         switch (searchMethod_) {
             		case 0:
                     default:
-                        /// Basic search using Nmslib strutures:
+                        /// Basic search using Nmslib data structure:
                         const_cast<Hnsw*>(this)->baseSearchAlgorithm(query);
             			break;
             		case 1:
-                        /// Experimental search using Nmslib strutures(should not be used):
+                        /// Experimental search using Nmslib data structure (should not be used):
                         const_cast<Hnsw*>(this)->listPassingModifiedAlgorithm(query);
             			break;
             		case 3:
@@ -516,7 +517,7 @@ namespace similarity {
             
             
         size_t data_plus_links0_size = memoryPerObject_*totalElementsStored_;
-        printf("writing %d bytes\n", data_plus_links0_size);
+        LOG(LIB_INFO) << "writing " << data_plus_links0_size << " bytes";
         output.write(data_level0_memory_, data_plus_links0_size);
         
         //output.write(data_level0_memory_, memoryPerObject_*totalElementsStored_);
@@ -536,7 +537,7 @@ namespace similarity {
 
     template <typename dist_t>
     void Hnsw<dist_t>::LoadIndex(const string &location) {
-        cout << "Loading index from "<<location<<endl;
+        LOG(LIB_INFO) << "Loading index from "<<location;
         std::ifstream input(location, std::ios::binary);
         streampos position;
         
@@ -561,8 +562,8 @@ namespace similarity {
 
 
   
-//        cout>> input.tellg()>>"\n";
-        printf("Total:%d, Memory per object:%d\n", totalElementsStored_, memoryPerObject_);
+//        LOG(LIB_INFO) << input.tellg();
+        LOG(LIB_INFO) << "Total: " << totalElementsStored_<< ", Memory per object: " << memoryPerObject_;
         size_t data_plus_links0_size = memoryPerObject_*totalElementsStored_;
         data_level0_memory_ = (char*)malloc(data_plus_links0_size);        
         input.read(data_level0_memory_, data_plus_links0_size);            
@@ -581,7 +582,7 @@ namespace similarity {
             }
 
         }
-        cout << "Finished loading index\n";
+        LOG(LIB_INFO) << "Finished loading index";
         visitedlistpool = new VisitedListPool(1, totalElementsStored_);
       
         input.close();

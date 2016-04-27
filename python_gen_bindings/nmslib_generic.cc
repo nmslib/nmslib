@@ -220,11 +220,11 @@ class IndexWrapper : public IndexWrapperBase {
     index_->SetQueryTimeParams(p);
   }
 
-  unique_ptr<Object> CreateObjFromStr(const string& s, int id) {
+  unique_ptr<Object> CreateObjFromStr(const string& s, int id) override {
     return space_->CreateObjFromStr(id, -1,  s, NULL);
   }
 
-  PyObject* KnnQuery(int k, const Object* query) {
+  PyObject* KnnQuery(int k, const Object* query) override {
     KNNQuery<T> knn(*space_, query, k);
     index_->Search(&knn, -1);
     KNNQueue<T>* res = knn.Result()->Clone();

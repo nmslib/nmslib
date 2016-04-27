@@ -59,6 +59,19 @@ using std::stringstream;
 #define MAX_NUM_QUERY  100
 
 vector<MethodTestCase>    vTestCaseDesc = {
+
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "hnsw", "efConstruction=50,M=10,searchMethod=0", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "hnsw", "efConstruction=50,M=10,searchMethod=0", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
+#if 0
+  // ************** Tests for non-metric clustering *********** //
+  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=firmal,centerQty=10", "dbScanFrac=0.1", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.8, 0.92, 0.1, 20, 2.5, 6),  
+  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=clarans,centerQty=10", "dbScanFrac=0.1", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
+  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=reduct_clarans,centerQty=10", "dbScanFrac=0.1", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
   // *************** NEW versions of permutation & projection-based filtering method tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", "", "",
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0, 0, 1, 1),  
@@ -68,7 +81,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0, 0, 1, 1),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", "multiThread=1,threadQty=4", "",
                 0 /* no-knn search */, 0.2 /* range 0.2 */ , 1.0, 1.0, 0, 0, 1, 1),  
-#if 1
 #if !defined(_MSC_VER)
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", "NN=10,rho=0.5,delta=0.001", "initSearchAttempts=10",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
