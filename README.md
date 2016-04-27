@@ -64,13 +64,13 @@ Python bindings (only on Linux)
 -----------------------
 
 
-In this release, we implemented basic Python bindings (for Linux and Python 2.7). Currently, only dense vector spaces are supported. To build the bindings, build the library first. Then, change the directory to
-[python_bindings](python_bindings) and type:
+In this release, we implemented basic Python bindings (for Linux and Python 2.7). To build bindings for dense vector spaces, build the library first. Then, change the directory to
+[python_vect_bindings](python_vect_bindings) and type:
 ```make
 sudo make install
 ```
 
-For an example of using our library in Python, see the script [test_nmslib.py](python_bindings/test_nmslib.py).
+For an example of using our library in Python, see the script [test_nmslib_vect.py](python_vect_bindings/test_nmslib_vect.py). Generic bindings can be found in the directory [python_gen_bindings](python_gen_bindings).
 
 Quick start on Windows
 -----------------------
