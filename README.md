@@ -124,7 +124,7 @@ Most important related papers are listed below in the chronological order:
 
 We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
 
-* The search-based construction algorithm published by Malkov et al. in 2014 (also presented at SISAP 2012);
+* The search-based construction algorithm published by Malkov et al. in 2014 (also presented at SISAP 2012). There is also a (yet experimental) new variant of this algorithm published by Malkov and Yashunin (2016);
 * The NN-Descent algorithm due to Dong et al. 2011. This first version came without a search algorithm. Therefore, we use the same search algorithm as Malkov et al. 2014. A newer version of NN-descent can be found [by following this link](http://www.kgraph.org/). It is not incorporated, though.
 
 
