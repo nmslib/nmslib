@@ -64,13 +64,13 @@ Python bindings (only on Linux)
 -----------------------
 
 
-In this release, we implemented basic Python bindings (for Linux and Python 2.7). Currently, only dense vector spaces are supported. To build the bindings, build the library first. Then, change the directory to
-[python_bindings](python_bindings) and type:
+In this release, we implemented basic Python bindings (for Linux and Python 2.7). To build bindings for dense vector spaces, build the library first. Then, change the directory to
+[python_vect_bindings](python_vect_bindings) and type:
 ```make
 sudo make install
 ```
 
-For an example of using our library in Python, see the script [test_nmslib.py](python_bindings/test_nmslib.py).
+For an example of using our library in Python, see the script [test_nmslib_vect.py](python_vect_bindings/test_nmslib_vect.py). Generic bindings can be found in the directory [python_gen_bindings](python_gen_bindings).
 
 Quick start on Windows
 -----------------------
@@ -125,7 +125,7 @@ Most important related papers are listed below in the chronological order:
 
 We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
 
-* The search-based construction algorithm published by Malkov et al. in 2014 (also presented at SISAP 2012);
+* The search-based construction algorithm published by Malkov et al. in 2014 (also presented at SISAP 2012). There is also a (yet experimental) new variant of this algorithm published by Malkov and Yashunin (2016);
 * The NN-Descent algorithm due to Dong et al. 2011. This first version came without a search algorithm. Therefore, we use the same search algorithm as Malkov et al. 2014. A newer version of NN-descent can be found [by following this link](http://www.kgraph.org/). It is not incorporated, though.
 
 
