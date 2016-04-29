@@ -20,7 +20,7 @@ Leo(nid) Boytsov is a maintainer.
 General information
 -----------------------
 
-A detailed description is given [in the manual](http://arxiv.org/abs/1508.05470). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse.
+A detailed description is given [in the manual](http://arxiv.org/abs/1508.05470). The manual also contains instructions for building under Linux, MAC OS, and Windows, extending the library, as well as for debugging the code using Eclipse.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -33,7 +33,7 @@ Prerequisites
 -----------------------
 
 1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 14 (version 12 can also be used, but the project fileds need to be downgraded).
-2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well.
+2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well. It should also be possible to build the code on MAC OS.
 3. Boost (dev version). For Windows, the core library and the standalone sample application do not require Boost.
 4. Only for Linux: CMake (GNU make is also required) 
 5. Only for Linux: GNU scientific library (dev version)
@@ -118,6 +118,7 @@ Most important related papers are listed below in the chronological order:
 * Dong, Wei, Charikar Moses, and Kai Li. 2011. [Efficient k-nearest neighbor graph construction for generic similarity measures.](http://wwwconference.org/proceedings/www2011/proceedings/p577.pdf) Proceedings of the 20th international conference on World wide web. ACM, 2011.
 [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/mir/DongWCL12)
 * Tellez, Eric Sadit, Edgar Chávez, and Gonzalo Navarro. [Succinct nearest neighbor search.](http://www.dcc.uchile.cl/~gnavarro/ps/is12.pdf) Information Systems 38.7 (2013): 1019-1030. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/is/TellezCN13)
+* V Krylov, A Logvinov, A Ponomarenko, D Ponomarev.  [Metrized Small World Properties Based Data Structure.](https://www.researchgate.net/profile/Vladimir_Krylov4/publication/221004850_Metrized_Small_World_Properties_Based_Data_Structure/links/02e7e52a020d9c040a000000.pdf) SEDE, 2008 
 * L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
 * Amato, Giuseppe, Claudio Gennaro, and Pasquale Savino. Mi-file: using inverted files for scalable approximate similarity search. Multimedia tools and applications 71.3 (2014): 1333-1362. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
 * Gonzalez, Edgar Chavez, Karina Figueroa, and Gonzalo Navarro. [Effective proximity retrieval by ordering permutations.](http://www.dcc.uchile.cl/~gnavarro/ps/tpami07.pdf) Pattern Analysis and Machine Intelligence, IEEE Transactions on 30.9 (2008): 1647-1658. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/pami/ChavezFN08)
