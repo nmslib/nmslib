@@ -176,7 +176,7 @@ namespace similarity {
             LOG(LIB_INFO) << "No appropriate custom distance function for " << space_.StrDesc();
             if (searchMethod_ != 0 && searchMethod_ != 1)
                 searchMethod_ = 0;
-            //return; // No optimized index
+            return; // No optimized index
         }
 
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
