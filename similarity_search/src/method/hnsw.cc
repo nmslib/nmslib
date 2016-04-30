@@ -694,14 +694,14 @@ namespace similarity {
         // Experimental search algorithm
     	template <typename dist_t>
     	void Hnsw<dist_t>::listPassingModifiedAlgorithm(KNNQuery<dist_t>* query) {
-    		int efSearchL = 4;
-    
+    		int efSearchL = 4; // This parameters defines the confidence of searches at level higher than zero 
+                               // for zero level it is set to ef
+            //Getting the visitedlist
     		VisitedList * vl = visitedlistpool->getFreeVisitedList();
     		unsigned int *massVisited = vl->mass;
     		unsigned int currentV = vl->curV;
     
-    		int maxlevel1 = enterpoint_->level;
-    
+    		int maxlevel1 = enterpoint_->level;    
     
     		const Object* currObj = enterpoint_->getData();
     
@@ -710,14 +710,13 @@ namespace similarity {
     		HnswNode *curNode = enterpoint_;
     
     
-    		priority_queue <HnswNodeDistFarther<dist_t>> candidateQueue; //the set of elements which we can use to evaluate
-    																			 //set <size_t> visitedQueue;/////The set of all elements which distance was calculated
-    																			 //unordered_set <size_t> visitedQueue;
-    		priority_queue <HnswNodeDistCloser<dist_t>> *closestDistQueue1= new priority_queue <HnswNodeDistCloser<dist_t>>(); //The set of closest found elements 
-    		priority_queue <HnswNodeDistCloser<dist_t>> *closestDistQueuecpy = new priority_queue <HnswNodeDistCloser<dist_t>>();
+    		priority_queue <HnswNodeDistFarther<dist_t>> candidateQueue; //the set of elements which we can use to evaluate    														
+    		priority_queue <HnswNodeDistCloser<dist_t>> closestDistQueue= priority_queue <HnswNodeDistCloser<dist_t>>(); //The set of closest found elements 
+    		priority_queue <HnswNodeDistCloser<dist_t>> closestDistQueueCpy = priority_queue <HnswNodeDistCloser<dist_t>>();
+
     		HnswNodeDistFarther<dist_t> ev(curdist, curNode);
     		candidateQueue.emplace(curdist, curNode);
-    		closestDistQueue1->emplace(curdist, curNode);
+    		closestDistQueue.emplace(curdist, curNode);
 
     		massVisited[curNode->getId()] = currentV;
 
@@ -728,7 +727,7 @@ namespace similarity {
     				auto iter = candidateQueue.top(); 
     				const HnswNodeDistFarther<dist_t>& currEv = iter;
     				//Check condtion to end the search
-    				dist_t lowerBound = closestDistQueue1->top().getDistance();
+    				dist_t lowerBound = closestDistQueue.top().getDistance();
     				if (currEv.getDistance() > lowerBound) {
     					break;
     				}
@@ -745,59 +744,51 @@ namespace similarity {
     					_mm_prefetch((char *)(massVisited + (*iter)->getId()), _MM_HINT_T0);
     				}
     				//calculate distance to each neighbor
-    				for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-    
+    				for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {    
     					curId = (*iter)->getId();
     					if (!(massVisited[curId] == currentV))
     					{
     						massVisited[curId] = currentV;
     						currObj = (*iter)->getData();
     						d = query->DistanceObjLeft(currObj);
-    						if (closestDistQueue1->top().getDistance() > d || closestDistQueue1->size() < efSearchL) {
-    							{
-    								
-    								candidateQueue.emplace(d, *iter);
-    								closestDistQueue1->emplace(d, *iter);
-    								if (closestDistQueue1->size() > efSearchL) {
-    									closestDistQueue1->pop();
-    								}
-    							}
-    						}
+                            if (closestDistQueue.top().getDistance() > d || closestDistQueue.size() < efSearchL) {
+                                candidateQueue.emplace(d, *iter);
+                                closestDistQueue.emplace(d, *iter);
+                                if (closestDistQueue.size() > efSearchL) {
+                                    closestDistQueue.pop();
+                                }
+                            }
     					}
     				}
     
     			}
-    			currentV++;
+                //Updating the bitset key:
+                currentV++;
+                vl->curV++;// not to forget updating in the pool
     			if (currentV == 0) {
     				memset(massVisited, 0, ElList_.size()*sizeof(int));
     				currentV++;
+                    vl->curV++;// not to forget updating in the pool
     			}
-    			if (i > 1) {
-    				candidateQueue.empty();
-    				closestDistQueuecpy->empty();
-    			
-    				while (closestDistQueue1->size() > 0) {
-    					closestDistQueuecpy->push(closestDistQueue1->top());
-    					massVisited[closestDistQueue1->top().getMSWNodeHier()->getId()] = currentV;
-    					//candidateQueue.push(closestDistQueue1->top());
-    					candidateQueue.emplace(closestDistQueue1->top().getDistance(), closestDistQueue1->top().getMSWNodeHier());
-    					closestDistQueue1->pop();
-    				}
-    				swap(closestDistQueue1, closestDistQueuecpy);
+                candidateQueue = priority_queue <HnswNodeDistFarther<dist_t>>();
+                closestDistQueueCpy = priority_queue <HnswNodeDistCloser<dist_t>>(closestDistQueue);
+    			if (i > 1) {    // Passing the closest neighbors to layers higher than zero:
+                    while (closestDistQueueCpy.size() > 0) {
+                        massVisited[closestDistQueueCpy.top().getMSWNodeHier()->getId()] = currentV;
+                        candidateQueue.emplace(closestDistQueueCpy.top().getDistance(), closestDistQueueCpy.top().getMSWNodeHier());                        
+                        closestDistQueueCpy.pop();
+                    }    				
     			}
+                else {     // Passing the closest neighbors to the 0 zero layer(one has to add also to query):                    
+                    while (closestDistQueueCpy.size() > 0) {
+                        massVisited[closestDistQueueCpy.top().getMSWNodeHier()->getId()] = currentV;
+                        candidateQueue.emplace(closestDistQueueCpy.top().getDistance(), closestDistQueueCpy.top().getMSWNodeHier());
+                        query->CheckAndAddToResult(closestDistQueueCpy.top().getDistance(), closestDistQueueCpy.top().getMSWNodeHier()->getData());
+                        closestDistQueueCpy.pop();
+                    }
+                }
     		}
-    		candidateQueue.empty();
-    		closestDistQueuecpy->empty();
-    		while (closestDistQueue1->size() > 0) {
-    			closestDistQueuecpy->push(closestDistQueue1->top());
-    			massVisited[closestDistQueue1->top().getMSWNodeHier()->getId()] = currentV;
-    			//candidateQueue.push(closestDistQueue1->top());
-    			candidateQueue.emplace(closestDistQueue1->top().getDistance(), closestDistQueue1->top().getMSWNodeHier());
-    			query->CheckAndAddToResult(closestDistQueue1->top().getDistance(), closestDistQueue1->top().getMSWNodeHier()->getData());
-    			closestDistQueue1->pop();
-    		}
-    		swap(closestDistQueue1, closestDistQueuecpy);
-    
+    		
     		////////////////////////////////////////////////////////////////////////////////
     		// PHASE TWO OF THE SEARCH
     		// Extraction of the neighborhood to find k nearest neighbors.
@@ -809,7 +800,7 @@ namespace similarity {
     			auto iter = candidateQueue.top();
     			const HnswNodeDistFarther<dist_t>& currEv = iter;
     			//Check condtion to end the search
-    			dist_t lowerBound = closestDistQueue1->top().getDistance();
+    			dist_t lowerBound = closestDistQueue.top().getDistance();
     			if (currEv.getDistance() > lowerBound) {
     				break;
     			}
@@ -834,13 +825,13 @@ namespace similarity {
     					massVisited[curId] = currentV;
     					currObj = (*iter)->getData();
     					d = query->DistanceObjLeft(currObj);
-    					if (closestDistQueue1->top().getDistance() > d || closestDistQueue1->size() < ef_) {
+    					if (closestDistQueue.top().getDistance() > d || closestDistQueue.size() < ef_) {
     						{
     							query->CheckAndAddToResult(d, currObj);
     							candidateQueue.emplace(d, *iter);
-    							closestDistQueue1->emplace(d, *iter);
-    							if (closestDistQueue1->size() > ef_) {
-    								closestDistQueue1->pop();
+    							closestDistQueue.emplace(d, *iter);
+    							if (closestDistQueue.size() > ef_) {
+    								closestDistQueue.pop();
     							}
     						}
     					}
@@ -848,8 +839,6 @@ namespace similarity {
     			}
     
     		}
-    		delete closestDistQueue1;
-    		delete closestDistQueuecpy;
     		visitedlistpool->releaseVisitedList(vl);
     
     	}
