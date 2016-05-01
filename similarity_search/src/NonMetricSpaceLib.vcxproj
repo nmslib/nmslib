@@ -64,6 +64,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</IntDir>
+    <IncludePath>C:\local\boost_1_59_0\lib64-msvc-14.0;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>C:\local\boost_1_59_0\lib64-msvc-14.0;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
@@ -297,6 +299,7 @@
     </ClCompile>
     <ClCompile Include="method\hnsw_distfunc_opt.cc" />
     <ClCompile Include="method\nndes.cc" />
+    <ClCompile Include="method\nonmetr_list_clust.cc" />
     <ClCompile Include="method\omedrank.cc" />
     <ClCompile Include="method\permutation_inverted_index.cc" />
     <ClCompile Include="method\permutation_prefix_index.cc" />

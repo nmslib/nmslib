@@ -179,6 +179,9 @@
     <ClCompile Include="method\hnsw_distfunc_opt.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="method\nonmetr_list_clust.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\distcomp.h">
