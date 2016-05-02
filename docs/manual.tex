@@ -23,8 +23,6 @@
 \newcommand{\todonoteinline}[1]{\todo[color=red!40,inline,caption={TODO}]{#1}}
 \newcommand{\todonote}[1]{\todo[color=red!40,caption={TODO}]{#1}}
 
-\newcommand{\nonmetrlib}{Non-Metric Space Library}
-
 %\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/}
 %\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/}
 
@@ -48,10 +46,10 @@
 \mainmatter  % start of an individual contribution
 
 % first the title is needed
-\title{\nonmetrlib{} Manual}
+\title{Non-Metric Space Library (NMSLIB) Manual}
 
 % a short form should be given in case it is too long for the running head
-\titlerunning{\nonmetrlib{} Manual}
+\titlerunning{NMSLIB Manual}
 
 % the name(s) of the author(s) follow(s) next
 %
@@ -128,7 +126,7 @@ and improved handling of the gold standard data, see \ref{} \todonote{add a refe
 \end{itemize}
 
 \subsection{History, Objectives, and Principles}
-The Non-Metric Space Library is a collection of
+The Non-Metric Space Library (shortly NMSLIB) is a collection of
 similarity search methods and a toolkit for their evaluation.
 Our software suit can also be used as a standalone search library on Linux and Windows. 
 Most search methods were implemented by Bileg(saikhan) Naidan and Leo(nid) Boytsov.\footnote{Leo(nid) Boytsov is a maintainer.}
@@ -255,7 +253,7 @@ it is also possible to compute an accuracy of a \knn based classification
 
 \section{Getting Started}
 \subsection{Prerequisites}
-The Non-Metric Space Library was developed and tested on 64-bit Linux.
+NMSLIB was developed and tested on 64-bit Linux.
 Yet, almost all the code can be built and run on 64-bit Windows (two notable exceptions are: LSHKIT and NN-Descent).
 It should also be possible to build the library on MAC OS.
 Building the code requires a modern C++ compiler that supports \mbox{C++11}.
@@ -457,7 +455,7 @@ can be built without installing Boost.
 A build process creates several important binaries, which include:
 
 \begin{itemize}
-\item The \nonmetrlib{} library (on Linux \ttt{libNonMetricSpaceLib.a}),
+\item NMSLIB library (on Linux \ttt{libNonMetricSpaceLib.a}),
 which can be used in external applications;
 \item The main benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows) 
 that carries out experiments and saves evaluation results;
@@ -553,7 +551,7 @@ contains two sample programs (see files
 \href{\replocfile sample_standalone_app/sample_standalone_app1.cc}{sample\_standalone\_app1.cc}
 and
 \href{\replocfile sample_standalone_app/sample_standalone_app2.cc}{sample\_standalone\_app2.cc})
-that use the \nonmetrlib{} installed in the folder \ttt{\$HOME/NonMetrLibRelease}.
+that use NMSLIB binaries installed in the folder \ttt{\$HOME/NonMetrLibRelease}.
 
 \subsubsection{Developing and Debugging on Linux}
 There are several debuggers that can be employed.
@@ -733,7 +731,7 @@ The core library, the semi unit test binary as well as examples of the standalon
 can be built without installing Boost. 
 However, Boost libraries are required for the binaries \ttt{experiment.exe}, \ttt{tune\_vptree.exe}, and \ttt{test\_integr.exe}.
 
-We would re-iterate that one needs 64-bit Boost binaries compiled with the same version of the Visual Studio as the \nonmetrlib{} binaries.  
+We would re-iterate that one needs 64-bit Boost binaries compiled with the same version of the Visual Studio as the NMSLIB binaries.  
 If you \href{http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-64.exe/download}{download the installer for Boost 59} and install it to a default location, then you do not have to change project files.
 Should you install Boost into a different folder, 
 the location of Boost binaries and header file need to be specified in the 
@@ -948,7 +946,8 @@ known as \emph{gold standard} data);
 \end{itemize}
 To make testing faster, the following methods can be used: 
 \begin{itemize}
-\item Caching of ground truth answers;
+\item Caching of gold standard data;
+\item Creating gold standard data using multiple threads; 
 \item Reusing previously created indices (when loading and saving is supported by a method);
 \item Carrying out multiple tests using different sets of query-time parameters. 
 \end{itemize}
@@ -959,7 +958,15 @@ by specifying an additional argument:
 \begin{verbatim}
 -g [ --cachePrefixGS ] arg  a prefix of gold standard cache files
 \end{verbatim}
-Ground truth data is stored in two files. One is a textual meta file
+The benchmarks can be run in a multi-threaded mode by specifying a parameter:
+\begin{verbatim}
+--threadTestQty arg (=1)    # of threads during querying
+\end{verbatim}
+In this case, the gold standard data is also created in a multi-threaded mode (which can also be much faster).
+Note that NMSLIB directly supports only an inter-query parallelism, i.e., multiple queries are executed in parallel,
+rather than the intra-query parallelism, where a single query can be processed by multiple CPU cores.
+
+Gold standard data is stored in two files. One is a textual meta file
 that memorizes important input parameters such as the name of the data and/or query file,
 the number of test queries, etc. 
 For each query, the binary cache files contains ids of answers (as well as distances and 
@@ -969,15 +976,15 @@ we memorize which objects belong to each query set.
 
 When the gold standard data is reused later,
 the benchmarking code verifies if input parameters match the content of the cache file. 
-Thus, we can prevent an accidental use of ground truth data created for one data set
+Thus, we can prevent an accidental use of gold standard data created for one data set
 while testing with a different data set.
 
 Another sanity check involves verifying that data points obtained via an approximate
 search are not closer to the query than data points obtained by an exact search.
-This check, which proved to be quite useful, fail in two cases:
+This check has turned out to be quite useful. 
+It has helped detecting a problem in at least the following two cases:
 \begin{itemize}
-\item The user creates a gold standard cache. Then, he modifies a distance function of the space
-and runs the tests again;
+\item The user creates a gold standard cache. Then, the user modifies a distance function and runs the tests again;
 \item Due to a bug, the search method reports distances to the query that are smaller than
 the actual distances (computed using a distance function). This may occur, e.g., due to
 a memory corruption.
@@ -1030,14 +1037,14 @@ the result set size. For example, if a range search returns 30 entries and the v
 \ttt{--maxCacheGSRelativeQty} is 10, then $30 \times 10=300$ entries are saved in the gold standard
 cache file.
 
-\todonoteinline{Also the number of test threads and creation of the gold standard cache!}
-
 \subsection{Measuring Performance and Interpreting Results}\label{SectionMeasurePerf}
 \subsubsection{Efficiency.} We measure several efficiency metrics: query runtime, the number of distance computations,
 the amount of memory used by the index \emph{and} the data, and the time to create the index.
 We also measure the improvement in runtime (improvement in efficiency) 
-with respect to a single-thread sequential search (i.e., brute force) approach
+with respect to a sequential search (i.e., brute force) approach
 as well as an improvement in the number of distance computations. 
+If the user runs benchmarks in a multi-threaded mode (by specifying the option \ttt{--threadTestQty}),
+we compare against the multi-threaded version of the brute force search as well.
 
 A good method should
 carry out fewer distance computations and be faster than the brute-force search,
@@ -1050,8 +1057,8 @@ in the projected space (as
 in the case of projection-based methods, see \S~\ref{SectionProjMethod}).
 
 Note that the improvement in efficiency is adjusted for the number of threads.
-Therefore, it should not increase as more threads are added: in contrast,
-it should decrease as there is more competition for computing resources (e.g., memory)
+Therefore, it does not increase as more threads are added: in contrast,
+it typically decreases as there is more competition for computing resources (e.g., memory)
 in a multi-threaded mode.
 
 The amount of memory consumed by a search method is measured indirectly: 
@@ -1160,6 +1167,7 @@ The data file contains only the average values,
 which can be used to, e.g., produce efficiency-effectiveness plots
 as described in \S~\ref{SectionGenPlot}.
 
+\todonoteinline{Revise computation of confidence intervals}
 An example of human readable report (\emph{confidence intervals} are in square brackets)
 is given in Table~\ref{TableHRep}.
 In addition to averages, the human-readable report provides 95\% confidence intervals.
@@ -1176,28 +1184,39 @@ For the relative error, however, we use the geometric mean  \cite{king:1986}.
 
 
 \subsection{Plotting results}\label{SectionGenPlot}
-We provide the Python script to generate performance graphs 
+We provide the Python script to generate nice performance graphs 
 from tab-separated data file produced by the 
 benchmarking utility \ttt{experiment}. 
-The plotting script is \href{\replocfile sample_scripts/genplot.py}{genplot.py}.
+The plotting script is \href{\replocfile sample_scripts/genplot_configurable.py}{genplot\_configurable.py}.
 In addition to Python, it requires Latex and PGF. 
 This script is supposed to run only on Linux.
 
-Consider the following example of using \ttt{genplot.py}:
+Consider the following example of using \ttt{genplot\_configurable.py}:
 \begin{verbatim}
-../sample_scripts/genplot.py  \
+../sample_scripts/genplot_configurable.py  \
+           -n MethodName \
            -i result_K\=1.dat -o plot_1nn \
            -x 1~norm~Recall \
            -y 1~log~ImprEfficiency \
+           -a  axis_desc.txt \
+           -m  meth_desc.txt \
            -l "2~(0.96,-.2)" \
-           -t "ImprEfficiency  vs Recall"
+           -t "ImprEfficiency  vs Recall" \
+           --xmin 0.01 --xmax 1.2 --ymin -2 --ymax 10
 \end{verbatim}
 
 It aims to process the tab-separated data file \ttt{result\_K=1.dat},
 which was generated for 1-NN search, and save the plot to the file \ttt{plot\_1nn.pdf}.
 Note that one should not explicitly specify the extension of the output file (as
-\ttt{.pdf} is always implied).
+\ttt{.pdf} is always implied). Also note that, in addition to the PDF-file,
+the script generates the source Latex file. 
+The source Latex file can be post-edited and/or embedded directly into a Latex source 
+(see \href{http://ftp.fau.de/ctan/graphics/pgf/base/doc/pgfmanual.pdf}{PGF documentation for details}).
+This can be useful for scientific publishing.
 
+
+The parameter \ttt{-n} specifies the name of the field that stores method/indices mnemonic names.
+In the case of the benchmarking utility \ttt{experiment} this field is named \ttt{methodName}.
 Parameters \ttt{-x} and \ttt{-y} define  X and Y axis.
 Parameter values have the same format.
 Each parameter has three tilda-separated values. The first should
@@ -1208,6 +1227,28 @@ The last value defines a metric that we want to visualize:
 The metric should be one of the names that appear in the header row of the output data file.
 The title of the plot is defind by \ttt{-t} (specify \ttt{-t ""} if you do not want
 to print the title).
+
+For each metric, one has to specify the display name. To this end, the user supplies
+an axis description file (option \ttt{-a}). This is a two-column tab-separated file.
+The first column is name of the metric used in the data file \ttt{result\_K=1.dat}.
+The second column is a display name. Here is an example of the axis description file (tabs are not shown):
+\begin{verbatim}
+Recall        recall 
+QueryTime     time (ms)
+\end{verbatim}
+
+Similarly, the user has to specify a method description file (option \ttt{-m}).
+It is a three-column tab-separated file. The first column is the name of the method
+used in the data file \ttt{result\_K=1.data} (\emph{exactly} as it is specified there).
+The second column is the method display name (it can have expressions that Latex can parse). 
+The third column, defines the style of the plot (e.g., line thickness and a line mark). 
+This should be a comma-separated lists of PGF-specifiers 
+(see \href{http://ftp.fau.de/ctan/graphics/pgf/base/doc/pgfmanual.pdf}{PGF documentation for details}).
+Here is an example of the method description file (tabs again are not shown):
+\begin{verbatim}
+"bbtree"	bbtree	mark=triangle*
+"vptree"	vptree	mark=star,blue,/tikz/densely dashed,mark size=1.5pt
+\end{verbatim}
 
 The parameter \ttt{-l} defines a plot legend.
 It is either a string \ttt{none} (to hide the legend) 
@@ -1222,13 +1263,18 @@ If the relative position is specified, the legend is printed inside the main
 plotting area, e.g.:
 \begin{verbatim}
 ../sample_scripts/genplot.py  \
+           -n MethodName \
            -i result_K\=1.dat -o plot_1nn \
            -x 1~norm~Recall \
            -y 1~log~ImprEfficiency \
+           -a  axis_desc.txt \
+           -m  meth_desc.txt \
            -l "2~north west" \
            -t "ImprEfficiency  vs Recall"
 \end{verbatim}
 
+Finally, note that the user can specify the bounding rectangle for the plot
+via the options \ttt{--xmin}, \ttt{--xmax}, \ttt{--ymin}, and \ttt{--ymax}.
 
 \section{Spaces}\label{SectionSpaces}
 Currently we provide implementations mostly for vector spaces.
@@ -1669,7 +1715,7 @@ In the case of clustering methods, we first visit partitions that are closer to 
 In the case of hierarchical space partitioning methods such as the VP-tree,
 we greedily explore partitions containing the query.
 
-In the \nonmetrlib, the early termination condition is defined in terms of 
+In NMSLIB, the early termination condition is defined in terms of 
 the maximum number of buckets (parameter \ttt{maxLeavesToVisit})
 to visit before terminating the search procedure.
 By default, the parameter \ttt{maxLeavesToVisit} is set to a large number (2147483647), 
@@ -1817,7 +1863,7 @@ release/experiment \
 \subsubsection{Multi-Vantage Point Tree}
 It is possible to have more than one pivot per tree level.
 In the binary version of the multi-vantage point tree (MVP-tree),
-which is implemented in \nonmetrlib,
+which is implemented in NMSLIB,
 there are two pivots.
 Thus, each partition divides the space into four parts,
 which are similar to partitions created by two levels of the VP-tree.
@@ -2979,7 +3025,7 @@ we call the function \href{\replocfile similarity_search/include/experiments.h#L
 and subsequently \href{\replocfile similarity_search/include/experiments.h#L213}{Execute} for all possible test sets.
 
 The function \ttt{Execute} is a main workhorse, which creates queries, runs searches,
-produces ground truth data, and collects execution statistics.
+produces gold standard data, and collects execution statistics.
 There are two types of queries: nearest-neighbor and range queries,
 which are represented by (template) classes \ttt{RangeQuery} and \ttt{KNNQuery}.
 Both classes inherit from the class \ttt{Query}.
