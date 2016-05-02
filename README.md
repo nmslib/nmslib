@@ -63,8 +63,7 @@ Note that the benchmarking utility **supports caching of ground truth data**, so
 Python bindings (only on Linux)
 -----------------------
 
-
-In this release, we implemented basic Python bindings (for Linux and Python 2.7). To build bindings for dense vector spaces, build the library first. Then, change the directory to
+We provide basic Python bindings (for Linux and Python 2.7). To build bindings for dense vector spaces, build the library first. Then, change the directory to
 [python_vect_bindings](python_vect_bindings) and type:
 ```make
 sudo make install

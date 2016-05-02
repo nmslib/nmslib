@@ -25,11 +25,11 @@
 
 \newcommand{\nonmetrlib}{Non-Metric Space Library}
 
-\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/}
-\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/}
+%\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/}
+%\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/}
 
-%\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/develop}
-%\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/develop/}
+\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/pserv}
+\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/pserv/}
 
 \newcommand{\ttt}[1]{\texttt{#1}}
 \newcommand{\knn}{$k$-NN }
@@ -38,6 +38,8 @@
 \newcommand{\pos}{\mbox{\rm pos}}
 \newcommand{\rev}{\mbox{\rm rev}}
 \newcommand{\DEL}[2]{\Delta_{#1}(#2)}
+
+\newcommand{\LibVersion}{1.5}
 
 \setcounter{secnumdepth}{3}
 
@@ -89,7 +91,7 @@ Pittsburgh, PA, USA\\
 \maketitle
 
 {\begin{center}{\small \textbf{Maintainer}: Leonid Boytsov}\end{center}}
-{\begin{center}{Version 1.5}\end{center} 
+{\begin{center}{Version \LibVersion}\end{center} 
 {\begin{center}{{\today}}\end{center}}
 
 \begin{abstract}
@@ -113,6 +115,18 @@ new search methods and spaces.
 \end{abstract}
 
 \section{Introduction}
+\subsection{What's new in version \LibVersion{} (major changes)} 
+\todonoteinline{This section needs to be re-worked and duplicated in README/log}
+\begin{itemize}
+\item We have improved performance of two core methods SW-graph and NAPP, see \ref{}\todonote{add references}
+\item We have adopted a new method: a hierarchical (navigable) small-world graph (HNSW),
+contributed by Yury Malkov \cite{Malkov2016}, see \ref{} \todonote{add a reference}
+\item We have modified the workflow of our benchmarking utility \ttt{experiment}
+and improved handling of the gold standard data, see \ref{} \todonote{add a reference};
+\item We have updated the API so that methods can save and restore indices, see \ref{} \todonote{add a reference};
+\item We have implemented a server, which can have clients in Java and Python, see \ref{}. 
+\end{itemize}
+
 \subsection{History, Objectives, and Principles}
 The Non-Metric Space Library is a collection of
 similarity search methods and a toolkit for their evaluation.
@@ -401,19 +415,23 @@ The latter runs a bunch of methods. It can also create an efficiency-effectivene
 
 
 \subsection{Python bindings (only on Linux)}
-In this release, we implemented basic Python bindings (for Linux and Python 2.7).
-Currently, only dense vector spaces are supported (see \S~\ref{SectionSpaces} for the description of spaces).
-\href{https://github.com/erikbern/ann-benchmarks}{One public evaluation of our library using these bindings was
-carried out by Erik Bernhardsson}. 
+We provide basic Python bindings (for Linux and Python 2.7). 
+%\href{https://github.com/erikbern/ann-benchmarks}{One public evaluation of our library using these bindings was carried out by Erik Bernhardsson}. 
 
 
-To build the bindings, build the library first.
-Then, change the directory to \ttt{python\_bindings} and type:
+To build bindings for dense vector spaces (see \S~\ref{SectionSpaces} for the description of spaces), build the library first.
+Then, change the directory to \ttt{python\_vect\_bindings} and type:
 \begin{verbatim}
 make
 sudo make install
 \end{verbatim} 
-For an example of using our library in Python, see the script  \href{\replocfile python_bindings/test_nmslib.py}{test\_nmslib.py}.
+For an example of using our library in Python, see the script  \href{\replocfile python_vect_bindings/test_nmslib_vect.py}{test\_nmslib\_vect.py}.
+
+Generic vector spaces are supported as well (see the directory \ttt{python\_gen\_bindings}. However, they work only for spaces
+that properly define define serialization and de-serialization, see \S~\ref{} for details. \todo{Add a proper reference}
+
+\subsection{Query server (only on Linux)}
+\todonoteinline{Add a description, also update the README}
 
 \subsection{Quick Start on Windows}\label{QuickStartWindows}
 Building on Windows is straightforward.
@@ -541,11 +559,12 @@ that use the \nonmetrlib{} installed in the folder \ttt{\$HOME/NonMetrLibRelease
 There are several debuggers that can be employed.
 Among them, some of the most popular are: \ttt{gdb} (a command line tool)
 and a \ttt{ddd} (a GUI wrapper for gdb).
-For users who prefer IDEs, one good option is Eclipse IDE for C/C++
-developers.
+For users who prefer IDEs, one good and free option is Eclipse IDE for C/C++ developers.
 It is not the same as Eclipse for Java and one needs 
 to \href{http://www.eclipse.org/ide/}{download 
 this version of Eclipse separately.}.
+An even better option is, perhaps, \href{https://www.jetbrains.com/clion/}{CLion}. However, it is not free.\footnote{There are
+a few categories of people, including students, who can ask for a free license, though.}
 
 \begin{figure}
 \centering
@@ -602,11 +621,17 @@ with the progress being shown in the status bar (right down corner).
 
 The user can also change the editor settings. 
 We would strongly encourage to disable the use of tabs.
-Again, go the menu \ttt{Window}, sub-menu \ttt{Preferences}
+Again, go the menu \ttt{Window}, sub-menu \ttt{Preferences},
 and select a category \ttt{General/Editors/Text Editors}.
 Then, check the box \ttt{Insert spaces for tabs}.
 In the same menu, you can also change the fonts (use the
 category \ttt{General/Appearance/Colors and Fonts}).
+
+In a newer Eclipse version, disabling tabs is done differently. 
+To this end, go to the menu \ttt{Window}, sub-menu \ttt{Preferences},
+and select a category \ttt{C++/Code Style/Formatter}.
+Then, you need to create a new profile and make this profile active. 
+In the profile, change the tab policy to \ttt{Spaces only}. 
 
 It is possible to build the project from Eclipse  (see the menu \ttt{Project}).
 However, one first needs to generate makefiles as described in \S~\ref{SectionBuildLinux}.
@@ -628,7 +653,7 @@ project folder \ttt{launches}.
 Right click on the item \ttt{sample.launch},
 choose the option \ttt{Debug as} (in the drop-down menu),
 and click on \ttt{sample} (in the pop-up menu).
-Note that you may need to edit command line arguments.
+Do not forget to edit command line arguments before you actually debug the application!
 
 After switching to a debug perspective,
 the Eclipse may stop the debugger in 
@@ -728,7 +753,7 @@ Both utilities accept the single optional argument: the name of the log file.
 If the log file is not specified, a lot of informational messages are printed to the screen.
 
 The \ttt{bunit} verifies some basic functitionality akin to unit testing.
-In particular, it checks that an optimized version of, e.g., the Eucledian, distance
+In particular, it checks that an optimized version of the, e.g., Eucledian, distance
 returns results that are very similar to the results returned by unoptimized and simpler version.
 The utility \ttt{bunit} is expected to always run without errors.
 
@@ -736,7 +761,7 @@ The utility \ttt{test\_integr} runs complete implementations of many methods
 and checks if several effectiveness and efficiency characteristics
 meet the expectations.
 The expectations are encoded as an array of instances of the class \ttt{MethodTestCase}
-(see \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/test/test_integr.cc#L65}{the code here}).
+(see \href{\replocdir /similarity_search/test/test_integr.cc#L65}{the code here}).
 For example, we expect that the recall (see \S~\ref{SectionEffect})
 fall in a certain pre-recorded range.
 Because almost all our methods are randomized, there is a great deal of variance
@@ -752,11 +777,13 @@ For high-dimensional data sets, the outcomes are much more stable despite the ra
 of most implementations.
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
 There are no principal differences in benchmarking on Linux and Windows.
-There is a \ttt{single} benchmarking utility 
+There is a \emph{single} benchmarking utility 
 \ttt{experiment} (\ttt{experiment.exe} on Windows) that includes implementation of all methods.
 It has multiple options, which specify, among others, 
-a space, a data set, a type of search, and a list of methods to test (with parameters).
+a space, a data set, a type of search, a method to test, and method parameters.
 These options and their use cases are described in the following subsections.
+Note that unlike older versions it is not possible to test multiple methods in a single run.
+However, it is possible to test the single method with different values of query-time parameters.
 
 \subsubsection{Space and distance value type}
 
@@ -780,36 +807,29 @@ A detailed list of possible spaces and respective
 distance functions is given in Table~\ref{TableSpaces} in \S~\ref{SectionSpaces}.
 
 For real-valued distance functions, one can use either single- or double-precision
-type. Single-precision is a recommended default.\footnote{It is not clear yet,
-if having double-precision distance functions is essential. Yet, we decided
-to keep them. Thanks to C++ templates, it requires very little additional effort.}
+type. Single-precision is a recommended default.
 One example of integer-valued distance function the Levenshtein distance.
 
 \subsubsection{Input Data/Test Set}
-There are three options that define the data to be indexed:
+There are two options that define the data to be indexed:
 \begin{verbatim}
-  -i [ --dataFile ] arg        input data file
-  --maxNumData arg (=0)        if non-zero, only the first 
-                               maxNumData elements are used
-  -d [ --dimension ] arg (=0)  optional dimensionality
+  -i [ --dataFile ] arg             input data file
+  -D [ --maxNumData ] arg (=0)      if non-zero, only the first maxNumData 
+                                    elements are used
 \end{verbatim}
 The input file can be indexed either completely, or partially.
 In the latter case, the user can create the index using only
 the first \ttt{--maxNumData} elements.
-In the case of vector-space data, the dimensionality is determined
-by the number of columns in the data file.
-The user may choose to restrict the dimensionality and use only the first 
-\ttt{--dimension} columns.
 
-For testing, the user can use a separate test set.
+For testing, the user can use a separate query set.
 It is, again, possible to limit the number of queries:
 \begin{verbatim}
-  -q [ --queryFile ] arg       query file
-  --maxNumQuery arg (=1000)    if non-zero, use maxNumQuery query 
-                               elements(required in the case 
-                               of bootstrapping)
+  -q [ --queryFile ] arg        query file
+  -Q [ --maxNumQuery ] arg (=0) if non-zero, use maxNumQuery query 
+                                elements(required in the case 
+                                of bootstrapping)
 \end{verbatim}
-If a separate test set is not available, it can be simulated by bootstrapping.
+If a separate query set is not available, it can be simulated by bootstrapping.
 To this, end the \ttt{--maxNumData} elements of the original data set
 are randomly divided into testing and indexable sets.
 The number of queries in this case is defined by the option \ttt{--maxNumQuery}.
@@ -838,18 +858,55 @@ For example, by specifying the options
 the user requests to run queries of five different types: $1$-NN, $10$-NN,
 as well three range queries with radii 0.01, 0.1, and 1.
 
-\subsubsection{Methods}
-The following is an option to specify search methods:
+\subsubsection{Method Specification}
+Unlike older versions it is possible to test only a single method at a time.
+To specify a method's name, use the following option:
 \begin{verbatim}
-  -m [ --method ] arg      list of method(s) with parameters
+  -m [ --method ] arg           method/index name
 \end{verbatim}
-Methods, similar to spaces, accept parameters (parameters may not contain whitespaces). 
-In this case,
-the name of the method is followed by a colon and a comma-separated list (no-spaces)
-of parameters in the format:
+A method can have a single set of index-time parameters, which is specified
+via:
+\begin{verbatim}
+-c [ --createIndex ] arg        index-time method(s) parameters
+\end{verbatim}
+In addition to the set of index-time parameters,
+the method can have multiple sets of query-time parameters, which are specified
+using the following (possibly repeating) option:
+\begin{verbatim}
+-t [ --queryTimeParams ] arg    query-time method(s) parameters
+\end{verbatim}
+For each set of query-time parameters, i.e., for each occurrence of the option \ttt{--queryTimeParams}, 
+the benchmarking utility \ttt{experiment},
+carries out an evaluation using the specified set of queries and a query type (e.g., a 10-NN search with
+queries from a specified file). 
+If the user does not specify any query-time parameters, there is only one evaluation to be carried out.
+This evaluation uses default query-time parameters.
+
+Similar to parameters of the spaces, 
+a set of method's parameters is a comma-separated list (no-spaces)
+of parameter-value pairs in the format:
 \ttt{<parameter name>=<parameter value>}.
 For a detailed list of methods and their parameters, please, refer to \S~\ref{SectionMethods}.
 
+Note that a few methods can save/restore (meta) indices. To save and load indices
+one should use the following options:
+\begin{verbatim}
+  -L [ --loadIndex ] arg        a location to load the index from 
+  -S [ --saveIndex ] arg        a location to save the index to
+\end{verbatim}
+When the user defines the location of the index using the option \ttt{--loadIndex}, 
+the index-time parameters may be ignored. 
+Specifically, if the specified index does not exist, the index is created from scratch.
+Otherwise, the index is loaded from disk.
+Also note that the benchmarking utility \emph{does not override an already existing index} (when the option \ttt{--saveIndex} is present).
+
+If the tests are run the bootstrapping mode, i.e., when queries are randomly sampled (without replacement) from the
+data set, several indices may need to be created. Specifically, for each split we create a separate index file.
+The identifier of the split is indicated using a special suffix.
+Also note that we need to memorize which data points in the split were used as queries. 
+This information is saved in a gold standard cache file (see \S~\ref{SectionEfficiency}).
+Thus, saving and loading of indices in the bootstrapping mode is possible only if 
+gold standard caching is used.
 
 \subsubsection{Saving and Processing Benchmark Results}
 The benchmarking utility may produce output of three types:
@@ -861,14 +918,15 @@ The benchmarking utility may produce output of three types:
 
 To save benchmarking results to a file, on needs to specify a parameter:
 \begin{verbatim}
-  -o [ --outFilePrefix ] arg   output file prefix
+  -o [ --outFilePrefix ] arg  output file prefix
 \end{verbatim}
 As noted above, we create two files: a human-readable report (suffix \ttt{.rep}) and 
 a tab-separated data file (suffix \ttt{.data}).
-By default, the benchmarking utility creates files from scratch. The
-following option can be used to make it work in the append mode:
+By default, the benchmarking utility creates files from scratch:
+If a previously created report exists, it is erased. 
+The following option can be used to append results to the previously created report:
 \begin{verbatim}
-  --appendToResFile arg (=0)   append mode flag
+  -a [ --appendToResFile ]    do not override information in results
 \end{verbatim}
 For information on processing and interpreting results see \S~\ref{SectionMeasurePerf}.
 A description of the plotting utility is given in \S~\ref{SectionGenPlot}.
@@ -881,20 +939,25 @@ However, they can also be redirected to a log-file:
 
 \subsubsection{Efficiency of Testing}\label{SectionBenchEfficiency}
 Except for  measuring methods' performance, 
-three expensive operations are computing ground truth answers (also
-known as \emph{gold standard} data),
-loading the data set, and indexing. There are two tricks to reduce their costs:
+the following are the most expensive operations: 
+\begin{itemize}
+\item computing ground truth answers (also
+known as \emph{gold standard} data);
+\item loading the data set; 
+\item indexing. 
+\end{itemize}
+To make testing faster, the following methods can be used: 
 \begin{itemize}
 \item Caching of ground truth answers;
-\item Asking the benchmarking utility to test several methods
-or the same method with several different sets of query-time parameters; 
+\item Reusing previously created indices (when loading and saving is supported by a method);
+\item Carrying out multiple tests using different sets of query-time parameters. 
 \end{itemize}
 
 By default, we recompute gold standard data every time we run benchmarks, which may take long time.
 However, it is possible to save gold standard data and re-use it later
 by specifying an additional argument:
 \begin{verbatim}
---cachePrefixGS  a prefix of gold standard cache files
+-g [ --cachePrefixGS ] arg  a prefix of gold standard cache files
 \end{verbatim}
 Ground truth data is stored in two files. One is a textual meta file
 that memorizes important input parameters such as the name of the data and/or query file,
@@ -908,51 +971,66 @@ When the gold standard data is reused later,
 the benchmarking code verifies if input parameters match the content of the cache file. 
 Thus, we can prevent an accidental use of ground truth data created for one data set
 while testing with a different data set.
-Note that if you terminate the benchmarking utility while it is writing cache files,
-the latter will become corrupt and unusable. In this case, you would need to remove 
-the corrupt files manually.
 
-By default, we store at most 1000 answer entries per query. 
-This is done to reduce the size of the cache files.
-This is sufficient to precisely compute the recall of a \knn search if $k \le 1000$.
-In addition, if $k$ is small, a rank approximation metric can be computed very accurately as well (see \S~\ref{SectionEffect}
-for a description of rank approximation metrics).
-However, 1000 entries may be too small for a range search, which may potentially return very large answer sets.\footnote{In the future, we will, perhaps, memorize at least every record returned by the search.} 
-To store a larger ground truth set,
-one can use the following parameter:
+Another sanity check involves verifying that data points obtained via an approximate
+search are not closer to the query than data points obtained by an exact search.
+This check, which proved to be quite useful, fail in two cases:
+\begin{itemize}
+\item The user creates a gold standard cache. Then, he modifies a distance function of the space
+and runs the tests again;
+\item Due to a bug, the search method reports distances to the query that are smaller than
+the actual distances (computed using a distance function). This may occur, e.g., due to
+a memory corruption.
+\end{itemize}
+
+When the benchmarking utility detects a situation when an approximate method
+returns points closer than points returned by an exact method, the testing procedure is terminated
+and the user sees a diagnostic message (see Table~\ref{TableFailGSCheck} for an example). 
+
+\begin{table}
+\scriptsize
 \begin{verbatim}
--maxCacheGSQty arg (=1000)  a maximum number of gold standard 
-                            entries to compute/cache
+... [INFO] >>>> Computing effectiveness metrics for small_world_rand
+... [INFO] Ex: -2.097 id = 140154 -> Apr: -2.111 id = 140154 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.974 id = 113850 -> Apr: -2.005 id = 113850 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.883 id = 102001 -> Apr: -1.898 id = 102001 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.6667 id = 58445 -> Apr: -1.6782 id = 58445 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.6547 id = 76888 -> Apr: -1.6688 id = 76888 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.5805 id = 47669 -> Apr: -1.5947 id = 47669 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.5201 id = 65783 -> Apr: -1.4998 id = 14954 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.4688 id = 14954 -> Apr: -1.3946 id = 25564 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.454 id = 90204 -> Apr: -1.3785 id = 120613 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.3804 id = 25564 -> Apr: -1.3190 id = 22051 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.367 id = 120613 -> Apr: -1.205 id = 101722 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.318 id = 71704 -> Apr: -1.1661 id = 136738 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.3103 id = 22051 -> Apr: -1.1039 id = 52950 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.191 id = 101722 -> Apr: -1.0926 id = 16190 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.157 id = 136738 -> Apr: -1.0348 id = 13878 1 - ratio: -0.0202 diff: -0.0221
+... [FATAL] bug: the approximate query should not return objects that are closer to the query 
+                 than object returned by (exact) sequential searching! 
+                 Approx: -1.09269 id = 16190 Exact: -1.09247 id = 52950
 \end{verbatim}
+\caption{\label{TableFailGSCheck} A diagnostic message indicating that
+there is some mismatch in the current experimental setup and the setup used to create
+the gold standard cache file.}
+\end{table}
 
-Note that it is possible to benchmark several methods
-using a single invocation of the binary \ttt{experiment}. 
-To do this one simply needs to provide several arguments \ttt{--method} with different method
-names and/or parameters.
-While this saves some time on (not) re-loading the data set,
-this trick is most useful when caching of ground truth data is not used.\footnote{Because
-we compute ground truth data only once, rather than for each method separately.}
-The disadvantage, of course, is that the test binary \ttt{experiment} will use
-more memory (as it has to keep several indices), which limits the size of the data set that can be tested. 
+To compute recall, it is enough to memorize only query answers.
+For example, in the case of a 10-NN search, it is enough to memorize only 10 data points closest 
+to the query as well as respective distances (to the query).
+However, this is not sufficient for computation of  a rank approximation metric (see \S~\ref{SectionEffect}).
+To control the accuracy of computation, we permit the user to change the number of entries memorized.
+This number is defined by the parameter:
+\begin{verbatim}
+--maxCacheGSRelativeQty arg (=10)   a maximum number of gold 
+                                    standard entries
+\end{verbatim}
+Note that this parameter is a coefficient: the actual number of entries is defined relative to
+the result set size. For example, if a range search returns 30 entries and the value of 
+\ttt{--maxCacheGSRelativeQty} is 10, then $30 \times 10=300$ entries are saved in the gold standard
+cache file.
 
-Additional time savings can be achieved by testing copies of the same method
-that differ only in one or more \emph{query time} parameter.
-In this case, we do not need to recreate the index before each new test,
-but rather just change query time parameters.
-
-There are couple of gotchas here. 
-First, all method descriptions (parameter \ttt{--method}) that correspond
-to the same method should be adjacent in the command line. 
-Second, one needs to explicitly specify all default values.
-Currently, (though this needs to be fixed in the future)
-the main benchmarking utility knows nothing about the default parameter
-values and cannot, therefore, set them. If a default parameter is omitted,
-the system will not change its value.
-
-In particular, for the list of clusters method \S~\ref{SectionListClust},
-specifying the default value (2147483647) for the parameter \ttt{maxLeavesToVisit} is
- especially important as the method uses a different (a special exact search
-algorithm) when \ttt{maxLeavesToVisit} is equal to the default value.
+\todonoteinline{Also the number of test threads and creation of the gold standard cache!}
 
 \subsection{Measuring Performance and Interpreting Results}\label{SectionMeasurePerf}
 \subsubsection{Efficiency.} We measure several efficiency metrics: query runtime, the number of distance computations,

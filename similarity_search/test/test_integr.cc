@@ -64,7 +64,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "hnsw", "efConstruction=50,M=10,searchMethod=0", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
-#if 0
+#if 1
   // ************** Tests for non-metric clustering *********** //
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=firmal,centerQty=10", "dbScanFrac=0.1", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.8, 0.92, 0.1, 20, 2.5, 6),  
