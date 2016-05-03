@@ -63,7 +63,8 @@ SpaceDummy<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& s
 
 template <typename dist_t>
 string SpaceDummy<dist_t>::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
-  return "";
+  // Return a string that is a copy of the Object buffer
+  return string(pObj->data(), pObj->datalength());
 }
 
 template <typename dist_t>
@@ -72,7 +73,9 @@ bool SpaceDummy<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string
   DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
   CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
   if (!pInpState->inp_file_) return false;
+  // Read the next line
   if (!getline(pInpState->inp_file_, strObj)) return false;
+  // Increase the line number counter
   pInpState->line_num_++;
   return true;
 }
