@@ -201,7 +201,7 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) const {
             EvaluatedNode  evE1(-d, currNew);
 
             closestDistQueue.push(d);
-            if (closestDistQueue.size() > searchNN_) { 
+            if (closestDistQueue.size() > efSearch_) { 
               closestDistQueue.pop(); 
             }
             candidateSet.push(evE1);
@@ -248,12 +248,12 @@ void
 NNDescentMethod<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   AnyParamManager pmgr(QueryTimeParams);
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  3);
-  pmgr.GetParamOptional("searchNN",           searchNN_,            NN_);
+  pmgr.GetParamOptional("efSearch",           efSearch_,            NN_);
   pmgr.GetParamOptional("greedy",             greedy_,              false);
   pmgr.CheckUnused();
   LOG(LIB_INFO) << "Set NNDescentMethod query-time parameters:";
   LOG(LIB_INFO) << "initSearchAttempts=" << initSearchAttempts_;
-  LOG(LIB_INFO) << "searchNN="           << searchNN_;
+  LOG(LIB_INFO) << "efSearch="           << efSearch_;
   LOG(LIB_INFO) << "greedy="             << greedy_;
 }
 

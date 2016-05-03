@@ -90,7 +90,7 @@ class NNDescentMethod : public Index<dist_t> {
   bool                    PrintProgress_;
 
   size_t                  NN_; // K in the original Wei Dong's code nndes.cpp
-  size_t                  searchNN_;
+  size_t                  efSearch_;
   size_t                  controlQty_; // control in the original Wei Dong's code nndes.cpp
   size_t                  iterationQty_; // iteration in the original Wei Dong's code nndes.cpp
   float                   rho_;
