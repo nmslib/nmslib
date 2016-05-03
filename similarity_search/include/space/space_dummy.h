@@ -65,17 +65,17 @@ class SpaceDummy : public Space<dist_t> {
   /*
    * Create an object from string representation.
    * If the input state pointer isn't null, we check
-   * if the new vector is consistent with previous output.
-   * If now previous output was seen, the state vector may be
-   * updated. For example, when we start reading vectors,
+   * if the new vector is consistent with previously read vectors.
+   * For example, when we start reading vectors,
    * we don't know the number of elements. When, we see the first
    * vector, we memorize dimensionality. If a subsequently read
    * vector has a different dimensionality, an exception will be thrown.
    */
   virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
                                               DataFileInputState* pInpState) const;
-  // Create a string representation of an object.
-  virtual string CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const;
+  // Create a string representation of an object
+  // The string representation may include external ID.
+  virtual string CreateStrFromObj(const Object* pObj, const string& externId) const;
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
   virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
   // Open a file for writing, write a header (if there is any) and memorize an output state
