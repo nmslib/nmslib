@@ -17,6 +17,7 @@
 \usepackage{url}
 \usepackage{float}
 \usepackage{upquote}
+\usepackage{placeins}
 
 \renewcommand{\arraystretch}{1.3}
 
@@ -999,7 +1000,7 @@ and the user sees a diagnostic message (see Table~\ref{TableFailGSCheck} for an 
 \begin{table}
 \scriptsize
 \begin{verbatim}
-... [INFO] >>>> Computing effectiveness metrics for small_world_rand
+... [INFO] >>>> Computing effectiveness metrics for sw-graph
 ... [INFO] Ex: -2.097 id = 140154 -> Apr: -2.111 id = 140154 1 - ratio: -0.0202 diff: -0.0221
 ... [INFO] Ex: -1.974 id = 113850 -> Apr: -2.005 id = 113850 1 - ratio: -0.0202 diff: -0.0221
 ... [INFO] Ex: -1.883 id = 102001 -> Apr: -1.898 id = 102001 1 - ratio: -0.0202 diff: -0.0221
@@ -2793,16 +2794,16 @@ Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
 \end{tabular}
 \end{table}
 
-\subsection{Proximity Graphs} \label{SectionProxGraph}
+\subsection{Proximity/Neighborhood Graphs} \label{SectionProxGraph}
 One efficient and effective approach
 relies on building a graph, where objects are graph nodes and edges connect sufficiently close objects.
 When edges connect mostly near neighbors, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
 
 A search process is a series of sub-searches 
 (the number of sub-searches is defined by the parameter \ttt{initSearchAttempts}).
-A sub-search starts at a random node and proceeds to expanding the set of traversed nodes by following neighboring links. The sub-search stops when we cannot find points 
-that are closer than already found \ttt{NN} nearest points (\ttt{NN} is a search parameter).
-Note that the greedy search is only approximate and does not necessarily return all \ttt{NN} nearest neighbors.
+A sub-search starts at some, e.g., random node and proceeds to expanding the set of traversed nodes by following neighboring links. The sub-search stops when we cannot find points 
+that are closer than already found \ttt{efSearch} nearest points (\ttt{efSearch} is a query-time search parameter).
+Note that the greedy search is only approximate and does not necessarily return all \ttt{efSearch} nearest neighbors.
 
 In our library we use two approaches to create proximity graphs, which are described below.
 Parameters of these methods are summarized in Table~\ref{TableProxGraphs}.
@@ -2810,20 +2811,23 @@ Note that both methods have the parameter with the same name, namely, \ttt{NN}.
 However, this parameter has a somewhat different interpretation depending on the method.
 Also note that these methods support only the nearest-neighbor, but not the range search.
 
-\subsubsection{Small World Graph.} \label{SectionSWGraph}
-In the Small World graph (SW-gaph),
+\subsubsection{Small World Graph (SW-graph).} \label{SectionSWGraph}
+In the Small World graph (SW-graph),
 indexing is a bottom-up procedure that relies on the previously described greedy search algorithm.  
 The number of restarts, though, is defined by a different parameter, i.e., \ttt{initIndexAttempts}.
 We add points one by one. For each data point, 
 we find \ttt{NN} closest points using an already constructed index.
-Then, we create an undirected edge between a new graph node (representing a new point) 
+Then, we create an \emph{undirected} edge between a new graph node (representing a new point) 
 and nodes that represent \ttt{NN} closest points found by the greedy search. 
+Each sub-search starts from some, e.g., random node and proceeds until it cannot find a point that is closer
+than already found \ttt{efConstruction} nearest points (\ttt{efConstruction} is an index-time parameter).
+
 Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
-This algorithm was presented at SISAP 2012 \cite{malkov2012scalable},
-but some of the implementation details were missing in the publication.
+This algorithm was presented at SEDE 2008 and SISAP 2012 \cite{krylov2008metrized,malkov2012scalable},
+but some of the algorithmic details were missing in these publications.
 This issue was resolved in a subsequent paper \cite{malkov2014}
 
-The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads. The number of threads is defined by the parameter \ttt{indexThreadQty}.
+The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads. The number of threads is defined by the parameter \ttt{indexThreadQty}. By default, this parameter is equal to the number of virtual cores.
 The graph updates are synchronized: If a thread  needs to add edges to a node or obtain
 the list of node edges, it first locks a node-specific mutex.
 Because different threads rarely update and/or access the same node simultaneously,
@@ -2832,6 +2836,7 @@ our parallelization approach is efficient.
 It is also necessary to synchronize updates for the list of graph nodes, 
 but this operation takes little time compared to searching for \ttt{NN} neighboring points.
 
+\newpage
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -2840,10 +2845,17 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method small_world_rand:NN=3,initIndexAttempts=5,initSearchAttempts=2,\
-           indexThreadQty=4 
+  --cachePrefixGS sw-graph \
+  --method sw-graph \
+    --createIndex NN=3,initIndexAttempts=5,indexThreadQty=4 \
+    --queryTimeParams initSearchAttempts=1,efSearch=10 \
+    --saveIndex sw-graph_index
 \end{verbatim}
 }
+Note that SW-graph is capable of saving/loading the meta index. However, in the bootstrapping
+mode this is only possible if gold standard data is cached (hence, the option \ttt{--cachePrefixGS}).
+
+\todonoteinline{Add HNSW and update the parameters table.}
 
 
 \subsubsection{NN-Descent.} \label{SectionNNDescent}
@@ -2874,8 +2886,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method nndes:NN=10,rho=0.5,delta=0.001,\
-           initSearchAttempts=3
+  --method nndes  \
+    --createIndex NN=10,rho=0.5,delta=0.001 \
+    --queryTimeParams initSearchAttempts=3
 \end{verbatim}
 }
 
@@ -2887,22 +2900,25 @@ release/experiment \
 \multicolumn{2}{c}{\textbf{Common parameters}}\\
 \cmidrule(l){1-2} 
 \ttt{initSearchAttempts}  & A number of random search restarts. \\
+\ttt{efSearch}            & The search depth: specifically, a sub-search is stopped,
+                            when it cannot find a point closer than \ttt{efSearch}
+                            points (seen so far) closest to the query.
 \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{SW-graph} (\ttt{small\_world\_rand}) \cite{malkov2012scalable,malkov2014}  }\\
 \cmidrule(l){1-2} 
-\ttt{NN}                  & Search: keep a queue containing at most this number of closest points. 
-                            Indexing: for a new point find this number of most closest points
+\ttt{NN}                  & For a newly added point find this number of most closest points
                             that make the initial neighborhood of the point. When more points are added,
                             this neighborhood may be expanded. \\
-\ttt{initIndexAttempts}   & The number of random search restarts necessary for the addition of one point.\\
+\ttt{efConstruction}      & The depth of the search that is used to find neighbors during indexing.
+                            This parameter is analogous to \ttt{efSearch}.\\
+\ttt{initIndexAttempts}   & The number of random search restarts carried out to add one point.\\
 \ttt{indexThreadQty}      & The number of indexing threads. If \href{http://openmp.org/wp/}{OpenMP}  is available the default value is
                             equal to the number of (logical) CPU cores. \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{NN-descent} (\ttt{nndes}) \cite{dong2011efficient,malkov2012scalable,malkov2014}  }\\
 \cmidrule(l){1-2} 
-\ttt{NN}                  & Search: keep a queue containing at most this number of closest points. 
-                            Indexing: for a new point find this number of most closest points. \\
+\ttt{NN}                  & For each point find this number of most closest points (neighbors). \\
 \ttt{rho}                 & A fraction of the data set that is randomly sampled for neighborhood propagation.  \\
 \ttt{delta}               & A stopping condition in terms of the fraction of updated edges in the \knnns graph. \\
 \bottomrule
@@ -2945,7 +2961,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method mult_index:methodName=vptree,indexQty=5,maxLeavesToVisit=2
+  --method mult_index \
+    --createIndex methodName=vptree,indexQty=5  \
+    --queryTimeParams maxLeavesToVisit=2
 \end{verbatim}
 }
 
@@ -2980,14 +2998,14 @@ and \S~\ref{SectionCreateMethod}.
 In the first step, the user writes the code that implements a
 functionality of a method or a space.
 In the second step, the user writes a special helper file  
-containing methods that creates a class or a method.
-In this helper file, it is normally necessary to include
+containing a method that creates a class or a method.
+In this helper file, it is necessary to include
 the method/space header. 
-Please, use the \textbf{angle brackets} in this include-directive here.
 
 Because we tend to give the helper file the same name
 as the name of header for a specific method/space,
-we should not include method/space headers using quotes.
+we should not include method/space headers using quotes (in other words,
+use only \emph{angle} brackets).
 Such code fails to compile under the Visual Studio. 
 Here is an example of a proper include-directive:
 \begin{verbatim}
@@ -3003,9 +3021,12 @@ or to the file
 This step has two sub-steps. 
 First, the user includes the previously created helper file into either
 \ttt{init\_spaces.h} or \ttt{init\_methods.h}.
-Finally the function \ttt{initMethods} or \ttt{initSpaces} is extended
+Second, the function \ttt{initMethods} or \ttt{initSpaces} is extended
 by adding a macro call that actually registers the space or method in a factory class.
-No modification of makefiles (or other configuration files) is required.
+
+Note that no explicit/manual modification of makefiles (or other configuration files) is required.
+However, you have to re-run \ttt{cmake} each time a new source file is created (addition
+of header files does not require a \ttt{cmake} run). This is necessary to automatically update makefiles so that they include new source files.
 
 Is is noteworthy that all implementations of methods and spaces
 are mostly template classes parameterized by the distance value type.
@@ -3031,32 +3052,19 @@ These zero-functionality examples can also be used as starting points to develop
 
 \subsection{Test Workflow}\label{SectionWorkflow}
 The main benchmarking utility \ttt{experiment} parses command line parameters. 
-Then, it creates a space and all required search methods using
-the space and the method factories.
-Thus, when it creates a class representing a search method,
-the constructor of this class has to create an index in the memory.
-%Thus, when we create a class representing a search method,
-%the constructor of this class has to create an index in the memory
-%or open a disk-based one.
+Then, it creates a space and a search method using the space and the method factories.
 Both search method and spaces can have parameters,
 which are passed to the method/space in an instance
-of the class \ttt{AnyParams}.
-We consider this in detail in \S~\ref{SectionCreateSpace} and \S~\ref{SectionCreateMethod}.
+of the class \ttt{AnyParams}. We consider this in detail in \S~\ref{SectionCreateSpace} and \S~\ref{SectionCreateMethod}.
 
-%In our library, we implemented only in-memory indices.
-%It is, nevertheless, possible to test disk-based indices as well.
-%For example, a method can accept to parameters: \ttt{saveFileName}
-%and \ttt{readFileName}.
-%If the user invokes \ttt{experiment} without arguments \ttt{--knn} 
-%or \ttt{--range} and specifies the parameter \ttt{saveFileName},
-%the method constructor reads the data set and creates and index. Then,
-%this index can be saved to the faile \ttt{saveFileName}.
-%If the user invokes \ttt{experiment} with an argument \ttt{--knn} 
-%or \ttt{--range} and specifies the parameter \ttt{readFileName},
-%the method constructor will open the disk-based index, whose location
-%is defined by the parameter \ttt{readFileName}.
+When we create a class representing a search method,
+the constructor of the class does not create an index in the memory.
+The index is created using either the function \ttt{CreateIndex} (from scratch)
+or the function \ttt{LoadIndex} (from a previously created index image).
+The index can be saved to disk using the function \ttt{SaveIndex}.
+Note, however, that most methods do not support index (de)-serialization.
 
-Depending on parameters, two test scenarios are possible.
+Depending on parameters passed to the benchmarking utility, two test scenarios are possible.
 In the first scenario, the user specifies separate data and test files.
 In the second scenario, a test file is created by bootstrapping:
 The data set is randomly divided into training and a test set.
@@ -3083,7 +3091,7 @@ partitions and data points.
 This commonality between the \ttt{RangeQuery} and \ttt{KNNQuery}
 allows us in many cases to carry out a nearest-neighbor query 
 using an algorithm designed to answer range queries.
-Thus, only a single implementation of a search method--that answers queries of both types--can be used in many cases.
+Thus, only a single implementation of a search method---that answers queries of both types---can be used in many cases.
 
 A query object proxies distance computations during the testing phase.
 Namely, the distance function is accessible through the function
@@ -3119,6 +3127,7 @@ These are the spaces that are responsible for reading objects from files,
 interpreting the structure of the data blobs (stored in the \ttt{Object}), 
 and computing a distance between two objects.
 
+
 For dense vector spaces the easiest way to create a new space,
 is to create a functor (function object class) that computes a distance.
 Then, this function should be used to instantiate a template
@@ -3138,43 +3147,9 @@ and the source file
 The user is encouraged to study these files and read the comments.
 Here we focus only on the main aspects of creating a new space.
 
-The sample files describe a template class \ttt{DummySpace} (see Table~\ref{FigDummySpace}), 
+The sample files include a template class \ttt{DummySpace} (see Table~\ref{FigDummySpace}), 
 which is declared and defined in the namespace \ttt{similarity}.
 It is a direct ancestor of the class \ttt{Space}.
-
-\begin{table}[t]
-\caption{\label{FigDummySpace}A sample space}
-\begin{verbatim}
-template <typename dist_t>
-class SpaceDummy : public Space<dist_t> {
- public:
-  ...
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config,
-                      const char* inputfile,
-                      const int MaxNumObjects) const;
-  /*
-   * CreateVectFromObj and GetElemQty() are only needed, if
-   * one wants to use methods with random projections.
-   */
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
-                                   size_t nElem) const {
-    throw runtime_error("Cannot create vector for the space: " + ToString());
-  }
-  virtual size_t GetElemQty(const Object* object) const {return 0;}
- protected:
-  virtual dist_t HiddenDistance(const Object* obj1, 
-                                const Object* obj2) const;
-  virtual Space<dist_t>* HiddenClone() const {
-    // The clone function should reproduce the space 
-    // with *IDENTICAL* parameters. 
-    // Another option is to use the default copy constructor 
-    // (if there are no pointer fields)
-    return new SpaceDummy<dist_t>(param1_, param2_);
-  }
-}
-\end{verbatim}
-\end{table}
 
 It is possible to provide the complete implementation of the \ttt{DummySpace}
 in the header file. However, this would make compilation slower.
@@ -3190,16 +3165,114 @@ template class SpaceDummy<float>;
 template class SpaceDummy<double>;
 \end{verbatim}
 
-Most importantly, the user needs to implement the function \ttt{ReadDataset},
-which reads objects from a file, the function \ttt{HiddenDistance},
+\begin{table}[[!htbp]
+\caption{\label{FigDummySpace}A sample space}
+\begin{verbatim}
+template <typename dist_t>
+class SpaceDummy : public Space<dist_t> {
+ public:
+  ...
+  /** Standard functions to read/write/create objects */ 
+  // Create an object from string representation.
+  virtual unique_ptr<Object> 
+  CreateObjFromStr(IdType id, LabelType label, const string& s,
+                   DataFileInputState* pInpState) const;
+
+  // Create a string representation of an object.
+  // The string representation may include external ID.
+  virtual string 
+  CreateStrFromObj(const Object* pObj, const string& externId) const;
+
+  // Open a file for reading, fetch a header 
+  // (if there is any) and memorize an input state
+  virtual unique_ptr<DataFileInputState> 
+  OpenReadFileHeader(const string& inputFile) const;
+
+  // Open a file for writing, write a header (if there is any) 
+  // and memorize an output state
+  virtual unique_ptr<DataFileOutputState> 
+  OpenWriteFileHeader(const ObjectVector& dataset,
+                      const string& outputFile) const;
+  /*
+   * Read a string representation of the next object in a file as well
+   * as its label. Return false, on EOF.
+   */
+  virtual bool 
+  ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, 
+                 string& externId) const;
+
+  /* 
+   * Write a string representation of the next object to a file. We totally delegate
+   * this to a Space object, because it may package the string representation, by
+   * e.g., in the form of an XML fragment.
+   */
+  virtual void WriteNextObj(const Object& obj, const string& externId, 
+                            DataFileOutputState &) const;
+
+  /** End of standard functions to read/write/create objects */ 
+
+  ...
+
+  /*
+   * CreateDenseVectFromObj and GetElemQty() are only needed, if
+   * one wants to use methods with random projections.
+   */
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
+                                   size_t nElem) const {
+    throw runtime_error("Cannot create vector for the space: " + StrDesc());
+  }
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
+
+
+ protected:
+  virtual dist_t HiddenDistance(const Object* obj1, 
+                                const Object* obj2) const;
+
+  DISABLE_COPY_AND_ASSIGN(SpaceDummy);
+}
+\end{verbatim}
+\end{table}
+
+Most importantly, the user needs to implement the function \ttt{HiddenDistance},
 which computes the distance between objects,
-and the function \ttt{HiddenClone} that creates the copy of the space object (with the same parameters).
-For a sample implementation of \ttt{ReadDataset},
+and the function \ttt{CreateObjFromStr} that creates a data point object from an instance
+of a C++ class \ttt{string}.
+For simplicity---even though this is not the most efficient approach---all our spaces create
+objects from textual representations. However, this is not a principal limitation,
+because a C++ string can hold binary data as well.
+Perhaps, the next most important function is \ttt{ReadNextObjStr}, 
+which reads a string representation of the next object from a file. 
+A file is represented by a reference to a subclass of the class \ttt{DataFileInputState}.
+
+Compared to previous releases, the new \ttt{Space} API is substantially more complex.
+This is necessary to standardize reading/writing of generic objects.
+In turn, this has been essential to implementing a generic query server.
+The query server accepts data points in the same format as they are stored in a data file.
+The above mentioned function \ttt{CreateObjFromStr} is used for de-serialization
+of both the data points stored in a file and query data points passed to the query server. 
+
+Additional complexity arises from the need to update space parameters after a space object is created.  
+This permits a more complex storage model where, e.g., parameters are stored
+in a special dedicated header file, while data points are stored elsewhere,
+e.g., split among several data files. 
+To support such functionality, we have a function that opens a data file (\ttt{OpenReadFileHeader})
+and creates a state object (sub-classed from \ttt{DataFileInputState}),
+which keeps the current file(s) state as well as all space-related parameters. 
+When we read data points using the function \ttt{ReadNextObjStr}, 
+the state object is updated.
+The function \ttt{ReadNextObjStr} may also read an optional external identifier for an object.
+When it produces a non-empty identifier it is memorized by the query server and is further
+used for query processing (see \S~\ref{SectionQueryServer}).\todonote{Add a reference to the query server section}
+After all data points are read, this state object is supposed to be passed to the \ttt{Space} object
+in the following fashion:
+\begin{verbatim}
+unique_ptr<DataFileInputState> 
+inpState(space->ReadDataset(dataSet, externIds, fileName, maxNumRec));
+space->UpdateParamsFromFile(*inpState);
+\end{verbatim}
+For a more advanced implementation of the space-related functions,
 please, see the file
-\href{\replocfile similarity_search/src/space/space_bit_hamming.cc}{space\_bit\_hamming.cc}.
-Note that \ttt{ReadDataset} is supposed to read at most \ttt{MaxNumObjects}
-from the file. If the file has more objects, only the first \ttt{maxNumData} should be retrieved.
-The space is responsible for following this convention, the library does not enforce this behavior.
+\href{\replocfile similarity_search/src/space/space_vector.cc}{space\_vector.cc}.
 
 Remember that the function \ttt{HiddenDistance} should not be directly accessible 
 by classes that are not friends of the \ttt{Space}.
@@ -3210,23 +3283,19 @@ during the indexing phase,
 During the testing phase, a search method can compute a distance
 only by accessing functions \ttt{Distance}, \ttt{DistanceObjLeft}, or
 \ttt{DistanceObjRight}, which are member functions of the \ttt{Query}.
-In some cases, however, we need to access the distance function without
-altering distance-computation statistics. To this end, one may create
-a copy of the space object by calling the function \ttt{HiddenClone}. 
-This function should create an exact copy of the space with exactly
-the same parameters.
-This is by far not a perfect solution and we are considering better
-way to proxy distance computations. 
+This is by far not a perfect solution and we are contemplating about better ways to proxy distance computations. 
 
-If we implement a vector space that should work properly with projection methods
-and classic random projections, we need to define functions \ttt{GetElemQty} and \ttt{CreateVectFromObj}. 
-In the case of a dense vector space, \ttt{GetElemQty}
+Should we implement a vector space that works properly with projection methods
+and classic random projections, we need to define functions \ttt{GetElemQty} and \ttt{CreateDenseVectFromObj}. 
+In the case of a \emph{dense} vector space, \ttt{GetElemQty}
 should return the number of vector elements stored in the object.
-For sparse vector spaces, it should return zero. The function \ttt{CreateVectFromObj}
-extracts elements stored in a vector. For dense vector spaces,
-it merely copies vector elements to a buffer. For space vector spaces,
+For \emph{sparse} vector spaces, it should return zero. The function \ttt{CreateDenseVectFromObj}
+extracts elements stored in a vector. For \emph{dense} vector spaces,
+it merely copies vector elements to a buffer. 
+For \emph{sparse} space vector spaces,
 it should do some kind of basic dimensionality reduction. 
 Currently, we do it via the hashing trick (see \S~\ref{SectionProjDetails}).
+
 
 Importantly, we need to ``tell'' the library about the space,
 by registering the space in the space factory.
@@ -3291,6 +3360,10 @@ the class, to the file \ttt{init\_spaces.h} as follows:
 \begin{verbatim}
 #include "factory/space/space_dummy.h"
 \end{verbatim}
+
+To conlcude, we recommend to make a \ttt{Space} object is non-copyable. 
+This can be done by using our macro \ttt{DISABLE\_COPY\_AND\_ASSIGN}.
+
 
 \subsection{Creating a method}\label{SectionCreateMethod}
 To explain the basics of developing a new search method,
