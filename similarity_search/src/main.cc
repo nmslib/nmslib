@@ -324,8 +324,10 @@ void RunExper(bool                                bPrintProgress,
         LOG(LIB_INFO) << "Saving the cache";
         managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId, ThreadTestQty);
 
-        // Remove the incomplete-file flag
-        CHECK_MSG(std::remove(cacheGSIncompleteFlagName.c_str())==0, "Error removing the file: " + cacheGSIncompleteFlagName);
+        // Remove the incomplete-file flag, but only if this is the last test set 
+        if (TestSetId + 1 == config.GetTestSetToRunQty())
+          CHECK_MSG(std::remove(cacheGSIncompleteFlagName.c_str())==0, 
+                                "Error removing the file: " + cacheGSIncompleteFlagName);
       }
     }
 
