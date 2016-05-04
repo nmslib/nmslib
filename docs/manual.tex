@@ -306,7 +306,7 @@ Yet, it is necessary to manually update project settings
 to enable more recent SIMD extensions (see \S\ref{SectionBuildWindows}).
 
 Scripts to generate and process data sets are written in Python.
-We also provide a sample Python script to plot performance graphs: \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py} (see \S~\ref{SectionGenPlot}).
+We also provide a sample Python script to plot performance graphs: \href{\replocfile sample_scripts/sample_scripts/genplot_configurable.py}{genplot\_configurable.py} (see \S~\ref{SectionGenPlot}).
 In addition to Python, this plotting script requires Latex and PGF. 
 
 \subsection{Installing C++11 Compilers}
@@ -1267,7 +1267,7 @@ A relative position is defined by one of the following descriptors
 If the relative position is specified, the legend is printed inside the main
 plotting area, e.g.:
 \begin{verbatim}
-../sample_scripts/genplot.py  \
+../sample_scripts/genplot_configurable.py  \
            -n MethodName \
            -i result_K\=1.dat -o plot_1nn \
            -x 1~norm~Recall \
@@ -1675,7 +1675,7 @@ categories:
 In the following subsections (\S~\ref{SectionSpacePartMeth}-\ref{SectionMiscMeth}),
 we describe implemented methods, explain their parameters,
 and provide examples of their use via the benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows).
-Note that a few parameters are query time parameters, which means that they 
+Note that a few parameters are query-time parameters, which means that they 
 can be changed without rebuilding the index see \S~\ref{SectionBenchEfficiency}.
 For the description of the utility \ttt{experiment} see \S~\ref{SectionRunBenchmark}.
 
@@ -1937,7 +1937,7 @@ to data objects in the leaves \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{List of clusters} (\ttt{list\_clusters})  \cite{chavez2005compact}}   \\
 \cmidrule(l){1-2} 
-                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit}. Note \ttt{maxLeavesToVisit} is a \textbf{query time} parameter. \\
+                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit}. Note \ttt{maxLeavesToVisit} is a \textbf{query-time} parameter. \\
 \ttt{useBucketSize} & If equal to one, we use the parameter \ttt{bucketSize} to determine the number of points in the cluster. Otherwise, the size of the cluster is defined by the parameter \ttt{radius}. \\
 \ttt{radius}        & The maximum radius of a cluster (used when \ttt{useBucketSize} is set to zero). \\
 \ttt{strategy}      & A cluster selection strategy. It is one of the following: \ttt{random}, \ttt{closestPrevCenter}, \ttt{farthestPrevCenter}, \ttt{minSumDistPrevCenters}, \ttt{maxSumDistPrevCenters}. \\ 
@@ -2764,7 +2764,7 @@ in the inverted file \\
 \ttt{indexThreadQty} & A number of indexhing threads. \\
 \ttt{numPivotIndex}  & A number of closest pivots to be indexed. \\
 \ttt{numPivotSearch} & A candidate entry should share this number of pivots with the query. 
-This is a \textbf{query time} parameter. \\
+This is a \textbf{query-time} parameter. \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -2785,7 +2785,7 @@ This is a \textbf{query time} parameter. \\
 an approximate search in the VP-tree. }  \\
 \cmidrule(l){1-2} 
                    & Common parameters: \ttt{numPivot}, \ttt{dbScanFrac}, \ttt{binThreshold}. 
-Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
+Note that \ttt{dbScanFrac} is a \textbf{query-time} parameter. \\
 \cmidrule(l){1-2} 
  \ttt{alphaLeft}   & A stretching coefficient $\alpha_{left}$ in Eq.~(\ref{EqDecFunc}) \\
  \ttt{alphaRight}  & A stretching coefficient $\alpha_{right}$ in Eq.~(\ref{EqDecFunc}) \\
@@ -3166,7 +3166,7 @@ template class SpaceDummy<double>;
 \end{verbatim}
 
 \begin{table}[[!htbp]
-\caption{\label{FigDummySpace}A sample space}
+\caption{\label{FigDummySpace}A sample space class}
 \begin{verbatim}
 template <typename dist_t>
 class SpaceDummy : public Space<dist_t> {
@@ -3303,6 +3303,7 @@ At runtime, the space is created through a helper function.
 In our case, it is called \ttt{CreateDummy}.
 The function, accepts only one parameter,
 which is a reference to an object of the type \ttt{AllParams}:
+\newpage
 
 \begin{verbatim}
 template <typename dist_t>
@@ -3365,8 +3366,68 @@ To conlcude, we recommend to make a \ttt{Space} object is non-copyable.
 This can be done by using our macro \ttt{DISABLE\_COPY\_AND\_ASSIGN}.
 
 
-\subsection{Creating a method}\label{SectionCreateMethod}
-To explain the basics of developing a new search method,
+\subsection{Creating a search method}\label{SectionCreateMethod}
+
+%\newpage
+\begin{table}[[!htbp]
+\caption{\label{FigDummyMethod}A sample search method class}
+\begin{verbatim}
+template <typename dist_t>
+class DummyMethod : public Index<dist_t> {
+ public:
+  DummyMethod(Space<dist_t>& space, 
+              const ObjectVector& data) : data_(data), space_(space) {}
+
+  void CreateIndex(const AnyParams& IndexParams) override {
+    AnyParamManager  pmgr(IndexParams);
+    pmgr.GetParamOptional("doSeqSearch",  
+                          bDoSeqSearch_, 
+    // One should always specify the default value of an optional parameter!
+                          false
+                          );
+    // Check if a user specified extra parameters, 
+    // which can be also misspelled variants of existing ones
+    pmgr.CheckUnused();
+    // It is recommended to call ResetQueryTimeParams() 
+    // to set query-time parameters to their default values
+    this->ResetQueryTimeParams();
+  }
+
+  // SaveIndex is not necessarily implemented
+  virtual void SaveIndex(const string& location) override {
+    throw runtime_error(
+            "SaveIndex is not implemented for method: " + StrDesc());
+  }
+  // LoadIndex is not necessarily implemented
+  virtual void LoadIndex(const string& location) override {
+    throw runtime_error(
+             "LoadIndex is not implemented for method: " + StrDesc());
+  }
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
+
+  // Description of the method, consider printing crucial parameter values
+  const std::string StrDesc() const override { 
+    stringstream str;
+    str << "Dummy method: " 
+        << (bDoSeqSearch_ ? " does seq. search " : 
+                            " does nothing (really dummy)"); 
+    return str.str();
+  }
+
+  //  One needs to implement two search functions.
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
+
+  // If we duplicate data, let the framework know it
+  virtual bool DuplicateData() const override { return false; }
+ private:
+  ...
+  DISABLE_COPY_AND_ASSIGN(DummyMethod);
+};
+\end{verbatim}
+\end{table}
+
+To illustrate the basics of developing a new search method,
 we created a sample zero-functionality method \ttt{DummyMethod}.
 It is represented by 
 the header file 
@@ -3374,66 +3435,52 @@ the header file
 and the source file
 \href{\replocfile similarity_search/src/method/dummy.cc}{dummy.cc}.
 The user is encouraged to study these files and read the comments.
-Here we would omit certain minor details.
+Here we would omit certain details.
 
 Similar to the space and query classes, a search method is implemented using
-a template class, which is parameterized by the distance function value:
+a template class, which is parameterized by the distance function value (see Table~\ref{FigDummyMethod}).
+Note again that the constructor of the class does not create an index in the memory.
+The index is created using either the function \ttt{CreateIndex} (from scratch)
+or the function \ttt{LoadIndex} (from a previously created index image).
+The index can be saved to disk using the function \ttt{SaveIndex}.
+It does not have to be a comprehensive index that contains a copy of the data set.
+Instead, it is sufficient to memorize only the index structure itself (because
+the data set is always loaded separately).
+Also note that most methods do not support index (de)-serialization.
 
-%\newpage
-\begin{verbatim}
-template <typename dist_t>
-class DummyMethod : public Index<dist_t> {
- public:
-  DummyMethod(const Space<dist_t>* space, 
-              const ObjectVector& data, 
-              AnyParamManager& pmgr) 
-              : data_(data) {
-    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch_);
+The constructor receives a reference to a space object as well as  a reference to an array of data objects. 
+In some cases, e.g., when we wrap existing methods such as the multiprobe LSH (see \S~\ref{SectionLSH}),
+we create a copy of the data set (simply because is was easier to write the wrapper this way).
+The framework can be informed about such a situation via the virtual function \ttt{DuplicateData}.
+If this function returns true, the framework ``knows'' that the data was duplicated.
+Thus, it can correct an estimate for the memory required by the method. 
 
-    pmgr.CheckUnused();
-
-    SetQueryTimeParamsInternal(pmgr);
-  }
-  ~DummyMethod(){};
-  const std::string ToString() const;
-   
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
-
-  virtual vector<string> GetQueryTimeParamNames() const;
- private: 
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
-  const ObjectVector&     data_;
-  // disable copy and assign
-  DISABLE_COPY_AND_ASSIGN(DummyMethod);
-};
-\end{verbatim}
-
-Note that it is the constructor that creates a search index (or calls a function to create it)!
-Here it accepts the pointer to a space,
-a reference to an array of data objects, 
-and a parameter manager.
-The parameter manager is used to retrieve too parameters:
-\ttt{doSeqSearch}, and \ttt{dummyParam} (the second one is a query time parameter).
-When the first parameter is true, our dummy method will carry out a sequential search.
+The function \ttt{CreateIndex} receives a parameter object.
+In our example, the parameter object is used to retrieve the single index-time parameter: \ttt{doSeqSearch}.
+When this parameter value is true, our dummy method carries out a sequential search.
 Otherwise, it does nothing useful.
 Again, it is recommended to call the function \ttt{CheckUnused} to ensure
 that the user did not enter parameters with incorrect names.
+It is also recommended to call the function \ttt{ResetQueryTimeParams} (\ttt{this} pointer needs to
+be specified explicitly here) to reset query-time parameters after the index is created (or loaded from disk).
 
-Query time parameters can be changed
-without rebuilding the index.
-The function \ttt{GetQueryTimeParamNames} returns the list of 
-names of such parameters.
-If this list is non-empty and the method is supposed to support
-query time modification of some parameters,
-these modifications are carried out inside the function  
-\ttt{SetQueryTimeParamsInternal}.
-Make sure, you call the method \ttt{SetQueryTimeParamsInternal} from the constructor as well.
+Unlike index-time parameters, query-time parameters can be changed without rebuilding the index
+by invoking the function \ttt{SetQueryTimeParams}.
+The function \ttt{SetQueryTimeParams} accepts a constant reference to a parameter object.
+The programmer, in turn, creates a parameter manager object to extract actual parameter values.
+To this end, two functions are used: \ttt{GetParamRequired} and \ttt{GetParamOptional}.
+Note that the latter function must be supplied with a mandatory \emph{default} value for the parameter.
+Thus, the parameter value is properly reset to its default value when the user does not specify the parameter value
+explicitly (e.g., the parameter specification is omitted when the user invokes the benchmarking utility \ttt{experiment})!
 
-The space object is typically used to compute the distance by calling
-the function \ttt{IndexTimeDistance}.
-Note again that \ttt{IndexTimeDistance} \textbf{should not be used} in a function
-\ttt{Search}. 
+There are two search functions each of which receives two parameters.
+The first parameter is a pointer to a query (either a range or a \knn query).
+The second parameter is currently unused.
+Note again that during the search phase, a search method can
+compute a distance only by accessing functions \ttt{Distance}, \ttt{DistanceObjLeft}, or
+\ttt{DistanceObjRight}, which are member functions of a query object.
+The function \ttt{IndexTimeDistance} \textbf{should not be used} in a function \ttt{Search},
+but it can be used in the function \ttt{CreateIndex}. 
 If the user attempts to invoke \ttt{IndexTimeDistance} during the test phase,
 \textbf{the program will terminate}.
 \footnote{As noted previously, we want to compute the number of times
@@ -3454,17 +3501,12 @@ In our case, the function name is \ttt{CreateDummy}:
 #include <method/dummy.h>
 
 namespace similarity {
-
 template <typename dist_t>
-  Index<dist_t>* CreateDummy(bool PrintProgress,
+Index<dist_t>* CreateDummy(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
-    AnyParamManager pmgr(AllParams);
-
-    return new DummyMethod<dist_t>(space, DataObjects, pmgr);
-  }
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+    return new DummyMethod<dist_t>(space, DataObjects);
 }
 \end{verbatim}
 There is an include-directive preceding
@@ -3507,12 +3549,6 @@ It encodes the range of plausible values
 for the following performance parameters: the recall,
 the number of points closer to the query than the nearest returned point,
 and the improvement in the number of distance computations.
-
-If you are using the script  \href{\replocfile sample_scripts/genplot.py#L222}{genplot.py} (see \S~\ref{SectionGenPlot}) to plot performances graphs, you will need to modify it as well.
-The function \ttt{methodNameAndStyle} in this script defines a mapping from the method name
-to a plot marker. Currently, we provide markers for all the implemented methods. 
-Yet, if you add a new one, you need to provide the mapping yourself (by modifying \ttt{methodNameAndStyle}).
-Note the name of the method is returned by the class member \ttt{ToString}.
 
 \subsection{Creating an application on Linux (inside the framework)}\label{SectionCreateAppLinux}
 First, we create a hello-world source file 
