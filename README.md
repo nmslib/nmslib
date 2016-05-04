@@ -29,12 +29,12 @@ The benchmark were run on an c4.2xlarge instance on EC2. They employs two data s
 
 
 <table  border="0" width="100%" style="border:none">
-<tr width="100%" border="0">
-<td border="0" align="center">
-1.19M 100D GloVe, cosine similarity.
+<tr width="100%" border="0" style="border:none">
+<td border="0" align="center" style="border:none">
+1.19M 100d GloVe, cosine similarity.
 <img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/glove.png" width="400">
 </td>
-<td border="0"  align="center">
+<td border="0"  align="center" style="border:none">
 1M 128d SIFT features, Euclidean distance:
 <img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/sift.png" width="400">
 </td>
