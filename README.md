@@ -92,22 +92,22 @@ Note that the benchmarking utility **supports caching of ground truth data**, so
 Query server (Linux-only)
 -----------------------
 The query server requires Apache Thrift. We used Apache Thrift 0.9.2, but, perhaps, newer versions will work as well.  
-To install Apache Thrift, you need to [https://thrift.apache.org/docs/BuildingFromSource](build it from source).
+To install Apache Thrift, you need to [build it from source](https://thrift.apache.org/docs/BuildingFromSource).
 This may require additional libraries. On Ubuntu they can be installed as follows:
 ```
 sudo apt-get install libboost-dev libboost-test-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev libevent-dev automake libtool flex bison pkg-config g++ libssl-dev libboost-thread-dev make
 ```
 
 After Apache Thrift is installed, you need to build the library itself. Then, change the directory
-to [query_server/cpp_client_server][query_server/cpp_client_server] and type ``make`` (the makefile may need to be modified,
+to [query_server/cpp_client_server](query_server/cpp_client_server) and type ``make`` (the makefile may need to be modified,
 if Apache Thrift is installed to a non-standard location).
-The query server has a similar set of parameters to the benchmarking utility experiment.  
-There are also three sample clients implemented in C++, Python ([query_server/python_client/](query_server/python_client/)),
-and Java ([query_server/java_client/](query_server/java_client/)). 
+The query server has a similar set of parameters to the benchmarking utility ``experiment``.  
+There are also three sample clients implemented in [C++](query_server/cpp_client_server), [Python](query_server/python_client/),
+and [Java](query_server/java_client/)). 
 A client reads a string representation of the query object from the standard stream.
 The format is the same as the format of objects in a data file.
 It is also possible to generate client classes for other languages supported by Thrift, e.g.., for C#
-from [query_server/protocol.thrift](the interface definition file), e.g.:
+from [the interface definition file](query_server/protocol.thrift), e.g.:
 ```
 thrift --gen csharp  protocol.thrift
 ```
