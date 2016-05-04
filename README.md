@@ -5,9 +5,8 @@ Non-Metric Space Library (NMSLIB)
 Non-Metric Space Library is a cross-platform similarity search library and a toolkit for evaluation of similarity search methods.
 The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces.
 Why do we care about being comprehensive? Because no single method is likely to be sufficient in all cases.
-It should also be easy to add new implementations and compare them against existing baselines. These considerations were also factored in the design.
+It should also be easy to add new implementations and compare them against existing baselines. These considerations were also factored in the design. Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on **approximate** methods. 
 
-Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on **approximate** methods. 
 **Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
 Leo(nid) Boytsov is a maintainer.
@@ -22,11 +21,10 @@ Below are the results (as of May 2016) of NMSLIB compared to the best implementa
 1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of random-projection KD-trees.
 2. A new library [FALCONN](https://github.com/FALCONN-LIB/FALCONN), which is a highly-optimized implementation of the multiprobe LSH.  It uses a novel type of random projections based on the fast Hadamard transform.
 
-The benchmarks were run on an c4.2xlarge instance on EC2. They employs two data sets:
+The benchmarks were run on an c4.2xlarge instance on EC2. They employ two data sets:
 
 1. 1.2M 100-dimensional word embeddings trained on Tweets [GloVe](http://nlp.stanford.edu/projects/glove/)
 2. 1M of 128-dimensional [SIFT features](http://corpus-texmex.irisa.fr/).  
-
 
 <table  border="0" width="100%" style="border:none">
 <tr width="100%" border="0" style="border:none">
@@ -43,7 +41,7 @@ The benchmarks were run on an c4.2xlarge instance on EC2. They employs two data 
 General information
 -----------------------
 
-A detailed description is given [in the manual](http://arxiv.org/abs/1508.05470). The manual also contains instructions for building under Linux, MAC OS, and Windows, extending the library, as well as for debugging the code using Eclipse.
+A detailed description is given [in the manual](http://arxiv.org/abs/1508.05470). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. It should be also possible to build our softare on MAC OS.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
