@@ -22,21 +22,23 @@ Below are the results (as of May 2016) of NMSLIB compared to the best implementa
 1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of random-projection KD-trees.
 2. A new library [FALCONN](https://github.com/FALCONN-LIB/FALCONN), which is a highly-optimized implementation of the multiprobe LSH.  It uses a novel type of random projections based on the fast Hadamard transform.
 
-The benchmark employs two data sets:
+The benchmark were run on an c4.2xlarge instance on EC2. They employs two data sets:
 
-1. 1.2M 100-dimensional word embeddings [GloVe](http://nlp.stanford.edu/projects/glove/)
+1. 1.2M 100-dimensional word embeddings trained on Tweets [GloVe](http://nlp.stanford.edu/projects/glove/)
 2. 1M of 128-dimensional [SIFT features](http://corpus-texmex.irisa.fr/).  
 
-1.19M vectors from GloVe (100 dimensions, trained from tweets), cosine similarity, run on an c4.2xlarge instance on EC2.
 
-.. figure:: https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/glove.png
-   :align: center
-
-1M SIFT features (128 dimensions), Euclidean distance, run on an c4.2xlarge:
-
-.. figure:: https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/sift.png
-   :align: center
-
+<table  border="0" width="100%" style="border:none">
+<tr width="100%" border="0">
+<td border="0" align="center">
+1.19M 100D GloVe, cosine similarity.
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/glove.png" width="400">
+</td>
+<td border="0"  align="center">
+1M 128d SIFT features, Euclidean distance:
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/sift.png" width="400">
+</td>
+</tr></table>
 
 General information
 -----------------------
