@@ -20,7 +20,7 @@ Below are the results (as of May 2016) of NMSLIB compared to the best implementa
 1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of random-projection KD-trees.
 2. A new library [FALCONN](https://github.com/FALCONN-LIB/FALCONN), which is a highly-optimized implementation of the multiprobe LSH.  It uses a novel type of random projections based on the fast Hadamard transform.
 
-The benchmarks were run on an c4.2xlarge instance on EC2. They employ two data sets:
+The benchmarks were run on an c4.2xlarge instance on EC2 on a previously unseen subset of 5K queries. They employ the following data sets:
 
 1. 1.2M 100-dimensional word embeddings trained on Tweets [GloVe](http://nlp.stanford.edu/projects/glove/)
 2. 1M of 128-dimensional [SIFT features](http://corpus-texmex.irisa.fr/).  
