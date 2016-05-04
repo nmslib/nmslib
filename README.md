@@ -2,10 +2,9 @@
 
 Non-Metric Space Library (NMSLIB)
 =================
-Non-Metric Space Library is a cross-platform similarity search library and a toolkit for evaluation of similarity search methods.
-The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces.
-Why do we care about being comprehensive? Because no single method is likely to be sufficient in all cases.
-It should also be easy to add new implementations and compare them against existing baselines. These considerations were also factored in the design. Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on **approximate** methods. 
+Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
+
+NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. It can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can also be used from Java. Java has a native client, i.e., it works on many platforms without requiring a C++ library.
 
 **Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
