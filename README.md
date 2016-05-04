@@ -4,7 +4,7 @@ Non-Metric Space Library (NMSLIB)
 =================
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
 
-NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can also be used from Java. Java has a native client, i.e., it works on many platforms without requiring a C++ library.
+NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library.
 
 **Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
@@ -36,6 +36,15 @@ The benchmarks were run on a c4.2xlarge instance on EC2 using a previously unsee
 <img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/sift.png" width="400">
 </td>
 </tr></table>
+
+What's new in version 1.5
+-----------------------
+
+1. A new method: a hierarchical (navigable) small-world graph (HNSW), contributed by Yury Malkov (@yurymalkov) 
+2. A query server, which can have clients in Java and Python, as well as Python bindings for non-vector spaces
+3. Improved performance of two core methods SW-graph and NAPP
+4. Better handling of the gold standard data in the benchmarking utility *experiment*
+5. Updated the API so that methods can save and restore indices
 
 General information
 -----------------------
@@ -80,7 +89,30 @@ export DATA_DIR=[path to the chosen directory with data files]
 
 Note that the benchmarking utility **supports caching of ground truth data**, so that ground truth data is not recomputed every time this utility is re-run on the same data set.
 
-Python bindings (only on Linux)
+Query server (Linux-only)
+-----------------------
+The query server requires Apache Thrift. We used Apache Thrift 0.9.2, but, perhaps, newer versions will work as well.  
+To install Apache Thrift, you need to [https://thrift.apache.org/docs/BuildingFromSource](build it from source).
+This may require additional libraries. On Ubuntu they can be installed as follows:
+```
+sudo apt-get install libboost-dev libboost-test-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev libevent-dev automake libtool flex bison pkg-config g++ libssl-dev libboost-thread-dev make
+```
+
+After Apache Thrift is installed, you need to build the library itself. Then, change the directory
+to [query_server/cpp_client_server][query_server/cpp_client_server] and type ``make`` (the makefile may need to be modified,
+if Apache Thrift is installed to a non-standard location).
+The query server has a similar set of parameters to the benchmarking utility experiment.  
+There are also three sample clients implemented in C++, Python ([query_server/python_client/](query_server/python_client/)),
+and Java ([query_server/java_client/](query_server/java_client/)). 
+A client reads a string representation of the query object from the standard stream.
+The format is the same as the format of objects in a data file.
+It is also possible to generate client classes for other languages supported by Thrift, e.g.., for C#
+from [query_server/protocol.thrift](the interface definition file), e.g.:
+```
+thrift --gen csharp  protocol.thrift
+```
+
+Python bindings (Linux-only)
 -----------------------
 
 We provide basic Python bindings (for Linux and Python 2.7). To build bindings for dense vector spaces, build the library first. Then, change the directory to
