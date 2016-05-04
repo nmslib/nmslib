@@ -4,7 +4,7 @@ Non-Metric Space Library (NMSLIB)
 =================
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
 
-NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. It can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can also be used from Java. Java has a native client, i.e., it works on many platforms without requiring a C++ library.
+NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can also be used from Java. Java has a native client, i.e., it works on many platforms without requiring a C++ library.
 
 **Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
@@ -14,16 +14,16 @@ Leo(nid) Boytsov is a maintainer.
 
 NMSLIB is generic yet fast!
 =================
-Even though our methods are generic, they often outperform specialized methods for the Euclidean space.
-Below are the results (as of May 2016) of NMSLIB compared to the best implementations participated in [a public evaluation ann-benchmarks](https://github.com/erikbern/ann-benchmarks). Our main competitors are: 
+Even though our methods are generic, they often outperform specialized methods for the Euclidean and/or angular space (i.e., for the cosine similarity).
+Below are the results (as of May 2016) of NMSLIB compared to the best implementations participated in [a public evaluation code-named ann-benchmarks](https://github.com/erikbern/ann-benchmarks). Our main competitors are: 
 
 1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of random-projection KD-trees.
 2. A new library [FALCONN](https://github.com/FALCONN-LIB/FALCONN), which is a highly-optimized implementation of the multiprobe LSH.  It uses a novel type of random projections based on the fast Hadamard transform.
 
-The benchmarks were run on an c4.2xlarge instance on EC2 on a previously unseen subset of 5K queries. They employ the following data sets:
+The benchmarks were run on a c4.2xlarge instance on EC2 using a previously unseen subset of 5K queries. The benchmarks employ the following data sets:
 
-1. 1.2M 100-dimensional word embeddings trained on Tweets [GloVe](http://nlp.stanford.edu/projects/glove/)
-2. 1M of 128-dimensional [SIFT features](http://corpus-texmex.irisa.fr/).  
+1. [GloVe](http://nlp.stanford.edu/projects/glove/) : 1.2M 100-dimensional word embeddings trained on Tweets 
+2. 1M of 128-dimensional [SIFT features](http://corpus-texmex.irisa.fr/)  
 
 <table  border="0" width="100%" style="border:none">
 <tr width="100%" border="0" style="border:none">

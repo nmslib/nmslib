@@ -129,16 +129,46 @@ The latter two methods are superseded by \ttt{proj\_incsort} and \ttt{proj\_vptr
 \end{itemize}
 
 \subsection{History, Objectives, and Principles}
-The Non-Metric Space Library (shortly NMSLIB) is a collection of
-similarity search methods and a toolkit for their evaluation.
-Our software suit can also be used as a standalone search library on Linux and Windows. 
+Non-Metric Space Library (NMSLIB) is an \textbf{efficient} cross-platform similarity search library and a toolkit for evaluation of similarity search methods.  The goal of the project is to create an effective and \textbf{comprehensive} toolkit for searching in \textbf{generic non-metric} spaces.
+Being comprehensive is important, because no single method is likely to be sufficient in all cases.
+Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on \textbf{approximate} methods. 
+
+NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. 
+NMSLIB can be used directly in C++ and Python (via Python bindings, see \S~\ref{SectionPythonBind}). In addition, it is also possible to build a query server (see \S~\ref{SectionQueryServer}), which can also be used from Java. Java has a native client, i.e., it works on many platforms without requiring a C++ library.
+
+Even though our methods are generic, they often outperform specialized methods for the Euclidean and/or angular distance
+ (i.e., for the cosine similarity).
+Tables \ref{FigGlove} and \ref{FigSIFT}
+contain results (as of May 2016) of NMSLIB compared to the best implementations participated in \href{https://github.com/erikbern/ann-benchmarks}{a public evaluation code-named \ttt{ann-benchmarks}}. Our main competitors are: 
+
+\begin{itemize}
+\item A popular library \href{https://github.com/spotify/annoy}{Annoy}, which uses a forest of random-projection KD-trees \cite{SilpaAnan2008OptimisedKF}.
+\item A new library \href{https://github.com/FALCONN-LIB/FALCONN}{FALCONN}, which is a highly-optimized implementation of the multiprobe LSH \cite{andoni2015practical}. It uses a novel type of random projections based on the fast Hadamard transform.
+\end{itemize}
+
+The benchmarks were run on a c4.2xlarge instance on EC2 (using a previously unseen subset of 5K queries). The benchmarks employ two data sets:
+\begin{itemize}
+\item \href{http://nlp.stanford.edu/projects/glove/}{GloVe}: 1.2M 100-dimensional word embeddings trained on Tweets;
+\item 1M of 128-dimensional \href{http://corpus-texmex.irisa.fr/}{SIFT features}.  
+\end{itemize}
+
+\begin{figure}[!htb]
+\centering
+\caption{\label{FigGlove}1.19M vectors from GloVe (100 dimensions, trained from tweets), cosine similarity.}
+\includegraphics[width=0.8\textwidth]{figures/glove.png}
+%\end{figure}
+%\begin{figure}[!htb]
+\centering
+\caption{\label{FigSIFT}1M SIFT features (128 dimensions), Euclidean distance.}
+\includegraphics[width=0.8\textwidth]{figures/sift.png}
+\end{figure}
+
+
 Most search methods were implemented by Bileg(saikhan) Naidan and Leo(nid) Boytsov.\footnote{Leo(nid) Boytsov is a maintainer.}
 Additional contributors are listed on the \href{https://github.com/searchivarius/NonMetricSpaceLib}{GitHub 
 page}.
 Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
 and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
-
-%We encourage potential users and contributors to use GitHub for bug reports.
 
 The code written by Bileg and Leo is distributed under the business-friendly \href{http://apache.org/licenses/LICENSE-2.0}{Apache License}. 
 However, some third-party contributions are licensed differently.
@@ -177,7 +207,7 @@ and instead one has to resort to approximate search procedures.
 This is why methods
 are evaluated in terms of efficiency-effectiveness trade-offs
 rather than merely in terms of their efficiency.
-We suspect that there is no ``one-size-fits-all'' search method.
+As mentioned previously, we believe that there is no ``one-size-fits-all'' search method.
 Therefore, it is important to provide a variety of methods
 each of which may work best for some specific classes of data.
 
@@ -185,10 +215,8 @@ Our commitment to efficiency affected several design decisions:
 \begin{itemize}
 \item The library is implemented in C++;
 \item We focus on in-memory indices 
-and, thus, do not require our methods to materialize a disk-based version of an index
-(this also reduces programming effort).
-However, one of our immediate goals is to support serialization of several best methods.
-%It is, nevertheless, possible to benchmark disk-based implementations as well (see \ref{SectionWorkflow}).
+and, thus, do not require all methods to materialize a disk-based version of an index
+(this reduces programming effort).
 
 \item 
 We provide efficient implementations of many distance functions,
@@ -413,9 +441,11 @@ Examples of using the benchmarking utility can be found in the directory \href{\
 Please, check the script \href{\replocfile sample_scripts/sample_run.sh}{sample\_run.sh}. 
 The latter runs a bunch of methods. It can also create an efficiency-effectiveness plot if needed.
 
+\subsection{Query Server (Linux-only)}\label{SectionQueryServer}
 
+\todonoteinline{Finish this section}
 
-\subsection{Python bindings (only on Linux)}
+\subsection{Python bindings (Linux-only)}\label{SectionPythonBind}
 We provide basic Python bindings (for Linux and Python 2.7). 
 %\href{https://github.com/erikbern/ann-benchmarks}{One public evaluation of our library using these bindings was carried out by Erik Bernhardsson}. 
 
@@ -2688,7 +2718,7 @@ number of pivots).
 One can compensate in quality by using more pivots. In our experiments,
 it was usually sufficient to double the number of pivots.
 
-\newpage
+%\newpage
 The binarized permutation can be searched sequentially. 
 An example of testing such a method using the utility \texttt{experiment} is as follows:
 {
@@ -2836,7 +2866,7 @@ our parallelization approach is efficient.
 It is also necessary to synchronize updates for the list of graph nodes, 
 but this operation takes little time compared to searching for \ttt{NN} neighboring points.
 
-\newpage
+%\newpage
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -3303,7 +3333,7 @@ At runtime, the space is created through a helper function.
 In our case, it is called \ttt{CreateDummy}.
 The function, accepts only one parameter,
 which is a reference to an object of the type \ttt{AllParams}:
-\newpage
+%\newpage
 
 \begin{verbatim}
 template <typename dist_t>
