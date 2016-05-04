@@ -6,7 +6,13 @@ Non-Metric Space Library is a cross-platform similarity search library and a too
 The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces.
 Why do we care about being comprehensive? Because no single method is likely to be sufficient in all cases.
 It should also be easy to add new implementations and compare them against existing baselines. These considerations were also factored in the design.
+
 Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on **approximate** methods. 
+**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
+
+Leo(nid) Boytsov is a maintainer.
+
+**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**.
 
 NMSLIB is generic yet fast!
 =================
@@ -23,19 +29,14 @@ The benchmark employs two data sets:
 
 1.19M vectors from GloVe (100 dimensions, trained from tweets), cosine similarity, run on an c4.2xlarge instance on EC2.
 
-.. figure:: docs/figures/glove.png
+.. figure:: https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/glove.png
    :align: center
 
 1M SIFT features (128 dimensions), Euclidean distance, run on an c4.2xlarge:
 
-.. figure:: docs/figures/sift.png
+.. figure:: https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/sift.png
    :align: center
 
-**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
-
-Leo(nid) Boytsov is a maintainer.
-
-**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**.
 
 General information
 -----------------------
