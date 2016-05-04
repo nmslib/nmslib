@@ -6,10 +6,30 @@ Non-Metric Space Library is a cross-platform similarity search library and a too
 The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces.
 Why do we care about being comprehensive? Because no single method is likely to be sufficient in all cases.
 It should also be easy to add new implementations and compare them against existing baselines. These considerations were also factored in the design.
-
 Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on **approximate** methods. 
-Some of the implemented approaches are quite efficient. For example, according to the results of [a public evaluation](https://github.com/erikbern/ann-benchmarks), our implementation of the SW-graph outperforms other methods in most cases. 
 
+NMSLIB is generic yet fast!
+=================
+Even though our methods are generic, they often outperform specialized methods for the Euclidean space.
+Below are the results (as of May 2016) of NMSLIB compared to the best implementations participated in [a public evaluation ann-benchmarks](https://github.com/erikbern/ann-benchmarks). Our main competitors are: 
+
+1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of random-projection KD-trees.
+2. A new library [FALCONN](https://github.com/FALCONN-LIB/FALCONN), which is a highly-optimized implementation of the multiprobe LSH.  It uses a novel type of random projections based on the fast Hadamard transform.
+
+The benchmark employs two data sets:
+
+1. 1.2M 100-dimensional word embeddings [GloVe](http://nlp.stanford.edu/projects/glove/)
+2. 1M of 128-dimensional [SIFT features](http://corpus-texmex.irisa.fr/).  
+
+1.19M vectors from GloVe (100 dimensions, trained from tweets), cosine similarity, run on an c4.2xlarge instance on EC2.
+
+.. figure:: docs/figures/glove.png
+   :align: center
+
+1M SIFT features (128 dimensions), Euclidean distance, run on an c4.2xlarge:
+
+.. figure:: docs/figures/sift.png
+   :align: center
 
 **Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
