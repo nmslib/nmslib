@@ -109,8 +109,8 @@ you can start the server as follows:
 There are also three sample clients implemented in [C++](query_server/cpp_client_server), [Python](query_server/python_client/),
 and [Java](query_server/java_client/). 
 A client reads a string representation of the query object from the standard stream.
-The format is the same as the format of objects in a data file. Here is how you can
-find ten vectors closest to the first vector (stored in row 1) of a provided sample data file:
+The format is the same as the format of objects in a data file. 
+Here is an example of searching for ten vectors closest to the first vector (stored in row 1) of a provided sample data file:
 ```
 export DATA_FILE=../../sample_data/final8_10K.txt
 head -1 $DATA_FILE|  ./query_client -p 10000 -a localhost  -k 10
@@ -119,6 +119,7 @@ It is also possible to generate client classes for other languages supported by 
 ```
 thrift --gen csharp  protocol.thrift
 ```
+For instructions on using generated code, please check out the [Apache Thrift tutorial](https://thrift.apache.org/tutorial/).
 
 Python bindings (Linux-only)
 -----------------------

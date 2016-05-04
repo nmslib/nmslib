@@ -63,7 +63,7 @@ class SpaceDummy : public Space<dist_t> {
 
   /** Standard functions to read/write/create objects */ 
   /*
-   * Create an object from string representation.
+   * Create an object from a (possibly binary) string.
    * If the input state pointer isn't null, we check
    * if the new vector is consistent with previously read vectors.
    * For example, when we start reading vectors,

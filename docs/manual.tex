@@ -114,19 +114,6 @@ new search methods and spaces.
 \end{abstract}
 
 \section{Introduction}
-\subsection{What's new in version \LibVersion{} (major changes)} 
-\todonoteinline{This section needs to be re-worked and duplicated in README/log}
-\begin{itemize}
-\item We have improved performance of two core methods SW-graph and NAPP, see \ref{}\todonote{add references}
-\item We have adopted a new method: a hierarchical (navigable) small-world graph (HNSW),
-contributed by Yury Malkov \cite{Malkov2016}, see \ref{} \todonote{add a reference}
-\item We have modified the workflow of our benchmarking utility \ttt{experiment}
-and improved handling of the gold standard data, see \ref{} \todonote{add a reference};
-\item We have updated the API so that methods can save and restore indices, see \ref{} \todonote{add a reference};
-\item We have implemented a server, which can have clients in Java and Python, see \ref{}. 
-\item Last, we removed methods \ttt{permutation}, \ttt{permutation\_incsort}, and \ttt{permutation\_vptree}. 
-The latter two methods are superseded by \ttt{proj\_incsort} and \ttt{proj\_vptree}, respectively.
-\end{itemize}
 
 \subsection{History, Objectives, and Principles}
 Non-Metric Space Library (NMSLIB) is an \textbf{efficient} cross-platform similarity search library and a toolkit for evaluation of similarity search methods.  The goal of the project is to create an effective and \textbf{comprehensive} toolkit for searching in \textbf{generic non-metric} spaces.
@@ -134,7 +121,7 @@ Being comprehensive is important, because no single method is likely to be suffi
 Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on \textbf{approximate} methods. 
 
 NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. 
-NMSLIB can be used directly in C++ and Python (via Python bindings, see \S~\ref{SectionPythonBind}). In addition, it is also possible to build a query server (see \S~\ref{SectionQueryServer}), which can also be used from Java. Java has a native client, i.e., it works on many platforms without requiring a C++ library.
+NMSLIB can be used directly in C++ and Python (via Python bindings, see \S~\ref{SectionPythonBind}). In addition, it is also possible to build a query server (see \S~\ref{SectionQueryServer}), which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library.
 
 Even though our methods are generic, they often outperform specialized methods for the Euclidean and/or angular distance
  (i.e., for the cosine similarity).
@@ -283,6 +270,22 @@ it is also possible to compute an accuracy of a \knn based classification
 %In the future, we plan to add more complex spaces, in particular, string-based.
 
 \section{Getting Started}
+
+\subsection{What's new in version \LibVersion{} (major changes)} 
+\todonoteinline{This section needs to be re-worked and duplicated in README/log}
+\begin{itemize}
+\item We have adopted a new method: a hierarchical (navigable) small-world graph (HNSW),
+      contributed by Yury Malkov \cite{Malkov2016}, see \ref{} \todonote{add a reference}
+\item We have improved performance of two core methods SW-graph: (see \S~\ref{SectionSWGraph}) and NAPP (see \ref{SectionNAPP}).
+\item We have modified the workflow of our benchmarking utility \ttt{experiment}
+and improved handling of the gold standard data, see \S~\ref{SectionBenchEfficiency};
+\item We have updated the API so that methods can save and restore indices, see \S~\ref{SectionCreateMethod}.
+\item We have implemented a server, which can have clients in Java and Python, see \S~\ref{SectionQueryServer}. 
+\item We have implemented generic Python bindings that can work for non-vector spaces, see \S~\ref{SectionPythonBind}.
+\item Last, we retired older methods \ttt{permutation}, \ttt{permutation\_incsort}, and \ttt{permutation\_vptree}. 
+The latter two methods are superseded by \ttt{proj\_incsort} and \ttt{proj\_vptree}, respectively.
+\end{itemize}
+
 \subsection{Prerequisites}
 NMSLIB was developed and tested on 64-bit Linux.
 Yet, almost all the code can be built and run on 64-bit Windows (two notable exceptions are: LSHKIT and NN-Descent).
@@ -443,7 +446,43 @@ The latter runs a bunch of methods. It can also create an efficiency-effectivene
 
 \subsection{Query Server (Linux-only)}\label{SectionQueryServer}
 
-\todonoteinline{Finish this section}
+The query server requires Apache Thrift. We used Apache Thrift 0.9.2, but, perhaps, newer versions will work as well.  
+To install Apache Thrift, you need to \href{https://thrift.apache.org/docs/BuildingFromSource}{build it from source}.
+This may require additional libraries. On Ubuntu they can be installed as follows:
+\begin{verbatim}
+sudo apt-get install libboost-dev libboost-test-dev \ 
+     libboost-program-options-dev libboost-system-dev \
+     libboost-filesystem-dev libevent-dev \
+     automake libtool flex bison pkg-config \
+     g++ libssl-dev libboost-thread-dev make
+\end{verbatim}
+
+After Apache Thrift is installed, you need to build the library itself. Then, change the directory
+to \href{\replocfile query_server/cpp_client_server}{query\_server/cpp\_client\_server} and type \ttt{make} (the makefile 
+may need to be modified, if Apache Thrift is installed to a non-standard location).
+The query server has a similar set of parameters to the benchmarking utility \ttt{experiment}.  For example,
+you can start the server as follows:
+\begin{verbatim}
+ ./query_server -i ../../sample_data/final8_10K.txt -s l2 -p 10000 \
+        -m sw-graph -c NN=10,efConstruction=200,initIndexAttempts=1
+\end{verbatim}
+
+There are also three sample clients implemented in \href{\replocfile query_server/cpp_client_server}{C++}, \href{\replocfile query_server/python_client/}{Python},
+and \href{\replocfile query_server/java_client/}{Java}. 
+A client reads a string representation of the query object from the standard stream.
+The format is the same as the format of objects in a data file. 
+Here is an example of searching for ten vectors closest to the first vector (stored in row 1) of a provided sample data file:
+\begin{verbatim}
+export DATA_FILE=../../sample_data/final8_10K.txt
+head -1 $DATA_FILE|  ./query_client -p 10000 -a localhost  -k 10
+\end{verbatim}
+
+It is also possible to generate client classes for other languages supported by Thrift from 
+\href{\replocfile query_server/protocol.thrift}{the interface definition file}, e.g., for C\#. To this end, one should invoke the thrift compiler as follows:
+\begin{verbatim}
+thrift --gen csharp  protocol.thrift
+\end{verbatim}
+For instructions on using generated code, please check out the \href{https://thrift.apache.org/tutorial/}{Apache Thrift tutorial}.
 
 \subsection{Python bindings (Linux-only)}\label{SectionPythonBind}
 We provide basic Python bindings (for Linux and Python 2.7). 
@@ -460,9 +499,6 @@ For an example of using our library in Python, see the script  \href{\replocfile
 
 Generic vector spaces are supported as well (see the directory \ttt{python\_gen\_bindings}. However, they work only for spaces
 that properly define define serialization and de-serialization, see \S~\ref{} for details. \todo{Add a proper reference}
-
-\subsection{Query server (only on Linux)}
-\todonoteinline{Add a description, also update the README}
 
 \subsection{Quick Start on Windows}\label{QuickStartWindows}
 Building on Windows is straightforward.
@@ -2634,7 +2670,7 @@ release/experiment \
 \end{verbatim}
 }
 
-\subsubsection{Neighborhood APProximation Index (NAPP).}
+\subsubsection{Neighborhood APProximation Index (NAPP).}\label{SectionNAPP}
 Recently it was proposed to index pivot neighborhoods: 
 For each data point, we compute distances to \ttt{numPivot} points
 and select \ttt{numPivotIndex} (typically, much smaller than \ttt{numPivot}) pivots 
@@ -3203,7 +3239,7 @@ class SpaceDummy : public Space<dist_t> {
  public:
   ...
   /** Standard functions to read/write/create objects */ 
-  // Create an object from string representation.
+  // Create an object from a (possibly binary) string.
   virtual unique_ptr<Object> 
   CreateObjFromStr(IdType id, LabelType label, const string& s,
                    DataFileInputState* pInpState) const;
@@ -3238,7 +3274,6 @@ class SpaceDummy : public Space<dist_t> {
    */
   virtual void WriteNextObj(const Object& obj, const string& externId, 
                             DataFileOutputState &) const;
-
   /** End of standard functions to read/write/create objects */ 
 
   ...
@@ -3252,14 +3287,12 @@ class SpaceDummy : public Space<dist_t> {
     throw runtime_error("Cannot create vector for the space: " + StrDesc());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
-
-
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, 
                                 const Object* obj2) const;
-
+  // Don't permit copying and/or assigning 
   DISABLE_COPY_AND_ASSIGN(SpaceDummy);
-}
+};
 \end{verbatim}
 \end{table}
 
@@ -3452,6 +3485,7 @@ class DummyMethod : public Index<dist_t> {
   virtual bool DuplicateData() const override { return false; }
  private:
   ...
+  // Don't permit copying and/or assigning 
   DISABLE_COPY_AND_ASSIGN(DummyMethod);
 };
 \end{verbatim}
@@ -3886,14 +3920,15 @@ the graph construction and the search algorithm, but we have not incorporated it
 Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
 and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
 We also thank 
-Lawrence Cayton for providing data sets (and allowing us to make them public),
-Nikita Avrelin for implementing the first version of the SW-graph
-and Daniel Lemire for contributing 
-the implementation of the original Schlegel~et~al.~\cite{schlegel2011fast}
+Lawrence Cayton for providing data sets (and allowing us to make them public);
+Nikita Avrelin for implementing the first version of the SW-graph;
+Yury Malkov for contributing a hierarchical modification of the SW-graph, 
+as well as for guideliness for tuning the original SW-graph;
+David Novak for the suggestion to use external pivots in permutation algorithms;
+Daniel Lemire for contributing the implementation of the original Schlegel~et~al.~\cite{schlegel2011fast}
 intersection algorithm.
-We also thank Andrey Savchenko, Alexander Ponomarenko, Yury Malkov,
-and anonymous referees for suggestions
-to improve the library and the documentation.
+We also thank Andrey Savchenko, Alexander Ponomarenko, and Yury Malkov
+for suggestions to improve the library and the documentation.
 
 
 
