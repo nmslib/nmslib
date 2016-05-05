@@ -1,6 +1,6 @@
 =================
 
-Non-Metric Space Library (NMSLIB)
+Non-Metric Space Library (NMSLIB), version 1.5
 =================
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
 
@@ -50,7 +50,7 @@ What's new in version 1.5
 General information
 -----------------------
 
-A detailed description is given [in the manual](http://arxiv.org/abs/1508.05470). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. It should be also possible to build NMSLIB on MAC OS.
+A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. It should be also possible to build NMSLIB on MAC OS.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -80,7 +80,7 @@ cmake .
 make  
 ```
 
-Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in [in the manual](http://arxiv.org/abs/1508.05470).  
+Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in [in the manual](docs/manual.pdf).  
 
 Examples of using the software can be found in the directory [sample_scripts](sample_scripts). A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small data sets stored in this repository. You can also download almost every data set used in our evaluations (see the section **Data sets** below). The downloaded data needs to be decompressed (you may need 7z, gzip, and bzip2). Then, copy data files to a directory of choice and set the environment variable:  
 
@@ -157,7 +157,7 @@ Data sets
 We use several data sets, which were created either by other folks,
 or using 3d party software. If you use these data sets, please, consider
 giving proper credit. The download scripts prints respective BibTex entries.
-More information can be found [in the manual](http://arxiv.org/abs/1508.05470).
+More information can be found [in the manual](docs/manual.pdf).
 
 Here is the list of scripts to download major data sets:
 * Data sets for our NIPS'13 and SISAP'13 papers [data/get_data_nips2013.sh](data/get_data_nips2013.sh).  
@@ -183,10 +183,4 @@ Most important related papers are listed below in the chronological order:
 * L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
 * Amato, Giuseppe, Claudio Gennaro, and Pasquale Savino. Mi-file: using inverted files for scalable approximate similarity search. Multimedia tools and applications 71.3 (2014): 1333-1362. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
 * Gonzalez, Edgar Chavez, Karina Figueroa, and Gonzalo Navarro. [Effective proximity retrieval by ordering permutations.](http://www.dcc.uchile.cl/~gnavarro/ps/tpami07.pdf) Pattern Analysis and Machine Intelligence, IEEE Transactions on 30.9 (2008): 1647-1658. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/pami/ChavezFN08)
-
-We **are** aware of other (numerous) papers on building and querying k-NN graphs (proximity graphs). In our library, we are currently using only two graph construction algorithms (see links below):
-
-* The search-based construction algorithm published by Malkov et al. in 2014 (also presented at SISAP 2012). There is also a (yet experimental) new variant of this algorithm published by Malkov and Yashunin (2016);
-* The NN-Descent algorithm due to Dong et al. 2011. This first version came without a search algorithm. Therefore, we use the same search algorithm as Malkov et al. 2014. A newer version of NN-descent can be found [by following this link](http://www.kgraph.org/). It is not incorporated, though.
-
 
