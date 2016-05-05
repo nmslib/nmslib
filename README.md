@@ -114,7 +114,7 @@ The format is the same as the format of objects in a data file.
 Here is an example of searching for ten vectors closest to the first vector (stored in row 1) of a provided sample data file:
 ```
 export DATA_FILE=../../sample_data/final8_10K.txt
-head -1 $DATA_FILE|  ./query_client -p 10000 -a localhost  -k 10
+head -1 $DATA_FILE | ./query_client -p 10000 -a localhost  -k 10
 ```
 It is also possible to generate client classes for other languages supported by Thrift from [the interface definition file](query_server/protocol.thrift), e.g., for C#. To this end, one should invoke the thrift compiler as follows:
 ```

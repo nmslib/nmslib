@@ -272,7 +272,6 @@ it is also possible to compute an accuracy of a \knn based classification
 \section{Getting Started}
 
 \subsection{What's new in version \LibVersion{} (major changes)} 
-\todonoteinline{This section needs to be re-worked and duplicated in README/log}
 \begin{itemize}
 \item We have adopted a new method: a hierarchical (navigable) small-world graph (HNSW),
       contributed by Yury Malkov \cite{Malkov2016}, see \ref{} \todonote{add a reference}
@@ -456,6 +455,12 @@ sudo apt-get install libboost-dev libboost-test-dev \
      automake libtool flex bison pkg-config \
      g++ libssl-dev libboost-thread-dev make
 \end{verbatim}
+To simplify the building process of Apache Thrift, one can disable unnecessary languages:
+\begin{verbatim}
+./configure  --without-erlang --without-nodejs --without-lua  \
+             --without-php --without-ruby --without-haskell \
+             --without-go --without-d 
+\end{verbatim}
 
 After Apache Thrift is installed, you need to build the library itself. Then, change the directory
 to \href{\replocfile query_server/cpp_client_server}{query\_server/cpp\_client\_server} and type \ttt{make} (the makefile 
@@ -463,8 +468,8 @@ may need to be modified, if Apache Thrift is installed to a non-standard locatio
 The query server has a similar set of parameters to the benchmarking utility \ttt{experiment}.  For example,
 you can start the server as follows:
 \begin{verbatim}
- ./query_server -i ../../sample_data/final8_10K.txt -s l2 -p 10000 \
-        -m sw-graph -c NN=10,efConstruction=200,initIndexAttempts=1
+./query_server -i ../../sample_data/final8_10K.txt -s l2 -p 10000 \
+       -m sw-graph -c NN=10,efConstruction=200,initIndexAttempts=1
 \end{verbatim}
 
 There are also three sample clients implemented in \href{\replocfile query_server/cpp_client_server}{C++}, \href{\replocfile query_server/python_client/}{Python},
@@ -474,7 +479,7 @@ The format is the same as the format of objects in a data file.
 Here is an example of searching for ten vectors closest to the first vector (stored in row 1) of a provided sample data file:
 \begin{verbatim}
 export DATA_FILE=../../sample_data/final8_10K.txt
-head -1 $DATA_FILE|  ./query_client -p 10000 -a localhost  -k 10
+head -1 $DATA_FILE | ./query_client -p 10000 -a localhost  -k 10
 \end{verbatim}
 
 It is also possible to generate client classes for other languages supported by Thrift from 
@@ -497,8 +502,8 @@ sudo make install
 \end{verbatim} 
 For an example of using our library in Python, see the script  \href{\replocfile python_vect_bindings/test_nmslib_vect.py}{test\_nmslib\_vect.py}.
 
-Generic vector spaces are supported as well (see the directory \ttt{python\_gen\_bindings}. However, they work only for spaces
-that properly define define serialization and de-serialization, see \S~\ref{} for details. \todo{Add a proper reference}
+Generic vector spaces are supported as well (see \href{\replocfile python_gen_bindings}{python\_gen\_bindings}). However, they work only for spaces
+that properly define define serialization and de-serialization (see a brief description in \S~\ref{SectionCreateSpace}).
 
 \subsection{Quick Start on Windows}\label{QuickStartWindows}
 Building on Windows is straightforward.
@@ -603,6 +608,30 @@ created build. When you type \ttt{cmake .} for the first time,
 it creates release makefiles. However, if you create debug
 makefiles and then type \ttt{cmake .}, 
 this will not lead to creation of release makefiles! 
+
+If the user cannot install necessary libraries to a standard location, 
+it is still possible to build a project.
+First, download Boost to some local directory. 
+Assume it is \ttt{\$HOME/boost\_download\_dir}.
+Then, set the corresponding environment variable, which will inform \ttt{cmake}
+about the location of the Boost files:
+\begin{verbatim}
+ export BOOST_ROOT=$HOME/boost_download_dir
+\end{verbatim}
+
+Second, the user needs to install the additional libraries. Assume that the
+lib-files are installed to \ttt{\$HOME/local\_lib}, while corresponding include
+files are installed to \ttt{\$HOME/local\_include}. Then, the user 
+needs to invoke \ttt{cmake} with the following arguments (after possibly deleting previously
+created cache and makefiles):
+\begin{verbatim}
+cmake . -DCMAKE_LIBRARY_PATH=$HOME/local_lib \
+        -DCMAKE_INCLUDE_PATH=$HOME/local_include \ 
+        -DBoost_NO_SYSTEM_PATHS=true
+\end{verbatim}
+Note the last option. Sometimes, an old version of Boost is installed. 
+Setting the variable \ttt{Boost\_NO\_SYSTEM\_PATHS} to true,
+tells \ttt{cmake} to ignore such an installation.
 
 To use the library in external applications, which do not belong to the library repository,
 one needs to install the library first.
@@ -1236,7 +1265,6 @@ The data file contains only the average values,
 which can be used to, e.g., produce efficiency-effectiveness plots
 as described in \S~\ref{SectionGenPlot}.
 
-\todonoteinline{Revise computation of confidence intervals}
 An example of human readable report (\emph{confidence intervals} are in square brackets)
 is given in Table~\ref{TableHRep}.
 In addition to averages, the human-readable report provides 95\% confidence intervals.
@@ -2105,8 +2133,6 @@ release/experiment \
 \end{verbatim}
 }
 
-\todonoteinline{Add a description of new clustering methods}
-
 \subsubsection{SA-tree}
 The Spatial Approximation tree (SA-tree)  \cite{navarro2002searching} aims
 to approximate the Voronoi partitioning.
@@ -2887,11 +2913,16 @@ Then, we create an \emph{undirected} edge between a new graph node (representing
 and nodes that represent \ttt{NN} closest points found by the greedy search. 
 Each sub-search starts from some, e.g., random node and proceeds until it cannot find a point that is closer
 than already found \ttt{efConstruction} nearest points (\ttt{efConstruction} is an index-time parameter).
+Similarly, the search procedure executes one or more sub-searches that start from some node and prcoeed
+until it cannot find a point closer than already found \ttt{efSearch} closest to the query.
 
 Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
-This algorithm was presented at SEDE 2008 and SISAP 2012 \cite{krylov2008metrized,malkov2012scalable},
+A basic variant of this algorithm was presented at SEDE 2008 and SISAP 2012 \cite{krylov2008metrized,malkov2012scalable},
 but some of the algorithmic details were missing in these publications.
-This issue was resolved in a subsequent paper \cite{malkov2014}
+This issue was resolved in a subsequent paper \cite{malkov2014}.
+In this paper, however, the values of \ttt{efSearch} and \ttt{efConstruction} are equal to \ttt{NN}.
+The idea of using values of \ttt{efSearch} and \ttt{efConstruction} potentially (much) larger than \ttt{NN}
+was proposed by Malkov and Yashunin \cite{Malkov2016}.
 
 The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads. The number of threads is defined by the parameter \ttt{indexThreadQty}. By default, this parameter is equal to the number of virtual cores.
 The graph updates are synchronized: If a thread  needs to add edges to a node or obtain
@@ -3325,7 +3356,7 @@ When we read data points using the function \ttt{ReadNextObjStr},
 the state object is updated.
 The function \ttt{ReadNextObjStr} may also read an optional external identifier for an object.
 When it produces a non-empty identifier it is memorized by the query server and is further
-used for query processing (see \S~\ref{SectionQueryServer}).\todonote{Add a reference to the query server section}
+used for query processing (see \S~\ref{SectionQueryServer}).
 After all data points are read, this state object is supposed to be passed to the \ttt{Space} object
 in the following fashion:
 \begin{verbatim}
