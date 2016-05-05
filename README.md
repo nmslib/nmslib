@@ -41,7 +41,7 @@ What's new in version 1.5
 -----------------------
 
 1. A new method: a hierarchical (navigable) small-world graph (HNSW), contributed by Yury Malkov (@yurymalkov) 
-2. A query server, which can have clients in Java and Python
+2. A query server, which can have clients in C++, Java, Python, and other languages supported by Apache Thrift
 3. Python bindings for vector **and non**-vector spaces
 4. Improved performance of two core methods SW-graph and NAPP
 5. Better handling of the gold standard data in the benchmarking utility *experiment*
