@@ -80,13 +80,8 @@ cmake .
 make  
 ```
 
-Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in [in the manual](docs/manual.pdf).  
-
-Examples of using the software can be found in the directory [sample_scripts](sample_scripts). A good starting point is a script [sample_scripts/sample_run.sh](sample_scripts/sample_run.sh). This script uses small data sets stored in this repository. You can also download almost every data set used in our evaluations (see the section **Data sets** below). The downloaded data needs to be decompressed (you may need 7z, gzip, and bzip2). Then, copy data files to a directory of choice and set the environment variable:  
-
-```bash
-export DATA_DIR=[path to the chosen directory with data files]
-```
+Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in [in the manual](docs/manual.pdf), which also contains example of using the software.  
+You can also download almost every data set used in our previous evaluations (see the section **Data sets** below). The downloaded data needs to be decompressed (you may need 7z, gzip, and bzip2). Old experimental scripts can be found in the directory [previous_releases_scripts](previous_releases_scripts). However, they will work only with previous releases.
 
 Note that the benchmarking utility **supports caching of ground truth data**, so that ground truth data is not recomputed every time this utility is re-run on the same data set.
 
