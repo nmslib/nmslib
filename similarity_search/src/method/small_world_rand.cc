@@ -115,7 +115,7 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
   pmgr.GetParamOptional("NN",                 NN_,                  10);
   pmgr.GetParamOptional("efConstruction",     efConstruction_,      NN_);
   efSearch_ = NN_;
-  pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   2);
+  pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   1);
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
 
   LOG(LIB_INFO) << "NN                  = " << NN_;
@@ -174,7 +174,7 @@ template <typename dist_t>
 void 
 SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   AnyParamManager pmgr(QueryTimeParams);
-  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  3);
+  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  1);
   pmgr.GetParamOptional("efSearch", efSearch_, NN_);
   string tmp;
   pmgr.GetParamOptional("algoType", tmp, "v1merge"); 

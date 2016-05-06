@@ -81,24 +81,23 @@ namespace similarity {
         indexThreadQty_ = omp_get_max_threads();
 #endif
         pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, indexThreadQty_);
-        pmgr.GetParamOptional("searchMethod", searchMethod_, 3);
         pmgr.GetParamOptional("efConstruction", efConstruction_, 200);
-		pmgr.GetParamOptional("ef", ef_, 20);
-
+        // Let's use a generic algorithm by default!
+        pmgr.GetParamOptional("searchMethod", searchMethod_, 0);
         pmgr.GetParamOptional("maxM", maxM_, M_);
         pmgr.GetParamOptional("maxM0", maxM0_, M_ * 2);
         pmgr.GetParamOptional("mult", mult_, 1 / log(1.0*M_));
         pmgr.GetParamOptional("delaunay_type", delaunay_type_, 1);
         int skip_optimized_index = 0;
         pmgr.GetParamOptional("skip_optimized_index", skip_optimized_index, 0);
-		SetQueryTimeParams(getEmptyParams());
+        LOG(LIB_INFO) << "searchMethod       =" << searchMethod_;
         LOG(LIB_INFO) << "M                  = " << M_;
         LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
         LOG(LIB_INFO) << "efConstruction      = " << efConstruction_;
-        LOG(LIB_INFO) << "ef        		  = " << ef_;
         LOG(LIB_INFO) << "maxM			      = " << maxM_;
         LOG(LIB_INFO) << "maxM0			      = " << maxM0_;
-        LOG(LIB_INFO) << "searchMethod		  = " << searchMethod_;
+
+		    SetQueryTimeParams(getEmptyParams());
         
         if (data_.empty()) return;
 
@@ -241,12 +240,17 @@ namespace similarity {
     void Hnsw<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
         AnyParamManager pmgr(QueryTimeParams);
 
-        pmgr.GetParamOptional("ef", ef_, ef_);
-        pmgr.GetParamOptional("searchMethod", searchMethod_, searchMethod_);
+        if (pmgr.hasParam("ef") && pmgr.hasParam("efSearch")) {
+          throw new runtime_error("The user shouldn't specify parameters ef and efSearch at the same time (they are synonyms)");
+        }
+
+        // ef and efSearch are going to be parameter-synonyms with the default value 20
+        pmgr.GetParamOptional("ef", ef_, 20);
+        pmgr.GetParamOptional("efSearch", ef_, ef_);
+
         pmgr.CheckUnused();
         LOG(LIB_INFO) << "Set HNSW query-time parameters:";
-        LOG(LIB_INFO) << "ef           =" << ef_;
-        LOG(LIB_INFO) << "searchMethod       =" << searchMethod_;
+        LOG(LIB_INFO) << "ef(Search)         =" << ef_;
     }
 
     template <typename dist_t>
@@ -324,7 +328,10 @@ namespace similarity {
         for (int level = min(curlevel, maxlevelcopy); level >= 0; level--) {
             if (ep == nullptr)
                 ep = resultSet.top().getMSWNodeHier();
-            resultSet.empty();
+
+            priority_queue<HnswNodeDistCloser<dist_t>> eq;
+            resultSet.swap(eq);
+
             if (ep == nullptr)
                 cerr << "!!!\n";
             kSearchElementsWithAttemptsLevel(space, NewElement->getData(), efConstruction_, resultSet, ep, level);//DOTO: make level
