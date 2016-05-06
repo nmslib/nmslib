@@ -276,6 +276,7 @@ it is also possible to compute an accuracy of a \knn based classification
 \item We have adopted a new method: a hierarchical (navigable) small-world graph (HNSW),
       contributed by Yury Malkov \cite{Malkov2016}, see \S~\ref{SectionHNSW}.
 \item We have improved performance of two core methods SW-graph (\S~\ref{SectionSWGraph}) and NAPP (\ref{SectionNAPP}).
+\item We have written basic tuning guidelines for SW-graph, HNSW, and NAPP \ref{SectionTuningGuide}.
 \item We have modified the workflow of our benchmarking utility \ttt{experiment}
 and improved handling of the gold standard data, see \S~\ref{SectionBenchEfficiency};
 \item We have updated the API so that methods can save and restore indices, see \S~\ref{SectionCreateMethod}.
@@ -438,10 +439,6 @@ most importantly,
 a benchmarking utility \ttt{experiment}, which carries out experiments,
 and testing utilities \ttt{bunit}, \ttt{test\_integer}, and \ttt{bench\_distfunc}.
 A more detailed description of the build process on Linux is given in \S~\ref{SectionBuildLinux}.
-
-Examples of using the benchmarking utility can be found in the directory \href{\replocdir sample_scripts}{sample\_scripts}. 
-Please, check the script \href{\replocfile sample_scripts/sample_run.sh}{sample\_run.sh}. 
-The latter runs a bunch of methods. It can also create an efficiency-effectiveness plot if needed.
 
 \subsection{Query Server (Linux-only)}\label{SectionQueryServer}
 
@@ -1284,13 +1281,13 @@ For the relative error, however, we use the geometric mean  \cite{king:1986}.
 We provide the Python script to generate nice performance graphs 
 from tab-separated data file produced by the 
 benchmarking utility \ttt{experiment}. 
-The plotting script is \href{\replocfile sample_scripts/genplot_configurable.py}{genplot\_configurable.py}.
+The plotting script is \href{\replocfile scripts/genplot_configurable.py}{genplot\_configurable.py}.
 In addition to Python, it requires Latex and PGF. 
 This script is supposed to run only on Linux.
 
 Consider the following example of using \ttt{genplot\_configurable.py}:
 \begin{verbatim}
-../sample_scripts/genplot_configurable.py  \
+../scripts/genplot_configurable.py  \
            -n MethodName \
            -i result_K\=1.dat -o plot_1nn \
            -x 1~norm~Recall \
@@ -1362,7 +1359,7 @@ If the relative position is specified, the legend is printed inside the main
 plotting area, e.g.:
 \newpage
 \begin{verbatim}
-../sample_scripts/genplot_configurable.py  \
+../scripts/genplot_configurable.py  \
            -n MethodName \
            -i result_K\=1.dat -o plot_1nn \
            -x 1~norm~Recall \
@@ -1774,6 +1771,7 @@ and provide examples of their use via the benchmarking utility \ttt{experiment} 
 Note that a few parameters are query-time parameters, which means that they 
 can be changed without rebuilding the index see \S~\ref{SectionBenchEfficiency}.
 For the description of the utility \ttt{experiment} see \S~\ref{SectionRunBenchmark}.
+For several methods we provide \emph{basic tuning guidelines}, see \S~\ref{SectionTuningGuide}.
 
 \subsection{Space Partitioning Methods} \label{SectionSpacePartMeth} 
 Parameters of space partitioning methods are summarized in Table~\ref{TableSpaceMethPart}.
@@ -2975,8 +2973,8 @@ Note though that for layers higher than $m$, we always use \ttt{efConstruction}=
 An outcome of a search in a layer is a set of data points that are close to the new point.
 These data points become neighbors of the new point in the layer's graph.
 Note that unlike the older SW-graph, the new algorithm has a limit on the maximum number of neighbors.
-Specifically, the maximum number of neighbors in all layers but the ground layer is \ttt{M} (an index-time parameter).
-The maximum number of neighbors for the ground layer is \ttt{M0} (an index-time parameter). 
+Specifically, the maximum number of neighbors in all layers but the ground layer is \ttt{maxM} (an index-time parameter).
+The maximum number of neighbors for the ground layer is \ttt{maxM0} (an index-time parameter). 
 
 A search algorithm is similar to the indexing algorithm. 
 It starts from the maximum-level layer and proceeds to lower-level layers by searching one layer at a time.
@@ -2996,9 +2994,36 @@ The number of threads is defined by the
 parameter \ttt{indexThreadQty}. By default, this parameter is equal to the number
 of virtual cores.
 
-\todonoteinline{Modify default values for SearchMethod and query time parameters}
-\todonoteinline{Add examples and update parameter tables}
-\todonoteinline{Saving the index, but only for L2 and the cosine-similarity}
+A sample command line to test HNSW using the utility \texttt{experiment}:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
+  --knn 1  \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --method hnsw \
+    --createIndex M=10,efConstruction=20,indexThreadQty=4,searchMethod=0 \
+    --queryTimeParams efSearch=10 
+\end{verbatim}
+}
+
+HNSW is capable of saving an index for optimized implementations, i.e., when \ttt{SearchMethod} is 3 or 4. Here
+is an example for the optimized $L_2$ implementation:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType cosinesimil --testSetQty 5 --maxNumQuery 100 \
+  --knn 1  \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --cachePrefixGS hnsw \
+  --method hnsw \
+    --createIndex M=10,efConstruction=20,indexThreadQty=4,searchMethod=4 \
+    --queryTimeParams efSearch=10 
+    --saveIndex hnsw_index
+\end{verbatim}
+}
 
 \subsubsection{NN-Descent.} \label{SectionNNDescent}
 The NN-descent is an iterative procedure initialized with randomly selected
@@ -3047,7 +3072,7 @@ release/experiment \
                             points (seen so far) closest to the query.
 \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{SW-graph} (\ttt{small\_world\_rand}) \cite{malkov2012scalable,malkov2014}  }\\
+\multicolumn{2}{c}{\textbf{SW-graph} (\ttt{sw-graph}) \cite{krylov2008metrized,malkov2012scalable,malkov2014}  }\\
 \cmidrule(l){1-2} 
 \ttt{NN}                  & For a newly added point find this number of most closest points
                             that make the initial neighborhood of the point. When more points are added,
@@ -3055,8 +3080,20 @@ release/experiment \
 \ttt{efConstruction}      & The depth of the search that is used to find neighbors during indexing.
                             This parameter is analogous to \ttt{efSearch}.\\
 \ttt{initIndexAttempts}   & The number of random search restarts carried out to add one point.\\
-\ttt{indexThreadQty}      & The number of indexing threads. If \href{http://openmp.org/wp/}{OpenMP}  is available the default value is
+\ttt{indexThreadQty}      & The number of indexing threads. The default value is
                             equal to the number of (logical) CPU cores. \\
+\cmidrule(l){1-2} 
+\multicolumn{2}{c}{\textbf{Hierarchical Navigable SW-graph} (\ttt{hnsw}) \cite{malkov2014}  }\\
+\cmidrule(l){1-2} 
+\ttt{mult}                & A scaling coefficient to determine the depth of a layer (see the paper by Malkov and Yashunin \cite{malkov2014} for details). A default value seems to be good enought. \\
+\ttt{searchMethod}        & A type of the search algorithm: 0 means a generic implementation,
+                            3 means an $L_2$-optimized version, and 4 means a version optimized for the cosine similarity.      \\
+\ttt{maxM}                & The maximum number of neighbors in all layers but the ground layer. \\
+\ttt{maxM0}               & The maximum number of neighbors in the \emph{ground} layer (default values seems to be good enough). \\
+ 
+\ttt{efConstruction}      & The depth of the search that is used to find neighbors during indexing. \\
+\ttt{delaunay\_type}      & A type of the pruning heuristic (we do not recommend changing this value). \\
+
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{NN-descent} (\ttt{nndes}) \cite{dong2011efficient,malkov2012scalable,malkov2014}  }\\
 \cmidrule(l){1-2} 
@@ -3130,6 +3167,41 @@ release/experiment \
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
 \end{table}
+
+\section{Tuning Guidelines}\label{SectionTuningGuide}
+\subsection{NAPP}
+Generally, increasing the overall number of pivots \ttt{numPivot} helps to improve performance.
+However, using a large number of pivots leads to increased indexing times. 
+
+A good compromise is to use \ttt{numPivot} somewhat larger than $\sqrt N$, where $N$ is the overall
+number of data points. Similarly, the number of pivots to be indexed (\ttt{numPivotIndex})
+should be somewhat larger than $\sqrt{\mbox{\ttt{numPivot}}}$. Finally, the number of pivots
+to be searched (\ttt{numPivotSearch}) should be in the order of $\sqrt{\mbox{\ttt{numPivotIndex}}}$.
+
+After selecting the values of \ttt{numPivot} and \ttt{numPivotIndex}, finding an optimal value of
+\ttt{numPivotSearch}---which provides a necessary recall---requires just a single run of the utility \ttt{experiment}
+(you need to specify all potentially good values of \ttt{numPivotSearch} multiple times using the option
+\ttt{--QueryTimeParams}). 
+
+
+\subsection{SW-graph and HNSW}
+The basic guidelines are similar for both methods.
+Specifically, increasing the value of \ttt{efConstruction} improves the quality of a constructed graph and
+leads to higher accuracy of search.
+However this also leads to longer indexing times.
+Similarly, increasing the value of \ttt{efSearch} improves recall at the expense of longer retrieval time. 
+The reasonable range of values for these parameters is 100-2000.
+
+In the case of SW-graph, the user can also specify the number of sub-searches: \ttt{initIndexAttempts} and
+\ttt{initSearchAttempts} used during indexing and retrieval, respectively. 
+However, we find that in most cases the number of sub-searches needs to be set to one.
+Yet, for large values of \ttt{efConstruction} and \ttt{efSearch} (e.g., larger than 2000)
+it sometimes makes sense to increase the number of sub-searches rather than further increasing
+\ttt{efConstruction} and/or \ttt{efSearch}.
+
+The recall values are also affected by parameters \ttt{NN} (for SW-graph) and \ttt{maxM} (HNSW).
+Increasing the values of these parameters (to a certain degree) leads to better recall and shorter retrieval times
+(at the expense of longer indexing time).  The reasonable range of values for these parameters is 5-100.
 
 \section{Extending the code}\label{SectionExtend}
 It is possible to add new spaces and search methods.
@@ -3889,8 +3961,8 @@ It is up to a designer of the space to decide on the default value for an unspec
 All existing implementations use \emph{zero} as the default value.
 Again, elements can be separated by spaces or commas/columns instead of spaces.
 
-In addition, the directory \ttt{sample\_scripts} contains the full set of scripts that can be used to re-produce our NIPS'13, SISAP'13, DA'14, and VLDB'15 results \cite{Boytsov_and_Bilegsaikhan:sisap2013,Boytsov_and_Bilegsaikhan:nips2013,ponomarenko2014comparative,naidan2015permutation}.
-This includes the software to generate plots (see also \S~\ref{SectionGenPlot}). 
+In addition, the directory \ttt{previous\_releases\_scripts} contains the full set of scripts that can be used to re-produce our NIPS'13, SISAP'13, DA'14, and VLDB'15 results \cite{Boytsov_and_Bilegsaikhan:sisap2013,Boytsov_and_Bilegsaikhan:nips2013,ponomarenko2014comparative,naidan2015permutation}.
+However, one would need to use older software version (1.0 for NIPS'13 and 1.1 for VLDB'15).
 Additionally, to reproduce our previous results, one needs to obtain data sets using scripts
 \href{\replocfile data/get_data_nips2013.sh}{data/get\_data\_nips2013.sh} 
 and \href{\replocfile data/get_data_vldb2015.sh}{data/get\_data\_vldb2015.sh}. 
