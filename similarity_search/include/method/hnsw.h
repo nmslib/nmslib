@@ -109,9 +109,6 @@ namespace similarity {
                 templist.pop();
             }
 
-            priority_queue<HnswNodeDistCloser<dist_t>> eq;
-            resultSet1.swap(eq);
-
             for (HnswNodeDistFarther<dist_t> curen2 : returnlist) {
                 resultSet1.emplace(curen2.getDistance(), curen2.getMSWNodeHier());
             }
