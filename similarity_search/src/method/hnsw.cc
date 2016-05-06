@@ -83,7 +83,7 @@ namespace similarity {
         pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, indexThreadQty_);
         pmgr.GetParamOptional("efConstruction", efConstruction_, 200);
         // Let's use a generic algorithm by default!
-        //pmgr.GetParamOptional("searchMethod", searchMethod_, 0);
+        pmgr.GetParamOptional("searchMethod", searchMethod_, 0);
         pmgr.GetParamOptional("maxM", maxM_, M_);
         pmgr.GetParamOptional("maxM0", maxM0_, M_ * 2);
         pmgr.GetParamOptional("mult", mult_, 1 / log(1.0*M_));
@@ -329,9 +329,9 @@ namespace similarity {
             ep = curNode;
         }
 
-        priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
+        
         for (int level = min(curlevel, maxlevelcopy); level >= 0; level--) {
-
+			priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
             kSearchElementsWithAttemptsLevel(space, NewElement->getData(), efConstruction_, resultSet, ep, level);//DOTO: make level
            
             switch (delaunay_type_) {
