@@ -90,7 +90,7 @@ namespace similarity {
         pmgr.GetParamOptional("delaunay_type", delaunay_type_, 1);
         int skip_optimized_index = 0;
         pmgr.GetParamOptional("skip_optimized_index", skip_optimized_index, 0);
-        LOG(LIB_INFO) << "searchMethod       =" << searchMethod_;
+        
         LOG(LIB_INFO) << "M                  = " << M_;
         LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
         LOG(LIB_INFO) << "efConstruction      = " << efConstruction_;
@@ -146,11 +146,13 @@ namespace similarity {
                 LOG(LIB_INFO) << "Thus using an optimised function for base 16";
                 fstdistfunc_ = L2SqrSIMD16Ext;
                 dist_func_type_ = 1;
+                searchMethod_ = 3;
             }
             else {
                 LOG(LIB_INFO) << "Thus using function with any base";
                 fstdistfunc_ = L2SqrSIMDExt;
                 dist_func_type_ = 2;
+                searchMethod_ = 3;
             }
         }
         else if (space_.StrDesc().compare("CosineSimilarity") == 0 && sizeof(dist_t) == 4)
@@ -163,21 +165,23 @@ namespace similarity {
                 LOG(LIB_INFO) << "Thus using an optimised function for base 4";
                 fstdistfunc_ = NormScalarProductSIMD;
                 dist_func_type_ = 3;
+                searchMethod_ = 4;
             }
             else {
                 LOG(LIB_INFO) << "Thus using function with any base";
                 LOG(LIB_INFO) << "Search method 4 is not allowed in this case";
                 fstdistfunc_ = NormScalarProductSIMD;
                 dist_func_type_ = 3;
+                searchMethod_ = 3;
             }
         }
         else {
             LOG(LIB_INFO) << "No appropriate custom distance function for " << space_.StrDesc();
-            if (searchMethod_ != 0 && searchMethod_ != 1)
+            //if (searchMethod_ != 0 && searchMethod_ != 1)
                 searchMethod_ = 0;
             return; // No optimized index
         }
-
+        LOG(LIB_INFO) << "searchMethod       =" << searchMethod_;
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
 
         int total_memory_allocated = (memoryPerObject_*ElList_.size());
@@ -284,7 +288,7 @@ namespace similarity {
 
         NewElement->init(curlevel, maxM_, maxM0_);       
 
-        priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
+        
 
 
         int maxlevelcopy = maxlevel_;
@@ -325,15 +329,9 @@ namespace similarity {
             ep = curNode;
         }
 
+        
         for (int level = min(curlevel, maxlevelcopy); level >= 0; level--) {
-            if (ep == nullptr)
-                ep = resultSet.top().getMSWNodeHier();
-
-            priority_queue<HnswNodeDistCloser<dist_t>> eq;
-            resultSet.swap(eq);
-
-            if (ep == nullptr)
-                cerr << "!!!\n";
+			priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
             kSearchElementsWithAttemptsLevel(space, NewElement->getData(), efConstruction_, resultSet, ep, level);//DOTO: make level
            
             switch (delaunay_type_) {
