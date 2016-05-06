@@ -42,12 +42,12 @@
 namespace similarity {
 	float L2SqrSIMD16Ext(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
 
-		size_t qty4 = qty >> 2;
+		//size_t qty4 = qty >> 2;
 		size_t qty16 = qty >> 4;
 
 		const float* pEnd1 = pVect1 + (qty16 << 4);
-		const float* pEnd2 = pVect1 + (qty4 << 2);
-		const float* pEnd3 = pVect1 + qty;
+		//const float* pEnd2 = pVect1 + (qty4 << 2);
+		//const float* pEnd3 = pVect1 + qty;
 
 		__m128  diff, v1, v2;
 		__m128  sum = _mm_set1_ps(0);
@@ -154,12 +154,12 @@ namespace similarity {
 
 		const float* pEnd1 = pVect1 + 16 * qty16;
 		const float* pEnd2 = pVect1 + 4 * qty4;
-		const float* pEnd3 = pVect1 + qty;
+		//const float* pEnd3 = pVect1 + qty;
 
 		__m128  v1, v2;
 		__m128  sum_prod = _mm_set1_ps(0);
-		__m128  sum_square1 = sum_prod;
-		__m128  sum_square2 = sum_prod;
+		//__m128  sum_square1 = sum_prod;
+		//__m128  sum_square2 = sum_prod;
 
 		while (pVect1 < pEnd1) {
 

@@ -266,7 +266,7 @@ namespace similarity {
         char *memt = memlevels;
         *((int *)(memt)) = (int)allFriends[0].size();
         memt += sizeof(int);
-        for (int j = 0; j < allFriends[0].size(); j++) {
+        for (size_t j = 0; j < allFriends[0].size(); j++) {
             *((int *)(memt)) = (int)allFriends[0][j]->getId();
             memt += sizeof(int);
         }
@@ -289,7 +289,7 @@ namespace similarity {
             *((int *)(memt)) = (int)allFriends[i].size();
 
             memt += sizeof(int);
-            for (int j = 0; j < allFriends[i].size(); j++) {
+            for (size_t j = 0; j < allFriends[i].size(); j++) {
                 *((int *)(memt)) = (int)allFriends[i][j]->getId();
                 memt += sizeof(int);
             }

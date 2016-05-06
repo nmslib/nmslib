@@ -66,7 +66,7 @@ namespace similarity {
     float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes);
 
     template <typename dist_t>    Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t>& space,   const ObjectVector& data) :
-        space_(space), data_(data), PrintProgress_(PrintProgress) {}
+        space_(space), PrintProgress_(PrintProgress), data_(data) {}
 
     template <typename dist_t> void Hnsw<dist_t>::CreateIndex(const AnyParams& IndexParams)
     {
@@ -77,13 +77,14 @@ namespace similarity {
 
         pmgr.GetParamOptional("M", M_, 16);
 
+        // Let's use a generic algorithm by default!
+        searchMethod_ = 0;
+
 #ifdef _OPENMP
         indexThreadQty_ = omp_get_max_threads();
 #endif
         pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, indexThreadQty_);
         pmgr.GetParamOptional("efConstruction", efConstruction_, 200);
-        // Let's use a generic algorithm by default!
-        pmgr.GetParamOptional("searchMethod", searchMethod_, 0);
         pmgr.GetParamOptional("maxM", maxM_, M_);
         pmgr.GetParamOptional("maxM0", maxM0_, M_ * 2);
         pmgr.GetParamOptional("mult", mult_, 1 / log(1.0*M_));
@@ -91,15 +92,22 @@ namespace similarity {
         int skip_optimized_index = 0;
         pmgr.GetParamOptional("skip_optimized_index", skip_optimized_index, 0);
         
-        LOG(LIB_INFO) << "M                  = " << M_;
+        LOG(LIB_INFO) << "M                   = " << M_;
         LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
         LOG(LIB_INFO) << "efConstruction      = " << efConstruction_;
-        LOG(LIB_INFO) << "maxM			      = " << maxM_;
-        LOG(LIB_INFO) << "maxM0			      = " << maxM0_;
+        LOG(LIB_INFO) << "maxM			          = " << maxM_;
+        LOG(LIB_INFO) << "maxM0			          = " << maxM0_;
+
+        LOG(LIB_INFO) << "mult                = " << mult_;
+        LOG(LIB_INFO) << "skip_optimized_index= " << skip_optimized_index;
+        LOG(LIB_INFO) << "delaunay_type       = "  << delaunay_type_;
 
 		    SetQueryTimeParams(getEmptyParams());
         
-        if (data_.empty()) return;
+        if (data_.empty()) {
+          pmgr.CheckUnused();
+          return;
+        }
 
         // One entry should be added before all the threads are started, or else add() will not work properly
         HnswNode *first = new HnswNode(data_[0], 0 /* id == 0 */);        
@@ -124,8 +132,12 @@ namespace similarity {
 
         data_level0_memory_ = NULL;
         linkLists_ = NULL;
-        if (skip_optimized_index)
-            return;
+
+        if (skip_optimized_index) {
+          LOG(LIB_INFO) << "searchMethod			  = " << searchMethod_;
+          pmgr.CheckUnused();
+          return;
+        }
 
         int friendsSectionSize = (maxM0_ + 1)*sizeof(int);
         //Checking for maximum size of the datasection:
@@ -139,7 +151,7 @@ namespace similarity {
         // Selecting custom made functions 
         if (space_.StrDesc().compare("SpaceLp: p = 2 do we have a special implementation for this p? : 1") == 0 && sizeof(dist_t) == 4)
         {
-            LOG(LIB_INFO) << "\nThe vectorspace is Euclidian";
+            LOG(LIB_INFO) << "\nThe space is Euclidean";
             vectorlength_ = ((dataSectionSize - 16) >> 2);
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
             if (vectorlength_ % 16 == 0) {
@@ -179,9 +191,12 @@ namespace similarity {
             LOG(LIB_INFO) << "No appropriate custom distance function for " << space_.StrDesc();
             //if (searchMethod_ != 0 && searchMethod_ != 1)
                 searchMethod_ = 0;
+            LOG(LIB_INFO) << "searchMethod			  = " << searchMethod_;
+            pmgr.CheckUnused();
             return; // No optimized index
         }
-        LOG(LIB_INFO) << "searchMethod       =" << searchMethod_;
+        pmgr.CheckUnused();
+        LOG(LIB_INFO) << "searchMethod			  = " << searchMethod_;
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
 
         int total_memory_allocated = (memoryPerObject_*ElList_.size());
@@ -526,9 +541,9 @@ namespace similarity {
         output.write(data_level0_memory_, data_plus_links0_size);
         
         //output.write(data_level0_memory_, memoryPerObject_*totalElementsStored_);
-        
 
-        size_t total_memory_allocated = 0;
+        //size_t total_memory_allocated = 0;
+
         for (size_t i = 0; i < totalElementsStored_; i++) {            
             unsigned int sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);       
             output.write((char*)&sizemass, sizeof(unsigned int));
