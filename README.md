@@ -4,7 +4,7 @@ Non-Metric Space Library (NMSLIB), version 1.5
 =================
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
 
-NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library.
+NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
 **Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Daniel Lemire, Alexander Ponomarenko.
 
@@ -14,7 +14,7 @@ Leo(nid) Boytsov is a maintainer.
 
 NMSLIB is generic yet fast!
 =================
-Even though our methods are generic, they often outperform specialized methods for the Euclidean and/or angular space (i.e., for the cosine similarity).
+Even though our methods are generic, they often outperform specialized methods for the Euclidean and/or angular distance (i.e., for the cosine similarity).
 Below are the results (as of May 2016) of NMSLIB compared to the best implementations participated in [a public evaluation code-named ann-benchmarks](https://github.com/erikbern/ann-benchmarks). Our main competitors are: 
 
 1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of random-projection KD-trees.
@@ -45,7 +45,7 @@ What's new in version 1.5
 3. Python bindings for vector **and non**-vector spaces
 4. Improved performance of two core methods SW-graph and NAPP
 5. Better handling of the gold standard data in the benchmarking utility *experiment*
-6. Updated the API so that methods can save and restore indices
+6. Updated API that permits search methods to serialize indices
 7. Improved documentation (e.g., we added tuning guidelines for best methods)
 
 General information
@@ -81,7 +81,7 @@ cmake .
 make  
 ```
 
-Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in [in the manual](docs/manual.pdf), which also contains example of using the software.  
+Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in [in the manual](docs/manual.pdf), which also contains examples of using the software.  
 
 You can also download almost every data set used in our previous evaluations (see the section **Data sets** below). The downloaded data needs to be decompressed (you may need 7z, gzip, and bzip2). Old experimental scripts can be found in the directory [previous_releases_scripts](previous_releases_scripts). However, they will work only with previous releases.
 
@@ -106,9 +106,9 @@ you can start the server as follows:
 ```
 There are also three sample clients implemented in [C++](query_server/cpp_client_server), [Python](query_server/python_client/),
 and [Java](query_server/java_client/). 
-A client reads a string representation of the query object from the standard stream.
+A client reads a string representation of a query object from the standard stream.
 The format is the same as the format of objects in a data file. 
-Here is an example of searching for ten vectors closest to the first vector (stored in row 1) of a provided sample data file:
+Here is an example of searching for ten vectors closest to the first data set vector (stored in row one) of a provided sample data file:
 ```
 export DATA_FILE=../../sample_data/final8_10K.txt
 head -1 $DATA_FILE | ./query_client -p 10000 -a localhost  -k 10
@@ -117,7 +117,7 @@ It is also possible to generate client classes for other languages supported by 
 ```
 thrift --gen csharp  protocol.thrift
 ```
-For instructions on using generated code, please check out the [Apache Thrift tutorial](https://thrift.apache.org/tutorial/).
+For instructions on using generated code, please consult the [Apache Thrift tutorial](https://thrift.apache.org/tutorial/).
 
 Python bindings (Linux-only)
 -----------------------
