@@ -2968,7 +2968,7 @@ a successor of the SW-graph.
 HNSW can be much faster (especially during indexing) and is more robust.
 However, the current implementation is still experimental and we will update it in the near future.
 
-HNSW can be seen as a multi-layer and a multi-resolution version of the SW-graph. 
+HNSW can be seen as a multi-layer and a multi-resolution variant of a proximity graph.
 A ground (zero-level) layer includes all data points. The higher is the layer, the fewer points it has.
 When a data point is added to HNSW, we select the maximum level $m$ randomly. 
 In that, the probability of selecting level $m$ decreases exponentially with $m$.
