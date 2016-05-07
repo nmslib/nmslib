@@ -974,6 +974,7 @@ carries out an evaluation using the specified set of queries and a query type (e
 queries from a specified file). 
 If the user does not specify any query-time parameters, there is only one evaluation to be carried out.
 This evaluation uses default query-time parameters.
+In general, we ensure that \emph{whenever a query-time parameter is missed, the default value is used}.
 
 Similar to parameters of the spaces, 
 a set of method's parameters is a comma-separated list (no-spaces)
@@ -2719,7 +2720,8 @@ This secondary filtering may eliminate less promising entries, but it incurs add
 computational costs, which may outweigh the benefits of additional filtering ``power'', if the distance is cheap.
 
 In many cases, good performance can be achieved by selecting pivots randomly. However, we find
-that pivots can also be engineered. To load external pivots, the user should specify
+that pivots can also be engineered (more information on this topic will be published soon). 
+To load external pivots, the user should specify
 an index-time parameter \ttt{pivotFile}. The pivots should be in the same format as the data points.
 
 Note that our implementation is different from that of Tellez~\cite{tellez2013succinct} in several ways.
@@ -2887,40 +2889,48 @@ Note that \ttt{dbScanFrac} is a \textbf{query-time} parameter. \\
 \end{table}
 
 \subsection{Proximity/Neighborhood Graphs} \label{SectionProxGraph}
-One efficient and effective approach
-relies on building a graph, where objects are graph nodes and edges connect sufficiently close objects.
-When edges connect mostly near neighbors, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
+One efficient and effective search approach
+relies on building a graph, where data points are graph nodes and edges connect sufficiently close points.
+When edges connect nearest neighbor points, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
 
-A search process is a series of sub-searches 
-(the number of sub-searches is defined by the parameter \ttt{initSearchAttempts}).
-A sub-search starts at some, e.g., random node and proceeds to expanding the set of traversed nodes by following neighboring links. The sub-search stops when we cannot find points 
-that are closer than already found \ttt{efSearch} nearest points (\ttt{efSearch} is a query-time search parameter).
-Note that the greedy search is only approximate and does not necessarily return all \ttt{efSearch} nearest neighbors.
+In a proximity-graph a search process is a series of greedy sub-searches.
+A sub-search starts at some, e.g., random node and proceeds to expanding the set of traversed nodes in a best-first fashion by following neighboring links. 
+The algorithm resembles a Dijkstra's shortest-path algorithm in that, in each step, 
+it selects an unvisited point closest to the query. 
 
-In our library we use two approaches to create proximity graphs, which are described below.
+There have been multiple stopping heuristics proposed.
+For example, we can stop after visiting a certain number of nodes.
+In NMSLIB, the sub-search carries out a $k'$-NN search for some $k'\ge k$ and
+terminates when the result set stops changing (i.e., we cannot find a point that is closer to a query than the $k'$-th closest point
+already discovered by the sub-search).
+Note that the greedy search is only approximate and does not necessarily return all true nearest neighbors.
+
+In our library we use several approaches to create proximity graphs, which are described below.
 Parameters of these methods are summarized in Table~\ref{TableProxGraphs}.
-Note that both methods have the parameter with the same name, namely, \ttt{NN}.
+Note that SW-graph and NN-descent have the parameter with the same name, namely, \ttt{NN}.
 However, this parameter has a somewhat different interpretation depending on the method.
-Also note that these methods support only the nearest-neighbor, but not the range search.
+Also note that our proximity-graph methods support only the nearest-neighbor, but not the range search.
 
 \subsubsection{Small World Graph (SW-graph).} \label{SectionSWGraph}
-In the Small World graph (SW-graph),
+In the (Navigable) Small World graph (SW-graph),\footnote{SW-graph is also known as a Metrized Small-World (MSW) graph
+and a Navigable Small World (NSW) graph.}
 indexing is a bottom-up procedure that relies on the previously described greedy search algorithm.  
 The number of restarts, though, is defined by a different parameter, i.e., \ttt{initIndexAttempts}.
-We add points one by one. For each data point, 
+We insert points one by one. For each data point, 
 we find \ttt{NN} closest points using an already constructed index.
 Then, we create an \emph{undirected} edge between a new graph node (representing a new point) 
 and nodes that represent \ttt{NN} closest points found by the greedy search. 
 Each sub-search starts from some, e.g., random node and proceeds until it cannot find a point that is closer
 than already found \ttt{efConstruction} nearest points (\ttt{efConstruction} is an index-time parameter).
-Similarly, the search procedure executes one or more sub-searches that start from some node and prcoeed
+Similarly, the search procedure executes one or more sub-searches that start from some node and proceed
 until it cannot find a point closer than already found \ttt{efSearch} closest to the query.
+The number of sub-searches is defined by the parameter \ttt{initSearchAttempts}.
 
 Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
-A basic variant of this algorithm was presented at SEDE 2008 and SISAP 2012 \cite{krylov2008metrized,malkov2012scalable},
-but some of the algorithmic details were missing in these publications.
-This issue was resolved in a subsequent paper \cite{malkov2014}.
-In this paper, however, the values of \ttt{efSearch} and \ttt{efConstruction} are equal to \ttt{NN}.
+A simpler and less efficient variant of this algorithm was presented at SEDE 2008 \cite{krylov2008metrized}.
+It was subsequently improved in two steps with results appearing in SISAP 2012 proceedings \cite{malkov2012scalable}
+and in an Information Systems publication \cite{malkov2014}, respectively.
+In the latter paper, however, the values of \ttt{efSearch} and \ttt{efConstruction} are set equal to \ttt{NN}.
 The idea of using values of \ttt{efSearch} and \ttt{efConstruction} potentially (much) larger than \ttt{NN}
 was proposed by Malkov and Yashunin \cite{Malkov2016}.
 
@@ -2953,7 +2963,8 @@ mode this is only possible if gold standard data is cached (hence, the option \t
 
 \subsubsection{Hierarchical Navigable Small World Graph (HNSW).} \label{SectionHNSW}
 
-The Hierarchical Navigable Small World Graph (HNSW) \cite{Malkov2016} is an improved variant of the SW-graph.
+The Hierarchical Navigable Small World Graph (HNSW) \cite{Malkov2016} is a new search method,
+a successor of the SW-graph.
 HNSW can be much faster (especially during indexing) and is more robust.
 However, the current implementation is still experimental and we will update it in the near future.
 
@@ -2962,31 +2973,43 @@ A ground (zero-level) layer includes all data points. The higher is the layer, t
 When a data point is added to HNSW, we select the maximum level $m$ randomly. 
 In that, the probability of selecting level $m$ decreases exponentially with $m$.
 
-The new point is added to all layers from zero to $m$ using a search-based algorithm very similar to that of the 
-basic SW-graph. 
-The search starts from the maximum-level layer and proceeds to lower layers by searching one layer at a time.
+Similarly to the SW-graph, the HNSW is constructed by inserting data points, one by one.
+A new point is added to all layers starting from layer $m$ down to layer zero.
+This is done using a search-based algorithm similar to that of the basic SW-graph. 
+The quality is controlled by the parameter \ttt{efConstruction}.
+
+Specifically, a search starts from the maximum-level layer and proceeds to lower layers by searching one layer at a time.
+For all layers higher than the ground layer, the search algorithm is a 1-NN search 
+that greedily follows the closest neighbor (this is equivalent to having \ttt{efConstruction}=1).
 The closest point found at the layer $h+1$ is used as a starting point for the search carried out at the layer $h$. 
-The search procedure is a previously described greedy search algorithm whose quality is controlled 
-by the parameter \ttt{efConstruction}.
-Note though that for layers higher than $m$, we always use \ttt{efConstruction}=1.
+For the ground layer, we carry an \ttt{M}-NN search whose quality is controlled by the parameter \ttt{efConstruction}.
+Note that the ground-layer search relies one the same algorithm as we use for the SW-graph (yet,
+we use only a single sub-search, which is equivalent to setting \ttt{initIndexAttempts} to one).
 
 An outcome of a search in a layer is a set of data points that are close to the new point.
-These data points become neighbors of the new point in the layer's graph.
+Using one of the heuristics described by Malkov and Yashunin \cite{Malkov2016},
+we select points from this set to become neighbors of the new point (in the layer's graph).
+The choice of the heuristic is controlled by the parameter \ttt{delaunay\_type}.
+
 Note that unlike the older SW-graph, the new algorithm has a limit on the maximum number of neighbors.
-Specifically, the maximum number of neighbors in all layers but the ground layer is \ttt{maxM} (an index-time parameter).
-The maximum number of neighbors for the ground layer is \ttt{maxM0} (an index-time parameter). 
+If the limit is exceeded, the heuristics are used to keep only the best neighbors.
+Specifically, the maximum number of neighbors in all layers but the ground layer is \ttt{maxM} (an index-time parameter,
+which is equal to \ttt{M} by default).
+The maximum number of neighbors for the ground layer is \ttt{maxM0} (an index-time parameter,
+which is equal to $2\times$\ttt{M} by default). 
 
 A search algorithm is similar to the indexing algorithm. 
 It starts from the maximum-level layer and proceeds to lower-level layers by searching one layer at a time.
+For all layers higher than the ground layer, the search algorithm is a 1-NN search 
+that greedily follows the closest neighbor (this is equivalent to having \ttt{efSearch}=1).
 The closest point found at the layer $h+1$ is used as a starting point for the search carried out at the layer $h$. 
-For all layers but the ground layer, we always use \ttt{efSearch}=1.
-When we reach the ground layer, we carry out the regular search algorithm whose quality is controlled by the parameter \ttt{efSearch}.
-Note that the algorithm does not carry out multiple sub-searches starting from different random data points.
+For the ground layer, we carry an \knn search whose quality is controlled by the parameter \ttt{efSearch} (in the 
+paper by Malkov and Yashunin \cite{Malkov2016} this parameter is denoted as \ttt{ep}).
+The ground-layer search relies one the same algorithm as we use for the SW-graph,
+but it does not carry out multiple sub-searches starting from different random data points.
 
-For $L_2$ and the cosine similarity, HNSW has optimized implementations. To enable them,
-one has to use a query-time parameter \ttt{searchMethod}. 
-Setting \ttt{searchMethod} to 3 and 4 enables optimized implementations for $L_2$ and the cosine similarity, respectively.
-The default value of \ttt{searchMethod} is zero, which corresponds to a generic algorithm.
+For $L_2$ and the cosine similarity, HNSW has optimized implementations, which are enabled by default.
+To enforce the use of the generic algorithm, set the parameter \ttt{skip\_optimized\_index} to one.
 
 Similar to SW-graph, the indexing algorithm can be expensive. 
 It is, therefore, accelerated by running parallel searches in multiple threads. 
@@ -3008,8 +3031,8 @@ release/experiment \
 \end{verbatim}
 }
 
-HNSW is capable of saving an index for optimized implementations, i.e., when \ttt{SearchMethod} is 3 or 4. Here
-is an example for the optimized $L_2$ implementation:
+HNSW is capable of saving an index for optimized $L_2$ and the cosine-similarity implementations. 
+Here is an example for $L_2$:
 {
 \footnotesize
 \begin{verbatim}
@@ -3034,16 +3057,19 @@ This process is governed by parameters \ttt{rho} and \ttt{delta}.
 Parameter \ttt{rho} defines a fraction of the data set that is randomly
 sampled for neighborhood propagation. A good value that works
 in many cases is $\ttt{rho}=0.5$. As the indexing algorithm iterates,
-fewer and fewer neighborhoods change after an attempt to improve the local
-neighborhood structure via neighborhood propagation. 
+fewer and fewer neighborhoods change (when we attempt to improve the local
+neighborhood structure via neighborhood propagation). 
 The parameter \ttt{delta} defines a stopping condition in terms of a fraction
 of modified edges in the \knnns graph (the exact definition can be inferred from code). 
 A good default value is \ttt{delta}=0.001.
-
 The indexing algorithm is multi-threaded: the method uses all available cores.
 
-Until recently, the search algorithm by the author of NN-descent was not open sourced.
-Therefore, in this release, we use the same algorithm as for the SW-graph \cite{malkov2012scalable,malkov2014}.
+When NN-descent was incorporated into NMSLIB, 
+there was no open-source search algorithm released, only the code to construct a \knnns graph.
+Therefore, we use the same algorithm as for the SW-graph \cite{malkov2012scalable,malkov2014}.
+The new, open-source, version of NN-descent (code-named \ttt{kgraph}), 
+which does include the search algorithm,
+can be found \href{https://github.com/aaalgo/kgraph}{on GitHub}.
 
 Here is an example of testing this method using the utility \ttt{experiment}:
 {
@@ -3066,7 +3092,6 @@ release/experiment \
 \toprule
 \multicolumn{2}{c}{\textbf{Common parameters}}\\
 \cmidrule(l){1-2} 
-\ttt{initSearchAttempts}  & A number of random search restarts. \\
 \ttt{efSearch}            & The search depth: specifically, a sub-search is stopped,
                             when it cannot find a point closer than \ttt{efSearch}
                             points (seen so far) closest to the query.
@@ -3082,16 +3107,22 @@ release/experiment \
 \ttt{initIndexAttempts}   & The number of random search restarts carried out to add one point.\\
 \ttt{indexThreadQty}      & The number of indexing threads. The default value is
                             equal to the number of (logical) CPU cores. \\
+\ttt{initSearchAttempts}  & A number of random search restarts. \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{Hierarchical Navigable SW-graph} (\ttt{hnsw}) \cite{malkov2014}  }\\
 \cmidrule(l){1-2} 
-\ttt{mult}                & A scaling coefficient to determine the depth of a layer (see the paper by Malkov and Yashunin \cite{malkov2014} for details). A default value seems to be good enought. \\
-\ttt{searchMethod}        & A type of the search algorithm: 0 means a generic implementation,
-                            3 means an $L_2$-optimized version, and 4 means a version optimized for the cosine similarity.      \\
-\ttt{maxM}                & The maximum number of neighbors in all layers but the ground layer. \\
-\ttt{maxM0}               & The maximum number of neighbors in the \emph{ground} layer (default values seems to be good enough). \\
+\ttt{mult}                & A scaling coefficient to determine the depth of a layered structure (see the paper by Malkov and Yashunin \cite{malkov2014} for details). A default value seems to be good enough. \\
+\ttt{skip\_optimized\_index}   & Setting this parameter to one disables the use of the optimized implementations (for $L_2$
+                                 and the cosine similarity).
+                          \\
+\ttt{maxM}                & The maximum number of neighbors in all layers but the ground layer (the default value seems to be good enough). \\
+\ttt{maxM0}               & The maximum number of neighbors in the \emph{ground} layer (the default value seems to be good enough). \\
+\ttt{M}                   & The size of the initial set of potential neighbors for the indexing phase. The set may be further 
+                            pruned so that the overall number of neighbors does not exceed \ttt{maxM0} (for the ground layer) or \ttt{maxM}
+                            (for all layers but the ground one).\\
  
-\ttt{efConstruction}      & The depth of the search that is used to find neighbors during indexing. \\
+\ttt{efConstruction}      & The depth of the search that is used to find neighbors during indexing (this parameter
+                            is used only for the search in the ground layer). \\
 \ttt{delaunay\_type}      & A type of the pruning heuristic (we do not recommend changing this value). \\
 
 \cmidrule(l){1-2} 
@@ -3100,6 +3131,7 @@ release/experiment \
 \ttt{NN}                  & For each point find this number of most closest points (neighbors). \\
 \ttt{rho}                 & A fraction of the data set that is randomly sampled for neighborhood propagation.  \\
 \ttt{delta}               & A stopping condition in terms of the fraction of updated edges in the \knnns graph. \\
+\ttt{initSearchAttempts}  & A number of random search restarts. \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
