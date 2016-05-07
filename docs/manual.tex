@@ -2995,8 +2995,6 @@ which is equal to \ttt{M} by default).
 The maximum number of neighbors for the ground layer is \ttt{maxM0} (an index-time parameter,
 which is equal to $2\times$\ttt{M} by default). 
 The choice of the heuristic is controlled by the parameter \ttt{delaunay\_type}.
-For high recall values ($>99$\%) the good value is 1. Otherwise, the value of 0 is a good choice (which
-also leads to shorter indexing times).
 
 A search algorithm is similar to the indexing algorithm. 
 It starts from the maximum-level layer and proceeds to lower-level layers by searching one layer at a time.
@@ -3097,7 +3095,7 @@ release/experiment \
                             points (seen so far) closest to the query.
 \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{SW-graph} (\ttt{sw-graph}) \cite{krylov2008metrized,malkov2012scalable,malkov2014}  }\\
+\multicolumn{2}{c}{\textbf{SW-graph} (\ttt{sw-graph}) \cite{Ponomarenko2011,malkov2012scalable,malkov2014}  }\\
 \cmidrule(l){1-2} 
 \ttt{NN}                  & For a newly added point find this number of most closest points
                             that make the initial neighborhood of the point. When more points are added,
@@ -3242,8 +3240,11 @@ Increasing the values of these parameters (to a certain degree) leads to better 
 For low and moderate recall values (e.g., 60-80\%) increasing these parameters may lead to longer retrieval times.
 The reasonable range of values for these parameters is 5-100.
 
-Finally, we note that for very high recall values ($>99$\%) setting \ttt{delaunay\_type} to 1 improves retrieval times.
-This comes at the expense of longer indexing times. Therefore, for lower recall values, we recommend using \ttt{delaunay\_type}=0.
+Finally, in the case of HNSW, there is a trade-off between retrieval performance and indexing time
+related to the choice of the pruning heuristic (controlled by the parameter \ttt{delaunay\_type}). 
+Specifically, by default \ttt{delaunay\_type} is equal to 1.
+Using \ttt{delaunay\_type}=1 improves performance---especially at high recall values ($>80$\%) at the expense of longer indexing times. 
+Therefore, for lower recall values, we recommend using \ttt{delaunay\_type}=0.
 
 \section{Extending the code}\label{SectionExtend}
 It is possible to add new spaces and search methods.
