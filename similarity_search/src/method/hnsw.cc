@@ -78,7 +78,7 @@ namespace similarity {
         pmgr.GetParamOptional("M", M_, 16);
 
         // Let's use a generic algorithm by default!
-        pmgr.GetParamOptional("searchMethod_", searchMethod_, 0); // this is just to prevent terminating the program when searchMethod is specified
+        pmgr.GetParamOptional("searchMethod", searchMethod_, 0); // this is just to prevent terminating the program when searchMethod is specified
         searchMethod_ = 0;
 
 #ifdef _OPENMP
