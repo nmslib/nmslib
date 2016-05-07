@@ -179,6 +179,6 @@ neighbor search small world approach.](http://www.iiis.org/CDs2011/CD2011IDI/ICT
 * Dong, Wei, Charikar Moses, and Kai Li. 2011. [Efficient k-nearest neighbor graph construction for generic similarity measures.](http://wwwconference.org/proceedings/www2011/proceedings/p577.pdf) Proceedings of the 20th international conference on World wide web. ACM, 2011.
 [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/mir/DongWCL12)
 * L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
-* Amato, Giuseppe, Claudio Gennaro, and Pasquale Savino. Mi-file: using inverted files for scalable approximate similarity search. Multimedia tools and applications 71.3 (2014): 1333-1362. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
+* Amato, Giuseppe, and Pasquale Savino. 2008 Approximate similarity search in metric spaces using inverted files.  [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
 * Gonzalez, Edgar Chavez, Karina Figueroa, and Gonzalo Navarro. [Effective proximity retrieval by ordering permutations.](http://www.dcc.uchile.cl/~gnavarro/ps/tpami07.pdf) Pattern Analysis and Machine Intelligence, IEEE Transactions on 30.9 (2008): 1647-1658. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/pami/ChavezFN08)
 
