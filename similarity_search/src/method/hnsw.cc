@@ -268,6 +268,9 @@ namespace similarity {
         pmgr.GetParamOptional("ef", ef_, 20);
         pmgr.GetParamOptional("efSearch", ef_, ef_);
 
+        int tmp;
+        pmgr.GetParamOptional("searchMethod", tmp, 0); // this is just to prevent terminating the program when searchMethod is specified
+
         pmgr.CheckUnused();
         LOG(LIB_INFO) << "Set HNSW query-time parameters:";
         LOG(LIB_INFO) << "ef(Search)         =" << ef_;
