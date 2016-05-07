@@ -265,8 +265,11 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeP
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
   }
-  
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_,  0);
+
+  // It is important to use a non-zero default here, otherwise the code
+  // will through an exception when a) useSort=1 and b) the parameter dbScanFrac is not specified explicitly
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_,  0.05);
+  CHECK_MSG(db_scan_frac_ >=0 && db_scan_frac_ <=1, "dbScanFrac should be >=0 and <= 1");
   pmgr.GetParamOptional("knnAmp",       knn_amp_,       0);
 
   pmgr.CheckUnused();
@@ -465,7 +468,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
     if (use_sort_) {
       if (!db_scan) {
         stringstream err;
-        err << "One should specify a proper value for either dbScanFrac or knnAmp" <<
+        err << "Bug: either dbScanFrac or knnAmp are expected to be non-zero " <<
                " currently, dbScanFrac=" << db_scan_frac_ << " knnAmp=" << knn_amp_;
         throw runtime_error(err.str());
       }
