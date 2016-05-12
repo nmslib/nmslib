@@ -14,7 +14,7 @@ Leo(nid) Boytsov is a maintainer.
 
 NMSLIB is generic yet fast!
 =================
-Even though our methods are generic, they often outperform specialized methods for the Euclidean and/or angular distance (i.e., for the cosine similarity).
+Even though our methods are generic (see e.g., evaluation results in [Naidan and Boytsov 2015](http://boytsov.info/pubs/p2332-naidan-arxiv.pdf)), they often outperform specialized methods for the Euclidean and/or angular distance (i.e., for the cosine similarity).
 Below are the results (as of May 2016) of NMSLIB compared to the best implementations participated in [a public evaluation code-named ann-benchmarks](https://github.com/erikbern/ann-benchmarks). Our main competitors are: 
 
 1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of random-projection KD-trees.
