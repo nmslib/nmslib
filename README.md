@@ -1,3 +1,5 @@
+Please, check out our [new version 1.5](https://github.com/searchivarius/nmslib/tree/pserv), which will merge into the master branch soon.
+=================
 Non-Metric Space Library (NMSLIB)
 =================
 Non-Metric Space Library is a cross-platform similarity search library and a toolkit for evaluation of similarity search methods.
