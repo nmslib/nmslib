@@ -1,4 +1,4 @@
-Please, check our [new version 1.5](https://github.com/searchivarius/nmslib/tree/pserv), which we will merge into the master branch soon.
+Please, check our [new version 1.5](https://github.com/searchivarius/nmslib/tree/pserv), which will be pushed into master soon.
 -----------------------
 Non-Metric Space Library (NMSLIB)
 =================
