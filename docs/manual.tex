@@ -24,8 +24,8 @@
 \newcommand{\todonoteinline}[1]{\todo[color=red!40,inline,caption={TODO}]{#1}}
 \newcommand{\todonote}[1]{\todo[color=red!40,caption={TODO}]{#1}}
 
-%\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/}
-%\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/}
+%\newcommand{\replocdir}{https://github.com/searchivarius/nmslib/tree/v1.5}
+%\newcommand{\replocfile}{https://github.com/searchivarius/nmslib/blob/v1.5}
 
 \newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/pserv}
 \newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/pserv/}
@@ -121,7 +121,7 @@ Being comprehensive is important, because no single method is likely to be suffi
 Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on \textbf{approximate} methods. 
 
 NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. 
-NMSLIB can be used directly in C++ and Python (via Python bindings, see \S~\ref{SectionPythonBind}). In addition, it is also possible to build a query server (see \S~\ref{SectionQueryServer}), which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library.
+NMSLIB can be used directly in C++ and Python (via Python bindings, see \S~\ref{SectionPythonBind}). In addition, it is also possible to build a query server (see \S~\ref{SectionQueryServer}), which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
 Even though our methods are generic, they often outperform specialized methods for the Euclidean and/or angular distance
  (i.e., for the cosine similarity).
@@ -308,7 +308,7 @@ More specifically, for Linux we require:
 \item A \textbf{64-bit} distributive (Ubuntu \textbf{LTS} is recommended)
 \item GNU C++ ($\ge4.7$), Intel Compiler ($\ge14$), Clang ($\ge3.4$)
 \item CMake (GNU make is also required)
-\item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev})
+\item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev} or newer \ttt{libboost1.54-all-dev})
 \item GNU scientific library (dev version, Ubuntu package \ttt{libgsl0-dev})
 \item Eigen (dev version, Ubuntu package \ttt{libeigen3-dev})
 \end{enumerate}
@@ -473,7 +473,7 @@ There are also three sample clients implemented in \href{\replocfile query_serve
 and \href{\replocfile query_server/java_client/}{Java}. 
 A client reads a string representation of the query object from the standard stream.
 The format is the same as the format of objects in a data file. 
-Here is an example of searching for ten vectors closest to the first vector (stored in row 1) of a provided sample data file:
+Here is an example of searching for ten vectors closest to the first data set vector (stored in row one) of a provided sample data file:
 \begin{verbatim}
 export DATA_FILE=../../sample_data/final8_10K.txt
 head -1 $DATA_FILE | ./query_client -p 10000 -a localhost  -k 10
@@ -484,7 +484,7 @@ It is also possible to generate client classes for other languages supported by 
 \begin{verbatim}
 thrift --gen csharp  protocol.thrift
 \end{verbatim}
-For instructions on using generated code, please check out the \href{https://thrift.apache.org/tutorial/}{Apache Thrift tutorial}.
+For instructions on using generated code, please consult the \href{https://thrift.apache.org/tutorial/}{Apache Thrift tutorial}.
 
 \subsection{Python bindings (Linux-only)}\label{SectionPythonBind}
 We provide basic Python bindings (for Linux and Python 2.7). 
@@ -906,9 +906,9 @@ One example of integer-valued distance function the Levenshtein distance.
 \subsubsection{Input Data/Test Set}
 There are two options that define the data to be indexed:
 \begin{verbatim}
-  -i [ --dataFile ] arg             input data file
-  -D [ --maxNumData ] arg (=0)      if non-zero, only the first maxNumData 
-                                    elements are used
+  -i [ --dataFile ] arg         input data file
+  -D [ --maxNumData ] arg (=0)  if non-zero, only the first 
+                                maxNumData elements are used
 \end{verbatim}
 The input file can be indexed either completely, or partially.
 In the latter case, the user can create the index using only
@@ -2715,7 +2715,9 @@ For computationally expensive distances, one can add an additional filtering ste
 setting the parameter \ttt{useSort} to one.
 If \ttt{useSort} is one, all candidate entries are additionally sorted by the number of shared pivots
 (in the decreasing order).
-Afterwards, the number of candidates defined by the parameter \ttt{dbScanFrac} are compared directly against the query. 
+Afterwards, a subset of candidates are compared directly against the query. 
+The size of the subset is defined by the parameter \ttt{dbScanFrac}.
+When selecting the subset, we give priority to candidates sharing more common pivots with the query. 
 This secondary filtering may eliminate less promising entries, but it incurs additional
 computational costs, which may outweigh the benefits of additional filtering ``power'', if the distance is cheap.
 
