@@ -59,19 +59,21 @@ using std::stringstream;
 #define MAX_NUM_QUERY  100
 
 vector<MethodTestCase>    vTestCaseDesc = {
-
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "hnsw", "efConstruction=50,M=10,searchMethod=0", "ef=50", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "hnsw", "efConstruction=50,M=10,searchMethod=0", "ef=50", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
-#if 1
+  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=clarans,centerQty=10", "dbScanFrac=0.1", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
   // ************** Tests for non-metric clustering *********** //
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=firmal,centerQty=10", "dbScanFrac=0.1", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.8, 0.92, 0.1, 20, 2.5, 6),  
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=clarans,centerQty=10", "dbScanFrac=0.1", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=reduct_clarans,centerQty=10", "dbScanFrac=0.1", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
+#if 1
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", "numPivot=8,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "hnsw", "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "hnsw", "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
   // *************** NEW versions of permutation & projection-based filtering method tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", "", "",
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0, 0, 1, 1),  
@@ -147,9 +149,9 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // *************** omedrank tests ******************** //
 
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "omedrank", "numPivot=4,chunkIndexSize=16536", "dbScanFrac=0.01,minFreq=0.5",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.97, 0.1, 2, 70, 120),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.97, 0.1, 3, 70, 120),  
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "omedrank", "numPivot=4,chunkIndexSize=16536", "dbScanFrac=0.01,minFreq=0.5",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.9, 0.2, 3, 70, 120),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.9, 0.1, 3, 70, 120),  
 
   // *************** VP-tree tests ******************** //
   // knn
@@ -182,7 +184,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", "maxPathLen=4,bucketSize=10", "",
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 50),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", "maxPathLen=4,bucketSize=10", "maxLeavesToVisit=10", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.82, 0.9, 0.2, 3, 230, 250),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.82, 0.9, 0.2, 3.5, 230, 250),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", "maxPathLen=4,bucketSize=10", "maxLeavesToVisit=20", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.75, 0.82, 0.2, 2.0, 85, 100),  
 
@@ -216,7 +218,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 10, 25),  
   // range
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "satree", "bucketSize=10", "", 
-                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 14, 18),  
+                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 13, 18),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "satree", "bucketSize=10", "", 
                 0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 2.8, 3.4),  
 

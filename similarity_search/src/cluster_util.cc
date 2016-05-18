@@ -23,6 +23,8 @@
 #include <utils.h>
 #include <ported_boost_progress.h>
 
+#define PARANOID_CHECK
+
 namespace similarity {
 
 using namespace std;
@@ -422,9 +424,29 @@ void ClusterUtils<dist_t>::doCLARANS(bool PrintProgress,
 
   double bestConfigCost = numeric_limits<double>::max();
 
-  for (size_t randRestId = 0; randRestId < randRestQty; ++randRestId) {
-    std::shuffle(data.begin(), data.end(), randGen);
+#ifdef PARANOID_CHECK
+  {
 
+    IdType MaxId = 0;
+    for (const Object *pObj: data) {
+      MaxId = max(MaxId, pObj->id());
+      CHECK_MSG(pObj->id()>=0, "Got negative Id!");
+    }
+
+    // Sanity check, is our data correct?
+    {
+      vector<bool> seen(MaxId+1);
+      for (const Object *pObj: data) {
+        CHECK_MSG(!seen[pObj->id()],
+                  "Inconsistent data, repeating id: " + ConvertToString(pObj->id()));
+        seen[pObj->id()] = true;
+      }
+    }
+  }
+#endif
+
+  for (size_t randRestId = 0; randRestId < randRestQty; ++randRestId) {
+#ifdef PARANOID_CHECK
     IdType MaxId = 0;
     for (const Object *pObj: data) {
       MaxId = max(MaxId, pObj->id());
@@ -432,13 +454,27 @@ void ClusterUtils<dist_t>::doCLARANS(bool PrintProgress,
 
     // Sanity check, is our data correct?
     {
-      vector<bool> seen(MaxId);
+      vector<bool> seen(MaxId+1);
       for (const Object *pObj: data) {
         CHECK_MSG(!seen[pObj->id()],
-                  "Inconsistent data, repeating id: " + ConvertToString(pObj->id()));
+                  "Inconsistent data (before shuffle), repeating id: " + ConvertToString(pObj->id()) + " randRestId=" + ConvertToString(randRestId));
         seen[pObj->id()] = true;
       }
     }
+#endif
+    std::shuffle(data.begin(), data.end(), randGen);
+
+#ifdef PARANOID_CHECK
+    // Sanity check, is our data correct?
+    {
+      vector<bool> seen(MaxId+1);
+      for (const Object *pObj: data) {
+        CHECK_MSG(!seen[pObj->id()],
+                  "Inconsistent data (after shuffle), repeating id: " + ConvertToString(pObj->id()) + " randRestId=" + ConvertToString(randRestId));
+        seen[pObj->id()] = true;
+      }
+    }
+#endif
 
     LOG(LIB_INFO) << "Found " << centerQty << " random seeds! Random restart id: " << randRestId;
 
@@ -564,15 +600,17 @@ void ClusterUtils<dist_t>::doCLARANS(bool PrintProgress,
       LOG(LIB_INFO) << "Found a better configuration: " << prevConfCost << " previous best cost: " << bestConfigCost;
       bestConfigCost = prevConfCost;
 
+#ifdef PARANOID_CHECK
       // Sanity check, if we swapped correctly, all IDs in data should be unique
       {
-        vector<bool> seen(MaxId);
+        vector<bool> seen(MaxId+1);
         for (const Object *pObj: data) {
           CHECK_MSG(!seen[pObj->id()],
                     "Bug, repeating id: " + ConvertToString(pObj->id()));
           seen[pObj->id()] = true;
         }
       }
+#endif
 
       vClustAssign.resize(centerQty);
       for (size_t cid = 0; cid < centerQty; ++cid) {
@@ -679,6 +717,8 @@ void ClusterUtils<dist_t>::doReductiveCLARANS(bool PrintProgress,
 
     CHECK(vCentersMetaIter.size() == vClusterAssignMetaIter.size());
 
+
+
     for (IdTypeUnsign cid = 0; cid < vCentersMetaIter.size(); ++cid) {
       vCentersGlobal.push_back(vCentersMetaIter[cid]);
       if (metaIter + 1 >= maxMetaIterQty) {
@@ -696,7 +736,11 @@ void ClusterUtils<dist_t>::doReductiveCLARANS(bool PrintProgress,
         for (IdTypeUnsign i = 0; i < vClusterAssignMetaIter[cid]->size(); ++i) {
           auto e = (*vClusterAssignMetaIter[cid])[i];
           if (e.first < R || i < keepSize) keepAssign->push_back(e);
-          else newData.push_back(e.second);
+          else {
+            IdType id = e.second->id();
+            CHECK(id >= 0);
+            newData.push_back(e.second);
+          } 
         }
 
         vClusterAssignGlobal.push_back(keepAssign);

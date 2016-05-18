@@ -39,6 +39,8 @@
 // This is either
 #define QUERY_QTY         "QueryQty"
 
+//#define PARANOID_SPLIT_CHECK
+
 
 namespace similarity {
 
@@ -308,6 +310,26 @@ void ExperimentConfig<dist_t>::SelectTestSet(int SetNum) {
     }
     else dataobjects_.push_back(origData_[i]);
   }
+#ifdef PARANOID_SPLIT_CHECK
+  {
+
+    IdType MaxId = 0;
+    for (const Object *pObj: dataobjects_) {
+      MaxId = max(MaxId, pObj->id());
+      CHECK_MSG(pObj->id()>=0, "Got negative Id!");
+    }
+
+    // Sanity check, is our data correct?
+    {
+      vector<bool> seen(MaxId);
+      for (const Object *pObj: dataobjects_) {
+        CHECK_MSG(!seen[pObj->id()],
+                  "Bug in splitting data, repeating id: " + ConvertToString(pObj->id()) + " testSetId: " +ConvertToString(SetNum));
+        seen[pObj->id()] = true;
+      }
+    }
+  }
+#endif
 }
 
 template <typename dist_t>
