@@ -29,7 +29,7 @@ namespace similarity {
 using namespace std;
 
 template <typename dist_t>
-RangeQuery<dist_t>::RangeQuery(const Space<dist_t>* space,
+RangeQuery<dist_t>::RangeQuery(const Space<dist_t>& space,
                                const Object* query_object,
                                const dist_t radius)
     : Query<dist_t>(space, query_object),
@@ -109,7 +109,7 @@ void RangeQuery<dist_t>::Print() const {
   for (auto iter = result_.begin(); iter != result_.end(); ++iter) {
     const Object* object = *iter;
     std::cerr << object->id() << "("
-        << this->space_->HiddenDistance(this->QueryObject(), object) << ") ";
+        << this->space_.HiddenDistance(this->QueryObject(), object) << ") ";
   }
   std::cerr << std::endl;
 }

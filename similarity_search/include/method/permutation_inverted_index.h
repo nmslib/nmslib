@@ -41,21 +41,23 @@ class PermutationInvertedIndex : public Index<dist_t> {
  public:
   PermutationInvertedIndex(
                 bool  PrintProgress,
-                const Space<dist_t>* space,
-                const ObjectVector& data,
-                AnyParams params);
+                const Space<dist_t>& space,
+                const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& params) override;
   ~PermutationInvertedIndex();
 
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
-
-  virtual vector<string> GetQueryTimeParamNames() const;
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
+  
+  virtual void SetQueryTimeParams(const AnyParams& params) override;
 
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
+  const Space<dist_t>&  space_;
+  const ObjectVector&   data_;
+  bool                  PrintProgress_;
 
-  const ObjectVector& data_;
   float  db_scan_frac_;
   size_t num_pivot_;            // overall number of pivots
   size_t num_pivot_index_;      // ki in the original paper
@@ -64,7 +66,7 @@ class PermutationInvertedIndex : public Index<dist_t> {
   size_t knn_amp_;
   ObjectVector pivot_;
 
-  size_t computeDbScan(size_t K) {
+  size_t computeDbScan(size_t K) const {
     if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
     return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
@@ -84,7 +86,7 @@ class PermutationInvertedIndex : public Index<dist_t> {
   std::vector<PostingList> posting_lists_;
 
   // K==0 for range search
-  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationInvertedIndex);

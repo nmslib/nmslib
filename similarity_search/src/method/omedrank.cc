@@ -36,27 +36,21 @@ using namespace std;
 template <typename dist_t>
 OMedRank<dist_t>::OMedRank(
     bool                 PrintProgress,
-    const Space<dist_t>* space,
-    const ObjectVector& data,
-    AnyParamManager &pmgr) 
-	: data_(data),  /* reference */
-    space_(space), /* pointer */
-    num_pivot_(8),
-    num_pivot_search_(8),
-    chunk_index_size_(16536),
-    index_qty_(0), // If ComputeDbScan is called before index_qty_ is computed, it will see this zero
-    skip_check_(false),
-    interm_dim_(0),
-    db_scan_frac_(0.05),
-    min_freq_(0.5)
- {
+    const Space<dist_t>& space,
+    const ObjectVector& data) :
+        space_(space), data_(data), PrintProgress_(PrintProgress),
+        index_qty_(0) // If ComputeDbScan is called before index_qty_ is computed, it will see this zero
+{ }
 
-  pmgr.GetParamOptional("projType", proj_type_);
-  if (proj_type_.empty()) proj_type_ = PROJ_TYPE_RAND;
-  pmgr.GetParamOptional("intermDim", interm_dim_);
-  pmgr.GetParamOptional("numPivot", num_pivot_);
-  num_pivot_search_ = num_pivot_;
-  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
+template <typename dist_t>
+void OMedRank<dist_t>::CreateIndex(const AnyParams &IndexParams) {
+  AnyParamManager pmgr(IndexParams);
+
+  pmgr.GetParamOptional("projType",  proj_type_,    PROJ_TYPE_RAND);
+  pmgr.GetParamOptional("intermDim", interm_dim_,   0);
+  pmgr.GetParamOptional("numPivot",  num_pivot_,    8);
+
+  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 65536);
 
   ToLower(proj_type_);
   if (PROJ_TYPE_PERM_BIN == proj_type_)
@@ -72,14 +66,12 @@ OMedRank<dist_t>::OMedRank(
 
   if (projection_.get() == NULL) {
     throw runtime_error("Cannot create projection class '" + proj_type_ + "'" +
-                        " for the space: '" + space_->ToString() +"' " +
+                        " for the space: '" + space_.StrDesc() +"' " +
                         " distance value type: '" + DistTypeName<dist_t>() + "'");
   }
 
   index_qty_ = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
-  // Call this function AFTER the index size is computed!
-  SetQueryTimeParamsInternal(pmgr);
-
+  
   pmgr.CheckUnused();
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
@@ -87,8 +79,6 @@ OMedRank<dist_t>::OMedRank(
   LOG(LIB_INFO) << "projection type:     " << proj_type_;
   LOG(LIB_INFO) << "intermediate dim:    " << interm_dim_;
   LOG(LIB_INFO) << "# pivots/target dim  " << num_pivot_;
-  LOG(LIB_INFO) << "db scan fraction =   " << db_scan_frac_;
-  LOG(LIB_INFO) << "min freq =           " << min_freq_;
 
   posting_lists_.resize(index_qty_);
 
@@ -96,8 +86,8 @@ OMedRank<dist_t>::OMedRank(
     posting_lists_[chunkId] = shared_ptr<vector<PostingList>>(new vector<PostingList>());
   }
 
-  unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
-                              new ProgressDisplay(data.size(), cerr)
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
+                              new ProgressDisplay(data_.size(), cerr)
                               :NULL);
 
   for (size_t chunkId = 0; chunkId < index_qty_; ++chunkId) {
@@ -107,7 +97,7 @@ OMedRank<dist_t>::OMedRank(
 
 template <typename dist_t> 
 template <typename QueryType> 
-void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) {
+void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) const {
   // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
   // a strange error message that says: dbScanFrac should be in the range [0,1].
   if (!knn_amp_) {
@@ -231,21 +221,23 @@ void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) {
  
 
 template <typename dist_t>
-void OMedRank<dist_t>::Search(RangeQuery<dist_t>* query) {
+void OMedRank<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   GenSearch(query, 0);
 }
 
 template <typename dist_t>
-void OMedRank<dist_t>::Search(KNNQuery<dist_t>* query) {
+void OMedRank<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   GenSearch(query, query->GetK());
 }
 
 template <typename dist_t>
-void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  pmgr.GetParamOptional("skipChecking", skip_check_);
+void OMedRank<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager pmgr(QueryTimeParams);
 
-  pmgr.GetParamOptional("minFreq", min_freq_);
-  pmgr.GetParamOptional("numPivotSearch", num_pivot_search_);
+  pmgr.GetParamOptional("skipChecking",   skip_check_, false);
+
+  pmgr.GetParamOptional("minFreq",        min_freq_, 0.5);
+  pmgr.GetParamOptional("numPivotSearch", num_pivot_search_, num_pivot_);
 
   if (num_pivot_search_ > num_pivot_) 
     throw runtime_error("numPivotSearch can't be > numPivot");
@@ -253,27 +245,18 @@ void OMedRank<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
   }
-  if (pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-  } else {
-    knn_amp_ = 0;
-  }
-  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0.05;
-    knn_amp_ = 0;
-  }
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
-  pmgr.GetParamOptional("knnAmp",  knn_amp_);
-}
+  
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_, 0.05);
+  pmgr.GetParamOptional("knnAmp",       knn_amp_,      0);
 
-template <typename dist_t>
-vector<string>
-OMedRank<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
-  names.push_back("dbScanFrac");
-  names.push_back("knnAmp");
-  names.push_back("minFreq");
-  return names;
+  pmgr.CheckUnused();
+  
+  LOG(LIB_INFO) << "Set query-time parameters for OMedRank:";
+  LOG(LIB_INFO) << "# dbScanFrac                  = " << db_scan_frac_;
+  LOG(LIB_INFO) << "# knnAmp                      = " << knn_amp_;
+  LOG(LIB_INFO) << "# minFreq                     = " << min_freq_;
+  LOG(LIB_INFO) << "# numPivotSearch              = " << num_pivot_search_;
+  LOG(LIB_INFO) << "# skipChecking                = " << skip_check_;
 }
 
 template <typename dist_t>

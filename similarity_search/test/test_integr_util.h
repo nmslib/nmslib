@@ -23,8 +23,11 @@
 #include <map>
 
 #include "utils.h"
+#include "bunit.h"
 #include "report.h"
+#include "params_def.h"
 #include "params_cmdline.h"
+#include "report_intr_dim.h"
 
 using std::set;
 using std::multimap;
@@ -45,7 +48,9 @@ struct MethodTestCase {
   string  mDistType;
   string  mSpaceType;
   string  mDataSet;
-  string  mMethodDesc;
+  string  mMethodName;
+  string  mIndexParams;
+  string  mQueryTimeParams;
   float   mRecallMin;
   float   mRecallMax;
   float   mNumCloserMin;
@@ -60,7 +65,9 @@ struct MethodTestCase {
                string distType,
                string spaceType,
                string dataSet,
-               string methodDesc,
+               string methodName,
+               string indexParams,
+               string queryTimeParams,
                unsigned  knn,
                float range, 
                float recallMin = 0, 
@@ -72,7 +79,9 @@ struct MethodTestCase {
                    mDistType(distType),
                    mSpaceType(spaceType),
                    mDataSet(dataSet),
-                   mMethodDesc(methodDesc),
+                   mMethodName(methodName),
+                   mIndexParams(indexParams),
+                   mQueryTimeParams(queryTimeParams),
                    mRecallMin(recallMin),
                    mRecallMax(recallMax),
                    mNumCloserMin(numCloserMin),
@@ -89,29 +98,28 @@ struct MethodTestCase {
 template <typename dist_t>
 bool ProcessAndCheckResults(
                     const string& cmdStr,
-                    const string& dataSet,
                     const string& distType,
                     const string& spaceType,
                     const MethodTestCase& testCase,
                     const ExperimentConfig<dist_t>& config,
                     MetaAnalysis& ExpRes,
-                    const string& MethDescStr,
-                    const string& MethParamStr,
                     string& PrintStr // For display
                     ) {
   std::stringstream Print, Data, Header;
 
   ExpRes.ComputeAll();
 
-  PrintStr  = produceHumanReadableReport(config, ExpRes, MethDescStr, MethParamStr);
+  PrintStr  = produceHumanReadableReport(config, ExpRes, testCase.mMethodName, testCase.mIndexParams, testCase.mQueryTimeParams);
 
   bool bFail = false;
 
   if (ExpRes.GetRecallAvg() < testCase.mRecallMin) {
     cerr << "Failed to meet min recall requirement, expect >= " << testCase.mRecallMin 
          << " got " << ExpRes.GetRecallAvg() << endl 
-         << " method: " << MethDescStr << " ; "
-         << " data set: " << dataSet << " ; "
+         << " method: " << testCase.mMethodName << " ; "
+         << " index-time params: " << testCase.mIndexParams << " ; "
+         << " query-time params: " << testCase.mQueryTimeParams << " ; "
+         << " data set: " << testCase.mDataSet << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
@@ -120,8 +128,10 @@ bool ProcessAndCheckResults(
   if (ExpRes.GetRecallAvg() > testCase.mRecallMax) {
     cerr << "Failed to meet max recall requirement, expect <= " << testCase.mRecallMax 
          << " got " << ExpRes.GetRecallAvg() << endl 
-         << " method: " << MethDescStr << " ; "
-         << " data set: " << dataSet << " ; "
+         << " method: " << testCase.mMethodName << " ; "
+         << " index-time params: " << testCase.mIndexParams << " ; "
+         << " query-time params: " << testCase.mQueryTimeParams << " ; "
+         << " data set: " << testCase.mDataSet << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
@@ -130,8 +140,10 @@ bool ProcessAndCheckResults(
   if (ExpRes.GetNumCloserAvg() < testCase.mNumCloserMin) {
     cerr << "Failed to meet min # of points closer requirement, expect >= " << testCase.mNumCloserMin 
          << " got " << ExpRes.GetNumCloserAvg() << endl 
-         << " method: " << MethDescStr << " ; "
-         << " data set: " << dataSet << " ; "
+         << " method: " << testCase.mMethodName << " ; "
+         << " index-time params: " << testCase.mIndexParams << " ; "
+         << " query-time params: " << testCase.mQueryTimeParams << " ; "
+         << " data set: " << testCase.mDataSet << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
@@ -140,8 +152,10 @@ bool ProcessAndCheckResults(
   if (ExpRes.GetNumCloserAvg() > testCase.mNumCloserMax) {
     cerr << "Failed to meet max # of points closer requirement, expect <= " << testCase.mNumCloserMax 
          << " got " << ExpRes.GetNumCloserAvg() << endl 
-         << " method: " << MethDescStr << " ; "
-         << " data set: " << dataSet << " ; "
+         << " method: " << testCase.mMethodName << " ; "
+         << " index-time params: " << testCase.mIndexParams << " ; "
+         << " query-time params: " << testCase.mQueryTimeParams << " ; "
+         << " data set: " << testCase.mDataSet << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
@@ -150,8 +164,10 @@ bool ProcessAndCheckResults(
   if (ExpRes.GetImprDistCompAvg() < testCase.mImprDistCompMin) {
     cerr << "Failed to meet min improvement requirement in the # of distance computations, expect >= "
          << testCase.mImprDistCompMin << " got " << ExpRes.GetImprDistCompAvg() << endl 
-         << " method: " << MethDescStr << " ; "
-         << " data set: " << dataSet << " ; "
+         << " method: " << testCase.mMethodName << " ; "
+         << " index-time params: " << testCase.mIndexParams << " ; "
+         << " query-time params: " << testCase.mQueryTimeParams << " ; "
+         << " data set: " << testCase.mDataSet << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
@@ -160,8 +176,10 @@ bool ProcessAndCheckResults(
   if (ExpRes.GetImprDistCompAvg() > testCase.mImprDistCompMax) {
     cerr << "Failed to meet max improvement requirement in the # of distance computations, expect <= "
          << testCase.mImprDistCompMax << " got " << ExpRes.GetImprDistCompAvg() << endl 
-         << " method: " << MethDescStr << " ; "
-         << " data set: " << dataSet << " ; "
+         << " method: " << testCase.mMethodName << " ; "
+         << " index-time params: " << testCase.mIndexParams << " ; "
+         << " query-time params: " << testCase.mQueryTimeParams << " ; "
+         << " data set: " << testCase.mDataSet << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
@@ -170,40 +188,107 @@ bool ProcessAndCheckResults(
   return !bFail;
 };
 
+inline string getFirstParam(const string& paramDef) {
+  vector<string>  vParDefs;
+  
+  if (!SplitStr(paramDef, vParDefs, ',')) {
+    PREPARE_RUNTIME_ERR(err) << "Cannot comma-split the parameter definition: '" << paramDef << "'";
+    THROW_RUNTIME_ERR(err);
+  }
+  if (vParDefs.empty()) {
+    PREPARE_RUNTIME_ERR(err) << "Empty definition list in the parameter definition: '" << paramDef << "'";
+    THROW_RUNTIME_ERR(err);
+  }
+  return "--" + vParDefs[0];  
+}
+
+inline string quoteEmpty(const string& str) {
+  return str.empty() ? string("\"\"") : str;
+};
+
+string CreateCmdStr(
+             const MethodTestCase&        testCase,
+             bool                         isRange,
+             const string&                rangeOrKnnArg,
+             const string&                DistType, 
+             string                       SpaceTypeStr,
+             unsigned                     ThreadTestQty,
+             unsigned                     TestSetQty,
+             const string&                DataFile,
+             const string&                QueryFile,
+             IdTypeUnsign                 MaxNumData,
+             IdTypeUnsign                 MaxNumQuery,
+             const                        float eps) {
+  stringstream res;
+  // our test data files shouldn't have spaces, so we won't escape them
+  // anyways, this is only a debug output 
+  res << getFirstParam(DATA_FILE_PARAM_OPT)    << " " << DataFile << " " 
+      << getFirstParam(MAX_NUM_DATA_PARAM_OPT) << " " << MaxNumData << " " 
+      << getFirstParam(DIST_TYPE_PARAM_OPT)    << " " << DistType << " " 
+      << getFirstParam(SPACE_TYPE_PARAM_OPT)   << " " << SpaceTypeStr << " " 
+      << getFirstParam(THREAD_TEST_QTY_PARAM_OPT)<< " " << ThreadTestQty << " " 
+      << getFirstParam(EPS_PARAM_OPT)          << " " << eps << " " ;
+   if (QueryFile.empty())
+     res << getFirstParam(TEST_SET_QTY_PARAM_OPT) << " " << TestSetQty << " " ;
+   else
+     res << getFirstParam(QUERY_FILE_PARAM_OPT) << " " << QueryFile << " " ;
+
+  res << getFirstParam(MAX_NUM_QUERY_PARAM_OPT) << " " << MaxNumQuery << " " 
+      << getFirstParam(isRange ? RANGE_PARAM_OPT : KNN_PARAM_OPT)    << " " << rangeOrKnnArg << " " 
+      << getFirstParam(METHOD_PARAM_OPT)        << " " << testCase.mMethodName << " " 
+      << getFirstParam(INDEX_TIME_PARAMS_PARAM_OPT) << " " << quoteEmpty(testCase.mIndexParams) << " " 
+      << getFirstParam(QUERY_TIME_PARAMS_PARAM_OPT) << " " << quoteEmpty(testCase.mQueryTimeParams);
+
+  return res.str();
+};
+                    
+
 /*
  * returns the # of failed tests
  */
 template <typename dist_t>
 size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
-             const string& cmdStr,
-             const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
-             const string&                DataSet,
              const string&                DistType, 
-             const string&                SpaceType,
-             const shared_ptr<AnyParams>& SpaceParams,
-             unsigned                     dimension,
+             string                       SpaceTypeStr,
              unsigned                     ThreadTestQty,
              unsigned                     TestSetQty,
              const string&                DataFile,
              const string&                QueryFile,
-             unsigned                     MaxNumData,
-             unsigned                     MaxNumQuery,
-             const                        vector<unsigned>& knn,
+             IdTypeUnsign                 MaxNumData,
+             IdTypeUnsign                 MaxNumQuery,
+             const string&                KnnArg,
              const                        float eps,
              const string&                RangeArg
 )
 {
-  vector<dist_t> range;
-
-  CHECK(MethodsDesc.size() == vTestCases.size());
+  vector<unsigned> knn;
+  vector<dist_t>   range;
 
   size_t nFail = 0;
 
+  if (!KnnArg.empty()) {
+    if (!SplitStr(KnnArg, knn, ',')) {
+      PREPARE_RUNTIME_ERR(err) << "Wrong format of the knn argument: '" << KnnArg << "' Should be a list of coma-separated int > 0 values.";
+      THROW_RUNTIME_ERR(err);
+    }
+  }
 
   if (!RangeArg.empty()) {
     if (!SplitStr(RangeArg, range, ',')) {
-      LOG(LIB_FATAL) << "Wrong format of the range argument: '" << RangeArg << "' Should be a list of coma-separated values.";
+      PREPARE_RUNTIME_ERR(err) << "Wrong format of the range argument: '" << RangeArg << "' Should be a list of coma-separated distance-type values.";
+      THROW_RUNTIME_ERR(err);
     }
+  }
+
+  ToLower(SpaceTypeStr);
+  string SpaceType;
+
+  shared_ptr<AnyParams> SpaceParams;
+
+  {
+    vector<string>     desc;
+    ParseSpaceArg(SpaceTypeStr, SpaceType, desc);
+    SpaceParams = shared_ptr<AnyParams>(new AnyParams(desc));
   }
 
 
@@ -211,13 +296,14 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                                   Instance().CreateSpace(SpaceType, *SpaceParams));
 
   if (NULL == space.get()) {
-    LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
+    PREPARE_RUNTIME_ERR(err) << "Cannot create space: '" << SpaceType;
+    THROW_RUNTIME_ERR(err);
   }
  
-  ExperimentConfig<dist_t> config(space.get(),
+  ExperimentConfig<dist_t> config(*space,
                                   DataFile, QueryFile, TestSetQty,
                                   MaxNumData, MaxNumQuery,
-                                  dimension, knn, eps, range);
+                                  knn, eps, range);
 
   config.ReadDataset();
   MemUsage  mem_usage_measure;
@@ -228,14 +314,11 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
   vector<double>                    MemUsage;
 
   vector<vector<MetaAnalysis*>> ExpResRange(config.GetRange().size(),
-                                                vector<MetaAnalysis*>(MethodsDesc.size()));
+                                                vector<MetaAnalysis*>(vTestCases.size()));
   vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
-                                              vector<MetaAnalysis*>(MethodsDesc.size()));
+                                              vector<MetaAnalysis*>(vTestCases.size()));
 
-  size_t MethNum = 0;
-
-  for (auto it = MethodsDesc.begin(); it != MethodsDesc.end(); ++it, ++MethNum) {
-
+  for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
@@ -250,123 +333,128 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 
     LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
 
-    ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
+    GoldStandardManager<dist_t> managerGS(config);
+    managerGS.Compute(ThreadTestQty, 0); // Keeping all GS entries, should be Ok here because our data sets are smallish
+    
+    for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
+      const string& MethodName  = vTestCases[MethNum].mMethodName;
 
-    vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
-    vector<bool>                       isNewIndex;
+      shared_ptr<AnyParams>           IndexParams; 
+      vector<shared_ptr<AnyParams>>   vQueryTimeParams;
 
-    bool bFailDueExcept = false;
-
-    try {
-      
-      for (const auto& methElem: MethodsDesc) {
-        MethNum = &methElem - &MethodsDesc[0];
-        
-        const string& MethodName  = methElem->methName_;
-        const AnyParams& MethPars = methElem->methPars_;
-        const string& MethParStr = MethPars.ToString();
-
-        LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
-        LOG(LIB_INFO) << ">>>> Parameters: " << MethParStr;
-        const double vmsize_before = mem_usage_measure.get_vmsize();
-
-
-        WallClockTimer wtm;
-
-        wtm.reset();
-        
-        bool bCreateNew = true;
-        
-        if (MethNum && MethodName == MethodsDesc[MethNum-1]->methName_) {
-          vector<string> exceptList = IndexPtrs.back()->GetQueryTimeParamNames();
-          
-          if (MethodsDesc[MethNum-1]->methPars_.equalsIgnoreInList(MethPars, exceptList)) {
-            bCreateNew = false;
-          }
-        }
-
-        LOG(LIB_INFO) << (bCreateNew ? "Creating a new index":"Using a previosuly created index");
-
-        IndexPtrs.push_back(
-                bCreateNew ?
-                           shared_ptr<Index<dist_t>>(
-                           MethodFactoryRegistry<dist_t>::Instance().
-                           CreateMethod(false /* don't print progress */,
-                                        MethodName, 
-                                        SpaceType, config.GetSpace(), 
-                                        config.GetDataObjects(), MethPars)
-                           )
-                           :IndexPtrs.back());
-        isNewIndex.push_back(bCreateNew);
-
-        LOG(LIB_INFO) << "==============================================";
-
-        const double vmsize_after = mem_usage_measure.get_vmsize();
-
-        const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
-
-        const double TotalMemByMethod = vmsize_after - vmsize_before + data_size;
-
-        wtm.split();
-
-        LOG(LIB_INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
-        LOG(LIB_INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
-        LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
-        LOG(LIB_INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
-
-
-        for (size_t i = 0; i < config.GetRange().size(); ++i) {
-          MetaAnalysis* res = ExpResRange[i][MethNum];
-          res->SetMem(TestSetId, TotalMemByMethod);
-        }
-        for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-          MetaAnalysis* res = ExpResKNN[i][MethNum];
-          res->SetMem(TestSetId, TotalMemByMethod);
-        }
-
-        if (!TestSetId) {
-          MethDescStr.push_back(IndexPtrs.back()->ToString());
-          MethParams.push_back(MethParStr);
-        }
+      {
+        vector<string>     desc;
+        ParseArg(vTestCases[MethNum].mIndexParams, desc);
+        IndexParams = shared_ptr<AnyParams>(new AnyParams(desc));
       }
 
-      GoldStandardManager<dist_t> managerGS(config);
-      managerGS.Compute(0); // Keeping all GS entries, should be Ok here because our data sets are smallish
+      {
+        vector<string>     desc;
+        ParseArg(vTestCases[MethNum].mQueryTimeParams, desc);
+        vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(desc)));
+      }
 
-      Experiments<dist_t>::RunAll(true /* print info */, 
-                                      ThreadTestQty,
-                                      TestSetId,
-                                      managerGS,
-                                      ExpResRange, ExpResKNN,
-                                      config, 
-                                      IndexPtrs, isNewIndex, MethodsDesc);
+      LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
+      LOG(LIB_INFO) << ">>>> Index-time parameters: " << IndexParams->ToString();
+
+      const double vmsize_before = mem_usage_measure.get_vmsize();
+
+      WallClockTimer wtm;
+
+      wtm.reset();
+      
+
+      LOG(LIB_INFO) << "Creating a new index" ;
+
+      shared_ptr<Index<dist_t>> IndexPtr(
+                         MethodFactoryRegistry<dist_t>::Instance().
+                         CreateMethod(false /* don't print progress */,
+                                      MethodName, 
+                                      SpaceType, config.GetSpace(), 
+                                      config.GetDataObjects())
+                         );
+
+      IndexPtr->CreateIndex(*IndexParams);
+
+      LOG(LIB_INFO) << "==============================================";
+
+      const double vmsize_after = mem_usage_measure.get_vmsize();
+
+      const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
+
+      const double TotalMemByMethod = vmsize_after - vmsize_before + data_size;
+
+      wtm.split();
+
+      LOG(LIB_INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
+      LOG(LIB_INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
+      LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
+      LOG(LIB_INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
+
+      /* 
+       * We need to repackage MetaAnalysis arrays:
+       * RunAll will deal with only a single method and 
+       * a single set of query-time parameters.
+       */ 
+
+      vector<vector<MetaAnalysis*>> ExpResRangeTmp(config.GetRange().size(), vector<MetaAnalysis*>(1));
+      vector<vector<MetaAnalysis*>> ExpResKNNTmp(config.GetKNN().size(), vector<MetaAnalysis*>(1));
 
 
-    } catch (const std::exception& e) {
-      LOG(LIB_ERROR) << "Exception: " << e.what();
-      bFailDueExcept = true;
-    } catch (...) {
-      LOG(LIB_ERROR) << "Unknown exception";
-      bFailDueExcept = true;
-    }
+      for (size_t i = 0; i < config.GetRange().size(); ++i) {
+        MetaAnalysis* res = ExpResRange[i][MethNum];
+        res->SetMem(TestSetId, TotalMemByMethod);
+        ExpResRangeTmp[i][0] = res;
+      }
+      for (size_t i = 0; i < config.GetKNN().size(); ++i) {
+        MetaAnalysis* res = ExpResKNN[i][MethNum];
+        res->SetMem(TestSetId, TotalMemByMethod);
+        ExpResKNNTmp[i][0] = res;
+      }
 
-    if (bFailDueExcept) {
-      LOG(LIB_FATAL) << "Failure due to an exception!";
-    }
+      CHECK_MSG(vQueryTimeParams.size() == 1, 
+                "Test integration code is currently can execute only one set of query-time parameters!");
+
+      Experiments<dist_t>::RunAll(true /* print progress */, 
+                                  ThreadTestQty,
+                                  TestSetId,
+                                  managerGS,
+                                  ExpResRangeTmp, ExpResKNNTmp,
+                                  config, 
+                                  *IndexPtr, 
+                                  vQueryTimeParams);
+
+      }
+
   }
 
-  for (auto it = MethDescStr.begin(); it != MethDescStr.end(); ++it) {
-    size_t MethNum = it - MethDescStr.begin();
-
-
+  for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
     string Print, Data, Header;
 
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       MetaAnalysis* res = ExpResRange[i][MethNum];
 
-      if (!ProcessAndCheckResults(cmdStr, DataSet, DistType, SpaceType, 
-                                  vTestCases[MethNum], config, *res, MethDescStr[MethNum], MethParams[MethNum], Print)) {
+      string cmdStr = CreateCmdStr(vTestCases[MethNum],
+                                             true,
+                                             ConvertToString(config.GetRange()[i]),
+                                             DistType, 
+                                             SpaceTypeStr,
+                                             ThreadTestQty,
+                                             TestSetQty,
+                                             DataFile,
+                                             QueryFile,
+                                             MaxNumData,
+                                             MaxNumQuery,
+                                             eps);
+      cout << cmdStr << endl;
+      LOG(LIB_INFO) << "Command line params: " << cmdStr;
+      if (!ProcessAndCheckResults(cmdStr, 
+                                  DistType, SpaceType, 
+                                  vTestCases[MethNum], config, *res, Print)) {
         nFail++;
+        cout << red << "failed" << no_color << " (see logs for more details) " << endl;
+      } else {
+        cout << green << "passed" << no_color << endl;
       }
       LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
       LOG(LIB_INFO) << Print;
@@ -378,9 +466,28 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
       MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-      if (!ProcessAndCheckResults(cmdStr, DataSet, DistType, SpaceType, 
-                                  vTestCases[MethNum], config, *res, MethDescStr[MethNum], MethParams[MethNum], Print)) {
+      string cmdStr = CreateCmdStr(vTestCases[MethNum],
+                                             false,
+                                             ConvertToString(config.GetKNN()[i]),
+                                             DistType, 
+                                             SpaceTypeStr,
+                                             ThreadTestQty,
+                                             TestSetQty,
+                                             DataFile,
+                                             QueryFile,
+                                             MaxNumData,
+                                             MaxNumQuery,
+                                             eps);
+
+      cout << cmdStr << endl;
+      LOG(LIB_INFO) << "Command line params: " << cmdStr;
+      if (!ProcessAndCheckResults(cmdStr,
+                                  DistType, SpaceType, 
+                                  vTestCases[MethNum], config, *res, Print)) {
+        cout << red << "failed" << no_color << " (see logs for more details) " << endl;
         nFail++;
+      } else {
+        cout << green << "passed" << no_color << endl;
       }
       LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
       LOG(LIB_INFO) << Print;
@@ -393,141 +500,66 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
   return nFail;
 }
 
-inline char * StrDupNew(const char *p, size_t len = 0) {
-  if (!len) len = strlen(p);
-  char *res = new char[len + 1];
-  copy(p, p + len + 1, res);
-  return res;
-};
-
-bool RunOneTest(const vector<MethodTestCase>& vTestCases, 
-                const vector<string>& vArgv) {
-  vector<char *>   argv = {StrDupNew("experiment")}; // the first argument is a program's name
-
-  bool bTestRes = true;
-
-  stringstream cmd;
-
-  for (string s: vArgv)
-    cmd << s << " ";
-
-  cerr << endl << "Test arguments: " << cmd.str() << endl;
-
-  for (unsigned i = 0; i < vArgv.size(); ++i) argv.push_back(StrDupNew(vArgv[i].c_str()));
-
-  size_t                threadQty = 1;
-  string                DistType;
-  string                SpaceType;
-  shared_ptr<AnyParams> SpaceParams;
-  bool                  DoAppend = false;
-  string                ResFilePrefix;
-  unsigned              TestSetQty = 10;
-  string                DataFile;
-  string                QueryFile;
-  string                CacheGSFilePrefix;
-  size_t                MaxCacheGSQty;
-  unsigned              MaxNumData = 0;
-  unsigned              MaxNumQuery = 1000;
-  vector<unsigned>      knn;
-  string                RangeArg;
-  string                tmp1;
-  unsigned              tmp2;
-  unsigned              dimension = 0;
-  float                 eps = 0.0;
-
-
-  vector<shared_ptr<MethodWithParams>>        MethodsDesc;
-
-  if (!CacheGSFilePrefix.empty()) {
-    LOG(LIB_FATAL) << "Caching of gold standard data is not yet implemented for this utility";
-  }
- 
-  ParseCommandLine(argv.size(), &argv[0], tmp1,
-                       DistType,
-                       SpaceType,
-                       SpaceParams,
-                       dimension,
-                       tmp2,
-                       DoAppend, 
-                       ResFilePrefix,
-                       TestSetQty,
-                       DataFile,
-                       QueryFile,
-                       CacheGSFilePrefix,
-                       MaxCacheGSQty,
-                       MaxNumData,
-                       MaxNumQuery,
-                       knn,
-                       eps,
-                       RangeArg,
-                       MethodsDesc);
-
-
-
+inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
+               string                       DistType, 
+               string                       SpaceTypeStr,
+               unsigned                     ThreadTestQty,
+               unsigned                     TestSetQty,
+               const string&                DataFile,
+               const string&                QueryFile,
+               IdTypeUnsign                 MaxNumData,
+               IdTypeUnsign                 MaxNumQuery,
+               const string&                KnnArg,
+               const                        float eps,
+               const string&                RangeArg) {
+  bool bTestRes = false;
   ToLower(DistType);
-
   if (DIST_TYPE_INT == DistType) {
     bTestRes = RunTestExper<int>(vTestCases,
-                  cmd.str(),
-                  MethodsDesc,
-                  DataFile,
                   DistType,
-                  SpaceType,
-                  SpaceParams,
-                  dimension,
-                  threadQty,
+                  SpaceTypeStr,
+                  ThreadTestQty,
                   TestSetQty,
                   DataFile,
                   QueryFile,
                   MaxNumData,
                   MaxNumQuery,
-                  knn,
+                  KnnArg,
                   eps,
                   RangeArg
                  );
   } else if (DIST_TYPE_FLOAT == DistType) {
     bTestRes = RunTestExper<float>(vTestCases,
-                  cmd.str(),
-                  MethodsDesc,
-                  DataFile,
                   DistType,
-                  SpaceType,
-                  SpaceParams,
-                  dimension,
-                  threadQty,
+                  SpaceTypeStr,
+                  ThreadTestQty,
                   TestSetQty,
                   DataFile,
                   QueryFile,
                   MaxNumData,
                   MaxNumQuery,
-                  knn,
+                  KnnArg,
                   eps,
                   RangeArg
                  );
   } else if (DIST_TYPE_DOUBLE == DistType) {
     bTestRes = RunTestExper<double>(vTestCases,
-                  cmd.str(),
-                  MethodsDesc,
-                  DataFile,
                   DistType,
-                  SpaceType,
-                  SpaceParams,
-                  dimension,
-                  threadQty,
-                  DoAppend, 
+                  SpaceTypeStr,
+                  ThreadTestQty,
+                  TestSetQty,
                   DataFile,
                   QueryFile,
                   MaxNumData,
                   MaxNumQuery,
-                  knn,
+                  KnnArg,
                   eps,
                   RangeArg
                  );
   } else {
-    LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
+    PREPARE_RUNTIME_ERR(err) << "Unknown distance value type: " << DistType;
+    THROW_RUNTIME_ERR(err);
   }
-
-  for (char *p: argv) delete [] p;
 
   return bTestRes;
 };

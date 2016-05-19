@@ -22,7 +22,6 @@
 #include "index.h"
 #include "space.h"
 #include "logging.h"
-#include "params.h"
 
 namespace similarity {
 
@@ -35,15 +34,14 @@ using std::string;
 template <typename dist_t>
 class MethodFactoryRegistry {
 public:
-  typedef Index<dist_t>* (*CreateFuncPtr)(bool PrintProgress,
-                           const string& SpaceType,
-                           const Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& MethPars);
+  typedef Index<dist_t>* (*CreateFuncPtr)(
+                           bool                 PrintProgress,
+                           const string&        SpaceType,
+                           Space<dist_t>&       space,
+                           const ObjectVector&  DataObjects);
 
   static MethodFactoryRegistry& Instance() {
     static MethodFactoryRegistry elem;
-
     return elem;
   }
 
@@ -55,14 +53,14 @@ public:
   Index<dist_t>* CreateMethod(bool PrintProgress,
                             const string& MethName,
                             const string& SpaceType,
-                            const Space<dist_t>* space,
-                            const ObjectVector& DataObjects,
-                            const AnyParams& MethPars) {
+                            Space<dist_t>& space,
+                            const ObjectVector& DataObjects) {
     if (Creators_.count(MethName)) {
-      return Creators_[MethName](PrintProgress, SpaceType, space, DataObjects, MethPars);
+      return Creators_[MethName](PrintProgress, SpaceType, space, DataObjects);
     } else {
-      LOG(LIB_FATAL) << "It looks like the method " << MethName << 
+      PREPARE_RUNTIME_ERR(err) << "It looks like the method " << MethName << 
                     " is not defined for the distance type : " << DistTypeName<dist_t>();
+      THROW_RUNTIME_ERR(err);
     }
     return NULL;
   }

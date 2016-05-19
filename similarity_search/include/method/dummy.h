@@ -37,32 +37,51 @@ template <typename dist_t>
 class DummyMethod : public Index<dist_t> {
  public:
   /*
-   * The constructor here accepts a pointer to the space, 
-   * a reference to an array of data objects,
-   * and a reference to the parameter manager,
-   * which is used to retrieve parameters.
-   *
-   * The constructor creates a search index (or calls a function to create it)!
-   * However, in this simple case, it simply memorizes a reference to the 
-   * array of data objects, which is guaranteed to exist through the complete
-   * test cycle.
-   *
-   * Note that we have a query time parameter here.
-   *
+   * The constructor here space and data-objects' references,
+   * which are guaranteed to be be valid during testing.
+   * So, we can memorize them safely.
    */
-  DummyMethod(const Space<dist_t>* space, 
-              const ObjectVector& data, 
-              AnyParamManager& pmgr) 
-              : data_(data) {
-    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch_);
-    SetQueryTimeParamsInternal(pmgr);
+  DummyMethod(Space<dist_t>& space, 
+              const ObjectVector& data) : data_(data), space_(space) {}
+
+  /*
+   * This function is supposed to create a search index (or call a 
+   * function to create it)!
+   */
+  void CreateIndex(const AnyParams& IndexParams) override {
+    AnyParamManager  pmgr(IndexParams);
+    pmgr.GetParamOptional("doSeqSearch",  
+                          bDoSeqSearch_, 
+      // One should always specify the default value of an optional parameter!
+                          false
+                          );
+    // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
+    pmgr.CheckUnused();
+    // Always call ResetQueryTimeParams() to set query-time parameters to their default values
+    this->ResetQueryTimeParams();
   }
+
+  /*
+   * One can implement functions for index serialization and reading.
+   * However, this is not required.
+   */
+  // SaveIndex is not necessarily implemented
+  virtual void SaveIndex(const string& location) override {
+    throw runtime_error("SaveIndex is not implemented for method: " + StrDesc());
+  }
+  // LoadIndex is not necessarily implemented
+  virtual void LoadIndex(const string& location) override {
+    throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
+  }
+
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
+
   ~DummyMethod(){};
 
   /* 
    * Just the name of the method, consider printing crucial parameter values
    */
-  const std::string ToString() const { 
+  const std::string StrDesc() const override { 
     stringstream str;
     str << "Dummy method: " << (bDoSeqSearch_ ? " does seq. search " : " does nothing (really dummy)"); 
     return str.str();
@@ -71,15 +90,23 @@ class DummyMethod : public Index<dist_t> {
   /* 
    *  One needs to implement two search functions.
    */
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  virtual vector<string> GetQueryTimeParamNames() const;
+  /*
+   * In rare cases, mostly when we wrap up 3rd party methods,
+   * we simply duplicate the data set. This function
+   * let the experimentation code know this, so it could
+   * adjust the memory consumption of the index.
+   *
+   * Note, however, that this method doesn't create any data duplicates.
+   */
+  virtual bool DuplicateData() const override { return false; }
 
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
-
+  bool                    data_duplicate_;
   const ObjectVector&     data_;
+  Space<dist_t>&          space_;
   bool                    bDoSeqSearch_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(DummyMethod);

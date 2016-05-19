@@ -30,6 +30,8 @@
 
 const char* log_severity[] = {"INFO", "WARNING", "ERROR", "FATAL"};
 
+using namespace std;
+
 // allocate the static member
 std::ofstream Logger::logfile_;
 
@@ -65,7 +67,7 @@ Logger::Logger(LogSeverity severity, const std::string& _file, int line, const c
 Logger::~Logger() {
   stream() << '\n';
   if (severity_ == LIB_FATAL) {
-    // stream() << std::flush;
+    stream().flush();
     if (logfile_.is_open())
       logfile_.close();
     // TODO(@leo/@bileg) do we want to abort here?
@@ -90,3 +92,13 @@ void InitializeLogger(LogChoice choice, const char* logfile) {
   }
 }
 
+
+RuntimeErrorWrapper::RuntimeErrorWrapper(const std::string& _file, int line, const char* function) {
+  std::string file = _file;
+  size_t n = file.rfind('/');
+  if (n != std::string::npos) {
+    file.erase(file.begin(), file.begin() + n + 1);
+  }
+  stream() << LibGetCurrentTime() << " " << file << ":" << line
+           << " (" << function << ") ";
+}

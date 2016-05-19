@@ -28,11 +28,10 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateBBTree(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
 
-    return new BBTree<dist_t>(space, DataObjects, AllParams);
+    return new BBTree<dist_t>(space, DataObjects);
 }
 
 /*

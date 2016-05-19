@@ -19,6 +19,8 @@
 
 #include <method/lsh_multiprobe.h>
 
+#include "logging.h"
+
 namespace similarity {
 
 /*
@@ -28,61 +30,11 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreateLSHMultiprobe(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
-    unsigned  LSH_M = 20;
-    unsigned  LSH_L = 50;
-    unsigned  LSH_H = 1017881;
-    float     LSH_W = 20;
-    unsigned  LSH_T = 10;
-    unsigned  LSH_TuneK = 1;
-    float     DesiredRecall = 0.5;
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+  CHECK_MSG(SpaceType == "l2", "Multiprobe LSH works only with L2");
 
-    AnyParamManager pmgr(AllParams);
-
-    pmgr.GetParamOptional("M",  LSH_M);
-    pmgr.GetParamOptional("L",  LSH_L);
-    pmgr.GetParamOptional("H",  LSH_H);
-    pmgr.GetParamOptional("W",  LSH_W);
-    pmgr.GetParamOptional("T",  LSH_T);
-    pmgr.GetParamOptional("tuneK",  LSH_TuneK);
-    pmgr.GetParamOptional("desiredRecall",  DesiredRecall);
-
-    if (SpaceType != "l2") LOG(LIB_FATAL) << "Multiprobe LSH works only with L2";
-
-    // For FitData():
-    // number of points to use
-    unsigned N1 = DataObjects.size();
-    // number of pairs to sample
-    unsigned P = 10000;
-    // number of queries to sample
-    unsigned Q = 1000;
-    // search for K neighbors neighbors
-    unsigned K = LSH_TuneK;
-
-    pmgr.GetParamOptional("numSamplePairs",  P);
-    pmgr.GetParamOptional("numSampleQueries",  Q);
-
-    LOG(LIB_INFO) << "lshTuneK: " << K;
-    // divide the sample to F folds
-    unsigned F = 10;
-    // For MPLSHTune():
-    // dataset size
-    unsigned N2 = DataObjects.size();
-    // desired recall
-
-    return new MultiProbeLSH<dist_t>(
-                  space,
-                  DataObjects,
-                  N1, P, Q, K, F, N2,
-                  DesiredRecall,
-                  LSH_L,
-                  LSH_T,
-                  LSH_H,
-                  LSH_M,
-                  LSH_W
-                  );
+  return new MultiProbeLSH<dist_t>(space, DataObjects);
 }
 
 /*

@@ -39,11 +39,12 @@ typedef std::pair<PivotIdType, size_t> IntInt;      // <perm-dist, object_id>
 
 template <typename dist_t>
 void GetPermutationPivot(const ObjectVector& data,
-                         const Space<dist_t>* space,
+                         const Space<dist_t>& space,
                          const size_t num_pivot,
-                         ObjectVector* pivot) {
+                         ObjectVector* pivot,
+                         std::vector<IdType>* pivot_pos = NULL) {
   if (num_pivot >= data.size()) {
-    throw runtime_error("The data set in the space " + space->ToString() +
+    throw runtime_error("The data set in the space " + space.StrDesc() +
                         "is to small to select enough pivots");
   }
   std::unordered_set<int> pivot_idx;
@@ -56,17 +57,18 @@ void GetPermutationPivot(const ObjectVector& data,
       p = RandomInt() % data.size();
     }
     pivot_idx.insert(p);
+    if (pivot_pos != NULL) pivot_pos->push_back(p);
     pivot->push_back(data[p]);
   }
 }
 
 template <typename dist_t>
-void GetPermutation(const ObjectVector& pivot, const Space<dist_t>* space,
+void GetPermutation(const ObjectVector& pivot, const Space<dist_t>& space,
                     const Object* object, Permutation* p) {
   // get pivot id
   std::vector<DistInt<dist_t>> dists;
   for (size_t i = 0; i < pivot.size(); ++i) {
-    dists.push_back(std::make_pair(space->IndexTimeDistance(pivot[i], object), static_cast<PivotIdType>(i)));
+    dists.push_back(std::make_pair(space.IndexTimeDistance(pivot[i], object), static_cast<PivotIdType>(i)));
   }
   std::sort(dists.begin(), dists.end());
   // dists.second = pivot id    i.e.  \Pi_o(i)
@@ -112,13 +114,13 @@ void GetPermutation(const ObjectVector& pivot,
 
 template <typename dist_t>
 void GetPermutationPPIndex(const ObjectVector& pivot,
-                           const Space<dist_t>* space,
+                           const Space<dist_t>& space,
                            const Object* object,
                            Permutation* p) {
   // get pivot id
   std::vector<DistInt<dist_t>> dists;
   for (size_t i = 0; i < pivot.size(); ++i) {
-    dists.push_back(std::make_pair(space->IndexTimeDistance(pivot[i], object),
+    dists.push_back(std::make_pair(space.IndexTimeDistance(pivot[i], object),
                                    static_cast<PivotIdType>(i)));
   }
   std::sort(dists.begin(), dists.end());

@@ -87,9 +87,11 @@ void benchProjection(size_t repeatQty,
                    << " should be a simple-storage dense vector space, e.g., l2";
   }
 
-  ObjectVector data;
+  ObjectVector      data;
+  vector<string>    tmp;
   LOG(LIB_INFO) << "maxNumData=" << maxNumData;
-  space->ReadDataset(data, NULL, inFile.c_str(), maxNumData);
+  unique_ptr<DataFileInputState> inpState(space->ReadDataset(data, tmp, inFile, maxNumData));
+  space->UpdateParamsFromFile(*inpState);
 
   size_t N = data.size();
 
@@ -108,7 +110,7 @@ void benchProjection(size_t repeatQty,
     LOG(LIB_INFO) << "Creating projection object set " << (rr + 1) << " out of " << repeatQty;
     projObj.reset(
       Projection<dist_t>::createProjection(
-                        space.get(),
+                        *space,
                         data,
                         projType,
                         nIntermDim,
@@ -138,7 +140,7 @@ void benchProjection(size_t repeatQty,
     for (size_t i = 0; i < sampleKNNQueryQty; ++i) {
       IdType id1 = RandomInt() % N;
 
-      KNNQuery<dist_t> query(space.get(), data[id1], knn);
+      KNNQuery<dist_t> query(*space, data[id1], knn);
 
       // Brute force search
       for (size_t i = 0; i < N; ++i) {

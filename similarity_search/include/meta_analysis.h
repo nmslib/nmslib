@@ -38,12 +38,15 @@ public:
     ClassAccuracy_  .resize(TestSetQty);
     LogRelPosError_ .resize(TestSetQty);
     NumCloser_      .resize(TestSetQty);
+    RecallAt1_      .resize(TestSetQty);
     QueryTime_      .resize(TestSetQty);
     DistComp_       .resize(TestSetQty);
     ImprEfficiency_ .resize(TestSetQty);
     ImprDistComp_   .resize(TestSetQty);
     Mem_            .resize(TestSetQty);
     IndexTime_      .resize(TestSetQty);
+    LoadTime_       .resize(TestSetQty);
+    SaveTime_       .resize(TestSetQty);
     QueryPerSec_    .resize(TestSetQty);
   }
 
@@ -63,6 +66,9 @@ public:
   void AddNumCloser(size_t SetId, double NumCloser) {
     NumCloser_[SetId].push_back(NumCloser);
   }
+  void AddRecallAt1(size_t SetId, double RecallAt1) {
+    RecallAt1_[SetId].push_back(RecallAt1);
+  }
   void AddQueryTime(size_t SetId, double QueryTime) {
     QueryTime_[SetId].push_back(QueryTime);
   }
@@ -74,6 +80,12 @@ public:
   }
   void SetIndexTime(size_t SetId, double IndexTime) {
     IndexTime_[SetId] = IndexTime;
+  }
+  void SetLoadTime(size_t SetId, double LoadTime) {
+    LoadTime_[SetId] = LoadTime;
+  }
+  void SetSaveTime(size_t SetId, double SaveTime) {
+    SaveTime_[SetId] = SaveTime;
   }
   void SetQueryPerSec(size_t SetId, double QueryPerSec) {
     QueryPerSec_[SetId] = QueryPerSec;
@@ -91,6 +103,7 @@ public:
     ComputeOneSimple("ClassAccuracy", ClassAccuracy_, ClassAccuracyAvg, ClassAccuracyConfMin, ClassAccuracyConfMax);
     ComputeOneSimple("LogRelPosError", LogRelPosError_, LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax);
     ComputeOneSimple("NumCloser", NumCloser_, NumCloserAvg, NumCloserConfMin, NumCloserConfMax);
+    ComputeOneSimple("RecallAt1", RecallAt1_, RecallAt1Avg, RecallAt1ConfMin, RecallAt1ConfMax);
     ComputeOneMeta("QueryTime", QueryTime_, QueryTimeAvg, QueryTimeConfMin, QueryTimeConfMax);
     ComputeOneMeta("DistComp", DistComp_, DistCompAvg, DistCompConfMin, DistCompConfMax);
 
@@ -98,6 +111,8 @@ public:
     ComputeOneSimple("ImprDistComp", ImprDistComp_, ImprDistCompAvg, ImprDistCompConfMin, ImprDistCompConfMax);
     ComputeOneSimple("MemUsage", Mem_, MemAvg, MemConfMin, MemConfMax);
     ComputeOneSimple("IndexTime", IndexTime_, IndexTimeAvg, IndexTimeConfMin, IndexTimeConfMax);
+    ComputeOneSimple("LoadTime", LoadTime_, LoadTimeAvg, LoadTimeConfMin, LoadTimeConfMax);
+    ComputeOneSimple("SaveTime", SaveTime_, SaveTimeAvg, SaveTimeConfMin, SaveTimeConfMax);
     ComputeOneSimple("QueryPerSec", QueryPerSec_, QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax);
   }
 
@@ -121,6 +136,10 @@ public:
   double GetNumCloserConfMin() const{return NumCloserConfMin;}; 
   double GetNumCloserConfMax() const { return NumCloserConfMax;}
 
+  double GetRecallAt1Avg() const { return RecallAt1Avg;} 
+  double GetRecallAt1ConfMin() const{return RecallAt1ConfMin;}; 
+  double GetRecallAt1ConfMax() const { return RecallAt1ConfMax;}
+
   double GetImprEfficiencyAvg() const { return ImprEfficiencyAvg;} 
   double GetImprEfficiencyConfMin() const{return ImprEfficiencyConfMin;}; 
   double GetImprEfficiencyConfMax() const { return ImprEfficiencyConfMax;}
@@ -136,6 +155,14 @@ public:
   double GetIndexTimeAvg() const { return IndexTimeAvg;} 
   double GetIndexTimeConfMin() const{return IndexTimeConfMin;}; 
   double GetIndexTimeConfMax() const { return IndexTimeConfMax;}
+
+  double GetLoadTimeAvg() const { return LoadTimeAvg;} 
+  double GetLoadTimeConfMin() const{return LoadTimeConfMin;}; 
+  double GetLoadTimeConfMax() const { return LoadTimeConfMax;}
+
+  double GetSaveTimeAvg() const { return SaveTimeAvg;} 
+  double GetSaveTimeConfMin() const{return SaveTimeConfMin;}; 
+  double GetSaveTimeConfMax() const { return SaveTimeConfMax;}
 
   double GetQueryPerSecAvg() const { return QueryPerSecAvg;} 
   double GetQueryPerSecConfMin() const{return QueryPerSecConfMin;}; 
@@ -154,12 +181,15 @@ double PrecisionOfApproxAvg, PrecisionOfApproxConfMin, PrecisionOfApproxConfMax;
 double ClassAccuracyAvg, ClassAccuracyConfMin, ClassAccuracyConfMax;
 double LogRelPosErrorAvg, LogRelPosErrorConfMin, LogRelPosErrorConfMax;
 double NumCloserAvg, NumCloserConfMin, NumCloserConfMax;
+double RecallAt1Avg, RecallAt1ConfMin, RecallAt1ConfMax;
 double QueryTimeAvg, QueryTimeConfMin, QueryTimeConfMax;
 double DistCompAvg, DistCompConfMin, DistCompConfMax;
 double ImprEfficiencyAvg, ImprEfficiencyConfMin, ImprEfficiencyConfMax;
 double ImprDistCompAvg, ImprDistCompConfMin, ImprDistCompConfMax;
 double MemAvg, MemConfMin, MemConfMax;
 double IndexTimeAvg, IndexTimeConfMin, IndexTimeConfMax;
+double LoadTimeAvg, LoadTimeConfMin, LoadTimeConfMax;
+double SaveTimeAvg, SaveTimeConfMin, SaveTimeConfMax;
 double QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax;
 double zVal_;
 
@@ -168,12 +198,15 @@ vector<vector<double>>   PrecisionOfApprox_;
 vector<vector<double>>   ClassAccuracy_; 
 vector<vector<double>>   LogRelPosError_; 
 vector<vector<double>>   NumCloser_; 
+vector<vector<double>>   RecallAt1_; 
 vector<vector<double>>   QueryTime_; 
 vector<vector<double>>   DistComp_; 
 vector<double>           ImprEfficiency_; 
 vector<double>           ImprDistComp_; 
 vector<double>           Mem_; 
 vector<double>           IndexTime_; 
+vector<double>           LoadTime_; 
+vector<double>           SaveTime_; 
 vector<double>           QueryPerSec_; 
 
 MetaAnalysis(){} // be private!
@@ -194,7 +227,7 @@ void ComputeOneSimple(const string& Name,
     LOG(INFO) << ".... " << Name  << " " << avg << " qty: " << vals.size();
 #endif
   double var = vals.size()> 1 ? Variance(&vals[0], vals.size(), avg) : 0;
-  double sigma = sqrt(var)/vals.size();
+  double sigma = sqrt(var/vals.size());
   // 5% confidence interval (assuming normal distrbution).
   ConfMin = avg - zVal_ * sigma;
   ConfMax = avg + zVal_ * sigma;

@@ -22,7 +22,7 @@
 namespace similarity {
 
 template <typename dist_t>
-void DummyMethod<dist_t>::Search(RangeQuery<dist_t>* query) {
+void DummyMethod<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   if (bDoSeqSearch_) {
     for (size_t i = 0; i < data_.size(); ++i) {
       query->CheckAndAddToResult(data_[i]);
@@ -33,7 +33,7 @@ void DummyMethod<dist_t>::Search(RangeQuery<dist_t>* query) {
 }
 
 template <typename dist_t>
-void DummyMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
+void DummyMethod<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   if (bDoSeqSearch_) {
     for (size_t i = 0; i < data_.size(); ++i) {
       query->CheckAndAddToResult(data_[i]);
@@ -45,20 +45,16 @@ void DummyMethod<dist_t>::Search(KNNQuery<dist_t>* query) {
 
 template <typename dist_t>
 void 
-DummyMethod<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+DummyMethod<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
+  AnyParamManager pmgr(QueryTimeParams);
   int dummy;
-  pmgr.GetParamOptional("dummyParam", dummy);
+  // Note that GetParamOptional() should always have a default value
+  pmgr.GetParamOptional("dummyParam", dummy, -1);
   LOG(LIB_INFO) << "Set dummy = " << dummy;
   pmgr.CheckUnused();
 }
 
-template <typename dist_t>
-vector<string>
-DummyMethod<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
-  names.push_back("dummyParam");
-  return names;
-}
 
 template class DummyMethod<float>;
 template class DummyMethod<double>;

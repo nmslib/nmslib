@@ -40,17 +40,24 @@ using std::pow;
 using std::log;
 
 template <typename dist_t>
-void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
-  // Default values are for the classic triangle inequality
-  alpha_left_  = 1.0;
-  exp_left_    = MIN_EXP_DEFAULT;
-  alpha_right_ = 1.0;
-  exp_right_   = MAX_EXP_DEFAULT;
-  pmgr.GetParamOptional(ALPHA_LEFT_PARAM, alpha_left_);
-  pmgr.GetParamOptional(ALPHA_RIGHT_PARAM, alpha_right_);
-  pmgr.GetParamOptional(EXP_LEFT_PARAM, exp_left_);
-  pmgr.GetParamOptional(EXP_RIGHT_PARAM, exp_right_);
+void PolynomialPruner<dist_t>::SetQueryTimeParams(AnyParamManager& pmgr) {
+  /* 
+   * If no tunning was carried out previously, 
+   * default values are for the classic triangle inequality.
+   * However, after tunning is done, we will use default values
+   * obtained after tunning.
+   */
+  pmgr.GetParamOptional(ALPHA_LEFT_PARAM,   alpha_left_,    alpha_left_default_);
+  pmgr.GetParamOptional(ALPHA_RIGHT_PARAM,  alpha_right_,   alpha_right_default_);
+  pmgr.GetParamOptional(EXP_LEFT_PARAM,     exp_left_,      exp_left_default_);
+  pmgr.GetParamOptional(EXP_RIGHT_PARAM,    exp_right_,     exp_right_default_);
 
+  LOG(LIB_INFO) << "Set polynomial pruner query-time parameters:";
+  LOG(LIB_INFO) << Dump();
+}
+
+template <typename dist_t>
+void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
   if (pmgr.hasParam(TUNE_R_PARAM) && pmgr.hasParam(TUNE_K_PARAM)) {
     stringstream err;
 
@@ -74,8 +81,8 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
       throw runtime_error(err.str());
     }
 
-    size_t tuneQty = TUNE_QTY_DEFAULT;
-    pmgr.GetParamOptional(TUNE_QTY_PARAM, tuneQty);
+    size_t tuneQty;
+    pmgr.GetParamOptional(TUNE_QTY_PARAM, tuneQty, TUNE_QTY_DEFAULT);
 
     if (tuneQty < MIN_TUNE_QTY) {
       stringstream err;
@@ -111,27 +118,26 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
                      " bucket size: " << bucketSizeAdjusted << 
                      " recall: " << desiredRecallAdjusted;
 
-    vector<string>                methodDesc;
-    stringstream                  methStrDesc;
+    vector<string>                paramDesc;
+    stringstream                  methParamDesc;
     string                        methName;
 
-    methStrDesc << METH_VPTREE << ":bucketSize=" << bucketSizeAdjusted;
+    methParamDesc << "bucketSize=" << bucketSizeAdjusted;
 
-    ParseMethodArg(methStrDesc.str(), methName, methodDesc);
-    shared_ptr<MethodWithParams>  method = shared_ptr<MethodWithParams>(new MethodWithParams(methName, methodDesc));
+    ParseArg(methParamDesc.str(), paramDesc);
 
-    size_t minExp = MIN_EXP_DEFAULT, maxExp = MAX_EXP_DEFAULT;
+    size_t minExp = 0, maxExp = 0;
 
-    pmgr.GetParamOptional(MIN_EXP_PARAM, minExp);
-    pmgr.GetParamOptional(MAX_EXP_PARAM, maxExp);
+    pmgr.GetParamOptional(MIN_EXP_PARAM, minExp, MIN_EXP_DEFAULT);
+    pmgr.GetParamOptional(MAX_EXP_PARAM, maxExp, MAX_EXP_DEFAULT);
 
     if (!maxExp) throw runtime_error(string(MIN_EXP_PARAM) + " can't be zero!");
     if (maxExp < minExp) throw runtime_error(string(MAX_EXP_PARAM) + " can't be < " + string(MIN_EXP_PARAM));
 
 
-    string metricName = OPTIM_METRIC_DEFAULT; 
+    string metricName;
 
-    pmgr.GetParamOptional(OPTIM_METRIC_PARAMETER, metricName);
+    pmgr.GetParamOptional(OPTIM_METRIC_PARAMETER, metricName, OPTIM_METRIC_DEFAULT);
 
     OptimMetric metric = getOptimMetric(metricName);
 
@@ -152,20 +158,17 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
 
     vector<unsigned>                  knn;
     vector<dist_t>                    range;
-    // The cloned space will be in the indexing mode.
-    // Otherwise, the tunning code will crash while accessing function IndexTimeDistance() 
-    unique_ptr<const Space<dist_t>>   clonedSpace(space_->Clone());
 
     if (pmgr.hasParam(TUNE_R_PARAM)) {
       dist_t r;
       pmgr.GetParamRequired(TUNE_R_PARAM, r);
       range.push_back(r);
       
-      config.reset(new ExperimentConfig<dist_t>(clonedSpace.get(), 
+      config.reset(new ExperimentConfig<dist_t>(space_, 
                                       data_, emptyQueries, 
                                       TUNE_SPLIT_QTY,
                                       tuneQty, TUNE_QUERY_QTY,
-                                      0, knn, eps, range));
+                                      knn, eps, range));
   
     }
 
@@ -174,11 +177,11 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
       pmgr.GetParamRequired(TUNE_K_PARAM, k);
       knn.push_back(k);
       
-      config.reset(new ExperimentConfig<dist_t>(clonedSpace.get(), 
+      config.reset(new ExperimentConfig<dist_t>(space_, 
                                       data_, emptyQueries, 
                                       TUNE_SPLIT_QTY,
                                       tuneQty, TUNE_QUERY_QTY,
-                                      0, knn, eps, range));
+                                      knn, eps, range));
   
     }
 
@@ -186,18 +189,18 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
 
     config->ReadDataset();
 
-    size_t maxCacheGSQty = MAX_CACHE_GS_QTY_DEFAULT;
-    pmgr.GetParamOptional(MAX_CACHE_GS_QTY_PARAM, maxCacheGSQty);
-    size_t maxIter = MAX_ITER_DEFAULT;
-    pmgr.GetParamOptional(MAX_ITER_PARAM, maxIter);
-    size_t maxRecDepth = MAX_REC_DEPTH_DEFAULT;
-    pmgr.GetParamOptional(MAX_REC_DEPTH_PARAM, maxRecDepth);
-    size_t stepN = STEP_N_DEFAULT;
-    pmgr.GetParamOptional(STEP_N_PARAM, stepN);
-    size_t addRestartQty = ADD_RESTART_QTY_DEFAULT;
-    pmgr.GetParamOptional(ADD_RESTART_QTY_PARAM, addRestartQty);
-    float fullFactor = FULL_FACTOR_DEFAULT;
-    pmgr.GetParamOptional(FULL_FACTOR_PARAM, fullFactor);
+    size_t maxCacheGSQty;
+    pmgr.GetParamOptional(MAX_CACHE_GS_QTY_PARAM, maxCacheGSQty, MAX_CACHE_GS_QTY_DEFAULT);
+    size_t maxIter = 0;
+    pmgr.GetParamOptional(MAX_ITER_PARAM, maxIter, MAX_ITER_DEFAULT);
+    size_t maxRecDepth = 0;
+    pmgr.GetParamOptional(MAX_REC_DEPTH_PARAM, maxRecDepth, MAX_REC_DEPTH_DEFAULT);
+    size_t stepN = 0;
+    pmgr.GetParamOptional(STEP_N_PARAM, stepN, STEP_N_DEFAULT);
+    size_t addRestartQty = 0;
+    pmgr.GetParamOptional(ADD_RESTART_QTY_PARAM, addRestartQty, ADD_RESTART_QTY_DEFAULT);
+    float fullFactor = 0;
+    pmgr.GetParamOptional(FULL_FACTOR_PARAM, fullFactor, (float)FULL_FACTOR_DEFAULT);
 
     float recall = 0, time_best = 0, impr_best = -1, alpha_left = 0, alpha_right = 0; 
     unsigned exp_left = 0, exp_right = 0;
@@ -227,7 +230,7 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
                      metric, desiredRecallAdjusted,
                      SpaceType, 
                      METH_VPTREE, 
-                     method->methPars_, 
+                     AnyParams(paramDesc), getEmptyParams(),
                      recall_loc, 
                      time_best_loc, impr_best_loc,
                      alpha_left_loc, expLeft, alpha_right_loc, expRight,
@@ -244,10 +247,17 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
       }
     }
 
-    alpha_left_ = alpha_left;
-    alpha_right_ = alpha_right;
-    exp_left_ = exp_left;
-    exp_right_ = exp_right;
+    /*
+     * Note that the tunning procedure overrides the default values,
+     * to prevent the procedure SetQueryTimeParams from overriding them.
+     * If one calls SetQueryTimeParams with the set of empty parameters,
+     * all parameters are reset to default values. So, we want to this default
+     * values to be equal to the values obtained during tuning.
+     */
+    alpha_left_default_ = alpha_left_ = alpha_left;
+    alpha_right_default_ = alpha_right_ = alpha_right;
+    exp_left_default_ = exp_left_ = exp_left;
+    exp_right_default_ = exp_right_ = exp_right;
 
     stringstream  bestParams;
     bestParams << ALPHA_LEFT_PARAM << "=" << alpha_left_ << "," << ALPHA_RIGHT_PARAM << "=" << alpha_right_ << ","
@@ -280,251 +290,6 @@ void PolynomialPruner<dist_t>::SetParams(AnyParamManager& pmgr) {
  
   }
 }
-
-template <typename dist_t>
-SamplingOracleCreator<dist_t>::SamplingOracleCreator(
-                   const Space<dist_t>* space,
-                   const ObjectVector& AllVectors,
-                   bool   DoRandSample,
-                   size_t MaxK,
-                   float  QuantileStepPivot,
-                   float  QuantileStepPseudoQuery,
-                   size_t NumOfPseudoQueriesInQuantile,
-                   float  DistLearnThreshold
-                   ) : space_(space),
-                       AllVectors_(AllVectors),
-                       DoRandSample_(DoRandSample),
-                       MaxK_(MaxK),
-                       QuantileStepPivot_(QuantileStepPivot),
-                       QuantileStepPseudoQuery_(QuantileStepPseudoQuery),
-                       NumOfPseudoQueriesInQuantile_(NumOfPseudoQueriesInQuantile),
-                       DistLearnThreshold_(DistLearnThreshold)
-{
-  LOG(LIB_INFO) << "MaxK              = " << MaxK;
-  LOG(LIB_INFO) << "DoRandSamp        = " << DoRandSample;
-  LOG(LIB_INFO) << "DistLearnThresh   = " << DistLearnThreshold;
-  LOG(LIB_INFO) << "QuantileStepPivot = " << QuantileStepPivot;
-  LOG(LIB_INFO) << "QuantileStepPseudoQuery       = " << QuantileStepPseudoQuery;
-  LOG(LIB_INFO) << "NumOfPseudoQueriesInQuantile  = " << NumOfPseudoQueriesInQuantile;
-}
-
-template <typename dist_t>
-SamplingOracle<dist_t>::SamplingOracle(
-                   const Space<dist_t>* space,
-                   const ObjectVector& AllVectors,
-                   const Object* pivot,
-                   const DistObjectPairVector<dist_t>& DistsOrig,
-                   bool   DoRandSample,
-                   size_t MaxK,
-                   float  QuantileStepPivot,
-                   float  QuantileStepPseudoQuery,
-                   size_t NumOfPseudoQueriesInQuantile,
-                   float  DistLearnThreshold
-                   ) : NotEnoughData_(false)
-{
-  CHECK(QuantileStepPivot > 0 && QuantileStepPivot < 1);
-  CHECK(QuantileStepPseudoQuery > 0 && QuantileStepPseudoQuery < 1);
-
-  dist_t               PivotR = GetMedian(DistsOrig).first;
-
-  /*
-   * Note that here using float (or any other floating-point type) is not
-   * a mistake. This is not related to dist_t.
-   */
-  vector<float>   quantiles;
-#if 1
-  for (float val = 0; val <= 1.00001 - QuantileStepPivot; val += QuantileStepPivot)
-      quantiles.push_back(val);
-#else
-  // Using finer-grained quantiles seems to be not very helpful
-  for (float val = 0; val <= 1.00001 - QuantileStepPivot; ) {
-    quantiles.push_back(val);
-    if (fabs(val - 0.5) > 0.1) {
-      val += QuantileStepPivot;
-    } else if (fabs(val - 0.5) > 0.02) {
-      val += QuantileStepPivot/5;
-    } else
-      val += QuantileStepPivot/50;
-
-  }
-#endif
-
-  DistObjectPairVector<dist_t> dists = DistsOrig;
-
-  size_t MinReqSize = quantiles.size();
-
-  if (dists.size() < MinReqSize) {
-    // Let's ignore a few unlikely duplicates
-    for (unsigned i = 0; i < MinReqSize - dists.size(); ++i) {
-      size_t RandId = RandomInt() % AllVectors.size();
-
-      // Distance can be asymmetric, pivot should be on the left
-      dists.push_back(std::make_pair(space->IndexTimeDistance(pivot, AllVectors[RandId]), AllVectors[RandId]));
-    }
-  }
-
-  vector<size_t> qind = EstimateQuantileIndices(dists, quantiles);
-
-  if (qind.size()) {
-  // Insert the last and the first indices
-    if (qind[0] != 0) qind.insert(qind.begin(), 0);
-    size_t LastIndx =  dists.size() - 1;
-    if (qind[qind.size() - 1] != LastIndx) qind.push_back(LastIndx);
-  }
-
-  for (unsigned i = 0; i < qind.size(); ++i) {
-    QuantilePivotDists.push_back(dists[qind[i]].first);
-  }
-
-  if (QuantilePivotDists.size() >= MinQuantIndQty) {
-    CHECK(QuantilePivotDists.size() > 0);
-    size_t N = QuantilePivotDists.size() - 1;
-    QuantileMaxPseudoQueryDists.resize(N);
-
-    for (size_t quant = 0; quant < N; ++ quant) {
-      std::vector<size_t>                       RandIds;
-      std::vector<std::pair<dist_t, bool> >     SampleRes;
-
-      for (size_t i = 0; i < NumOfPseudoQueriesInQuantile; ++i) {
-        size_t d = qind[quant + 1] - qind[quant];
-        CHECK(d > 0);
-
-        size_t Id = qind[quant] + static_cast<size_t>(RandomInt() % d);
-
-        CHECK(qind[quant] <= Id && Id < qind[quant + 1]);
-
-        RandIds.push_back(Id);
-      }
-
-      std::sort(RandIds.begin(), RandIds.end());
-
-        /*
-         * If we are doing random sampling, we can reuse the same (pseudo) query
-         * multiple times. Anyways, the data points will be different most of the time.
-         * However, if we are computing the MaxK-neighborhood of a pseudoquery
-         * reusing queries doesn't give us additional information. So, instead of reusing
-         * the same pseudoquery, we simply increase the size of the neighborhood
-         */
-      if (!DoRandSample) {
-        RandIds.erase(std::unique(RandIds.begin(), RandIds.end()), RandIds.end());
-      }
-
-      for (auto it = RandIds.begin(); it != RandIds.end(); ++it) {
-        const Object* PseudoQuery = dists[*it].second;
-        dist_t  Pivot2QueryDist = space->IndexTimeDistance(pivot, PseudoQuery);
-        bool    QueryLeft  =  Pivot2QueryDist <= PivotR;
-        bool    QueryRight =  Pivot2QueryDist >= PivotR;
-
-          /*
-           * If we didn't find enough points in the interval,
-           * let's try to compensate for this by using larger neighborhoods.
-           * See, the comment above: this strategy is not necessary, if sampling
-           * is random.
-           */
-
-        size_t SampleQty = MaxK;
-        if (!DoRandSample) {
-          SampleQty *= NumOfPseudoQueriesInQuantile * quantiles.size() / N / RandIds.size();
-
-          std::priority_queue<std::pair<dist_t, bool> >  NN;
-
-          for (size_t j = 0; j < dists.size(); ++j) {
-            const Object* ThatObj = dists[j].second;
-
-            // distance can be asymmetric, but the query should be on the right
-            dist_t Query2ObjDist = space->IndexTimeDistance(ThatObj, PseudoQuery);
-
-            /*
-            * If:
-            *    (1) the queue contains < MaxK elements and
-            *    (2) ThatObj is farther from the query than the objects in the query
-            * Then  ignore ThatObj
-            */
-            if (NN.size() < MaxK || NN.top().first > Query2ObjDist) {
-              // distance can be asymmetric, but the pivot is on the left
-              dist_t  Pivot2ObjDist = space->IndexTimeDistance(pivot, ThatObj);
-
-              bool    ObjLeft  =  Pivot2ObjDist <= PivotR;
-              bool    ObjRight =  Pivot2ObjDist >= PivotR;
-              bool    IsSameBall = ObjLeft == QueryLeft || ObjRight == QueryRight;
-
-              // distance can be asymmetric, but query is on the right side
-              NN.push(std::make_pair(Query2ObjDist, IsSameBall));
-              if (NN.size() > MaxK) NN.pop();
-            }
-
-            while (!NN.empty()) {
-              const std::pair<dist_t, bool>&  elem = NN.top();
-              SampleRes.push_back(elem);
-              NN.pop();
-            }
-          }
-        } else {
-          for (size_t k = 0; k < MaxK; ++k) {
-            size_t Id = static_cast<size_t>(RandomInt() % dists.size());
-            const Object* ThatObj = dists[Id].second;
-
-            // distance can be asymmetric, but the pivot is on the left
-            dist_t  Pivot2ObjDist = space->IndexTimeDistance(pivot, ThatObj);
-
-            bool    ObjLeft  =  Pivot2ObjDist <= PivotR;
-            bool    ObjRight =  Pivot2ObjDist >= PivotR;
-            bool    IsSameBall = ObjLeft == QueryLeft || ObjRight == QueryRight;
-
-            // distance can be asymmetric, but query is on the right side
-            SampleRes.push_back(std::make_pair(space->IndexTimeDistance(ThatObj, PseudoQuery), IsSameBall));
-          }
-        }
-      }
-      {
-        sort(SampleRes.begin(), SampleRes.end());
-        vector<float>   quantiles;
-        for (float val = 0; val <= 1.00001 - QuantileStepPseudoQuery; val += QuantileStepPseudoQuery)
-          quantiles.push_back(val);
-
-        vector<size_t> qind = EstimateQuantileIndices(SampleRes, quantiles);
-
-        dist_t PrevQueryR = static_cast<dist_t>(0);
-        size_t PrevIndx = 0;
-
-        float QtyAllSum  = 0;
-        float QtyDiffSum = 0;
-
-        for(size_t i = 0; i < qind.size(); ++i) {
-          size_t indx = qind[i];
-
-          float Qty = indx - PrevIndx + (i == 0);
-          QtyAllSum += Qty;
-          for (size_t j = PrevIndx + (i != 0); j <= indx; ++j)
-            QtyDiffSum += !SampleRes[j].second;
-
-          if (QtyAllSum > 0 && QtyDiffSum > QtyAllSum * DistLearnThreshold) {
-            /*
-             * We dont' just re-use PrevQueryR, because this results in
-             * a very conservative estimate.
-             */
-            PrevQueryR = (PrevQueryR + SampleRes[indx].first) / 2;
-            break;
-          }
-          PrevQueryR = SampleRes[indx].first;
-          PrevIndx = indx;
-        }
-        QuantileMaxPseudoQueryDists[quant] = PrevQueryR;
-      }
-    }
-
-#if 0
-    std::cout << " # created a sampler, dists.size() = " << dists.size() << std::endl;
-#endif
-  } else {
-    NotEnoughData_ = true;
-  }
-}
-
-template class SamplingOracleCreator<int>;
-template class SamplingOracleCreator<short int>;
-template class SamplingOracleCreator<float>;
-template class SamplingOracleCreator<double>;
 
 template class PolynomialPruner<int>;
 template class PolynomialPruner<float>;

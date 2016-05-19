@@ -47,22 +47,22 @@ template <typename dist_t>
 class ProjectionIndexIncremental : public Index<dist_t> {
  public:
   ProjectionIndexIncremental(bool PrintProgress,
-                             const Space<dist_t>* space,
-                             const ObjectVector& data,
-                             const AnyParams& AllParams);
+                             const Space<dist_t>& space,
+                             const ObjectVector& data);
+  void CreateIndex(const AnyParams& IndexParams) override;
   ~ProjectionIndexIncremental();
 
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
   
-  virtual vector<string> GetQueryTimeParamNames() const;
-
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
-  const Space<dist_t>*                                  space_;
-  const ObjectVector&                                   data_;
+  const Space<dist_t>&    space_;
+  const ObjectVector&     data_;
+  bool                    PrintProgress_;
+
   float                                                 max_proj_dist_;
   bool                                                  use_priority_queue_;
   size_t                                                K_;
@@ -79,12 +79,12 @@ class ProjectionIndexIncremental : public Index<dist_t> {
   std::vector<vector<float>>    proj_vects_;
 #endif
   
-  size_t computeDbScan(size_t K) {
+  size_t computeDbScan(size_t K) const {
     if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
     return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
 
-  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(ProjectionIndexIncremental);

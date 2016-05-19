@@ -14,12 +14,11 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <cmath>
+
 #include <limits>
 #include <string>
 #include <sstream>
@@ -87,8 +86,9 @@ void OutData(bool DoAppend, const string& FilePrefix,
 template <typename dist_t>
 void ProcessResults(const ExperimentConfig<dist_t>& config,
                     MetaAnalysis& ExpRes,
-                    const string& MethDescStr,
-                    const string& MethParamStr,
+                    const string& MethodName,
+                    const string& IndexParamStr,
+                    const string& QueryTimeParamStr,
                     string& PrintStr, // For display
                     string& HeaderStr,
                     string& DataStr   /* to be processed by a script */) {
@@ -96,10 +96,11 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tQueryPerSec\tMethodParams\tNumData" << std::endl;
+  Header << "MethodName\tRecall\tRecall@1\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tIndexParams\tQueryTimeParams\tNumData" << std::endl;
 
-  Data << "\"" << MethDescStr << "\"\t";
+  Data << "\"" << MethodName << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
+  Data << ExpRes.GetRecallAt1Avg() << "\t";
   Data << ExpRes.GetPrecisionOfApproxAvg() << "\t";
   Data << ExpRes.GetRelPosErrorAvg() << "\t";
   Data << ExpRes.GetNumCloserAvg() << "\t";
@@ -110,35 +111,42 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << ExpRes.GetImprDistCompAvg() << "\t";
   Data << size_t(ExpRes.GetMemAvg()) << "\t";
   Data << ExpRes.GetIndexTimeAvg() << "\t";
+  Data << ExpRes.GetLoadTimeAvg() << "\t";
+  Data << ExpRes.GetSaveTimeAvg() << "\t";
   Data << ExpRes.GetQueryPerSecAvg() << "\t";
-  Data << "\"" << MethParamStr << "\"" << "\t";
+  Data << "\"" << IndexParamStr << "\"" << "\t";
+  Data << "\"" << QueryTimeParamStr << "\"" << "\t";
   Data << config.GetDataObjects().size();
   Data << std::endl;
 
-  PrintStr  = produceHumanReadableReport(config, ExpRes, MethDescStr, MethParamStr);
+  PrintStr  = produceHumanReadableReport(config, ExpRes, MethodName, IndexParamStr, QueryTimeParamStr);
 
   DataStr   = Data.str();
   HeaderStr = Header.str();
 };
 
 template <typename dist_t>
-void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
-             const string                 SpaceType,
-             const shared_ptr<AnyParams>& SpaceParams,
-             unsigned                     dimension,
-             unsigned                     ThreadTestQty,
-             bool                         DoAppend, 
-             const string&                ResFilePrefix,
-             unsigned                     TestSetQty,
-             const string&                DataFile,
-             const string&                QueryFile,
-             const string&                CacheGSFilePrefix,
-             size_t                       MaxCacheGSQty,
-             unsigned                     MaxNumData,
-             unsigned                     MaxNumQuery,
-             const                        vector<unsigned>& knn,
-             const                        float eps,
-             const string&                RangeArg
+void RunExper(bool                                bPrintProgress,
+             const string&                        LoadIndexLoc,
+             const string&                        SaveIndexLoc, 
+             const string&                        MethodName,
+             const shared_ptr<AnyParams>&         IndexTimeParams,
+             const vector<shared_ptr<AnyParams>>& QueryTimeParams,
+             const string                         SpaceType,
+             const shared_ptr<AnyParams>&         SpaceParams,
+             unsigned                             ThreadTestQty,
+             bool                                 DoAppend, 
+             const string&                        ResFilePrefix,
+             unsigned                             TestSetQty,
+             const string&                        DataFile,
+             const string&                        QueryFile,
+             const string&                        CacheGSFilePrefix,
+             float                                maxCacheGSRelativeQty,
+             IdTypeUnsign                         MaxNumData,
+             IdTypeUnsign                         MaxNumQuery,
+             const                                vector<unsigned>& knn,
+             const                                float eps,
+             const string&                        RangeArg
 )
 {
   LOG(LIB_INFO) << "### Append? : "       << DoAppend;
@@ -163,15 +171,28 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
   unique_ptr<Space<dist_t>> space (SpaceFactoryRegistry<dist_t>::
                                   Instance().CreateSpace(SpaceType, *SpaceParams));
 
-  ExperimentConfig<dist_t> config(space.get(),
+  ExperimentConfig<dist_t> config(*space,
                                   DataFile, QueryFile, TestSetQty,
                                   MaxNumData, MaxNumQuery,
-                                  dimension, knn, eps, range);
+                                  knn, eps, range);
 
   size_t cacheDataSetQty = 0;
+
+  const string& cacheGSIncompleteFlagName = CacheGSFilePrefix + "_incomplete.flag";
+
   if (bCacheGS) {
     const string& cacheGSControlName = CacheGSFilePrefix + "_ctrl.txt";
     const string& cacheGSBinaryName  = CacheGSFilePrefix + "_data.bin";
+
+    if (DoesFileExist(cacheGSIncompleteFlagName) ||
+        (DoesFileExist(cacheGSControlName) != DoesFileExist(cacheGSBinaryName))
+        ) {
+      LOG(LIB_INFO) << "Incomplete cache file detected! Removing incomplete entries...";
+      if (DoesFileExist(cacheGSBinaryName))
+        CHECK_MSG(std::remove(cacheGSBinaryName.c_str())==0, "Error removing the file: " + cacheGSBinaryName);
+      if (DoesFileExist(cacheGSControlName))
+        CHECK_MSG(std::remove(cacheGSControlName.c_str())==0, "Error removing the file: " + cacheGSControlName);
+    }
 
     if (DoesFileExist(cacheGSControlName)) {
     // Cache exists => reuse it
@@ -194,13 +215,18 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
                             cacheGSControlName + "' but there is binary data file: '" +
                             cacheGSBinaryName + "'");
       }
-    // No cache => create new file
+    // No cache => create new file, but first mark cache as incomplete!
+      ofstream flag_file(cacheGSIncompleteFlagName.c_str());
+      CHECK_MSG(flag_file, "Error creating file: " + cacheGSIncompleteFlagName);
+      flag_file.close();
+
       cacheGSControl.reset(new fstream(cacheGSControlName.c_str(),
                                         std::ios::trunc | std::ios::out));
       cacheGSBinary.reset(new fstream(cacheGSBinaryName.c_str(),
                                         std::ios::trunc | std::ios::out |
                                         // On Windows you don't get a proper binary stream without ios::binary!
                                         ios::binary));
+
       bWriteGSCache = true;
     }
 
@@ -234,47 +260,54 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
    * after reading the data set.
    */
   if (bWriteGSCache) {
+
     config.Write(*cacheGSControl, *cacheGSBinary);
   }
-
 
 
   MemUsage  mem_usage_measure;
 
 
-  std::vector<std::string>          MethDescStr;
-  std::vector<std::string>          MethParams;
   vector<double>                    MemUsage;
 
+  CHECK_MSG(!QueryTimeParams.empty(), "The array of query-time parameters shouldn't be empty!");
+
   vector<vector<MetaAnalysis*>> ExpResRange(config.GetRange().size(),
-                                                vector<MetaAnalysis*>(MethodsDesc.size()));
+                                                vector<MetaAnalysis*>(QueryTimeParams.size()));
   vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
-                                              vector<MetaAnalysis*>(MethodsDesc.size()));
+                                              vector<MetaAnalysis*>(QueryTimeParams.size()));
 
   GoldStandardManager<dist_t> managerGS(config);
 
 
+  string MethodDescStr;
 
-  size_t MethNum = 0;
-
-  for (auto it = MethodsDesc.begin(); it != MethodsDesc.end(); ++it, ++MethNum) {
+  // qtmParamId is the ID of the query time parameter set
+  for (size_t qtmParamId = 0; qtmParamId < QueryTimeParams.size(); ++qtmParamId) {
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
+      ExpResRange[i][qtmParamId] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
+      ExpResKNN[i][qtmParamId] = new MetaAnalysis(config.GetTestSetToRunQty());
     }
   }
 
   for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
 
+    string indexLocAdd = "";
+
+    if (QueryFile.empty() && config.GetTestSetToRunQty() > 0) {
+      indexLocAdd = "_" + ConvertToString(TestSetId);
+    }
+
     // SelectTestSet must go before managerGS.Compute()!!!
 
     if (bReadGSCache) {
-      size_t cacheTestId = 0;
+      size_t cacheTestId = 0, savedThreadQty = 0;
       managerGS.Read(*cacheGSControl, *cacheGSBinary,
-                     config.GetTotalQueryQty(), cacheTestId);
+                     config.GetTotalQueryQty(),
+                     cacheTestId, savedThreadQty);
       if (cacheTestId != TestSetId) {
         stringstream err;
         err << "Perhaps, the input file is corrput (or is incompatible with "
@@ -282,11 +315,19 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
             << "but obtained " << cacheTestId;
         throw runtime_error(err.str());
       }
+      CHECK_MSG(savedThreadQty == ThreadTestQty,
+                "Error: the gold standard was computed using " +ConvertToString(savedThreadQty) + " threads, but the current test will use "  +
+                ConvertToString(ThreadTestQty) + " threads. You have to use the same number of threads while compute gold standard data and testing!");
     } else {
-      managerGS.Compute(MaxCacheGSQty);
+      managerGS.Compute(ThreadTestQty, maxCacheGSRelativeQty);
       if (bWriteGSCache) {
-        LOG(LIB_INFO) << "Saving the cache, at most: " << MaxCacheGSQty << " entries";
-        managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId, MaxCacheGSQty);
+        LOG(LIB_INFO) << "Saving the cache";
+        managerGS.Write(*cacheGSControl, *cacheGSBinary, TestSetId, ThreadTestQty);
+
+        // Remove the incomplete-file flag, but only if this is the last test set 
+        if (TestSetId + 1 == config.GetTestSetToRunQty())
+          CHECK_MSG(std::remove(cacheGSIncompleteFlagName.c_str())==0, 
+                                "Error removing the file: " + cacheGSIncompleteFlagName);
       }
     }
 
@@ -294,155 +335,162 @@ void RunExper(const vector<shared_ptr<MethodWithParams>>& MethodsDesc,
 
     //ReportIntrinsicDimensionality("Main data set" , *config.GetSpace(), config.GetDataObjects());
 
-    vector<shared_ptr<Index<dist_t>>>  IndexPtrs;
-    vector<bool>                       isNewIndex;
+    if (MethodName.empty()) {
+      LOG(LIB_INFO) << "No method is specified, so we will not run any tests...";
+    } else {
+      unique_ptr<Index<dist_t>>   IndexPtr;
 
-    try {
+      try {
+        LOG(LIB_INFO) << ">>>> Index type : "           << MethodName;
+        LOG(LIB_INFO) << ">>>> Index Time Parameters: " << IndexTimeParams->ToString();
 
-      double prevMemUsed = 0;
-      double prevTimeUsed = 0;
-      
-      for (const auto& methElem: MethodsDesc) {
-        MethNum = &methElem - &MethodsDesc[0];
-        
-        const string& MethodName  = methElem->methName_;
-        const AnyParams& MethPars = methElem->methPars_;
-        const string& MethParStr = MethPars.ToString();
-
-        LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
-        LOG(LIB_INFO) << ">>>> Parameters: " << MethParStr;
         const double vmsize_before = mem_usage_measure.get_vmsize();
-
 
         WallClockTimer wtm;
 
         wtm.reset();
         
-        bool bCreateNew = true;
-        
-        if (MethNum && MethodName == MethodsDesc[MethNum-1]->methName_) {
-          vector<string> exceptList = IndexPtrs.back()->GetQueryTimeParamNames();
-          
-          if (MethodsDesc[MethNum-1]->methPars_.equalsIgnoreInList(MethPars, exceptList)) {
-            bCreateNew = false;
-          }
+          IndexPtr.reset(MethodFactoryRegistry<dist_t>::Instance().
+                       CreateMethod(bPrintProgress,
+                                    MethodName, 
+                                    SpaceType, config.GetSpace(), 
+                                    config.GetDataObjects()));
+
+        string adjLoadLoc = LoadIndexLoc + indexLocAdd;
+
+        bool bCreate = LoadIndexLoc.empty() || !DoesFileExist(adjLoadLoc);
+
+        if (bCreate) {
+          LOG(LIB_INFO) << "Creating an index from scratch";
+
+          IndexPtr->CreateIndex(*IndexTimeParams);
+        } else {
+          LOG(LIB_INFO) << "Loading an index for test set id " << TestSetId << " using location: " << adjLoadLoc;
+          IndexPtr->LoadIndex(adjLoadLoc);
         }
 
-        LOG(LIB_INFO) << (bCreateNew ? "Creating a new index":"Using a previosuly created index");
-
-        isNewIndex.push_back(bCreateNew);
-        IndexPtrs.push_back(
-                bCreateNew ?
-                           shared_ptr<Index<dist_t>>(
-                           MethodFactoryRegistry<dist_t>::Instance().
-                           CreateMethod(true /* print progress */,
-                                        MethodName, 
-                                        SpaceType, config.GetSpace(), 
-                                        config.GetDataObjects(), MethPars)
-                           )
-                           :IndexPtrs.back());
+        if (!TestSetId) MethodDescStr = IndexPtr->StrDesc();
 
         LOG(LIB_INFO) << "==============================================";
 
         const double vmsize_after = mem_usage_measure.get_vmsize();
 
         wtm.split();
-        const double TimeElapsed = double(wtm.elapsed())/1e6;
+
+        const double IndexTime = bCreate ? double(wtm.elapsed())/1e6 : 0;
+        const double LoadTime  = !bCreate ? double(wtm.elapsed())/1e6 : 0;
 
         const double data_size = DataSpaceUsed(config.GetDataObjects()) / 1024.0 / 1024.0;
-        const double TotalMemByMethod = bCreateNew ? vmsize_after - vmsize_before + data_size : prevMemUsed;
-        const double TimeUsed = bCreateNew ? TimeElapsed : prevTimeUsed;
+        const double TotalMemByMethod =  vmsize_after - vmsize_before + data_size;
+        double AdjustedMemByMethod = TotalMemByMethod;
+
+        if (IndexPtr->DuplicateData()) AdjustedMemByMethod -= data_size;
+
+        wtm.reset();
+        // We won't save the index if it is already created
+        string adjSaveLoc = SaveIndexLoc + indexLocAdd;
+        if (!SaveIndexLoc.empty() && !DoesFileExist(adjSaveLoc)) {
+          LOG(LIB_INFO) << "Saving an index for test set id " << TestSetId << " using location: " << adjSaveLoc;
+          IndexPtr->SaveIndex(adjSaveLoc);
+        }
+        wtm.split();
+        const double SaveTime  = double(wtm.elapsed())/1e6;
     
-        prevMemUsed = TotalMemByMethod;
-        prevTimeUsed = TimeUsed;
 
+        LOG(LIB_INFO) << ">>>> Process memory usage:  " << vmsize_after         << " MBs";
+        LOG(LIB_INFO) << ">>>> Virtual memory usage:  " << TotalMemByMethod     << " MBs";
+        LOG(LIB_INFO) << ">>>> Adjusted memory usage: " << AdjustedMemByMethod  << " MBs";
+        LOG(LIB_INFO) << ">>>> Data size:             " << data_size            << " MBs";
+        LOG(LIB_INFO) << ">>>> Indexing time:         " << IndexTime            << " sec";
+        LOG(LIB_INFO) << ">>>> Index loading time:    " << LoadTime             << " sec";
+        LOG(LIB_INFO) << ">>>> Index saving  time:    " << SaveTime             << " sec";
 
-        LOG(LIB_INFO) << ">>>> Process memory usage: " << vmsize_after << " MBs";
-        LOG(LIB_INFO) << ">>>> Virtual memory usage: " << TotalMemByMethod << " MBs";
-        LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
-        LOG(LIB_INFO) << ">>>> Time elapsed:         " << TimeElapsed << " sec";
-
-
-        for (size_t i = 0; i < config.GetRange().size(); ++i) {
-          MetaAnalysis* res = ExpResRange[i][MethNum];
-          res->SetMem(TestSetId, TotalMemByMethod);
-          res->SetIndexTime(TestSetId, TimeUsed);
+        for (size_t qtmParamId = 0; qtmParamId < QueryTimeParams.size(); ++qtmParamId) {
+          for (size_t i = 0; i < config.GetRange().size(); ++i) {
+            MetaAnalysis* res = ExpResRange[i][qtmParamId];
+            res->SetMem(TestSetId, AdjustedMemByMethod);
+            res->SetIndexTime(TestSetId, IndexTime);
+            res->SetLoadTime(TestSetId, LoadTime);
+            res->SetSaveTime(TestSetId, SaveTime);
+          }
+          for (size_t i = 0; i < config.GetKNN().size(); ++i) {
+            MetaAnalysis* res = ExpResKNN[i][qtmParamId];
+            res->SetMem(TestSetId, AdjustedMemByMethod);
+            res->SetIndexTime(TestSetId, IndexTime);
+            res->SetLoadTime(TestSetId, LoadTime);
+            res->SetSaveTime(TestSetId, SaveTime);
+          }
         }
-        for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-          MetaAnalysis* res = ExpResKNN[i][MethNum];
-          res->SetMem(TestSetId, TotalMemByMethod);
-          res->SetIndexTime(TestSetId, TimeUsed);
-        }
 
-        if (!TestSetId) {
-          MethDescStr.push_back(IndexPtrs.back()->ToString());
-          MethParams.push_back(MethParStr);
-        }
+        Experiments<dist_t>::RunAll(bPrintProgress,
+                                    ThreadTestQty, 
+                                    TestSetId,
+                                    managerGS,
+                                    ExpResRange, ExpResKNN,
+                                    config, 
+                                    *IndexPtr, 
+                                    QueryTimeParams);
+
+
+      } catch (const std::exception& e) {
+        LOG(LIB_ERROR) << "Exception: " << e.what();
+        bFail = true;
+      } catch (...) {
+        LOG(LIB_ERROR) << "Unknown exception";
+        bFail = true;
       }
 
-      Experiments<dist_t>::RunAll(true /* print info */,
-                                      ThreadTestQty, 
-                                      TestSetId,
-                                      managerGS,
-                                      ExpResRange, ExpResKNN,
-                                      config, 
-                                      IndexPtrs, isNewIndex,
-                                      MethodsDesc);
-
-
-    } catch (const std::exception& e) {
-      LOG(LIB_ERROR) << "Exception: " << e.what();
-      bFail = true;
-    } catch (...) {
-      LOG(LIB_ERROR) << "Unknown exception";
-      bFail = true;
-    }
-
-    if (bFail) {
-      LOG(LIB_FATAL) << "Failure due to an exception!";
+      if (bFail) {
+        LOG(LIB_FATAL) << "Failure due to an exception!";
+      }
     }
   }
 
-  for (auto it = MethDescStr.begin(); it != MethDescStr.end(); ++it) {
-    size_t MethNum = it - MethDescStr.begin();
+  // Don't save results, if the method wasn't specified
+  if (!MethodName.empty()) {
+    for (size_t MethNum = 0; MethNum < QueryTimeParams.size(); ++MethNum) {
+      // Don't overwrite file after we output data at least for one method!
+      bool DoAppendHere = DoAppend || MethNum;
 
-    // Don't overwrite file after we output data at least for one method!
-    bool DoAppendHere = DoAppend || MethNum;
+      string Print, Data, Header;
 
-    string Print, Data, Header;
+      for (size_t i = 0; i < config.GetRange().size(); ++i) {
+        MetaAnalysis* res = ExpResRange[i][MethNum];
 
-    for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      MetaAnalysis* res = ExpResRange[i][MethNum];
+        ProcessResults(config, *res, MethodDescStr,
+                      IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
+                      Print, Header, Data);
+        LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
+        LOG(LIB_INFO) << Print;
+        LOG(LIB_INFO) << "Data: " << Header << Data;
 
-      ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
-      LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
-      LOG(LIB_INFO) << Print;
-      LOG(LIB_INFO) << "Data: " << Header << Data;
+        if (!ResFilePrefix.empty()) {
+          stringstream str;
+          str << ResFilePrefix << "_r=" << config.GetRange()[i];
+          OutData(DoAppendHere, str.str(), Print, Header, Data);
+        }
 
-      if (!ResFilePrefix.empty()) {
-        stringstream str;
-        str << ResFilePrefix << "_r=" << config.GetRange()[i];
-        OutData(DoAppendHere, str.str(), Print, Header, Data);
+        delete res;
       }
 
-      delete res;
-    }
+      for (size_t i = 0; i < config.GetKNN().size(); ++i) {
+        MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-    for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      MetaAnalysis* res = ExpResKNN[i][MethNum];
+        ProcessResults(config, *res, MethodDescStr,
+                      IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
+                      Print, Header, Data);
+        LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
+        LOG(LIB_INFO) << Print;
+        LOG(LIB_INFO) << "Data: " << Header << Data;
 
-      ProcessResults(config, *res, MethDescStr[MethNum], MethParams[MethNum], Print, Header, Data);
-      LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
-      LOG(LIB_INFO) << Print;
-      LOG(LIB_INFO) << "Data: " << Header << Data;
+        if (!ResFilePrefix.empty()) {
+          stringstream str;
+          str << ResFilePrefix << "_K=" << config.GetKNN()[i];
+          OutData(DoAppendHere, str.str(), Print, Header, Data);
+        }
 
-      if (!ResFilePrefix.empty()) {
-        stringstream str;
-        str << ResFilePrefix << "_K=" << config.GetKNN()[i];
-        OutData(DoAppendHere, str.str(), Print, Header, Data);
+        delete res;
       }
-
-      delete res;
     }
   }
 }
@@ -454,8 +502,11 @@ int main(int ac, char* av[]) {
   timer.reset();
 
 
+  bool                  bPrintProgress;
   string                LogFile;
   string                DistType;
+  string                LoadIndexLoc;
+  string                SaveIndexLoc;
   string                SpaceType;
   shared_ptr<AnyParams> SpaceParams;
   bool                  DoAppend;
@@ -464,23 +515,27 @@ int main(int ac, char* av[]) {
   string                DataFile;
   string                QueryFile;
   string                CacheGSFilePrefix;
-  size_t                MaxCacheGSQty;
-  unsigned              MaxNumData;
-  unsigned              MaxNumQuery;
+  float                 maxCacheGSRelativeQty;
+  IdTypeUnsign          MaxNumData;
+  IdTypeUnsign          MaxNumQuery;
   vector<unsigned>      knn;
   string                RangeArg;
-  unsigned              dimension;
   float                 eps = 0.0;
   unsigned              ThreadTestQty;
 
-  try {
-    vector<shared_ptr<MethodWithParams>>        MethodsDesc;
+  shared_ptr<AnyParams>           IndexTimeParams;
+  vector<shared_ptr<AnyParams>>   QueryTimeParams;
 
-    ParseCommandLine(ac, av, LogFile,
+  try {
+    string                                  MethodName;
+
+    ParseCommandLine(ac, av, bPrintProgress,
+                         LogFile,
+                         LoadIndexLoc,
+                         SaveIndexLoc, 
                          DistType,
                          SpaceType,
                          SpaceParams,
-                         dimension,
                          ThreadTestQty,
                          DoAppend, 
                          ResFilePrefix,
@@ -488,13 +543,24 @@ int main(int ac, char* av[]) {
                          DataFile,
                          QueryFile,
                          CacheGSFilePrefix,
-                         MaxCacheGSQty,
+                         maxCacheGSRelativeQty,
                          MaxNumData,
                          MaxNumQuery,
                          knn,
                          eps,
                          RangeArg,
-                         MethodsDesc);
+                         MethodName,
+                         IndexTimeParams,
+                         QueryTimeParams);
+
+    if ((!LoadIndexLoc.empty() || !SaveIndexLoc.empty()) &&
+         CacheGSFilePrefix.empty() &&
+         MaxNumQuery != 0 &&
+         QueryFile.empty()) {
+      throw
+          runtime_error(string("If there is i) no query file ii) # of queries > 0 iii) you ask to save/load the index,")+
+                        "then you have to specify the gold-standard cache file!");
+    }
 
     initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
@@ -503,10 +569,14 @@ int main(int ac, char* av[]) {
     ToLower(DistType);
 
     if (DIST_TYPE_INT == DistType) {
-      RunExper<int>(MethodsDesc,
+      RunExper<int>(bPrintProgress,
+                    LoadIndexLoc,
+                    SaveIndexLoc,
+                    MethodName,
+                    IndexTimeParams,
+                    QueryTimeParams,
                     SpaceType,
                     SpaceParams,
-                    dimension,
                     ThreadTestQty,
                     DoAppend, 
                     ResFilePrefix,
@@ -514,7 +584,7 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                    MaxCacheGSQty,
+                    maxCacheGSRelativeQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -522,10 +592,14 @@ int main(int ac, char* av[]) {
                     RangeArg
                    );
     } else if (DIST_TYPE_FLOAT == DistType) {
-      RunExper<float>(MethodsDesc,
+      RunExper<float>(bPrintProgress,
+                    LoadIndexLoc,
+                    SaveIndexLoc,
+                    MethodName,
+                    IndexTimeParams,
+                    QueryTimeParams,
                     SpaceType,
                     SpaceParams,
-                    dimension,
                     ThreadTestQty,
                     DoAppend, 
                     ResFilePrefix,
@@ -533,7 +607,7 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                    MaxCacheGSQty,
+                      maxCacheGSRelativeQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -541,10 +615,14 @@ int main(int ac, char* av[]) {
                     RangeArg
                    );
     } else if (DIST_TYPE_DOUBLE == DistType) {
-      RunExper<double>(MethodsDesc,
+      RunExper<double>(bPrintProgress,
+                    LoadIndexLoc,
+                    SaveIndexLoc,
+                    MethodName,
+                    IndexTimeParams,
+                    QueryTimeParams,
                     SpaceType,
                     SpaceParams,
-                    dimension,
                     ThreadTestQty,
                     DoAppend, 
                     ResFilePrefix,
@@ -552,7 +630,7 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                    MaxCacheGSQty,
+                       maxCacheGSRelativeQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,

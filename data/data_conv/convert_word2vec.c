@@ -32,13 +32,13 @@ int main(int argc, char **argv) {
   float *M;
   char *vocab;
   if (argc < 2) {
-    printf("Usage: ./convert_word2vec <FILE>\nwhere FILE contains word projections in the BINARY FORMAT\n");
+    fprintf(stderr, "Usage: ./convert_word2vec <FILE>\nwhere FILE contains word projections in the BINARY FORMAT\n");
     return 0;
   }
   strcpy(file_name, argv[1]);
   f = fopen(file_name, "rb");
   if (f == NULL) {
-    printf("Input file not found\n");
+    fprintf(stderr, "Input file not found\n");
     return -1;
   }
   if (fscanf(f, "%lld", &words) != 1) {
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
   vocab = (char *)malloc((long long)words * max_w * sizeof(char));
   M = (float *)malloc((long long)words * (long long)size * sizeof(float));
   if (M == NULL) {
-    printf("Cannot allocate memory: %lld MB    %lld  %lld\n", (long long)words * size * sizeof(float) / 1048576, words, size);
+    fprintf(stderr, "Cannot allocate memory: %lld MB    %lld  %lld\n", (long long)words * size * sizeof(float) / 1048576, words, size);
     return -1;
   }
   for (b = 0; b < words; b++) {

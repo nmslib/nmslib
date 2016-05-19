@@ -38,6 +38,8 @@
 #define PROJ_TYPE_PERM_BIN        "permbin"
 // Dense vectors remain unchanged, sparsed vectors are "hashed" into dense ones
 #define PROJ_TYPE_VECTOR_DENSE    "densevect"
+// Trivial projection
+#define PROJ_TYPE_NONE            "none"
 
 namespace similarity {
 
@@ -47,7 +49,7 @@ public:
   /*
    * Create a projection helper class that inherits from the current one.
    */
-  static Projection* createProjection(const Space<dist_t>* space,
+  static Projection* createProjection(const Space<dist_t>& space,
                         const ObjectVector& data,
                         std::string projType,
                         size_t nProjDim,
@@ -84,7 +86,7 @@ public:
                          float* pDstVect) const = 0;
 
 protected:
-  static dist_t DistanceObjLeft(const Space<dist_t>* pSpace,
+  static dist_t DistanceObjLeft(const Space<dist_t>& space,
                                 const Query<dist_t>* pQuery,
                                 const Object* pRefObj, // reference object
                                 const Object* pObj // the object to project
@@ -95,22 +97,22 @@ protected:
      * and pivot again is the left argument.
      */
     return NULL == pQuery ?
-        pSpace->IndexTimeDistance(pRefObj, pObj)
+        space.IndexTimeDistance(pRefObj, pObj)
         :
         pQuery->DistanceObjLeft(pRefObj);
   }
-  static void fillIntermBuffer(const  Space<dist_t>* pSpace,
+  static void fillIntermBuffer(const  Space<dist_t>& space,
                                const  Object* pObj,
                                size_t nIntermDim,
                                vector<dist_t>& intermBuffer) {
 
     /*
-     *  For dense vector spaces CreateVectObj does nothing useful
+     *  For dense vector spaces CreateDenseVectFromObj does nothing useful
      *  (and intermDim_ == srcDim_),
      *  however, we introduced this function to have the
      *  uniform interface for sparse and dense vector spaces.
      */
-    pSpace->CreateVectFromObj(pObj, &intermBuffer[0], nIntermDim);
+    space.CreateDenseVectFromObj(pObj, &intermBuffer[0], nIntermDim);
   }
 };
 

@@ -25,9 +25,11 @@
 #include <list>
 #include <utility>
 #include <limits>
+#include <algorithm>
 #include <cstdint>
 
 #include "global.h"
+#include "idtype.h"
 #include "logging.h"
 
 namespace similarity {
@@ -35,8 +37,6 @@ namespace similarity {
 using std::string;
 using std::stringstream;
 using std::numeric_limits;
-
-
 
 /* 
  * Structure of object: | 4-byte id | 4-byte label | 8-byte datasize | data ........ |
@@ -48,20 +48,6 @@ using std::numeric_limits;
  *
  * See also http://searchivarius.org/blog/what-you-must-know-about-alignment-21st-century
  */
-
-/* 
- * We are not gonna have billions of records or labels in the foreseeable future
- * Negative values would represent missing labels and ids
- */
-typedef int32_t IdType;
-typedef int32_t LabelType;
-
-#define LABEL_PREFIX "label:"
-#define EMPTY_LABEL  numeric_limits<LabelType>::min()
-
-const size_t ID_SIZE         = sizeof(IdType);
-const size_t LABEL_SIZE      = sizeof(LabelType);
-const size_t DATALENGTH_SIZE = sizeof(size_t);
 
 class Object {
  public:
@@ -146,13 +132,15 @@ class Object {
         stringstream numstr(fileLine.substr(labelPrefix.size(), p - labelPrefix.size()));
 
         if (!(numstr >> res) || !numstr.eof()) {
-          LOG(LIB_FATAL) << "Cannot extract label from the file line: '" << fileLine << "'";
+          PREPARE_RUNTIME_ERR(err) << "Cannot extract label from the file line: '" << fileLine << "'";
+          THROW_RUNTIME_ERR(err);
         }
 
         fileLine = fileLine.substr(j);
        
       } else {
-        LOG(LIB_FATAL) << "No space is found after the label definition in the file line: '" << fileLine << "'";
+        PREPARE_RUNTIME_ERR(err) << "No space is found after the label definition in the file line: '" << fileLine << "'";
+        THROW_RUNTIME_ERR(err);
       }
     }
     return res;
@@ -261,6 +249,39 @@ struct ObjectIdAscComparator {
     return x->id() < y->id();
   }
 };
+
+/*
+ * We do not support very large data sets.
+ */
+inline void CheckDataSize(const ObjectVector &data) {
+  if (data.size() > MAX_DATASET_QTY) {
+    PREPARE_RUNTIME_ERR(err) << "Bug: the number of data elements (" << data.size() << ") is too big, "
+                             << "bigger than " << MAX_DATASET_QTY;
+  }
+}
+
+/*
+ * Creates a recoding array to efficiently map object IDs to their
+ * positions in the data vector. The array-based mapping is
+ * quite space-efficient, because the largest object ID is rouhgly
+ * equal to the number of data vector elements. The array based mapping
+ * also permits extremely fast lookups.
+ */
+inline void CreateObjIdToPosMapper(const ObjectVector& data, std::vector<IdType>& mapper) {
+  CheckDataSize(data);
+  IdType maxId = -1;
+  for (const Object* pObj : data)  {
+    CHECK_MSG(pObj->id() >= 0, "Bug: encountered negative object ID");
+    maxId = std::max(maxId, pObj->id());
+  }
+  mapper.resize(maxId);
+  std::fill(mapper.begin(), mapper.end(), -1);
+  for (IdTypeUnsign i = 0; i < data.size(); ++i) {
+    mapper[data[i]->id()] = i;
+  }
+}
+
+
 
 }   // namespace similarity
 

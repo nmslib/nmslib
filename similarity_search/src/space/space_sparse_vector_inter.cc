@@ -29,8 +29,9 @@ namespace similarity {
 
 template <typename dist_t>
 void
-SpaceSparseVectorInter<dist_t>::CreateVectFromObj(const Object* obj, dist_t* pVect,
-                                                 size_t nElem) const {
+SpaceSparseVectorInter<dist_t>::CreateDenseVectFromObj(const Object* obj, 
+                                                       dist_t* pVect,
+                                                       size_t nElem) const {
   static std::hash<size_t>   indexHash;
   fill(pVect, pVect + nElem, static_cast<dist_t>(0));
 
@@ -41,6 +42,12 @@ SpaceSparseVectorInter<dist_t>::CreateVectFromObj(const Object* obj, dist_t* pVe
     size_t idx = indexHash(e.id_) % nElem;
     pVect[idx] += e.val_;
   }
+}
+
+template <typename dist_t>
+void
+SpaceSparseVectorInter<dist_t>::CreateVectFromObj(const Object* obj, vector<ElemType>& v) const {
+  UnpackSparseElements(obj->data(), obj->datalength(), v);
 }
 
 template <typename dist_t>

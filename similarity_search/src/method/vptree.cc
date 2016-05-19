@@ -36,44 +36,49 @@ using std::endl;
 using std::cout;
 using std::cerr;
     
-
 template <typename dist_t, typename SearchOracle>
 VPTree<dist_t, SearchOracle>::VPTree(
                        bool  PrintProgress,
-                       const Space<dist_t>* space,
+                       Space<dist_t>& space,
                        const ObjectVector& data,
-                       const AnyParams& MethParams,
                        bool use_random_center) : 
+                              space_(space),
+                              data_(data),
+                              PrintProgress_(PrintProgress),
+                              use_random_center_(use_random_center),
                               oracle_(space, data, PrintProgress),
-                              BucketSize_(50),
-                              MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT),
-                              ChunkBucket_(true)
-                       {
-  AnyParamManager pmgr(MethParams);
+                              QueryTimeParams_(oracle_.GetQueryTimeParamNames()) { 
+                                QueryTimeParams_.push_back("maxLeavesToVisit");
+                              }
 
-  pmgr.GetParamOptional("bucketSize", BucketSize_);
-  pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
+template <typename dist_t, typename SearchOracle>
+void VPTree<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
+
+  pmgr.GetParamOptional("bucketSize", BucketSize_, 50);
+  pmgr.GetParamOptional("chunkBucket", ChunkBucket_, true);
 
   LOG(LIB_INFO) << "bucketSize  = " << BucketSize_;
   LOG(LIB_INFO) << "chunkBucket = " << ChunkBucket_;
 
   // Call this function *ONLY AFTER* the bucket size is obtained!
-  VPTree<dist_t,SearchOracle>::SetQueryTimeParamsInternal(pmgr);
+  oracle_.SetIndexTimeParams(pmgr);
+  oracle_.LogParams();
 
   pmgr.CheckUnused();
 
-  oracle_.LogParams();
+  this->ResetQueryTimeParams(); // reset query-time parameters
 
-  unique_ptr<ProgressDisplay>   progress_bar(PrintProgress ? 
-                                              new ProgressDisplay(data.size(), cerr):
+  unique_ptr<ProgressDisplay>   progress_bar(PrintProgress_ ? 
+                                              new ProgressDisplay(data_.size(), cerr):
                                               NULL);
 
-  root_ = new VPNode(0,
+  root_.reset(new VPNode(0,
                      progress_bar.get(), 
-                     oracle_, space,
-                     const_cast<ObjectVector&>(data),
+                     oracle_, 
+                     space_, data_,
                      BucketSize_, ChunkBucket_,
-                     use_random_center, true);
+                     use_random_center_ /* use random center */));
 
   if (progress_bar) { // make it 100%
     (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
@@ -82,22 +87,21 @@ VPTree<dist_t, SearchOracle>::VPTree(
 
 template <typename dist_t,typename SearchOracle>
 VPTree<dist_t, SearchOracle>::~VPTree() {
-  delete root_;
 }
 
 template <typename dist_t,typename SearchOracle>
-const std::string VPTree<dist_t, SearchOracle>::ToString() const {
+const std::string VPTree<dist_t, SearchOracle>::StrDesc() const {
   return "vptree: " + SearchOracle::GetName();
 }
 
 template <typename dist_t, typename SearchOracle>
-void VPTree<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query) {
+void VPTree<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
-void VPTree<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query) {
+void VPTree<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
@@ -119,9 +123,9 @@ VPTree<dist_t, SearchOracle>::VPNode::VPNode(
                                unsigned level,
                                ProgressDisplay* progress_bar,
                                const SearchOracle& oracle,
-                               const Space<dist_t>* space, const ObjectVector& data,
+                               const Space<dist_t>& space, const ObjectVector& data,
                                size_t BucketSize, bool ChunkBucket,
-                               bool use_random_center, bool is_root)
+                               bool use_random_center)
     : oracle_(oracle),
       pivot_(NULL), mediandist_(0),
       left_child_(NULL), right_child_(NULL),
@@ -144,7 +148,7 @@ VPTree<dist_t, SearchOracle>::VPNode::VPNode(
         continue;
       }
       // Distance can be asymmetric, the pivot is always on the left side!
-      dp.push_back(std::make_pair(space->IndexTimeDistance(pivot_, data[i]), data[i]));
+      dp.push_back(std::make_pair(space.IndexTimeDistance(pivot_, data[i]), data[i]));
     }
 
     std::sort(dp.begin(), dp.end(), DistObjectPairAscComparator<dist_t>());
@@ -183,11 +187,11 @@ VPTree<dist_t, SearchOracle>::VPNode::VPNode(
     }
 
     if (!left.empty()) {
-      left_child_ = new VPNode(level + 1, progress_bar, oracle_, space, left, BucketSize, ChunkBucket, use_random_center, false);
+      left_child_ = new VPNode(level + 1, progress_bar, oracle_, space, left, BucketSize, ChunkBucket, use_random_center);
     }
 
     if (!right.empty()) {
-      right_child_ = new VPNode(level + 1, progress_bar, oracle_, space, right, BucketSize, ChunkBucket, use_random_center, false);
+      right_child_ = new VPNode(level + 1, progress_bar, oracle_, space, right, BucketSize, ChunkBucket, use_random_center);
     }
   }
 }
@@ -202,7 +206,7 @@ VPTree<dist_t, SearchOracle>::VPNode::~VPNode() {
 template <typename dist_t, typename SearchOracle>
 template <typename QueryType>
 void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
-                                                         int& MaxLeavesToVisit) {
+                                                         int& MaxLeavesToVisit) const {
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (bucket_) {
     --MaxLeavesToVisit;

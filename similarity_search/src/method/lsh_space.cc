@@ -32,7 +32,7 @@ float LSHLp(const float* x, const float* y, const int dim, const int p) {
   } else if (p == 2) {
     return L2NormSIMD(x, y, dim);
   } else {
-    LOG(LIB_FATAL) << "LSH can work only with l_1 and l_2";
+    throw runtime_error("LSH can work only with l_1 and l_2");
   }
   return -1;
 }

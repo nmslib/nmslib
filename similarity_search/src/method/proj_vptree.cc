@@ -27,14 +27,14 @@
 #include "distcomp.h"
 #include "projection.h"
 #include "spacefactory.h"
+#include "report_intr_dim.h"
 
 namespace similarity {
 
 using std::unique_ptr;
 
 template <typename dist_t>
-Object* 
-ProjectionVPTree<dist_t>::ProjectOneVect(size_t targSpaceId,
+Object* ProjectionVPTree<dist_t>::ProjectOneVect(size_t targSpaceId,
                                          const Query<dist_t>* pQuery,
                                          const Object* pSrcObj) const {
   vector<float> targVect(projDim_);
@@ -42,42 +42,46 @@ ProjectionVPTree<dist_t>::ProjectOneVect(size_t targSpaceId,
   projObj_->compProj(pQuery, pSrcObj, &targVect[0]);
 
   return VPTreeSpace_->CreateObjFromVect(targSpaceId, -1, targVect);
-};
+}
 
 template <typename dist_t>
-void ProjectionVPTree<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  AnyParams params = pmgr.ExtractParametersExcept({});
-  if (VPTreeIndex_) VPTreeIndex_->SetQueryTimeParams(params);
+void ProjectionVPTree<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  CHECK_MSG(VPTreeIndex_ != NULL, "Expecting non-null pointer for the VP-tree index in SetQueryTimeParams");
+  AnyParamManager pmgr(QueryTimeParams);
+
+  AnyParams vptreeQueryParams = pmgr.ExtractParameters(VPTreeIndex_->getQueryTimeParams());
+  VPTreeIndex_->SetQueryTimeParams(vptreeQueryParams);
 
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
   }
-  if (pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-  } else {
-    knn_amp_ = 0;
-  }
-  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-    knn_amp_ = 0;
-  }
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
-  pmgr.GetParamOptional("knnAmp",  knn_amp_);
+  
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_, 0);
+  pmgr.GetParamOptional("knnAmp",       knn_amp_,      0);
+
+  LOG(LIB_INFO) << "Set query-time parameters for ProjectionVPTree:";
+  LOG(LIB_INFO) << "dbScanFrac=" << db_scan_frac_;
+  LOG(LIB_INFO) << "knnAmp="     << knn_amp_;
 }
 
 template <typename dist_t>
 ProjectionVPTree<dist_t>::ProjectionVPTree(
-    const Space<dist_t>* space,
-    const ObjectVector& data,
-    const AnyParams& AllParams) : 
+    bool PrintProgress,
+    Space<dist_t>& space,
+    const ObjectVector& data) :
       space_(space),
-      data_(data),  // reference
+      data_(data),  
+      PrintProgress_(PrintProgress),
       K_(0),
       knn_amp_(0),
-      db_scan_frac_(0),
-      VPTreeIndex_(NULL)
+      db_scan_frac_(0)
 {
-  AnyParamManager pmgr(AllParams);
+}
+
+
+template <typename dist_t>
+void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
   string          projSpaceType = "l2";
 
   size_t        intermDim = 0;
@@ -85,20 +89,16 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
   size_t        binThreshold = 0;
   string        projType;
 
-  pmgr.GetParamOptional("intermDim", intermDim);
+  pmgr.GetParamOptional("intermDim", intermDim, 0);
   pmgr.GetParamRequired("projDim", projDim_);
   pmgr.GetParamRequired("projType", projType);
-  pmgr.GetParamOptional("binThreshold", binThreshold);
-  pmgr.GetParamOptional("projSpaceType", projSpaceType);
-
-  SetQueryTimeParamsInternal(pmgr);
+  pmgr.GetParamOptional("binThreshold", binThreshold, 0);
+  pmgr.GetParamOptional("projSpaceType", projSpaceType, "l2");
 
   AnyParams RemainParams;
 
   RemainParams = pmgr.ExtractParametersExcept(
-                        {"dbScanFrac",
-                         "knnAmp",
-
+                        {
                          "intermDim",
                          "projDim",
                          "projType",
@@ -111,8 +111,7 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
   LOG(LIB_INFO) << "projDim      = " << projDim_;
   LOG(LIB_INFO) << "intermDim    = " << intermDim;
   LOG(LIB_INFO) << "binThreshold = " << binThreshold;
-  LOG(LIB_INFO) << "dbDscanFrac  = " << db_scan_frac_;
-  LOG(LIB_INFO) << "knnAmp       = " << knn_amp_;
+
 
   /*
    * Let's extract all parameters before doing
@@ -125,8 +124,8 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
    */
 
   projObj_.reset(Projection<dist_t>::createProjection(
-                    space,
-                    data,
+                    space_,
+                    data_,
                     projType,
                     intermDim,
                     projDim_,
@@ -149,8 +148,8 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
     throw runtime_error(err.str());
   }
 
-  const VectorSpaceSimpleStorage<float>*  ps =
-      dynamic_cast<const VectorSpaceSimpleStorage<float>*>(tmpSpace.get());
+  VectorSpaceSimpleStorage<float>*  ps =
+      dynamic_cast<VectorSpaceSimpleStorage<float>*>(tmpSpace.get());
 
   if (NULL == ps) {
     stringstream err;
@@ -163,20 +162,22 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
 
 
 
-  projData_.resize(data.size());
+  projData_.resize(data_.size());
 
-  for (size_t id = 0; id < data.size(); ++id) {
-    projData_[id] = ProjectOneVect(id, NULL, data[id]);
+  for (size_t id = 0; id < data_.size(); ++id) {
+    projData_[id] = ProjectOneVect(id, NULL, data_[id]);
   }
 
   ReportIntrinsicDimensionality("Set of projections" , *VPTreeSpace_, projData_);
 
-  VPTreeIndex_ = new VPTree<float, PolynomialPruner<float>>(
-                                          true,
-                                          VPTreeSpace_.get(),
-                                          projData_,
-                                          RemainParams
-                                    );
+  VPTreeIndex_.reset(new VPTree<float, PolynomialPruner<float>>(
+                                          PrintProgress_,
+                                          *VPTreeSpace_,
+                                          projData_, true /* use random centers */));
+  VPTreeIndex_->CreateIndex(RemainParams);
+
+  // Reset parameters only after the VP-tree index is created!
+  this->ResetQueryTimeParams();
 }
 
 template <typename dist_t>
@@ -184,18 +185,17 @@ ProjectionVPTree<dist_t>::~ProjectionVPTree() {
   for (size_t i = 0; i < data_.size(); ++i) {
     delete projData_[i];
   }
-  delete VPTreeIndex_;
 }
 
 template <typename dist_t>
-const std::string ProjectionVPTree<dist_t>::ToString() const {
+const std::string ProjectionVPTree<dist_t>::StrDesc() const {
   std::stringstream str;
   str <<  "projection (vptree)";
   return str.str();
 }
 
 template <typename dist_t>
-void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query) {
+void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   if (db_scan_frac_ < 0.0 || db_scan_frac_ > 1.0) {
     stringstream err;
     err << METH_PROJ_VPTREE << " requires that dbScanFrac is in the range [0,1]";
@@ -206,11 +206,11 @@ void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query) {
     throw runtime_error("For the range search you need to specify a sufficiently large dbScanFrac!");
   }
   unique_ptr<Object>            QueryObject(ProjectOneVect(0, query, query->QueryObject()));
-  unique_ptr<KNNQuery<float>>   VPTreeQuery(new KNNQuery<float>(VPTreeSpace_.get(),
+  unique_ptr<KNNQuery<float>>   VPTreeQuery(new KNNQuery<float>(*VPTreeSpace_,
                                                                 QueryObject.get(),
                                                                 db_scan_qty, 0.0));
 
-  VPTreeIndex_->Search(VPTreeQuery.get());
+  VPTreeIndex_->Search(VPTreeQuery.get(), -1);
 
   unique_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
 
@@ -222,18 +222,18 @@ void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query) {
 }
 
 template <typename dist_t>
-void ProjectionVPTree<dist_t>::Search(KNNQuery<dist_t>* query) {
+void ProjectionVPTree<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   size_t db_scan_qty = computeDbScan(query->GetK());
   if (!db_scan_qty) {
     throw runtime_error("You need to specify knnAmp > 0 or a sufficiently large dbScanFrac!");
   }
 
   unique_ptr<Object>            QueryObject(ProjectOneVect(0, query, query->QueryObject()));
-  unique_ptr<KNNQuery<float>>   VPTreeQuery(new KNNQuery<float>(VPTreeSpace_.get(),
+  unique_ptr<KNNQuery<float>>   VPTreeQuery(new KNNQuery<float>(*VPTreeSpace_,
                                                                 QueryObject.get(),
                                                                 db_scan_qty, 0.0));
 
-  VPTreeIndex_->Search(VPTreeQuery.get());
+  VPTreeIndex_->Search(VPTreeQuery.get(), -1);
 
   unique_ptr<KNNQueue<float>> ResQueue(VPTreeQuery->Result()->Clone());
 

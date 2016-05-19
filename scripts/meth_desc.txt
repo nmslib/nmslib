@@ -1,0 +1,5 @@
+"permutation (inverted index over neighboring pivots)"	NAPP	mark=star,/tikz/solid,gray,/tikz/thick,mark options={scale=1,solid}
+"sw-graph"	SW-graph	mark=star,/tikz/solid,blue,/tikz/thick,mark options={scale=1,solid}
+"hnsw"	HNSW	mark=triangle*,red,/tikz/densely dashed,/tikz/thick,mark size=1.5pt
+"vptree: polynomial pruner"	VP-tree	mark=star,/tikz/solid,teal,/tikz/thick,mark options={scale=1,solid}
+

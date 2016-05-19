@@ -37,9 +37,9 @@ dist_t SpaceLp<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) c
 }
 
 template <typename dist_t>
-std::string SpaceLp<dist_t>::ToString() const {
+std::string SpaceLp<dist_t>::StrDesc() const {
   std::stringstream stream;
-  stream << "SpaceLp: p = " << distObj_.getP() << " (custom implement.) = " << distObj_.getCustom();
+  stream << "SpaceLp: p = " << distObj_.getP() << " do we have a special implementation for this p? : " << bool(distObj_.getCustom());
   return stream.str();
 }
 

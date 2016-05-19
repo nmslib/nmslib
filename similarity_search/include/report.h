@@ -22,6 +22,7 @@
 #include "meta_analysis.h"
 #include "experiments.h"
 #include "experimentconf.h"
+#include "space.h"
 
 namespace similarity {
   using std::string;
@@ -33,18 +34,21 @@ namespace similarity {
                     const ExperimentConfig<dist_t>& config,
                     MetaAnalysis& ExpRes,
                     const string& MethDescStr,
-                    const string& MethParamStr) {
+                    const string& IndexParamStr,
+                    const string& QueryTimeParamStr) {
     stringstream  Print;
 
     Print << std::endl << 
             "===================================" << std::endl;
     Print << MethDescStr << std::endl;
-    Print << MethParamStr << std::endl;
+    Print << "Index parameters:      " << IndexParamStr     << std::endl;
+    Print << "Query-time parameters: " << QueryTimeParamStr << std::endl;
     Print << "===================================" << std::endl;
     Print << "# of points: " << config.GetDataObjects().size() << std::endl;
     Print << "# of queries: " << config.GetQueryToRunQty() << std::endl;
     Print << "------------------------------------" << std::endl;
     Print << "Recall:            " << round3(ExpRes.GetRecallAvg())  << " -> " << "[" << round3(ExpRes.GetRecallConfMin()) << " " << round3(ExpRes.GetRecallConfMax()) << "]" << std::endl;
+    Print << "Recall@1:          " << round3(ExpRes.GetRecallAt1Avg())  << " -> " << "[" << round3(ExpRes.GetRecallAt1ConfMin()) << " " << round3(ExpRes.GetRecallAt1ConfMax()) << "]" << std::endl;
     Print << "PrecisionOfApprox: " << round3(ExpRes.GetPrecisionOfApproxAvg())                << " -> " << "[" << round3(ExpRes.GetPrecisionOfApproxConfMin()) << " " << round3(ExpRes.GetPrecisionOfApproxConfMax()) << "]" << std::endl;
     Print << "ClassAccuracy:     " << ExpRes.GetClassAccuracyAvg() << " -> " << "[" << ExpRes.GetClassAccuracyConfMin() << " " << ExpRes.GetClassAccuracyConfMax() << "]" << std::endl;
     Print << "RelPosError:       " << round2(ExpRes.GetRelPosErrorAvg())  << " -> " << "[" << round2(ExpRes.GetRelPosErrorConfMin()) << " \t" << round2(ExpRes.GetRelPosErrorConfMax()) << "]" << std::endl;
@@ -63,7 +67,7 @@ namespace similarity {
     
     return Print.str();
   }
-};
 
+};
 
 #endif

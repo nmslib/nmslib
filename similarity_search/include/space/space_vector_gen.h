@@ -32,6 +32,7 @@ template <typename dist_t, typename DistObjType>
 class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
  public:
   virtual ~VectorSpaceGen() {}
+  explicit VectorSpaceGen() {}
 
   virtual void CreateDataset(ObjectVector& dataset, 
                             const vector<vector<dist_t>>& sourceData) {
@@ -43,18 +44,17 @@ class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
                             const vector<LabelType>& labels) {
     fillDataSet(dataset, sourceData, &labels);
   }
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "custom space";
   }
   Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const {
     return VectorSpace<dist_t>::CreateObjFromVect(id, label, InpVect);
   };
  protected:
+  DISABLE_COPY_AND_ASSIGN(VectorSpaceGen);
+
   DistObjType      distObj_;
 
-  virtual Space<dist_t>* HiddenClone() const { 
-    return new VectorSpaceGen<dist_t, DistObjType>(*this); 
-  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
     CHECK(obj1->datalength() == obj2->datalength());
@@ -78,9 +78,10 @@ class VectorSpaceGen : public VectorSpaceSimpleStorage<dist_t> {
       if (!dim) dim = currDim;
       else {
         if (dim != currDim) {
-            LOG(LIB_FATAL) << "The # of vector elements (" << currDim << ")" <<
+          PREPARE_RUNTIME_ERR(err) << "The # of vector elements (" << currDim << ")" <<
                       " doesn't match the # of elements in previous lines. (" << dim << " )" <<
                       "Found mismatch, index : " << (index + 1);
+          THROW_RUNTIME_ERR(err);
         }
       }
       LabelType label = pLabels ? (*pLabels)[index] :  -1 ;

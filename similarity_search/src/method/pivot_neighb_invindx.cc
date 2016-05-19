@@ -18,6 +18,8 @@
 #include <sstream>
 #include <thread>
 #include <memory>
+#include <fstream>
+#include <thread>
 #include <unordered_map>
 
 #include "space.h"
@@ -32,14 +34,6 @@ namespace similarity {
 using std::vector;
 using std::pair;
 using std::mutex;
-
-struct IdCount {
-  size_t id;
-  size_t qty;
-  IdCount(size_t id=0, int    qty=0) : id(id), qty(qty) {}
-};
-
-typedef vector<IdCount> VectIdCount;
 
 template <typename dist_t>
 struct IndexThreadParamsPNII {
@@ -78,95 +72,69 @@ struct IndexThreadPNII {
   }
 };
 
-void postListUnion(const VectIdCount& lst1, const PostingListInt lst2, VectIdCount& res) {
-  res.clear();
-  res.reserve((lst1.size() + lst2.size())/2);
-  auto i1 = lst1.begin();
-  auto i2 = lst2.begin();
-
-  while (i1 != lst1.end() && i2 != lst2.end()) {
-    size_t id2 = static_cast<size_t>(*i2);
-    if (i1->id < id2) {
-      res.push_back(*i1);
-      ++i1;
-    } else if (i1->id > id2) {
-      res.push_back(IdCount(id2, 1));
-      ++i2;
-    } else {
-      res.push_back(IdCount(i1->id, i1->qty + 1));
-      ++i1;
-      ++i2;
-    }
-  }
-  while (i1 != lst1.end()) {
-      res.push_back(*i1);
-    ++i1;
-  }
-  while (i2 != lst2.end()) {
-      res.push_back(IdCount(*i2, 1));
-      ++i2;
-  }
-}
-
 template <typename dist_t>
 PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     bool  PrintProgress,
-    const Space<dist_t>* space,
-    const ObjectVector& data,
-    const AnyParams& AllParams) 
-: data_(data),   // reference
-  space_(space), // pointer
-  chunk_index_size_(65536),
-  K_(0),
-  knn_amp_(0),
-  db_scan_frac_(0),
-  num_prefix_(32),
-  min_times_(2),
-  use_sort_(false),
-  skip_checking_(false),
-  index_thread_qty_(0),
-  num_pivot_(512),
-  inv_proc_alg_ (kScan) {
-  AnyParamManager pmgr(AllParams);
+    const Space<dist_t>& space,
+    const ObjectVector& data) 
+      : data_(data),  
+        space_(space), 
+        PrintProgress_(PrintProgress),
+        recreate_points_(false)  {
+}
 
-  string inv_proc_alg = PERM_PROC_FAST_SCAN;
 
-  pmgr.GetParamOptional("numPivot", num_pivot_);
+template <typename dist_t>
+void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
+
+
+  pmgr.GetParamOptional("numPivot", num_pivot_, 512);
 
   if (pmgr.hasParam("numPivotIndex") && pmgr.hasParam("numPrefix")) {
     throw runtime_error("One shouldn't specify both parameters numPrefix and numPivotIndex, b/c they are synonyms!");
   }
-  pmgr.GetParamOptional("numPivotIndex", num_prefix_);
-  pmgr.GetParamOptional("numPrefix", num_prefix_);
+  pmgr.GetParamOptional("numPivotIndex", num_prefix_, 32);
+  pmgr.GetParamOptional("numPrefix",     num_prefix_, num_prefix_);
 
-  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_);
+  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 65536);
 
-  pmgr.GetParamOptional("indexThreadQty", index_thread_qty_);
+  pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  thread::hardware_concurrency());
+  pmgr.GetParamOptional("recreatePoints", recreate_points_,  false);
 
   if (num_prefix_ > num_pivot_) {
-    LOG(LIB_FATAL) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix "
-               << "should be less than or equal to numPivot";
+    PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix (" << num_prefix_ << ") "
+                             << "should be less than or equal to numPivot (" << num_pivot_ << ")";
+    THROW_RUNTIME_ERR(err);
   }
 
   CHECK(num_prefix_ <= num_pivot_);
+
+  pmgr.GetParamOptional("pivotFile", pivot_file_, "");
   
   size_t indexQty = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
 
-  SetQueryTimeParamsInternal(pmgr);
-
   pmgr.CheckUnused();
+  this->ResetQueryTimeParams();
 
   LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
   LOG(LIB_INFO) << "# of index chunks             = " << indexQty;
   LOG(LIB_INFO) << "# of indexing thread          = " << index_thread_qty_;
+  LOG(LIB_INFO) << "# pivotFile                   = " << pivot_file_;
   LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
   LOG(LIB_INFO) << "# pivots to index (numPrefix) = " << num_prefix_;
-  LOG(LIB_INFO) << "# pivots to search (minTimes) = " << min_times_;
-  LOG(LIB_INFO) << "# dbScanFrac              = " << db_scan_frac_;
-  LOG(LIB_INFO) << "# knnAmp                  = " << knn_amp_;
-  
+  LOG(LIB_INFO) << "Do we recreate points during indexing when computing distances to pivots?  = " << recreate_points_;
 
-  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
+  if (pivot_file_.empty())
+    GetPermutationPivot(data_, space_, num_pivot_, &pivot_, &pivot_pos_);
+  else {
+    vector<string> vExternIds;
+    space_.ReadDataset(pivot_, vExternIds, pivot_file_, num_pivot_);
+    if (pivot_.size() < num_pivot_) {
+      throw runtime_error("Not enough pivots in the file '" + pivot_file_ + "'");
+    }
+    genPivot_ = pivot_;
+  }
 
   posting_lists_.resize(indexQty);
 
@@ -184,8 +152,8 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
   mutex                                               progressBarMutex;
 
   if (index_thread_qty_ <= 1) {
-    unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
-                                new ProgressDisplay(data.size(), cerr)
+    unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
+                                new ProgressDisplay(data_.size(), cerr)
                                 :NULL);
     for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
       IndexChunk(chunkId, progress_bar.get(), progressBarMutex);
@@ -200,8 +168,8 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
 
     LOG(LIB_INFO) << "Will create " << index_thread_qty_ << " indexing threads";;
 
-    unique_ptr<ProgressDisplay> progress_bar(PrintProgress ?
-                                new ProgressDisplay(data.size(), cerr)
+    unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
+                                new ProgressDisplay(data_.size(), cerr)
                                 :NULL);
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
@@ -233,10 +201,19 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* pr
 
   auto & chunkPostLists = *posting_lists_[chunkId];
   chunkPostLists.resize(num_pivot_);
+  string externId;
 
   for (size_t id = 0; id < maxId - minId; ++id) {
     Permutation perm;
-    GetPermutationPPIndex(pivot_, space_, data_[minId + id], &perm);
+    const Object* pObj = data_[minId + id];
+
+    unique_ptr<Object> extObj;
+    if (recreate_points_) {
+      extObj=space_.CreateObjFromStr(-1, -1, space_.CreateStrFromObj(pObj, externId), NULL);
+      pObj=extObj.get();
+    }
+
+    GetPermutationPPIndex(pivot_, space_, pObj, &perm);
     for (size_t j = 0; j < num_prefix_; ++j) {
       chunkPostLists[perm[j]].push_back(id);
     }
@@ -258,19 +235,20 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* pr
     
 template <typename dist_t>
 void 
-PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-  string inv_proc_alg = PERM_PROC_FAST_SCAN;
+PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+  AnyParamManager pmgr(QueryTimeParams);
+  string inv_proc_alg;
   
-  pmgr.GetParamOptional("skipChecking", skip_checking_);
-  pmgr.GetParamOptional("useSort",      use_sort_);
-  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg);
+  pmgr.GetParamOptional("skipChecking", skip_checking_, false);
+  pmgr.GetParamOptional("useSort",      use_sort_,      false);
+  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg,   PERM_PROC_FAST_SCAN);
 
   if (pmgr.hasParam("minTimes") && pmgr.hasParam("numPivotSearch")) {
     throw runtime_error("One shouldn't specify both parameters minTimes and numPivotSearch, b/c they are synonyms!");
   }
 
-  pmgr.GetParamOptional("minTimes",        min_times_);
-  pmgr.GetParamOptional("numPivotSearch",  min_times_);
+  pmgr.GetParamOptional("minTimes",        min_times_, 2);
+  pmgr.GetParamOptional("numPivotSearch",  min_times_, 2);
   
   if (inv_proc_alg == PERM_PROC_FAST_SCAN) {
     inv_proc_alg_ = kScan; 
@@ -287,51 +265,178 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pm
   if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
     throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
   }
-  if (pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-  } else {
-    knn_amp_ = 0;
-  }
-  if (!pmgr.hasParam("dbScanFrac") && !pmgr.hasParam("knnAmp")) {
-    db_scan_frac_ = 0;
-    knn_amp_ = 0;
-  }
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_);
-  pmgr.GetParamOptional("knnAmp",  knn_amp_);
-}
 
-template <typename dist_t>
-vector<string>
-PivotNeighbInvertedIndex<dist_t>::GetQueryTimeParamNames() const {
-  vector<string> names;
+  // It is important to use a non-zero default here, otherwise the code
+  // will through an exception when a) useSort=1 and b) the parameter dbScanFrac is not specified explicitly
+  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_,  0.05);
+  CHECK_MSG(db_scan_frac_ >=0 && db_scan_frac_ <=1, "dbScanFrac should be >=0 and <= 1");
+  pmgr.GetParamOptional("knnAmp",       knn_amp_,       0);
+
+  pmgr.CheckUnused();
   
-  names.push_back("dbScanFrac");
-  names.push_back("knnAmp");
-  names.push_back("useSort");
-  names.push_back("skipChecking");
-  names.push_back("invProcAlg");
-  names.push_back("minTimes");
-  names.push_back("numPivotSearch");
-    
-  return names;
+  LOG(LIB_INFO) << "Set query-time parameters for PivotNeighbInvertedIndex:";
+  LOG(LIB_INFO) << "# pivots to search (minTimes) = " << min_times_;
+  LOG(LIB_INFO) << "# dbScanFrac                  = " << db_scan_frac_;
+  LOG(LIB_INFO) << "# knnAmp                      = " << knn_amp_;
+  LOG(LIB_INFO) << "# useSort                     = " << use_sort_;
+  LOG(LIB_INFO) << "invProcAlg (code)             = " << inv_proc_alg_ << "(" << toString(inv_proc_alg_) << ")";
+  LOG(LIB_INFO) << "# skipChecking                = " << skip_checking_;
 }
-    
-    
 
 template <typename dist_t>
 PivotNeighbInvertedIndex<dist_t>::~PivotNeighbInvertedIndex() {
+  for (const Object* o: genPivot_) delete o;
 }
 
 template <typename dist_t>
-const string PivotNeighbInvertedIndex<dist_t>::ToString() const {
+const string PivotNeighbInvertedIndex<dist_t>::StrDesc() const {
   stringstream str;
   str <<  "permutation (inverted index over neighboring pivots)";
   return str.str();
 }
 
 template <typename dist_t>
+void PivotNeighbInvertedIndex<dist_t>::SaveIndex(const string &location) {
+  ofstream outFile(location);
+  CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
+  outFile.exceptions(std::ios::badbit);
+
+  size_t lineNum = 0;
+  // Save main parameters
+  WriteField(outFile, METHOD_DESC, StrDesc()); lineNum++;
+  WriteField(outFile, "numPivot", num_pivot_); lineNum++;
+  WriteField(outFile, "numPivotIndex", num_prefix_); lineNum++;
+  WriteField(outFile, "chunkIndexSize", chunk_index_size_); lineNum++;
+  WriteField(outFile, "indexQty", posting_lists_.size()); lineNum++;
+  WriteField(outFile, "pivotFile", pivot_file_); lineNum++;
+
+  if (pivot_file_.empty()) {
+    // Save pivots positions
+    outFile << MergeIntoStr(pivot_pos_, ' ') << endl;
+    lineNum++;
+    vector<IdType> oIDs;
+    for (const Object *pObj: pivot_)
+      oIDs.push_back(pObj->id());
+    // Save pivot IDs
+    outFile << MergeIntoStr(oIDs, ' ') << endl;
+    lineNum++;
+  }
+
+  for(size_t i = 0; i < posting_lists_.size(); ++i) {
+    WriteField(outFile, "chunkId", i); lineNum++;
+    CHECK(posting_lists_[i]->size() == num_pivot_);
+    for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
+      outFile << MergeIntoStr((*posting_lists_[i])[pivotId], ' ') << endl; lineNum++;
+    }
+  }
+
+  WriteField(outFile, LINE_QTY, lineNum + 1 /* including this line */);
+  outFile.close();
+}
+
+template <typename dist_t>
+void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
+  ifstream inFile(location);
+  CHECK_MSG(inFile, "Cannot open file '" + location + "' for reading");
+  inFile.exceptions(std::ios::badbit);
+
+  size_t lineNum = 1;
+  string methDesc;
+  ReadField(inFile, METHOD_DESC, methDesc); lineNum++;
+  CHECK_MSG(methDesc == StrDesc(),
+            "Looks like you try to use an index created by a different method: " + methDesc);
+  ReadField(inFile, "numPivot", num_pivot_); lineNum++;
+  ReadField(inFile, "numPivotIndex", num_prefix_); lineNum++;
+  ReadField(inFile, "chunkIndexSize", chunk_index_size_); lineNum++;
+  size_t indexQty;
+  ReadField(inFile, "indexQty", indexQty);  lineNum++;
+  ReadField(inFile, "pivotFile", pivot_file_); lineNum++;
+
+  string line;
+  if (pivot_file_.empty()) {
+    // Read pivot positions
+    CHECK_MSG(getline(inFile, line),
+              "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
+    pivot_pos_.clear();
+    CHECK_MSG(SplitStr(line, pivot_pos_, ' '),
+              "Failed to extract pivot indices from line #" + ConvertToString(lineNum) + " from " + location);
+    CHECK_MSG(pivot_pos_.size() == num_pivot_,
+              "# of extracted pivots indices from line #" + ConvertToString(lineNum) + " (" +
+              ConvertToString(pivot_pos_.size()) + ")"
+                  " doesn't match the number of pivots (" + ConvertToString(num_pivot_) +
+              " from the header (location  " + location + ")");
+    pivot_.resize(num_pivot_);
+    for (size_t i = 0; i < pivot_pos_.size(); ++i) {
+      CHECK_MSG(pivot_pos_[i] < data_.size(),
+                DATA_MUTATION_ERROR_MSG + " (detected an object index >= #of data points");
+      pivot_[i] = data_[pivot_pos_[i]];
+    }
+    ++lineNum;
+    // Read pivot object IDs
+    vector<IdType> oIDs;
+    CHECK_MSG(getline(inFile, line),
+              "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
+    CHECK_MSG(SplitStr(line, oIDs, ' '),
+              "Failed to extract pivot IDs from line #" + ConvertToString(lineNum) + " from " + location);
+    CHECK_MSG(oIDs.size() == num_pivot_,
+              "# of extracted pivots IDs from line #" + ConvertToString(lineNum) + " (" +
+              ConvertToString(pivot_pos_.size()) + ")"
+                  " doesn't match the number of pivots (" + ConvertToString(num_pivot_) +
+              " from the header (location  " + location + ")");
+    /*
+     * Now let's make a quick sanity-check to see if the pivot IDs match what was saved previously.
+     * If the user used a different data set, or a different test split (and a different gold-standard file),
+     * we cannot re-use the index
+     */
+    for (size_t i = 0; i < num_pivot_; ++i) {
+      if (oIDs[i] != pivot_[i]->id()) {
+        PREPARE_RUNTIME_ERR(err) << DATA_MUTATION_ERROR_MSG <<
+                                 " (different pivot IDs detected, old: " << oIDs[i] << " new: " << pivot_[i]->id() <<
+                                 " pivot index: " << i << ")";
+        THROW_RUNTIME_ERR(err);
+      }
+    }
+    ++lineNum;
+  } else {
+    vector<string> vExternIds;
+    space_.ReadDataset(pivot_, vExternIds, pivot_file_, num_pivot_);
+    if (pivot_.size() < num_pivot_) {
+      throw runtime_error("Not enough pivots in the file '" + pivot_file_+ "'");
+    }
+    genPivot_ = pivot_;
+  }
+
+
+  posting_lists_.resize(indexQty);
+
+  for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
+    size_t tmp;
+    ReadField(inFile, "chunkId", tmp);
+    CHECK_MSG(tmp == chunkId, "The chunkId (" + ConvertToString(tmp) + " read from line " + ConvertToString(lineNum) +
+              " doesn't match the expected chunk ID " + ConvertToString(chunkId));
+    ++lineNum;
+    posting_lists_[chunkId] = shared_ptr<vector<PostingListInt>>(new vector<PostingListInt>());
+    (*posting_lists_[chunkId]).resize(num_pivot_);
+    for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
+      CHECK_MSG(getline(inFile, line),
+                "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
+      CHECK_MSG(SplitStr(line, (*posting_lists_[chunkId])[pivotId], ' '),
+                "Failed to extract object IDs from line #" + ConvertToString(lineNum) +
+                " chunkId " + ConvertToString(chunkId) + " location: " + location);
+      ++lineNum;
+    }
+  }
+  size_t ExpLineNum;
+  ReadField(inFile, LINE_QTY, ExpLineNum);
+  CHECK_MSG(lineNum == ExpLineNum,
+            DATA_MUTATION_ERROR_MSG + " (expected number of lines " + ConvertToString(ExpLineNum) +
+            " read so far doesn't match the number of read lines: " + ConvertToString(lineNum));
+  inFile.close();
+}
+
+template <typename dist_t>
 template <typename QueryType>
-void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
+void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) const {
   // Let's make this check here. Otherwise, if you misspell dbScanFrac, you will get 
   // a strange error message that says: dbScanFrac should be in the range [0,1].
   if (!knn_amp_) {
@@ -342,7 +447,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
     }
   }
 
-  size_t db_scan = computeDbScan(K);
+  size_t db_scan = computeDbScan(K, posting_lists_.size());
 
 
   Permutation perm_q;
@@ -363,7 +468,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
     if (use_sort_) {
       if (!db_scan) {
         stringstream err;
-        err << "One should specify a proper value for either dbScanFrac or knnAmp" <<
+        err << "Bug: either dbScanFrac or knnAmp are expected to be non-zero " <<
                " currently, dbScanFrac=" << db_scan_frac_ << " knnAmp=" << knn_amp_;
         throw runtime_error(err.str());
       }
@@ -412,7 +517,8 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
           }
         }
       } else {
-        LOG(LIB_FATAL) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        PREPARE_RUNTIME_ERR(err) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        THROW_RUNTIME_ERR(err);
       }
 
       IncrementalQuickSelect<IntInt> quick_select(candidates);
@@ -471,21 +577,20 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) {
           }
         }
       } else {
-        LOG(LIB_FATAL) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        PREPARE_RUNTIME_ERR(err) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        THROW_RUNTIME_ERR(err);
       }
     }
   }
 }
 
 template <typename dist_t>
-void PivotNeighbInvertedIndex<dist_t>::Search(
-    RangeQuery<dist_t>* query) {
+void PivotNeighbInvertedIndex<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   GenSearch(query, 0);
 }
 
 template <typename dist_t>
-void PivotNeighbInvertedIndex<dist_t>::Search(
-    KNNQuery<dist_t>* query) {
+void PivotNeighbInvertedIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   GenSearch(query, query->GetK());
 }
 

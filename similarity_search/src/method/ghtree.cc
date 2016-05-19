@@ -25,49 +25,57 @@
 namespace similarity {
 
 template <typename dist_t>
-GHTree<dist_t>::GHTree(const Space<dist_t>* space,
+GHTree<dist_t>::GHTree(const Space<dist_t>& space,
                        const ObjectVector& data,
-                       const AnyParams& MethParams,
-                       bool use_random_center)
-    : BucketSize_(50),
-      MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT),
-      ChunkBucket_(true) {
-  AnyParamManager pmgr(MethParams);
-
-  pmgr.GetParamOptional("bucketSize", BucketSize_);
-  pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
-
-  root_ = new GHNode(space, const_cast<ObjectVector&>(data),
-                     BucketSize_, ChunkBucket_,
-                     use_random_center, true);
+                       bool use_random_center) : 
+                                space_(space), 
+                                data_(data),
+                                use_random_center_(use_random_center) {
 }
 
 template <typename dist_t>
-GHTree<dist_t>::~GHTree() { delete root_; }
+void GHTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
+
+  pmgr.GetParamOptional("bucketSize", BucketSize_,    50);
+  pmgr.GetParamOptional("chunkBucket", ChunkBucket_,  true);
+
+  LOG(LIB_INFO) << "bucketSize   = " << BucketSize_;
+  LOG(LIB_INFO) << "chunkBucket  = " << ChunkBucket_;
+
+  pmgr.CheckUnused();
+  this->ResetQueryTimeParams();
+
+  root_.reset(new GHNode(space_, data_,
+                     BucketSize_, ChunkBucket_,
+                     use_random_center_ /* random center */));
+}
 
 template <typename dist_t>
-const std::string GHTree<dist_t>::ToString() const {
+GHTree<dist_t>::~GHTree() { }
+
+template <typename dist_t>
+const std::string GHTree<dist_t>::StrDesc() const {
   return "ghtree";
 }
 
 template <typename dist_t>
-void GHTree<dist_t>::Search(RangeQuery<dist_t>* query) {
+void GHTree<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
 template <typename dist_t>
-void GHTree<dist_t>::Search(KNNQuery<dist_t>* query) {
+void GHTree<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
 template <typename dist_t>
 GHTree<dist_t>::GHNode::GHNode(
-    const Space<dist_t>* space, ObjectVector& data,
+    const Space<dist_t>& space, const ObjectVector& data,
     size_t bucket_size, bool chunk_bucket,
-    const bool use_random_center, bool is_root)
+    const bool use_random_center)
   : pivot1_(NULL), pivot2_(NULL), left_child_(NULL), right_child_(NULL),
     bucket_(NULL), CacheOptimizedBucket_(NULL) {
   CHECK(!data.empty());
@@ -92,7 +100,7 @@ GHTree<dist_t>::GHNode::GHNode(
     for (int t = 0; t < 100; ++t) {
         id = RandomInt() % data_size;
         if (id != pivot1_id) {
-            dist_t curd = space->IndexTimeDistance(pivot1_, data[id]);
+            dist_t curd = space.IndexTimeDistance(pivot1_, data[id]);
             if (curd >= maxd) {
               maxd = curd;
               pivot2_id = id;
@@ -110,8 +118,8 @@ GHTree<dist_t>::GHNode::GHNode(
     for (int i = 0; i < data_size; ++i) {
       if (i == pivot1_id || i == pivot2_id)
         continue;
-      dist_to_pivot1 = space->IndexTimeDistance(pivot1_, data[i]);
-      dist_to_pivot2 = space->IndexTimeDistance(pivot2_, data[i]);
+      dist_to_pivot1 = space.IndexTimeDistance(pivot1_, data[i]);
+      dist_to_pivot2 = space.IndexTimeDistance(pivot2_, data[i]);
       if (dist_to_pivot1 < dist_to_pivot2) {    // close to pivot1
         left_subset.push_back(data[i]);
       } else {
@@ -119,16 +127,12 @@ GHTree<dist_t>::GHNode::GHNode(
       }
     }
 
-    if (!is_root) {
-      ObjectVector().swap(data);
-    }
-
     if (!left_subset.empty()) {
-      left_child_ = new GHNode(space, left_subset, bucket_size, chunk_bucket, use_random_center, false);
+      left_child_ = new GHNode(space, left_subset, bucket_size, chunk_bucket, use_random_center);
     }
 
     if (!right_subset.empty()) {
-      right_child_ = new GHNode(space, right_subset, bucket_size, chunk_bucket, use_random_center, false);
+      right_child_ = new GHNode(space, right_subset, bucket_size, chunk_bucket, use_random_center);
     }
   }
 }

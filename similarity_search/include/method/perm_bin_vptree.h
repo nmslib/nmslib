@@ -44,36 +44,32 @@ namespace similarity {
 template <typename dist_t, PivotIdType (*CorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 class PermBinVPTree : public Index<dist_t> {
  public:
-  PermBinVPTree(const Space<dist_t>* space,
-                   const ObjectVector& data,
-                   const AnyParams& MethPars);
+  PermBinVPTree(bool PrintProgress,
+                Space<dist_t>& space,
+                const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams) override;
 
   ~PermBinVPTree();
 
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  vector<string> GetQueryTimeParamNames() const { return VPTreeIndex_->GetQueryTimeParamNames(); }
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
-  void SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
-    AnyParams params;
-    pmgr.ExtractParametersExcept({});
-    VPTreeIndex_->SetQueryTimeParams(params);
-  }
 
-  const Space<dist_t>*      space_;
+  Space<dist_t>&            space_;
   const ObjectVector&       data_;
+  bool                      PrintProgress_;
   size_t                    bin_threshold_;
   size_t                    bin_perm_word_qty_;
   size_t                    db_scan_qty_;
   ObjectVector              pivots_;
   ObjectVector              BinPermData_;
 
-  VPTree<int, PolynomialPruner<int>>*   VPTreeIndex_;
-  const SpaceBitHamming*                VPTreeSpace_;
-
-  void SetQueryTimeParamsInternal(AnyParams params) { VPTreeIndex_->SetQueryTimeParams(params); }
+  unique_ptr<VPTree<int, PolynomialPruner<int>>>   VPTreeIndex_;
+  unique_ptr<SpaceBitHamming>                      VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermBinVPTree);

@@ -42,16 +42,13 @@ class SpaceSparseLp : public SpaceSparseVectorSimpleStorage<dist_t> {
   explicit SpaceSparseLp(dist_t p) : distObj_(p) {}
   virtual ~SpaceSparseLp() {}
 
-  virtual std::string ToString() const;
+  virtual std::string StrDesc() const;
 
  protected:
-  virtual Space<dist_t>* HiddenClone() const {
-    // Can use the default copy constructor, b/c we have no pointer fields in SpaceLpDist<dist_t>
-    return new SpaceSparseLp<dist_t>(*this);
-  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
  private:
   SpaceLpDist<dist_t> distObj_;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseLp);
 };
 
 

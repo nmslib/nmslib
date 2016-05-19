@@ -33,43 +33,40 @@ using std::unique_ptr;
 
 template <typename dist_t>
 MultiIndex<dist_t>::MultiIndex(
+         bool PrintProgress,
          const string& SpaceType,
-         const Space<dist_t>* space, 
-         const ObjectVector& data,
-         const AnyParams& AllParams) : space_(space) {
-  bool            PrintProgress = false;
-  AnyParamManager pmgr(AllParams);
+         Space<dist_t>& space, 
+         const ObjectVector& data) : space_(space), data_(data), SpaceType_(SpaceType), PrintProgress_(PrintProgress) {}
+
+
+template <typename dist_t>
+void MultiIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
 
   pmgr.GetParamRequired("indexQty", IndexQty_);
   pmgr.GetParamRequired("methodName", MethodName_);
-  pmgr.GetParamOptional("printProgress", PrintProgress);
 
-  AnyParams RemainParams = pmgr.ExtractParametersExcept( {"indexQty", "methodName", "printProgress"} );
-
+  AnyParams RemainParams = pmgr.ExtractParametersExcept( {"indexQty", "methodName"} );
 
   for (size_t i = 0; i < IndexQty_; ++i) {
     LOG(LIB_INFO) << "Method: " << MethodName_ << " index # " << (i+1) << " out of " << IndexQty_;
-    indices_.push_back(MethodFactoryRegistry<dist_t>::Instance().CreateMethod(PrintProgress, 
+    indices_.push_back(MethodFactoryRegistry<dist_t>::Instance().CreateMethod(PrintProgress_, 
                                                                  MethodName_,
-                                                                 SpaceType,
-                                                                 space,
-                                                                 data,
-                                                                 RemainParams));
+                                                                 SpaceType_,
+                                                                 space_,
+                                                                 data_));
+
+    indices_.back()->CreateIndex(RemainParams);
   }
 
+  this->ResetQueryTimeParams(); // reset query time parameters
 }
 
 template <typename dist_t>
-vector<string> MultiIndex<dist_t>::GetQueryTimeParamNames() const {
-  if (!indices_.empty()) return indices_[0]->GetQueryTimeParamNames();
-  return vector<string>({});
-}
-
-template <typename dist_t>
-void MultiIndex<dist_t>::SetQueryTimeParamsInternal(AnyParamManager& pmgr) {
+void MultiIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   for (size_t i = 0; i < indices_.size(); ++i) {
-    AnyParams pars = pmgr.ExtractParametersExcept({});
-    indices_[i]->SetQueryTimeParams(pars);
+    AnyParams ParamCopy(QueryTimeParams);
+    indices_[i]->SetQueryTimeParams(ParamCopy);
   }
 }
 
@@ -80,14 +77,14 @@ MultiIndex<dist_t>::~MultiIndex() {
 }
 
 template <typename dist_t>
-const std::string MultiIndex<dist_t>::ToString() const {
+const std::string MultiIndex<dist_t>::StrDesc() const {
   std::stringstream str;
   str << "" << indices_.size() << " copies of " << MethodName_;
   return str.str();
 }
 
 template <typename dist_t>
-void MultiIndex<dist_t>::Search(RangeQuery<dist_t>* query) {
+void MultiIndex<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   /* 
    * There may be duplicates: the same object coming from 
    * different indices. The set found is used to filter them out.
@@ -112,7 +109,7 @@ void MultiIndex<dist_t>::Search(RangeQuery<dist_t>* query) {
 }
 
 template <typename dist_t>
-void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query) {
+void MultiIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   /* 
    * There may be duplicates: the same object coming from 
    * different indices. The set found is used to filter them out.

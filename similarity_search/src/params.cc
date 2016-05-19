@@ -49,20 +49,13 @@ void ParseSpaceArg(const string& descStr, string& SpaceType, vector<string>& Spa
   }
 }
 
-void ParseMethodArg(const string& descStr, string& MethName, vector<string>& MethodDesc) {
+void ParseArg(const string& descStr, vector<string>& vDesc) {
+  vDesc.clear();
 
-  vector<string> tmp;
-  if (!SplitStr(descStr, tmp, ':') || tmp.size() > 2  || !tmp.size()) {
-    throw runtime_error("Wrong format of the method argument: '" + descStr + "'");
-  }
+  if (descStr.empty()) return;
 
-  MethName = tmp[0];
-
-  MethodDesc.clear();
-  if (tmp.size() == 2) {
-    if (!SplitStr(tmp[1], MethodDesc, ',')) {
-      throw runtime_error("Cannot split method arguments in: '" + tmp[1] + "'");
-    }
+  if (!SplitStr(descStr, vDesc, ',')) {
+    throw runtime_error("Cannot split arguments in: '" + descStr + "'");
   }
 }
 

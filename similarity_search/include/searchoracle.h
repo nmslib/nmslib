@@ -125,8 +125,11 @@ inline string getOptimMetricName(OptimMetric metr) {
  * The results were published in:
  * Boytsov, Leonid, and Bilegsaikhan Naidan. 
  * "Learning to prune in metric and non-metric spaces." Advances in Neural Information Processing Systems. 2013.
+ * However, the tunning procedure itself was later slightly improved and, most importantly, modified to
+ * to tune to a specific recall using only a sample of the data.
  *
- * A further extension relies on a polynomial approximation of the pruning rule.
+ * Another small extension is to support a polynomial approximation of the pruning rule.
+ * This works best for low-dimensional spaces. For high dimensional spaces, the linear rule is not worse.
  * In the left subtree we prune if:
  * MaxDist <= alphaLeft | M  - d(q, pivot) |^expLeft
  * In the right subtree we prune if:
@@ -139,16 +142,17 @@ template <typename dist_t>
 class PolynomialPruner {
 public:
   static std::string GetName() { return "polynomial pruner"; }
-  PolynomialPruner(const Space<dist_t>* space, const ObjectVector& data, bool bPrintProgres) : 
-      space_(space), data_(data), printProgress_(bPrintProgres), alpha_left_(1), exp_left_(1), alpha_right_(1), exp_right_(1) {}
-  void SetParams(AnyParamManager& pmgr);
+  PolynomialPruner(Space<dist_t>& space, const ObjectVector& data, bool bPrintProgres) : 
+      space_(space), data_(data), printProgress_(bPrintProgres), 
+       alpha_left_(1), exp_left_(1), alpha_right_(1), exp_right_(1),
+       alpha_left_default_(1), exp_left_default_(1), alpha_right_default_(1), exp_right_default_(1) {}
+  // It's important to pass parameters only by reference here!
+  void SetQueryTimeParams(AnyParamManager& pmgr);
+  void SetIndexTimeParams(AnyParamManager& pmgr);
 
-  vector<string> GetParams() const {
-    vector<string> res = {ALPHA_LEFT_PARAM, EXP_LEFT_PARAM, ALPHA_RIGHT_PARAM, EXP_RIGHT_PARAM, 
+  vector<string> GetQueryTimeParamNames() const {
+    vector<string> res = {ALPHA_LEFT_PARAM, EXP_LEFT_PARAM, ALPHA_RIGHT_PARAM, EXP_RIGHT_PARAM};
 
-                          MIN_EXP_PARAM, MAX_EXP_PARAM, DESIRED_RECALL_PARAM, TUNE_K_PARAM, TUNE_R_PARAM, TUNE_QTY_PARAM,
-
-                          MAX_CACHE_GS_QTY_PARAM, MAX_ITER_PARAM, MAX_REC_DEPTH_PARAM, STEP_N_PARAM, ADD_RESTART_QTY_PARAM, FULL_FACTOR_PARAM};
     return res;
   }
   
@@ -184,12 +188,12 @@ public:
   string Dump() { 
     stringstream str;
 
-    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << " ExponentLeft: " << exp_left_ << 
+    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << " ExponentLeft: " << exp_left_ << " " <<
            ALPHA_RIGHT_PARAM << ": " << alpha_right_ << " ExponentRight: " << exp_right_ ;
     return str.str();
   }
 private:
-  const Space<dist_t>*  space_;
+  Space<dist_t>&        space_;
   const ObjectVector    data_;
   bool                  printProgress_;
 
@@ -197,165 +201,13 @@ private:
   unsigned  exp_left_;
   double    alpha_right_;
   unsigned  exp_right_;
+
+  double    alpha_left_default_;
+  unsigned  exp_left_default_;
+  double    alpha_right_default_;
+  unsigned  exp_right_default_;
 };
 
-
-template <typename dist_t>
-class TriangIneq {
-public:
-  static std::string GetName() { return "triangle inequality"; }
-  TriangIneq(double alpha_left, double alpha_right) : alpha_left_(alpha_left), alpha_right_(alpha_right){}
-
-  inline VPTreeVisitDecision Classify(dist_t dist, dist_t MaxDist, dist_t MedianDist) const {
-
-    /*
-     * If the median is in both subtrees (e.g., this is often the case of a discrete metric)
-     * and the distance to the pivot is MedianDist, we need to visit both subtrees.
-     * Hence, we check for the strict inequality!!! Even if MaxDist == 0, 
-     * for the case of dist == MedianDist, 0 < 0 may be false. 
-     * Thus, we visit both subtrees. 
-     */
-    if (double(MaxDist) < alpha_left_ * (double(MedianDist) - dist)) return (kVisitLeft);
-    if (double(MaxDist) < alpha_right_* (dist - double(MedianDist))) return (kVisitRight);
-
-    return (kVisitBoth);
-  }
-  string Dump() { 
-    stringstream str;
-
-    str << ALPHA_LEFT_PARAM << ": " << alpha_left_ << ALPHA_RIGHT_PARAM << ": " << alpha_right_;
-    return str.str();
-  }
-private:
-  double alpha_left_;
-  double alpha_right_;
-};
-
-template <typename dist_t>
-class TriangIneqCreator {
-public:
-  TriangIneqCreator(double alpha_left, double alpha_right) : alpha_left_(alpha_left), alpha_right_(alpha_right){
-    LOG(LIB_INFO) << ALPHA_LEFT_PARAM << " (left stretch coeff)= "   << alpha_left;
-    LOG(LIB_INFO) << ALPHA_RIGHT_PARAM << " (right stretch coeff)= " << alpha_right;
-  }
-  TriangIneq<dist_t>* Create(unsigned level, const Object* /*pivot_*/, const DistObjectPairVector<dist_t>& /*dists*/) const {
-    return new TriangIneq<dist_t>(alpha_left_, alpha_right_);
-  }
-private:
-  double alpha_left_;
-  double alpha_right_;
-};
-
-template <typename dist_t>
-class SamplingOracle {
-public:
-    SamplingOracle(const typename similarity::Space<dist_t>* space,
-                   const ObjectVector& AllVectors,
-                   const Object* pivot,
-                   const DistObjectPairVector<dist_t>& dists,
-                   bool   DoRandSample,
-                   size_t MaxK,
-                   float  QuantileStepPivot,
-                   float  QuantileStepPseudoQuery,
-                   size_t NumOfPseudoQueriesInQuantile,
-                   float  DistLearnThreshold
-                   );
-    static std::string GetName() { return "sampling"; }
-
-    inline VPTreeVisitDecision Classify(dist_t dist, dist_t MaxDist, dist_t MedianDist) {
-        if (NotEnoughData_ || dist == MedianDist) return kVisitBoth;
-
-        if (dist < QuantilePivotDists[0]) return kVisitBoth;
-
-        auto it = std::lower_bound(QuantilePivotDists.begin(), QuantilePivotDists.end(), dist);
-
-        if (QuantilePivotDists.end() == it) return kVisitBoth;
-
-        size_t quant = it - QuantilePivotDists.begin();
-      
-        if (quant >= QuantileMaxPseudoQueryDists.size()) return kVisitBoth;
-
-        dist_t MaxQueryR = QuantileMaxPseudoQueryDists[quant];
-
-        if (MaxQueryR <= MaxDist) return kVisitBoth;
-
-        CHECK(dist != MedianDist); // should return kVisitBoth before reaching this point
-        return dist < MedianDist ? kVisitLeft : kVisitRight;
-    }
-    string Dump() { 
-      stringstream str1, str2;
-
-      for (unsigned i = 0; i < QuantileMaxPseudoQueryDists.size(); ++i) {
-        if (i) {
-          str1 << ",";
-          str2 << ",";
-        }
-        str1 << QuantilePivotDists[i];
-        str2 << QuantileMaxPseudoQueryDists[i];
-      }
-
-      return str1.str() + "\n" + str2.str() + "\n";
-    }
-
-private:
-  const  unsigned MinQuantIndQty = 4;  
-  bool   NotEnoughData_; // If true, the classifier returns kVisitBoth
-
-  std::vector<dist_t>  QuantilePivotDists;
-  std::vector<dist_t>  QuantileMaxPseudoQueryDists;
-
-  
-};
-
-template <typename dist_t>
-class SamplingOracleCreator {
-public:
-    SamplingOracle<dist_t>* Create(unsigned level, const Object* pivot, const DistObjectPairVector<dist_t>& dists) const {
-      try {
-        return new SamplingOracle<dist_t>(space_,
-                                          AllVectors_,
-                                          pivot,
-                                          dists,
-                                          DoRandSample_,
-                                          MaxK_,
-                                          QuantileStepPivot_,
-                                          QuantileStepPseudoQuery_,
-                                          NumOfPseudoQueriesInQuantile_,
-                                          DistLearnThreshold_);
-      } catch (const std::exception& e) {
-        LOG(LIB_FATAL) << "Exception while creating sampling oracle: " << e.what();
-      } catch (...) {
-        LOG(LIB_FATAL) << "Unknown exception while creating sampling oracle";
-      } 
-      return NULL;
-    }
-    SamplingOracleCreator(const typename similarity::Space<dist_t>* space,
-                   const ObjectVector& AllVectors,
-                   bool   DoRandSample,
-                   size_t MaxK,
-                   float  QuantileStepPivotDists,
-                   float  QuantileStepPseudoQuery,
-                   size_t NumOfPseudoQueriesInQuantile,
-                   float  FractToDetectFuncVal
-                   );
-private:
-  const  typename similarity::Space<dist_t>* space_;
-  const  ObjectVector& AllVectors_;
-  bool   DoRandSample_; // If true, we don't compute K-neighborhood exactly, MaxK points are sampled randomly.
-  size_t MaxK_;
-  float  QuantileStepPivot_;       // Quantiles for the distances to a pivot
-  float  QuantileStepPseudoQuery_;      // Quantiles for the distances to a pseudo-query
-  size_t NumOfPseudoQueriesInQuantile_; /* The number of pseudo-queries, 
-                                          which are selected in each distance quantile.
-                                        */
-  float  DistLearnThreshold_; /* A fraction of observed kVisitBoth-type points we wnat to encounter
-                                  before declaring that some radius r is the maximum radius for which
-                                  all results are within the same ball as the query point.
-                                  The smaller is FractToDetectFuncVal, the close our sampling-based 
-                                  procedure to the exact searching. That is, the highest recall
-                                  would be for FractToDetectFuncVal == 0.
-                                */
-};
 
 }
 

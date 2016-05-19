@@ -81,15 +81,12 @@ class SpaceLp : public VectorSpaceSimpleStorage<dist_t> {
   explicit SpaceLp(dist_t p) : distObj_(p) {}
   virtual ~SpaceLp() {}
 
-  virtual std::string ToString() const;
+  virtual std::string StrDesc() const;
  protected:
-  virtual Space<dist_t>* HiddenClone() const {
-    // Can use the default copy constructor, b/c we have no pointer fields in SpaceLpDist<dist_t>
-    return new SpaceLp<dist_t>(*this);
-  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
  private:
   SpaceLpDist<dist_t> distObj_;
+  DISABLE_COPY_AND_ASSIGN(SpaceLp);
 };
 
 

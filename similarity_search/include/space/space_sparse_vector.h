@@ -72,23 +72,46 @@ class SpaceSparseVector : public Space<dist_t> {
 public:
   typedef SparseVectElem<dist_t> ElemType;
 
+  explicit SpaceSparseVector() {}
   virtual ~SpaceSparseVector() {}
 
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config,
-                      const char* inputfile,
-                      const int MaxNumObjects) const;
+  /** Standard functions to read/write/create objects */ 
+  // Create a string representation of an object.
+  virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                              DataFileInputState* pInpState) const;
+  virtual string CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const;
+  // Open a file for reading, fetch a header (if there is any) and memorize an input state
+  virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
+  // Open a file for writing, write a header (if there is any) and memorize an output state
+  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const ObjectVector& dataset,
+                                                              const string& outputFile) const;
+  /*
+   * Read a string representation of the next object in a file as well
+   * as its label. Return false, on EOF.
+   */
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const;
+  /** End of standard functions to read/write/create objects */
 
-  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
+  /*
+   * Used only for testing/debugging: compares objects approximately. Floating point numbers
+   * should be nearly equal. Integers and strings should coincide exactly.
+   */
+  virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const;
+
+  /* 
+   * Different implementations of the sparse vector space will pack elements differently.
+   * Hence, they have to provide their own procedures to create an Object as
+   * well as extract elements from an Object.
+   */
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const = 0;
   // Sparse vectors have no fixed dimensionality
   virtual size_t GetElemQty(const Object* object) const {return 0;}
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
-                                   size_t nElem) const = 0;
 
   virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const = 0;
 protected:
-  virtual Space<dist_t>* HiddenClone() const = 0;
-  void ReadSparseVec(std::string line, IdType& label, std::vector<ElemType>& v) const;
+  void ReadSparseVec(std::string line, size_t line_num, IdType& label, vector<ElemType>& v) const;
+  virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const  = 0;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseVector);
 };
 
 template <typename dist_t>
@@ -97,7 +120,9 @@ public:
   typedef SparseVectElem<dist_t> ElemType;
 
   virtual ~SpaceSparseVectorSimpleStorage() {}
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+  explicit SpaceSparseVectorSimpleStorage() {}
+
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const {
     static std::hash<size_t>   indexHash;
     fill(pVect, pVect + nElem, static_cast<dist_t>(0));
@@ -110,13 +135,26 @@ public:
     }
   }
 
+  Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const {
+    return new Object(id, label, InpVect.size() * sizeof(ElemType), &InpVect[0]);
+  };
+
   virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
     SpaceNormScalarProduct distObjNormSP;
     return SpaceSparseVectorSimpleStorage<dist_t>::
                             ComputeDistanceHelper(obj1, obj2, distObjNormSP);
   }
 protected:
-  virtual Space<dist_t>* HiddenClone() const = 0;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorSimpleStorage);
+
+  virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const {
+    const ElemType* beg = reinterpret_cast<const ElemType*>(obj->data());
+    const ElemType* const end =
+        reinterpret_cast<const ElemType*>(obj->data() + obj->datalength());
+    size_t qty = end - beg;
+    v.resize(qty);
+    for (size_t i = 0; i < qty; ++i) v[i] = beg[i];
+  }
 
   struct SpaceNormScalarProduct {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {

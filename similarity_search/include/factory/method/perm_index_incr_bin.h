@@ -28,15 +28,13 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreatePermutationIndexIncrementalBin(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
-                           const ObjectVector& dataObjects,
-                           const AnyParams& allParams) {
+                           Space<dist_t>& space,
+                           const ObjectVector& dataObjects) {
 
   return new PermutationIndexIncrementalBin<dist_t, SpearmanRhoSIMD>(
                                                        PrintProgress,
                                                        space,
-                                                       dataObjects,
-                                                       allParams);
+                                                       dataObjects);
 
 }
 

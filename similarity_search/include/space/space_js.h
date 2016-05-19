@@ -46,14 +46,14 @@ class SpaceJSBase : public VectorSpace<dist_t> {
   explicit SpaceJSBase(JSType type) : type_(type) {}
   virtual ~SpaceJSBase() {}
 
-  virtual std::string ToString() const = 0;
+  virtual std::string StrDesc() const = 0;
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
 
   virtual size_t GetElemQty(const Object* object) const {
     size_t tmp = object->datalength()/ sizeof(dist_t);
     return (type_ == kJSSlow) ? tmp : tmp / 2;
   }
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
     return VectorSpace<dist_t>::
                 CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
@@ -72,20 +72,18 @@ class SpaceJSDiv : public SpaceJSBase<dist_t> {
   explicit SpaceJSDiv(typename SpaceJSBase<dist_t>::JSType type) : SpaceJSBase<dist_t>(type) {}
   virtual ~SpaceJSDiv() {}
 
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     std::stringstream stream;
     stream << "Jensen-Shannon divergence: type code = " << SpaceJSBase<dist_t>::GetType();
     return stream.str();
   }
 
  protected:
-  virtual Space<dist_t>* HiddenClone() const { 
-    return new SpaceJSDiv<dist_t>(SpaceJSBase<dist_t>::GetType()); // one parameter
-  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     return SpaceJSBase<dist_t>::JensenShannonFunc(obj1, obj2);
   }
  private:
+  DISABLE_COPY_AND_ASSIGN(SpaceJSDiv);
 };
 
 template <typename dist_t>
@@ -94,19 +92,17 @@ class SpaceJSMetric : public SpaceJSBase<dist_t> {
   explicit SpaceJSMetric(typename SpaceJSBase<dist_t>::JSType type) : SpaceJSBase<dist_t>(type) {}
   virtual ~SpaceJSMetric() {}
 
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     std::stringstream stream;
     stream << "Jensen-Shannon metric: type code = " << SpaceJSBase<dist_t>::GetType();
     return stream.str();
   }
  protected:
-  virtual Space<dist_t>* HiddenClone() const { 
-    return new SpaceJSMetric<dist_t>(SpaceJSBase<dist_t>::GetType()); // only one parameter: type
-  }
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     return sqrt(SpaceJSBase<dist_t>::JensenShannonFunc(obj1, obj2));
   }
  private:
+  DISABLE_COPY_AND_ASSIGN(SpaceJSMetric);
 };
 
 

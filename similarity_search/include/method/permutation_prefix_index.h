@@ -41,29 +41,32 @@ template <typename dist_t>
 class PermutationPrefixIndex : public Index<dist_t> {
  public:
   PermutationPrefixIndex(bool  PrintProgress,
-                        const Space<dist_t>* space,
-                        const ObjectVector& data,
-                        const AnyParams& AllParams) ;
+                        const Space<dist_t>& space,
+                        const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams) override;
   ~PermutationPrefixIndex();
 
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  virtual vector<string> GetQueryTimeParamNames() const;
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
+  virtual bool DuplicateData() const override { return chunkBucket_; }
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
-  size_t computeDbScan(size_t K) {
+  size_t computeDbScan(size_t K) const {
     if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
     return static_cast<size_t>(min(min_candidate_, data_.size()));
   }
 
 
   template <typename QueryType>
-  void GenSearch(QueryType* query, size_t K);
+  void GenSearch(QueryType* query, size_t K) const;
 
-  const ObjectVector& data_;
+  const Space<dist_t>&  space_;
+  const ObjectVector&   data_;
+  bool                  PrintProgress_;
 
   // permutation prefix length (l in the original paper) in (0, num_pivot]
   size_t num_pivot_;
@@ -72,7 +75,8 @@ class PermutationPrefixIndex : public Index<dist_t> {
   size_t knn_amp_;
   // min # of candidates to be selected (z in the original paper)
   ObjectVector pivot_;
-  PrefixTree* prefixtree_;
+  unique_ptr<PrefixTree> prefixtree_;
+  bool                   chunkBucket_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermutationPrefixIndex);

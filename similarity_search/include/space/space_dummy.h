@@ -46,7 +46,7 @@ class SpaceDummy : public Space<dist_t> {
  public:
   // A constructor can have arbitrary params
   explicit SpaceDummy(int param1, int param2) : param1_(param1), param2_(param2) {
-    LOG(LIB_INFO) << "Created " << ToString();
+    LOG(LIB_INFO) << "Created " << StrDesc();
   }
   virtual ~SpaceDummy() {}
 
@@ -55,24 +55,61 @@ class SpaceDummy : public Space<dist_t> {
    * Consider, including all the parameters where you
    * print the space name:
    */
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     stringstream  str;
     str << "DummySpace param1=" << param1_ << " param2=" << param2_;
     return str.str();
   }
 
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config,
-                      const char* inputfile,
-                      const int MaxNumObjects) const;
+  /** Standard functions to read/write/create objects */ 
+  /*
+   * Create an object from a (possibly binary) string.
+   * If the input state pointer isn't null, we check
+   * if the new vector is consistent with previously read vectors.
+   * For example, when we start reading vectors,
+   * we don't know the number of elements. When, we see the first
+   * vector, we memorize dimensionality. If a subsequently read
+   * vector has a different dimensionality, an exception will be thrown.
+   */
+  virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                              DataFileInputState* pInpState) const;
+  // Create a string representation of an object
+  // The string representation may include external ID.
+  virtual string CreateStrFromObj(const Object* pObj, const string& externId) const;
+  // Open a file for reading, fetch a header (if there is any) and memorize an input state
+  virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
+  // Open a file for writing, write a header (if there is any) and memorize an output state
+  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const ObjectVector& dataset,
+                                                              const string& outputFile) const;
+  /*
+   * Read a string representation of the next object in a file as well
+   * as its label. Return false, on EOF.
+   */
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const;
+  /* 
+   * Write a string representation of the next object to a file. We totally delegate
+   * this to a Space object, because it may package the string representation, by
+   * e.g., in the form of an XML fragment.
+   */
+  virtual void WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &) const;
+  /** End of standard functions to read/write/create objects */ 
 
   /*
-   * CreateVectFromObj and GetElemQty() are only needed, if
+   * Used only for testing/debugging: compares objects approximately. Floating point numbers
+   * should be nearly equal. Integers and strings should coincide exactly.
+   */
+  virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const {
+    return true; // In an actual, non-dummy class, you should return the result
+                 // of an actual comparison. Here 'true' is used only to make it compile.
+  }
+
+  /*
+   * CreateDenseVectFromObj and GetElemQty() are only needed, if
    * one wants to use methods with random projections.
    */
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                    size_t nElem) const {
-    throw runtime_error("Cannot create vector for the space: " + ToString());
+    throw runtime_error("Cannot create vector for the space: " + StrDesc());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
@@ -82,11 +119,6 @@ class SpaceDummy : public Space<dist_t> {
   * should be able to access it.
   */
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
-  virtual Space<dist_t>* HiddenClone() const {
-    // The clone function should reproduce the space with *IDENTICAL* parameters
-    // Another option is to use the default copy constructor (if there are no pointer fields)
-    return new SpaceDummy<dist_t>(param1_, param2_);
-  }
  private:
  
   /* 
@@ -95,6 +127,10 @@ class SpaceDummy : public Space<dist_t> {
    */
   int param1_;
   int param2_;
+  /*
+   * One should forbid making copies of the Space object
+   */
+  DISABLE_COPY_AND_ASSIGN(SpaceDummy);
 };
 
 

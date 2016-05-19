@@ -723,9 +723,12 @@ bool TestSparseAngularDistanceAgree(const string& dataFile, size_t N, size_t Rep
 
     ObjectVector                                 elemsFast;
     ObjectVector                                 elemsReg;
+    vector<string>                               tmp;
 
-    spaceFast->ReadDataset(elemsFast, NULL, dataFile.c_str(), N);
-    spaceReg->ReadDataset(elemsReg, NULL, dataFile.c_str(), N);
+    unique_ptr<DataFileInputState> inpStateFast(spaceFast->ReadDataset(elemsFast, tmp, dataFile, N));
+    spaceFast->UpdateParamsFromFile(*inpStateFast);
+    unique_ptr<DataFileInputState> inpStateReg(spaceReg->ReadDataset(elemsReg, tmp, dataFile, N));
+    spaceReg->UpdateParamsFromFile(*inpStateReg);
 
     CHECK(elemsFast.size() == elemsReg.size());
 
@@ -769,9 +772,12 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
 
     ObjectVector                                 elemsFast;
     ObjectVector                                 elemsReg;
+    vector<string>                               tmp;
 
-    spaceFast->ReadDataset(elemsFast, NULL, dataFile.c_str(),  N); 
-    spaceReg->ReadDataset(elemsReg, NULL, dataFile.c_str(),  N); 
+    unique_ptr<DataFileInputState> inpStateFast(spaceFast->ReadDataset(elemsFast, tmp, dataFile,  N)); 
+    spaceFast->UpdateParamsFromFile(*inpStateFast);
+    unique_ptr<DataFileInputState> inpStateReg(spaceReg->ReadDataset(elemsReg, tmp, dataFile,  N)); 
+    spaceReg->UpdateParamsFromFile(*inpStateReg);
 
     CHECK(elemsFast.size() == elemsReg.size());
 

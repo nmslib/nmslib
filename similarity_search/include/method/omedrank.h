@@ -68,23 +68,24 @@ template <typename dist_t>
 class OMedRank : public Index<dist_t> {
  public:
   OMedRank(bool PrintProgress,
-           const Space<dist_t>* space,
-           const ObjectVector& data,
-           AnyParamManager &pmgr);
+           const Space<dist_t>& space,
+           const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams) override;
   virtual ~OMedRank(){};
 
-  const std::string ToString() const { return "omedrank" ; }
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  const std::string StrDesc() const override { return "omedrank" ; }
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  virtual vector<string> GetQueryTimeParamNames() const;
-
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
   void IndexChunk(size_t chunkId, ProgressDisplay* displayBar);
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
+  const Space<dist_t>&    space_;
   const ObjectVector&     data_;
-  const Space<dist_t>*    space_;
+  bool                    PrintProgress_;
+
   size_t                  num_pivot_;
   size_t                  num_pivot_search_;
   size_t                  chunk_index_size_;
@@ -115,12 +116,12 @@ class OMedRank : public Index<dist_t> {
   
   // Heuristics: try to read db_scan_fraction/index_qty entries from each index part
   // or alternatively K * knn_amp_ entries, for KNN-search
-  size_t computeDbScan(size_t K) {
+  size_t computeDbScan(size_t K) const {
     if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
     return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
 
-  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(OMedRank);

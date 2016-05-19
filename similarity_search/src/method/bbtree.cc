@@ -42,35 +42,40 @@ using std::unique_ptr;
 
 template <typename dist_t>
 BBTree<dist_t>::BBTree(
-    const Space<dist_t>* space, 
-    const ObjectVector& data, 
-    const AnyParams& MethParams) : 
-                              BucketSize_(50),
-                              MaxLeavesToVisit_(FAKE_MAX_LEAVES_TO_VISIT),
-                              ChunkBucket_(true) {
+    const Space<dist_t>& space, 
+    const ObjectVector& data)  : data_(data) {
+  BregmanDivSpace_ = BregmanDiv<dist_t>::ConvertFrom(&space); // Should be the special space!
+}
+
+
+template <typename dist_t>
+void BBTree<dist_t>::CreateIndex(const AnyParams& MethParams) {
   AnyParamManager pmgr(MethParams);
 
-  pmgr.GetParamOptional("bucketSize", BucketSize_);
-  pmgr.GetParamOptional("chunkBucket", ChunkBucket_);
-  pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_);
+  pmgr.GetParamOptional("bucketSize", BucketSize_, 50);
+  pmgr.GetParamOptional("chunkBucket", ChunkBucket_, true);
 
-  BregmanDivSpace_ = BregmanDiv<dist_t>::ConvertFrom(space); // Should be the special space!
-  root_node_ = new BBNode(BregmanDivSpace_, data, BucketSize_, ChunkBucket_);
+  LOG(LIB_INFO) << "bucketSize  = " << BucketSize_;
+  LOG(LIB_INFO) << "ChunkBucket = " << ChunkBucket_;
+
+
+  pmgr.CheckUnused();
+
+  root_node_.reset(new BBNode(BregmanDivSpace_, data_, BucketSize_, ChunkBucket_));
 }
 
 template <typename dist_t>
 BBTree<dist_t>::~BBTree() {
-  delete root_node_;
 }
 
 template <typename dist_t>
-const std::string BBTree<dist_t>::ToString() const {
+const std::string BBTree<dist_t>::StrDesc() const {
   return "bbtree";
 }
 
 
 template <typename dist_t>
-void BBTree<dist_t>::Search(RangeQuery<dist_t>* query) {
+void BBTree<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   unique_ptr<Object> query_gradient(BregmanDivSpace_->GradientFunction(query->QueryObject()));
 
   /*
@@ -85,7 +90,7 @@ void BBTree<dist_t>::Search(RangeQuery<dist_t>* query) {
 }
 
 template <typename dist_t>
-void BBTree<dist_t>::Search(KNNQuery<dist_t>* query) {
+void BBTree<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   unique_ptr<Object> query_gradient(BregmanDivSpace_->GradientFunction(query->QueryObject()));
 
   int mx = MaxLeavesToVisit_;
@@ -154,7 +159,7 @@ BBTree<dist_t>::BBNode::~BBNode() {
 }
 
 template <typename dist_t>
-bool BBTree<dist_t>::BBNode::IsLeaf() {
+bool BBTree<dist_t>::BBNode::IsLeaf() const {
   return is_leaf_;
 }
 
@@ -223,7 +228,7 @@ template <typename QueryType>
 void BBTree<dist_t>::BBNode::LeftSearch(const BregmanDiv<dist_t>* div, 
                                         Object* query_gradient, 
                                         QueryType* query,
-                                        int& MaxLeavesToVisit) {
+                                        int& MaxLeavesToVisit) const {
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (IsLeaf()) {
     --MaxLeavesToVisit;
@@ -257,7 +262,7 @@ bool BBTree<dist_t>::BBNode::NeedToSearch(
     Object* query_gradient, 
     QueryType* query,
     dist_t mindist_est,
-    dist_t div_query_to_center) {
+    dist_t div_query_to_center) const {
   if (div_query_to_center < covering_radius_ ||
       div_query_to_center < mindist_est) {
     return true;
@@ -271,10 +276,11 @@ bool BBTree<dist_t>::BBNode::RecBinSearch(
     const BregmanDiv<dist_t>* div,
     Object* query_gradient, 
     QueryType* query, dist_t mindist_est,
-    dist_t l, dist_t r, int depth) {
+    dist_t l, dist_t r, int depth) const {
   // sanity checks
   if (depth >= 1e6) {    // something is wrong!
-    LOG(LIB_FATAL) << "Recursive depth exceeds " << depth << std::endl;
+    PREPARE_RUNTIME_ERR(err) << "Recursive depth exceeds " << depth << std::endl;
+    THROW_RUNTIME_ERR(err);
   }
   CHECK(query->QueryObject()->datalength() == center_gradf_->datalength());
 

@@ -42,23 +42,28 @@ template <typename dist_t> class Space;
 template <typename dist_t>
 class MultiIndex : public Index<dist_t> {
  public:
-  MultiIndex(const string& SpaceType,
-             const Space<dist_t>* space, 
-             const ObjectVector& data,
-             const AnyParams& params);
+  MultiIndex(bool PrintProgress,
+             const string& SpaceType,
+             Space<dist_t>& space, 
+             const ObjectVector& data);
+
+  void CreateIndex(const AnyParams& IndexParams) override;
+
   ~MultiIndex();
 
-  const std::string ToString() const;
+  const std::string StrDesc() const override;
 
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType ) const override;
+  void Search(KNNQuery<dist_t>* query, IdType ) const override;
 
-  virtual vector<string> GetQueryTimeParamNames() const;
+  virtual void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  protected:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& pmgr);
 
   std::vector<Index<dist_t>*> indices_;
-  const Space<dist_t>*        space_;
+  Space<dist_t>&              space_;
+  const ObjectVector&         data_;
+  string                      SpaceType_;
+  bool                        PrintProgress_;
   size_t                      IndexQty_;
   string                      MethodName_;
 };

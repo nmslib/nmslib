@@ -41,12 +41,11 @@ class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t>
   explicit SpaceSparseAngularDistance() {}
   virtual ~SpaceSparseAngularDistance() {}
 
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "AngularDistance";
   }
 
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new SpaceSparseAngularDistance<dist_t>(); } // no parameters 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     return SpaceSparseVectorSimpleStorage<dist_t>::
                         ComputeDistanceHelper(obj1, obj2, distObjAngular_);
@@ -56,11 +55,12 @@ class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t>
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = AngularDistance(x, y, length);
       // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
-      if (std::isnan(val)) LOG(LIB_FATAL) << "Bug: NAN dist!!!!";
+      if (std::isnan(val)) throw runtime_error("SpaceAngularDist Bug: NAN dist!!!!");
       return val;
     }
   };
   SpaceAngularDist        distObjAngular_;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseAngularDistance);
 };
 
 template <typename dist_t>
@@ -69,12 +69,11 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t
   explicit SpaceSparseCosineSimilarity() {}
   virtual ~SpaceSparseCosineSimilarity() {}
 
-  virtual std::string ToString() const {
+  virtual std::string StrDesc() const {
     return "CosineSimilarity";
   }
 
  protected:
-  virtual Space<dist_t>* HiddenClone() const { return new SpaceSparseCosineSimilarity<dist_t>(); } // no parameters 
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
     return SpaceSparseVectorSimpleStorage<dist_t>::
                   ComputeDistanceHelper(obj1, obj2, distObjCosineSimilarity_);
@@ -84,11 +83,12 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = CosineSimilarity(x, y, length);
       // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
-      if (std::isnan(val)) LOG(LIB_FATAL) << "Bug: NAN dist!!!!";
+      if (std::isnan(val)) throw runtime_error("SpaceCosineSimilarityDist Bug: NAN dist!!!!");
       return val;
     }
   };
   SpaceCosineSimilarityDist        distObjCosineSimilarity_;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseCosineSimilarity);
 };
 
 

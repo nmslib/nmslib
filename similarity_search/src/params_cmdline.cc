@@ -21,6 +21,7 @@
 
 #include "utils.h"
 #include "params_cmdline.h"
+#include "params_def.h"
 #include "logging.h"
 #include "space.h"
 
@@ -42,12 +43,13 @@ static void Usage(const char *prog,
               << desc << std::endl;
 }
 
-void ParseCommandLine(int argc, char*argv[],
+void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                       string&                 LogFile,
+                      string&                 LoadIndexLoc,
+                      string&                 SaveIndexLoc,
                       string&                 DistType,
                       string&                 SpaceType,
                       shared_ptr<AnyParams>&  SpaceParams,
-                      unsigned&               dimension,
                       unsigned&               ThreadTestQty,
                       bool&                   AppendToResFile,
                       string&                 ResFilePrefix,
@@ -55,65 +57,55 @@ void ParseCommandLine(int argc, char*argv[],
                       string&                 DataFile,
                       string&                 QueryFile,
                       string&                 CacheGSFilePrefix,
-                      size_t&                 maxCacheGSQty,
+                      float&                  maxCacheGSRelativeQty,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,
                       float&                  eps,
                       string&                 RangeArg,
-                      vector<shared_ptr<MethodWithParams>>& pars) {
+                      string&                 MethodName,
+                      shared_ptr<AnyParams>&          IndexTimeParams,
+                      vector<shared_ptr<AnyParams>>&  QueryTimeParams) {
   knn.clear();
   RangeArg.clear();
-  pars.clear();
+  QueryTimeParams.clear();
 
-  vector<string>  methParams;
+  string          indexTimeParamStr;
+  vector<string>  vQueryTimeParamStr;
+  string          spaceParamStr;
   string          knnArg;
   // Conversion to double is due to an Intel's bug with __builtin_signbit being undefined for float
   double          epsTmp;
 
+  bPrintProgress  = true;
+
+  bool bSuppressPrintProgress;
+
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
-    ("help,h", "produce help message")
-    ("spaceType,s",     po::value<string>(&SpaceType)->required(),
-                        "space type, e.g., l1, l2, lp:p=0.5")
-    ("distType",        po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT),
-                        "distance value type: int, float, double")
-    ("dataFile,i",      po::value<string>(&DataFile)->required(),
-                        "input data file")
-    ("maxNumData",      po::value<unsigned>(&MaxNumData)->default_value(0),
-                        "if non-zero, only the first maxNumData elements are used")
-    ("dimension,d",     po::value<unsigned>(&dimension)->default_value(0),
-                        "optional dimensionality")
-    ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
-                        "query file")
-    ("cachePrefixGS",   po::value<string>(&CacheGSFilePrefix)->default_value(""),
-                        "a prefix of gold standard cache files")
-    ("maxCacheGSQty",   po::value<size_t>(&maxCacheGSQty)->default_value(1000),
-                       "a maximum number of gold standard entries to compute/cache")
-    ("logFile,l",       po::value<string>(&LogFile)->default_value(""),
-                        "log file")
-    ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(0),
-                        "if non-zero, use maxNumQuery query elements"
-                        "(required in the case of bootstrapping)")
-    ("testSetQty,b",    po::value<unsigned>(&TestSetQty)->default_value(0),
-                        "# of test sets obtained by bootstrapping;"
-                        " ignored if queryFile is specified")
-    ("knn,k",           po::value< string>(&knnArg),
-                        "comma-separated values of K for the k-NN search")
-    ("range,r",         po::value<string>(&RangeArg),
-                        "comma-separated radii for the range searches")
-    ("eps",             po::value<double>(&epsTmp)->default_value(0.0),
-                        "the parameter for the eps-approximate k-NN search.")
-    ("method,m",        po::value< vector<string> >(&methParams)->multitoken()->zero_tokens(),
-                        "list of method(s) with comma-separated parameters in the format:\n"
-                        "<method name>:<param1>,<param2>,...,<paramK>")
-    ("threadTestQty",   po::value<unsigned>(&ThreadTestQty)->default_value(1),
-                        "# of threads")
-    ("outFilePrefix,o", po::value<string>(&ResFilePrefix)->default_value(""),
-                        "output file prefix")
-    ("appendToResFile", po::value<bool>(&AppendToResFile)->default_value(false),
-                        "do not override information in results files, append new data")
-
+    (HELP_PARAM_OPT,          HELP_PARAM_MSG)
+    (SPACE_TYPE_PARAM_OPT,    po::value<string>(&spaceParamStr)->required(),                SPACE_TYPE_PARAM_MSG)
+    (DIST_TYPE_PARAM_OPT,     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG)
+    (DATA_FILE_PARAM_OPT,     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG)
+    (MAX_NUM_DATA_PARAM_OPT,  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG)
+    (QUERY_FILE_PARAM_OPT,    po::value<string>(&QueryFile)->default_value(QUERY_FILE_PARAM_DEFAULT),  QUERY_FILE_PARAM_MSG)
+    (LOAD_INDEX_PARAM_OPT,    po::value<string>(&LoadIndexLoc)->default_value(LOAD_INDEX_PARAM_DEFAULT),   LOAD_INDEX_PARAM_MSG)
+    (SAVE_INDEX_PARAM_OPT,    po::value<string>(&SaveIndexLoc)->default_value(SAVE_INDEX_PARAM_DEFAULT),   SAVE_INDEX_PARAM_MSG)
+    (CACHE_PREFIX_GS_PARAM_OPT,  po::value<string>(&CacheGSFilePrefix)->default_value(CACHE_PREFIX_GS_PARAM_DEFAULT),  CACHE_PREFIX_GS_PARAM_MSG)
+    (MAX_CACHE_GS_QTY_PARAM_OPT, po::value<float>(&maxCacheGSRelativeQty)->default_value(MAX_CACHE_GS_QTY_PARAM_DEFAULT),    MAX_CACHE_GS_QTY_PARAM_MSG)
+    (LOG_FILE_PARAM_OPT,      po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT),          LOG_FILE_PARAM_MSG)
+    (MAX_NUM_QUERY_PARAM_OPT, po::value<unsigned>(&MaxNumQuery)->default_value(MAX_NUM_QUERY_PARAM_DEFAULT), MAX_NUM_QUERY_PARAM_MSG)
+    (TEST_SET_QTY_PARAM_OPT,  po::value<unsigned>(&TestSetQty)->default_value(TEST_SET_QTY_PARAM_DEFAULT),   TEST_SET_QTY_PARAM_MSG)
+    (KNN_PARAM_OPT,           po::value< string>(&knnArg),                                  KNN_PARAM_MSG)
+    (RANGE_PARAM_OPT,         po::value<string>(&RangeArg),                                 RANGE_PARAM_MSG)
+    (EPS_PARAM_OPT,           po::value<double>(&epsTmp)->default_value(EPS_PARAM_DEFAULT), EPS_PARAM_MSG)
+    (QUERY_TIME_PARAMS_PARAM_OPT, po::value< vector<string> >(&vQueryTimeParamStr)->multitoken()->zero_tokens(), QUERY_TIME_PARAMS_PARAM_MSG)
+    (INDEX_TIME_PARAMS_PARAM_OPT, po::value<string>(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG)
+    (METHOD_PARAM_OPT,        po::value<string>(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG)
+    (THREAD_TEST_QTY_PARAM_OPT,po::value<unsigned>(&ThreadTestQty)->default_value(THREAD_TEST_QTY_PARAM_DEFAULT), THREAD_TEST_QTY_PARAM_MSG)
+    (OUT_FILE_PREFIX_PARAM_OPT, po::value<string>(&ResFilePrefix)->default_value(OUT_FILE_PREFIX_PARAM_DEFAULT), OUT_FILE_PREFIX_PARAM_MSG)
+    (APPEND_TO_RES_FILE_PARAM_OPT, po::bool_switch(&AppendToResFile), APPEND_TO_RES_FILE_PARAM_MSG)
+    (NO_PROGRESS_PARAM_OPT,   po::bool_switch(&bSuppressPrintProgress), NO_PROGRESS_PARAM_MSG)
     ;
 
   po::variables_map vm;
@@ -125,6 +117,8 @@ void ParseCommandLine(int argc, char*argv[],
     LOG(LIB_FATAL) << e.what();
   }
 
+  bPrintProgress = !bSuppressPrintProgress;
+
   eps = epsTmp;
 
   if (vm.count("help")  ) {
@@ -133,22 +127,33 @@ void ParseCommandLine(int argc, char*argv[],
   }
 
   ToLower(DistType);
-  ToLower(SpaceType);
+  ToLower(spaceParamStr);
+  ToLower(MethodName);
   
   try {
     {
-      vector<string> SpaceDesc;
-      string str = SpaceType;
-      ParseSpaceArg(str, SpaceType, SpaceDesc);
-      SpaceParams = shared_ptr<AnyParams>(new AnyParams(SpaceDesc));
+      vector<string>     desc;
+      ParseSpaceArg(spaceParamStr, SpaceType, desc);
+      SpaceParams = shared_ptr<AnyParams>(new AnyParams(desc));
     }
 
-    for(const auto s: methParams) {
-      string         MethName;
-      vector<string> MethodDesc;
-      ParseMethodArg(s, MethName, MethodDesc);
-      pars.push_back(shared_ptr<MethodWithParams>(new MethodWithParams(MethName, MethodDesc)));
+
+    {
+      vector<string>     desc;
+      ParseArg(indexTimeParamStr, desc);
+      IndexTimeParams = shared_ptr<AnyParams>(new AnyParams(desc));
     }
+
+    if (vQueryTimeParamStr.empty())
+      vQueryTimeParamStr.push_back("");
+
+    for(const auto s: vQueryTimeParamStr) {
+      vector<string>  desc;
+
+      ParseArg(s, desc);
+      QueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(desc)));
+    }
+
     if (vm.count("knn")) {
       if (!SplitStr(knnArg, knn, ',')) {
         Usage(argv[0], ProgOptDesc);
@@ -171,6 +176,9 @@ void ParseCommandLine(int argc, char*argv[],
     if (!MaxNumQuery && QueryFile.empty()) {
       LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
     }
+
+    CHECK_MSG(MaxNumData < MAX_DATASET_QTY, "The maximum number of points should not exceed" + ConvertToString(MAX_DATASET_QTY));
+    CHECK_MSG(MaxNumQuery < MAX_DATASET_QTY, "The maximum number of queries should not exceed" + ConvertToString(MAX_DATASET_QTY));
   } catch (const exception& e) {
     LOG(LIB_FATAL) << "Exception: " << e.what();
   }

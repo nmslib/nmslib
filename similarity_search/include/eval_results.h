@@ -43,16 +43,16 @@ using std::sort;
 template <class dist_t>
 class EvalResults {
 public:
-  EvalResults(const typename similarity::Space<dist_t>* space,
-                   const typename similarity::KNNQuery<dist_t>* query,
-                   const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
+  EvalResults(const typename similarity::Space<dist_t>& space,
+              const typename similarity::KNNQuery<dist_t>* query,
+              const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
     GetKNNData(query);
     ComputeMetrics(query->QueryObject()->label());
   }
 
-  EvalResults(const typename similarity::Space<dist_t>* space,
-                   const typename similarity::RangeQuery<dist_t>* query,
-                   const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
+  EvalResults(const typename similarity::Space<dist_t>& space,
+              const typename similarity::RangeQuery<dist_t>* query,
+              const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
     GetRangeData(query);
     ComputeMetrics(query->QueryObject()->label());
   }
@@ -77,6 +77,12 @@ public:
    *
    */
   double GetNumCloser()       const { return NumberCloser_;}
+
+  /*
+   * Recall of the closets (1-NN) entry
+   */
+  double GetRecallAt1()       const { return RecallAt1_;}
+
    /*
     * An average logarithm of a relative position error.
     * Just exponentiate to get a geometric mean of relative position errors.
@@ -175,6 +181,7 @@ private:
     ClassCorrect_      = kClassUnknown;
     Recall_            = EvalRecall<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
     NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    RecallAt1_         = NumberCloser_ > 0.1 ? 0.0 : 1;
     PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
     LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
 
@@ -201,6 +208,7 @@ private:
     }
   }
 
+  double                              RecallAt1_;
   double                              NumberCloser_;
   double                              LogRelPosError_;
   double                              Recall_;

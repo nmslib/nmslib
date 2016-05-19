@@ -21,6 +21,7 @@
 #include <map>
 #include <stdexcept>
 #include <sstream>
+#include <memory>
 
 #include <string.h>
 #include "global.h"
@@ -30,25 +31,50 @@
 
 namespace similarity {
 
+using std::string;
+using std::unique_ptr;
+
 template <typename dist_t>
 class VectorSpace : public Space<dist_t> {
  public:
+  explicit VectorSpace() {}
   virtual ~VectorSpace() {}
 
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config,
-                      const char* inputfile,
-                      const int MaxNumObjects) const;
-  virtual void WriteDataset(const ObjectVector& dataset,
-                            const char* outputfile) const;
+  /** Standard functions to read/write/create objects */ 
+  virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                                DataFileInputState* pInpState) const;
+    // Create a string representation of an object.
+    virtual string CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const;
+    // Open a file for reading, fetch a header (if there is any) and memorize an input state
+    virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
+    // Open a file for writing, write a header (if there is any) and memorize an output state
+    virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                const string& outputFile) const;
+    /*
+     * Read a string representation of the next object in a file as well
+     * as its label. Return false, on EOF.
+     */
+    virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const;
+  /** End of standard functions to read/write/create objects */ 
+
+  /*
+   * Used only for testing/debugging: compares objects approximately. Floating point numbers
+   * should be nearly equal. Integers and strings should coincide exactly.
+   */
+  virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const;
+
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const = 0;
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const = 0;
- protected:
-  virtual Space<dist_t>* HiddenClone() const = 0;
+
+  static void ReadVec(std::string line, LabelType& label, std::vector<dist_t>& v);
+
+protected:
+  DISABLE_COPY_AND_ASSIGN(VectorSpace);
+
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
-  void ReadVec(std::string line, LabelType& label, std::vector<dist_t>& v) const;
+
   void CreateVectFromObjSimpleStorage(const char *pFuncName,
                                  const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
@@ -68,14 +94,17 @@ template <typename dist_t>
 class VectorSpaceSimpleStorage : public VectorSpace<dist_t> {
  public:
   virtual ~VectorSpaceSimpleStorage() {}
+  explicit VectorSpaceSimpleStorage() {}
   virtual size_t GetElemQty(const Object* object) const {
     return object->datalength()/ sizeof(dist_t);
   }
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pDstVect,
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,
                                  size_t nElem) const {
-    return VectorSpace<dist_t>::
+    VectorSpace<dist_t>::
                 CreateVectFromObjSimpleStorage(__func__, obj, pDstVect, nElem);
   }
+private:
+  DISABLE_COPY_AND_ASSIGN(VectorSpaceSimpleStorage);
 };
 
 }  // namespace similarity

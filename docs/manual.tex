@@ -17,19 +17,19 @@
 \usepackage{url}
 \usepackage{float}
 \usepackage{upquote}
+\usepackage{placeins}
 
 \renewcommand{\arraystretch}{1.3}
 
 \newcommand{\todonoteinline}[1]{\todo[color=red!40,inline,caption={TODO}]{#1}}
 \newcommand{\todonote}[1]{\todo[color=red!40,caption={TODO}]{#1}}
 
-\newcommand{\nonmetrlib}{Non-Metric Space Library}
+% replocdir and replocfile should end on '/'
+\newcommand{\replocdir}{https://github.com/searchivarius/nmslib/tree/v1.5/}
+\newcommand{\replocfile}{https://github.com/searchivarius/nmslib/blob/v1.5/}
 
-\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/master/}
-\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/}
-
-%\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/develop}
-%\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/develop/}
+%\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/pserv}
+%\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/pserv/}
 
 \newcommand{\ttt}[1]{\texttt{#1}}
 \newcommand{\knn}{$k$-NN }
@@ -39,6 +39,8 @@
 \newcommand{\rev}{\mbox{\rm rev}}
 \newcommand{\DEL}[2]{\Delta_{#1}(#2)}
 
+\newcommand{\LibVersion}{1.5}
+
 \setcounter{secnumdepth}{3}
 
 \begin{document}
@@ -46,10 +48,10 @@
 \mainmatter  % start of an individual contribution
 
 % first the title is needed
-\title{\nonmetrlib{} Manual}
+\title{Non-Metric Space Library (NMSLIB) Manual}
 
 % a short form should be given in case it is too long for the running head
-\titlerunning{\nonmetrlib{} Manual}
+\titlerunning{NMSLIB Manual}
 
 % the name(s) of the author(s) follow(s) next
 %
@@ -89,7 +91,7 @@ Pittsburgh, PA, USA\\
 \maketitle
 
 {\begin{center}{\small \textbf{Maintainer}: Leonid Boytsov}\end{center}}
-{\begin{center}{Version 1.1}\end{center} 
+{\begin{center}{Version \LibVersion}\end{center} 
 {\begin{center}{{\today}}\end{center}}
 
 \begin{abstract}
@@ -113,17 +115,48 @@ new search methods and spaces.
 \end{abstract}
 
 \section{Introduction}
+
 \subsection{History, Objectives, and Principles}
-The Non-Metric Space Library is a collection of
-similarity search methods and a toolkit for their evaluation.
-Our software suit can also be used as a standalone search library on Linux and Windows. 
+Non-Metric Space Library (NMSLIB) is an \textbf{efficient} cross-platform similarity search library and a toolkit for evaluation of similarity search methods.  The goal of the project is to create an effective and \textbf{comprehensive} toolkit for searching in \textbf{generic non-metric} spaces.
+Being comprehensive is important, because no single method is likely to be sufficient in all cases.
+Because exact solutions are hardly efficient in high dimensions and/or non-metric spaces, the main focus is on \textbf{approximate} methods. 
+
+NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. 
+NMSLIB can be used directly in C++ and Python (via Python bindings, see \S~\ref{SectionPythonBind}). In addition, it is also possible to build a query server (see \S~\ref{SectionQueryServer}), which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
+
+Even though our methods are generic, they often outperform specialized methods for the Euclidean and/or angular distance
+ (i.e., for the cosine similarity).
+Tables \ref{FigGlove} and \ref{FigSIFT}
+contain results (as of May 2016) of NMSLIB compared to the best implementations participated in \href{https://github.com/erikbern/ann-benchmarks}{a public evaluation code-named \ttt{ann-benchmarks}}. Our main competitors are: 
+
+\begin{itemize}
+\item A popular library \href{https://github.com/spotify/annoy}{Annoy}, which uses a forest of random-projection KD-trees \cite{SilpaAnan2008OptimisedKF}.
+\item A new library \href{https://github.com/FALCONN-LIB/FALCONN}{FALCONN}, which is a highly-optimized implementation of the multiprobe LSH \cite{andoni2015practical}. It uses a novel type of random projections based on the fast Hadamard transform.
+\end{itemize}
+
+The benchmarks were run on a c4.2xlarge instance on EC2 (using a previously unseen subset of 5K queries). The benchmarks employ two data sets:
+\begin{itemize}
+\item \href{http://nlp.stanford.edu/projects/glove/}{GloVe}: 1.2M 100-dimensional word embeddings trained on Tweets;
+\item 1M of 128-dimensional \href{http://corpus-texmex.irisa.fr/}{SIFT features}.  
+\end{itemize}
+
+\begin{figure}[!htb]
+\centering
+\caption{\label{FigGlove}1.19M vectors from GloVe (100 dimensions, trained from tweets), cosine similarity.}
+\includegraphics[width=0.8\textwidth]{figures/glove.png}
+%\end{figure}
+%\begin{figure}[!htb]
+\centering
+\caption{\label{FigSIFT}1M SIFT features (128 dimensions), Euclidean distance.}
+\includegraphics[width=0.8\textwidth]{figures/sift.png}
+\end{figure}
+
+
 Most search methods were implemented by Bileg(saikhan) Naidan and Leo(nid) Boytsov.\footnote{Leo(nid) Boytsov is a maintainer.}
 Additional contributors are listed on the \href{https://github.com/searchivarius/NonMetricSpaceLib}{GitHub 
 page}.
 Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
 and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
-
-%We encourage potential users and contributors to use GitHub for bug reports.
 
 The code written by Bileg and Leo is distributed under the business-friendly \href{http://apache.org/licenses/LICENSE-2.0}{Apache License}. 
 However, some third-party contributions are licensed differently.
@@ -162,7 +195,7 @@ and instead one has to resort to approximate search procedures.
 This is why methods
 are evaluated in terms of efficiency-effectiveness trade-offs
 rather than merely in terms of their efficiency.
-We suspect that there is no ``one-size-fits-all'' search method.
+As mentioned previously, we believe that there is no ``one-size-fits-all'' search method.
 Therefore, it is important to provide a variety of methods
 each of which may work best for some specific classes of data.
 
@@ -170,10 +203,8 @@ Our commitment to efficiency affected several design decisions:
 \begin{itemize}
 \item The library is implemented in C++;
 \item We focus on in-memory indices 
-and, thus, do not require our methods to materialize a disk-based version of an index
-(this also reduces programming effort).
-However, one of our immediate goals is to support serialization of several best methods.
-%It is, nevertheless, possible to benchmark disk-based implementations as well (see \ref{SectionWorkflow}).
+and, thus, do not require all methods to materialize a disk-based version of an index
+(this reduces programming effort).
 
 \item 
 We provide efficient implementations of many distance functions,
@@ -240,9 +271,26 @@ it is also possible to compute an accuracy of a \knn based classification
 %In the future, we plan to add more complex spaces, in particular, string-based.
 
 \section{Getting Started}
+
+\subsection{What's new in version \LibVersion{} (major changes)} 
+\begin{itemize}
+\item We have adopted a new method: a hierarchical (navigable) small-world graph (HNSW),
+      contributed by Yury Malkov \cite{Malkov2016}, see \S~\ref{SectionHNSW}.
+\item We have improved performance of two core methods SW-graph (\S~\ref{SectionSWGraph}) and NAPP (\ref{SectionNAPP}).
+\item We have written basic tuning guidelines for SW-graph, HNSW, and NAPP \ref{SectionTuningGuide}.
+\item We have modified the workflow of our benchmarking utility \ttt{experiment}
+and improved handling of the gold standard data, see \S~\ref{SectionBenchEfficiency};
+\item We have updated the API so that methods can save and restore indices, see \S~\ref{SectionCreateMethod}.
+\item We have implemented a server, which can have clients in C++, Java, Python, and other languages supported by Apache Thrift, see \S~\ref{SectionQueryServer}. 
+\item We have implemented generic Python bindings that work for non-vector spaces, see \S~\ref{SectionPythonBind}.
+\item Last, we retired older methods \ttt{permutation}, \ttt{permutation\_incsort}, and \ttt{permutation\_vptree}. 
+The latter two methods are superseded by \ttt{proj\_incsort} and \ttt{proj\_vptree}, respectively.
+\end{itemize}
+
 \subsection{Prerequisites}
-The Non-Metric Space Library was developed and tested on 64-bit Linux.
+NMSLIB was developed and tested on 64-bit Linux.
 Yet, almost all the code can be built and run on 64-bit Windows (two notable exceptions are: LSHKIT and NN-Descent).
+It should also be possible to build the library on MAC OS.
 Building the code requires a modern C++ compiler that supports \mbox{C++11}.
 Currently, we support GNU C++ ($\ge4.7$), Intel compiler ($\ge14$), 
 Clang ($\ge3.4$), 
@@ -261,7 +309,7 @@ More specifically, for Linux we require:
 \item A \textbf{64-bit} distributive (Ubuntu \textbf{LTS} is recommended)
 \item GNU C++ ($\ge4.7$), Intel Compiler ($\ge14$), Clang ($\ge3.4$)
 \item CMake (GNU make is also required)
-\item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev})
+\item Boost (dev version $\ge48$, Ubuntu package \ttt{libboost1.48-all-dev} or newer \ttt{libboost1.54-all-dev})
 \item GNU scientific library (dev version, Ubuntu package \ttt{libgsl0-dev})
 \item Eigen (dev version, Ubuntu package \ttt{libeigen3-dev})
 \end{enumerate}
@@ -290,7 +338,7 @@ Yet, it is necessary to manually update project settings
 to enable more recent SIMD extensions (see \S\ref{SectionBuildWindows}).
 
 Scripts to generate and process data sets are written in Python.
-We also provide a sample Python script to plot performance graphs: \href{\replocfile sample_scripts/sample_scripts/genplot.py}{genplot.py} (see \S~\ref{SectionGenPlot}).
+We also provide a sample Python script to plot performance graphs: \href{\replocfile sample_scripts/sample_scripts/genplot_configurable.py}{genplot\_configurable.py} (see \S~\ref{SectionGenPlot}).
 In addition to Python, this plotting script requires Latex and PGF. 
 
 \subsection{Installing C++11 Compilers}
@@ -393,26 +441,67 @@ a benchmarking utility \ttt{experiment}, which carries out experiments,
 and testing utilities \ttt{bunit}, \ttt{test\_integer}, and \ttt{bench\_distfunc}.
 A more detailed description of the build process on Linux is given in \S~\ref{SectionBuildLinux}.
 
-Examples of using the benchmarking utility can be found in the directory \href{\replocdir sample_scripts}{sample\_scripts}. 
-Please, check the script \href{\replocfile sample_scripts/sample_run.sh}{sample\_run.sh}. 
-The latter runs a bunch of methods. It can also create an efficiency-effectiveness plot if needed.
+\subsection{Query Server (Linux-only)}\label{SectionQueryServer}
+
+The query server requires Apache Thrift. We used Apache Thrift 0.9.2, but, perhaps, newer versions will work as well.  
+To install Apache Thrift, you need to \href{https://thrift.apache.org/docs/BuildingFromSource}{build it from source}.
+This may require additional libraries. On Ubuntu they can be installed as follows:
+\begin{verbatim}
+sudo apt-get install libboost-dev libboost-test-dev \ 
+     libboost-program-options-dev libboost-system-dev \
+     libboost-filesystem-dev libevent-dev \
+     automake libtool flex bison pkg-config \
+     g++ libssl-dev libboost-thread-dev make
+\end{verbatim}
+To simplify the building process of Apache Thrift, one can disable unnecessary languages:
+\begin{verbatim}
+./configure  --without-erlang --without-nodejs --without-lua  \
+             --without-php --without-ruby --without-haskell \
+             --without-go --without-d 
+\end{verbatim}
+
+After Apache Thrift is installed, you need to build the library itself. Then, change the directory
+to \href{\replocfile query_server/cpp_client_server}{query\_server/cpp\_client\_server} and type \ttt{make} (the makefile 
+may need to be modified, if Apache Thrift is installed to a non-standard location).
+The query server has a similar set of parameters to the benchmarking utility \ttt{experiment}.  For example,
+you can start the server as follows:
+\begin{verbatim}
+./query_server -i ../../sample_data/final8_10K.txt -s l2 -p 10000 \
+       -m sw-graph -c NN=10,efConstruction=200,initIndexAttempts=1
+\end{verbatim}
+
+There are also three sample clients implemented in \href{\replocfile query_server/cpp_client_server}{C++}, \href{\replocfile query_server/python_client/}{Python},
+and \href{\replocfile query_server/java_client/}{Java}. 
+A client reads a string representation of the query object from the standard stream.
+The format is the same as the format of objects in a data file. 
+Here is an example of searching for ten vectors closest to the first data set vector (stored in row one) of a provided sample data file:
+\begin{verbatim}
+export DATA_FILE=../../sample_data/final8_10K.txt
+head -1 $DATA_FILE | ./query_client -p 10000 -a localhost  -k 10
+\end{verbatim}
+
+It is also possible to generate client classes for other languages supported by Thrift from 
+\href{\replocfile query_server/protocol.thrift}{the interface definition file}, e.g., for C\#. To this end, one should invoke the thrift compiler as follows:
+\begin{verbatim}
+thrift --gen csharp  protocol.thrift
+\end{verbatim}
+For instructions on using generated code, please consult the \href{https://thrift.apache.org/tutorial/}{Apache Thrift tutorial}.
+
+\subsection{Python bindings (Linux-only)}\label{SectionPythonBind}
+We provide basic Python bindings (for Linux and Python 2.7). 
+%\href{https://github.com/erikbern/ann-benchmarks}{One public evaluation of our library using these bindings was carried out by Erik Bernhardsson}. 
 
 
-
-\subsection{Python bindings (only on Linux)}
-In this release, we implemented basic Python bindings (for Linux and Python 2.7).
-Currently, only dense vector spaces are supported (see \S~\ref{SectionSpaces} for the description of spaces).
-\href{https://github.com/erikbern/ann-benchmarks}{One public evaluation of our library using these bindings was
-carried out by Erik Bernhardsson}. 
-
-
-To build the bindings, build the library first.
-Then, change the directory to \ttt{python\_bindings} and type:
+To build bindings for dense vector spaces (see \S~\ref{SectionSpaces} for the description of spaces), build the library first.
+Then, change the directory to \ttt{python\_vect\_bindings} and type:
 \begin{verbatim}
 make
 sudo make install
 \end{verbatim} 
-For an example of using our library in Python, see the script  \href{\replocfile python_bindings/test_nmslib.py}{test\_nmslib.py}.
+For an example of using our library in Python, see the script  \href{\replocfile python_vect_bindings/test_nmslib_vect.py}{test\_nmslib\_vect.py}.
+
+Generic vector spaces are supported as well (see \href{\replocfile python_gen_bindings}{python\_gen\_bindings}). However, they work only for spaces
+that properly define define serialization and de-serialization (see a brief description in \S~\ref{SectionCreateSpace}).
 
 \subsection{Quick Start on Windows}\label{QuickStartWindows}
 Building on Windows is straightforward.
@@ -438,7 +527,7 @@ can be built without installing Boost.
 A build process creates several important binaries, which include:
 
 \begin{itemize}
-\item The \nonmetrlib{} library (on Linux \ttt{libNonMetricSpaceLib.a}),
+\item NMSLIB library (on Linux \ttt{libNonMetricSpaceLib.a}),
 which can be used in external applications;
 \item The main benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows) 
 that carries out experiments and saves evaluation results;
@@ -518,6 +607,30 @@ it creates release makefiles. However, if you create debug
 makefiles and then type \ttt{cmake .}, 
 this will not lead to creation of release makefiles! 
 
+If the user cannot install necessary libraries to a standard location, 
+it is still possible to build a project.
+First, download Boost to some local directory. 
+Assume it is \ttt{\$HOME/boost\_download\_dir}.
+Then, set the corresponding environment variable, which will inform \ttt{cmake}
+about the location of the Boost files:
+\begin{verbatim}
+ export BOOST_ROOT=$HOME/boost_download_dir
+\end{verbatim}
+
+Second, the user needs to install the additional libraries. Assume that the
+lib-files are installed to \ttt{\$HOME/local\_lib}, while corresponding include
+files are installed to \ttt{\$HOME/local\_include}. Then, the user 
+needs to invoke \ttt{cmake} with the following arguments (after possibly deleting previously
+created cache and makefiles):
+\begin{verbatim}
+cmake . -DCMAKE_LIBRARY_PATH=$HOME/local_lib \
+        -DCMAKE_INCLUDE_PATH=$HOME/local_include \ 
+        -DBoost_NO_SYSTEM_PATHS=true
+\end{verbatim}
+Note the last option. Sometimes, an old version of Boost is installed. 
+Setting the variable \ttt{Boost\_NO\_SYSTEM\_PATHS} to true,
+tells \ttt{cmake} to ignore such an installation.
+
 To use the library in external applications, which do not belong to the library repository,
 one needs to install the library first.
 Assume that an installation location is the folder \ttt{NonMetrLibRelease} in the
@@ -534,17 +647,18 @@ contains two sample programs (see files
 \href{\replocfile sample_standalone_app/sample_standalone_app1.cc}{sample\_standalone\_app1.cc}
 and
 \href{\replocfile sample_standalone_app/sample_standalone_app2.cc}{sample\_standalone\_app2.cc})
-that use the \nonmetrlib{} installed in the folder \ttt{\$HOME/NonMetrLibRelease}.
+that use NMSLIB binaries installed in the folder \ttt{\$HOME/NonMetrLibRelease}.
 
 \subsubsection{Developing and Debugging on Linux}
 There are several debuggers that can be employed.
 Among them, some of the most popular are: \ttt{gdb} (a command line tool)
 and a \ttt{ddd} (a GUI wrapper for gdb).
-For users who prefer IDEs, one good option is Eclipse IDE for C/C++
-developers.
+For users who prefer IDEs, one good and free option is Eclipse IDE for C/C++ developers.
 It is not the same as Eclipse for Java and one needs 
 to \href{http://www.eclipse.org/ide/}{download 
 this version of Eclipse separately.}.
+An even better option is, perhaps, \href{https://www.jetbrains.com/clion/}{CLion}. However, it is not free.\footnote{There are
+a few categories of people, including students, who can ask for a free license, though.}
 
 \begin{figure}
 \centering
@@ -601,11 +715,17 @@ with the progress being shown in the status bar (right down corner).
 
 The user can also change the editor settings. 
 We would strongly encourage to disable the use of tabs.
-Again, go the menu \ttt{Window}, sub-menu \ttt{Preferences}
+Again, go the menu \ttt{Window}, sub-menu \ttt{Preferences},
 and select a category \ttt{General/Editors/Text Editors}.
 Then, check the box \ttt{Insert spaces for tabs}.
 In the same menu, you can also change the fonts (use the
 category \ttt{General/Appearance/Colors and Fonts}).
+
+In a newer Eclipse version, disabling tabs is done differently. 
+To this end, go to the menu \ttt{Window}, sub-menu \ttt{Preferences},
+and select a category \ttt{C++/Code Style/Formatter}.
+Then, you need to create a new profile and make this profile active. 
+In the profile, change the tab policy to \ttt{Spaces only}. 
 
 It is possible to build the project from Eclipse  (see the menu \ttt{Project}).
 However, one first needs to generate makefiles as described in \S~\ref{SectionBuildLinux}.
@@ -627,7 +747,7 @@ project folder \ttt{launches}.
 Right click on the item \ttt{sample.launch},
 choose the option \ttt{Debug as} (in the drop-down menu),
 and click on \ttt{sample} (in the pop-up menu).
-Note that you may need to edit command line arguments.
+Do not forget to edit command line arguments before you actually debug the application!
 
 After switching to a debug perspective,
 the Eclipse may stop the debugger in 
@@ -707,7 +827,7 @@ The core library, the semi unit test binary as well as examples of the standalon
 can be built without installing Boost. 
 However, Boost libraries are required for the binaries \ttt{experiment.exe}, \ttt{tune\_vptree.exe}, and \ttt{test\_integr.exe}.
 
-We would re-iterate that one needs 64-bit Boost binaries compiled with the same version of the Visual Studio as the \nonmetrlib{} binaries.  
+We would re-iterate that one needs 64-bit Boost binaries compiled with the same version of the Visual Studio as the NMSLIB binaries.  
 If you \href{http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-64.exe/download}{download the installer for Boost 59} and install it to a default location, then you do not have to change project files.
 Should you install Boost into a different folder, 
 the location of Boost binaries and header file need to be specified in the 
@@ -727,7 +847,7 @@ Both utilities accept the single optional argument: the name of the log file.
 If the log file is not specified, a lot of informational messages are printed to the screen.
 
 The \ttt{bunit} verifies some basic functitionality akin to unit testing.
-In particular, it checks that an optimized version of, e.g., the Eucledian, distance
+In particular, it checks that an optimized version of the, e.g., Eucledian, distance
 returns results that are very similar to the results returned by unoptimized and simpler version.
 The utility \ttt{bunit} is expected to always run without errors.
 
@@ -735,7 +855,7 @@ The utility \ttt{test\_integr} runs complete implementations of many methods
 and checks if several effectiveness and efficiency characteristics
 meet the expectations.
 The expectations are encoded as an array of instances of the class \ttt{MethodTestCase}
-(see \href{https://github.com/searchivarius/NonMetricSpaceLib/blob/master/similarity_search/test/test_integr.cc#L65}{the code here}).
+(see \href{\replocdir similarity_search/test/test_integr.cc#L65}{the code here}).
 For example, we expect that the recall (see \S~\ref{SectionEffect})
 fall in a certain pre-recorded range.
 Because almost all our methods are randomized, there is a great deal of variance
@@ -751,11 +871,13 @@ For high-dimensional data sets, the outcomes are much more stable despite the ra
 of most implementations.
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
 There are no principal differences in benchmarking on Linux and Windows.
-There is a \ttt{single} benchmarking utility 
+There is a \emph{single} benchmarking utility 
 \ttt{experiment} (\ttt{experiment.exe} on Windows) that includes implementation of all methods.
 It has multiple options, which specify, among others, 
-a space, a data set, a type of search, and a list of methods to test (with parameters).
+a space, a data set, a type of search, a method to test, and method parameters.
 These options and their use cases are described in the following subsections.
+Note that unlike older versions it is not possible to test multiple methods in a single run.
+However, it is possible to test the single method with different values of query-time parameters.
 
 \subsubsection{Space and distance value type}
 
@@ -779,36 +901,29 @@ A detailed list of possible spaces and respective
 distance functions is given in Table~\ref{TableSpaces} in \S~\ref{SectionSpaces}.
 
 For real-valued distance functions, one can use either single- or double-precision
-type. Single-precision is a recommended default.\footnote{It is not clear yet,
-if having double-precision distance functions is essential. Yet, we decided
-to keep them. Thanks to C++ templates, it requires very little additional effort.}
+type. Single-precision is a recommended default.
 One example of integer-valued distance function the Levenshtein distance.
 
 \subsubsection{Input Data/Test Set}
-There are three options that define the data to be indexed:
+There are two options that define the data to be indexed:
 \begin{verbatim}
-  -i [ --dataFile ] arg        input data file
-  --maxNumData arg (=0)        if non-zero, only the first 
-                               maxNumData elements are used
-  -d [ --dimension ] arg (=0)  optional dimensionality
+  -i [ --dataFile ] arg         input data file
+  -D [ --maxNumData ] arg (=0)  if non-zero, only the first 
+                                maxNumData elements are used
 \end{verbatim}
 The input file can be indexed either completely, or partially.
 In the latter case, the user can create the index using only
 the first \ttt{--maxNumData} elements.
-In the case of vector-space data, the dimensionality is determined
-by the number of columns in the data file.
-The user may choose to restrict the dimensionality and use only the first 
-\ttt{--dimension} columns.
 
-For testing, the user can use a separate test set.
+For testing, the user can use a separate query set.
 It is, again, possible to limit the number of queries:
 \begin{verbatim}
-  -q [ --queryFile ] arg       query file
-  --maxNumQuery arg (=1000)    if non-zero, use maxNumQuery query 
-                               elements(required in the case 
-                               of bootstrapping)
+  -q [ --queryFile ] arg        query file
+  -Q [ --maxNumQuery ] arg (=0) if non-zero, use maxNumQuery query 
+                                elements(required in the case 
+                                of bootstrapping)
 \end{verbatim}
-If a separate test set is not available, it can be simulated by bootstrapping.
+If a separate query set is not available, it can be simulated by bootstrapping.
 To this, end the \ttt{--maxNumData} elements of the original data set
 are randomly divided into testing and indexable sets.
 The number of queries in this case is defined by the option \ttt{--maxNumQuery}.
@@ -837,18 +952,56 @@ For example, by specifying the options
 the user requests to run queries of five different types: $1$-NN, $10$-NN,
 as well three range queries with radii 0.01, 0.1, and 1.
 
-\subsubsection{Methods}
-The following is an option to specify search methods:
+\subsubsection{Method Specification}
+Unlike older versions it is possible to test only a single method at a time.
+To specify a method's name, use the following option:
 \begin{verbatim}
-  -m [ --method ] arg      list of method(s) with parameters
+  -m [ --method ] arg           method/index name
 \end{verbatim}
-Methods, similar to spaces, accept parameters (parameters may not contain whitespaces). 
-In this case,
-the name of the method is followed by a colon and a comma-separated list (no-spaces)
-of parameters in the format:
+A method can have a single set of index-time parameters, which is specified
+via:
+\begin{verbatim}
+-c [ --createIndex ] arg        index-time method(s) parameters
+\end{verbatim}
+In addition to the set of index-time parameters,
+the method can have multiple sets of query-time parameters, which are specified
+using the following (possibly repeating) option:
+\begin{verbatim}
+-t [ --queryTimeParams ] arg    query-time method(s) parameters
+\end{verbatim}
+For each set of query-time parameters, i.e., for each occurrence of the option \ttt{--queryTimeParams}, 
+the benchmarking utility \ttt{experiment},
+carries out an evaluation using the specified set of queries and a query type (e.g., a 10-NN search with
+queries from a specified file). 
+If the user does not specify any query-time parameters, there is only one evaluation to be carried out.
+This evaluation uses default query-time parameters.
+In general, we ensure that \emph{whenever a query-time parameter is missed, the default value is used}.
+
+Similar to parameters of the spaces, 
+a set of method's parameters is a comma-separated list (no-spaces)
+of parameter-value pairs in the format:
 \ttt{<parameter name>=<parameter value>}.
 For a detailed list of methods and their parameters, please, refer to \S~\ref{SectionMethods}.
 
+Note that a few methods can save/restore (meta) indices. To save and load indices
+one should use the following options:
+\begin{verbatim}
+  -L [ --loadIndex ] arg        a location to load the index from 
+  -S [ --saveIndex ] arg        a location to save the index to
+\end{verbatim}
+When the user defines the location of the index using the option \ttt{--loadIndex}, 
+the index-time parameters may be ignored. 
+Specifically, if the specified index does not exist, the index is created from scratch.
+Otherwise, the index is loaded from disk.
+Also note that the benchmarking utility \emph{does not override an already existing index} (when the option \ttt{--saveIndex} is present).
+
+If the tests are run the bootstrapping mode, i.e., when queries are randomly sampled (without replacement) from the
+data set, several indices may need to be created. Specifically, for each split we create a separate index file.
+The identifier of the split is indicated using a special suffix.
+Also note that we need to memorize which data points in the split were used as queries. 
+This information is saved in a gold standard cache file (see \S~\ref{SectionEfficiency}).
+Thus, saving and loading of indices in the bootstrapping mode is possible only if 
+gold standard caching is used.
 
 \subsubsection{Saving and Processing Benchmark Results}
 The benchmarking utility may produce output of three types:
@@ -860,14 +1013,15 @@ The benchmarking utility may produce output of three types:
 
 To save benchmarking results to a file, on needs to specify a parameter:
 \begin{verbatim}
-  -o [ --outFilePrefix ] arg   output file prefix
+  -o [ --outFilePrefix ] arg  output file prefix
 \end{verbatim}
 As noted above, we create two files: a human-readable report (suffix \ttt{.rep}) and 
 a tab-separated data file (suffix \ttt{.data}).
-By default, the benchmarking utility creates files from scratch. The
-following option can be used to make it work in the append mode:
+By default, the benchmarking utility creates files from scratch:
+If a previously created report exists, it is erased. 
+The following option can be used to append results to the previously created report:
 \begin{verbatim}
-  --appendToResFile arg (=0)   append mode flag
+  -a [ --appendToResFile ]    do not override information in results
 \end{verbatim}
 For information on processing and interpreting results see \S~\ref{SectionMeasurePerf}.
 A description of the plotting utility is given in \S~\ref{SectionGenPlot}.
@@ -880,22 +1034,36 @@ However, they can also be redirected to a log-file:
 
 \subsubsection{Efficiency of Testing}\label{SectionBenchEfficiency}
 Except for  measuring methods' performance, 
-three expensive operations are computing ground truth answers (also
-known as \emph{gold standard} data),
-loading the data set, and indexing. There are two tricks to reduce their costs:
+the following are the most expensive operations: 
 \begin{itemize}
-\item Caching of ground truth answers;
-\item Asking the benchmarking utility to test several methods
-or the same method with several different sets of query-time parameters; 
+\item computing ground truth answers (also
+known as \emph{gold standard} data);
+\item loading the data set; 
+\item indexing. 
+\end{itemize}
+To make testing faster, the following methods can be used: 
+\begin{itemize}
+\item Caching of gold standard data;
+\item Creating gold standard data using multiple threads; 
+\item Reusing previously created indices (when loading and saving is supported by a method);
+\item Carrying out multiple tests using different sets of query-time parameters. 
 \end{itemize}
 
 By default, we recompute gold standard data every time we run benchmarks, which may take long time.
 However, it is possible to save gold standard data and re-use it later
 by specifying an additional argument:
 \begin{verbatim}
---cachePrefixGS  a prefix of gold standard cache files
+-g [ --cachePrefixGS ] arg  a prefix of gold standard cache files
 \end{verbatim}
-Ground truth data is stored in two files. One is a textual meta file
+The benchmarks can be run in a multi-threaded mode by specifying a parameter:
+\begin{verbatim}
+--threadTestQty arg (=1)    # of threads during querying
+\end{verbatim}
+In this case, the gold standard data is also created in a multi-threaded mode (which can also be much faster).
+Note that NMSLIB directly supports only an inter-query parallelism, i.e., multiple queries are executed in parallel,
+rather than the intra-query parallelism, where a single query can be processed by multiple CPU cores.
+
+Gold standard data is stored in two files. One is a textual meta file
 that memorizes important input parameters such as the name of the data and/or query file,
 the number of test queries, etc. 
 For each query, the binary cache files contains ids of answers (as well as distances and 
@@ -905,60 +1073,75 @@ we memorize which objects belong to each query set.
 
 When the gold standard data is reused later,
 the benchmarking code verifies if input parameters match the content of the cache file. 
-Thus, we can prevent an accidental use of ground truth data created for one data set
+Thus, we can prevent an accidental use of gold standard data created for one data set
 while testing with a different data set.
-Note that if you terminate the benchmarking utility while it is writing cache files,
-the latter will become corrupt and unusable. In this case, you would need to remove 
-the corrupt files manually.
 
-By default, we store at most 1000 answer entries per query. 
-This is done to reduce the size of the cache files.
-This is sufficient to precisely compute the recall of a \knn search if $k \le 1000$.
-In addition, if $k$ is small, a rank approximation metric can be computed very accurately as well (see \S~\ref{SectionEffect}
-for a description of rank approximation metrics).
-However, 1000 entries may be too small for a range search, which may potentially return very large answer sets.\footnote{In the future, we will, perhaps, memorize at least every record returned by the search.} 
-To store a larger ground truth set,
-one can use the following parameter:
+Another sanity check involves verifying that data points obtained via an approximate
+search are not closer to the query than data points obtained by an exact search.
+This check has turned out to be quite useful. 
+It has helped detecting a problem in at least the following two cases:
+\begin{itemize}
+\item The user creates a gold standard cache. Then, the user modifies a distance function and runs the tests again;
+\item Due to a bug, the search method reports distances to the query that are smaller than
+the actual distances (computed using a distance function). This may occur, e.g., due to
+a memory corruption.
+\end{itemize}
+
+When the benchmarking utility detects a situation when an approximate method
+returns points closer than points returned by an exact method, the testing procedure is terminated
+and the user sees a diagnostic message (see Table~\ref{TableFailGSCheck} for an example). 
+
+\begin{table}
+\scriptsize
 \begin{verbatim}
--maxCacheGSQty arg (=1000)  a maximum number of gold standard 
-                            entries to compute/cache
+... [INFO] >>>> Computing effectiveness metrics for sw-graph
+... [INFO] Ex: -2.097 id = 140154 -> Apr: -2.111 id = 140154 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.974 id = 113850 -> Apr: -2.005 id = 113850 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.883 id = 102001 -> Apr: -1.898 id = 102001 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.6667 id = 58445 -> Apr: -1.6782 id = 58445 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.6547 id = 76888 -> Apr: -1.6688 id = 76888 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.5805 id = 47669 -> Apr: -1.5947 id = 47669 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.5201 id = 65783 -> Apr: -1.4998 id = 14954 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.4688 id = 14954 -> Apr: -1.3946 id = 25564 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.454 id = 90204 -> Apr: -1.3785 id = 120613 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.3804 id = 25564 -> Apr: -1.3190 id = 22051 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.367 id = 120613 -> Apr: -1.205 id = 101722 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.318 id = 71704 -> Apr: -1.1661 id = 136738 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.3103 id = 22051 -> Apr: -1.1039 id = 52950 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.191 id = 101722 -> Apr: -1.0926 id = 16190 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.157 id = 136738 -> Apr: -1.0348 id = 13878 1 - ratio: -0.0202 diff: -0.0221
+... [FATAL] bug: the approximate query should not return objects that are closer to the query 
+                 than object returned by (exact) sequential searching! 
+                 Approx: -1.09269 id = 16190 Exact: -1.09247 id = 52950
 \end{verbatim}
+\caption{\label{TableFailGSCheck} A diagnostic message indicating that
+there is some mismatch in the current experimental setup and the setup used to create
+the gold standard cache file.}
+\end{table}
 
-Note that it is possible to benchmark several methods
-using a single invocation of the binary \ttt{experiment}. 
-To do this one simply needs to provide several arguments \ttt{--method} with different method
-names and/or parameters.
-While this saves some time on (not) re-loading the data set,
-this trick is most useful when caching of ground truth data is not used.\footnote{Because
-we compute ground truth data only once, rather than for each method separately.}
-The disadvantage, of course, is that the test binary \ttt{experiment} will use
-more memory (as it has to keep several indices), which limits the size of the data set that can be tested. 
-
-Additional time savings can be achieved by testing copies of the same method
-that differ only in one or more \emph{query time} parameter.
-In this case, we do not need to recreate the index before each new test,
-but rather just change query time parameters.
-
-There are couple of gotchas here. 
-First, all method descriptions (parameter \ttt{--method}) that correspond
-to the same method should be adjacent in the command line. 
-Second, one needs to explicitly specify all default values.
-Currently, (though this needs to be fixed in the future)
-the main benchmarking utility knows nothing about the default parameter
-values and cannot, therefore, set them. If a default parameter is omitted,
-the system will not change its value.
-
-In particular, for the list of clusters method \S~\ref{SectionListClust},
-specifying the default value (2147483647) for the parameter \ttt{maxLeavesToVisit} is
- especially important as the method uses a different (a special exact search
-algorithm) when \ttt{maxLeavesToVisit} is equal to the default value.
+To compute recall, it is enough to memorize only query answers.
+For example, in the case of a 10-NN search, it is enough to memorize only 10 data points closest 
+to the query as well as respective distances (to the query).
+However, this is not sufficient for computation of  a rank approximation metric (see \S~\ref{SectionEffect}).
+To control the accuracy of computation, we permit the user to change the number of entries memorized.
+This number is defined by the parameter:
+\begin{verbatim}
+--maxCacheGSRelativeQty arg (=10)   a maximum number of gold 
+                                    standard entries
+\end{verbatim}
+Note that this parameter is a coefficient: the actual number of entries is defined relative to
+the result set size. For example, if a range search returns 30 entries and the value of 
+\ttt{--maxCacheGSRelativeQty} is 10, then $30 \times 10=300$ entries are saved in the gold standard
+cache file.
 
 \subsection{Measuring Performance and Interpreting Results}\label{SectionMeasurePerf}
 \subsubsection{Efficiency.} We measure several efficiency metrics: query runtime, the number of distance computations,
 the amount of memory used by the index \emph{and} the data, and the time to create the index.
 We also measure the improvement in runtime (improvement in efficiency) 
-with respect to a single-thread sequential search (i.e., brute force) approach
+with respect to a sequential search (i.e., brute-force) approach
 as well as an improvement in the number of distance computations. 
+If the user runs benchmarks in a multi-threaded mode (by specifying the option \ttt{--threadTestQty}),
+we compare against the multi-threaded version of the brute-force search as well.
 
 A good method should
 carry out fewer distance computations and be faster than the brute-force search,
@@ -971,8 +1154,8 @@ in the projected space (as
 in the case of projection-based methods, see \S~\ref{SectionProjMethod}).
 
 Note that the improvement in efficiency is adjusted for the number of threads.
-Therefore, it should not increase as more threads are added: in contrast,
-it should decrease as there is more competition for computing resources (e.g., memory)
+Therefore, it does not increase as more threads are added: in contrast,
+it typically decreases as there is more competition for computing resources (e.g., memory)
 in a multi-threaded mode.
 
 The amount of memory consumed by a search method is measured indirectly: 
@@ -1096,43 +1279,81 @@ Note for all metrics, except relative position error, an average is computed usi
 For the relative error, however, we use the geometric mean  \cite{king:1986}.
 
 
-\subsection{Plotting results}\label{SectionGenPlot}
-We provide the Python script to generate performance graphs 
+\subsection{Plotting results (Linux-Only)}\label{SectionGenPlot}
+We provide the Python script to generate nice performance graphs 
 from tab-separated data file produced by the 
 benchmarking utility \ttt{experiment}. 
-The plotting script is \href{\replocfile sample_scripts/genplot.py}{genplot.py}.
+The plotting script is \href{\replocfile scripts/genplot_configurable.py}{genplot\_configurable.py}.
 In addition to Python, it requires Latex and PGF. 
 This script is supposed to run only on Linux.
+For a working example of using script,
+please, see the another script: \href{\replocfile scripts/test_run.sh}{test\_run.sh}.
+This script runs several experiments, saves data, and generates a plot (if this is asked by the user).
 
-Consider the following example of using \ttt{genplot.py}:
+Consider the following example of using \ttt{genplot\_configurable.py}:
 \begin{verbatim}
-../sample_scripts/genplot.py  \
+../scripts/genplot_configurable.py  \
+           -n MethodName \
            -i result_K\=1.dat -o plot_1nn \
            -x 1~norm~Recall \
            -y 1~log~ImprEfficiency \
+           -a  axis_desc.txt \
+           -m  meth_desc.txt \
            -l "2~(0.96,-.2)" \
-           -t "ImprEfficiency  vs Recall"
+           -t "ImprEfficiency  vs Recall" \
+           --xmin 0.01 --xmax 1.2 --ymin -2 --ymax 10
 \end{verbatim}
-
-It aims to process the tab-separated data file \ttt{result\_K=1.dat},
-which was generated for 1-NN search, and save the plot to the file \ttt{plot\_1nn.pdf}.
+Here the goal is to process the tab-separated data file \ttt{result\_K=1.dat},
+which was generated by 1-NN search, and save the plot to an output file \ttt{plot\_1nn.pdf}.
 Note that one should not explicitly specify the extension of the output file (as
-\ttt{.pdf} is always implied).
+\ttt{.pdf} is always implied). Also note that, in addition to the PDF-file,
+the script generates the source Latex file. 
+The source Latex file can be post-edited and/or embedded directly into a Latex source 
+(see \href{http://ftp.fau.de/ctan/graphics/pgf/base/doc/pgfmanual.pdf}{PGF documentation for details}).
+This can be useful for scientific publishing.
 
-Parameters \ttt{-x} and \ttt{-y} define  X and Y axis.
-Parameter values have the same format.
-Each parameter has three tilda-separated values. The first should
-be 0 or 1. Specify 0, only if you do not want to print the axis label.
+
+The parameter \ttt{-n} specifies the name of the field that stores method/indices mnemonic names.
+In the case of the benchmarking utility \ttt{experiment} this field is named \ttt{MethodName}.
+Parameters \ttt{-x} and \ttt{-y} define  X and Y axis, i.e.,
+which metrics are associated with each axis and what is the display format.
+Arguments  \ttt{-x} and \ttt{-y} have the same format.
+Specifically, these option arguments include three tilda-separated values each. 
+The first value should be zero or one.
+Specify zero not to print the axis label.
 The second value is either \ttt{norm} or \ttt{log}, 
 which stands for a normal or logarithmic scale, respectively.
+
 The last value defines a metric that we want to visualize:
-The metric should be one of the names that appear in the header row of the output data file.
-The title of the plot is defind by \ttt{-t} (specify \ttt{-t ""} if you do not want
-to print the title).
+The metric should be a field name, i.e.,
+it is one of the names that appear in the header row of the output data file.
+However, a display value of the metric can be different.
+To specify metric display values, one has to provide an axis description file (option \ttt{-a}). 
+
+The axis description file has two tab-separated columns.
+The first column is a name of the metric used in the data file (in our example it is \ttt{result\_K=1.dat}).
+The second column is a display name. Here is an example of the axis description file (tabs are not shown):
+\begin{verbatim}
+Recall        recall 
+QueryTime     time (ms)
+\end{verbatim}
+
+Similarly, the user has to specify a method description file (option \ttt{-m}).
+It is a three-column tab-separated file. The first column is the name of the method
+used in the data file \ttt{result\_K=1.data} (\emph{exactly} as it is specified there).
+The second column is the method display name (it can have Latex-parsable expressions). 
+The third column, defines the style of the plot (e.g., line thickness and a line mark). 
+This should be a comma-separated lists of PGF-specifiers 
+(see \href{http://ftp.fau.de/ctan/graphics/pgf/base/doc/pgfmanual.pdf}{PGF documentation for details}).
+Here is an example of the method description file (tabs again are not shown):
+\begin{verbatim}
+"bbtree"	bbtree	mark=triangle*
+"vptree"	vptree	mark=star,blue,/tikz/densely dashed,mark size=1.5pt
+\end{verbatim}
 
 The parameter \ttt{-l} defines a plot legend.
-It is either a string \ttt{none} (to hide the legend) 
-or  it contains two tilda-separated values.
+To hide the legend, use the string \ttt{none}.
+Otheriwse, two tilda-separated values should be specified.
 The first value gives the number of columns in the legend, while the second value
 defines a position of the legend. The position can be either 
 absolute or relative.
@@ -1141,15 +1362,22 @@ A relative position is defined by one of the following descriptors
 (quotes are for clarity only): ``north west'', ``north east'', ``south west'', ``south east''.
 If the relative position is specified, the legend is printed inside the main
 plotting area, e.g.:
+\newpage
 \begin{verbatim}
-../sample_scripts/genplot.py  \
+../scripts/genplot_configurable.py  \
+           -n MethodName \
            -i result_K\=1.dat -o plot_1nn \
            -x 1~norm~Recall \
            -y 1~log~ImprEfficiency \
+           -a  axis_desc.txt \
+           -m  meth_desc.txt \
            -l "2~north west" \
            -t "ImprEfficiency  vs Recall"
 \end{verbatim}
 
+The title of the plot is defind by \ttt{-t} (specify \ttt{-t ""} if you do not want
+to print the title). Finally, note that the user can specify the bounding rectangle for the plot
+via the options \ttt{--xmin}, \ttt{--xmax}, \ttt{--ymin}, and \ttt{--ymax}.
 
 \section{Spaces}\label{SectionSpaces}
 Currently we provide implementations mostly for vector spaces.
@@ -1545,9 +1773,10 @@ categories:
 In the following subsections (\S~\ref{SectionSpacePartMeth}-\ref{SectionMiscMeth}),
 we describe implemented methods, explain their parameters,
 and provide examples of their use via the benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows).
-Note that a few parameters are query time parameters, which means that they 
+Note that a few parameters are query-time parameters, which means that they 
 can be changed without rebuilding the index see \S~\ref{SectionBenchEfficiency}.
 For the description of the utility \ttt{experiment} see \S~\ref{SectionRunBenchmark}.
+For several methods we provide \emph{basic tuning guidelines}, see \S~\ref{SectionTuningGuide}.
 
 \subsection{Space Partitioning Methods} \label{SectionSpacePartMeth} 
 Parameters of space partitioning methods are summarized in Table~\ref{TableSpaceMethPart}.
@@ -1590,7 +1819,7 @@ In the case of clustering methods, we first visit partitions that are closer to 
 In the case of hierarchical space partitioning methods such as the VP-tree,
 we greedily explore partitions containing the query.
 
-In the \nonmetrlib, the early termination condition is defined in terms of 
+In NMSLIB, the early termination condition is defined in terms of 
 the maximum number of buckets (parameter \ttt{maxLeavesToVisit})
 to visit before terminating the search procedure.
 By default, the parameter \ttt{maxLeavesToVisit} is set to a large number (2147483647), 
@@ -1706,7 +1935,7 @@ Alternatively, the user can manually specify values of  parameters:
 \ttt{alphaLeft}, \ttt{alphaRight}, \ttt{expLeft}, and \ttt{expRight} (by default exponents are one).
 
 The following is an example of testing the VP-tree with the benchmarking utility \ttt{experiment}
-without the auto-tunning:
+without the auto-tunning (note the separation into index- and query-time parameters):
 {
 \footnotesize
 \begin{verbatim}
@@ -1714,10 +1943,12 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method vptree:alphaLeft=2.0,alphaRight=2.0,\
-                  expLeft=1,expRight=1,\
-                  maxLeavesToVisit=500,\
-                  bucketSize=10,chunkBucket=1
+  --method vptree \
+    --createIndex  bucketSize=10,chunkBucket=1 \
+    --queryTimeParams alphaLeft=2.0,alphaRight=2.0,\
+                      expLeft=1,expRight=1,\
+                      maxLeavesToVisit=500
+                 
 \end{verbatim}
 }
 
@@ -1730,7 +1961,8 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method vptree:tuneK=1,desiredRecall=0.9,
+  --method vptree \
+    --createIndex tuneK=1,desiredRecall=0.9,\
                   bucketSize=10,chunkBucket=1
 \end{verbatim}
 }
@@ -1738,7 +1970,7 @@ release/experiment \
 \subsubsection{Multi-Vantage Point Tree}
 It is possible to have more than one pivot per tree level.
 In the binary version of the multi-vantage point tree (MVP-tree),
-which is implemented in \nonmetrlib,
+which is implemented in NMSLIB,
 there are two pivots.
 Thus, each partition divides the space into four parts,
 which are similar to partitions created by two levels of the VP-tree.
@@ -1762,8 +1994,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method mvptree:maxPathLen=4,maxLeavesToVisit=500,\
-                   bucketSize=10,chunkBucket=1
+  --method mvptree \
+    --createIndex maxPathLen=4,bucketSize=10,chunkBucket=1 \
+    --queryTimeParams maxLeavesToVisit=500
 \end{verbatim}
 }
 
@@ -1803,7 +2036,7 @@ to data objects in the leaves \\
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{List of clusters} (\ttt{list\_clusters})  \cite{chavez2005compact}}   \\
 \cmidrule(l){1-2} 
-                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit}. Note \ttt{maxLeavesToVisit} is a \textbf{query time} parameter. \\
+                   & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit}. Note \ttt{maxLeavesToVisit} is a \textbf{query-time} parameter. \\
 \ttt{useBucketSize} & If equal to one, we use the parameter \ttt{bucketSize} to determine the number of points in the cluster. Otherwise, the size of the cluster is defined by the parameter \ttt{radius}. \\
 \ttt{radius}        & The maximum radius of a cluster (used when \ttt{useBucketSize} is set to zero). \\
 \ttt{strategy}      & A cluster selection strategy. It is one of the following: \ttt{random}, \ttt{closestPrevCenter}, \ttt{farthestPrevCenter}, \ttt{minSumDistPrevCenters}, \ttt{maxSumDistPrevCenters}. \\ 
@@ -1834,8 +2067,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method ghtree:maxLeavesToVisit=10,\
-                   bucketSize=10,chunkBucket=1
+  --method ghtree \
+    --createIndex bucketSize=10,chunkBucket=1 \
+    --queryTimeParams maxLeavesToVisit=10
 \end{verbatim}
 }
 
@@ -1884,8 +2118,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method list_clusters:useBucketSize=1,bucketSize=100,\
-                           maxLeavesToVisit=5,strategy=random
+  --method list_clusters \
+    --createIndex useBucketSize=1,bucketSize=100,strategy=random \
+    --queryTimeParams maxLeavesToVisit=5
 \end{verbatim}
 }
 An example of testing the list of clusters using the \ttt{radius} as a parameter to define
@@ -1897,8 +2132,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method list_clusters:useBucketSize=0,radius=0.2,\
-                           maxLeavesToVisit=5,strategy=random
+  --method list_clusters \
+    --createIndex useBucketSize=0,radius=0.2,strategy=random \
+    --queryTimeParams maxLeavesToVisit=5
 \end{verbatim}
 }
 
@@ -1936,7 +2172,6 @@ release/experiment \
   --method satree 
 \end{verbatim}
 }
- 
 
 \subsubsection{bbtree}
 A Bregman ball tree (bbtree) is an exact search method for Bregman divergences \cite{Cayton2008}.
@@ -1970,12 +2205,14 @@ release/experiment \
   --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method bbtree:maxLeavesToVisit=20,bucketSize=10 
+  --method bbtree \
+    --createIndex bucketSize=10  \
+    --queryTimeParams maxLeavesToVisit=20 
 \end{verbatim}
 }
 
 \subsection{Locality-sensitive Hashing Methods} \label{SectionLSH}
-Locality Sensitive Hashing (LSH) \cite{indyk1998approximate} is a class of methods employing hash functions that tend to have the same hash values for close points and different hash values for distant points. It is a probabilistic method in which the probability of having the same hash value is a monotonically decreasing function of the distance between two points (that we compare). A hash function that possesses this property is called locality sensitive. 
+Locality Sensitive Hashing (LSH) \cite{indyk1998approximate,Kushilevitz_et_al:1998} is a class of methods employing hash functions that tend to have the same hash values for close points and different hash values for distant points. It is a probabilistic method in which the probability of having the same hash value is a monotonically decreasing function of the distance between two points (that we compare). A hash function that possesses this property is called \emph{locality sensitive}. 
 %The first LSH method was proposed by Indyk and Motwani in \cite{indyk1998approximate}. 
 
 Our library embeds the LSHKIT which provides locality sensitive hash functions in $L_1$ and $L_2$.
@@ -2003,6 +2240,8 @@ which are concatenated to produce an integer hash value.  \\
                    & Common parameters: \ttt{W}, \ttt{M}, \ttt{H}, and \ttt{L} \\
 \ttt{T}            & a number of probes \\
 \ttt{desiredRecall}& a desired recall \\
+\ttt{numSamplePairs}& a number of samples (P in lshkit)\\
+\ttt{numSampleQueries}& a number of sample queries (Q in lshkit)\\
 \ttt{tuneK}        & find optimal parameter for \knn, search
                      where $k$ is defined by this parameter \\
 \cmidrule(l){1-2} 
@@ -2072,8 +2311,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method lsh_multiprobe:desiredRecall=0.25,tuneK=1,T=5,L=25,\
-                          H=16535
+  --method lsh_multiprobe \
+    --createIndex desiredRecall=0.25,tuneK=1,\
+                  T=5,L=25,H=16535
 \end{verbatim}
 }
 
@@ -2085,7 +2325,8 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method lsh_gaussian:W=2,L=5,M=40,H=16535
+  --method lsh_gaussian \
+    --createIndex W=2,L=5,M=40,H=16535
 \end{verbatim}
 }
 
@@ -2098,7 +2339,8 @@ release/experiment \
   --distType float --spaceType l1 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method lsh_cauchy:W=2,L=5,M=10,H=16535
+  --method lsh_cauchy \
+    --createIndex W=2,L=5,M=10,H=16535
 \end{verbatim}
 }
 
@@ -2111,7 +2353,8 @@ release/experiment \
   --distType float --spaceType l1 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method lsh_threshold:L=5,M=60,H=16535
+  --method lsh_threshold  \
+    --createIndex L=5,M=60,H=16535
 \end{verbatim}
 }
 
@@ -2173,7 +2416,9 @@ release/experiment \
   --distType float --spaceType cosinesimil --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method proj_incsort:projType=rand,projDim=4,useCosine=1,dbScanFrac=0.01
+  --method proj_incsort \
+    --createIndex projType=rand,projDim=4 \
+    --queryTimeParams useCosine=1,dbScanFrac=0.01
 \end{verbatim}
 }
 
@@ -2202,8 +2447,9 @@ release/experiment \
   --distType float --spaceType cosinesimil --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method proj_vptree:projType=rand,projDim=4,projSpaceType=cosinesimil,\
-alphaLeft=2,alphaRight=2,dbScanFrac=0.01
+  --method proj_vptree  \
+    --createIndex projType=rand,projDim=4,projSpaceType=cosinesimil \
+    --queryTimeParams alphaLeft=2,alphaRight=2,dbScanFrac=0.01
 \end{verbatim}
 }
 
@@ -2266,7 +2512,9 @@ release/experiment \
   --distType float --spaceType cosinesimil --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method omedrank:projType=rand,numPivot=8,minFreq=0.5,dbScanFrac=0.02
+    --method omedrank \
+    --createIndex projType=rand,numPivot=8  \
+    --queryTimeParams minFreq=0.5,dbScanFrac=0.02
 \end{verbatim}
 }
 
@@ -2388,7 +2636,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method pp-index:numPivot=4,prefixLength=4,minCandidate=100
+  --method pp-index \
+    --createIndex numPivot=4 \
+    --queryTimeParams prefixLength=4,minCandidate=100
 \end{verbatim}
 }
 
@@ -2399,7 +2649,7 @@ We, however, rely on the approximate version of the VP-tree described in \S~\ref
 while Figueroa and Fredriksson use an exact one.
 The ``sloppiness'' of the VP-tree search is governed by the stretching coefficients 
  \ttt{alphaLeft}   and \ttt{alphaRight} as well as by the exponents in Eq.~(\ref{EqDecFunc}).
-In this release, the VP-tree index over permutations is a special
+In NMSLIB, the VP-tree index over permutations is a special
 case of the projection VP-tree (see \S~\ref{SectionProjVPTree}).
 There is also an additional VP-tree based method that indexes binarized permutations.
 It is described in \S~\ref{SectionPermBinary}.
@@ -2445,12 +2695,13 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method mi-file:numPivot=128,numPivotIndex=16,numPivotSearch=4,\
-           dbScanFrac=0.01
+  --method mi-file  \
+    --createIndex numPivot=128,numPivotIndex=16 \
+    --queryTimeParams numPivotSearch=4,dbScanFrac=0.01
 \end{verbatim}
 }
 
-\subsubsection{Neighborhood APProximation Index (NAPP).}
+\subsubsection{Neighborhood APProximation Index (NAPP).}\label{SectionNAPP}
 Recently it was proposed to index pivot neighborhoods: 
 For each data point, we compute distances to \ttt{numPivot} points
 and select \ttt{numPivotIndex} (typically, much smaller than \ttt{numPivot}) pivots 
@@ -2468,9 +2719,16 @@ For computationally expensive distances, one can add an additional filtering ste
 setting the parameter \ttt{useSort} to one.
 If \ttt{useSort} is one, all candidate entries are additionally sorted by the number of shared pivots
 (in the decreasing order).
-Afterwards, the number of candidates defined by the parameter \ttt{dbScanFrac} are compared directly against the query. 
+Afterwards, a subset of candidates are compared directly against the query. 
+The size of the subset is defined by the parameter \ttt{dbScanFrac}.
+When selecting the subset, we give priority to candidates sharing more common pivots with the query. 
 This secondary filtering may eliminate less promising entries, but it incurs additional
 computational costs, which may outweigh the benefits of additional filtering ``power'', if the distance is cheap.
+
+In many cases, good performance can be achieved by selecting pivots randomly. However, we find
+that pivots can also be engineered (more information on this topic will be published soon). 
+To load external pivots, the user should specify
+an index-time parameter \ttt{pivotFile}. The pivots should be in the same format as the data points.
 
 Note that our implementation is different from that of Tellez~\cite{tellez2013succinct} in several ways.
 First, we do not use a succinct inverted index. Second, we use a simple posting merging algorithm
@@ -2478,7 +2736,7 @@ based on counting (a \emph{ScanCount} algorithm}).
 Before a query is processed, we zero-initialize an array that keeps one
 counter for every data point. As we traverse a posting list and encounter an entry corresponding to object
 $i$, we increment a counter number $i$.
-The ScanCount is known to be efficient \cite{li2008efficient}.
+The ScanCount is known to be quite efficient \cite{li2008efficient}.
 
 We also divide the index in chunks each accounting for at most \ttt{chunkIndexSize} data points.
 The search algorithm processes one chunk at a time. The idea is to make a chunk sufficiently small
@@ -2492,10 +2750,16 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method napp:numPivot=32,numPivotIndex=8,numPivotSearch=8,\
-           chunkIndexSize=1024
+  --cachePrefixGS napp_gold_standard \
+  --method napp \
+    --createIndex numPivot=32,numPivotIndex=8,chunkIndexSize=1024 \
+    --queryTimeParams numPivotSearch=8 \
+    --saveIndex napp_index
 \end{verbatim}
 }
+Note that NAPP is capable of saving/loading the meta index. However, in the bootstrapping
+mode this is only possible if gold standard data is cached (hence, the option \ttt{--cachePrefixGS}).
+
 An example of running NAPP \textbf{with} the additional filtering stage:
 {
 \footnotesize
@@ -2504,8 +2768,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method napp:numPivot=32,numPivotIndex=8,numPivotSearch=8,\
-           chunkIndexSize=1024,useSort=1,dbScanFrac=0.01
+  --method napp   \
+    --createIndex numPivot=32,numPivotIndex=8,chunkIndexSize=1024 \
+    --queryTimeParams useSort=1,dbScanFrac=0.01,numPivotSearch=8
 \end{verbatim}
 }
 
@@ -2523,7 +2788,8 @@ number of pivots).
 One can compensate in quality by using more pivots. In our experiments,
 it was usually sufficient to double the number of pivots.
 
-The binarized permutation can be search sequentially. 
+%\newpage
+The binarized permutation can be searched sequentially. 
 An example of testing such a method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -2532,8 +2798,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_incsort_bin:numPivot=32,binThreshold=16,\
-           dbScanFrac=0.05
+  --method perm_incsort_bin \
+    --createIndex numPivot=32,binThreshold=16 \
+    --queryTimeParams dbScanFrac=0.05
 \end{verbatim}
 }
 
@@ -2548,8 +2815,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1 --range 0.1 \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,\
-           dbScanFrac=0.05
+  --method perm_bin_vptree  \
+    --createIndex numPivot=32 \
+    --queryTimeParams alphaLeft=2,alphaRight=2,dbScanFrac=0.05
 \end{verbatim}
 }
 
@@ -2596,7 +2864,7 @@ in the inverted file \\
 \ttt{indexThreadQty} & A number of indexhing threads. \\
 \ttt{numPivotIndex}  & A number of closest pivots to be indexed. \\
 \ttt{numPivotSearch} & A candidate entry should share this number of pivots with the query. 
-This is a \textbf{query time} parameter. \\
+This is a \textbf{query-time} parameter. \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -2617,7 +2885,7 @@ This is a \textbf{query time} parameter. \\
 an approximate search in the VP-tree. }  \\
 \cmidrule(l){1-2} 
                    & Common parameters: \ttt{numPivot}, \ttt{dbScanFrac}, \ttt{binThreshold}. 
-Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
+Note that \ttt{dbScanFrac} is a \textbf{query-time} parameter. \\
 \cmidrule(l){1-2} 
  \ttt{alphaLeft}   & A stretching coefficient $\alpha_{left}$ in Eq.~(\ref{EqDecFunc}) \\
  \ttt{alphaRight}  & A stretching coefficient $\alpha_{right}$ in Eq.~(\ref{EqDecFunc}) \\
@@ -2626,37 +2894,52 @@ Note that \ttt{dbScanFrac} is a \textbf{query time} parameter. \\
 \end{tabular}
 \end{table}
 
-\subsection{Proximity Graphs} \label{SectionProxGraph}
-One efficient and effective approach
-relies on building a graph, where objects are graph nodes and edges connect sufficiently close objects.
-When edges connect mostly near neighbors, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
+\subsection{Proximity/Neighborhood Graphs} \label{SectionProxGraph}
+One efficient and effective search approach
+relies on building a graph, where data points are graph nodes and edges connect sufficiently close points.
+When edges connect nearest neighbor points, such graph is called a \knn graph (or a \href{https://en.wikipedia.org/wiki/Nearest_neighbor_graph}{nearest neighbor graph}).
 
-A search process is a series of sub-searches 
-(the number of sub-searches is defined by the parameter \ttt{initSearchAttempts}).
-A sub-search starts at a random node and proceeds to expanding the set of traversed nodes by following neighboring links. The sub-search stops when we cannot find points 
-that are closer than already found \ttt{NN} nearest points (\ttt{NN} is a search parameter).
-Note that the greedy search is only approximate and does not necessarily return all \ttt{NN} nearest neighbors.
+In a proximity-graph a search process is a series of greedy sub-searches.
+A sub-search starts at some, e.g., random node and proceeds to expanding the set of traversed nodes in a best-first fashion by following neighboring links. 
+The algorithm resembles a Dijkstra's shortest-path algorithm in that, in each step, 
+it selects an unvisited point closest to the query. 
 
-In our library we use two approaches to create proximity graphs, which are described below.
+There have been multiple stopping heuristics proposed.
+For example, we can stop after visiting a certain number of nodes.
+In NMSLIB, the sub-search carries out a $k'$-NN search for some $k'\ge k$ and
+terminates when the result set stops changing (i.e., we cannot find a point that is closer to a query than the $k'$-th closest point
+already discovered by the sub-search).
+Note that the greedy search is only approximate and does not necessarily return all true nearest neighbors.
+
+In our library we use several approaches to create proximity graphs, which are described below.
 Parameters of these methods are summarized in Table~\ref{TableProxGraphs}.
-Note that both methods have the parameter with the same name, namely, \ttt{NN}.
+Note that SW-graph and NN-descent have the parameter with the same name, namely, \ttt{NN}.
 However, this parameter has a somewhat different interpretation depending on the method.
-Also note that these methods support only the nearest-neighbor, but not the range search.
+Also note that our proximity-graph methods support only the nearest-neighbor, but not the range search.
 
-\subsubsection{Small World Graph.} \label{SectionSWGraph}
-In the Small World graph (SW-gaph),
+\subsubsection{Small World Graph (SW-graph).} \label{SectionSWGraph}
+In the (Navigable) Small World graph (SW-graph),\footnote{SW-graph is also known as a Metrized Small-World (MSW) graph
+and a Navigable Small World (NSW) graph.}
 indexing is a bottom-up procedure that relies on the previously described greedy search algorithm.  
 The number of restarts, though, is defined by a different parameter, i.e., \ttt{initIndexAttempts}.
-We add points one by one. For each data point, 
+We insert points one by one. For each data point, 
 we find \ttt{NN} closest points using an already constructed index.
-Then, we create an undirected edge between a new graph node (representing a new point) 
+Then, we create an \emph{undirected} edge between a new graph node (representing a new point) 
 and nodes that represent \ttt{NN} closest points found by the greedy search. 
-Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
-This algorithm was presented at SISAP 2012 \cite{malkov2012scalable},
-but some of the implementation details were missing in the publication.
-This issue was resolved in a subsequent paper \cite{malkov2014}
+Each sub-search starts from some, e.g., random node and proceeds until it cannot find a point that is closer
+than already found \ttt{efConstruction} nearest points (\ttt{efConstruction} is an index-time parameter).
+Similarly, the search procedure executes one or more sub-searches that start from some node and proceed
+until it cannot find a point closer than already found \ttt{efSearch} closest to the query.
+The number of sub-searches is defined by the parameter \ttt{initSearchAttempts}.
 
-The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads. The number of threads is defined by the parameter \ttt{indexThreadQty}.
+Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
+A simpler and less efficient variant of this algorithm was presented at ICTA 2011 and SISAP 2012 \cite{Ponomarenko2011,malkov2012scalable}.
+An improved variant appeared as an Information Systems publication \cite{malkov2014}.
+In the latter paper, however, the values of \ttt{efSearch} and \ttt{efConstruction} are set equal to \ttt{NN}.
+The idea of using values of \ttt{efSearch} and \ttt{efConstruction} potentially (much) larger than \ttt{NN}
+was proposed by Malkov and Yashunin \cite{Malkov2016}.
+
+The indexing algorithm is rather expensive and we accelerate it by running parallel searches in multiple threads. The number of threads is defined by the parameter \ttt{indexThreadQty}. By default, this parameter is equal to the number of virtual cores.
 The graph updates are synchronized: If a thread  needs to add edges to a node or obtain
 the list of node edges, it first locks a node-specific mutex.
 Because different threads rarely update and/or access the same node simultaneously,
@@ -2664,7 +2947,7 @@ such synchronization creates little contention and, consequently,
 our parallelization approach is efficient.
 It is also necessary to synchronize updates for the list of graph nodes, 
 but this operation takes little time compared to searching for \ttt{NN} neighboring points.
-
+%\newpage
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -2673,11 +2956,101 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method small_world_rand:NN=3,initIndexAttempts=5,initSearchAttempts=2,\
-           indexThreadQty=4 
+  --cachePrefixGS sw-graph \
+  --method sw-graph \
+    --createIndex NN=3,initIndexAttempts=5,indexThreadQty=4 \
+    --queryTimeParams initSearchAttempts=1,efSearch=10 \
+    --saveIndex sw-graph_index
+\end{verbatim}
+}
+Note that SW-graph is capable of saving/loading the meta index. However, in the bootstrapping
+mode this is only possible if gold standard data is cached (hence, the option \ttt{--cachePrefixGS}).
+
+\subsubsection{Hierarchical Navigable Small World Graph (HNSW).} \label{SectionHNSW}
+
+The Hierarchical Navigable Small World Graph (HNSW) \cite{Malkov2016} is a new search method,
+a successor of the SW-graph.
+HNSW can be much faster (especially during indexing) and is more robust.
+However, the current implementation is still experimental and we will update it in the near future.
+
+HNSW can be seen as a multi-layer and a multi-resolution variant of a proximity graph.
+A ground (zero-level) layer includes all data points. The higher is the layer, the fewer points it has.
+When a data point is added to HNSW, we select the maximum level $m$ randomly. 
+In that, the probability of selecting level $m$ decreases exponentially with $m$.
+
+Similarly to the SW-graph, the HNSW is constructed by inserting data points, one by one.
+A new point is added to all layers starting from layer $m$ down to layer zero.
+This is done using a search-based algorithm similar to that of the basic SW-graph. 
+The quality is controlled by the parameter \ttt{efConstruction}.
+
+Specifically, a search starts from the maximum-level layer and proceeds to lower layers by searching one layer at a time.
+For all layers higher than the ground layer, the search algorithm is a 1-NN search 
+that greedily follows the closest neighbor (this is equivalent to having \ttt{efConstruction}=1).
+The closest point found at the layer $h+1$ is used as a starting point for the search carried out at the layer $h$. 
+For the ground layer, we carry an \ttt{M}-NN search whose quality is controlled by the parameter \ttt{efConstruction}.
+Note that the ground-layer search relies one the same algorithm as we use for the SW-graph (yet,
+we use only a single sub-search, which is equivalent to setting \ttt{initIndexAttempts} to one).
+
+An outcome of a search in a layer is a set of data points that are close to the new point.
+Using one of the heuristics described by Malkov and Yashunin \cite{Malkov2016},
+we select points from this set to become neighbors of the new point (in the layer's graph).
+Note that unlike the older SW-graph, the new algorithm has a limit on the maximum number of neighbors.
+If the limit is exceeded, the heuristics are used to keep only the best neighbors.
+Specifically, the maximum number of neighbors in all layers but the ground layer is \ttt{maxM} (an index-time parameter,
+which is equal to \ttt{M} by default).
+The maximum number of neighbors for the ground layer is \ttt{maxM0} (an index-time parameter,
+which is equal to $2\times$\ttt{M} by default). 
+The choice of the heuristic is controlled by the parameter \ttt{delaunay\_type}.
+
+A search algorithm is similar to the indexing algorithm. 
+It starts from the maximum-level layer and proceeds to lower-level layers by searching one layer at a time.
+For all layers higher than the ground layer, the search algorithm is a 1-NN search 
+that greedily follows the closest neighbor (this is equivalent to having \ttt{efSearch}=1).
+The closest point found at the layer $h+1$ is used as a starting point for the search carried out at the layer $h$. 
+For the ground layer, we carry an \knn search whose quality is controlled by the parameter \ttt{efSearch} (in the 
+paper by Malkov and Yashunin \cite{Malkov2016} this parameter is denoted as \ttt{ep}).
+The ground-layer search relies one the same algorithm as we use for the SW-graph,
+but it does not carry out multiple sub-searches starting from different random data points.
+
+For $L_2$ and the cosine similarity, HNSW has optimized implementations, which are enabled by default.
+To enforce the use of the generic algorithm, set the parameter \ttt{skip\_optimized\_index} to one.
+
+Similar to SW-graph, the indexing algorithm can be expensive. 
+It is, therefore, accelerated by running parallel searches in multiple threads. 
+The number of threads is defined by the
+parameter \ttt{indexThreadQty}. By default, this parameter is equal to the number
+of virtual cores.
+
+A sample command line to test HNSW using the utility \texttt{experiment}:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
+  --knn 1  \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --method hnsw \
+    --createIndex M=10,efConstruction=20,indexThreadQty=4,searchMethod=0 \
+    --queryTimeParams efSearch=10 
 \end{verbatim}
 }
 
+HNSW is capable of saving an index for optimized $L_2$ and the cosine-similarity implementations. 
+Here is an example for $L_2$:
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType cosinesimil --testSetQty 5 --maxNumQuery 100 \
+  --knn 1  \
+  --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
+  --cachePrefixGS hnsw \
+  --method hnsw \
+    --createIndex M=10,efConstruction=20,indexThreadQty=4,searchMethod=4 \
+    --queryTimeParams efSearch=10 
+    --saveIndex hnsw_index
+\end{verbatim}
+}
 
 \subsubsection{NN-Descent.} \label{SectionNNDescent}
 The NN-descent is an iterative procedure initialized with randomly selected
@@ -2688,16 +3061,19 @@ This process is governed by parameters \ttt{rho} and \ttt{delta}.
 Parameter \ttt{rho} defines a fraction of the data set that is randomly
 sampled for neighborhood propagation. A good value that works
 in many cases is $\ttt{rho}=0.5$. As the indexing algorithm iterates,
-fewer and fewer neighborhoods change after an attempt to improve the local
-neighborhood structure via neighborhood propagation. 
+fewer and fewer neighborhoods change (when we attempt to improve the local
+neighborhood structure via neighborhood propagation). 
 The parameter \ttt{delta} defines a stopping condition in terms of a fraction
 of modified edges in the \knnns graph (the exact definition can be inferred from code). 
 A good default value is \ttt{delta}=0.001.
-
 The indexing algorithm is multi-threaded: the method uses all available cores.
 
-Until recently, the search algorithm by the author of NN-descent was not open sourced.
-Therefore, in this release, we use the same algorithm as for the SW-graph \cite{malkov2012scalable,malkov2014}.
+When NN-descent was incorporated into NMSLIB, 
+there was no open-source search algorithm released, only the code to construct a \knnns graph.
+Therefore, we use the same algorithm as for the SW-graph \cite{malkov2012scalable,malkov2014}.
+The new, open-source, version of NN-descent (code-named \ttt{kgraph}), 
+which does include the search algorithm,
+can be found \href{https://github.com/aaalgo/kgraph}{on GitHub}.
 
 Here is an example of testing this method using the utility \ttt{experiment}:
 {
@@ -2707,8 +3083,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method nndes:NN=10,rho=0.5,delta=0.001,\
-           initSearchAttempts=3
+  --method nndes  \
+    --createIndex NN=10,rho=0.5,delta=0.001 \
+    --queryTimeParams initSearchAttempts=3
 \end{verbatim}
 }
 
@@ -2719,25 +3096,47 @@ release/experiment \
 \toprule
 \multicolumn{2}{c}{\textbf{Common parameters}}\\
 \cmidrule(l){1-2} 
-\ttt{initSearchAttempts}  & A number of random search restarts. \\
+\ttt{efSearch}            & The search depth: specifically, a sub-search is stopped,
+                            when it cannot find a point closer than \ttt{efSearch}
+                            points (seen so far) closest to the query.
 \\
 \cmidrule(l){1-2} 
-\multicolumn{2}{c}{\textbf{SW-graph} (\ttt{small\_world\_rand}) \cite{malkov2012scalable,malkov2014}  }\\
+\multicolumn{2}{c}{\textbf{SW-graph} (\ttt{sw-graph}) \cite{Ponomarenko2011,malkov2012scalable,malkov2014}  }\\
 \cmidrule(l){1-2} 
-\ttt{NN}                  & Search: keep a queue containing at most this number of closest points. 
-                            Indexing: for a new point find this number of most closest points
+\ttt{NN}                  & For a newly added point find this number of most closest points
                             that make the initial neighborhood of the point. When more points are added,
                             this neighborhood may be expanded. \\
-\ttt{initIndexAttempts}   & The number of random search restarts necessary for the addition of one point.\\
-\ttt{indexThreadQty}      & The number of indexing threads. If \href{http://openmp.org/wp/}{OpenMP}  is available the default value is
+\ttt{efConstruction}      & The depth of the search that is used to find neighbors during indexing.
+                            This parameter is analogous to \ttt{efSearch}.\\
+\ttt{initIndexAttempts}   & The number of random search restarts carried out to add one point.\\
+\ttt{indexThreadQty}      & The number of indexing threads. The default value is
                             equal to the number of (logical) CPU cores. \\
+\ttt{initSearchAttempts}  & A number of random search restarts. \\
+\cmidrule(l){1-2} 
+\multicolumn{2}{c}{\textbf{Hierarchical Navigable SW-graph} (\ttt{hnsw}) \cite{malkov2014}  }\\
+\cmidrule(l){1-2} 
+\ttt{mult}                & A scaling coefficient to determine the depth of a layered structure (see the paper by Malkov and Yashunin \cite{malkov2014} for details). A default value seems to be good enough. \\
+\ttt{skip\_optimized\_index}   & Setting this parameter to one disables the use of the optimized implementations (for $L_2$
+                                 and the cosine similarity).
+                          \\
+\ttt{maxM}                & The maximum number of neighbors in all layers but the ground layer (the default value seems to be good enough). \\
+\ttt{maxM0}               & The maximum number of neighbors in the \emph{ground} layer (the default value seems to be good enough). \\
+\ttt{M}                   & The size of the initial set of potential neighbors for the indexing phase. The set may be further 
+                            pruned so that the overall number of neighbors does not exceed \ttt{maxM0} (for the ground layer) or \ttt{maxM}
+                            (for all layers but the ground one).\\
+ 
+\ttt{efConstruction}      & The depth of the search that is used to find neighbors during indexing (this parameter
+                            is used only for the search in the ground layer). \\
+\ttt{delaunay\_type}      & A type of the pruning heuristic: 0 indicates that we keep only \ttt{maxM} (or \ttt{maxM0} for the ground layer)
+                            neighbors, 1 activates a heuristic described by Algorithm 4 \cite{malkov2014}  \\
+
 \cmidrule(l){1-2} 
 \multicolumn{2}{c}{\textbf{NN-descent} (\ttt{nndes}) \cite{dong2011efficient,malkov2012scalable,malkov2014}  }\\
 \cmidrule(l){1-2} 
-\ttt{NN}                  & Search: keep a queue containing at most this number of closest points. 
-                            Indexing: for a new point find this number of most closest points. \\
+\ttt{NN}                  & For each point find this number of most closest points (neighbors). \\
 \ttt{rho}                 & A fraction of the data set that is randomly sampled for neighborhood propagation.  \\
 \ttt{delta}               & A stopping condition in terms of the fraction of updated edges in the \knnns graph. \\
+\ttt{initSearchAttempts}  & A number of random search restarts. \\
 \bottomrule
 \multicolumn{2}{l}{\textbf{Note:} mnemonic method names are given in round brackets.}
 \end{tabular}
@@ -2769,7 +3168,7 @@ It is possible to generate several copies of the same index using a
 meta method \ttt{mult\_indx}.
 This makes sense for randomized indexing methods, e.g., for the VP-tree
 or the PP-index.\footnote{In fact, all of the methods except for the sequential, i.e.,
-brute force, search are randomized.}
+brute-force, search are randomized.}
 
 {
 \footnotesize
@@ -2778,7 +3177,9 @@ release/experiment \
   --distType float --spaceType l2 --testSetQty 5 --maxNumQuery 100 \
   --knn 1  \
   --dataFile ../sample_data/final8_10K.txt --outFilePrefix result \
-  --method mult_index:methodName=vptree,indexQty=5,maxLeavesToVisit=2
+  --method mult_index \
+    --createIndex methodName=vptree,indexQty=5  \
+    --queryTimeParams maxLeavesToVisit=2
 \end{verbatim}
 }
 
@@ -2804,6 +3205,53 @@ release/experiment \
 \end{tabular}
 \end{table}
 
+\section{Tuning Guidelines}\label{SectionTuningGuide}
+In the following subsections, we provide brief tuning guidelines.
+These guidelines are broad-brush: The user is expected to find
+optimal parameters through experimentation on some development data set.
+
+\subsection{NAPP}
+Generally, increasing the overall number of pivots \ttt{numPivot} helps to improve performance.
+However, using a large number of pivots leads to increased indexing times. 
+
+A good compromise is to use \ttt{numPivot} somewhat larger than $\sqrt N$, where $N$ is the overall
+number of data points. Similarly, the number of pivots to be indexed (\ttt{numPivotIndex})
+should be somewhat larger than $\sqrt{\mbox{\ttt{numPivot}}}$. Finally, the number of pivots
+to be searched (\ttt{numPivotSearch}) should be in the order of $\sqrt{\mbox{\ttt{numPivotIndex}}}$.
+
+After selecting the values of \ttt{numPivot} and \ttt{numPivotIndex}, finding an optimal value of
+\ttt{numPivotSearch}---which provides a necessary recall---requires just a single run of the utility \ttt{experiment}
+(you need to specify all potentially good values of \ttt{numPivotSearch} multiple times using the option
+\ttt{--QueryTimeParams}). 
+
+
+\subsection{SW-graph and HNSW}
+The basic guidelines are similar for both methods.
+Specifically, increasing the value of \ttt{efConstruction} improves the quality of a constructed graph and
+leads to higher accuracy of search.
+However this also leads to longer indexing times.
+Similarly, increasing the value of \ttt{efSearch} improves recall at the expense of longer retrieval time. 
+The reasonable range of values for these parameters is 100-2000.
+
+In the case of SW-graph, the user can also specify the number of sub-searches: \ttt{initIndexAttempts} and
+\ttt{initSearchAttempts} used during indexing and retrieval, respectively. 
+However, we find that in most cases the number of sub-searches needs to be set to one.
+Yet, for large values of \ttt{efConstruction} and \ttt{efSearch} (e.g., larger than 2000)
+it sometimes makes sense to increase the number of sub-searches rather than further increasing
+\ttt{efConstruction} and/or \ttt{efSearch}.
+
+The recall values are also affected by parameters \ttt{NN} (for SW-graph) and \ttt{M} (HNSW).
+Increasing the values of these parameters (to a certain degree) leads to better recall and shorter retrieval times
+(at the expense of longer indexing time).  
+For low and moderate recall values (e.g., 60-80\%) increasing these parameters may lead to longer retrieval times.
+The reasonable range of values for these parameters is 5-100.
+
+Finally, in the case of HNSW, there is a trade-off between retrieval performance and indexing time
+related to the choice of the pruning heuristic (controlled by the parameter \ttt{delaunay\_type}). 
+Specifically, by default \ttt{delaunay\_type} is equal to 1.
+Using \ttt{delaunay\_type}=1 improves performance---especially at high recall values ($>80$\%) at the expense of longer indexing times. 
+Therefore, for lower recall values, we recommend using \ttt{delaunay\_type}=0.
+
 \section{Extending the code}\label{SectionExtend}
 It is possible to add new spaces and search methods.
 This is done in three steps, which we only outline here.
@@ -2813,14 +3261,14 @@ and \S~\ref{SectionCreateMethod}.
 In the first step, the user writes the code that implements a
 functionality of a method or a space.
 In the second step, the user writes a special helper file  
-containing methods that creates a class or a method.
-In this helper file, it is normally necessary to include
+containing a method that creates a class or a method.
+In this helper file, it is necessary to include
 the method/space header. 
-Please, use the \textbf{angle brackets} in this include-directive here.
 
 Because we tend to give the helper file the same name
 as the name of header for a specific method/space,
-we should not include method/space headers using quotes.
+we should not include method/space headers using quotes (in other words,
+use only \emph{angle} brackets).
 Such code fails to compile under the Visual Studio. 
 Here is an example of a proper include-directive:
 \begin{verbatim}
@@ -2836,9 +3284,12 @@ or to the file
 This step has two sub-steps. 
 First, the user includes the previously created helper file into either
 \ttt{init\_spaces.h} or \ttt{init\_methods.h}.
-Finally the function \ttt{initMethods} or \ttt{initSpaces} is extended
+Second, the function \ttt{initMethods} or \ttt{initSpaces} is extended
 by adding a macro call that actually registers the space or method in a factory class.
-No modification of makefiles (or other configuration files) is required.
+
+Note that no explicit/manual modification of makefiles (or other configuration files) is required.
+However, you have to re-run \ttt{cmake} each time a new source file is created (addition
+of header files does not require a \ttt{cmake} run). This is necessary to automatically update makefiles so that they include new source files.
 
 Is is noteworthy that all implementations of methods and spaces
 are mostly template classes parameterized by the distance value type.
@@ -2864,32 +3315,19 @@ These zero-functionality examples can also be used as starting points to develop
 
 \subsection{Test Workflow}\label{SectionWorkflow}
 The main benchmarking utility \ttt{experiment} parses command line parameters. 
-Then, it creates a space and all required search methods using
-the space and the method factories.
-Thus, when it creates a class representing a search method,
-the constructor of this class has to create an index in the memory.
-%Thus, when we create a class representing a search method,
-%the constructor of this class has to create an index in the memory
-%or open a disk-based one.
+Then, it creates a space and a search method using the space and the method factories.
 Both search method and spaces can have parameters,
 which are passed to the method/space in an instance
-of the class \ttt{AnyParams}.
-We consider this in detail in \S~\ref{SectionCreateSpace} and \S~\ref{SectionCreateMethod}.
+of the class \ttt{AnyParams}. We consider this in detail in \S~\ref{SectionCreateSpace} and \S~\ref{SectionCreateMethod}.
 
-%In our library, we implemented only in-memory indices.
-%It is, nevertheless, possible to test disk-based indices as well.
-%For example, a method can accept to parameters: \ttt{saveFileName}
-%and \ttt{readFileName}.
-%If the user invokes \ttt{experiment} without arguments \ttt{--knn} 
-%or \ttt{--range} and specifies the parameter \ttt{saveFileName},
-%the method constructor reads the data set and creates and index. Then,
-%this index can be saved to the faile \ttt{saveFileName}.
-%If the user invokes \ttt{experiment} with an argument \ttt{--knn} 
-%or \ttt{--range} and specifies the parameter \ttt{readFileName},
-%the method constructor will open the disk-based index, whose location
-%is defined by the parameter \ttt{readFileName}.
+When we create a class representing a search method,
+the constructor of the class does not create an index in the memory.
+The index is created using either the function \ttt{CreateIndex} (from scratch)
+or the function \ttt{LoadIndex} (from a previously created index image).
+The index can be saved to disk using the function \ttt{SaveIndex}.
+Note, however, that most methods do not support index (de)-serialization.
 
-Depending on parameters, two test scenarios are possible.
+Depending on parameters passed to the benchmarking utility, two test scenarios are possible.
 In the first scenario, the user specifies separate data and test files.
 In the second scenario, a test file is created by bootstrapping:
 The data set is randomly divided into training and a test set.
@@ -2898,7 +3336,7 @@ we call the function \href{\replocfile similarity_search/include/experiments.h#L
 and subsequently \href{\replocfile similarity_search/include/experiments.h#L213}{Execute} for all possible test sets.
 
 The function \ttt{Execute} is a main workhorse, which creates queries, runs searches,
-produces ground truth data, and collects execution statistics.
+produces gold standard data, and collects execution statistics.
 There are two types of queries: nearest-neighbor and range queries,
 which are represented by (template) classes \ttt{RangeQuery} and \ttt{KNNQuery}.
 Both classes inherit from the class \ttt{Query}.
@@ -2916,7 +3354,7 @@ partitions and data points.
 This commonality between the \ttt{RangeQuery} and \ttt{KNNQuery}
 allows us in many cases to carry out a nearest-neighbor query 
 using an algorithm designed to answer range queries.
-Thus, only a single implementation of a search method--that answers queries of both types--can be used in many cases.
+Thus, only a single implementation of a search method---that answers queries of both types---can be used in many cases.
 
 A query object proxies distance computations during the testing phase.
 Namely, the distance function is accessible through the function
@@ -2952,6 +3390,7 @@ These are the spaces that are responsible for reading objects from files,
 interpreting the structure of the data blobs (stored in the \ttt{Object}), 
 and computing a distance between two objects.
 
+
 For dense vector spaces the easiest way to create a new space,
 is to create a functor (function object class) that computes a distance.
 Then, this function should be used to instantiate a template
@@ -2971,43 +3410,9 @@ and the source file
 The user is encouraged to study these files and read the comments.
 Here we focus only on the main aspects of creating a new space.
 
-The sample files describe a template class \ttt{DummySpace} (see Table~\ref{FigDummySpace}), 
+The sample files include a template class \ttt{DummySpace} (see Table~\ref{FigDummySpace}), 
 which is declared and defined in the namespace \ttt{similarity}.
 It is a direct ancestor of the class \ttt{Space}.
-
-\begin{table}[t]
-\caption{\label{FigDummySpace}A sample space}
-\begin{verbatim}
-template <typename dist_t>
-class SpaceDummy : public Space<dist_t> {
- public:
-  ...
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config,
-                      const char* inputfile,
-                      const int MaxNumObjects) const;
-  /*
-   * CreateVectFromObj and GetElemQty() are only needed, if
-   * one wants to use methods with random projections.
-   */
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
-                                   size_t nElem) const {
-    throw runtime_error("Cannot create vector for the space: " + ToString());
-  }
-  virtual size_t GetElemQty(const Object* object) const {return 0;}
- protected:
-  virtual dist_t HiddenDistance(const Object* obj1, 
-                                const Object* obj2) const;
-  virtual Space<dist_t>* HiddenClone() const {
-    // The clone function should reproduce the space 
-    // with *IDENTICAL* parameters. 
-    // Another option is to use the default copy constructor 
-    // (if there are no pointer fields)
-    return new SpaceDummy<dist_t>(param1_, param2_);
-  }
-}
-\end{verbatim}
-\end{table}
 
 It is possible to provide the complete implementation of the \ttt{DummySpace}
 in the header file. However, this would make compilation slower.
@@ -3023,16 +3428,111 @@ template class SpaceDummy<float>;
 template class SpaceDummy<double>;
 \end{verbatim}
 
-Most importantly, the user needs to implement the function \ttt{ReadDataset},
-which reads objects from a file, the function \ttt{HiddenDistance},
+\begin{table}[[!htbp]
+\caption{\label{FigDummySpace}A sample space class}
+\begin{verbatim}
+template <typename dist_t>
+class SpaceDummy : public Space<dist_t> {
+ public:
+  ...
+  /** Standard functions to read/write/create objects */ 
+  // Create an object from a (possibly binary) string.
+  virtual unique_ptr<Object> 
+  CreateObjFromStr(IdType id, LabelType label, const string& s,
+                   DataFileInputState* pInpState) const;
+
+  // Create a string representation of an object.
+  // The string representation may include external ID.
+  virtual string 
+  CreateStrFromObj(const Object* pObj, const string& externId) const;
+
+  // Open a file for reading, fetch a header 
+  // (if there is any) and memorize an input state
+  virtual unique_ptr<DataFileInputState> 
+  OpenReadFileHeader(const string& inputFile) const;
+
+  // Open a file for writing, write a header (if there is any) 
+  // and memorize an output state
+  virtual unique_ptr<DataFileOutputState> 
+  OpenWriteFileHeader(const ObjectVector& dataset,
+                      const string& outputFile) const;
+  /*
+   * Read a string representation of the next object in a file as well
+   * as its label. Return false, on EOF.
+   */
+  virtual bool 
+  ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, 
+                 string& externId) const;
+
+  /* 
+   * Write a string representation of the next object to a file. We totally delegate
+   * this to a Space object, because it may package the string representation, by
+   * e.g., in the form of an XML fragment.
+   */
+  virtual void WriteNextObj(const Object& obj, const string& externId, 
+                            DataFileOutputState &) const;
+  /** End of standard functions to read/write/create objects */ 
+
+  ...
+
+  /*
+   * CreateDenseVectFromObj and GetElemQty() are only needed, if
+   * one wants to use methods with random projections.
+   */
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
+                                   size_t nElem) const {
+    throw runtime_error("Cannot create vector for the space: " + StrDesc());
+  }
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
+ protected:
+  virtual dist_t HiddenDistance(const Object* obj1, 
+                                const Object* obj2) const;
+  // Don't permit copying and/or assigning 
+  DISABLE_COPY_AND_ASSIGN(SpaceDummy);
+};
+\end{verbatim}
+\end{table}
+
+Most importantly, the user needs to implement the function \ttt{HiddenDistance},
 which computes the distance between objects,
-and the function \ttt{HiddenClone} that creates the copy of the space object (with the same parameters).
-For a sample implementation of \ttt{ReadDataset},
+and the function \ttt{CreateObjFromStr} that creates a data point object from an instance
+of a C++ class \ttt{string}.
+For simplicity---even though this is not the most efficient approach---all our spaces create
+objects from textual representations. However, this is not a principal limitation,
+because a C++ string can hold binary data as well.
+Perhaps, the next most important function is \ttt{ReadNextObjStr}, 
+which reads a string representation of the next object from a file. 
+A file is represented by a reference to a subclass of the class \ttt{DataFileInputState}.
+
+Compared to previous releases, the new \ttt{Space} API is substantially more complex.
+This is necessary to standardize reading/writing of generic objects.
+In turn, this has been essential to implementing a generic query server.
+The query server accepts data points in the same format as they are stored in a data file.
+The above mentioned function \ttt{CreateObjFromStr} is used for de-serialization
+of both the data points stored in a file and query data points passed to the query server. 
+
+Additional complexity arises from the need to update space parameters after a space object is created.  
+This permits a more complex storage model where, e.g., parameters are stored
+in a special dedicated header file, while data points are stored elsewhere,
+e.g., split among several data files. 
+To support such functionality, we have a function that opens a data file (\ttt{OpenReadFileHeader})
+and creates a state object (sub-classed from \ttt{DataFileInputState}),
+which keeps the current file(s) state as well as all space-related parameters. 
+When we read data points using the function \ttt{ReadNextObjStr}, 
+the state object is updated.
+The function \ttt{ReadNextObjStr} may also read an optional external identifier for an object.
+When it produces a non-empty identifier it is memorized by the query server and is further
+used for query processing (see \S~\ref{SectionQueryServer}).
+After all data points are read, this state object is supposed to be passed to the \ttt{Space} object
+in the following fashion:
+\begin{verbatim}
+unique_ptr<DataFileInputState> 
+inpState(space->ReadDataset(dataSet, externIds, fileName, maxNumRec));
+space->UpdateParamsFromFile(*inpState);
+\end{verbatim}
+For a more advanced implementation of the space-related functions,
 please, see the file
-\href{\replocfile similarity_search/src/space/space_bit_hamming.cc}{space\_bit\_hamming.cc}.
-Note that \ttt{ReadDataset} is supposed to read at most \ttt{MaxNumObjects}
-from the file. If the file has more objects, only the first \ttt{maxNumData} should be retrieved.
-The space is responsible for following this convention, the library does not enforce this behavior.
+\href{\replocfile similarity_search/src/space/space_vector.cc}{space\_vector.cc}.
 
 Remember that the function \ttt{HiddenDistance} should not be directly accessible 
 by classes that are not friends of the \ttt{Space}.
@@ -3043,23 +3543,19 @@ during the indexing phase,
 During the testing phase, a search method can compute a distance
 only by accessing functions \ttt{Distance}, \ttt{DistanceObjLeft}, or
 \ttt{DistanceObjRight}, which are member functions of the \ttt{Query}.
-In some cases, however, we need to access the distance function without
-altering distance-computation statistics. To this end, one may create
-a copy of the space object by calling the function \ttt{HiddenClone}. 
-This function should create an exact copy of the space with exactly
-the same parameters.
-This is by far not a perfect solution and we are considering better
-way to proxy distance computations. 
+This is by far not a perfect solution and we are contemplating about better ways to proxy distance computations. 
 
-If we implement a vector space that should work properly with projection methods
-and classic random projections, we need to define functions \ttt{GetElemQty} and \ttt{CreateVectFromObj}. 
-In the case of a dense vector space, \ttt{GetElemQty}
+Should we implement a vector space that works properly with projection methods
+and classic random projections, we need to define functions \ttt{GetElemQty} and \ttt{CreateDenseVectFromObj}. 
+In the case of a \emph{dense} vector space, \ttt{GetElemQty}
 should return the number of vector elements stored in the object.
-For sparse vector spaces, it should return zero. The function \ttt{CreateVectFromObj}
-extracts elements stored in a vector. For dense vector spaces,
-it merely copies vector elements to a buffer. For space vector spaces,
+For \emph{sparse} vector spaces, it should return zero. The function \ttt{CreateDenseVectFromObj}
+extracts elements stored in a vector. For \emph{dense} vector spaces,
+it merely copies vector elements to a buffer. 
+For \emph{sparse} space vector spaces,
 it should do some kind of basic dimensionality reduction. 
 Currently, we do it via the hashing trick (see \S~\ref{SectionProjDetails}).
+
 
 Importantly, we need to ``tell'' the library about the space,
 by registering the space in the space factory.
@@ -3067,6 +3563,7 @@ At runtime, the space is created through a helper function.
 In our case, it is called \ttt{CreateDummy}.
 The function, accepts only one parameter,
 which is a reference to an object of the type \ttt{AllParams}:
+%\newpage
 
 \begin{verbatim}
 template <typename dist_t>
@@ -3125,8 +3622,73 @@ the class, to the file \ttt{init\_spaces.h} as follows:
 #include "factory/space/space_dummy.h"
 \end{verbatim}
 
-\subsection{Creating a method}\label{SectionCreateMethod}
-To explain the basics of developing a new search method,
+To conlcude, we recommend to make a \ttt{Space} object is non-copyable. 
+This can be done by using our macro \ttt{DISABLE\_COPY\_AND\_ASSIGN}.
+
+
+\subsection{Creating a search method}\label{SectionCreateMethod}
+
+%\newpage
+\begin{table}[[!htbp]
+\caption{\label{FigDummyMethod}A sample search method class}
+\begin{verbatim}
+template <typename dist_t>
+class DummyMethod : public Index<dist_t> {
+ public:
+  DummyMethod(Space<dist_t>& space, 
+              const ObjectVector& data) : data_(data), space_(space) {}
+
+  void CreateIndex(const AnyParams& IndexParams) override {
+    AnyParamManager  pmgr(IndexParams);
+    pmgr.GetParamOptional("doSeqSearch",  
+                          bDoSeqSearch_, 
+    // One should always specify the default value of an optional parameter!
+                          false
+                          );
+    // Check if a user specified extra parameters, 
+    // which can be also misspelled variants of existing ones
+    pmgr.CheckUnused();
+    // It is recommended to call ResetQueryTimeParams() 
+    // to set query-time parameters to their default values
+    this->ResetQueryTimeParams();
+  }
+
+  // SaveIndex is not necessarily implemented
+  virtual void SaveIndex(const string& location) override {
+    throw runtime_error(
+            "SaveIndex is not implemented for method: " + StrDesc());
+  }
+  // LoadIndex is not necessarily implemented
+  virtual void LoadIndex(const string& location) override {
+    throw runtime_error(
+             "LoadIndex is not implemented for method: " + StrDesc());
+  }
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
+
+  // Description of the method, consider printing crucial parameter values
+  const std::string StrDesc() const override { 
+    stringstream str;
+    str << "Dummy method: " 
+        << (bDoSeqSearch_ ? " does seq. search " : 
+                            " does nothing (really dummy)"); 
+    return str.str();
+  }
+
+  //  One needs to implement two search functions.
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
+
+  // If we duplicate data, let the framework know it
+  virtual bool DuplicateData() const override { return false; }
+ private:
+  ...
+  // Don't permit copying and/or assigning 
+  DISABLE_COPY_AND_ASSIGN(DummyMethod);
+};
+\end{verbatim}
+\end{table}
+
+To illustrate the basics of developing a new search method,
 we created a sample zero-functionality method \ttt{DummyMethod}.
 It is represented by 
 the header file 
@@ -3134,66 +3696,52 @@ the header file
 and the source file
 \href{\replocfile similarity_search/src/method/dummy.cc}{dummy.cc}.
 The user is encouraged to study these files and read the comments.
-Here we would omit certain minor details.
+Here we would omit certain details.
 
 Similar to the space and query classes, a search method is implemented using
-a template class, which is parameterized by the distance function value:
+a template class, which is parameterized by the distance function value (see Table~\ref{FigDummyMethod}).
+Note again that the constructor of the class does not create an index in the memory.
+The index is created using either the function \ttt{CreateIndex} (from scratch)
+or the function \ttt{LoadIndex} (from a previously created index image).
+The index can be saved to disk using the function \ttt{SaveIndex}.
+It does not have to be a comprehensive index that contains a copy of the data set.
+Instead, it is sufficient to memorize only the index structure itself (because
+the data set is always loaded separately).
+Also note that most methods do not support index (de)-serialization.
 
-%\newpage
-\begin{verbatim}
-template <typename dist_t>
-class DummyMethod : public Index<dist_t> {
- public:
-  DummyMethod(const Space<dist_t>* space, 
-              const ObjectVector& data, 
-              AnyParamManager& pmgr) 
-              : data_(data) {
-    pmgr.GetParamOptional("doSeqSearch",  bDoSeqSearch_);
+The constructor receives a reference to a space object as well as  a reference to an array of data objects. 
+In some cases, e.g., when we wrap existing methods such as the multiprobe LSH (see \S~\ref{SectionLSH}),
+we create a copy of the data set (simply because is was easier to write the wrapper this way).
+The framework can be informed about such a situation via the virtual function \ttt{DuplicateData}.
+If this function returns true, the framework ``knows'' that the data was duplicated.
+Thus, it can correct an estimate for the memory required by the method. 
 
-    pmgr.CheckUnused();
-
-    SetQueryTimeParamsInternal(pmgr);
-  }
-  ~DummyMethod(){};
-  const std::string ToString() const;
-   
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
-
-  virtual vector<string> GetQueryTimeParamNames() const;
- private: 
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
-  const ObjectVector&     data_;
-  // disable copy and assign
-  DISABLE_COPY_AND_ASSIGN(DummyMethod);
-};
-\end{verbatim}
-
-Note that it is the constructor that creates a search index (or calls a function to create it)!
-Here it accepts the pointer to a space,
-a reference to an array of data objects, 
-and a parameter manager.
-The parameter manager is used to retrieve too parameters:
-\ttt{doSeqSearch}, and \ttt{dummyParam} (the second one is a query time parameter).
-When the first parameter is true, our dummy method will carry out a sequential search.
+The function \ttt{CreateIndex} receives a parameter object.
+In our example, the parameter object is used to retrieve the single index-time parameter: \ttt{doSeqSearch}.
+When this parameter value is true, our dummy method carries out a sequential search.
 Otherwise, it does nothing useful.
 Again, it is recommended to call the function \ttt{CheckUnused} to ensure
 that the user did not enter parameters with incorrect names.
+It is also recommended to call the function \ttt{ResetQueryTimeParams} (\ttt{this} pointer needs to
+be specified explicitly here) to reset query-time parameters after the index is created (or loaded from disk).
 
-Query time parameters can be changed
-without rebuilding the index.
-The function \ttt{GetQueryTimeParamNames} returns the list of 
-names of such parameters.
-If this list is non-empty and the method is supposed to support
-query time modification of some parameters,
-these modifications are carried out inside the function  
-\ttt{SetQueryTimeParamsInternal}.
-Make sure, you call the method \ttt{SetQueryTimeParamsInternal} from the constructor as well.
+Unlike index-time parameters, query-time parameters can be changed without rebuilding the index
+by invoking the function \ttt{SetQueryTimeParams}.
+The function \ttt{SetQueryTimeParams} accepts a constant reference to a parameter object.
+The programmer, in turn, creates a parameter manager object to extract actual parameter values.
+To this end, two functions are used: \ttt{GetParamRequired} and \ttt{GetParamOptional}.
+Note that the latter function must be supplied with a mandatory \emph{default} value for the parameter.
+Thus, the parameter value is properly reset to its default value when the user does not specify the parameter value
+explicitly (e.g., the parameter specification is omitted when the user invokes the benchmarking utility \ttt{experiment})!
 
-The space object is typically used to compute the distance by calling
-the function \ttt{IndexTimeDistance}.
-Note again that \ttt{IndexTimeDistance} \textbf{should not be used} in a function
-\ttt{Search}. 
+There are two search functions each of which receives two parameters.
+The first parameter is a pointer to a query (either a range or a \knn query).
+The second parameter is currently unused.
+Note again that during the search phase, a search method can
+compute a distance only by accessing functions \ttt{Distance}, \ttt{DistanceObjLeft}, or
+\ttt{DistanceObjRight}, which are member functions of a query object.
+The function \ttt{IndexTimeDistance} \textbf{should not be used} in a function \ttt{Search},
+but it can be used in the function \ttt{CreateIndex}. 
 If the user attempts to invoke \ttt{IndexTimeDistance} during the test phase,
 \textbf{the program will terminate}.
 \footnote{As noted previously, we want to compute the number of times
@@ -3214,17 +3762,12 @@ In our case, the function name is \ttt{CreateDummy}:
 #include <method/dummy.h>
 
 namespace similarity {
-
 template <typename dist_t>
-  Index<dist_t>* CreateDummy(bool PrintProgress,
+Index<dist_t>* CreateDummy(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
-    AnyParamManager pmgr(AllParams);
-
-    return new DummyMethod<dist_t>(space, DataObjects, pmgr);
-  }
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+    return new DummyMethod<dist_t>(space, DataObjects);
 }
 \end{verbatim}
 There is an include-directive preceding
@@ -3267,12 +3810,6 @@ It encodes the range of plausible values
 for the following performance parameters: the recall,
 the number of points closer to the query than the nearest returned point,
 and the improvement in the number of distance computations.
-
-If you are using the script  \href{\replocfile sample_scripts/genplot.py#L222}{genplot.py} (see \S~\ref{SectionGenPlot}) to plot performances graphs, you will need to modify it as well.
-The function \ttt{methodNameAndStyle} in this script defines a mapping from the method name
-to a plot marker. Currently, we provide markers for all the implemented methods. 
-Yet, if you add a new one, you need to provide the mapping yourself (by modifying \ttt{methodNameAndStyle}).
-Note the name of the method is returned by the class member \ttt{ToString}.
 
 \subsection{Creating an application on Linux (inside the framework)}\label{SectionCreateAppLinux}
 First, we create a hello-world source file 
@@ -3473,8 +4010,8 @@ It is up to a designer of the space to decide on the default value for an unspec
 All existing implementations use \emph{zero} as the default value.
 Again, elements can be separated by spaces or commas/columns instead of spaces.
 
-In addition, the directory \ttt{sample\_scripts} contains the full set of scripts that can be used to re-produce our NIPS'13, SISAP'13, DA'14, and VLDB'15 results \cite{Boytsov_and_Bilegsaikhan:sisap2013,Boytsov_and_Bilegsaikhan:nips2013,ponomarenko2014comparative,naidan2015permutation}.
-This includes the software to generate plots (see also \S~\ref{SectionGenPlot}). 
+In addition, the directory \ttt{previous\_releases\_scripts} contains the full set of scripts that can be used to re-produce our NIPS'13, SISAP'13, DA'14, and VLDB'15 results \cite{Boytsov_and_Bilegsaikhan:sisap2013,Boytsov_and_Bilegsaikhan:nips2013,ponomarenko2014comparative,naidan2015permutation}.
+However, one would need to use older software version (1.0 for NIPS'13 and 1.1 for VLDB'15).
 Additionally, to reproduce our previous results, one needs to obtain data sets using scripts
 \href{\replocfile data/get_data_nips2013.sh}{data/get\_data\_nips2013.sh} 
 and \href{\replocfile data/get_data_vldb2015.sh}{data/get\_data\_vldb2015.sh}. 
@@ -3580,14 +4117,15 @@ the graph construction and the search algorithm, but we have not incorporated it
 Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
 and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
 We also thank 
-Lawrence Cayton for providing the data sets,
-Nikita Avrelin for implementing the first version of the SW-graph
-and Daniel Lemire for contributing 
-the implementation of the original Schlegel~et~al.~\cite{schlegel2011fast}
+Lawrence Cayton for providing data sets (and allowing us to make them public);
+Nikita Avrelin for implementing the first version of the SW-graph;
+Yury Malkov for contributing a hierarchical modification of the SW-graph, 
+as well as for guideliness for tuning the original SW-graph;
+David Novak for the suggestion to use external pivots in permutation algorithms;
+Daniel Lemire for contributing the implementation of the original Schlegel~et~al.~\cite{schlegel2011fast}
 intersection algorithm.
-We also thank Andrey Savchenko, Alexander Ponomarenko, Yury Malkov,
-and anonymous referees for suggestions
-to improve the library and the documentation.
+We also thank Andrey Savchenko, Alexander Ponomarenko, and Yury Malkov
+for suggestions to improve the library and the documentation.
 
 
 

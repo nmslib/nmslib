@@ -36,15 +36,24 @@ class Space;
 template <typename dist_t>
 class MultiVantagePointTree : public Index<dist_t> {
  public:
-  MultiVantagePointTree(const Space<dist_t>* space,
-                        const ObjectVector& data,
-                        const AnyParams& MethParams);
+  MultiVantagePointTree(const Space<dist_t>& space,
+                        const ObjectVector& data);
+  void CreateIndex(const AnyParams& IndexParams) override;
   ~MultiVantagePointTree();
 
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override {
+    AnyParamManager pmgr(QueryTimeParams);
+    pmgr.GetParamOptional("maxLeavesToVisit", MaxLeavesToVisit_, FAKE_MAX_LEAVES_TO_VISIT);
+    LOG(LIB_INFO) << "Set MVP-tree query-time parameters:";
+    LOG(LIB_INFO) << "maxLeavesToVisit" << MaxLeavesToVisit_;
+    pmgr.CheckUnused();
+  }
+
+  virtual bool DuplicateData() const override { return ChunkBucket_; }
  private:
   struct Entry;
 
@@ -153,9 +162,11 @@ class MultiVantagePointTree : public Index<dist_t> {
   Node* BuildTree(const Space<dist_t>* space, Entries& entries);
 
   template <typename QueryType>
-  void GenericSearch(Node* node, QueryType* query, Dists& path, size_t query_path_len, int& MaxLeavesToVisit);
+  void GenericSearch(Node* node, QueryType* query, Dists& path, size_t query_path_len, int& MaxLeavesToVisit) const;
 
-  Node* root_;               // root node
+  const Space<dist_t>& space_;
+  const ObjectVector& data_;
+  unique_ptr<Node>    root_;               // root node
 
   size_t MaxPathLength_;   // the number of distances for the data
                              // points to be kept at the leaves (P)

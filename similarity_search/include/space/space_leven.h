@@ -33,10 +33,10 @@ namespace similarity {
 
 class SpaceLevenshtein : public StringSpace<int> {
  public:
+  explicit SpaceLevenshtein() {}
   virtual ~SpaceLevenshtein() {}
-  virtual std::string ToString() const { return "Levenshtein distance"; }
+  virtual std::string StrDesc() const { return "Levenshtein distance"; }
  protected:
-  virtual Space<int>* HiddenClone() const { return new SpaceLevenshtein(); } // no parameters 
   virtual int HiddenDistance(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
     CHECK(obj2->datalength() > 0);
@@ -47,14 +47,15 @@ class SpaceLevenshtein : public StringSpace<int> {
 
     return levenshtein(x, len1, y, len2);
   }
+  DISABLE_COPY_AND_ASSIGN(SpaceLevenshtein);
 };
 
 class SpaceLevenshteinNormalized : public StringSpace<float> {
  public:
+  explicit SpaceLevenshteinNormalized() {}
   virtual ~SpaceLevenshteinNormalized() {}
-  virtual std::string ToString() const { return "Normalized Levenshtein distance"; }
+  virtual std::string StrDesc() const { return "Normalized Levenshtein distance"; }
  protected:
-  virtual Space<float>* HiddenClone() const { return new SpaceLevenshteinNormalized(); } // no parameters 
   virtual float HiddenDistance(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
     CHECK(obj2->datalength() > 0);
@@ -67,6 +68,7 @@ class SpaceLevenshteinNormalized : public StringSpace<float> {
     CHECK(len1 || len2);
     return float(levenshtein(x, len1, y, len2))/std::max(len1, len2);
   }
+  DISABLE_COPY_AND_ASSIGN(SpaceLevenshteinNormalized);
 };
 
 }  // namespace similarity

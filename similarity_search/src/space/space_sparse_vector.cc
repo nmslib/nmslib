@@ -17,6 +17,8 @@
 #include <cmath>
 #include <fstream>
 #include <string>
+#include <limits>
+#include <iomanip>
 #include <sstream>
 #include <random>
 
@@ -28,20 +30,22 @@
 
 namespace similarity {
 
+using namespace std;
+
 template <typename dist_t>
-void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, LabelType& label, vector<ElemType>& v) const
+void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, size_t line_num, LabelType& label, vector<ElemType>& v) const
 {
   v.clear();
+
+  label = Object::extractLabel(line);
+
+  ReplaceSomePunct(line); 
   std::stringstream str(line);
 
   str.exceptions(std::ios::badbit);
 
   uint32_t id;
   dist_t   val;
-
-  label = Object::extractLabel(line);
-
-  ReplaceSomePunct(line); 
 
   try {
     while (str >> id && str >> val) {
@@ -55,73 +59,106 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, LabelType& label
 
       if (id == prevId) {
         stringstream err;
-        err << "Repeating ID: prevId = " << prevId << " current id: " << id;
+        err << "Repeating ID: prevId = " << prevId << " prev val: " << v[i-1].val_ << " current id: " << id << " val = " << v[i].val_ << " (i=" << i << ")";
         throw std::runtime_error(err.str());
       }
 
       if (id < prevId) {
         stringstream err;
-        err << "But: Ids are not sorted, prevId = " << prevId << " current id: " << id;
+        err << "But: Ids are not sorted, prevId = " << prevId << " prev val: " << v[i-1].val_ << " current id: " << id << " val = " << v[i].val_ << " (i=" << i << ")";
         throw std::runtime_error(err.str());
       }
     }
   } catch (const std::exception &e) {
     LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'" << std::endl;
+    PREPARE_RUNTIME_ERR(err) << "Failed to parse the line # " << line_num << ": '" << line << "'" << std::endl;
+    LOG(LIB_ERROR) << err.stream().str() << std::endl;
+    THROW_RUNTIME_ERR(err);
   }
+
+  CHECK_MSG(!v.empty(), "Encountered an empty sparse vector: this is not allowed!");
+}
+
+/** Standard functions to read/write/create objects */ 
+
+template <typename dist_t>
+unique_ptr<DataFileInputState> SpaceSparseVector<dist_t>::OpenReadFileHeader(const string& inpFileName) const {
+  return unique_ptr<DataFileInputState>(new DataFileInputStateOneFile(inpFileName));
+}
+
+template <typename dist_t>
+unique_ptr<DataFileOutputState> SpaceSparseVector<dist_t>::OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                              const string& outputFile) const {
+  return unique_ptr<DataFileOutputState>(new DataFileOutputState(outputFile));
+}
+
+template <typename dist_t>
+unique_ptr<Object> 
+SpaceSparseVector<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                      DataFileInputState* pInpStateBase) const {
+  size_t line_num = 0;
+  if (NULL != pInpStateBase) {
+    DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(pInpStateBase);
+    CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+    line_num = pInpState->line_num_; 
+  }
+
+  vector<ElemType>  vec;
+  ReadSparseVec(s, line_num, label, vec);
+  return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
+}
+
+template <typename dist_t>
+bool 
+SpaceSparseVector<dist_t>::ApproxEqual(const Object& obj1, const Object& obj2) const {
+  vector<SparseVectElem<dist_t>> target1, target2;
+  CreateVectFromObj(&obj1, target1);
+  CreateVectFromObj(&obj2, target2);
+  return target1 == target2;
+}
+
+template <typename dist_t>
+string SpaceSparseVector<dist_t>::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
+  stringstream out;
+
+  vector<ElemType> elems;
+
+  vector<SparseVectElem<dist_t>> target;
+  CreateVectFromObj(pObj, target);
+
+  for (size_t i = 0; i < target.size(); ++i) {
+    if (i) out << " ";
+    // Clear all previous flags & set to the maximum precision available
+    out.unsetf(ios_base::floatfield);
+    out << target[i].id_ << " " << setprecision(numeric_limits<dist_t>::max_digits10) << target[i].val_;
+  }
+
+  return out.str();
 }
 
 
 template <typename dist_t>
-void SpaceSparseVector<dist_t>::ReadDataset(
-    ObjectVector& dataset,
-    const ExperimentConfig<dist_t>* /* ignoring it here */,
-    const char* FileName,
-    const int MaxNumObjects) const {
-
-  dataset.clear();
-  dataset.reserve(MaxNumObjects);
-
-  vector<ElemType>    temp;
-
-  std::ifstream InFile(FileName);
-
-  if (!InFile) {
-      LOG(LIB_FATAL) << "Cannot open file: " << FileName;
+bool SpaceSparseVector<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string& strObj, LabelType& label, string& externId) const {
+  externId.clear();
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected reference type");
+  if (!pInpState->inp_file_) return false;
+  if (!getline(pInpState->inp_file_, strObj)) return false;
+  if (strObj.empty()) {
+    PREPARE_RUNTIME_ERR(err) << "Encountered an empty line (not allowed), line # " << pInpState->line_num_; 
+    THROW_RUNTIME_ERR(err);
   }
-
-  InFile.exceptions(std::ios::badbit);
-
-  try {
-
-    std::string StrLine;
-
-    int linenum = 0;
-    int id = linenum;
-    LabelType label = -1;
-
-    while (getline(InFile, StrLine) && (!MaxNumObjects || linenum < MaxNumObjects)) {
-      if (StrLine.empty()) continue;
-      ReadSparseVec(StrLine, label, temp);
-      id = linenum;
-      ++linenum;
-      dataset.push_back(CreateObjFromVect(id, label, temp));
-    }
-  } catch (const std::exception &e) {
-    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
-    LOG(LIB_FATAL) << "Failed to read/parse the file: '" << FileName << "'" << std::endl;
-  }
+  pInpState->line_num_++;
+  return true;
 }
-
-template <typename dist_t>
-Object* SpaceSparseVector<dist_t>::CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const {
-  return new Object(id, label, InpVect.size() * sizeof(ElemType), &InpVect[0]);
-};
-
 
 /* 
  * We don't instantiate sparse vector spaces for types other than float & double
  */
 template class SpaceSparseVector<float>;
 template class SpaceSparseVector<double>;
+
+template class SpaceSparseVectorSimpleStorage<float>;
+template class SpaceSparseVectorSimpleStorage<double>;
+
 }  // namespace similarity

@@ -27,9 +27,7 @@
 #define METH_PIVOT_NEIGHB_INVINDEX      "pivot_neighb_invindx"
 #define METH_PIVOT_NEIGHB_INVINDEX_SYN  "napp"
 
-#define PERM_PROC_FAST_SCAN       "scan"
-#define PERM_PROC_MAP             "map"
-#define PERM_PROC_MERGE           "merge"
+#include <method/pivot_neighb_common.h>
 
 namespace similarity {
 
@@ -64,30 +62,32 @@ using std::mutex;
  *        IEEE 24th International Conference on, pp. 257-266. IEEE, 2008.
  */
 
-typedef vector<int> PostingListInt;
-
 template <typename dist_t>
 class PivotNeighbInvertedIndex : public Index<dist_t> {
  public:
   PivotNeighbInvertedIndex(bool PrintProgress,
-                           const Space<dist_t>* space,
-                           const ObjectVector& data,
-                           const AnyParams& AllParams);
+                           const Space<dist_t>& space,
+                           const ObjectVector& data);
+
+  virtual void CreateIndex(const AnyParams& IndexParams) override;
+  virtual void SaveIndex(const string &location) override;
+  virtual void LoadIndex(const string &location) override;
 
   ~PivotNeighbInvertedIndex();
 
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
   
-  virtual vector<string> GetQueryTimeParamNames() const;
-
   void IndexChunk(size_t chunkId, ProgressDisplay*, mutex&);
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
-  virtual void SetQueryTimeParamsInternal(AnyParamManager& );
 
-  const   ObjectVector& data_;
-  const   Space<dist_t>*  space_;
+  const   ObjectVector&   data_;
+  const   Space<dist_t>&  space_;
+  bool    PrintProgress_;
+  bool    recreate_points_;
+
   size_t  chunk_index_size_;
   size_t  K_;
   size_t  knn_amp_;
@@ -98,6 +98,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   bool    skip_checking_;
   size_t  index_thread_qty_;
   size_t  num_pivot_;
+  string  pivot_file_;
 
   enum eAlgProctype {
     kScan,
@@ -105,17 +106,31 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
     kMerge
   } inv_proc_alg_;
 
+  string toString(eAlgProctype type) {
+    if (type == kScan)   return PERM_PROC_FAST_SCAN;
+    if (type == kMap)    return PERM_PROC_MAP;
+    if (type == kMerge)  return PERM_PROC_MERGE;
+    return "unknown";
+  }
 
-  ObjectVector pivot_;
+  ObjectVector    pivot_;
+  vector<IdType>  pivot_pos_;
 
-  size_t computeDbScan(size_t K) {
-    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
-    return static_cast<size_t>(db_scan_frac_ * data_.size());
+  ObjectVector    genPivot_; // generated pivots
+
+  size_t computeDbScan(size_t K, size_t chunkQty) const {
+    size_t totalDbScan = static_cast<size_t>(db_scan_frac_ * data_.size());
+    if (knn_amp_) { 
+      totalDbScan = K * knn_amp_;
+    }
+    totalDbScan = min(totalDbScan, data_.size());
+    CHECK_MSG(chunkQty, "Bug or inconsistent parameters: the number of index chunks cannot be zero!");
+    return (totalDbScan + chunkQty - 1) / chunkQty;
   }
   
   vector<shared_ptr<vector<PostingListInt>>> posting_lists_;
 
-  template <typename QueryType> void GenSearch(QueryType* query, size_t K);
+  template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PivotNeighbInvertedIndex);

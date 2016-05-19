@@ -47,7 +47,7 @@ Space<dist_t>* CreateSparseL(const AnyParams& AllParams) {
 
   dist_t p;
 
-  pmgr.GetParamOptional("p",  p);
+  pmgr.GetParamRequired("p",  p);
 
   return new SpaceSparseLp<dist_t>(p);
 }

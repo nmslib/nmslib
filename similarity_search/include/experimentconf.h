@@ -37,13 +37,12 @@ using std::unordered_map;
 template <typename dist_t>
 class ExperimentConfig {
 public:
-  ExperimentConfig(const Space<dist_t>* space,
+  ExperimentConfig(Space<dist_t>& space,
                    const string& datafile,
                    const string& queryfile,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
-                   unsigned MaxNumData,
-                   unsigned MaxNumQueryToRun,
-                   unsigned dimension,
+                   IdTypeUnsign MaxNumData,
+                   IdTypeUnsign MaxNumQueryToRun,
                    const typename std::vector<unsigned>& knn,
                    float eps,
                    const typename std::vector<dist_t>& range)
@@ -58,7 +57,6 @@ public:
         maxNumData_(MaxNumData),
         maxNumQuery_(MaxNumQueryToRun),
         maxNumQueryToRun_(MaxNumQueryToRun),
-        dimension_(dimension),
         range_(range),
         knn_(knn),
         eps_(eps),
@@ -73,13 +71,12 @@ public:
     }
   }
 
-  ExperimentConfig(const Space<dist_t>* space,
+  ExperimentConfig(Space<dist_t>& space,
                    const ObjectVector& externalData,
                    const ObjectVector& externalQuery,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
-                   unsigned MaxNumData,
-                   unsigned MaxNumQueryToRun,
-                   unsigned dimension,
+                   IdTypeUnsign MaxNumData,
+                   IdTypeUnsign MaxNumQueryToRun,
                    const typename std::vector<unsigned>& knn,
                    float eps,
                    const typename std::vector<dist_t>& range)
@@ -94,7 +91,6 @@ public:
         maxNumData_(MaxNumData),
         maxNumQuery_(MaxNumQueryToRun),
         maxNumQueryToRun_(MaxNumQueryToRun),
-        dimension_(dimension),
         range_(range),
         knn_(knn),
         eps_(eps),
@@ -110,12 +106,6 @@ public:
   }
 
   ~ExperimentConfig() {
-    /*  
-        The experimental config shouldn't assume ownership of the space.
-        This is also related to the Object-ownership issue https://github.com/searchivarius/NonMetricSpaceLib/issues/48
-    */
-    //delete space_;
-
     for (auto it = origData_.begin(); it != origData_.end(); ++it) {
       delete *it;
     }
@@ -135,13 +125,13 @@ public:
     return testSetQty_;
   }
   size_t GetOrigDataQty() const { return origData_.size(); }
-  const Space<dist_t>*  GetSpace() const { return space_; }
+  const Space<dist_t>&  GetSpace() const { return space_; }
+  Space<dist_t>&  GetSpace() { return space_; }
   const ObjectVector& GetDataObjects() const { return dataobjects_; }
   const ObjectVector& GetQueryObjects() const { return queryobjects_; }
   const typename std::vector<unsigned>& GetKNN() const { return knn_; }
   float GetEPS() const { return eps_; }
   const typename std::vector<dist_t>& GetRange() const { return range_; }
-  int   GetDimension() const { return dimension_; }
   int   GetQueryToRunQty() const {
     return noQueryData_ ? maxNumQueryToRun_ :
                           static_cast<unsigned>(origQuery_.size());
@@ -172,7 +162,7 @@ public:
 
   void ReadDataset();
 private:
-  const Space<dist_t>*    space_;
+  Space<dist_t>&    space_;
   ObjectVector      dataobjects_;
   ObjectVector      queryobjects_;
   ObjectVector      origData_;
@@ -186,10 +176,10 @@ private:
   bool              noQueryData_;
   unsigned          testSetToRunQty_;
   unsigned          testSetQty_;
-  unsigned          maxNumData_;
-  unsigned          maxNumQuery_;
-  unsigned          maxNumQueryToRun_;
-  unsigned          dimension_;
+
+  IdTypeUnsign      maxNumData_;
+  IdTypeUnsign      maxNumQuery_;
+  IdTypeUnsign      maxNumQueryToRun_;
 
 
   vector<dist_t>    range_;  // range search parameter

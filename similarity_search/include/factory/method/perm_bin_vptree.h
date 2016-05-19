@@ -28,11 +28,10 @@ namespace similarity {
 template <typename dist_t>
 Index<dist_t>* CreatePermutationBinVPTree(bool PrintProgress,
                            const string& SpaceType,
-                           const Space<dist_t>* space,
-                           const ObjectVector& DataObjects,
-                           const AnyParams& AllParams) {
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
 
-    return new PermBinVPTree<dist_t, SpearmanRhoSIMD>(space, DataObjects, AllParams);
+    return new PermBinVPTree<dist_t, SpearmanRhoSIMD>(PrintProgress, space, DataObjects);
 }
 
 /*

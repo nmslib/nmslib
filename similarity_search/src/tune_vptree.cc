@@ -42,11 +42,11 @@
 #include "tune.h"
 #include "method/vptree.h"
 #include "method/proj_vptree.h"
-#include "method/permutation_vptree.h"
 #include "method/perm_bin_vptree.h"
 #include "logging.h"
 #include "spacefactory.h"
 #include "methodfactory.h"
+#include "params_def.h"
 
 #include "meta_analysis.h"
 #include "params.h"
@@ -71,14 +71,16 @@ static void Usage(const char *prog,
 
 template <typename dist_t>
 void RunExper(unsigned AddRestartQty, 
-             shared_ptr<MethodWithParams>  Method,
+             const string&                  MethodName,
+             const AnyParams&               IndexParams,
+             const AnyParams&               QueryTimeParams,
              const string&                  SpaceType,
-             const shared_ptr<AnyParams>&   SpaceParams,
+             const AnyParams&               SpaceParams,
              unsigned                       TestSetQty,
              const string&                  DataFile,
              const string&                  QueryFile,
-             unsigned                       MaxNumData,
-             unsigned                       MaxNumQuery,
+             IdTypeUnsign                   MaxNumData,
+             IdTypeUnsign                   MaxNumQuery,
              vector<unsigned>               knnAll,
              float                          eps,
              const string&                  RangeArg,
@@ -89,7 +91,7 @@ void RunExper(unsigned AddRestartQty,
              unsigned                       MaxRecDepth,
              unsigned                       StepN,
              float                          FullFactor,
-             unsigned                       maxCacheGSQty
+             float                          maxCacheGSRelativeQty
 )
 {
   vector<dist_t> rangeAll;
@@ -100,16 +102,14 @@ void RunExper(unsigned AddRestartQty,
     }
   }
 
-  vector<string>  vAllowedMeth = {METH_VPTREE, METH_PROJ_VPTREE, METH_PERMUTATION_VPTREE, METH_PERM_BIN_VPTREE};
+  vector<string>  vAllowedMeth = {METH_VPTREE, METH_PROJ_VPTREE, METH_PERM_BIN_VPTREE};
   string          allowedMethList;
 
   for (string s: vAllowedMeth) allowedMethList += s + " ";
 
-  const string methodName = Method->methName_;
-
   bool ok = false;
   for (string s: vAllowedMeth) {
-    if (methodName  == s) {
+    if (MethodName  == s) {
       ok = true;
       break;
     }
@@ -120,23 +120,21 @@ void RunExper(unsigned AddRestartQty,
                       "you should specify only a single method from the list: " << allowedMethList;
   }
 
-  LOG(LIB_INFO) << "We are going to tune parameters for " << methodName;
-
-  const AnyParams& MethPars = Method->methPars_;
+  LOG(LIB_INFO) << "We are going to tune parameters for " << MethodName;
 
   static  std::random_device          rd;
   static  std::mt19937                engine(rd());
   static  std::normal_distribution<>  normGen(0.0f, log(FullFactor));
 
-  AnyParamManager pmgr(MethPars);
+  AnyParamManager pmgr(IndexParams);
 
   float         desiredRecall = 0;
 
   pmgr.GetParamRequired(DESIRED_RECALL_PARAM, desiredRecall);
 
-  string metricName = OPTIM_METRIC_DEFAULT; 
+  string metricName;
 
-  pmgr.GetParamOptional(OPTIM_METRIC_PARAMETER, metricName);
+  pmgr.GetParamOptional(OPTIM_METRIC_PARAMETER, metricName, OPTIM_METRIC_DEFAULT);
 
   OptimMetric metric = getOptimMetric(metricName);
 
@@ -157,7 +155,7 @@ void RunExper(unsigned AddRestartQty,
     }
 
     unique_ptr<ExperimentConfig<dist_t>>  config;
-    unique_ptr<Space<dist_t>>             space(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, *SpaceParams));
+    unique_ptr<Space<dist_t>>             space(SpaceFactoryRegistry<dist_t>::Instance().CreateSpace(SpaceType, SpaceParams));
 
     if (NULL == space.get()) {
       LOG(LIB_FATAL) << "Cannot create space: '" << SpaceType;
@@ -169,10 +167,10 @@ void RunExper(unsigned AddRestartQty,
 
       range.push_back(rangeAll[i]);
       
-      config.reset(new ExperimentConfig<dist_t>(space.get(),
+      config.reset(new ExperimentConfig<dist_t>(*space,
                                       DataFile, QueryFile, TestSetQty,
                                       MaxNumData, MaxNumQuery,
-                                      0, knn, eps, range));
+                                      knn, eps, range));
     }
 
     for (unsigned i = 0; i < knnAll.size(); ++i) {
@@ -181,10 +179,10 @@ void RunExper(unsigned AddRestartQty,
 
       knn.push_back(knnAll[i]);
 
-      config.reset(new ExperimentConfig<dist_t>(space.get(),
+      config.reset(new ExperimentConfig<dist_t>(*space,
                                       DataFile, QueryFile, TestSetQty,
                                       MaxNumData, MaxNumQuery,
-                                      0, knn, eps, range));
+                                      knn, eps, range));
     }
 
     CHECK(config.get());
@@ -210,12 +208,14 @@ void RunExper(unsigned AddRestartQty,
       GetOptimalAlphas(true,
                      *config, 
                      metric, desiredRecall,
-                     SpaceType, methodName, 
+                     SpaceType, 
+                     MethodName, 
                      pmgr.ExtractParametersExcept({DESIRED_RECALL_PARAM, OPTIM_METRIC_PARAMETER}), 
+                     QueryTimeParams,
                      recall_loc, 
                      time_best_loc, impr_best_loc,
                      alpha_left_loc, expLeft, alpha_right_loc, expRight,
-                     MaxIter, MaxRecDepth, StepN, FullFactor, maxCacheGSQty);
+                     MaxIter, MaxRecDepth, StepN, FullFactor, maxCacheGSRelativeQty);
 
       if (impr_best_loc > impr_best) {
         recall = recall_loc; 
@@ -278,7 +278,7 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                       unsigned&               TestSetQty,
                       string&                 DataFile,
                       string&                 QueryFile,
-                      size_t&                 maxCacheGSQty,
+                      float&                  MaxCacheGSRelativeQty,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,
@@ -291,7 +291,9 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                       unsigned&               StepN,      
                       float&                  FullFactor,
                       unsigned&               addRestartQty,
-                      shared_ptr<MethodWithParams>& pars) {
+                      string&                 MethodName,
+                      shared_ptr<AnyParams>&  IndexParams,
+                      shared_ptr<AnyParams>&  QueryTimeParams) {
   knn.clear();
   RangeArg.clear();
 
@@ -301,40 +303,30 @@ void ParseCommandLineForTuning(int argc, char*argv[],
   double          epsTmp;
   double          fullFactorTmp;
 
+  string          indexTimeParamStr;
+  string          queryTimeParamStr;
+
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
-    ("help,h", "produce help message")
-    ("spaceType,s",     po::value<string>(&SpaceType)->required(),
-                        "space type, e.g., l1, l2, lp:p=0.5")
-    ("distType",        po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT),
-                        "distance value type: int, float, double")
-    ("dataFile,i",      po::value<string>(&DataFile)->required(),
-                        "input data file")
-    ("maxNumData",      po::value<unsigned>(&MaxNumData)->default_value(0),
-                        "if non-zero, only the first maxNumData elements are used")
-    ("queryFile,q",     po::value<string>(&QueryFile)->default_value(""),
-                        "query file")
-    (MAX_CACHE_GS_QTY_PARAM, po::value<size_t>(&maxCacheGSQty)->default_value(MAX_CACHE_GS_QTY_DEFAULT),
-                       "a maximum number of gold standard entries to compute/cache")
-    ("logFile,l",       po::value<string>(&LogFile)->default_value(""),
-                        "log file")
-    ("maxNumQuery",     po::value<unsigned>(&MaxNumQuery)->default_value(0),
-                        "if non-zero, use maxNumQuery query elements"
-                        "(required in the case of bootstrapping)")
-    ("testSetQty,b",    po::value<unsigned>(&TestSetQty)->default_value(0),
-                        "# of test sets obtained by bootstrapping;"
-                        " ignored if queryFile is specified")
-    ("knn,k",           po::value< string>(&knnArg),
-                        "comma-separated values of K for the k-NN search")
-    ("range,r",         po::value<string>(&RangeArg),
-                        "comma-separated radii for the range searches")
-    ("eps",             po::value<double>(&epsTmp)->default_value(0.0),
-                        "the parameter for the eps-approximate k-NN search.")
-    ("method,m",        po::value<string>(&methParams)->required(),
-                        "one method with comma-separated parameters in the format:\n"
-                        "<method name>:<param1>,<param2>,...,<paramK>")
-    ("outFile,o",       po::value<string>(&ResFile)->default_value(""),
-                        "output file")
+    (HELP_PARAM_OPT,          HELP_PARAM_MSG)
+    (SPACE_TYPE_PARAM_OPT,    po::value<string>(&SpaceType)->required(),                    SPACE_TYPE_PARAM_MSG)
+    (DIST_TYPE_PARAM_OPT,     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG)
+    (DATA_FILE_PARAM_OPT,     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG)
+    (MAX_NUM_DATA_PARAM_OPT,  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG)
+    (QUERY_FILE_PARAM_OPT,    po::value<string>(&QueryFile)->default_value(QUERY_FILE_PARAM_DEFAULT),  QUERY_FILE_PARAM_MSG)
+    (MAX_CACHE_GS_QTY_PARAM_OPT, po::value<float>(&MaxCacheGSRelativeQty)->default_value(MAX_CACHE_GS_QTY_PARAM_DEFAULT),    MAX_CACHE_GS_QTY_PARAM_MSG)
+    (LOG_FILE_PARAM_OPT,      po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT),          LOG_FILE_PARAM_MSG)
+    (MAX_NUM_QUERY_PARAM_OPT, po::value<unsigned>(&MaxNumQuery)->default_value(MAX_NUM_QUERY_PARAM_DEFAULT), MAX_NUM_QUERY_PARAM_MSG)
+    (TEST_SET_QTY_PARAM_OPT,  po::value<unsigned>(&TestSetQty)->default_value(TEST_SET_QTY_PARAM_DEFAULT),   TEST_SET_QTY_PARAM_MSG)
+    (KNN_PARAM_OPT,           po::value< string>(&knnArg),                                  KNN_PARAM_MSG)
+    (RANGE_PARAM_OPT,         po::value<string>(&RangeArg),                                 RANGE_PARAM_MSG)
+    (EPS_PARAM_OPT,           po::value<double>(&epsTmp)->default_value(EPS_PARAM_DEFAULT), EPS_PARAM_MSG)
+    (METHOD_PARAM_OPT,        po::value<string>(&MethodName)->required(), METHOD_PARAM_MSG)
+    ("outFile,o",             po::value<string>(&ResFile)->default_value(""), "output file")
+
+    (QUERY_TIME_PARAMS_PARAM_OPT, po::value<string>(&queryTimeParamStr)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG)
+    (INDEX_TIME_PARAMS_PARAM_OPT, po::value<string>(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG)
+
     (MIN_EXP_PARAM, po::value<unsigned>(&MinExp)->default_value(MIN_EXP_DEFAULT),
                     "the minimum exponent in the pruning oracle.")
     (MAX_EXP_PARAM, po::value<unsigned>(&MaxExp)->default_value(MAX_EXP_DEFAULT),
@@ -379,11 +371,6 @@ void ParseCommandLineForTuning(int argc, char*argv[],
       SpaceParams = shared_ptr<AnyParams>(new AnyParams(SpaceDesc));
     }
 
-    string          MethName;
-    vector<string>  MethodDesc;
-    ParseMethodArg(methParams, MethName, MethodDesc);
-    pars = shared_ptr<MethodWithParams>(new MethodWithParams(MethName, MethodDesc));
-    
     if (vm.count("knn")) {
       if (!SplitStr(knnArg, knn, ',')) {
         Usage(argv[0], ProgOptDesc);
@@ -407,6 +394,21 @@ void ParseCommandLineForTuning(int argc, char*argv[],
       LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
     }
 
+    CHECK_MSG(MaxNumData < MAX_DATASET_QTY, "The maximum number of points should not exceed" + ConvertToString(MAX_DATASET_QTY));
+    CHECK_MSG(MaxNumQuery < MAX_DATASET_QTY, "The maximum number of queries should not exceed" + ConvertToString(MAX_DATASET_QTY));
+
+    {
+      vector<string>     desc;
+      ParseArg(indexTimeParamStr, desc);
+      IndexParams = shared_ptr<AnyParams>(new AnyParams(desc));
+    }
+
+    {
+      vector<string>     desc;
+      ParseArg(queryTimeParamStr, desc);
+      QueryTimeParams = shared_ptr<AnyParams>(new AnyParams(desc));
+    }
+
   } catch (const exception& e) {
     LOG(LIB_FATAL) << "Exception: " << e.what();
   }
@@ -424,13 +426,15 @@ int main(int ac, char* av[]) {
   unsigned                TestSetQty;
   string                  DataFile;
   string                  QueryFile;
-  size_t                  MaxCacheGSQty;
-  unsigned                MaxNumData;
-  unsigned                MaxNumQuery;
+  float                   MaxCacheGSRelativeQty;
+  IdTypeUnsign            MaxNumData;
+  IdTypeUnsign            MaxNumQuery;
   vector<unsigned>        knn;
   string                  RangeArg;
   float                   eps;
-  shared_ptr<MethodWithParams> Method;
+  string                  MethodName;
+  shared_ptr<AnyParams>   IndexParams;
+  shared_ptr<AnyParams>   QueryTimeParams;
 
   unsigned MinExp;
   unsigned MaxExp;
@@ -449,7 +453,7 @@ int main(int ac, char* av[]) {
                        TestSetQty,
                        DataFile,
                        QueryFile,
-                       MaxCacheGSQty,
+                       MaxCacheGSRelativeQty,
                        MaxNumData,
                        MaxNumQuery,
                        knn,
@@ -462,16 +466,29 @@ int main(int ac, char* av[]) {
                        StepN,
                        FullFactor,
                        AddRestartQty,
-                       Method);
+                       MethodName,
+                       IndexParams,
+                       QueryTimeParams);
 
   initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   ToLower(DistType);
 
+  if (!SpaceParams) {
+    LOG(LIB_FATAL) << "Failed to initialized space parameters!";
+  }
+  if (!IndexParams) {
+    LOG(LIB_FATAL) << "Failed to initialized index-time method parameters!";
+  }
+  if (!QueryTimeParams) {
+    LOG(LIB_FATAL) << "Failed to initialized query-time method parameters!";
+  }
+
   if (DIST_TYPE_INT == DistType) {
-    RunExper<int>(AddRestartQty, Method,
+    RunExper<int>(AddRestartQty, 
+                  MethodName, *IndexParams, *QueryTimeParams,
                   SpaceType,
-                  SpaceParams,
+                  *SpaceParams,
                   TestSetQty,
                   DataFile,
                   QueryFile,
@@ -487,12 +504,13 @@ int main(int ac, char* av[]) {
                   MaxRecDepth,
                   StepN,
                   FullFactor,
-                  MaxCacheGSQty 
+                  MaxCacheGSRelativeQty
                  );
   } else if (DIST_TYPE_FLOAT == DistType) {
-    RunExper<float>(AddRestartQty, Method,
+    RunExper<float>(AddRestartQty, 
+                  MethodName, *IndexParams, *QueryTimeParams,
                   SpaceType,
-                  SpaceParams,
+                  *SpaceParams,
                   TestSetQty,
                   DataFile,
                   QueryFile,
@@ -508,12 +526,13 @@ int main(int ac, char* av[]) {
                   MaxRecDepth,
                   StepN,
                   FullFactor,
-                  MaxCacheGSQty
+                  MaxCacheGSRelativeQty
                  );
   } else if (DIST_TYPE_DOUBLE == DistType) {
-    RunExper<double>(AddRestartQty, Method,
+    RunExper<double>(AddRestartQty, 
+                  MethodName, *IndexParams, *QueryTimeParams,
                   SpaceType,
-                  SpaceParams,
+                  *SpaceParams,
                   TestSetQty,
                   DataFile,
                   QueryFile,
@@ -529,7 +548,7 @@ int main(int ac, char* av[]) {
                   MaxRecDepth,
                   StepN,
                   FullFactor,
-                  MaxCacheGSQty
+                  MaxCacheGSRelativeQty
                  );
   } else {
     LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;

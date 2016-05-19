@@ -46,11 +46,11 @@ class ParameterCreator {
   static typename lsh_t::Parameter GetParameter(
     const lshkit::FloatMatrix& matrix,
     unsigned H, unsigned M, float W) {
-    LOG(LIB_FATAL) << "not allowed dummy parameter creator";
+    throw runtime_error("not allowed: dummy parameter creator");
     return lsh_t::Parameter();
   }
 
-  static std::string ToString() {
+  static std::string StrDesc() {
     return "ParameterCreator<dummy>";
   }
 };
@@ -77,7 +77,7 @@ class ParameterCreator<TailRepeatHashThreshold> {
     return param;
   }
 
-  static std::string ToString() {
+  static std::string StrDesc() {
     return "ParameterCreator<TailRepeatHashThreshold> (l1 distance)";
   }
 };
@@ -96,7 +96,7 @@ class ParameterCreator<TailRepeatHashCauchy> {
     return param;
   }
 
-  static std::string ToString() {
+  static std::string StrDesc() {
     return "ParameterCreator<TailRepeatHashCauchy> (l1 distance)";
   }
 };
@@ -115,7 +115,7 @@ class ParameterCreator<TailRepeatHashGaussian> {
     return param;
   }
 
-  static std::string ToString() {
+  static std::string StrDesc() {
     return "ParameterCreator<TailRepeatHashGaussian> (l2 distance)";
   }
 };
@@ -124,20 +124,22 @@ class ParameterCreator<TailRepeatHashGaussian> {
 template <typename dist_t, typename lsh_t, typename paramcreator_t>
 class LSH : public Index<dist_t> {
  public:
-  LSH(const Space<dist_t>* space,
+  LSH(const Space<dist_t>& space,
       const ObjectVector& data,
-      int P,      // lp (l1 or l2)
-      float W,    // window size (used only for LSHCauchy and LSHGaussian)
-      unsigned M, // # of hash functions
-      unsigned L, // # of hash tables
-      unsigned H  // hash table size
-      );
+      int P      // lp (l1 or l2)
+  );
+
+  void CreateIndex(const AnyParams& IndexParams) override;
+
   ~LSH();
 
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType ) const override;
+  void Search(KNNQuery<dist_t>* query, IdType ) const override;
+  void SetQueryTimeParams(const AnyParams& params)  override {};
 
+  // LSH does copy all data
+  virtual bool DuplicateData() const override { return true; }
  private:
   typedef lshkit::LshIndex<TailRepeatHash<lsh_t>, unsigned> LshIndexType;
 

@@ -34,10 +34,10 @@ namespace similarity {
 template <PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 class RankCorrelVectorSpace : public VectorSpace<PivotIdType> {
  public:
+  explicit RankCorrelVectorSpace() {}
 
-  virtual std::string ToString() const { return "rank correlation vector space"; }
+  virtual std::string StrDesc() const { return "rank correlation vector space"; }
  protected:
-  virtual Space<PivotIdType>* HiddenClone() const { return new RankCorrelVectorSpace<RankCorrelDistFunc>(); } // no parameters 
   // Should not be directly accessible
   virtual PivotIdType HiddenDistance(const Object* obj1, const Object* obj2) const {
     CHECK(obj1->datalength() > 0);
@@ -48,6 +48,7 @@ class RankCorrelVectorSpace : public VectorSpace<PivotIdType> {
 
     return RankCorrelDistFunc(x, y, length);
   }
+  DISABLE_COPY_AND_ASSIGN(RankCorrelVectorSpace);
 };
 
 }  // namespace similarity

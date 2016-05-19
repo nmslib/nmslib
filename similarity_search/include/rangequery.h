@@ -26,7 +26,7 @@ namespace similarity {
 template <typename dist_t>
 class RangeQuery : public Query<dist_t> {
  public:
-  RangeQuery(const Space<dist_t>* space, const Object* query_object, const dist_t radius);
+  RangeQuery(const Space<dist_t>& space, const Object* query_object, const dist_t radius);
 
   const ObjectVector* Result() const;
   const std::vector<dist_t>* ResultDists() const { return &resultDists_; }

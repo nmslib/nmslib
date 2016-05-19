@@ -37,34 +37,30 @@ namespace similarity {
 template <typename dist_t>
 class ProjectionVPTree : public Index<dist_t> {
  public:
-  ProjectionVPTree(const Space<dist_t>* space,
-                   const ObjectVector& data,
-                   const AnyParams& MethPars);
+  ProjectionVPTree(bool PrintProgress, 
+                   Space<dist_t>& space,
+                   const ObjectVector& data);
+  void CreateIndex(const AnyParams& IndexParams) override;
 
   ~ProjectionVPTree();
 
-  const std::string ToString() const;
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  const std::string StrDesc() const override;
+  void Search(RangeQuery<dist_t>* query, IdType ) const override;
+  void Search(KNNQuery<dist_t>* query, IdType ) const override;
 
-  vector<string> GetQueryTimeParamNames() const { 
-    vector<string> res = VPTreeIndex_->GetQueryTimeParamNames();
-    res.push_back("dbScanFrac");
-    res.push_back("knnAmp");
-    return res;
-  }
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
-  void SetQueryTimeParamsInternal(AnyParamManager& pmgr);
 
 
-  const Space<dist_t>*              space_;
+  Space<dist_t>&                    space_;
   const ObjectVector&               data_;
+  bool                              PrintProgress_;
 
   size_t                            K_;
   size_t                            knn_amp_;
   float					                    db_scan_frac_;
 
-  size_t computeDbScan(size_t K) {
+  size_t computeDbScan(size_t K) const {
     if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
     return static_cast<size_t>(db_scan_frac_ * data_.size());
   }
@@ -77,8 +73,8 @@ class ProjectionVPTree : public Index<dist_t> {
                                                    const Query<dist_t>* pQuery,
                                                    const Object* pSrcObj) const;
 
-  VPTree<float, PolynomialPruner<float>>*             VPTreeIndex_;
-  unique_ptr<const VectorSpaceSimpleStorage<float>>   VPTreeSpace_;
+  unique_ptr<VPTree<float, PolynomialPruner<float>>>  VPTreeIndex_;
+  unique_ptr<VectorSpaceSimpleStorage<float>>         VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(ProjectionVPTree);

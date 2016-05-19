@@ -37,31 +37,47 @@ using std::string;
 template <typename dist_t>
 class StringSpace : public Space<dist_t> {
  public:
+  explicit StringSpace() {}
   virtual ~StringSpace() {}
 
-  virtual void ReadDataset(ObjectVector& dataset,
-                      const ExperimentConfig<dist_t>* config,
-                      const char* inputfile,
-                      const int MaxNumObjects) const;
-  virtual void WriteDataset(const ObjectVector& dataset,
-                            const char* outputfile) const;
-  Object* CreateObjFromStr(IdType id, LabelType label, const string& s) const {
-    return CreateObjFromStr(id, label, s.data(), s.size()); 
+  /** Standard functions to read/write/create objects */ 
+  // Create an object from string representation.
+  virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                              DataFileInputState* pInpState) const {
+    // TODO double-check that sizeof(char) should always be 1 as guaranteed by the C++ standard
+    // then sizeof can be removed
+    return unique_ptr<Object>(new Object(id, label, s.size() * sizeof(char), s.c_str()));
   }
-  virtual Object* CreateObjFromStr(IdType id, LabelType label, const char *pStr, size_t len) const {
-    return new Object(id, label, len * sizeof(char), pStr);
-  }
+  // Create a string representation of an object.
+  virtual string CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const;
+  // Open a file for reading, fetch a header (if there is any) and memorize an input state
+  virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const ;
+  // Open a file for writing, write a header (if there is any) and memorize an output state
+  virtual unique_ptr<DataFileOutputState> OpenWriteFileHeader(const ObjectVector& dataset,
+                                                              const string& outputFile) const ;
+  // Read a string representation of the next object in a file
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const;
+  // Write a string representation of the next object to a file
+  virtual void WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &) const;
+  /** End of standard functions to read/write/create objects */ 
 
-  virtual string ToString() const = 0;
-  virtual void CreateVectFromObj(const Object* obj, dist_t* pVect,
+  /*
+   * Used only for testing/debugging: compares objects approximately. Floating point numbers
+   * should be nearly equal. Integers and strings should coincide exactly.
+   */
+  virtual bool ApproxEqual(const Object& obj1, const Object& obj2) const;
+
+  virtual string StrDesc() const = 0;
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const {
-    throw runtime_error("Cannot create vector for the space: " + ToString());
+    throw runtime_error("Cannot create vector for the space: " + StrDesc());
   }
   virtual size_t GetElemQty(const Object* object) const {return 0;}
  protected:
-  virtual Space<dist_t>* HiddenClone() const = 0;
+  DISABLE_COPY_AND_ASSIGN(StringSpace);
+
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
-  void ReadStr(std::string line, LabelType& label, std::string& str) const;
+  void ReadStr(std::string line, LabelType& label, std::string& str, size_t* pLineNum) const;
 };
 
 }  // namespace similarity

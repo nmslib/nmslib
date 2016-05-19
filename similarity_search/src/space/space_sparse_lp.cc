@@ -33,7 +33,7 @@ dist_t SpaceSparseLp<dist_t>::HiddenDistance(const Object* obj1, const Object* o
 }
 
 template <typename dist_t>
-std::string SpaceSparseLp<dist_t>::ToString() const {
+std::string SpaceSparseLp<dist_t>::StrDesc() const {
   std::stringstream stream;
   stream << "SpaceSparseLp: p = " << distObj_.getP() << " (custom implement.) = " << distObj_.getCustom();
   return stream.str();

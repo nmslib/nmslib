@@ -37,16 +37,57 @@ dist_t SpaceDummy<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2
    * obj2->data();
    */
   return static_cast<dist_t>(0);
+
+} 
+
+/** Sample standard functions to read/write/create objects */ 
+
+template <typename dist_t>
+unique_ptr<DataFileInputState> SpaceDummy<dist_t>::OpenReadFileHeader(const string& inpFileName) const {
+  return unique_ptr<DataFileInputState>(new DataFileInputStateOneFile(inpFileName));
 }
 
 template <typename dist_t>
-void SpaceDummy<dist_t>::ReadDataset(
-    ObjectVector& dataset,
-    const ExperimentConfig<dist_t>* config,
-    const char* FileName,
-    const int MaxNumObjects) const {
-  LOG(LIB_INFO) << "Reading at most " << MaxNumObjects << " from the file: " << FileName;
+unique_ptr<DataFileOutputState> SpaceDummy<dist_t>::OpenWriteFileHeader(const ObjectVector& dataset,
+                                                                        const string& outFileName) const {
+  return unique_ptr<DataFileOutputState>(new DataFileOutputState(outFileName));
 }
+
+template <typename dist_t>
+unique_ptr<Object> 
+SpaceDummy<dist_t>::CreateObjFromStr(IdType id, LabelType label, const string& s,
+                                            DataFileInputState* pInpStateBase) const {
+  // Object that stores the string
+  return unique_ptr<Object>(new Object(id, label, s.size(), s.data())); 
+}
+
+template <typename dist_t>
+string SpaceDummy<dist_t>::CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const {
+  // Return a string that is a copy of the Object buffer
+  return string(pObj->data(), pObj->datalength());
+}
+
+template <typename dist_t>
+bool SpaceDummy<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string& strObj, LabelType& label, string& externId) const {
+  externId.clear();
+  DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
+  CHECK_MSG(pInpState != NULL, "Bug: unexpected pointer type");
+  if (!pInpState->inp_file_) return false;
+  // Read the next line
+  if (!getline(pInpState->inp_file_, strObj)) return false;
+  // Increase the line number counter
+  pInpState->line_num_++;
+  return true;
+}
+
+template <typename dist_t>
+void SpaceDummy<dist_t>::WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &outState) const {
+  string s = CreateStrFromObj(&obj, externId);
+  outState.out_file_ << s << endl;
+}
+/** End of standard functions to read/write/create objects */ 
+
+ 
 
 template class SpaceDummy<int>;
 template class SpaceDummy<float>;

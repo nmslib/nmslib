@@ -20,29 +20,40 @@
 
 #include "index.h"
 
-#define METH_SEQ_SEARCH             "seq_search"
+#define METH_SEQ_SEARCH                 "brute_force"
+#define METH_SEQ_SEARCH_SYN             "seq_search"
 
 namespace similarity {
 
 using std::string;
+using std::vector;
 
 // Sequential search
 
 template <typename dist_t>
 class SeqSearch : public Index<dist_t> {
  public:
-  SeqSearch(const ObjectVector& data, const AnyParams& params);
+  SeqSearch(Space<dist_t>& space, const ObjectVector& data);
+  void CreateIndex(const AnyParams& ) override;
   virtual ~SeqSearch();
 
-  const std::string ToString() const { return "Sequential search"; }
+  const std::string StrDesc() const override { return "Sequential search"; }
 
-  void Search(RangeQuery<dist_t>* query);
-  void Search(KNNQuery<dist_t>* query);
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
 
+  void SetQueryTimeParams(const AnyParams& params) override {}
  private:
+  Space<dist_t>&          space_;
   const ObjectVector&     origData_;
   char*                   cacheOptimizedBucket_;
+
   ObjectVector*           pData_;
+  bool                    multiThread_;
+  IdTypeUnsign            threadQty_;
+  vector<ObjectVector>    vvThreadData;
+
+  const ObjectVector& getData() const { return pData_ != NULL ? *pData_ : origData_; }
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(SeqSearch);
 };

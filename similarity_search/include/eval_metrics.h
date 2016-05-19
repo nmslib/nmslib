@@ -78,8 +78,8 @@ struct EvalMetricsBase {
                          << " Approx: " << elemApprox.mDist << " id = " << elemApprox.mId 
                          << " Exact: "  << elemExact.mDist  << " id = " << elemExact.mId;
         }
-        // At this point the distance to the true answer is either >= than the distance to the approximate answer,
-        // or the distance to the true answer is slightly smaller due to floating point arithmetic inconsistency
+        // At this point the distance to the true answer is either <= than the distance to the approximate answer,
+        // or the distance to the true answer is slightly larger due to non-determinism of floating point arithmetic
         size_t LastEqualP = p;
         if (p < SortedAllEntries.size() && 
             ApproxEqualElem(elemApprox, elemExact)) {
