@@ -1,21 +1,14 @@
 #/bin/bash
 
 
-DATA_DIR=$1
+DATA_FILE=$1
 
-if [ "$DATA_DIR" = "" ] ; then
-  echo "Specify a directory with data files (1st arg)"
+if [ "$DATA_FILE" = "" ] ; then
+  echo "Specify a test file (1st arg)"
   exit 1
 fi
 
-if [ ! -d "$DATA_DIR" ] ; then
-  echo "Not a directory: $DATA_DIR"
-  exit 1
-fi
-
-DATA_FILE="$DATA_DIR/final64.txt"
-
-if [ ! -f "$DATA_FILE" ; then
+if [ ! -f "$DATA_FILE" ] ; then
   echo "The following data file is missing: $DATA_FILE"
   exit 1
 fi
@@ -27,10 +20,10 @@ if [ "$THREAD_QTY" = "" ] ; then
   exit 1
 fi
 
-# If you have python, latex, and PGF install, 
+# If you have python, latex, and PGF installed, 
 # you can set the following variable to 1 to generate a performance plot.
 GEN_PLOT=$3
-if [ "$GEN_PLOT" = "" ]
+if [ "$GEN_PLOT" = "" ] ; then
   echo "Specify a plot-generation flag: 1 to generate plots (3d arg)"
   exit 1
 fi
@@ -40,49 +33,46 @@ QUERY_QTY=500
 RESULT_FILE=output_file
 K=10
 SPACE=l2
+LOG_FILE_PREFIX="log_$K"
 BIN_DIR="../similarity_search"
+GS_CACHE_DIR="gs_cache"
+mkdir -p $GS_CACHE_DIR
+CACHE_PREFIX_GS=$GS_CACHE_DIR/test_run.tq=$THREAD_QTY
 
 rm -f $RESULT_FILE
-rm -f $LOG_FILE
+rm -f $LOG_FILE_PREFIX.*
 
-CMD_PREFIX=$BIN_DIR/release/experiment --distType float --spaceType $SPACE \
-        --cachePrefixGS exper1_cache -b $TEST_SET_QTY -Q  $QUERY_QTY -k $K \
-        --dataFile "$DATA_FILE" --outFilePrefix $RESULT_FILE --appendToResFile 0 -l "$LOG_FILE" 
+ARG_PREFIX="-s $SPACE -i $DATA_FILE -g $CACHE_PREFIX_GS -b $TEST_SET_QTY -Q  $QUERY_QTY -k $K  --outFilePrefix $RESULT_FILE --threadTestQty $THREAD_QTY "
 
+LN=1
 
-        --method vptree:tuneK=$K,bucketSize=50,chunkBucket=1 \
+function do_run {
+  DO_APPEND="$1"
+  ADD_ARG="$2"
+  ARGS="$ARG_PREFIX $ADD_ARG"
+  if [ "$DO_APPEND" = "1" ] ; then
+    APPEND_FLAG=" -a "
+  fi
+  cmd="$BIN_DIR/release/experiment $ARGS $APPEND_FLAG -l ${LOG_FILE_PREFIX}.$LN"
+  echo "$cmd"
+  bash -c "$cmd"
+  if [ "$?" != "0" ] ; then
+    echo "Command failed, args : $ARGS"
+    echo $CMD
+    exit 1 
+  fi
+  LN=$((LN+1))
+}
 
-# Testing the bregman-ball tree
-$BinDir/release/experiment --distType float --spaceType kldivgenfast \
-        --cachePrefixGS exper2_cache --maxCacheGSQty 2000 \
-        --testSetQty 5 --maxNumQuery 100 --knn 1 \
-        --dataFile $SampleData/final8_10K.txt --outFilePrefix result --appendToResFile 1 -l log \
-        --method bbtree:maxLeavesToVisit=20,bucketSize=10
-               
-# Testing permutation-based filtering methods
-$BinDir/release/experiment --distType float --spaceType l2 \
-        --cachePrefixGS exper3_cache --maxCacheGSQty 2000 \
-        --testSetQty 5 --maxNumQuery 100 --knn 1  \
-        --dataFile $SampleData/final8_10K.txt --outFilePrefix result --appendToResFile 1 -l log \
-        --method proj_incsort:projType=perm,projDim=4,dbScanFrac=0.2 \
-        --method pp-index:numPivot=4,prefixLength=4,minCandidate=100  \
-        --method proj_vptree:projType=perm,projDim=4,alphaLeft=2,alphaRight=2,dbScanFrac=0.05  \
-        --method mi-file:numPivot=128,numPivotIndex=16,numPivotSearch=4,dbScanFrac=0.01  \
-        --method napp:numPivot=32,numPivotIndex=8,numPivotSearch=8,chunkIndexSize=1024   \
-        --method perm_incsort_bin:numPivot=32,dbScanFrac=0.05  \
-        --method perm_bin_vptree:numPivot=32,alphaLeft=2,alphaRight=2,dbScanFrac=0.05  \
-
-
-# Testing misc methods
-$BinDir/release/experiment --distType float --spaceType l2 \
-        --cachePrefixGS exper4_cache --maxCacheGSQty 2000 \
-        --testSetQty 5 --maxNumQuery 100 --knn 1 --appendToResFile 1  -l log \
-        --dataFile $SampleData/final8_10K.txt --outFilePrefix result \
-        --method small_world_rand:NN=3,initIndexAttempts=5,initSearchAttempts=2,indexThreadQty=4  \
-        --method nndes:NN=3,rho=0.5,initSearchAttempts=2  \
-        --method seq_search  \
-        --method mult_index:methodName=vptree,indexQty=5,maxLeavesToVisit=2 
+do_run 0 "-m napp -c numPivot=512,numPivotIndex=64 -t numPivotSearch=40 -t numPivotSearch=42 -t numPivotSearch=44 -t numPivotSearch=46 -t numPivotSearch=48"
+do_run 1 "-m sw-graph -c NN=10 -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240"
+do_run 1 "-m hnsw -c M=10 -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240"
+do_run 1 "-m vptree -c tuneK=$K,bucketSize=50,desiredRecall=0.99,chunkBucket=1 "
+do_run 1 "-m vptree -c tuneK=$K,bucketSize=50,desiredRecall=0.975,chunkBucket=1 "
+do_run 1 "-m vptree -c tuneK=$K,bucketSize=50,desiredRecall=0.95,chunkBucket=1 "
+do_run 1 "-m vptree -c tuneK=$K,bucketSize=50,desiredRecall=0.925,chunkBucket=1 "
+do_run 1 "-m vptree -c tuneK=$K,bucketSize=50,desiredRecall=0.9,chunkBucket=1 "
 
 if [ "$GEN_PLOT" = 1 ] ; then
-  ./genplot_configurable.py -i result_K\=1.dat -o plot_1nn -x 1~norm~Recall -y 1~log~ImprEfficiency -l "2~(0.96,-.2)" -t "ImprEfficiency vs Recall"
+  ./genplot_configurable.py -i ${RESULT_FILE}_K=${K}.dat -o plot_${K}_NN -x 1~norm~Recall -y 1~log~ImprEfficiency -l "1~south west" -t "Improvement in efficiency vs recall" -n "MethodName" -a axis_desc.txt -m meth_desc.txt
 fi

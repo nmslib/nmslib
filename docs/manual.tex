@@ -24,11 +24,12 @@
 \newcommand{\todonoteinline}[1]{\todo[color=red!40,inline,caption={TODO}]{#1}}
 \newcommand{\todonote}[1]{\todo[color=red!40,caption={TODO}]{#1}}
 
-%\newcommand{\replocdir}{https://github.com/searchivarius/nmslib/tree/v1.5}
-%\newcommand{\replocfile}{https://github.com/searchivarius/nmslib/blob/v1.5}
+% replocdir and replocfile should end on '/'
+\newcommand{\replocdir}{https://github.com/searchivarius/nmslib/tree/v1.5/}
+\newcommand{\replocfile}{https://github.com/searchivarius/nmslib/blob/v1.5/}
 
-\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/pserv}
-\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/pserv/}
+%\newcommand{\replocdir}{https://github.com/searchivarius/NonMetricSpaceLib/tree/pserv}
+%\newcommand{\replocfile}{https://github.com/searchivarius/NonMetricSpaceLib/blob/pserv/}
 
 \newcommand{\ttt}[1]{\texttt{#1}}
 \newcommand{\knn}{$k$-NN }
@@ -854,7 +855,7 @@ The utility \ttt{test\_integr} runs complete implementations of many methods
 and checks if several effectiveness and efficiency characteristics
 meet the expectations.
 The expectations are encoded as an array of instances of the class \ttt{MethodTestCase}
-(see \href{\replocdir /similarity_search/test/test_integr.cc#L65}{the code here}).
+(see \href{\replocdir similarity_search/test/test_integr.cc#L65}{the code here}).
 For example, we expect that the recall (see \S~\ref{SectionEffect})
 fall in a certain pre-recorded range.
 Because almost all our methods are randomized, there is a great deal of variance
@@ -1285,6 +1286,9 @@ benchmarking utility \ttt{experiment}.
 The plotting script is \href{\replocfile scripts/genplot_configurable.py}{genplot\_configurable.py}.
 In addition to Python, it requires Latex and PGF. 
 This script is supposed to run only on Linux.
+For a working example of using script,
+please, see the another script: \href{\replocfile scripts/test_run.sh}{test\_run.sh}.
+This script runs several experiments, saves data, and generates a plot (if this is asked by the user).
 
 Consider the following example of using \ttt{genplot\_configurable.py}:
 \begin{verbatim}
