@@ -31,6 +31,9 @@
     <ClCompile Include="test_proj.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_space_serial.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
