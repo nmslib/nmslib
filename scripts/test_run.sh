@@ -9,7 +9,7 @@ if [ "$DATA_FILE" = "" ] ; then
 fi
 
 if [ ! -f "$DATA_FILE" ] ; then
-  echo "The following data file is missing: $DATA_FILE"
+  echo "The following data file doesn't exist: $DATA_FILE"
   exit 1
 fi
 
@@ -39,7 +39,7 @@ GS_CACHE_DIR="gs_cache"
 mkdir -p $GS_CACHE_DIR
 CACHE_PREFIX_GS=$GS_CACHE_DIR/test_run.tq=$THREAD_QTY
 
-rm -f $RESULT_FILE
+rm -f $RESULT_FILE.*
 rm -f $LOG_FILE_PREFIX.*
 
 ARG_PREFIX="-s $SPACE -i $DATA_FILE -g $CACHE_PREFIX_GS -b $TEST_SET_QTY -Q  $QUERY_QTY -k $K  --outFilePrefix $RESULT_FILE --threadTestQty $THREAD_QTY "

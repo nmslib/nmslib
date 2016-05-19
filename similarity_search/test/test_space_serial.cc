@@ -216,6 +216,7 @@ TEST(Test_BitHamming) {
   }
 }
 
+#if !defined(_MSC_VER)
 TEST(Test_SFQD) {
   const char* sqfdParams[] = {"alpha=1", NULL} ; 
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
@@ -223,6 +224,7 @@ TEST(Test_SFQD) {
     EXPECT_EQ(true, fullTest<double>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
   }
 }
+#endif
 
 
 }
