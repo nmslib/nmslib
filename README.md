@@ -39,7 +39,7 @@ The benchmarks were run on a c4.2xlarge instance on EC2 using a previously unsee
 What's new in version 1.5
 -----------------------
 
-1. A new efficient method: a hierarchical (navigable) small-world graph (HNSW), contributed by Yury Malkov (@yurymalkov) 
+1. A new efficient method: a hierarchical (navigable) small-world graph (HNSW), contributed by Yury Malkov (@yurymalkov). Works with g++, Visual Studio, Intel Compiler, but doesn't work with Clang yet.
 2. A query server, which can have clients in C++, Java, Python, and other languages supported by Apache Thrift
 3. Python bindings for vector **and non**-vector spaces
 4. Improved performance of two core methods SW-graph and NAPP
