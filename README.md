@@ -50,7 +50,7 @@ What's new in version 1.5
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. It should be also possible to build NMSLIB on MAC OS.
+A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
