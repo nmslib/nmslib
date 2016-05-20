@@ -869,6 +869,23 @@ The exact search method, however, should always have an almost perfect recall.
 Variance is partly due to using low-dimensional test sets. In the future, we plan to change this.
 For high-dimensional data sets, the outcomes are much more stable despite the randomized nature
 of most implementations.
+
+Finally, one is encouraged to run a small-scale test using the script
+\href{\replocfile scripts/test_run.sh}{test\_run.sh} on Linux (\href{\replocfile scripts/test_run.sh}{test\_run.bat} on Windows).
+The test includes several important methods, which can be very efficient.
+Both the Linux and the Windows scripts expect some dense vector space file (see \S~\ref{SectionSpaces} and \S~\ref{SectionDatasets}) and the number of threads
+as the first two parameters. The Linux script has an additional third parameter. 
+If the user specifies 1, the software creates a plot (see \S~\ref{SectionGenPlot}). On Linux, the user can verify
+that for the Colors data set \cite{LibMetricSpace} the plot looks as follows:
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/test_run.pdf}
+\end{figure}
+
+On Windows, the script \ttt{test\_run.bat} creates only the data (\ttt{output\_file\_K\=10.dat}) 
+and the report file (\ttt{output\_file\_K\=10.rep}). The report file can be checked manually.
+The data file can be used to create a plot via Excel or Google Docs.
+
 \subsection{Running Benchmarks}\label{SectionRunBenchmark}
 There are no principal differences in benchmarking on Linux and Windows.
 There is a \emph{single} benchmarking utility 
@@ -1362,7 +1379,7 @@ A relative position is defined by one of the following descriptors
 (quotes are for clarity only): ``north west'', ``north east'', ``south west'', ``south east''.
 If the relative position is specified, the legend is printed inside the main
 plotting area, e.g.:
-\newpage
+%\newpage
 \begin{verbatim}
 ../scripts/genplot_configurable.py  \
            -n MethodName \
@@ -2196,6 +2213,7 @@ the range searching.
 Such an implementation of the range searching is somewhat suboptimal
 and a better approach exists \cite{cayton2009efficient}.
 
+\newpage
 The following is an example of testing the bbtree with the benchmarking utility \ttt{experiment}:
 {
 \footnotesize
@@ -2628,6 +2646,7 @@ as that of the query. If we do not get enough candidate objects, we shorten the 
 and repeat the procedure until we get a sufficient number of candidate entries.
 Note that we do not the use the parameter \ttt{dbScanFrac} here.
 
+\newpage
 The following is an example of testing the PP-index with the benchmarking utility \ttt{experiment}.
 {
 \footnotesize
@@ -2687,6 +2706,7 @@ These objects are compared directly against the query.
 The filtering step of the MI-file is expensive. Therefore,
 this method is efficient only for computationally-intensive distances.
 
+\newpage
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -2947,7 +2967,8 @@ such synchronization creates little contention and, consequently,
 our parallelization approach is efficient.
 It is also necessary to synchronize updates for the list of graph nodes, 
 but this operation takes little time compared to searching for \ttt{NN} neighboring points.
-%\newpage
+
+\newpage
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -3163,6 +3184,7 @@ release/experiment \
 \end{verbatim}
 }
 
+\newpage
 \subsubsection{\textbf{Several copies of the same index type}.}
 It is possible to generate several copies of the same index using a
 meta method \ttt{mult\_indx}.
