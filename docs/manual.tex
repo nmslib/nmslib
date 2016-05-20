@@ -2926,9 +2926,10 @@ it selects an unvisited point closest to the query.
 
 There have been multiple stopping heuristics proposed.
 For example, we can stop after visiting a certain number of nodes.
-In NMSLIB, the sub-search carries out a $k'$-NN search for some $k'\ge k$ and
-terminates when the result set stops changing (i.e., we cannot find a point that is closer to a query than the $k'$-th closest point
-already discovered by the sub-search).
+In NMSLIB, the sub-search terminates essentially when the candidate queue is exhausted.
+Specifically, the candidate queue is expanded only with points that are closer to the query than the $k'$-\textit{th} closest point already discovered by the sub-search ($k'$ is a search parameter).
+When we stop finding such points, the queue dwindles and eventually becomes empty. 
+We also terminate the sub-search when the queue contains only points farther than the $k'$-\textit{th} closest point already discovered by the sub-search.
 Note that the greedy search is only approximate and does not necessarily return all true nearest neighbors.
 
 In our library we use several approaches to create proximity graphs, which are described below.
@@ -2946,10 +2947,10 @@ We insert points one by one. For each data point,
 we find \ttt{NN} closest points using an already constructed index.
 Then, we create an \emph{undirected} edge between a new graph node (representing a new point) 
 and nodes that represent \ttt{NN} closest points found by the greedy search. 
-Each sub-search starts from some, e.g., random node and proceeds until it cannot find a point that is closer
-than already found \ttt{efConstruction} nearest points (\ttt{efConstruction} is an index-time parameter).
-Similarly, the search procedure executes one or more sub-searches that start from some node and proceed
-until it cannot find a point closer than already found \ttt{efSearch} closest to the query.
+Each sub-search starts from some, e.g., random node and proceeds expanding the candidate queue with points that are closer
+than the \ttt{efConstruction}-\textit{th} closest point (\ttt{efConstruction} is an index-time parameter).
+Similarly, the search procedure executes one or more sub-searches that start from some node.
+The queue is expanded only with points that are closer than the \ttt{efSearch}-\textit{th} closest point.
 The number of sub-searches is defined by the parameter \ttt{initSearchAttempts}.
 
 Empirically, it was shown that this method often creates a navigable small world graph, where most nodes are separated by only a few edges (roughly logarithmic in terms of the overall number of objects) \cite{malkov2012scalable}.
@@ -2968,7 +2969,7 @@ our parallelization approach is efficient.
 It is also necessary to synchronize updates for the list of graph nodes, 
 but this operation takes little time compared to searching for \ttt{NN} neighboring points.
 
-\newpage
+%\newpage
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -4188,7 +4189,7 @@ well distances in the original space (see e.g. \cite{bingham2001random}).
 FastMap introduced by Faloutsos and Lin \cite{faloutsos1995fastmap}
 is also a type of the random-projection method. 
 At indexing time, we randomly select $projDim$ pairs $A_i$ and $B_i$.
-The \mbox{$i$-th} coordinate of vector $x$ is computed using the formula:
+The \mbox{$i$-\textit{th}} coordinate of vector $x$ is computed using the formula:
 \begin{equation}\label{EqFastMap}
 \mbox{\ttt{FastMap}}_{i}(x)  = \frac{d(A_i,x)^2 - d(B_i,x_i)^2 + d(A_i,B_i)}{2 d(A_i,B_i)^2}
 \end{equation}
@@ -4198,7 +4199,7 @@ However, FastMap can be used in non-Euclidean spaces as well.
 
 \subsection{Distances to the Random Reference Points} 
 This method is a folklore projection approach,
-where the \mbox{$i$-th} coordinate of point $x$ in the projected space is computed as simply $d(x, \pi_i)$,
+where the \mbox{$i$-\textit{th}} coordinate of point $x$ in the projected space is computed as simply $d(x, \pi_i)$,
 where $\pi_i$ is a pivot in the original space, i.e., a randomly selected reference point.
 Pivots are selected once during indexing time.
 
