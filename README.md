@@ -63,7 +63,7 @@ Prerequisites
 -----------------------
 
 1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 14 (version 12 can also be used, but the project fileds need to be downgraded).
-2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well. It should also be possible to build the code on MAC OS.
+2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well. 
 3. Boost (dev version). For Windows, the core library and the standalone sample application do not require Boost.
 4. Only for Linux: CMake (GNU make is also required) 
 5. Only for Linux: GNU scientific library (dev version)
