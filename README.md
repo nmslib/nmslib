@@ -44,7 +44,7 @@ What's new in version 1.5
 3. Python bindings for vector **and non**-vector spaces
 4. Improved performance of two core methods SW-graph and NAPP
 5. Better handling of the gold standard data in the benchmarking utility *experiment*
-6. Updated API that permits search methods to serialize indices
+6. Updated API that permits search methods to serialize indices (actually only on those methods: hnsw, pivot_neighb_invindx, small_world_rand, small_world_rand_split )
 7. Improved documentation (e.g., we added tuning guidelines for best methods)
 
 General information
