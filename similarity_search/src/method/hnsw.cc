@@ -499,8 +499,10 @@ namespace similarity {
     template <typename dist_t>
     void Hnsw<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const  {
         switch (searchMethod_) {
+                default:
+                  throw runtime_error("Invalid searchMethod: " + ConvertToString(searchMethod_));
+                  break;
             		case 0:
-                    default:
                         /// Basic search using Nmslib data structure:
                         const_cast<Hnsw*>(this)->baseSearchAlgorithm(query);
             			break;
@@ -537,6 +539,7 @@ namespace similarity {
         output.write((char*)&maxM_, sizeof(size_t));
         output.write((char*)&maxM0_, sizeof(size_t));
         output.write((char*)&dist_func_type_, sizeof(size_t));       
+        output.write((char*)&searchMethod_, sizeof(searchMethod_));
 
             
             
@@ -576,6 +579,9 @@ namespace similarity {
         input.read((char*)&maxM_, sizeof(size_t));
         input.read((char*)&maxM0_, sizeof(size_t));
         input.read((char*)&dist_func_type_, sizeof(size_t));
+        input.read((char*)&searchMethod_, sizeof(searchMethod_));
+
+        LOG(LIB_INFO) << "searchMethod: " << searchMethod_;
         
         if (dist_func_type_ == 1)
              fstdistfunc_ = L2SqrSIMD16Ext;
