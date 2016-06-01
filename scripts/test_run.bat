@@ -168,7 +168,7 @@ if "%INDEX_NAME%" == "" (
     echo "====================================="
     exit /B 1
   )
-  set CMD=%BIN_DIR%\experiment.exe %COMMON_ARGS% -m %METHOD_NAME% %APPEND_FLAG% %INDEX_ARGS% %QUERY_ARGS% -l %LOG_FILE_PREFIX%_index.%LN% -L %INDEX_NAME%
+  set CMD=%BIN_DIR%\experiment.exe %COMMON_ARGS% -m %METHOD_NAME% %APPEND_FLAG% %QUERY_ARGS% -l %LOG_FILE_PREFIX%_index.%LN% -L %INDEX_NAME%
   echo "Command to execute: !CMD!"
   !CMD!
 
