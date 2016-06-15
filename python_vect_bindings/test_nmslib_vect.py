@@ -3,8 +3,9 @@
 import sys
 import nmslib_vector
 
-def read_data(f):
-    for line in open(f).readlines():
+def read_data(fn):
+    with open(fn) as f:
+      for line in f:
         yield [float(v) for v in line.strip().split()]
 
 def test_vector_fresh():
