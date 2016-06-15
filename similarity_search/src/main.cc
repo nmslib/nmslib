@@ -317,7 +317,7 @@ void RunExper(bool                                bPrintProgress,
       }
       CHECK_MSG(savedThreadQty == ThreadTestQty,
                 "Error: the gold standard was computed using " +ConvertToString(savedThreadQty) + " threads, but the current test will use "  +
-                ConvertToString(ThreadTestQty) + " threads. You have to use the same number of threads while compute gold standard data and testing!");
+                ConvertToString(ThreadTestQty) + " threads. You have to use the same number of threads while computing gold standard data and testing!");
     } else {
       managerGS.Compute(ThreadTestQty, maxCacheGSRelativeQty);
       if (bWriteGSCache) {

@@ -18,8 +18,10 @@
 #define EVAL_METRICS_H
 
 #include <vector>
+#include <iomanip>
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <unordered_set>
 
 #include "object.h"
@@ -75,6 +77,7 @@ struct EvalMetricsBase {
           LOG(LIB_FATAL) << "bug: the approximate query should not return objects "
                          << "that are closer to the query than object returned by "
                          << "(exact) sequential searching!"
+                         << std::setprecision(std::numeric_limits<dist_t>::digits10)
                          << " Approx: " << elemApprox.mDist << " id = " << elemApprox.mId 
                          << " Exact: "  << elemExact.mDist  << " id = " << elemExact.mId;
         }
