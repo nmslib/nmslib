@@ -11,7 +11,7 @@ NMSLIB is an **extendible library**, which means that is possible to add new sea
 
 Leo(nid) Boytsov is a maintainer.
 
-Leo is backed by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa). Bileg gratefully acknowledges the support by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
+Leo is backed by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa). Bileg was  supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
 
 **Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**.
 
