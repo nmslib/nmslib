@@ -63,7 +63,8 @@ struct EvalMetricsBase {
          * function twice with the same object pointers, but get slightly
          * different results.
          */
-        if (elemApprox.mDist -  elemExact.mDist < 0
+        dist_t diffApproxExact = elemApprox.mDist -  elemExact.mDist;
+        if (diffApproxExact < 0
            && !ApproxEqualElem(elemApprox, elemExact)
             ) {
           double mx = std::abs(std::max(ApproxEntries[k].mDist, SortedAllEntries[p].mDist));
@@ -79,7 +80,8 @@ struct EvalMetricsBase {
                          << "(exact) sequential searching!"
                          << std::setprecision(std::numeric_limits<dist_t>::digits10)
                          << " Approx: " << elemApprox.mDist << " id = " << elemApprox.mId 
-                         << " Exact: "  << elemExact.mDist  << " id = " << elemExact.mId;
+                         << " Exact: "  << elemExact.mDist  << " id = " << elemExact.mId
+                         << " difference: " << diffApproxExact;
         }
         // At this point the distance to the true answer is either <= than the distance to the approximate answer,
         // or the distance to the true answer is slightly larger due to non-determinism of floating point arithmetic
