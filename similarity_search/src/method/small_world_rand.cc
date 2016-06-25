@@ -31,6 +31,8 @@
 #include <sstream>
 #include <typeinfo>
 
+#define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 10
+
 //#define START_WITH_E0
 #define START_WITH_E0_AT_QUERY_TIME
 
@@ -496,7 +498,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
           currObj = neighbor->getData();
           d = query->DistanceObjLeft(currObj);
           visitedBitset[nodeId] = true;
-          if (d < topKey) {
+          if (d < topKey || sortedArr.size() < efSearch_) {
             itemBuff[itemQty++]=QueueItem(d, neighbor);
           }
         }
@@ -504,12 +506,25 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
 
       if (itemQty) {
         _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
-        std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
-        size_t insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
 
-        if (insIndex < currElem) {
-          //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
-          currElem = insIndex;
+        size_t insIndex=0;
+        if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+          std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+          insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+          if (insIndex < currElem) {
+            //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
+            currElem = insIndex;
+          }
+        } else {
+          for (size_t ii = 0; ii < itemQty; ++ii) {
+            size_t insIndex = sortedArr.push_or_replace_non_empty(itemBuff[ii].key, itemBuff[ii].data);
+
+            if (insIndex < currElem) {
+              //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
+              currElem = insIndex;
+            }
+          }
         }
       }
 

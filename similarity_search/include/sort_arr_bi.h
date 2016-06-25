@@ -78,7 +78,7 @@ class SortArrBI {
     std::swap(v_[x], v_[y]);
   }
 
-  // Checking for duplicate IDs isn't the responsiblity of this function
+  // Checking for duplicate IDs isn't the responsibility of this function
   // it also assumes a non-empty array
   size_t push_or_replace_non_empty(const KeyType& key, const DataType& data) {
     // num_elems_ > 0
