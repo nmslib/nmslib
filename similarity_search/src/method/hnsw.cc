@@ -177,7 +177,6 @@ namespace similarity {
         first->init(getRandomLevel(mult_), maxM_, maxM0_);        
         maxlevel_ = first->level;
         enterpoint_ = first;
-        //addToElementListSynchronized(first);
         ElList_[0] = first;
 
         visitedlistpool = new VisitedListPool(indexThreadQty_, data_.size());
@@ -192,202 +191,9 @@ namespace similarity {
             if (progress_bar) ++(*progress_bar);
         }
 
-
-        if (post_ == 4) {
-            getDegreeDistr("D:\\before4.txt", ElList_);
-            unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
-
-            vector<int> inconnections = vector<int>(ElList_.size());            
-
-#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
-            for (int i = 0; i < ElList_.size(); i++) {
-                for (HnswNode* node : ElList_[i]->allFriends[0]) {
-                    inconnections[node->getId()]++;
-                }
-            }
-            
-            vector<std::tuple<size_t, int>> sizes= vector<std::tuple<size_t, int>>();
-
-            for (size_t i = 0; i < ElList_.size(); i++) {
-                if(inconnections[i]<M_)
-                sizes.push_back (std::make_tuple(i,inconnections[i]));
-            }
-
-            std::sort(begin(sizes), end(sizes),
-                [](tuple<size_t, int> const &t1, tuple<size_t, int> const &t2) {
-                return get<1>(t1) < get<1>(t2);  }          );
-            for (int i = 0; i < sizes.size(); i++) {
-                int numIn = get<1>(sizes[i]);
-                size_t elNum = get<0>(sizes[i]);
-                priority_queue<HnswNodeDistCloser<dist_t>> resultSet, resultSet1;
-                
-                kSearchElementsWithAttemptsLevel(&space_, ElList_[elNum]->getData(), efConstruction_, resultSet1, ElList_[elNum], 0);
-
-                
-                while (resultSet1.size() > 0) {
-                    if (resultSet1.top().getMSWNodeHier()->getId() == elNum) {
-                        resultSet1.pop();
-                        continue;
-                    }
-                    resultSet.push(resultSet1.top());
-                    resultSet1.pop();
-                }
-
-                switch (delaunay_type_) {
-                //switch (1) {
-                case 0:
-                    while (resultSet.size() > M_)
-                        resultSet.pop();
-                    break;
-                case 1:
-                case 3:
-                    ElList_[elNum]->getNeighborsByHeuristic1(resultSet, M_, &space_);
-                    break;
-                case 2:
-                    ElList_[elNum]->getNeighborsByHeuristic2(resultSet, M_, &space_, 0);
-                    break;
-                //case 3:
-                //    ElList_[elNum]->getNeighborsByHeuristic3(resultSet, M_, &space_, 0);
-                //    break;
-                }
-                priority_queue<HnswNodeDistFarther<dist_t>> resultCloser;
-                while (resultSet.size() > 0) {
-                    resultCloser.emplace(resultSet.top().getDistance(), resultSet.top().getMSWNodeHier());                    
-                    resultSet.pop();
-                }
-                //cout << "\n";
-                //int t = 0;
-                while (resultCloser.size() > 0 && numIn<M_) {                    
-                    HnswNode *other = resultCloser.top().getMSWNodeHier();
-                    //cout << space_.IndexTimeDistance(other->getData(), ElList_[elNum]->getData()) << "\n";
-                    
-                    if (other->allFriends[0].size() < maxM0_) {
-                        if ((std::find(other->allFriends[0].begin(), other->allFriends[0].end(), ElList_[elNum]) == other->allFriends[0].end())) {                            
-                            other->allFriends[0].push_back(ElList_[elNum]);                            
-                            //cout << "Added link to "<< ElList_[elNum]->getId()<<"\n";
-                            for (HnswNode *n : other->allFriends[0]) {
-                                //cout << n->getId()<<" "<<space_.IndexTimeDistance(other->getData(), n->getData()) <<"\n";
-                            }
-                            numIn++;
-                        }
-                    }
-                    
-                    resultCloser.pop();
-                }
-               
-
-                //cout << t << "\n";
-                
-            }
-            getDegreeDistr("D:\\after4.txt", ElList_);
-        }
-
-
-
-        if (post_ == 3) {
-            unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
-
-            vector<vector<HnswNode*>> outvectors= vector<vector<HnswNode*>>(data_.size());
-            vector<vector<HnswNode*>> invectors = vector<vector<HnswNode*>>(data_.size());
-            
-#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
-            for (int id = 0; id < data_.size(); ++id) {
-                priority_queue<HnswNodeDistCloser<dist_t>> resultSet,resultSet1;
-                //kSearchElementsWithAttemptsLevel(&space_, ElList_[id]->getData(), M_, resultSet1, ElList_[id], 0);
-                for (HnswNode *h : ElList_[id]->allFriends[0]) {
-                   
-                    resultSet.emplace( space_.IndexTimeDistance(h->getData(), ElList_[id]->getData()), h);
-                }
-/*
-                while (resultSet1.size() > 0) {
-                    if (resultSet1.top().getMSWNodeHier() == ElList_[id]) {
-                        resultSet1.pop();
-                        continue;
-                    }
-                    resultSet.push(resultSet1.top());
-                    resultSet1.pop();
-                }*/
-                
-                switch (delaunay_type_) {
-                case 0:
-                    while (resultSet.size() > M_)
-                        resultSet.pop();
-                    break;
-                case 1:
-                    ElList_[id]->getNeighborsByHeuristic1(resultSet, M_, &space_);
-                    break;
-                //case 2:
-                //    ElList_[id]->getNeighborsByHeuristic2(resultSet, M_, &space_, 0);
-                //    break;
-                case 2:
-                case 3:
-                    ElList_[id]->getNeighborsByHeuristic3(resultSet, M_, &space_, 0);
-                    break;
-                }
-#pragma omp critical
-                {
-                    while (!resultSet.empty()) {
-                        int add = 1;
-                        for (HnswNode *n : outvectors[id]) {
-                            if (n == resultSet.top().getMSWNodeHier()) 
-                                add = 0;
-                        }
-                        if(add)
-                            outvectors[id].push_back(resultSet.top().getMSWNodeHier());
-                        int id2 = resultSet.top().getMSWNodeHier()->getId();
-                        add = 1;
-                        //invectors[id2].push_back(ElList_[id]);
-                        for (HnswNode *n : outvectors[id2]) {
-                            if (n == ElList_[id])
-                                add = 0;
-                        }
-                        if(add)
-                            outvectors[id2].push_back(ElList_[id]);
-                        //invectors[id2].push_back(ElList_[id]);
-                        //
-                        resultSet.pop();
-                    }
-                }
-               
-                if (progress_bar) ++(*progress_bar);
-            }
-            int maxC = 0;
-            /*
-            for (int id = 0; id < data_.size(); ++id) {
-                priority_queue<HnswNodeDistCloser<dist_t>> resultSet, resultSet1;                
-                while (resultSet1.size() > 1) {
-                    resultSet.push(resultSet1.top());
-                    resultSet1.pop();
-                }                
-                switch (delaunay_type_) {
-                    case 0:
-                        while (resultSet.size() > M_)
-                            resultSet.pop();
-                        break;
-                    case 1:
-                        ElList_[id]->getNeighborsByHeuristic1(resultSet, M_, &space_);
-                        break;
-                    case 2:
-                        ElList_[id]->getNeighborsByHeuristic2(resultSet, M_, &space_, 0);
-                        break;
-                    case 3:
-                        ElList_[id]->getNeighborsByHeuristic3(resultSet, M_, &space_, 0);
-                        break;
-                }
-
-            } */           
-            for (int id = 0; id < data_.size(); ++id) {
-                if(outvectors[id].size()>maxC)
-                    maxC = outvectors[id].size();
-                ElList_[id]->allFriends[0].swap(outvectors[id]);                
-            }
-            maxM0_ = maxC;
-            cout << "maxM0=" << maxC<<"\n";
-        }
-
         
         if (post_ == 1 || post_ == 2) {
-            getDegreeDistr("D:\\before.txt", ElList_);
+            
             vector <HnswNode *> temp;
             temp.swap(ElList_);
             ElList_.resize(data_.size());
@@ -396,6 +202,7 @@ namespace similarity {
             maxlevel_ = first->level;
             enterpoint_ = first;
             ElList_[0] = first;
+            /// Making the same index in reverse order 
             unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
 #pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
             for (int id = data_.size() - 1; id >= 1; id--) {
@@ -428,7 +235,6 @@ namespace similarity {
                     priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
                     for (int cur : intersect) {
                         resultSet.emplace(space_.IndexTimeDistance(ElList_[cur]->getData(), ElList_[id]->getData()), ElList_[cur]);
-                        //rez.push_back(cur);
                     }
 
                     switch (delaunay_type_) {
@@ -440,10 +246,6 @@ namespace similarity {
                     case 1:
                         ElList_[id]->getNeighborsByHeuristic1(resultSet, maxM0_, &space_);
                         break;
-                   // case 2:
-                       // ElList_[id]->getNeighborsByHeuristic2(resultSet, maxM0_, &space_, 0);
-                        //cout << resultSet.size() << "\n";
-                        //break;
                     case 3:
                         ElList_[id]->getNeighborsByHeuristic3(resultSet, maxM0_, &space_, 0);
                         break;
@@ -464,15 +266,11 @@ namespace similarity {
 
                 ElList_[id]->allFriends[0].swap(rez);
                 degrees[ElList_[id]->allFriends[0].size()]++;
-                //f1.swap(rez);
             }
-            //for (int i = 0; i < 100; i++)
-            //    cout << degrees[i] << "\n";
             for (int i = 0; i < temp.size(); i++)
                 delete temp[i];
             temp.clear();
-            getDegreeDistr("D:\\after.txt", ElList_);
-            cout << "\nMax size=" << maxF << "\n";
+           
 
         }
         checkList1(ElList_);
@@ -487,10 +285,10 @@ namespace similarity {
         }
 
         int friendsSectionSize = (maxM0_ + 1)*sizeof(int);
+
         //Checking for maximum size of the datasection:
         int dataSectionSize = 1;
-        for (int i = 0; i < ElList_.size(); i++) {
-            //ElList_[i]->id_ = i;
+        for (int i = 0; i < ElList_.size(); i++) {            
             if (ElList_[i]->getData()->bufferlength()>dataSectionSize)
                 dataSectionSize = ElList_[i]->getData()->bufferlength();
         }
