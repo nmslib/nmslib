@@ -71,6 +71,62 @@ namespace similarity {
     template <typename dist_t>    Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t>& space,   const ObjectVector& data) :
         space_(space), PrintProgress_(PrintProgress), data_(data) {}
 
+    void checkList1(vector<HnswNode*> list) {
+        
+        int ok = 1;
+        for (int i = 0; i < list.size(); i++) {
+            for (int j = 0; j < list[i]->allFriends[0].size(); j++) {
+                for (int k = j+1; k < list[i]->allFriends[0].size(); k++) {
+                    if (list[i]->allFriends[0][j] == list[i]->allFriends[0][k]) {
+                        cout << "\nDuplicate links\n\n\n\n\n!!!!!";
+                        ok = 0;
+                    }
+                }
+                if (list[i]->allFriends[0][j] == list[i]) {
+                    cout << "\nLink to the same element\n\n\n\n\n!!!!!";
+                    ok = 0;
+                }
+            }
+            
+        }
+        if (ok)
+            cout << "\nOK\n";
+        else
+            cout << "\nNOT OK!!!\n";
+        return;
+    }
+
+    void getDegreeDistr(string filename, vector<HnswNode*> list) {        
+        ofstream out(filename);
+        int maxdegree = 0;
+        for (HnswNode* node : list) {
+            if (node->allFriends[0].size() > maxdegree)
+                maxdegree = node->allFriends[0].size();
+        }
+        
+ 
+        vector<int> distrin = vector<int>(1000);
+        vector<int> distrout = vector<int>(1000);
+        vector<int> inconnections = vector<int>(list.size());
+        vector<int> outconnections = vector<int>(list.size());
+        for (int i = 0; i < list.size();i++) {
+            for (HnswNode* node : list[i]->allFriends[0]) {
+                outconnections[list[i]->getId()]++;
+                inconnections[node->getId()]++;
+            }            
+        }
+        
+        for (int i = 0; i < list.size(); i++) {
+            distrin[inconnections[i]]++;
+            distrout[outconnections[i]]++;            
+        }
+        
+        for (int i = 0; i < distrin.size(); i++) {
+            out<<i<<"\t"<<distrin[i]<<"\t"<< distrout[i]<<"\n";
+        }
+        out.close();
+        return;
+    }
     template <typename dist_t> void Hnsw<dist_t>::CreateIndex(const AnyParams& IndexParams)
     {
 
@@ -88,11 +144,14 @@ namespace similarity {
         indexThreadQty_ = omp_get_max_threads();
 #endif
         pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, indexThreadQty_);
+        //indexThreadQty_ = 1;
         pmgr.GetParamOptional("efConstruction", efConstruction_, 200);
         pmgr.GetParamOptional("maxM", maxM_, M_);
         pmgr.GetParamOptional("maxM0", maxM0_, M_ * 2);
         pmgr.GetParamOptional("mult", mult_, 1 / log(1.0*M_));
         pmgr.GetParamOptional("delaunay_type", delaunay_type_, 1);
+        int post_;
+        pmgr.GetParamOptional("post", post_, 0);
         int skip_optimized_index = 0;
         pmgr.GetParamOptional("skip_optimized_index", skip_optimized_index, 0);
         
@@ -112,13 +171,14 @@ namespace similarity {
           pmgr.CheckUnused();
           return;
         }
-
+        ElList_.resize(data_.size());
         // One entry should be added before all the threads are started, or else add() will not work properly
         HnswNode *first = new HnswNode(data_[0], 0 /* id == 0 */);        
         first->init(getRandomLevel(mult_), maxM_, maxM0_);        
         maxlevel_ = first->level;
         enterpoint_ = first;
-        addToElementListSynchronized(first);
+        //addToElementListSynchronized(first);
+        ElList_[0] = first;
 
         visitedlistpool = new VisitedListPool(indexThreadQty_, data_.size());
 
@@ -128,12 +188,295 @@ namespace similarity {
         for (int id = 1; id < data_.size(); ++id) {
             HnswNode* node = new HnswNode(data_[id], id);
             add(&space_, node); 
-
+            ElList_[id] = node;
             if (progress_bar) ++(*progress_bar);
-
         }
 
 
+        if (post_ == 4) {
+            getDegreeDistr("D:\\before4.txt", ElList_);
+            unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
+
+            vector<int> inconnections = vector<int>(ElList_.size());            
+
+#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
+            for (int i = 0; i < ElList_.size(); i++) {
+                for (HnswNode* node : ElList_[i]->allFriends[0]) {
+                    inconnections[node->getId()]++;
+                }
+            }
+            
+            vector<std::tuple<size_t, int>> sizes= vector<std::tuple<size_t, int>>();
+
+            for (size_t i = 0; i < ElList_.size(); i++) {
+                if(inconnections[i]<M_)
+                sizes.push_back (std::make_tuple(i,inconnections[i]));
+            }
+
+            std::sort(begin(sizes), end(sizes),
+                [](tuple<size_t, int> const &t1, tuple<size_t, int> const &t2) {
+                return get<1>(t1) < get<1>(t2);  }          );
+            for (int i = 0; i < sizes.size(); i++) {
+                int numIn = get<1>(sizes[i]);
+                size_t elNum = get<0>(sizes[i]);
+                priority_queue<HnswNodeDistCloser<dist_t>> resultSet, resultSet1;
+                
+                kSearchElementsWithAttemptsLevel(&space_, ElList_[elNum]->getData(), efConstruction_, resultSet1, ElList_[elNum], 0);
+
+                
+                while (resultSet1.size() > 0) {
+                    if (resultSet1.top().getMSWNodeHier()->getId() == elNum) {
+                        resultSet1.pop();
+                        continue;
+                    }
+                    resultSet.push(resultSet1.top());
+                    resultSet1.pop();
+                }
+
+                switch (delaunay_type_) {
+                //switch (1) {
+                case 0:
+                    while (resultSet.size() > M_)
+                        resultSet.pop();
+                    break;
+                case 1:
+                case 3:
+                    ElList_[elNum]->getNeighborsByHeuristic1(resultSet, M_, &space_);
+                    break;
+                case 2:
+                    ElList_[elNum]->getNeighborsByHeuristic2(resultSet, M_, &space_, 0);
+                    break;
+                //case 3:
+                //    ElList_[elNum]->getNeighborsByHeuristic3(resultSet, M_, &space_, 0);
+                //    break;
+                }
+                priority_queue<HnswNodeDistFarther<dist_t>> resultCloser;
+                while (resultSet.size() > 0) {
+                    resultCloser.emplace(resultSet.top().getDistance(), resultSet.top().getMSWNodeHier());                    
+                    resultSet.pop();
+                }
+                //cout << "\n";
+                //int t = 0;
+                while (resultCloser.size() > 0 && numIn<M_) {                    
+                    HnswNode *other = resultCloser.top().getMSWNodeHier();
+                    //cout << space_.IndexTimeDistance(other->getData(), ElList_[elNum]->getData()) << "\n";
+                    
+                    if (other->allFriends[0].size() < maxM0_) {
+                        if ((std::find(other->allFriends[0].begin(), other->allFriends[0].end(), ElList_[elNum]) == other->allFriends[0].end())) {                            
+                            other->allFriends[0].push_back(ElList_[elNum]);                            
+                            //cout << "Added link to "<< ElList_[elNum]->getId()<<"\n";
+                            for (HnswNode *n : other->allFriends[0]) {
+                                //cout << n->getId()<<" "<<space_.IndexTimeDistance(other->getData(), n->getData()) <<"\n";
+                            }
+                            numIn++;
+                        }
+                    }
+                    
+                    resultCloser.pop();
+                }
+               
+
+                //cout << t << "\n";
+                
+            }
+            getDegreeDistr("D:\\after4.txt", ElList_);
+        }
+
+
+
+        if (post_ == 3) {
+            unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
+
+            vector<vector<HnswNode*>> outvectors= vector<vector<HnswNode*>>(data_.size());
+            vector<vector<HnswNode*>> invectors = vector<vector<HnswNode*>>(data_.size());
+            
+#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
+            for (int id = 0; id < data_.size(); ++id) {
+                priority_queue<HnswNodeDistCloser<dist_t>> resultSet,resultSet1;
+                //kSearchElementsWithAttemptsLevel(&space_, ElList_[id]->getData(), M_, resultSet1, ElList_[id], 0);
+                for (HnswNode *h : ElList_[id]->allFriends[0]) {
+                   
+                    resultSet.emplace( space_.IndexTimeDistance(h->getData(), ElList_[id]->getData()), h);
+                }
+/*
+                while (resultSet1.size() > 0) {
+                    if (resultSet1.top().getMSWNodeHier() == ElList_[id]) {
+                        resultSet1.pop();
+                        continue;
+                    }
+                    resultSet.push(resultSet1.top());
+                    resultSet1.pop();
+                }*/
+                
+                switch (delaunay_type_) {
+                case 0:
+                    while (resultSet.size() > M_)
+                        resultSet.pop();
+                    break;
+                case 1:
+                    ElList_[id]->getNeighborsByHeuristic1(resultSet, M_, &space_);
+                    break;
+                //case 2:
+                //    ElList_[id]->getNeighborsByHeuristic2(resultSet, M_, &space_, 0);
+                //    break;
+                case 2:
+                case 3:
+                    ElList_[id]->getNeighborsByHeuristic3(resultSet, M_, &space_, 0);
+                    break;
+                }
+#pragma omp critical
+                {
+                    while (!resultSet.empty()) {
+                        int add = 1;
+                        for (HnswNode *n : outvectors[id]) {
+                            if (n == resultSet.top().getMSWNodeHier()) 
+                                add = 0;
+                        }
+                        if(add)
+                            outvectors[id].push_back(resultSet.top().getMSWNodeHier());
+                        int id2 = resultSet.top().getMSWNodeHier()->getId();
+                        add = 1;
+                        //invectors[id2].push_back(ElList_[id]);
+                        for (HnswNode *n : outvectors[id2]) {
+                            if (n == ElList_[id])
+                                add = 0;
+                        }
+                        if(add)
+                            outvectors[id2].push_back(ElList_[id]);
+                        //invectors[id2].push_back(ElList_[id]);
+                        //
+                        resultSet.pop();
+                    }
+                }
+               
+                if (progress_bar) ++(*progress_bar);
+            }
+            int maxC = 0;
+            /*
+            for (int id = 0; id < data_.size(); ++id) {
+                priority_queue<HnswNodeDistCloser<dist_t>> resultSet, resultSet1;                
+                while (resultSet1.size() > 1) {
+                    resultSet.push(resultSet1.top());
+                    resultSet1.pop();
+                }                
+                switch (delaunay_type_) {
+                    case 0:
+                        while (resultSet.size() > M_)
+                            resultSet.pop();
+                        break;
+                    case 1:
+                        ElList_[id]->getNeighborsByHeuristic1(resultSet, M_, &space_);
+                        break;
+                    case 2:
+                        ElList_[id]->getNeighborsByHeuristic2(resultSet, M_, &space_, 0);
+                        break;
+                    case 3:
+                        ElList_[id]->getNeighborsByHeuristic3(resultSet, M_, &space_, 0);
+                        break;
+                }
+
+            } */           
+            for (int id = 0; id < data_.size(); ++id) {
+                if(outvectors[id].size()>maxC)
+                    maxC = outvectors[id].size();
+                ElList_[id]->allFriends[0].swap(outvectors[id]);                
+            }
+            maxM0_ = maxC;
+            cout << "maxM0=" << maxC<<"\n";
+        }
+
+        
+        if (post_ == 1 || post_ == 2) {
+            getDegreeDistr("D:\\before.txt", ElList_);
+            vector <HnswNode *> temp;
+            temp.swap(ElList_);
+            ElList_.resize(data_.size());
+            first = new HnswNode(data_[0], 0 /* id == 0 */);
+            first->init(getRandomLevel(mult_), maxM_, maxM0_);
+            maxlevel_ = first->level;
+            enterpoint_ = first;
+            ElList_[0] = first;
+            unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
+#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
+            for (int id = data_.size() - 1; id >= 1; id--) {
+                HnswNode* node = new HnswNode(data_[id], id);
+                add(&space_, node);
+                ElList_[id] = node;
+                if (progress_bar1) ++(*progress_bar1);
+            }
+            int maxF = 0;
+
+            int degrees[100] = {0};
+#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
+            for (int id = 1; id < data_.size(); ++id) {
+                HnswNode* node1 = ElList_[id];
+                HnswNode* node2 = temp[id];
+                vector<HnswNode *> f1 = node1->getAllFriends(0);
+                vector<HnswNode *> f2 = node2->getAllFriends(0);
+                unordered_set<size_t> intersect = unordered_set<size_t>();
+                for (HnswNode *cur : f1) {
+                    intersect.insert(cur->getId());
+                }
+                for (HnswNode *cur : f2) {
+                    intersect.insert(cur->getId());
+                }
+                if (intersect.size() > maxF)
+                    maxF = intersect.size();
+                vector<HnswNode *> rez = vector<HnswNode *>();
+                
+                if (post_ == 2) {
+                    priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
+                    for (int cur : intersect) {
+                        resultSet.emplace(space_.IndexTimeDistance(ElList_[cur]->getData(), ElList_[id]->getData()), ElList_[cur]);
+                        //rez.push_back(cur);
+                    }
+
+                    switch (delaunay_type_) {
+                    case 0:
+                        while (resultSet.size() > maxM0_)
+                            resultSet.pop();
+                        break;
+                    case 2:
+                    case 1:
+                        ElList_[id]->getNeighborsByHeuristic1(resultSet, maxM0_, &space_);
+                        break;
+                   // case 2:
+                       // ElList_[id]->getNeighborsByHeuristic2(resultSet, maxM0_, &space_, 0);
+                        //cout << resultSet.size() << "\n";
+                        //break;
+                    case 3:
+                        ElList_[id]->getNeighborsByHeuristic3(resultSet, maxM0_, &space_, 0);
+                        break;
+                    }                    
+                    while (!resultSet.empty()) {
+                        rez.push_back(resultSet.top().getMSWNodeHier());                        
+                        resultSet.pop();
+                    }
+                }
+                else 
+                if (post_ == 1) {
+                    maxM0_ = maxF;
+
+                    for (int cur : intersect) {
+                        rez.push_back(ElList_[cur]);
+                    }
+                }
+
+                ElList_[id]->allFriends[0].swap(rez);
+                degrees[ElList_[id]->allFriends[0].size()]++;
+                //f1.swap(rez);
+            }
+            //for (int i = 0; i < 100; i++)
+            //    cout << degrees[i] << "\n";
+            for (int i = 0; i < temp.size(); i++)
+                delete temp[i];
+            temp.clear();
+            getDegreeDistr("D:\\after.txt", ElList_);
+            cout << "\nMax size=" << maxF << "\n";
+
+        }
+        checkList1(ElList_);
+        
         data_level0_memory_ = NULL;
         linkLists_ = NULL;
 
@@ -147,7 +490,7 @@ namespace similarity {
         //Checking for maximum size of the datasection:
         int dataSectionSize = 1;
         for (int i = 0; i < ElList_.size(); i++) {
-            ElList_[i]->id_ = i;
+            //ElList_[i]->id_ = i;
             if (ElList_[i]->getData()->bufferlength()>dataSectionSize)
                 dataSectionSize = ElList_[i]->getData()->bufferlength();
         }
@@ -320,9 +663,6 @@ namespace similarity {
 
         NewElement->init(curlevel, maxM_, maxM0_);       
 
-        
-
-
         int maxlevelcopy = maxlevel_;
         HnswNode *ep = enterpoint_;
         if (curlevel < maxlevelcopy) {
@@ -336,8 +676,6 @@ namespace similarity {
                 while (changed) {
                     changed = false;
                     unique_lock<mutex>  lock(curNode->accessGuard_);
-
-
                     const vector<HnswNode*>& neighbor = curNode->getAllFriends(level);
                     int size = neighbor.size();
                     for (int i = 0; i < size; i++) {
@@ -364,7 +702,7 @@ namespace similarity {
         
         for (int level = min(curlevel, maxlevelcopy); level >= 0; level--) {
 			priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
-            kSearchElementsWithAttemptsLevel(space, NewElement->getData(), efConstruction_, resultSet, ep, level);//DOTO: make level
+            kSearchElementsWithAttemptsLevel(space, NewElement->getData(), efConstruction_, resultSet, ep, level);
            
             switch (delaunay_type_) {
             case 0:
@@ -372,10 +710,13 @@ namespace similarity {
                     resultSet.pop();
                 break;
             case 1:
-                NewElement->getNeighborsByDistanceHeuristic(resultSet, M_, space);
+                NewElement->getNeighborsByHeuristic1(resultSet, M_, space);
                 break;
             case 2:
-                NewElement->getNeighborsByMiniGreedySearches(resultSet, M_, space, level);
+                NewElement->getNeighborsByHeuristic2(resultSet, M_, space, level);
+                break;
+            case 3:
+                NewElement->getNeighborsByHeuristic3(resultSet, M_, space, level);
                 break;
             }
             while (!resultSet.empty()) {
@@ -391,7 +732,6 @@ namespace similarity {
         }
         if (lock != nullptr)
             delete lock;
-        addToElementListSynchronized(NewElement);
     }
 
 
@@ -402,8 +742,6 @@ namespace similarity {
         Hnsw<dist_t>::kSearchElementsWithAttemptsLevel(const Space<dist_t>* space,
             const Object* queryObj, size_t efConstruction, priority_queue<HnswNodeDistCloser<dist_t>>& resultSet, HnswNode* ep, int level) const
     {
-
-        
 #if EXTEND_USE_EXTENDED_NEIGHB_AT_CONSTR!=0
         priority_queue<HnswNodeDistCloser<dist_t>> fullResultSet;
 #endif
