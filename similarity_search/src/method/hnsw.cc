@@ -847,7 +847,7 @@ void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
         }
       } else {
         for (size_t ii = 0; ii < itemQty; ++ii) {
-          size_t insIndex = sortedArr.push_or_replace_non_empty(itemBuff[ii].key, itemBuff[ii].data);
+          size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
 
           if (insIndex < currElem) {
             //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
