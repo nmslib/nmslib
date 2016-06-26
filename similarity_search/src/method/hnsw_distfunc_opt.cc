@@ -41,6 +41,11 @@
 #else
 #define PORTABLE_ALIGN16 __declspec(align(16))
 #endif
+#if defined(__GNUC__)
+#define PORTABLE_ALIGN32 __attribute__((aligned(32)))
+#else
+#define PORTABLE_ALIGN32 __declspec(align(32))
+#endif
 //#define DIST_CALC 
 namespace similarity {
 	float L2SqrSIMD16Ext(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
@@ -52,30 +57,22 @@ namespace similarity {
 		//const float* pEnd2 = pVect1 + (qty4 << 2);
 		//const float* pEnd3 = pVect1 + qty;
 
-		__m128  diff, v1, v2;
-		__m128  sum = _mm_set1_ps(0);
+		__m256  diff, v1, v2;
+		__m256  sum = _mm256_set1_ps(0);
 
-		while (pVect1 < pEnd1) {
+		while (pVect1 < pEnd1) 
+        {
 			_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
-			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
-			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
-			diff = _mm_sub_ps(v1, v2);
-			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
+			v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
+			v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
+			diff = _mm256_sub_ps(v1, v2);
+			sum = _mm256_add_ps(sum, _mm256_mul_ps(diff, diff));
 
-			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
-			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
-			diff = _mm_sub_ps(v1, v2);
-			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
+            v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
+            v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
+            diff = _mm256_sub_ps(v1, v2);
+            sum = _mm256_add_ps(sum, _mm256_mul_ps(diff, diff));
 
-			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
-			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
-			diff = _mm_sub_ps(v1, v2);
-			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
-
-			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
-			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
-			diff = _mm_sub_ps(v1, v2);
-			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
 		}
 
 		/*while (pVect1 < pEnd2) {
@@ -87,15 +84,15 @@ namespace similarity {
 
 		//float PORTABLE_ALIGN16 TmpRes[4];
 
-		_mm_store_ps(TmpRes, sum);
-		float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
+		_mm256_store_ps(TmpRes, sum);
+		float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3]+ TmpRes[4] + TmpRes[5] + TmpRes[6] + TmpRes[7];
 
 		/*while (pVect1 < pEnd3) {
 		float diff = *pVect1++ - *pVect2++;
 		res += diff * diff;
 		}*/
-
-		return sqrt(res);
+        return (res);
+		//return sqrt(res);
 	};
 	float L2SqrSIMDExt(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
 
@@ -293,7 +290,7 @@ namespace similarity {
 	template <typename dist_t>
 	void Hnsw<dist_t>::SearchL2CustomOld(KNNQuery<dist_t>* query) {
 		float *pVectq = (float *)((char *)query->QueryObject()->data());
-		float PORTABLE_ALIGN16 TmpRes[4];
+		float PORTABLE_ALIGN32 TmpRes[8];
 		size_t qty = query->QueryObject()->datalength() >> 2;
 
 		VisitedList * vl = visitedlistpool->getFreeVisitedList();
@@ -399,7 +396,7 @@ namespace similarity {
 template <typename dist_t>
 void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 	float *pVectq = (float *)((char *)query->QueryObject()->data());
-	float PORTABLE_ALIGN16 TmpRes[4];
+	float PORTABLE_ALIGN32 TmpRes[8];
 	size_t qty = query->QueryObject()->datalength() >> 2;
 
 	VisitedList * vl = visitedlistpool->getFreeVisitedList();
@@ -533,7 +530,7 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 	void Hnsw<dist_t>::SearchCosineNormalizedOld(KNNQuery<dist_t> *query) {
 		
 		float *pVectq = (float *)((char *)query->QueryObject()->data());
-        float PORTABLE_ALIGN16 TmpRes[4];
+        float PORTABLE_ALIGN32 TmpRes[8];
         size_t qty = query->QueryObject()->datalength() >> 2;
 
 
@@ -656,7 +653,7 @@ template <typename dist_t>
 void Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query) {
 
 	float *pVectq = (float *)((char *)query->QueryObject()->data());
-	float PORTABLE_ALIGN16 TmpRes[4];
+	float PORTABLE_ALIGN32 TmpRes[8];
 	size_t qty = query->QueryObject()->datalength() >> 2;
 
 
