@@ -190,6 +190,7 @@ SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
   LOG(LIB_INFO) << "initSearchAttempts =" << initSearchAttempts_;
   LOG(LIB_INFO) << "efSearch           =" << efSearch_;
+  LOG(LIB_INFO) << "algoType           =" << searchAlgoType_;
 }
 
 template <typename dist_t>

@@ -30,6 +30,9 @@
 #include "ported_boost_progress.h"
 #include "method/hnsw.h"
 
+#include "sort_arr_bi.h"
+#define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 10
+
 #include <vector>
 #include <limits>
 #include <algorithm>    // std::min
@@ -284,11 +287,11 @@ namespace similarity {
 
 	/****************************************************************
 
-	UNIVERSAL FUNCTION FOR CUSTOM MADE
+	UNIVERSAL FUNCTION FOR CUSTOM DISTANCES
 
 	****************************************************************/
 	template <typename dist_t>
-	void Hnsw<dist_t>::SearchL2Custom(KNNQuery<dist_t>* query) {
+	void Hnsw<dist_t>::SearchL2CustomOld(KNNQuery<dist_t>* query) {
 		float *pVectq = (float *)((char *)query->QueryObject()->data());
 		float PORTABLE_ALIGN16 TmpRes[4];
 		size_t qty = query->QueryObject()->datalength() >> 2;
@@ -392,13 +395,142 @@ namespace similarity {
 		visitedlistpool->releaseVisitedList(vl);
 
 	}
+
+template <typename dist_t>
+void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
+	float *pVectq = (float *)((char *)query->QueryObject()->data());
+	float PORTABLE_ALIGN16 TmpRes[4];
+	size_t qty = query->QueryObject()->datalength() >> 2;
+
+	VisitedList * vl = visitedlistpool->getFreeVisitedList();
+	unsigned int *massVisited = vl->mass;
+	unsigned int currentV = vl->curV;
+
+
+
+	int maxlevel1 = maxlevel_;
+	int curNodeNum = enterpointId_;
+	dist_t curdist = (fstdistfunc_(pVectq, (float *)(data_level0_memory_ + enterpointId_*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+
+
+	for (int i = maxlevel1; i > 0; i--) {
+		bool changed = true;
+		while (changed) {
+			changed = false;
+			int  *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1)*(i - 1)*sizeof(int));
+			int size = *data;
+			for (int j = 1; j <= size; j++) {
+				_mm_prefetch(data_level0_memory_ + (*(data + j))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+			}
+#ifdef DIST_CALC
+			query->distance_computations_ += size;
+#endif
+
+			for (int j = 1; j <= size; j++) {
+				int tnum = *(data + j);
+
+				dist_t d = (fstdistfunc_(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+				if (d < curdist) {
+					curdist = d;
+					curNodeNum = tnum;
+					changed = true;
+				}
+			}
+
+
+		}
+	}
+
+	SortArrBI<dist_t,int> sortedArr(ef_);
+	sortedArr.push_unsorted_grow(curdist, curNodeNum);
+
+	int_fast32_t  currElem = 0;
+
+	typedef typename SortArrBI<dist_t, int>::Item  QueueItem;
+	vector<QueueItem>& queueData = sortedArr.get_data();
+	vector<QueueItem>  itemBuff(8*30);
+
+	massVisited[curNodeNum] = currentV;
+
+	while(currElem < sortedArr.size()){
+		auto& e = queueData[currElem];
+		CHECK(!e.used);
+		e.used = true;
+		curNodeNum = e.data;
+		++currElem;
+
+		size_t itemQty = 0;
+		dist_t topKey = sortedArr.top_key();
+
+		int  *data = (int *)(data_level0_memory_ + curNodeNum*memoryPerObject_ + offsetLevel0_);
+		int size = *data;
+		_mm_prefetch((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
+		_mm_prefetch((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
+		_mm_prefetch(data_level0_memory_ + (*(data + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+		_mm_prefetch((char *)(data + 2), _MM_HINT_T0);
+
+		for (int j = 1; j <= size; j++) {
+			int tnum = *(data + j);
+			_mm_prefetch((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
+			_mm_prefetch(data_level0_memory_ + (*(data + j + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+			if (!(massVisited[tnum] == currentV))
+			{
+
+#ifdef DIST_CALC
+				query->distance_computations_++;
+#endif
+				massVisited[tnum] = currentV;
+				char *currObj1 = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+				dist_t d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
+
+				if (d < topKey || sortedArr.size() < ef_) {
+					itemBuff[itemQty++]=QueueItem(d, tnum);
+				}
+			}
+		}
+		if (itemQty) {
+			_mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
+
+			size_t insIndex = 0;
+			if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+				std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+				insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+				if (insIndex < currElem) {
+					currElem = insIndex;
+				}
+			} else {
+				for (size_t ii = 0; ii < itemQty; ++ii) {
+					size_t insIndex = sortedArr.push_or_replace_non_empty(itemBuff[ii].key, itemBuff[ii].data);
+					if (insIndex < currElem) {
+						currElem = insIndex;
+					}
+				}
+			}
+			// because itemQty > 1, there would be at least item in sortedArr
+			_mm_prefetch(data_level0_memory_ + sortedArr.top_item().data * memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
+		}
+		// To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+		while (currElem < sortedArr.size() && queueData[currElem].used == true)
+			++currElem;
+	}
+
+	for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+		int tnum = queueData[i].data;
+		char *currObj = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+		query->CheckAndAddToResult(queueData[i].key, new Object(currObj));
+	}
+	visitedlistpool->releaseVisitedList(vl);
+
+}
+
 	/****************************************************************
 
 	Search function for cosine
 
 	****************************************************************/
 	template <typename dist_t>
-	void Hnsw<dist_t>::SearchCosineNormalized(KNNQuery<dist_t>* query) {
+	void Hnsw<dist_t>::SearchCosineNormalizedOld(KNNQuery<dist_t> *query) {
 		
 		float *pVectq = (float *)((char *)query->QueryObject()->data());
         float PORTABLE_ALIGN16 TmpRes[4];
@@ -519,7 +651,154 @@ namespace similarity {
 
 
 	}
-	
+
+template <typename dist_t>
+void Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query) {
+
+	float *pVectq = (float *)((char *)query->QueryObject()->data());
+	float PORTABLE_ALIGN16 TmpRes[4];
+	size_t qty = query->QueryObject()->datalength() >> 2;
+
+
+	float *v = pVectq;
+	float sum = 0;
+	for (int i = 0; i < qty; i++) {
+		sum += v[i] * v[i];
+	}
+	if (sum != 0.0) {
+		sum = 1 / sqrt(sum);
+		for (int i = 0; i < qty; i++) {
+			v[i] *= sum;
+		}
+	}
+
+
+
+
+	VisitedList * vl = visitedlistpool->getFreeVisitedList();
+	unsigned int *massVisited = vl->mass;
+	unsigned int currentV = vl->curV;
+
+
+	int maxlevel1 = maxlevel_;
+	int curNodeNum = enterpointId_;
+	dist_t curdist = (ScalarProductSIMD(pVectq, (float *)(data_level0_memory_ + enterpointId_*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+
+
+	for (int i = maxlevel1; i > 0; i--) {
+		bool changed = true;
+		while (changed) {
+			changed = false;
+			int  *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1)*(i - 1)*sizeof(int));
+			int size = *data;
+			for (int j = 1; j <= size; j++) {
+				_mm_prefetch(data_level0_memory_ + (*(data + j))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+			}
+#ifdef DIST_CALC
+			query->distance_computations_ += size;
+#endif
+
+			for (int j = 1; j <= size; j++) {
+				int tnum = *(data + j);
+
+				dist_t d = (ScalarProductSIMD(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+				if (d < curdist) {
+					curdist = d;
+					curNodeNum = tnum;
+					changed = true;
+				}
+			}
+
+
+		}
+	}
+
+	SortArrBI<dist_t,int> sortedArr(ef_);
+	sortedArr.push_unsorted_grow(curdist, curNodeNum);
+
+	int_fast32_t  currElem = 0;
+
+	typedef typename SortArrBI<dist_t, int>::Item  QueueItem;
+	vector<QueueItem>& queueData = sortedArr.get_data();
+	vector<QueueItem>  itemBuff(8*30);
+
+	massVisited[curNodeNum] = currentV;
+
+
+	while(currElem < sortedArr.size()){
+		auto& e = queueData[currElem];
+		CHECK(!e.used);
+		e.used = true;
+		curNodeNum = e.data;
+		++currElem;
+
+		size_t itemQty = 0;
+		dist_t topKey = sortedArr.top_key();
+
+		int  *data = (int *)(data_level0_memory_ + curNodeNum*memoryPerObject_ + offsetLevel0_);
+		int size = *data;
+		_mm_prefetch((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
+		_mm_prefetch((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
+		_mm_prefetch(data_level0_memory_ + (*(data + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+		_mm_prefetch((char *)(data + 2), _MM_HINT_T0);
+
+		for (int j = 1; j <= size; j++) {
+			int tnum = *(data + j);
+			_mm_prefetch((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
+			_mm_prefetch(data_level0_memory_ + (*(data + j + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+			if (!(massVisited[tnum] == currentV))
+			{
+
+#ifdef DIST_CALC
+				query->distance_computations_++;
+#endif
+				massVisited[tnum] = currentV;
+				char *currObj1 = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+				dist_t d = (ScalarProductSIMD(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
+
+				if (d < topKey || sortedArr.size() < ef_) {
+					itemBuff[itemQty++]=QueueItem(d, tnum);
+				}
+			}
+		}
+
+		if (itemQty) {
+			_mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
+
+			size_t insIndex = 0;
+			if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+				std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+				insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+				if (insIndex < currElem) {
+					currElem = insIndex;
+				}
+			} else {
+				for (size_t ii = 0; ii < itemQty; ++ii) {
+					size_t insIndex = sortedArr.push_or_replace_non_empty(itemBuff[ii].key, itemBuff[ii].data);
+					if (insIndex < currElem) {
+						currElem = insIndex;
+					}
+				}
+			}
+			// because itemQty > 1, there would be at least item in sortedArr
+			_mm_prefetch(data_level0_memory_ + sortedArr.top_item().data * memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
+		}
+		// To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+		while (currElem < sortedArr.size() && queueData[currElem].used == true)
+			++currElem;
+	}
+
+	for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+		int tnum = queueData[i].data;
+		char *currObj = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+		query->CheckAndAddToResult(queueData[i].key, new Object(currObj));
+	}
+	visitedlistpool->releaseVisitedList(vl);
+
+}
+
+
 	template class Hnsw<float>;
 	template class Hnsw<double>;
 	template class Hnsw<int>;

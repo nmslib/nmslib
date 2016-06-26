@@ -69,6 +69,10 @@ class SortArrBI {
     return v_[num_elems_-1].key;
   }
 
+  const Item& top_item() const {
+    return v_[num_elems_-1];
+  }
+
   void sort() {
     _mm_prefetch(&v_[0], _MM_HINT_T0);
     std::sort(v_.begin(), v_.begin() + num_elems_);

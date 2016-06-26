@@ -67,7 +67,7 @@ namespace similarity {
             id_ = id;
         }
         ~HnswNode() {};
-
+        const Object* getData() { return data_; }
         template <typename dist_t>
         void getNeighborsByDistanceHeuristic(priority_queue<HnswNodeDistCloser<dist_t>> &resultSet1, const int NN, const Space<dist_t>* space) {
             if (resultSet1.size() < NN) {
@@ -416,10 +416,13 @@ namespace similarity {
 
 
         typedef std::vector<HnswNode*> ElementList;
-        void baseSearchAlgorithm(KNNQuery<dist_t>* query);
+        void baseSearchAlgorithmOld(KNNQuery<dist_t> *query);
+        void baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query);
         void listPassingModifiedAlgorithm(KNNQuery<dist_t>* query);
-        void SearchL2Custom(KNNQuery<dist_t>* query);
-        void SearchCosineNormalized(KNNQuery<dist_t>* query);
+        void SearchL2CustomV1Merge(KNNQuery<dist_t> *query);
+        void SearchL2CustomOld(KNNQuery<dist_t>* query);
+        void SearchCosineNormalizedOld(KNNQuery<dist_t> *query);
+        void SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query);
 
         
 
@@ -478,6 +481,10 @@ namespace similarity {
         char                  **linkLists_;
         size_t                memoryPerObject_;
         float                 (*fstdistfunc_)(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes);
+
+        enum AlgoType { kOld, kV1Merge };
+
+        AlgoType               searchAlgoType_;
     protected:
         DISABLE_COPY_AND_ASSIGN(Hnsw);
     };

@@ -43,6 +43,9 @@
 #include <sstream>
 #include <typeinfo>
 
+#include "sort_arr_bi.h"
+#define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 10
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -271,9 +274,19 @@ namespace similarity {
         int tmp;
         pmgr.GetParamOptional("searchMethod", tmp, 0); // this is just to prevent terminating the program when searchMethod is specified
 
+        string tmps;
+        pmgr.GetParamOptional("algoType", tmps, "v1merge");
+        ToLower(tmps);
+        if (tmps == "v1merge") searchAlgoType_ = kV1Merge;
+        else if (tmps == "old") searchAlgoType_ = kOld;
+        else {
+          throw runtime_error("algoType should be one of the following: old, v1merge");
+        }
+
         pmgr.CheckUnused();
         LOG(LIB_INFO) << "Set HNSW query-time parameters:";
         LOG(LIB_INFO) << "ef(Search)         =" << ef_;
+        LOG(LIB_INFO) << "algoType           =" << searchAlgoType_;
     }
 
     template <typename dist_t>
@@ -504,7 +517,10 @@ namespace similarity {
                   break;
             		case 0:
                         /// Basic search using Nmslib data structure:
-                        const_cast<Hnsw*>(this)->baseSearchAlgorithm(query);
+                      if (searchAlgoType_ == kOld)
+                        const_cast<Hnsw *>(this)->baseSearchAlgorithmOld(query);
+                      else
+                        const_cast<Hnsw *>(this)->baseSearchAlgorithmV1Merge(query);
             			break;
             		case 1:
                         /// Experimental search using Nmslib data structure (should not be used):
@@ -512,13 +528,19 @@ namespace similarity {
             			break;
             		case 3:
                         /// Basic search using optimized index(cosine+L2)
-                        const_cast<Hnsw*>(this)->SearchL2Custom(query);
+                        if (searchAlgoType_ == kOld)
+                          const_cast<Hnsw*>(this)->SearchL2CustomOld(query);
+                        else
+                          const_cast<Hnsw *>(this)->SearchL2CustomV1Merge(query);
             			break;
             		case 4:
                         /// Basic search using optimized index with one-time normalized cosine similarity
                         /// Only for cosine similarity!
-                        const_cast<Hnsw*>(this)->SearchCosineNormalized(query);
-            			break;
+                        if (searchAlgoType_ == kOld)
+                          const_cast<Hnsw *>(this)->SearchCosineNormalizedOld(query);
+                        else
+                          const_cast<Hnsw *>(this)->SearchCosineNormalizedV1Merge(query);
+                        break;
             		};
     }
 
@@ -621,7 +643,7 @@ namespace similarity {
 
 
     	template <typename dist_t>
-    	void Hnsw<dist_t>::baseSearchAlgorithm(KNNQuery<dist_t>* query) {
+    	void Hnsw<dist_t>::baseSearchAlgorithmOld(KNNQuery<dist_t> *query) {
     		VisitedList * vl = visitedlistpool->getFreeVisitedList();
     		unsigned int *massVisited = vl->mass;
     		unsigned int currentV = vl->curV;
@@ -721,6 +743,131 @@ namespace similarity {
     		visitedlistpool->releaseVisitedList(vl);
     
     	}
+
+template <typename dist_t>
+void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
+  VisitedList * vl = visitedlistpool->getFreeVisitedList();
+  unsigned int *massVisited = vl->mass;
+  unsigned int currentV = vl->curV;
+
+  HnswNode* provider;
+  int maxlevel1 = enterpoint_->level;
+  provider = enterpoint_;
+
+  const Object* currObj = provider->getData();
+
+  dist_t d = query->DistanceObjLeft(currObj);
+  dist_t curdist = d;
+  HnswNode *curNode = provider;
+  for (int i = maxlevel1; i > 0; i--) {
+    bool changed = true;
+    while (changed) {
+      changed = false;
+
+      const vector<HnswNode*>& neighbor = curNode->getAllFriends(i);
+      for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
+        _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
+      }
+      for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
+        currObj = (*iter)->getData();
+        d = query->DistanceObjLeft(currObj);
+        if (d < curdist) {
+          curdist = d;
+          curNode = *iter;
+          changed = true;
+        }
+      }
+    }
+  }
+
+
+  SortArrBI<dist_t,HnswNode*> sortedArr(ef_);
+  sortedArr.push_unsorted_grow(curdist, curNode);
+
+  int_fast32_t  currElem = 0;
+
+  typedef typename SortArrBI<dist_t, HnswNode*>::Item  QueueItem;
+  vector<QueueItem>& queueData = sortedArr.get_data();
+  vector<QueueItem>  itemBuff(16*M_);
+
+  massVisited[curNode->getId()] = currentV;
+  //visitedQueue.insert(curNode->getId());
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // PHASE TWO OF THE SEARCH
+  // Extraction of the neighborhood to find k nearest neighbors.
+  ////////////////////////////////////////////////////////////////////////////////
+
+  while(currElem < sortedArr.size()){
+    auto& e = queueData[currElem];
+    CHECK(!e.used);
+    e.used = true;
+    HnswNode* initNode = e.data;
+    ++currElem;
+
+    size_t itemQty = 0;
+    dist_t topKey = sortedArr.top_key();
+
+    const vector<HnswNode*>& neighbor = (initNode)->getAllFriends(0);
+
+    size_t curId;
+
+    for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
+      _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
+      _mm_prefetch((char *)(massVisited + (*iter)->getId()), _MM_HINT_T0);
+    }
+    //calculate distance to each neighbor
+    for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
+
+      curId = (*iter)->getId();
+
+      if (!(massVisited[curId] == currentV))
+      {
+        massVisited[curId] = currentV;
+        currObj = (*iter)->getData();
+        d = query->DistanceObjLeft(currObj);
+
+        if (d < topKey || sortedArr.size() < ef_) {
+          itemBuff[itemQty++]=QueueItem(d, *iter);
+        }
+      }
+    }
+
+    if (itemQty) {
+      _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
+
+      size_t insIndex=0;
+      if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+        std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+        insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+        if (insIndex < currElem) {
+          //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
+          currElem = insIndex;
+        }
+      } else {
+        for (size_t ii = 0; ii < itemQty; ++ii) {
+          size_t insIndex = sortedArr.push_or_replace_non_empty(itemBuff[ii].key, itemBuff[ii].data);
+
+          if (insIndex < currElem) {
+            //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
+            currElem = insIndex;
+          }
+        }
+      }
+    }
+    // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+    while (currElem < sortedArr.size() && queueData[currElem].used == true)
+      ++currElem;
+  }
+
+  for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+    query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
+  }
+
+  visitedlistpool->releaseVisitedList(vl);
+
+}
         // Experimental search algorithm
     	template <typename dist_t>
     	void Hnsw<dist_t>::listPassingModifiedAlgorithm(KNNQuery<dist_t>* query) {
