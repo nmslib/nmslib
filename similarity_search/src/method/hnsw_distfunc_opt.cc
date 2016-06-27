@@ -201,11 +201,9 @@ namespace similarity {
 			sum256 = _mm256_add_ps(sum256, _mm256_mul_ps(v1, v2));
 		}
 
-		_mm256_store_ps(TmpRes, sum256);
-		float res256 = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3]+ TmpRes[4] + TmpRes[5] + TmpRes[6] + TmpRes[7];
-
 		__m128  v1, v2;
-		__m128  sum_prod = _mm_set1_ps(0);
+		__m128  sum_prod = _mm_add_ps(_mm256_extractf128_ps(sum256, 0),
+																	_mm256_extractf128_ps(sum256, 1));
 
 		while (pVect1 < pEnd2) {
 			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
@@ -214,7 +212,7 @@ namespace similarity {
 		}
 
 		_mm_store_ps(TmpRes, sum_prod);
-		float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3] + res256;
+		float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];;
         return  1.0f -sum;
 		//return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
 #else
