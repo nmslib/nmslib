@@ -156,7 +156,7 @@ class SortArrBI {
       if (d > curr) d = curr;
     }
 
-    _mm_prefetch(&v_[curr], _MM_HINT_T0);
+    _mm_prefetch((char*)&v_[curr], _MM_HINT_T0);
     if (curr < prev) {
       curr = std::lower_bound(&v_[curr], &v_[prev], Item(key)) - &v_[0];
     }
