@@ -74,9 +74,9 @@ namespace similarity {
     void checkList1(vector<HnswNode*> list) {
         
         int ok = 1;
-        for (int i = 0; i < list.size(); i++) {
-            for (int j = 0; j < list[i]->allFriends[0].size(); j++) {
-                for (int k = j+1; k < list[i]->allFriends[0].size(); k++) {
+        for (size_t i = 0; i < list.size(); i++) {
+            for (size_t j = 0; j < list[i]->allFriends[0].size(); j++) {
+                for (size_t k = j+1; k < list[i]->allFriends[0].size(); k++) {
                     if (list[i]->allFriends[0][j] == list[i]->allFriends[0][k]) {
                         cout << "\nDuplicate links\n\n\n\n\n!!!!!";
                         ok = 0;
@@ -98,7 +98,7 @@ namespace similarity {
 
     void getDegreeDistr(string filename, vector<HnswNode*> list) {        
         ofstream out(filename);
-        int maxdegree = 0;
+        size_t maxdegree = 0;
         for (HnswNode* node : list) {
             if (node->allFriends[0].size() > maxdegree)
                 maxdegree = node->allFriends[0].size();
@@ -109,19 +109,19 @@ namespace similarity {
         vector<int> distrout = vector<int>(1000);
         vector<int> inconnections = vector<int>(list.size());
         vector<int> outconnections = vector<int>(list.size());
-        for (int i = 0; i < list.size();i++) {
+        for (size_t i = 0; i < list.size();i++) {
             for (HnswNode* node : list[i]->allFriends[0]) {
                 outconnections[list[i]->getId()]++;
                 inconnections[node->getId()]++;
             }            
         }
         
-        for (int i = 0; i < list.size(); i++) {
+        for (size_t i = 0; i < list.size(); i++) {
             distrin[inconnections[i]]++;
             distrout[outconnections[i]]++;            
         }
         
-        for (int i = 0; i < distrin.size(); i++) {
+        for (size_t i = 0; i < distrin.size(); i++) {
             out<<i<<"\t"<<distrin[i]<<"\t"<< distrout[i]<<"\n";
         }
         out.close();
@@ -213,7 +213,7 @@ namespace similarity {
             }
             int maxF = 0;
 
-            int degrees[100] = {0};
+            //int degrees[100] = {0};
 #pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
             for (int id = 1; id < data_.size(); ++id) {
                 HnswNode* node1 = ElList_[id];
@@ -265,7 +265,7 @@ namespace similarity {
                 }
 
                 ElList_[id]->allFriends[0].swap(rez);
-                degrees[ElList_[id]->allFriends[0].size()]++;
+                //degrees[ElList_[id]->allFriends[0].size()]++;
             }
             for (int i = 0; i < temp.size(); i++)
                 delete temp[i];
