@@ -46,8 +46,11 @@
 #else
 #define PORTABLE_ALIGN32 __declspec(align(32))
 #endif
-
+#if defined(__GNUC__)
 #ifdef __AVX__
+#define USE_AVX
+#endif
+#else
 #define USE_AVX
 #endif
 
@@ -165,8 +168,7 @@ namespace similarity {
 		sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
 		}
 
-		//float PORTABLE_ALIGN16 TmpRes[4];
-
+		
 		_mm_store_ps(TmpRes, sum);
 		float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 
@@ -213,8 +215,8 @@ namespace similarity {
 
 		_mm_store_ps(TmpRes, sum_prod);
 		float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3] + res256;
-
-		return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
+        return  1.0f -sum;
+		//return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
 #else
 		size_t qty16 = qty / 16;
 		size_t qty4 = qty / 4;

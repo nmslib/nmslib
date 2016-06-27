@@ -126,7 +126,7 @@ namespace similarity {
                 return;
             }
             priority_queue<HnswNodeDistFarther<dist_t>> resultSet;
-            priority_queue<HnswNodeDistFarther<dist_t>> templist;
+            //priority_queue<HnswNodeDistFarther<dist_t>> templist;
             vector<HnswNodeDistFarther<dist_t>> returnlist;
             //int full = resultSet1.size();
             while (resultSet1.size() > 0)
@@ -154,8 +154,8 @@ namespace similarity {
                 }
                 if (good)
                     returnlist.push_back(curen);
-                else
-                    templist.push(curen);
+                //else
+                //    templist.push(curen);
 
             }
             //cout << returnlist.size() <<", looked:"<< h<<" ("<<h/(1.0*full) <<") missied:"<< (full-h) / (1.0*full)<<endl;

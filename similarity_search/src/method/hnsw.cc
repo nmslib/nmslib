@@ -149,7 +149,7 @@ namespace similarity {
         pmgr.GetParamOptional("maxM", maxM_, M_);
         pmgr.GetParamOptional("maxM0", maxM0_, M_ * 2);
         pmgr.GetParamOptional("mult", mult_, 1 / log(1.0*M_));
-        pmgr.GetParamOptional("delaunay_type", delaunay_type_, 1);
+        pmgr.GetParamOptional("delaunay_type", delaunay_type_, 2);
         int post_;
         pmgr.GetParamOptional("post", post_, 0);
         int skip_optimized_index = 0;
@@ -273,7 +273,8 @@ namespace similarity {
            
 
         }
-        checkList1(ElList_);
+        // Uncomment for debug mode
+        //checkList1(ElList_);
         
         data_level0_memory_ = NULL;
         linkLists_ = NULL;
