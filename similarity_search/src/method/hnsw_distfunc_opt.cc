@@ -46,23 +46,25 @@
 #else
 #define PORTABLE_ALIGN32 __declspec(align(32))
 #endif
+
+#ifdef __AVX__
+#define USE_AVX
+#endif
+
 //#define DIST_CALC 
 namespace similarity {
 	float L2SqrSIMD16Ext(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
-
-		//size_t qty4 = qty >> 2;
+#ifdef USE_AVX
 		size_t qty16 = qty >> 4;
 
 		const float* pEnd1 = pVect1 + (qty16 << 4);
-		//const float* pEnd2 = pVect1 + (qty4 << 2);
-		//const float* pEnd3 = pVect1 + qty;
 
 		__m256  diff, v1, v2;
 		__m256  sum = _mm256_set1_ps(0);
 
 		while (pVect1 < pEnd1) 
         {
-			_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
+			//_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
 			v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
 			v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
 			diff = _mm256_sub_ps(v1, v2);
@@ -75,25 +77,52 @@ namespace similarity {
 
 		}
 
-		/*while (pVect1 < pEnd2) {
-		v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
-		v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
-		diff = _mm_sub_ps(v1, v2);
-		sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
-		}*/
-
-		//float PORTABLE_ALIGN16 TmpRes[4];
-
 		_mm256_store_ps(TmpRes, sum);
 		float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3]+ TmpRes[4] + TmpRes[5] + TmpRes[6] + TmpRes[7];
 
-		/*while (pVect1 < pEnd3) {
-		float diff = *pVect1++ - *pVect2++;
-		res += diff * diff;
-		}*/
-        return (res);
-		//return sqrt(res);
+
+		return (res);
+#else
+		//size_t qty4 = qty >> 2;
+		size_t qty16 = qty >> 4;
+
+		const float* pEnd1 = pVect1 + (qty16 << 4);
+		//const float* pEnd2 = pVect1 + (qty4 << 2);
+		//const float* pEnd3 = pVect1 + qty;
+
+		__m128  diff, v1, v2;
+		__m128  sum = _mm_set1_ps(0);
+
+		while (pVect1 < pEnd1) {
+			//_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
+			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
+			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
+			diff = _mm_sub_ps(v1, v2);
+			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
+
+			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
+			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
+			diff = _mm_sub_ps(v1, v2);
+			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
+
+			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
+			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
+			diff = _mm_sub_ps(v1, v2);
+			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
+
+			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
+			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
+			diff = _mm_sub_ps(v1, v2);
+			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
+		}
+
+		_mm_store_ps(TmpRes, sum);
+		float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
+
+		return (res);
+#endif
 	};
+
 	float L2SqrSIMDExt(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
 
 		size_t qty4 = qty >> 2;
@@ -107,7 +136,7 @@ namespace similarity {
 		__m128  sum = _mm_set1_ps(0);
 
 		while (pVect1 < pEnd1) {
-			_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
+			//_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
 			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
 			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
 			diff = _mm_sub_ps(v1, v2);
@@ -149,17 +178,52 @@ namespace similarity {
 		return sqrt(res);
 	};
 	float ScalarProductSIMD(const float* __restrict pVect1, const float*  __restrict pVect2, size_t qty, float  *  __restrict TmpRes) {
+#ifdef USE_AVX
 		size_t qty16 = qty / 16;
 		size_t qty4 = qty / 4;
 
 		const float* pEnd1 = pVect1 + 16 * qty16;
 		const float* pEnd2 = pVect1 + 4 * qty4;
-		//const float* pEnd3 = pVect1 + qty;
+
+		__m256  sum256 = _mm256_set1_ps(0);
+
+		while (pVect1 < pEnd1) {
+			//_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
+
+			__m256 v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
+			__m256 v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
+			sum256 = _mm256_add_ps(sum256, _mm256_mul_ps(v1, v2));
+
+			v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
+			v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
+			sum256 = _mm256_add_ps(sum256, _mm256_mul_ps(v1, v2));
+		}
+
+		_mm256_store_ps(TmpRes, sum256);
+		float res256 = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3]+ TmpRes[4] + TmpRes[5] + TmpRes[6] + TmpRes[7];
 
 		__m128  v1, v2;
 		__m128  sum_prod = _mm_set1_ps(0);
-		//__m128  sum_square1 = sum_prod;
-		//__m128  sum_square2 = sum_prod;
+
+		while (pVect1 < pEnd2) {
+			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
+			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
+			sum_prod = _mm_add_ps(sum_prod, _mm_mul_ps(v1, v2));
+		}
+
+		_mm_store_ps(TmpRes, sum_prod);
+		float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3] + res256;
+
+		return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
+#else
+		size_t qty16 = qty / 16;
+		size_t qty4 = qty / 4;
+
+		const float* pEnd1 = pVect1 + 16 * qty16;
+		const float* pEnd2 = pVect1 + 4 * qty4;
+
+		__m128  v1, v2;
+		__m128  sum_prod = _mm_set1_ps(0);
 
 		while (pVect1 < pEnd1) {
 
@@ -194,19 +258,13 @@ namespace similarity {
 
 		_mm_store_ps(TmpRes, sum_prod);
 		float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
-		/*while (pVect1 < pEnd3) {
-			//cout << "!!!";
-			sum += (*pVect1) * (*pVect2);
-
-			++pVect1; ++pVect2;
-		}*/
-		//return -sum;
 
 		return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
+#endif
 	};
 
 	float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
-        
+
 		size_t qty16 = qty / 16;
 		size_t qty4 = qty / 4;
 		

@@ -128,7 +128,7 @@ namespace similarity {
             priority_queue<HnswNodeDistFarther<dist_t>> resultSet;
             priority_queue<HnswNodeDistFarther<dist_t>> templist;
             vector<HnswNodeDistFarther<dist_t>> returnlist;
-            int full = resultSet1.size();
+            //int full = resultSet1.size();
             while (resultSet1.size() > 0)
             {
                 resultSet.emplace(resultSet1.top().getDistance(), resultSet1.top().getMSWNodeHier());
