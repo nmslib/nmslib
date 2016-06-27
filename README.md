@@ -32,11 +32,11 @@ As of **May 2016** results are:
 <tr width="100%" border="0" style="border:none">
 <td border="0" align="center" style="border:none">
 1.19M 100d GloVe, cosine similarity.
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/glove.png" width="400">
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/docs/figures/glove.png" width="400">
 </td>
 <td border="0"  align="center" style="border:none">
 1M 128d SIFT features, Euclidean distance:
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/sift.png" width="400">
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/docs/figures/sift.png" width="400">
 </td>
 </tr></table>
 
