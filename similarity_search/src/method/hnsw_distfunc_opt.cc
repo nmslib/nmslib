@@ -46,11 +46,8 @@
 #else
 #define PORTABLE_ALIGN32 __declspec(align(32))
 #endif
-#if defined(__GNUC__)
+
 #ifdef __AVX__
-#define USE_AVX
-#endif
-#else
 #define USE_AVX
 #endif
 
