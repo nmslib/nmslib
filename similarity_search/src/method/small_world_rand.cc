@@ -511,10 +511,10 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
 
       if (itemQty) {
         _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
+        std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 
         size_t insIndex=0;
         if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
-          std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
           insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
 
           if (insIndex < currElem) {

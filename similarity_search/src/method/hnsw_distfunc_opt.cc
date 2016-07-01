@@ -31,7 +31,7 @@
 #include "method/hnsw.h"
 
 #include "sort_arr_bi.h"
-#define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 10
+#define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 100
 
 #include <vector>
 #include <limits>
@@ -493,7 +493,7 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 		}
 	}
 
-	SortArrBI<dist_t,int> sortedArr(ef_);
+	SortArrBI<dist_t,int> sortedArr(max<size_t>(ef_, query->GetK()));
 	sortedArr.push_unsorted_grow(curdist, curNodeNum);
 
 	int_fast32_t  currElem = 0;
@@ -504,7 +504,7 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 
 	massVisited[curNodeNum] = currentV;
 
-	while(currElem < sortedArr.size()){
+	while(currElem < min(sortedArr.size(),ef_)){
 		auto& e = queueData[currElem];
 		CHECK(!e.used);
 		e.used = true;
@@ -542,10 +542,10 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 		}
 		if (itemQty) {
 			_mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
+			std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 
 			size_t insIndex = 0;
 			if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
-				std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 				insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
 
 				if (insIndex < currElem) {
@@ -765,7 +765,7 @@ void Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query) {
 		}
 	}
 
-	SortArrBI<dist_t,int> sortedArr(ef_);
+	SortArrBI<dist_t,int> sortedArr(max<size_t>(ef_, query->GetK()));
 	sortedArr.push_unsorted_grow(curdist, curNodeNum);
 
 	int_fast32_t  currElem = 0;
@@ -777,7 +777,7 @@ void Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query) {
 	massVisited[curNodeNum] = currentV;
 
 
-	while(currElem < sortedArr.size()){
+	while(currElem < min(sortedArr.size(),ef_)){
 		auto& e = queueData[currElem];
 		CHECK(!e.used);
 		e.used = true;
@@ -816,10 +816,10 @@ void Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query) {
 
 		if (itemQty) {
 			_mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
+			std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 
 			size_t insIndex = 0;
 			if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
-				std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 				insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
 
 				if (insIndex < currElem) {
