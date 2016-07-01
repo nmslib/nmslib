@@ -87,7 +87,16 @@ class SortArrBI {
   size_t push_or_replace_non_empty(const KeyType& key, const DataType& data) {
     // num_elems_ > 0
     unsigned curr = num_elems_ - 1;
-    if (v_[curr].key < key) return num_elems_;
+    if (v_[curr].key <= key) {
+      if (num_elems_ < v_.size()) {
+        v_[num_elems_].used = false;
+        v_[num_elems_].key  = key;
+        v_[num_elems_].data = data;
+        return num_elems_++;
+      } else {
+        return num_elems_;
+      }
+    }
 
     while (curr > 0) {
       unsigned j = curr - 1;
@@ -144,7 +153,16 @@ class SortArrBI {
   size_t push_or_replace_non_empty_exp(const KeyType& key, const DataType& data) {
     // num_elems_ > 0
     unsigned curr = num_elems_ - 1;
-    if (v_[curr].key <= key) return num_elems_;
+    if (v_[curr].key <= key) {
+      if (num_elems_ < v_.size()) {
+        v_[num_elems_].used = false;
+        v_[num_elems_].key  = key;
+        v_[num_elems_].data = data;
+        return num_elems_++;
+      } else {
+        return num_elems_;
+      }
+    }
     unsigned prev = curr;
 
     unsigned d=1;
