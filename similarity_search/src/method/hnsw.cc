@@ -417,10 +417,11 @@ namespace similarity {
         pmgr.GetParamOptional("searchMethod", tmp, 0); // this is just to prevent terminating the program when searchMethod is specified
 
         string tmps;
-        pmgr.GetParamOptional("algoType", tmps, "v1merge");
+        pmgr.GetParamOptional("algoType", tmps, "hybrid");
         ToLower(tmps);
         if (tmps == "v1merge") searchAlgoType_ = kV1Merge;
         else if (tmps == "old") searchAlgoType_ = kOld;
+        else if (tmps == "hybrid") searchAlgoType_ = kHybrid;
         else {
           throw runtime_error("algoType should be one of the following: old, v1merge");
         }
@@ -648,13 +649,15 @@ namespace similarity {
 
     template <typename dist_t>
     void Hnsw<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const  {
+        bool useOld = searchAlgoType_ == kOld || (searchAlgoType_ == kHybrid && ef_ >= 1000);
+        //cout << "Ef = " << ef_ << " use old = " << useOld << endl;
         switch (searchMethod_) {
                 default:
                   throw runtime_error("Invalid searchMethod: " + ConvertToString(searchMethod_));
                   break;
             		case 0:
                         /// Basic search using Nmslib data structure:
-                      if (searchAlgoType_ == kOld)
+                      if (useOld)
                         const_cast<Hnsw *>(this)->baseSearchAlgorithmOld(query);
                       else
                         const_cast<Hnsw *>(this)->baseSearchAlgorithmV1Merge(query);
@@ -665,7 +668,7 @@ namespace similarity {
             			break;
             		case 3:
                         /// Basic search using optimized index(cosine+L2)
-                        if (searchAlgoType_ == kOld)
+                        if (useOld)
                           const_cast<Hnsw*>(this)->SearchL2CustomOld(query);
                         else
                           const_cast<Hnsw *>(this)->SearchL2CustomV1Merge(query);
@@ -673,7 +676,7 @@ namespace similarity {
             		case 4:
                         /// Basic search using optimized index with one-time normalized cosine similarity
                         /// Only for cosine similarity!
-                        if (searchAlgoType_ == kOld)
+                        if (useOld)
                           const_cast<Hnsw *>(this)->SearchCosineNormalizedOld(query);
                         else
                           const_cast<Hnsw *>(this)->SearchCosineNormalizedV1Merge(query);

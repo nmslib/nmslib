@@ -563,7 +563,7 @@ namespace similarity {
         size_t                memoryPerObject_;
         float                 (*fstdistfunc_)(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes);
 
-        enum AlgoType { kOld, kV1Merge };
+        enum AlgoType { kOld, kV1Merge, kHybrid };
 
         AlgoType               searchAlgoType_;
     protected:
