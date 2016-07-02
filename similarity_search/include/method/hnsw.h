@@ -67,9 +67,9 @@ namespace similarity {
             id_ = id;
         }
         ~HnswNode() {};
-
+        const Object* getData() { return data_; }
         template <typename dist_t>
-        void getNeighborsByDistanceHeuristic(priority_queue<HnswNodeDistCloser<dist_t>> &resultSet1, const int NN, const Space<dist_t>* space) {
+        void getNeighborsByHeuristic1(priority_queue<HnswNodeDistCloser<dist_t>> &resultSet1, const int NN, const Space<dist_t>* space) {
             if (resultSet1.size() < NN) {
                 return;
             }
@@ -92,7 +92,8 @@ namespace similarity {
                 for (HnswNodeDistFarther<dist_t> curen2 : returnlist) {
                     dist_t curdist = space->IndexTimeDistance(curen2.getMSWNodeHier()->getData(), curen.getMSWNodeHier()->getData());
 
-                    if (curdist <= dist_to_query) {
+                    //if (curdist <= dist_to_query) {
+                    if (curdist < dist_to_query) {
                         good = false;
                         break;
                     }
@@ -118,71 +119,146 @@ namespace similarity {
         * Experimental method for selection of neighbors based on local search. However is peforms worse than the previous method
         * Note that it works correctly only in a single thread!!!
         */
+       
         template <typename dist_t>
-        void getNeighborsByMiniGreedySearches(priority_queue<HnswNodeDistCloser<dist_t>> &resultSet1, const int NN, const Space<dist_t>* space, int level) {
+        void getNeighborsByHeuristic2(priority_queue<HnswNodeDistCloser<dist_t>> &resultSet1, const int NN, const Space<dist_t>* space, int level) {
             if (resultSet1.size() < NN) {
                 return;
             }
-            priority_queue<HnswNodeDistFarther<dist_t>> inputSet;
-            priority_queue<HnswNodeDistFarther<dist_t>> templist;
-
-            set <HnswNode*> result;
-
+            priority_queue<HnswNodeDistFarther<dist_t>> resultSet;
+            //priority_queue<HnswNodeDistFarther<dist_t>> templist;
+            vector<HnswNodeDistFarther<dist_t>> returnlist;
+            //int full = resultSet1.size();
             while (resultSet1.size() > 0)
             {
-                inputSet.emplace(resultSet1.top().getDistance(), resultSet1.top().getMSWNodeHier());
+                resultSet.emplace(resultSet1.top().getDistance(), resultSet1.top().getMSWNodeHier());
                 resultSet1.pop();
             }
-            result.insert(inputSet.top().getMSWNodeHier());
-            inputSet.pop();
-            while (inputSet.size()) {
-                if (result.size() >= NN)
+            int h = 0;
+            while (resultSet.size()) {
+                h++;
+                if (returnlist.size() >= NN)
                     break;
+                HnswNodeDistFarther<dist_t> curen = resultSet.top();
+                dist_t dist_to_query = curen.getDistance();
+                resultSet.pop();
                 bool good = true;
-                HnswNodeDistFarther<dist_t> curen = inputSet.top();
-                inputSet.pop();
-                dist_t curdist = curen.getDistance();
-                HnswNode *curNode = curen.getMSWNodeHier();
+                for (HnswNodeDistFarther<dist_t> curen2 : returnlist) {
+                    dist_t curdist = space->IndexTimeDistance(curen2.getMSWNodeHier()->getData(), curen.getMSWNodeHier()->getData());
 
-                bool changed = true;
-                while (changed) {
-                    changed = false;
-
-                    const vector<HnswNode*>& neighbor = curNode->getAllFriends(level);
-                    for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                        _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
-                    }
-                    for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                        const Object *currObj = (*iter)->getData();
-                        dist_t d = space->IndexTimeDistance(this->data_, currObj);
-                        if (d < curdist) {
-                            curdist = d;
-                            curNode = *iter;
-                            changed = true;
-                        }
-                    }
-                    if (result.count(curNode)) {
+                    //if (curdist <= dist_to_query) {
+                    if (curdist < dist_to_query) {
                         good = false;
                         break;
                     }
                 }
                 if (good)
-                    result.insert(curen.getMSWNodeHier());
-                else
-                    templist.push(curen);
+                    returnlist.push_back(curen);
+                //else
+                //    templist.push(curen);
 
             }
+            //cout << returnlist.size() <<", looked:"<< h<<" ("<<h/(1.0*full) <<") missied:"<< (full-h) / (1.0*full)<<endl;
+            /*while (returnlist.size() < NN && templist.size() > 0) {
+            returnlist.push_back(templist.top());
+            templist.pop();
+            }*/
 
-            while (result.size() < NN && templist.size() > 0) {
-                result.insert(templist.top().getMSWNodeHier());
-                templist.pop();
-            }
-            resultSet1.empty();
-            for (HnswNode *curNode : result) {
-                resultSet1.emplace(0, curNode);
+            for (HnswNodeDistFarther<dist_t> curen2 : returnlist) {
+                resultSet1.emplace(curen2.getDistance(), curen2.getMSWNodeHier());
             }
 
         };
+        template <typename dist_t>
+        void getNeighborsByHeuristic3(priority_queue<HnswNodeDistCloser<dist_t>> &resultSet1, const int NN, const Space<dist_t>* space, int level) {
+            unordered_set<HnswNode*> candidates;
+            for (int i = resultSet1.size() - 1; i >= 0; i--)
+            {
+                //inputCopy[i] = resultSet1.top();
+                candidates.insert(resultSet1.top().getMSWNodeHier());
+                for(HnswNode* n: resultSet1.top().getMSWNodeHier()->getAllFriends(level))
+                    candidates.insert(n);
+                resultSet1.pop();
+            }
+            for (HnswNode *n : candidates) {
+                if(n!=this)
+                resultSet1.emplace(space->IndexTimeDistance(n->getData(),this->getData()), n);
+            }
+
+            if (resultSet1.size() < NN) {
+                return;
+            }
+                       
+            vector<HnswNodeDistCloser<dist_t>> inputCopy(resultSet1.size());
+            vector<HnswNodeDistCloser<dist_t>> templist;
+            vector<HnswNodeDistCloser<dist_t>> returnlist;
+            vector<HnswNodeDistCloser<dist_t>> highPriorityList;
+            for (int i = resultSet1.size() - 1; i >= 0; i--)
+            {
+                inputCopy[i] = resultSet1.top();
+                resultSet1.pop();
+            }
+            for (int i = 0; i<inputCopy.size(); i++) {
+                if (highPriorityList.size() >= NN)
+                    break;
+                //if (returnlist.size() >= NN)
+                //    break;
+                HnswNodeDistCloser<dist_t> curen = inputCopy[i];
+                dist_t dist_to_query = curen.getDistance();
+
+                int good = 2;
+                for (HnswNodeDistCloser<dist_t> curen2 : templist) {
+                    dist_t curdist = space->IndexTimeDistance(curen2.getMSWNodeHier()->getData(), curen.getMSWNodeHier()->getData());
+                    if (curdist < dist_to_query) {
+                        if (good == 2)
+                            good = 1;
+                        break;
+                    }
+                }
+                for (HnswNodeDistCloser<dist_t> curen2 : highPriorityList) {
+                    dist_t curdist = space->IndexTimeDistance(curen2.getMSWNodeHier()->getData(), curen.getMSWNodeHier()->getData());
+
+                    if (curdist < dist_to_query) {
+                        good = 0;
+                        break;
+                    }
+                }
+                if (good)
+                    for (HnswNodeDistCloser<dist_t> curen2 : returnlist) {
+                        dist_t curdist = space->IndexTimeDistance(curen2.getMSWNodeHier()->getData(), curen.getMSWNodeHier()->getData());
+
+                        if (curdist < dist_to_query) {
+                            good = 0;
+                            break;
+                        }
+                    }
+
+
+                if (good == 2)
+                    highPriorityList.push_back(curen);
+                else if (good == 1)
+                    //if(good)
+                    returnlist.push_back(curen);
+                else
+                    templist.push_back(curen);
+
+            }
+
+
+            for (HnswNodeDistCloser<dist_t> curen2 : highPriorityList) {
+                if (resultSet1.size() >= NN)
+                    break;
+                resultSet1.emplace(curen2.getDistance(), curen2.getMSWNodeHier());
+            }
+            for (HnswNodeDistCloser<dist_t> curen2 : returnlist) {
+                if (resultSet1.size() >= NN)
+                    break;
+                resultSet1.emplace(curen2.getDistance(), curen2.getMSWNodeHier());
+            }
+            
+        };
+
+
         template <typename dist_t>
         void addFriendlevel(int level, HnswNode* element, const Space<dist_t>* space, int delaunay_type) {
 
@@ -208,13 +284,16 @@ namespace similarity {
             {
                 if (delaunay_type > 0) {
                     priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
-                    for (int i = 1; i < allFriends[level].size(); i++) {
+                    //for (int i = 1; i < allFriends[level].size(); i++) {
+                    for (int i = 0; i < allFriends[level].size(); i++) {
                         resultSet.emplace(space->IndexTimeDistance(this->getData(), allFriends[level][i]->getData()), allFriends[level][i]);
                     }
                     if (delaunay_type == 1)
-                        this->getNeighborsByDistanceHeuristic(resultSet, resultSet.size() - 1, space);
+                        this->getNeighborsByHeuristic1(resultSet, resultSet.size() - 1, space);
                     else if (delaunay_type == 2)
-                        this->getNeighborsByMiniGreedySearches(resultSet, resultSet.size() - 1, space, level);
+                        this->getNeighborsByHeuristic2(resultSet, resultSet.size() - 1, space, level);
+                    else if (delaunay_type == 3)
+                        this->getNeighborsByHeuristic3(resultSet, resultSet.size() - 1, space, level);
                     allFriends[level].clear();
 
                     while (resultSet.size()) {
@@ -416,10 +495,13 @@ namespace similarity {
 
 
         typedef std::vector<HnswNode*> ElementList;
-        void baseSearchAlgorithm(KNNQuery<dist_t>* query);
+        void baseSearchAlgorithmOld(KNNQuery<dist_t> *query);
+        void baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query);
         void listPassingModifiedAlgorithm(KNNQuery<dist_t>* query);
-        void SearchL2Custom(KNNQuery<dist_t>* query);
-        void SearchCosineNormalized(KNNQuery<dist_t>* query);
+        void SearchL2CustomV1Merge(KNNQuery<dist_t> *query);
+        void SearchL2CustomOld(KNNQuery<dist_t>* query);
+        void SearchCosineNormalizedOld(KNNQuery<dist_t> *query);
+        void SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query);
 
         
 
@@ -433,6 +515,8 @@ namespace similarity {
         void kSearchElementsWithAttemptsLevel(const Space<dist_t>* space,
             const Object* queryObj, size_t NN,
             std::priority_queue<HnswNodeDistCloser<dist_t>>& resultSet, HnswNode* ep, int level) const;
+
+
         void add(const Space<dist_t>* space, HnswNode *newElement);
         void addToElementListSynchronized(HnswNode *newElement);
 
@@ -478,6 +562,10 @@ namespace similarity {
         char                  **linkLists_;
         size_t                memoryPerObject_;
         float                 (*fstdistfunc_)(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes);
+
+        enum AlgoType { kOld, kV1Merge, kHybrid };
+
+        AlgoType               searchAlgoType_;
     protected:
         DISABLE_COPY_AND_ASSIGN(Hnsw);
     };

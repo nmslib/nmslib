@@ -69,6 +69,10 @@ class SortArrBI {
     return v_[num_elems_-1].key;
   }
 
+  const Item& top_item() const {
+    return v_[num_elems_-1];
+  }
+
   void sort() {
     _mm_prefetch(&v_[0], _MM_HINT_T0);
     std::sort(v_.begin(), v_.begin() + num_elems_);
@@ -78,12 +82,21 @@ class SortArrBI {
     std::swap(v_[x], v_[y]);
   }
 
-  // Checking for duplicate IDs isn't the responsiblity of this function
+  // Checking for duplicate IDs isn't the responsibility of this function
   // it also assumes a non-empty array
   size_t push_or_replace_non_empty(const KeyType& key, const DataType& data) {
     // num_elems_ > 0
     unsigned curr = num_elems_ - 1;
-    if (v_[curr].key < key) return num_elems_;
+    if (v_[curr].key <= key) {
+      if (num_elems_ < v_.size()) {
+        v_[num_elems_].used = false;
+        v_[num_elems_].key  = key;
+        v_[num_elems_].data = data;
+        return num_elems_++;
+      } else {
+        return num_elems_;
+      }
+    }
 
     while (curr > 0) {
       unsigned j = curr - 1;
@@ -93,8 +106,8 @@ class SortArrBI {
 
     if (num_elems_ < v_.size()) num_elems_++;
     // curr + 1 <= num_elems_
-    _mm_prefetch(&v_[curr], _MM_HINT_T0);
-    memmove(&v_[curr+1], &v_[curr], (num_elems_ - (1 + curr)) * sizeof(v_[0]));
+    _mm_prefetch((char *)&v_[curr], _MM_HINT_T0);
+    memmove((char *)&v_[curr+1], &v_[curr], (num_elems_ - (1 + curr)) * sizeof(v_[0]));
     
     v_[curr].used = false;
     v_[curr].key  = key;
@@ -140,7 +153,16 @@ class SortArrBI {
   size_t push_or_replace_non_empty_exp(const KeyType& key, const DataType& data) {
     // num_elems_ > 0
     unsigned curr = num_elems_ - 1;
-    if (v_[curr].key <= key) return num_elems_;
+    if (v_[curr].key <= key) {
+      if (num_elems_ < v_.size()) {
+        v_[num_elems_].used = false;
+        v_[num_elems_].key  = key;
+        v_[num_elems_].data = data;
+        return num_elems_++;
+      } else {
+        return num_elems_;
+      }
+    }
     unsigned prev = curr;
 
     unsigned d=1;
@@ -152,7 +174,7 @@ class SortArrBI {
       if (d > curr) d = curr;
     }
 
-    _mm_prefetch(&v_[curr], _MM_HINT_T0);
+    _mm_prefetch((char*)&v_[curr], _MM_HINT_T0);
     if (curr < prev) {
       curr = std::lower_bound(&v_[curr], &v_[prev], Item(key)) - &v_[0];
     }

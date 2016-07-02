@@ -20,6 +20,7 @@
 
 #include "space.h"
 #include "knnquery.h"
+#include "knnqueue.h"
 #include "rangequery.h"
 #include "ported_boost_progress.h"
 #include "method/small_world_rand.h"
@@ -30,6 +31,8 @@
 #include <map>
 #include <sstream>
 #include <typeinfo>
+
+#define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 100
 
 //#define START_WITH_E0
 #define START_WITH_E0_AT_QUERY_TIME
@@ -177,7 +180,8 @@ SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  1);
   pmgr.GetParamOptional("efSearch", efSearch_, NN_);
   string tmp;
-  pmgr.GetParamOptional("algoType", tmp, "v1merge"); 
+  //pmgr.GetParamOptional("algoType", tmp, "v1merge");
+  pmgr.GetParamOptional("algoType", tmp, "old");
   ToLower(tmp);
   if (tmp == "v1merge") searchAlgoType_ = kV1Merge;
   else if (tmp == "old") searchAlgoType_ = kOld;
@@ -188,6 +192,7 @@ SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
   LOG(LIB_INFO) << "initSearchAttempts =" << initSearchAttempts_;
   LOG(LIB_INFO) << "efSearch           =" << efSearch_;
+  LOG(LIB_INFO) << "algoType           =" << searchAlgoType_;
 }
 
 template <typename dist_t>
@@ -447,7 +452,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
 #else
     MSWNode* currNode = getRandomEntryPoint();
 #endif
-    SortArrBI<dist_t,MSWNode*> sortedArr(efSearch_);
+    SortArrBI<dist_t,MSWNode*> sortedArr(max<size_t>(efSearch_, query->GetK()));
 
     const Object* currObj = currNode->getData();
     dist_t d = query->DistanceObjLeft(currObj);
@@ -466,8 +471,9 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
     vector<QueueItem>& queueData = sortedArr.get_data();
     vector<QueueItem>  itemBuff(8*NN_);
 
-    //LOG(LIB_INFO) << "@@@ start size = " << queueData.size();
-    while(currElem < sortedArr.size()){
+    // efSearch_ is always <= # of elements in the queueData.size() (the size of the BUFFER), but it can be
+    // larger than sortedArr.size(), which returns the number of actual elements in the buffer
+    while(currElem < min(sortedArr.size(),efSearch_)){
       auto& e = queueData[currElem];
       CHECK(!e.used);
       e.used = true;
@@ -485,6 +491,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
         itemBuff.resize(currNode->getAllFriends().size());
 
       size_t itemQty = 0;
+
       dist_t topKey = sortedArr.top_key();
       //calculate distance to each neighbor
       for (MSWNode* neighbor : currNode->getAllFriends()) {
@@ -496,7 +503,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
           currObj = neighbor->getData();
           d = query->DistanceObjLeft(currObj);
           visitedBitset[nodeId] = true;
-          if (d < topKey) {
+          if (sortedArr.size() < efSearch_ || d < topKey) {
             itemBuff[itemQty++]=QueueItem(d, neighbor);
           }
         }
@@ -505,15 +512,24 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
       if (itemQty) {
         _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
         std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
-        size_t insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
 
-        if (insIndex < currElem) {
-          //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
-          currElem = insIndex;
+        size_t insIndex=0;
+        if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+          insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+          if (insIndex < currElem) {
+            currElem = insIndex;
+          }
+        } else {
+          for (size_t ii = 0; ii < itemQty; ++ii) {
+            size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
+
+            if (insIndex < currElem) {
+              currElem = insIndex;
+            }
+          }
         }
       }
-
-      //LOG(LIB_INFO) << "@@@ " << itemQty << " out of " << currNode->getAllFriends().size() << " queue size: " << sortedArr.size();
 
       // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
       while (currElem < sortedArr.size() && queueData[currElem].used == true)
@@ -529,6 +545,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
+
   if (ElList_.empty()) return;
   CHECK_MSG(efSearch_ > 0, "efSearch should be > 0");
 /*
@@ -616,6 +633,7 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
             if (closestDistQueue.size() > efSearch_) {
               closestDistQueue.pop();
             }
+
             candidateQueue.emplace(d, *iter);
           }
 
@@ -624,7 +642,6 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
       }
     }
   }
-
 }
 
 template <typename dist_t>
