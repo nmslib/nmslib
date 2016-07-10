@@ -156,26 +156,26 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // *************** VP-tree tests ******************** //
   // knn
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", "chunkBucket=1,bucketSize=10",  "",
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 70),  
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 80),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "alphaLeft=2,alphaRight=2", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.93, 0.97, 0.03, 0.09, 120, 160),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.93, 0.97, 0.03, 0.09, 120, 190),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 1.5, 1.8),  
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 1.5, 2.5),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "alphaLeft=2,alphaRight=2", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.98, 1.0, 0.0, 0.02, 2.8, 3.4),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.98, 1.0, 0.0, 0.02, 2.8, 5.5),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 20, 24),  
+                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 20, 30),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "alphaLeft=2,alphaRight=2", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.93, 0.96, 0.0, 0.02, 56, 63),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.93, 0.96, 0.0, 0.02, 56, 80),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 1.1, 1.3),  
+                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 1.1, 1.6),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "alphaLeft=2,alphaRight=2", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.99, 0.999, 0.0, 0.01, 1.5, 2.5),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.98, 0.999, 0.0, 0.01, 1.5, 2.5),  
   // range
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "",
-                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 23, 26),  
+                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 23, 30),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", "chunkBucket=1,bucketSize=10", "",
-                0 /* no KNN */, 0.5 /* range search radius 0.5 */ , 1.0, 1.0, 0.0, 0.0, 2.4, 3),  
+                0 /* no KNN */, 0.5 /* range search radius 0.5 */ , 1.0, 1.0, 0.0, 0.0, 2.4, 4),  
 
   // *************** MVP-tree tests ******************** //
   // knn
