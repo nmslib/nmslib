@@ -26,6 +26,8 @@ namespace similarity {
  * Creating functions.
  */
 
+/* Regular sparse spaces */
+
 template <typename dist_t>
 Space<dist_t>* CreateSparseCosineSimilarity(const AnyParams& /* ignoring params */) {
   // Cosine Similarity
@@ -39,11 +41,35 @@ Space<dist_t>* CreateSparseAngularDistance(const AnyParams& /* ignoring params *
   return new SpaceSparseAngularDistance<dist_t>();
 }
 
+template <typename dist_t>
+Space<dist_t>* CreateSparseNegativeScalarProduct(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceSparseNegativeScalarProduct<dist_t>();
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateSparseQueryNormNegativeScalarProduct(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceSparseQueryNormNegativeScalarProduct<dist_t>();
+}
+
+/* Fast sparse spaces */
+
 Space<float>* CreateSparseCosineSimilarityFast(const AnyParams& /* ignoring params */) {
   // Cosine Similarity
   return new SpaceSparseCosineSimilarityFast();
 }
 
+
+Space<float>* CreateSparseNegativeScalarProductFast(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceSparseNegativeScalarProductFast();
+}
+
+Space<float>* CreateSparseQueryNormNegativeScalarProductFast(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceSparseQueryNormNegativeScalarProductFast();
+}
 
 Space<float>* CreateSparseAngularDistanceFast(const AnyParams& /* ignoring params */) {
   // Cosine Similarity

@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <string>
 #include <map>
+#include <cmath>
 #include <stdexcept>
 #include <algorithm>
 #include <limits>
@@ -57,16 +58,6 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
                                      size_t nElem) const;
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
   virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const ;
-  /*
-   * Overriding the function from the base class
-   */
-  virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
-    CHECK(obj1->datalength() > 0);
-    CHECK(obj2->datalength() > 0);
-
-    return ScalarProductFast(obj1->data(), obj1->datalength(),
-                             obj2->data(), obj2->datalength());
-  }
  protected:
   DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorInter);
 
@@ -123,6 +114,7 @@ template <typename dist_t>
 inline  void ParseSparseElementHeader(const char*     pBuff, 
                                       size_t&         rBlockQty,
                                       dist_t&         rSqSum,
+                                      float&          rNormCoeff,
                                       const size_t*&  rpBlockQtys,
                                       const size_t*&  rpBlockOffs, 
                                       const char*&    rpBlockBegin) {
@@ -130,7 +122,9 @@ inline  void ParseSparseElementHeader(const char*     pBuff,
   rBlockQty = *pQty;
   const dist_t*   pSqSum = reinterpret_cast<const dist_t*>(pQty + 1);
   rSqSum = *pSqSum;
-  rpBlockQtys = reinterpret_cast<const size_t*>(pSqSum + 1);
+  const float* pNormCoeff = reinterpret_cast<const float*>(pSqSum + 1);
+  rNormCoeff = *pNormCoeff;
+  rpBlockQtys = reinterpret_cast<const size_t*>(pNormCoeff + 1);
   rpBlockOffs = rpBlockQtys + rBlockQty;
 
   rpBlockBegin = reinterpret_cast<const char*>(rpBlockOffs + rBlockQty);
@@ -144,12 +138,14 @@ inline  void UnpackSparseElements(const char* pBuff, size_t dataLen,
 
   size_t            blockQty = 0;
   dist_t            SqSum = 0;
+  float             normCoeff = 0;
   const size_t*     pBlockQty = NULL;
   const size_t*     pBlockOff = NULL;
 
   const char* pBlockBegin = NULL;
 
-  ParseSparseElementHeader(pBuff, blockQty, SqSum, 
+  ParseSparseElementHeader(pBuff, blockQty,
+                           SqSum, normCoeff,
                            pBlockQty, 
                            pBlockOff, 
                            pBlockBegin);
@@ -226,6 +222,7 @@ inline  void PackSparseElements(const vector<SparseVectElem<dist_t>>& InpVect,
   size_t elemSize = 2 + sizeof(dist_t);
   dataSize = sizeof(size_t) + // number of blocks
               sizeof(dist_t) + // sum of squared elements
+              sizeof(float) + // (sum of squared elements)^(-0.5)
               2 * sizeof(size_t) * (blocks.size()) + // block qtys & offsets
               elemSize * InpVect.size();  
 
@@ -240,7 +237,9 @@ inline  void PackSparseElements(const vector<SparseVectElem<dist_t>>& InpVect,
 
   dist_t*   pSqSum = reinterpret_cast<dist_t*>(pQty + 1);
   *pSqSum = sqSum;
-  size_t*   pBlockQtyOff = reinterpret_cast<size_t*>(pSqSum + 1);
+  float*    pNormCoeff = reinterpret_cast<float*>(pSqSum + 1);
+  *pNormCoeff = 1.0f/sqrt(static_cast<float>(sqSum));
+  size_t*   pBlockQtyOff = reinterpret_cast<size_t*>(pNormCoeff + 1);
 
   for (size_t i = 0; i < blocks.size(); ++i) {
     *pBlockQtyOff++ = blocks[i].size(); // qty
