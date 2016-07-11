@@ -64,6 +64,47 @@ const double EPSD = numeric_limits<double>::min();
 
 const size_t KNN = 10;
 
+TEST(TestRecallFloatRealCase1) {
+  vector<vector<RESF>> exactEntries = {
+   {
+    RESF(571409,0,-0.33415),
+    RESF(3625626,0,-0.189035),
+    RESF(3912183,0,-0.145867),
+    RESF(1097649,0,-0.129897),
+    RESF(805074,0,-0.076682),
+    RESF(1016013,0,-0.0281219),
+    RESF(1768728,0,-0.0281219),
+    RESF(16198,0,-0.0230081),
+    RESF(117286,0,0.0152135),
+    RESF(3091007,0,0.0166574)
+   }
+  };
+  vector<vector<RESF>> approxEntries = {
+   {
+    RESF(571409,0,-0.33415),
+    RESF(3912183,0,-0.145867),
+    RESF(1097649,0,-0.129897),
+    RESF(805074,0,-0.076682),
+    RESF(1016013,0,-0.0281219),
+    RESF(1768728,0,-0.0281219),
+    RESF(16198,0,-0.0230081),
+    RESF(117286,0,0.0152135),
+    RESF(3091007,0,0.0166574),
+    RESF(2827082,0,0.0561426)
+   }
+  };
+  vector<float> expLogRelPosError {
+    0.15505974124111666
+  };
+  
+  EXPECT_EQ(exactEntries.size(), approxEntries.size());
+  EXPECT_EQ(exactEntries.size(), expLogRelPosError.size());
+
+  for (size_t i = 0; i < exactEntries.size(); ++i) {
+    testMetric<float,EvalLogRelPosError<float>>(KNN, exactEntries[i], approxEntries[i], expLogRelPosError[i]); 
+  }
+}
+
 TEST(TestRecallDouble) {
   vector<vector<RESD>> exactEntries = {
     {},
@@ -278,7 +319,7 @@ TEST(TestRelPosErrorDouble) {
     { RESD(10, 0, 33), RESD(11, 0, 33), RESD(12, 0, 33) },
     { RESD(10, 0, 33 + + numeric_limits<double>::epsilon()), RESD(11, 0, 33 + + numeric_limits<double>::epsilon()), RESD(12, 0, 33 + numeric_limits<double>::epsilon()) },
   };
-  vector<double> expNumCloser {
+  vector<double> expLogRelPosError {
     0,
     log(static_cast<double>(exactEntries[1].size())),
     log(2),
@@ -287,10 +328,10 @@ TEST(TestRelPosErrorDouble) {
   };
   
   EXPECT_EQ(exactEntries.size(), approxEntries.size());
-  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+  EXPECT_EQ(exactEntries.size(), expLogRelPosError.size());
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
-    testMetric<double,EvalLogRelPosError<double>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    testMetric<double,EvalLogRelPosError<double>>(KNN, exactEntries[i], approxEntries[i], expLogRelPosError[i]); 
     /* 
      * In a special case when there are no results the relative position error should be 1.0 and
      * its logarithm should be zero
@@ -314,7 +355,7 @@ TEST(TestRelPosErrorFloat) {
     { RESF(10, 0, 33), RESF(11, 0, 33), RESF(12, 0, 33) },
     { RESF(10, 0, 33 + + numeric_limits<float>::epsilon()), RESF(11, 0, 33 + + numeric_limits<float>::epsilon()), RESF(12, 0, 33 + numeric_limits<float>::epsilon()) },
   };
-  vector<double> expNumCloser {
+  vector<double> expLogRelPosError {
     0,
     log(static_cast<double>(exactEntries[1].size())),
     log(2),
@@ -323,10 +364,10 @@ TEST(TestRelPosErrorFloat) {
   };
   
   EXPECT_EQ(exactEntries.size(), approxEntries.size());
-  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+  EXPECT_EQ(exactEntries.size(), expLogRelPosError.size());
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
-    testMetric<float,EvalLogRelPosError<float>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    testMetric<float,EvalLogRelPosError<float>>(KNN, exactEntries[i], approxEntries[i], expLogRelPosError[i]); 
     /* 
      * In a special case when there are no results the relative position error should be 1.0 and
      * its logarithm should be zero
@@ -348,7 +389,7 @@ TEST(TestRelPosErrorInt) {
     { RESI(10, 0, 1), RESI(11, 0, 3) },
     { RESI(10, 0, 33), RESI(11, 0, 33), RESI(12, 0, 33) },
   };
-  vector<double> expNumCloser {
+  vector<double> expLogRelPosError {
     0,
     log(static_cast<double>(exactEntries[1].size())),
     log(2),
@@ -356,10 +397,10 @@ TEST(TestRelPosErrorInt) {
   };
   
   EXPECT_EQ(exactEntries.size(), approxEntries.size());
-  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+  EXPECT_EQ(exactEntries.size(), expLogRelPosError.size());
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
-    testMetric<int,EvalLogRelPosError<int>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    testMetric<int,EvalLogRelPosError<int>>(KNN, exactEntries[i], approxEntries[i], expLogRelPosError[i]); 
     /* 
      * In a special case when there are no results the relative position error should be 1.0 and
      * its logarithm should be zero
@@ -383,7 +424,7 @@ TEST(TestPrecisionOfApproxDouble) {
     { RESD(10, 0, 33), RESD(11, 0, 33), RESD(12, 0, 33) },
     { RESD(10, 0, 33 + + numeric_limits<double>::epsilon()), RESD(11, 0, 33 + + numeric_limits<double>::epsilon()), RESD(12, 0, 33 + numeric_limits<double>::epsilon()) },
   };
-  vector<double> expNumCloser {
+  vector<double> expPrecApprox {
     1.0,
     0.0,
     0.5,
@@ -392,10 +433,10 @@ TEST(TestPrecisionOfApproxDouble) {
   };
   
   EXPECT_EQ(exactEntries.size(), approxEntries.size());
-  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+  EXPECT_EQ(exactEntries.size(), expPrecApprox.size());
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
-    testMetric<double,EvalPrecisionOfApprox<double>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    testMetric<double,EvalPrecisionOfApprox<double>>(KNN, exactEntries[i], approxEntries[i], expPrecApprox[i]); 
     // In a special case when there are no results, the precision of approximation should be equal to 1.0
     testMetric<double,EvalPrecisionOfApprox<double>>(0, exactEntries[i], approxEntries[i], 1.0); 
   }
@@ -416,7 +457,7 @@ TEST(TestPrecisionOfApproxFloat) {
     { RESF(10, 0, 33), RESF(11, 0, 33), RESF(12, 0, 33) },
     { RESF(10, 0, 33 + + numeric_limits<float>::epsilon()), RESF(11, 0, 33 + + numeric_limits<float>::epsilon()), RESF(12, 0, 33 + numeric_limits<float>::epsilon()) },
   };
-  vector<double> expNumCloser {
+  vector<double> expPrecApprox {
     1.0,
     0.0,
     0.5,
@@ -425,10 +466,10 @@ TEST(TestPrecisionOfApproxFloat) {
   };
   
   EXPECT_EQ(exactEntries.size(), approxEntries.size());
-  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+  EXPECT_EQ(exactEntries.size(), expPrecApprox.size());
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
-    testMetric<float,EvalPrecisionOfApprox<float>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    testMetric<float,EvalPrecisionOfApprox<float>>(KNN, exactEntries[i], approxEntries[i], expPrecApprox[i]); 
     // In a special case when there are no results, the precision of approximation should be equal to 1.0
     testMetric<float,EvalPrecisionOfApprox<float>>(0, exactEntries[i], approxEntries[i], 1.0); 
   }
@@ -447,7 +488,7 @@ TEST(TestPrecisionOfApproxInt) {
     { RESI(10, 0, 1), RESI(11, 0, 3) },
     { RESI(10, 0, 33), RESI(11, 0, 33), RESI(12, 0, 33) },
   };
-  vector<double> expNumCloser {
+  vector<double> expPrecApprox {
     1.0,
     0.0,
     0.5,
@@ -455,10 +496,10 @@ TEST(TestPrecisionOfApproxInt) {
   };
   
   EXPECT_EQ(exactEntries.size(), approxEntries.size());
-  EXPECT_EQ(exactEntries.size(), expNumCloser.size());
+  EXPECT_EQ(exactEntries.size(), expPrecApprox.size());
 
   for (size_t i = 0; i < exactEntries.size(); ++i) {
-    testMetric<int,EvalPrecisionOfApprox<int>>(KNN, exactEntries[i], approxEntries[i], expNumCloser[i]); 
+    testMetric<int,EvalPrecisionOfApprox<int>>(KNN, exactEntries[i], approxEntries[i], expPrecApprox[i]); 
     // In a special case when there are no results, the precision of approximation should be equal to 1.0
     testMetric<int,EvalPrecisionOfApprox<int>>(0, exactEntries[i], approxEntries[i], 1.0); 
   }

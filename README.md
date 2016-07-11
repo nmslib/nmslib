@@ -1,7 +1,7 @@
 =================
 Non-Metric Space Library (NMSLIB)
 =================
-The latest release is [1.5.1](https://github.com/searchivarius/nmslib/releases/tag/v1.5.1)
+The latest release is [1.5.2](https://github.com/searchivarius/nmslib/releases/tag/v1.5.2)
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
 
@@ -9,7 +9,7 @@ NMSLIB is an **extendible library**, which means that is possible to add new sea
 
 **Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin, Daniel Lemire, Alexander Ponomarenko.
 
-Leo(nid) Boytsov is a maintainer.
+Leo(nid) Boytsov is a maintainer. Leo is backed by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa). Bileg was  supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
 
 **Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**.
 
@@ -18,7 +18,7 @@ NMSLIB is generic yet fast!
 Even though our methods are generic (see e.g., evaluation results in [Naidan and Boytsov 2015](http://boytsov.info/pubs/p2332-naidan-arxiv.pdf)), they often outperform specialized methods for the Euclidean and/or angular distance (i.e., for the cosine similarity).
 Below are the results (as of May 2016) of NMSLIB compared to the best implementations participated in [a public evaluation code-named ann-benchmarks](https://github.com/erikbern/ann-benchmarks). Our main competitors are: 
 
-1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of random-projection KD-trees.
+1. A popular library [Annoy](https://github.com/spotify/annoy), which uses a forest of trees (older version used random-projection trees, the new one seems to use a hierarchical 2-means).
 2. A new library [FALCONN](https://github.com/FALCONN-LIB/FALCONN), which is a highly-optimized implementation of the multiprobe LSH.  It uses a novel type of random projections based on the fast Hadamard transform.
 
 The benchmarks were run on a c4.2xlarge instance on EC2 using a previously unseen subset of 5K queries. The benchmarks employ the following data sets:
@@ -26,15 +26,17 @@ The benchmarks were run on a c4.2xlarge instance on EC2 using a previously unsee
 1. [GloVe](http://nlp.stanford.edu/projects/glove/) : 1.2M 100-dimensional word embeddings trained on Tweets 
 2. 1M of 128-dimensional [SIFT features](http://corpus-texmex.irisa.fr/)  
 
+As of **May 2016** results are:
+
 <table  border="0" width="100%" style="border:none">
 <tr width="100%" border="0" style="border:none">
 <td border="0" align="center" style="border:none">
 1.19M 100d GloVe, cosine similarity.
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/glove.png" width="400">
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/docs/figures/glove.png" width="400">
 </td>
 <td border="0"  align="center" style="border:none">
 1M 128d SIFT features, Euclidean distance:
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/sift.png" width="400">
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/docs/figures/sift.png" width="400">
 </td>
 </tr></table>
 

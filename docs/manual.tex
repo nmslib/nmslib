@@ -155,7 +155,7 @@ The benchmarks were run on a c4.2xlarge instance on EC2 (using a previously unse
 Most search methods were implemented by Bileg(saikhan) Naidan and Leo(nid) Boytsov.\footnote{Leo(nid) Boytsov is a maintainer.}
 Additional contributors are listed on the \href{https://github.com/searchivarius/NonMetricSpaceLib}{GitHub 
 page}.
-Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
+Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{https://web.archive.org/web/20160306011711/http://www.iad-center.com/}}
 and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
 
 The code written by Bileg and Leo is distributed under the business-friendly \href{http://apache.org/licenses/LICENSE-2.0}{Apache License}. 
@@ -1854,6 +1854,10 @@ one (inner) partition. If the distance is larger than the median,
 the objects are placed into the other (outer) partition.
 If the distance is exactly equal to the median, the placement can be arbitrary.
 
+We attempt to select the pivot multiple times. Each time, we measure the variance of distances to the pivot.
+Eventually, we use the pivot that corresponds to the maximum variance.
+The number of attempts to select the pivot is controlled by the index-time parameter \ttt{selectPivotAttempts}.
+
 The VP-tree in metric spaces is an exact search method, which relies on the triangle inequality.
 It can be made approximate by applying the early termination strategy (as described 
 in the previous subsection).
@@ -2035,6 +2039,7 @@ the parameter \ttt{maxLeavesToVisit}). Yet, this implementation should be used o
 \\
 \cmidrule(l){1-2} 
                    & Common parameters: \ttt{bucketSize}, \ttt{chunkBucket}, and \ttt{maxLeavesToVisit} \\
+ \ttt{selectPivotAttempts} & A number of pivot selection attempts (5 by default) \\
  \ttt{alphaLeft}/\ttt{alphaRight}   & A stretching coefficient $\alpha_{left}$/$\alpha_{right}$ in Eq.~(\ref{EqDecFunc}) \\
  \ttt{expLeft}/\ttt{expRight} & The left/right exponent in Eq.~(\ref{EqDecFunc}) \\
  \ttt{tuneK}       & The value of $k$ used in the auto-tunning procedure (in the case of \knn search) \\
@@ -4137,7 +4142,7 @@ the graph construction and the search algorithm, but we have not incorporated it
 \end{itemize}
 
 \section{Acknowledgements}
-Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{http://www.iad-center.com/}}
+Bileg and Leo gratefully acknowledge support by the iAd Center~\footnote{\url{https://web.archive.org/web/20160306011711/http://www.iad-center.com/}}
 and the Open Advancement of Question Answering Systems (OAQA) group~\footnote{\url{http://oaqa.github.io/}}.
 We also thank 
 Lawrence Cayton for providing data sets (and allowing us to make them public);
