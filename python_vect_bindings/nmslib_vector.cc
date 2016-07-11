@@ -260,15 +260,18 @@ class IndexWrapper {
   }
 
   PyObject* KnnQuery(int k, const Object* query) {
+    IntVector ids;
+Py_BEGIN_ALLOW_THREADS
+    KNNQueue<T>* res;
     KNNQuery<T> knn(*space_, query, k);
     index_->Search(&knn, -1);
-    KNNQueue<T>* res = knn.Result()->Clone();
-    IntVector ids;
+    res = knn.Result()->Clone();
     while (!res->Empty()) {
       ids.insert(ids.begin(), res->TopObject()->id());
       res->Pop();
     }
     delete res;
+Py_END_ALLOW_THREADS
     PyObject* z = PyList_New(ids.size());
     if (!z) {
       return NULL;
@@ -386,7 +389,9 @@ template <typename T>
 void _createIndex(PyObject* ptr, const AnyParams& index_params) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
+Py_BEGIN_ALLOW_THREADS
   index->CreateIndex(index_params);
+Py_END_ALLOW_THREADS
 }
 
 PyObject* createIndex(PyObject* self, PyObject* args) {
