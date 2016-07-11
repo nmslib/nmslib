@@ -77,6 +77,7 @@ class VPTree : public Index<dist_t> {
            ProgressDisplay* progress_bar,
            const SearchOracle&  oracle,
            const Space<dist_t>& space, const ObjectVector& data,
+           size_t max_pivot_select_attempts,
            size_t BucketSize, bool ChunkBucket,
            bool use_random_center);
     ~VPNode();
@@ -108,6 +109,7 @@ class VPTree : public Index<dist_t> {
   const ObjectVector& data_;
   bool                PrintProgress_;
   bool                use_random_center_;
+  size_t              max_pivot_select_attempts_;
 
   SearchOracle        oracle_;
   unique_ptr<VPNode>  root_;
