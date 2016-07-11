@@ -1407,7 +1407,7 @@ void TestSparseCosineSimilarityFast(const string& dataFile, size_t N, size_t Rep
     LOG(LIB_INFO) << "Ignore: " << DiffSum;
     LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile << 
             " Elapsed: " << tDiff / 1e3 << " ms " << 
-            " # of (fast) fast sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep ;
+            " # of (fast) sparse cosine similarity dist second: " << (1e6/tDiff) * N * Rep ;
 
 }
 
@@ -1448,7 +1448,89 @@ void TestSparseAngularDistanceFast(const string& dataFile, size_t N, size_t Rep)
     LOG(LIB_INFO) << "Ignore: " << DiffSum;
     LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile <<
         " Elapsed: " << tDiff / 1e3 << " ms " <<
-        " # of (fast) fast sparse angular dist second: " << (1e6 / tDiff) * N * Rep;
+        " # of (fast) sparse angular dist second: " << (1e6 / tDiff) * N * Rep;
+
+}
+
+void TestSparseNegativeScalarProductFast(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
+
+    unique_ptr<SpaceSparseNegativeScalarProductFast>  space(new SpaceSparseNegativeScalarProductFast());
+    ObjectVector                                      elems;
+    vector<string>                                    tmp;
+
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile,  N)); 
+    space->UpdateParamsFromFile(*inpState);
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile << 
+            " Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of (fast) negative scalar/dot product dist second: " << (1e6/tDiff) * N * Rep ;
+
+}
+
+void TestSparseQueryNormNegativeScalarProductFast(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
+
+    unique_ptr<SpaceSparseQueryNormNegativeScalarProductFast>  space(new SpaceSparseQueryNormNegativeScalarProductFast());
+    ObjectVector                                      elems;
+    vector<string>                                    tmp;
+
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile,  N)); 
+    space->UpdateParamsFromFile(*inpState);
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile << 
+            " Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of (fast) QUERY-NORMALIZED negative scalar/dot product dist second: " << (1e6/tDiff) * N * Rep ;
 
 }
 
@@ -1493,6 +1575,85 @@ void TestSparseCosineSimilarity(const string& dataFile, size_t N, size_t Rep) {
 
 }
 
+template <class T>
+void TestSparseNegativeScalarProduct(const string& dataFile, size_t N, size_t Rep) {
+    unique_ptr<SpaceSparseNegativeScalarProduct<T>>  space(new SpaceSparseNegativeScalarProduct<T>());
+    ObjectVector                  elems;
+    vector<string>                tmp;
+
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile, N)); 
+    space->UpdateParamsFromFile(*inpState);
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile 
+         << " Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of negative scalar product dist second: " << (1e6/tDiff) * N * Rep ;
+
+}
+
+template <class T>
+void TestSparseQueryNormNegativeScalarProduct(const string& dataFile, size_t N, size_t Rep) {
+    unique_ptr<SpaceSparseQueryNormNegativeScalarProduct<T>>  space(new SpaceSparseQueryNormNegativeScalarProduct<T>());
+    ObjectVector                  elems;
+    vector<string>                tmp;
+
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile, N)); 
+    space->UpdateParamsFromFile(*inpState);
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile 
+         << " Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of QUERY-NORMALIZED negative scalar product dist second: " << (1e6/tDiff) * N * Rep ;
+
+}
 template <class T>
 void TestScalarProduct(size_t N, size_t dim, size_t Rep) {
     T* pArr = new T[N * dim];
@@ -1852,6 +2013,14 @@ int main(int argc, char* argv[]) {
     nTest++;
     TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
     nTest++;
+    TestSparseNegativeScalarProductFast(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseNegativeScalarProductFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseQueryNormNegativeScalarProductFast(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseQueryNormNegativeScalarProductFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
     TestSparseAngularDistanceFast(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
     TestSparseAngularDistanceFast(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
@@ -1864,6 +2033,15 @@ int main(int argc, char* argv[]) {
     TestSparseAngularDistance<float>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
     TestSparseAngularDistance<float>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseNegativeScalarProduct<float>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseNegativeScalarProduct<float>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseQueryNormNegativeScalarProduct<float>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseQueryNormNegativeScalarProduct<float>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+
 #if TEST_SPEED_DOUBLE
     nTest++;
     TestSparseCosineSimilarity<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
@@ -1873,6 +2051,14 @@ int main(int argc, char* argv[]) {
     TestSparseAngularDistance<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
     TestSparseAngularDistance<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseNegativeScalarProduct<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseNegativeScalarProduct<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseQueryNormNegativeScalarProduct<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
+    nTest++;
+    TestSparseQueryNormNegativeScalarProduct<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
 #endif
 
 

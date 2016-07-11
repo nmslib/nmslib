@@ -152,7 +152,7 @@ VPTree<dist_t, SearchOracle>::VPNode::VPNode(
   if (data.size() >= 2) {
     unsigned bestDP = 0;
     float    largestSIGMA = 0;
-    DistObjectPairVector<dist_t> dpARR[max_pivot_select_attempts];
+    vector<DistObjectPairVector<dist_t>> dpARR(max_pivot_select_attempts);
 
     // To compute StdDev we need at least 2 points not counting the pivot
     size_t maxAtt = data.size() >= max(3, MIN_PIVOT_SELECT_DATA_QTY) ? max_pivot_select_attempts : 1;

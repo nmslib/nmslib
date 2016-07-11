@@ -34,6 +34,10 @@
 #define SPACE_SPARSE_COSINE_SIMILARITY_FAST  "cosinesimil_sparse_fast"
 #define SPACE_SPARSE_ANGULAR_DISTANCE_FAST   "angulardist_sparse_fast"
 
+#define SPACE_SPARSE_NEGATIVE_SCALAR_FAST             "negdotprod_sparse_fast"
+#define SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST  "querynorm_negdotprod_sparse_fast"
+
+
 namespace similarity {
 
 class SpaceSparseCosineSimilarityFast : public SpaceSparseVectorInter<float> {
@@ -56,6 +60,28 @@ public:
 protected:
   virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
   DISABLE_COPY_AND_ASSIGN(SpaceSparseAngularDistanceFast);
+};
+
+class SpaceSparseNegativeScalarProductFast : public SpaceSparseVectorInter<float> {
+public:
+  explicit SpaceSparseNegativeScalarProductFast(){}
+  virtual std::string StrDesc() const {
+    return "NegativeScalarProduct (fast)";
+  }
+protected:
+  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseNegativeScalarProductFast);
+};
+
+class SpaceSparseQueryNormNegativeScalarProductFast : public SpaceSparseVectorInter<float> {
+public:
+  explicit SpaceSparseQueryNormNegativeScalarProductFast(){}
+  virtual std::string StrDesc() const {
+    return "QueryNormNegativeScalarProduct (fast)";
+  }
+protected:
+  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseQueryNormNegativeScalarProductFast);
 };
 
 

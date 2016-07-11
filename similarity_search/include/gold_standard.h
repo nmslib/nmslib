@@ -234,7 +234,7 @@ public:
   // if maxKeepEntryCoeff is non-zero, it defines how many GS entries (relative to the result set size) we memorize
   void Compute(size_t threadQty, float maxKeepEntryCoeff) {
     threadQty = std::max(size_t(1), threadQty);
-    LOG(LIB_INFO) << "Computing gold standard data using " << threadQty << " threads, keeping " << maxKeepEntryCoeff<< " times result set size entries";;
+    LOG(LIB_INFO) << "Computing gold standard data using " << threadQty << " threads, keeping " << maxKeepEntryCoeff<< "x entries compared to the result set size";;
     for (size_t i = 0; i < config_.GetRange().size(); ++i) {
       vvGoldStandardRange_[i].clear();
       const dist_t radius = config_.GetRange()[i];
