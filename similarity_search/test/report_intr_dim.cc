@@ -5,8 +5,8 @@
  * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
+ * https://github.com/searchivarius/NonMetricSpaceLib
+ *
  * Copyright (c) 2014
  *
  * This code is released under the
@@ -17,29 +17,20 @@
 #include <iostream>
 #include <string>
 
-#include <boost/program_options.hpp>
-
 #include "space.h"
 #include "params.h"
 #include "init.h"
 #include "report_intr_dim.h"
 #include "spacefactory.h"
+#include "cmd_options.h"
 
 using namespace similarity;
 using namespace std;
 
-namespace po = boost::program_options;
-
 const unsigned defaultSampleQty = 1000000;
 
-static void Usage(const char *prog,
-                  const po::options_description& desc) {
-    std::cout << prog << std::endl
-              << desc << std::endl;
-}
-
 template <typename dist_t>
-void ComputeMuDeffect(const Space<dist_t>& space, 
+void ComputeMuDeffect(const Space<dist_t>& space,
                     const ObjectVector& dataset,
                     double & dleft, double & dright,
                     size_t SampleQty = 1000000) {
@@ -122,28 +113,23 @@ int main(int argc, char* argv[]) {
   unsigned  sampleQty;
   bool      compMuDeffect;
 
-  po::options_description ProgOptDesc("Allowed options");
-  ProgOptDesc.add_options()
-    ("help,h", "produce help message")
-    ("spaceType,s",     po::value<string>(&spaceDesc)->required(),
-                        "space type, e.g., l1, l2, lp:p=0.5")
-    ("distType",        po::value<string>(&distType)->default_value(DIST_TYPE_FLOAT),
-                        "distance value type: int, float, double")
-    ("dataFile,i",      po::value<string>(&dataFile)->required(),
-                        "input data file")
-    ("maxNumData",      po::value<unsigned>(&maxNumData)->default_value(0),
-                        "if non-zero, only the first maxNumData elements are used")
-    ("sampleQty",       po::value<unsigned>(&sampleQty)->default_value(defaultSampleQty),
-                        "a number of samples (a sample is a pair of data points)")
-    ("muDeffect,m",     po::value<bool>(&compMuDeffect)->default_value(false),
-                        "estimate the left and the right mu deffectiveness")
-    
-  ;
+  CmdOptions cmd_options;
 
-  po::variables_map vm;
+  cmd_options.Add(new CmdParam("spaceType,s", "space type, e.g., l1, l2, lp:p=0.5",
+                               &spaceDesc, true));
+  cmd_options.Add(new CmdParam("distType", "distance value type: int, float, double",
+                               &distType, false, DIST_TYPE_FLOAT));
+  cmd_options.Add(new CmdParam("dataFile,i", "input data file",
+                               &dataFile, true));
+  cmd_options.Add(new CmdParam("maxNumData", "if non-zero, only the first maxNumData elements are used",
+                               &maxNumData, false, 0));
+  cmd_options.Add(new CmdParam("sampleQty", "a number of samples (a sample is a pair of data points)",
+                               &sampleQty, false, defaultSampleQty));
+  cmd_options.Add(new CmdParam("muDeffect,m", "estimate the left and the right mu deffectiveness",
+                               &compMuDeffect, false, false));
+
   try {
-    po::store(po::parse_command_line(argc, argv, ProgOptDesc), vm);
-    po::notify(vm);
+    cmd_options.Parse(argc, argv);
 
     if (!DoesFileExist(dataFile)) {
       PREPARE_RUNTIME_ERR(err) << "data file " << dataFile << " doesn't exist";
@@ -178,8 +164,13 @@ int main(int argc, char* argv[]) {
                  );
     }
 
+  } catch (const CmdParserException& e) {
+    cmd_options.ToString();
+    std::cout.flush();
+    LOG(LIB_FATAL) << e.what();
   } catch (const exception& e) {
-    Usage(argv[0], ProgOptDesc);
+    cmd_options.ToString();
+    std::cout.flush();
     LOG(LIB_FATAL) << e.what();
   }
 

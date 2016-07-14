@@ -5,8 +5,8 @@
  * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
+ * https://github.com/searchivarius/NonMetricSpaceLib
+ *
  * Copyright (c) 2015
  *
  * This code is released under the
@@ -28,7 +28,6 @@
 #include <fstream>
 #include <map>
 
-#include <boost/program_options.hpp>
 #include <cluster_util.h>
 
 #include "init.h"
@@ -47,34 +46,35 @@
 
 #include "meta_analysis.h"
 #include "params.h"
+#include "cmd_options.h"
 
 using namespace similarity;
 
-#define CLUST_TYPE_PARAM_OPT "clustType,t"
+const string CLUST_TYPE_PARAM_OPT="clustType,t";
 const string CLUST_TYPE_PARAM_MSG="A type of cluster: " + CLUST_TYPE_CLARAN + "," + CLUST_TYPE_FIRMAL;
-#define CLUST_QTY_PARAM_OPT "clustQty,c"
-#define CLUST_QTY_PARAM_MSG "A # of clusters"
+const string CLUST_QTY_PARAM_OPT="clustQty,c";
+const string CLUST_QTY_PARAM_MSG="A # of clusters";
 const IdTypeUnsign CLUST_QTY_PARAM_DEFAULT = 100;
-#define IN_CLUST_SWAP_ATT_PARAM_OPT "swapAtt,W"
-#define IN_CLUST_SWAP_ATT_PARAM_MSG "The number of in claster swap attempts (in order to find a better center)"
+const string IN_CLUST_SWAP_ATT_PARAM_OPT = "swapAtt,W";
+const string IN_CLUST_SWAP_ATT_PARAM_MSG = "The number of in claster swap attempts (in order to find a better center)";
 const IdTypeUnsign IN_CLUST_SWAP_ATT_PARAM_DEFAULT = CLARANS_SWAP_ATTEMPTS;
-#define IN_CLUST_SAMPLE_QTY_PARAM_OPT "clustSampleQty,Q"
-#define IN_CLUST_SAMPLE_QTY_PARAM_MSG "The number of sampled points inside the cluster to compute a cluster configuration cost"
+const string IN_CLUST_SAMPLE_QTY_PARAM_OPT = "clustSampleQty,Q";
+const string IN_CLUST_SAMPLE_QTY_PARAM_MSG = "The number of sampled points inside the cluster to compute a cluster configuration cost";
 const IdTypeUnsign IN_CLUST_SAMPLE_QTY_PARAM_DEFAULT = CLARANS_SAMPLE_QTY;
-#define RAND_REST_QTY_PARAM_OPT "randRestartQty,R"
-#define RAND_REST_QTY_PARAM_MSG "The number of random restarts"
+const string RAND_REST_QTY_PARAM_OPT = "randRestartQty,R";
+const string RAND_REST_QTY_PARAM_MSG = "The number of random restarts";
 const size_t RAND_REST_QTY_PARAM_DEFAULT = 5;
-#define SEARCH_CLOSE_ITER_QTY_PARAM_OPT "searchCloseIterQty,I"
-#define SEARCH_CLOSE_ITER_QTY_PARAM_MSG "A number of search iterations to find a point that is close to already selected centers"
+const string SEARCH_CLOSE_ITER_QTY_PARAM_OPT = "searchCloseIterQty,I";
+const string SEARCH_CLOSE_ITER_QTY_PARAM_MSG = "A number of search iterations to find a point that is close to already selected centers";
 const IdTypeUnsign SEARCH_CLOSE_ITER_QTY_PARAM_DEFAULT = 200;
-#define DIST_SAMPLE_QTY_PARAM_OPT "distSampleQty,S"
-#define DIST_SAMPLE_QTY_PARAM_MSG "A number of samples to determine the distribution of distances"
+const string DIST_SAMPLE_QTY_PARAM_OPT = "distSampleQty,S";
+const string DIST_SAMPLE_QTY_PARAM_MSG = "A number of samples to determine the distribution of distances";
 const IdTypeUnsign DIST_SAMPLE_QTY_PARAM_DEFAULT = SAMPLE_LIST_CLUST_DEFAULT_SAMPLE_QTY;
-#define MAX_META_ITER_QTY_PARAM_OPT "maxMetaIterQty,M"
-#define MAX_META_ITER_QTY_PARAM_MSG "A maximum number of meta iterations"
+const string MAX_META_ITER_QTY_PARAM_OPT = "maxMetaIterQty,M";
+const string MAX_META_ITER_QTY_PARAM_MSG = "A maximum number of meta iterations";
 const IdTypeUnsign MAX_META_ITER_QTY_PARAM_DEFAULT = 10;
-#define KEEP_FRAC_QTY_PARAM_OPT "keepFrac,F"
-#define KEEP_FRAC_QTY_PARAM_MSG "Percentage of assigned points kept after a meta-iteration is finished"
+const string KEEP_FRAC_QTY_PARAM_OPT = "keepFrac,F";
+const string KEEP_FRAC_QTY_PARAM_MSG = "Percentage of assigned points kept after a meta-iteration is finished";
 const float KEEP_FRAC_QTY_PARAM_DEFAULT = 0.2;
 
 using std::vector;
@@ -83,13 +83,6 @@ using std::make_pair;
 using std::string;
 using std::stringstream;
 
-namespace po = boost::program_options;
-
-static void Usage(const char *prog,
-                  const po::options_description& desc) {
-    std::cout << prog << std::endl
-              << desc << std::endl;
-}
 
 template <typename dist_t>
 void RunExper(
@@ -174,46 +167,60 @@ void ParseCommandLineForClustering(int argc, char*argv[],
 ) {
   bool NoPrintProgress;
 
+  CmdOptions cmd_options;
 
-  po::options_description ProgOptDesc("Allowed options");
-  ProgOptDesc.add_options()
-      (HELP_PARAM_OPT,          HELP_PARAM_MSG)
-      (NO_PROGRESS_PARAM_OPT,   po::bool_switch(&NoPrintProgress), NO_PROGRESS_PARAM_MSG)
-      (SPACE_TYPE_PARAM_OPT,    po::value<string>(&SpaceType)->required(),                    SPACE_TYPE_PARAM_MSG)
-      (DIST_TYPE_PARAM_OPT,     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG)
-      (DATA_FILE_PARAM_OPT,     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG)
-      (MAX_NUM_DATA_PARAM_OPT,  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG)
-      (LOG_FILE_PARAM_OPT,      po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT),          LOG_FILE_PARAM_MSG)
-      (CLUST_TYPE_PARAM_OPT,    po::value<string>(&ClustType)->required(),      CLUST_TYPE_PARAM_MSG.c_str())
-      (CLUST_QTY_PARAM_OPT,    po::value<IdTypeUnsign>(&ClustQty)->default_value(CLUST_QTY_PARAM_DEFAULT), CLUST_QTY_PARAM_MSG)
-      (IN_CLUST_SWAP_ATT_PARAM_OPT, po::value<IdTypeUnsign>(&inClusterSwapAttempts)->default_value(IN_CLUST_SWAP_ATT_PARAM_DEFAULT), IN_CLUST_SWAP_ATT_PARAM_MSG)
-      (IN_CLUST_SAMPLE_QTY_PARAM_OPT, po::value<IdTypeUnsign>(&inClusterSampleQty)->default_value(IN_CLUST_SAMPLE_QTY_PARAM_DEFAULT), IN_CLUST_SAMPLE_QTY_PARAM_MSG)
-      (RAND_REST_QTY_PARAM_OPT, po::value<IdTypeUnsign>(&RandRestQty)->default_value(RAND_REST_QTY_PARAM_DEFAULT), RAND_REST_QTY_PARAM_MSG)
-      (SEARCH_CLOSE_ITER_QTY_PARAM_OPT,po::value<IdTypeUnsign>(&SearchCloseIterQty)->default_value(SEARCH_CLOSE_ITER_QTY_PARAM_DEFAULT), SEARCH_CLOSE_ITER_QTY_PARAM_MSG)
-      (DIST_SAMPLE_QTY_PARAM_OPT, po::value<IdTypeUnsign>(&SampleDistQty)->default_value(DIST_SAMPLE_QTY_PARAM_DEFAULT), DIST_SAMPLE_QTY_PARAM_MSG)
-      (MAX_META_ITER_QTY_PARAM_OPT, po::value<IdTypeUnsign>(&maxMetaIterQty)->default_value(MAX_META_ITER_QTY_PARAM_DEFAULT), MAX_META_ITER_QTY_PARAM_MSG)
-      (KEEP_FRAC_QTY_PARAM_OPT, po::value<float>(&keepFrac)->default_value(KEEP_FRAC_QTY_PARAM_DEFAULT), KEEP_FRAC_QTY_PARAM_MSG)
-      ;
+  cmd_options.Add(new CmdParam(NO_PROGRESS_PARAM_OPT, NO_PROGRESS_PARAM_MSG,
+                               &NoPrintProgress, false));
+  cmd_options.Add(new CmdParam(SPACE_TYPE_PARAM_OPT, SPACE_TYPE_PARAM_MSG,
+                               &SpaceType, true));
+  cmd_options.Add(new CmdParam(DIST_TYPE_PARAM_OPT, DIST_TYPE_PARAM_MSG,
+                               &DistType, false, DIST_TYPE_FLOAT));
+  cmd_options.Add(new CmdParam(DATA_FILE_PARAM_OPT, DATA_FILE_PARAM_MSG,
+                               &DataFile, true));
+  cmd_options.Add(new CmdParam(MAX_NUM_DATA_PARAM_OPT, MAX_NUM_QUERY_PARAM_MSG,
+                               &MaxNumData, false, MAX_NUM_DATA_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(LOG_FILE_PARAM_OPT, LOG_FILE_PARAM_MSG,
+                               &LogFile, false, LOG_FILE_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(CLUST_TYPE_PARAM_OPT, CLUST_TYPE_PARAM_MSG,
+                               &ClustType, true));
+  cmd_options.Add(new CmdParam(CLUST_QTY_PARAM_OPT, CLUST_QTY_PARAM_MSG,
+                               &ClustQty, false, CLUST_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(IN_CLUST_SWAP_ATT_PARAM_OPT, IN_CLUST_SWAP_ATT_PARAM_MSG,
+                               &inClusterSwapAttempts, false, IN_CLUST_SWAP_ATT_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(IN_CLUST_SAMPLE_QTY_PARAM_OPT, IN_CLUST_SAMPLE_QTY_PARAM_MSG,
+                               &inClusterSampleQty, false, IN_CLUST_SAMPLE_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(RAND_REST_QTY_PARAM_OPT, RAND_REST_QTY_PARAM_MSG,
+                               &RandRestQty, false, RAND_REST_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(SEARCH_CLOSE_ITER_QTY_PARAM_OPT, SEARCH_CLOSE_ITER_QTY_PARAM_MSG,
+                               &SearchCloseIterQty, false, SEARCH_CLOSE_ITER_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(DIST_SAMPLE_QTY_PARAM_OPT, DIST_SAMPLE_QTY_PARAM_MSG,
+                               &SampleDistQty, false, DIST_SAMPLE_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(MAX_META_ITER_QTY_PARAM_OPT, MAX_META_ITER_QTY_PARAM_MSG,
+                               &maxMetaIterQty, false, MAX_META_ITER_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(KEEP_FRAC_QTY_PARAM_OPT, KEEP_FRAC_QTY_PARAM_MSG,
+                               &keepFrac, false, KEEP_FRAC_QTY_PARAM_DEFAULT));
+
+  try {
+    cmd_options.Parse(argc, argv);
+  } catch (const CmdParserException& e) {
+    cmd_options.ToString();
+    std::cout.flush();
+    LOG(LIB_FATAL) << e.what();
+  } catch (const std::exception& e) {
+    cmd_options.ToString();
+    std::cout.flush();
+    LOG(LIB_FATAL) << e.what();
+  } catch (...) {
+    cmd_options.ToString();
+    std::cout.flush();
+    LOG(LIB_FATAL) << "Failed to parse cmd arguments";
+  }
 
   PrintProgress = !NoPrintProgress;
 
-  po::variables_map vm;
-  try {
-    po::store(po::parse_command_line(argc, argv, ProgOptDesc), vm);
-    po::notify(vm);
-  } catch (const exception& e) {
-    Usage(argv[0], ProgOptDesc);
-    LOG(LIB_FATAL) << e.what();
-  }
-
-  if (vm.count("help")  ) {
-    Usage(argv[0], ProgOptDesc);
-    exit(0);
-  }
-
   ToLower(ClustType);
   ToLower(SpaceType);
-  
+
   try {
     {
       vector<string> SpaceDesc;

@@ -20,8 +20,6 @@
 #define PORTABLE_ALIGN16 __declspec(align(16))
 #endif
 
-#ifndef WITHOUT_SIMD
-
 // On Win64 SSE2 is always enabled
 // http://stackoverflow.com/questions/1067630/sse2-option-in-visual-c-x64
 #if defined(__SSE2__) || defined(__AVX__) || defined(_MSC_VER)
@@ -32,8 +30,6 @@
 #if defined(__SSE4_2__) || defined(__AVX__)
 #define PORTABLE_SSE4
 #endif
-
-#endif    // WITHOUT_SIMD
 
 
 #ifdef PORTABLE_SSE4

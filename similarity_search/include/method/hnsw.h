@@ -39,6 +39,9 @@
 #include <thread>
 #include <condition_variable>
 #include <queue>
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <tmmintrin.h>
 
 
 #define METH_HNSW      "hnsw"
