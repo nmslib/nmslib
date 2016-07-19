@@ -171,14 +171,14 @@ class Value<std::vector<double>> {
 };
 
 template <typename T>
-std::string Str(T& value) {
+std::string Str(const T& value) {
   std::stringstream ss;
   ss << value;
   return ss.str();
 }
 
 template <typename T>
-std::string Str(std::vector<T>& value) {
+std::string Str(const std::vector<T>& value) {
   std::stringstream ss;
   for (auto& v : value) {
     ss << v << " ";
@@ -195,7 +195,7 @@ class CmdParam {
            bool required,
            typename std::remove_reference<T>::type default_value = Value<T>::get_default_value())
     : descr_(descr),
-      ptr_(new Holder<T>(value, &default_value)),
+      ptr_(new Holder<T>(value, default_value)),
       required_(required),
       parsed_(false) {
     *value = default_value;
@@ -250,7 +250,7 @@ class CmdParam {
   template <typename T>
   class Holder : public Base {
    public:
-    Holder(T* value, T* defval)
+    Holder(T* value, const T defval)
         : value_(value), defval_(defval) {}
 
     void Parse(const std::string& arg) override {
@@ -259,7 +259,7 @@ class CmdParam {
 
     std::string ToString() override {
       std::stringstream ss;
-      ss << "(default value: " << Str(*defval_) << ")";
+      ss << "(default value: " << Str(defval_) << ")";
       return ss.str();
     }
 
@@ -271,13 +271,13 @@ class CmdParam {
 
    private:
     T* value_;
-    T* defval_;
+    const T defval_;
     using type = T;
   };
 
   std::string long_name_;
   std::string short_name_;
-  const std::string& descr_;
+  std::string descr_;
   Base* ptr_;
   bool required_;
   bool parsed_;
@@ -317,7 +317,7 @@ class CmdOptions {
     std::unordered_set<CmdParam*> processed;
     for (int i = 1; i < argc; i += 2) {
       std::string arg_name = argv[i];
-      if (arg_name == "--help") {
+      if (arg_name == "--help" || arg_name == "-h") {
         ToString();
         exit(0);
       }
@@ -334,7 +334,11 @@ class CmdOptions {
         throw CmdParserException(ss.str().c_str());
       }
       processed.insert(param->second);
-      param->second->Parse(argv[i+1]);
+      if (i + 1 < argc) {
+        param->second->Parse(argv[i + 1]);
+      } else {
+        throw CmdParserException("Missing argument of the last parameter");
+      }
     }
     for (auto* param : params_) {
       if (param->is_required() && !param->is_parsed()) {

@@ -29,7 +29,7 @@ fi
 
 # If you have python, latex, and PGF installed, 
 # you can set the following variable to 1 to generate a performance plot.
-GEN_PLOT=$3
+GEN_PLOT=$4
 if [ "$GEN_PLOT" = "" ] ; then
   echo "Specify a plot-generation flag: 1 to generate plots (3d arg)"
   exit 1
@@ -60,7 +60,7 @@ function do_run {
     exit 1
   fi
   if [ "$DO_APPEND" = "1" ] ; then
-    APPEND_FLAG=" -a "
+    APPEND_FLAG=" -a 1 "
   fi
   METHOD_NAME="$2"
   if [ "$METHOD_NAME" = "" ] ; then

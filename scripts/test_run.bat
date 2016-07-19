@@ -128,7 +128,7 @@ if "%DO_APPEND%" == "" (
   exit /B 1
 )
 if "%DO_APPEND%" == "1" (
-  set APPEND_FLAG= -a  
+  set APPEND_FLAG= -a 1 
 )
 
 set METHOD_NAME=%~2
