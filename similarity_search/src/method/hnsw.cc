@@ -548,8 +548,8 @@ namespace similarity {
         
 #if USE_BITSET_FOR_INDEXING
         VisitedList * vl = visitedlistpool->getFreeVisitedList();
-        unsigned int *mass = vl->mass;
-        unsigned int curV = vl->curV;
+        vl_type *mass = vl->mass;
+        vl_type curV = vl->curV;
 #else
         unordered_set<HnswNode*>             visited;
 #endif
@@ -785,8 +785,8 @@ namespace similarity {
     	template <typename dist_t>
     	void Hnsw<dist_t>::baseSearchAlgorithmOld(KNNQuery<dist_t> *query) {
     		VisitedList * vl = visitedlistpool->getFreeVisitedList();
-    		unsigned int *massVisited = vl->mass;
-    		unsigned int currentV = vl->curV;
+            vl_type *massVisited = vl->mass;
+            vl_type currentV = vl->curV;
 
     		HnswNode* provider;
     		int maxlevel1 = enterpoint_->level;
@@ -887,8 +887,8 @@ namespace similarity {
 template <typename dist_t>
 void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
   VisitedList * vl = visitedlistpool->getFreeVisitedList();
-  unsigned int *massVisited = vl->mass;
-  unsigned int currentV = vl->curV;
+  vl_type *massVisited = vl->mass;
+  vl_type currentV = vl->curV;
 
   HnswNode* provider;
   int maxlevel1 = enterpoint_->level;
@@ -1015,8 +1015,8 @@ void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
                                // for zero level it is set to ef
             //Getting the visitedlist
     		VisitedList * vl = visitedlistpool->getFreeVisitedList();
-    		unsigned int *massVisited = vl->mass;
-    		unsigned int currentV = vl->curV;
+            vl_type *massVisited = vl->mass;
+            vl_type currentV = vl->curV;
     
     		int maxlevel1 = enterpoint_->level;    
     
@@ -1083,7 +1083,7 @@ void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
                 currentV++;
                 vl->curV++;// not to forget updating in the pool
     			if (currentV == 0) {
-    				memset(massVisited, 0, ElList_.size()*sizeof(int));
+    				memset(massVisited, 0, ElList_.size()*sizeof(vl_type));
     				currentV++;
                     vl->curV++;// not to forget updating in the pool
     			}

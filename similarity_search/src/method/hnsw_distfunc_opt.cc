@@ -349,8 +349,8 @@ namespace similarity {
 		size_t qty = query->QueryObject()->datalength() >> 2;
 
 		VisitedList * vl = visitedlistpool->getFreeVisitedList();
-		unsigned int *massVisited = vl->mass;
-		unsigned int currentV = vl->curV;
+        vl_type *massVisited = vl->mass;
+        vl_type currentV = vl->curV;
 
 
 
@@ -455,8 +455,8 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 	size_t qty = query->QueryObject()->datalength() >> 2;
 
 	VisitedList * vl = visitedlistpool->getFreeVisitedList();
-	unsigned int *massVisited = vl->mass;
-	unsigned int currentV = vl->curV;
+    vl_type *massVisited = vl->mass;
+    vl_type currentV = vl->curV;
 
 
 
@@ -605,8 +605,8 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 
 
 		VisitedList * vl = visitedlistpool->getFreeVisitedList();
-		unsigned int *massVisited = vl->mass;
-		unsigned int currentV = vl->curV;
+        vl_type *massVisited = vl->mass;
+        vl_type currentV = vl->curV;
 
 
         int maxlevel1 = maxlevel_;
@@ -728,8 +728,8 @@ void Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query) {
 
 
 	VisitedList * vl = visitedlistpool->getFreeVisitedList();
-	unsigned int *massVisited = vl->mass;
-	unsigned int currentV = vl->curV;
+    vl_type *massVisited = vl->mass;
+    vl_type currentV = vl->curV;
 
 
 	int maxlevel1 = maxlevel_;

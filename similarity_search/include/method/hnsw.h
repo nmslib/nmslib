@@ -570,22 +570,23 @@ namespace similarity {
         DISABLE_COPY_AND_ASSIGN(Hnsw);
     };
 
-
+    typedef unsigned char vl_type;
     class VisitedList {
-    public: unsigned int curV;
-    public:	unsigned int *mass;
+    public: vl_type curV;
+    public:	vl_type *mass;
     public: unsigned int numelements;
     public:
         VisitedList(int  numelements1) {
-            curV = 0;
+            curV = -1;
             numelements = numelements1;
-            mass = new unsigned int[numelements];
+            mass = new vl_type[numelements];
         }
         void reset() {
             curV++;
             if (curV == 0)
             {
-                memset(mass, 0, sizeof(int)*numelements);
+                memset(mass, 0, sizeof(vl_type)*numelements);
+                curV++;
             }
         };
         ~VisitedList() {
@@ -599,9 +600,7 @@ namespace similarity {
     //
     /////////////////////////////////////////////////////////
 
-    class VisitedListPool {
-        vector<unsigned int*> listPool;
-        vector<unsigned int*> curV;
+    class VisitedListPool {        
         deque<VisitedList*> pool;
         mutex poolguard;
         int maxpools;
@@ -613,16 +612,19 @@ namespace similarity {
                 pool.push_front(new VisitedList(numelements));
         }
         VisitedList * getFreeVisitedList() {
-            unique_lock<mutex> lock(poolguard);
-            if (pool.size() > 0) {
-                VisitedList *rez = pool.front();
-                rez->reset();
-                pool.pop_front();
-                return rez;
+            VisitedList *rez;
+            {
+                unique_lock<mutex> lock(poolguard);
+                if (pool.size() > 0) {
+                    rez = pool.front();
+                    pool.pop_front();
+                }
+                else {
+                    rez = new VisitedList(numelements);                    
+                }
             }
-            else {
-                return new VisitedList(numelements);
-            }
+            rez->reset();
+            return rez;
 
         };
         void releaseVisitedList(VisitedList *vl) {
