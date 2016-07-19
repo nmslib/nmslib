@@ -59,6 +59,15 @@ using std::stringstream;
 #define MAX_NUM_QUERY  100
 
 vector<MethodTestCase>    vTestCaseDesc = {
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "sw-graph", "efConstruction=50,NN=10", "efSearch=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 5, 10),  
+  MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse", "sparse_5K.txt", "hnsw", "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse_fast", "sparse_5K.txt", "sw-graph", "efConstruction=50,NN=10", "efSearch=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 5, 10),  
+#if 1
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=clarans,centerQty=10", "dbScanFrac=0.1", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
   // ************** Tests for non-metric clustering *********** //
@@ -66,7 +75,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 10 /* KNN-10 */, 0 /* no range search */ , 0.8, 0.92, 0.1, 20, 2.5, 6),  
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=reduct_clarans,centerQty=10", "dbScanFrac=0.1", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
-#if 1
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", "numPivot=8,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
 

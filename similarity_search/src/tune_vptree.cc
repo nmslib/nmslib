@@ -5,8 +5,8 @@
  * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
+ * https://github.com/searchivarius/NonMetricSpaceLib
+ *
  * Copyright (c) 2015
  *
  * This code is released under the
@@ -28,8 +28,6 @@
 #include <fstream>
 #include <map>
 
-#include <boost/program_options.hpp>
-
 #include "init.h"
 #include "global.h"
 #include "utils.h"
@@ -50,6 +48,7 @@
 
 #include "meta_analysis.h"
 #include "params.h"
+#include "cmd_options.h"
 
 //#define DETAILED_LOG_INFO 1
 
@@ -61,16 +60,8 @@ using std::make_pair;
 using std::string;
 using std::stringstream;
 
-namespace po = boost::program_options;
-
-static void Usage(const char *prog,
-                  const po::options_description& desc) {
-    std::cout << prog << std::endl
-              << desc << std::endl;
-}
-
 template <typename dist_t>
-void RunExper(unsigned AddRestartQty, 
+void RunExper(unsigned AddRestartQty,
              const string&                  MethodName,
              const AnyParams&               IndexParams,
              const AnyParams&               QueryTimeParams,
@@ -116,7 +107,7 @@ void RunExper(unsigned AddRestartQty,
   }
 
   if (!ok) {
-    LOG(LIB_FATAL) << "Wrong method name, " << 
+    LOG(LIB_FATAL) << "Wrong method name, " <<
                       "you should specify only a single method from the list: " << allowedMethList;
   }
 
@@ -140,7 +131,7 @@ void RunExper(unsigned AddRestartQty,
 
   if (IMPR_INVALID == metric) {
     stringstream err;
-  
+
     err << "Invalid metric name: " << metricName;
     LOG(LIB_FATAL) << err.str();
   }
@@ -166,7 +157,7 @@ void RunExper(unsigned AddRestartQty,
       vector<unsigned>    knn;
 
       range.push_back(rangeAll[i]);
-      
+
       config.reset(new ExperimentConfig<dist_t>(*space,
                                       DataFile, QueryFile, TestSetQty,
                                       MaxNumData, MaxNumQuery,
@@ -189,13 +180,13 @@ void RunExper(unsigned AddRestartQty,
 
     config->ReadDataset();
 
-    float recall = 0, time_best = 0, impr_best = -1, alpha_left = 0, alpha_right = 0; 
+    float recall = 0, time_best = 0, impr_best = -1, alpha_left = 0, alpha_right = 0;
     unsigned exp_left = 0, exp_right = 0;
 
     for (unsigned ce = MinExp; ce <= MaxExp; ++ce)
     for (unsigned k = 0; k < 1 + AddRestartQty; ++k) {
       unsigned expLeft = ce, expRight = ce;
-      float recall_loc, time_best_loc, impr_best_loc, 
+      float recall_loc, time_best_loc, impr_best_loc,
             alpha_left_loc = 1.0, alpha_right_loc = 1.0; // These are initial values
 
       if (k > 0) {
@@ -203,25 +194,25 @@ void RunExper(unsigned AddRestartQty,
         alpha_left_loc = exp(normGen(engine));
         alpha_right_loc = exp(normGen(engine));
         LOG(LIB_INFO) << " RANDOM STARTING POINTS: " << alpha_left_loc << " " << alpha_right_loc;
-      } 
+      }
 
       GetOptimalAlphas(true,
-                     *config, 
+                     *config,
                      metric, desiredRecall,
-                     SpaceType, 
-                     MethodName, 
-                     pmgr.ExtractParametersExcept({DESIRED_RECALL_PARAM, OPTIM_METRIC_PARAMETER}), 
+                     SpaceType,
+                     MethodName,
+                     pmgr.ExtractParametersExcept({DESIRED_RECALL_PARAM, OPTIM_METRIC_PARAMETER}),
                      QueryTimeParams,
-                     recall_loc, 
+                     recall_loc,
                      time_best_loc, impr_best_loc,
                      alpha_left_loc, expLeft, alpha_right_loc, expRight,
                      MaxIter, MaxRecDepth, StepN, FullFactor, maxCacheGSRelativeQty);
 
       if (impr_best_loc > impr_best) {
-        recall = recall_loc; 
-        time_best = time_best_loc; 
+        recall = recall_loc;
+        time_best = time_best_loc;
         impr_best = impr_best_loc;
-        alpha_left = alpha_left_loc; 
+        alpha_left = alpha_left_loc;
         alpha_right = alpha_right_loc;
         exp_left = expLeft;
         exp_right = expRight;
@@ -240,7 +231,7 @@ void RunExper(unsigned AddRestartQty,
     }
     LOG(LIB_INFO) << "Recall: " << recall;
     LOG(LIB_INFO) << "Best time: " << time_best;
-    LOG(LIB_INFO) << "Best impr. " << impr_best << " (" << getOptimMetricName(metric) << ")" << endl; 
+    LOG(LIB_INFO) << "Best impr. " << impr_best << " (" << getOptimMetricName(metric) << ")" << endl;
     LOG(LIB_INFO) << "alpha_left: " << alpha_left;
     LOG(LIB_INFO) << "exp_left: " << exp_left;
     LOG(LIB_INFO) << "alpha_right: " << alpha_right;
@@ -284,11 +275,11 @@ void ParseCommandLineForTuning(int argc, char*argv[],
                       vector<unsigned>&       knn,
                       float&                  eps,
                       string&                 RangeArg,
-                      unsigned&               MinExp,   
-                      unsigned&               MaxExp,   
-                      unsigned&               MaxIter,   
+                      unsigned&               MinExp,
+                      unsigned&               MaxExp,
+                      unsigned&               MaxIter,
                       unsigned&               MaxRecDepth,
-                      unsigned&               StepN,      
+                      unsigned&               StepN,
                       float&                  FullFactor,
                       unsigned&               addRestartQty,
                       string&                 MethodName,
@@ -306,63 +297,79 @@ void ParseCommandLineForTuning(int argc, char*argv[],
   string          indexTimeParamStr;
   string          queryTimeParamStr;
 
-  po::options_description ProgOptDesc("Allowed options");
-  ProgOptDesc.add_options()
-    (HELP_PARAM_OPT,          HELP_PARAM_MSG)
-    (SPACE_TYPE_PARAM_OPT,    po::value<string>(&SpaceType)->required(),                    SPACE_TYPE_PARAM_MSG)
-    (DIST_TYPE_PARAM_OPT,     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG)
-    (DATA_FILE_PARAM_OPT,     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG)
-    (MAX_NUM_DATA_PARAM_OPT,  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG)
-    (QUERY_FILE_PARAM_OPT,    po::value<string>(&QueryFile)->default_value(QUERY_FILE_PARAM_DEFAULT),  QUERY_FILE_PARAM_MSG)
-    (MAX_CACHE_GS_QTY_PARAM_OPT, po::value<float>(&MaxCacheGSRelativeQty)->default_value(MAX_CACHE_GS_QTY_PARAM_DEFAULT),    MAX_CACHE_GS_QTY_PARAM_MSG)
-    (LOG_FILE_PARAM_OPT,      po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT),          LOG_FILE_PARAM_MSG)
-    (MAX_NUM_QUERY_PARAM_OPT, po::value<unsigned>(&MaxNumQuery)->default_value(MAX_NUM_QUERY_PARAM_DEFAULT), MAX_NUM_QUERY_PARAM_MSG)
-    (TEST_SET_QTY_PARAM_OPT,  po::value<unsigned>(&TestSetQty)->default_value(TEST_SET_QTY_PARAM_DEFAULT),   TEST_SET_QTY_PARAM_MSG)
-    (KNN_PARAM_OPT,           po::value< string>(&knnArg),                                  KNN_PARAM_MSG)
-    (RANGE_PARAM_OPT,         po::value<string>(&RangeArg),                                 RANGE_PARAM_MSG)
-    (EPS_PARAM_OPT,           po::value<double>(&epsTmp)->default_value(EPS_PARAM_DEFAULT), EPS_PARAM_MSG)
-    (METHOD_PARAM_OPT,        po::value<string>(&MethodName)->required(), METHOD_PARAM_MSG)
-    ("outFile,o",             po::value<string>(&ResFile)->default_value(""), "output file")
+  CmdOptions cmd_options;
 
-    (QUERY_TIME_PARAMS_PARAM_OPT, po::value<string>(&queryTimeParamStr)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG)
-    (INDEX_TIME_PARAMS_PARAM_OPT, po::value<string>(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG)
+  cmd_options.Add(new CmdParam(SPACE_TYPE_PARAM_OPT, SPACE_TYPE_PARAM_MSG,
+                               &SpaceType, true));
+  cmd_options.Add(new CmdParam(DIST_TYPE_PARAM_OPT, DIST_TYPE_PARAM_MSG,
+                               &DistType, false, DIST_TYPE_FLOAT));
+  cmd_options.Add(new CmdParam(DATA_FILE_PARAM_OPT, DATA_FILE_PARAM_MSG,
+                               &DataFile, true));
+  cmd_options.Add(new CmdParam(MAX_NUM_DATA_PARAM_OPT, MAX_NUM_QUERY_PARAM_MSG,
+                               &MaxNumData, false, MAX_NUM_DATA_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(QUERY_FILE_PARAM_OPT, QUERY_FILE_PARAM_MSG,
+                               &QueryFile, false, QUERY_FILE_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(MAX_CACHE_GS_QTY_PARAM_OPT, MAX_CACHE_GS_QTY_PARAM_MSG,
+                               &MaxCacheGSRelativeQty, false, MAX_CACHE_GS_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(LOG_FILE_PARAM_OPT, LOG_FILE_PARAM_MSG,
+                               &LogFile, false, LOG_FILE_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(MAX_NUM_QUERY_PARAM_OPT, MAX_NUM_QUERY_PARAM_MSG,
+                               &MaxNumQuery, false, MAX_NUM_QUERY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(TEST_SET_QTY_PARAM_OPT, TEST_SET_QTY_PARAM_MSG,
+                               &TestSetQty, false, TEST_SET_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(KNN_PARAM_OPT, KNN_PARAM_MSG,
+                               &knnArg, false));
+  cmd_options.Add(new CmdParam(RANGE_PARAM_OPT, RANGE_PARAM_MSG,
+                               &RangeArg, false));
+  cmd_options.Add(new CmdParam(EPS_PARAM_OPT, EPS_PARAM_MSG,
+                               &epsTmp, false, EPS_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(METHOD_PARAM_OPT, METHOD_PARAM_MSG,
+                               &MethodName, true));
+  cmd_options.Add(new CmdParam("outFile,o", "output file",
+                               &ResFile, false));
 
-    (MIN_EXP_PARAM, po::value<unsigned>(&MinExp)->default_value(MIN_EXP_DEFAULT),
-                    "the minimum exponent in the pruning oracle.")
-    (MAX_EXP_PARAM, po::value<unsigned>(&MaxExp)->default_value(MAX_EXP_DEFAULT),
-                    "the maximum exponent in the pruning oracle.")
-    (MAX_ITER_PARAM,     po::value<unsigned>(&MaxIter)->default_value(MAX_ITER_DEFAULT),
-                    "the maximum number of iteration while we are looking for a point where a desired recall can be achieved.")
-    (MAX_REC_DEPTH_PARAM, po::value<unsigned>(&MaxRecDepth)->default_value(MAX_REC_DEPTH_DEFAULT),
-                    "the maximum recursion in the maximization algorithm (each recursion leads to decrease in the grid search step).")
-    (STEP_N_PARAM,       po::value<unsigned>(&StepN)->default_value(STEP_N_DEFAULT),
-                    "each local step of the grid search involves (2StepN+1)^2 mini-iterations.")
-    (ADD_RESTART_QTY_PARAM,  po::value<unsigned>(&addRestartQty)->default_value(ADD_RESTART_QTY_DEFAULT),
-                    "number of *ADDITIONAL* restarts, initial values are selected randomly")
-    (FULL_FACTOR_PARAM,  po::value<double>(&fullFactorTmp)->default_value(FULL_FACTOR_DEFAULT),
-                    "the maximum factor used in the local grid search (i.e., if (A, B) is a starting point for the grid search, the first element will be in the range: [A/Factor,A*Factor], while the second element will be in the range [B/Factor,B*Factor]. In the beginning, Factor==FullFactor, but it gradually decreases as the algorithm converges.")
-    ;
+  cmd_options.Add(new CmdParam(QUERY_TIME_PARAMS_PARAM_OPT, QUERY_TIME_PARAMS_PARAM_MSG,
+                               &queryTimeParamStr, false));
+  cmd_options.Add(new CmdParam(INDEX_TIME_PARAMS_PARAM_OPT, INDEX_TIME_PARAMS_PARAM_MSG,
+                               &indexTimeParamStr, false));
 
-  po::variables_map vm;
+  cmd_options.Add(new CmdParam(MIN_EXP_PARAM, "the minimum exponent in the pruning oracle.",
+                               &MinExp, false, MIN_EXP_DEFAULT));
+  cmd_options.Add(new CmdParam(MAX_EXP_PARAM, "the maximum exponent in the pruning oracle.",
+                               &MaxExp, false, MAX_EXP_DEFAULT));
+  cmd_options.Add(new CmdParam(MAX_ITER_PARAM, "the maximum number of iteration while we are looking for a point where a desired recall can be achieved.",
+                               &MaxIter, false, MAX_ITER_DEFAULT));
+  cmd_options.Add(new CmdParam(MAX_REC_DEPTH_PARAM, "the maximum recursion in the maximization algorithm (each recursion leads to decrease in the grid search step).",
+                               &MaxRecDepth, false, MAX_REC_DEPTH_DEFAULT));
+  cmd_options.Add(new CmdParam(STEP_N_PARAM, "each local step of the grid search involves (2StepN+1)^2 mini-iterations.",
+                               &StepN, false, STEP_N_DEFAULT));
+  cmd_options.Add(new CmdParam(ADD_RESTART_QTY_PARAM, "number of *ADDITIONAL* restarts, initial values are selected randomly",
+                               &addRestartQty, false, ADD_RESTART_QTY_DEFAULT));
+  cmd_options.Add(new CmdParam(FULL_FACTOR_PARAM, "the maximum factor used in the local grid search (i.e., if (A, B) is a starting point for the grid search, the first element will be in the range: [A/Factor,A*Factor], while the second element will be in the range [B/Factor,B*Factor]. In the beginning, Factor==FullFactor, but it gradually decreases as the algorithm converges.",
+                               &fullFactorTmp, false, FULL_FACTOR_DEFAULT));
+
   try {
-    po::store(po::parse_command_line(argc, argv, ProgOptDesc), vm);
-    po::notify(vm);
-  } catch (const exception& e) {
-    Usage(argv[0], ProgOptDesc);
+    cmd_options.Parse(argc, argv);
+  } catch (const CmdParserException& e) {
+    cmd_options.ToString();
+    std::cout.flush();
     LOG(LIB_FATAL) << e.what();
+  } catch (const std::exception& e) {
+    cmd_options.ToString();
+    std::cout.flush();
+    LOG(LIB_FATAL) << e.what();
+  } catch (...) {
+    cmd_options.ToString();
+    std::cout.flush();
+    LOG(LIB_FATAL) << "Failed to parse cmd arguments";
   }
 
   eps = epsTmp;
   FullFactor = fullFactorTmp;
 
-  if (vm.count("help")  ) {
-    Usage(argv[0], ProgOptDesc);
-    exit(0);
-  }
-
   ToLower(DistType);
   ToLower(SpaceType);
-  
+
   try {
     {
       vector<string> SpaceDesc;
@@ -371,11 +378,8 @@ void ParseCommandLineForTuning(int argc, char*argv[],
       SpaceParams = shared_ptr<AnyParams>(new AnyParams(SpaceDesc));
     }
 
-    if (vm.count("knn")) {
-      if (!SplitStr(knnArg, knn, ',')) {
-        Usage(argv[0], ProgOptDesc);
-        LOG(LIB_FATAL) << "Wrong format of the KNN argument: '" << knnArg;
-      }
+    if (!knnArg.empty() && !SplitStr(knnArg, knn, ',')) {
+      LOG(LIB_FATAL) << "Wrong format of the KNN argument: '" << knnArg;
     }
 
     if (DataFile.empty()) {
@@ -391,7 +395,7 @@ void ParseCommandLineForTuning(int argc, char*argv[],
     }
 
     if (!MaxNumQuery && QueryFile.empty()) {
-      LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!"; 
+      LOG(LIB_FATAL) << "Set a positive # of queries or specify a query file!";
     }
 
     CHECK_MSG(MaxNumData < MAX_DATASET_QTY, "The maximum number of points should not exceed" + ConvertToString(MAX_DATASET_QTY));
@@ -444,7 +448,7 @@ int main(int ac, char* av[]) {
   float    FullFactor;
   unsigned AddRestartQty;
 
-  ParseCommandLineForTuning(ac, av, 
+  ParseCommandLineForTuning(ac, av,
                        LogFile,
                        DistType,
                        SpaceType,
@@ -485,7 +489,7 @@ int main(int ac, char* av[]) {
   }
 
   if (DIST_TYPE_INT == DistType) {
-    RunExper<int>(AddRestartQty, 
+    RunExper<int>(AddRestartQty,
                   MethodName, *IndexParams, *QueryTimeParams,
                   SpaceType,
                   *SpaceParams,
@@ -507,7 +511,7 @@ int main(int ac, char* av[]) {
                   MaxCacheGSRelativeQty
                  );
   } else if (DIST_TYPE_FLOAT == DistType) {
-    RunExper<float>(AddRestartQty, 
+    RunExper<float>(AddRestartQty,
                   MethodName, *IndexParams, *QueryTimeParams,
                   SpaceType,
                   *SpaceParams,
@@ -529,7 +533,7 @@ int main(int ac, char* av[]) {
                   MaxCacheGSRelativeQty
                  );
   } else if (DIST_TYPE_DOUBLE == DistType) {
-    RunExper<double>(AddRestartQty, 
+    RunExper<double>(AddRestartQty,
                   MethodName, *IndexParams, *QueryTimeParams,
                   SpaceType,
                   *SpaceParams,

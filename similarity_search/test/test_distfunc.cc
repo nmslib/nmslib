@@ -811,6 +811,101 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
     return true;
 }
 
+bool TestSparseNegativeScalarProductAgree(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
+
+    unique_ptr<SpaceSparseNegativeScalarProductFast>     spaceFast(new SpaceSparseNegativeScalarProductFast());
+    unique_ptr<SpaceSparseNegativeScalarProduct<T>>      spaceReg (new SpaceSparseNegativeScalarProduct<T>());
+
+    ObjectVector                                 elemsFast;
+    ObjectVector                                 elemsReg;
+    vector<string>                               tmp;
+
+    unique_ptr<DataFileInputState> inpStateFast(spaceFast->ReadDataset(elemsFast, tmp, dataFile,  N)); 
+    spaceFast->UpdateParamsFromFile(*inpStateFast);
+    unique_ptr<DataFileInputState> inpStateReg(spaceReg->ReadDataset(elemsReg, tmp, dataFile,  N)); 
+    spaceReg->UpdateParamsFromFile(*inpStateReg);
+
+    CHECK(elemsFast.size() == elemsReg.size());
+
+    N = min(N, elemsReg.size());
+
+    bool bug = false;
+
+    float maxRelDiff = 1e-6f;
+    float maxAbsDiff = 1e-6f;
+
+    for (size_t j = Rep; j < N; ++j) 
+    for (size_t k = j - Rep; k < j; ++k) {
+        float val1 = spaceFast->IndexTimeDistance(elemsFast[k], elemsFast[j]);
+        float val2 = spaceReg->IndexTimeDistance(elemsReg[k], elemsReg[j]);
+
+        float AbsDiff1 = fabs(val1 - val2);
+        float RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val2)),T(1e-18));
+
+        if (RelDiff1 > maxRelDiff && AbsDiff1 > maxAbsDiff) {
+            cerr << "Bug fast vs non-fast negative scalar/dot product " <<
+            " val1 = " << val1 << " val2 = " << val2 << 
+            " Diff: " << (val1 - val2) << 
+            " RelDiff1: " << RelDiff1 << 
+            " AbsDiff1: " << AbsDiff1 << endl;
+            bug = true;
+        }
+
+        if (bug) return false;
+    }
+
+    return true;
+}
+
+bool TestSparseQueryNormNegativeScalarProductAgree(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
+
+    unique_ptr<SpaceSparseQueryNormNegativeScalarProductFast>     spaceFast(new SpaceSparseQueryNormNegativeScalarProductFast());
+    unique_ptr<SpaceSparseQueryNormNegativeScalarProduct<T>>      spaceReg (new SpaceSparseQueryNormNegativeScalarProduct<T>());
+
+    ObjectVector                                 elemsFast;
+    ObjectVector                                 elemsReg;
+    vector<string>                               tmp;
+
+    unique_ptr<DataFileInputState> inpStateFast(spaceFast->ReadDataset(elemsFast, tmp, dataFile,  N));
+    spaceFast->UpdateParamsFromFile(*inpStateFast);
+    unique_ptr<DataFileInputState> inpStateReg(spaceReg->ReadDataset(elemsReg, tmp, dataFile,  N));
+    spaceReg->UpdateParamsFromFile(*inpStateReg);
+
+    CHECK(elemsFast.size() == elemsReg.size());
+
+    N = min(N, elemsReg.size());
+
+    bool bug = false;
+
+    float maxRelDiff = 1e-6f;
+    float maxAbsDiff = 1e-6f;
+
+    for (size_t j = Rep; j < N; ++j)
+        for (size_t k = j - Rep; k < j; ++k) {
+            float val1 = spaceFast->IndexTimeDistance(elemsFast[k], elemsFast[j]);
+            float val2 = spaceReg->IndexTimeDistance(elemsReg[k], elemsReg[j]);
+
+            float AbsDiff1 = fabs(val1 - val2);
+            float RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val2)),T(1e-18));
+
+            if (RelDiff1 > maxRelDiff && AbsDiff1 > maxAbsDiff) {
+                cerr << "Bug fast vs non-fast QUERY-NORMALIZED negative scalar/dot product " <<
+                " val1 = " << val1 << " val2 = " << val2 <<
+                " Diff: " << (val1 - val2) <<
+                " RelDiff1: " << RelDiff1 <<
+                " AbsDiff1: " << AbsDiff1 << endl;
+                bug = true;
+            }
+
+            if (bug) return false;
+        }
+
+    return true;
+}
+
+
 #ifdef DISABLE_LONG_TESTS
 TEST(DISABLE_TestAgree) {
 #else
@@ -830,14 +925,28 @@ TEST(TestAgree) {
 
     nTest++;
     nFail += !TestSparseCosineSimilarityAgree(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 200);
-   
-    /* 
-     * 32 should be more than enough for almost all methods,
-     * where loop-unrolling  includes at most 16 distance computations.
-     *
-     * Bit-Hamming is an exception.
-     * 
-     */
+
+
+    nTest++;
+    nFail += !TestSparseNegativeScalarProductAgree(sampleDataPrefix + "sparse_5K.txt", 1000, 200);
+
+    nTest++;
+    nFail += !TestSparseNegativeScalarProductAgree(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 200);
+
+    nTest++;
+    nFail += !TestSparseQueryNormNegativeScalarProductAgree(sampleDataPrefix + "sparse_5K.txt", 1000, 200);
+
+    nTest++;
+    nFail += !TestSparseQueryNormNegativeScalarProductAgree(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 200);
+
+
+  /*
+   * 32 should be more than enough for almost all methods,
+   * where loop-unrolling  includes at most 16 distance computations.
+   *
+   * Bit-Hamming is an exception.
+   *
+   */
     for (unsigned dim = 1; dim <= 1024; dim+=2) {
         LOG(LIB_INFO) << "Dim = " << dim;
 

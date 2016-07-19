@@ -195,12 +195,14 @@ class IndexWrapper : public IndexWrapperBase {
 
 
   void CreateIndex(const AnyParams& index_params) override {
+Py_BEGIN_ALLOW_THREADS
     delete index_;
     index_ = MethodFactoryRegistry<T>::Instance()
         .CreateMethod(PRINT_PROGRESS,
                       method_name_, space_type_,
                       *space_, data_);
     index_->CreateIndex(index_params);
+Py_END_ALLOW_THREADS
   }
 
   void SaveIndex(const string& fileName) override {
@@ -225,15 +227,17 @@ class IndexWrapper : public IndexWrapperBase {
   }
 
   PyObject* KnnQuery(int k, const Object* query) override {
+    IntVector ids;
+Py_BEGIN_ALLOW_THREADS
     KNNQuery<T> knn(*space_, query, k);
     index_->Search(&knn, -1);
     KNNQueue<T>* res = knn.Result()->Clone();
-    IntVector ids;
     while (!res->Empty()) {
       ids.insert(ids.begin(), res->TopObject()->id());
       res->Pop();
     }
     delete res;
+Py_END_ALLOW_THREADS
     PyObject* z = PyList_New(ids.size());
     if (!z) {
       return NULL;

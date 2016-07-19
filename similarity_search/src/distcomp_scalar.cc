@@ -20,14 +20,16 @@
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <tmmintrin.h>
+
 
 namespace similarity {
 
 using namespace std;
 /*
  * Scalar-product (divided by Euclidean vector norms)
- *
- * TODO: @leo implement a more efficient version
  */
 
 template <class T>
@@ -61,6 +63,28 @@ T NormScalarProduct(const T *p1, const T *p2, size_t qty)
 
 template float  NormScalarProduct<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double NormScalarProduct<double>(const double* pVect1, const double* pVect2, size_t qty);
+
+// Query is the second argument (by convention we use only left queries, where a data point is the left argument)
+template <class T>
+T QueryNormScalarProduct(const T *p1, const T *p2, size_t qty)
+{
+    const T eps = numeric_limits<T>::min() * 2;
+
+    T sum = 0;
+    T norm2 = 0;
+
+    for (size_t i = 0; i < qty; i++) {
+        norm2 += p2[i] * p2[i];
+        sum += p1[i] * p2[i];
+    }
+
+    norm2 = max(norm2, eps);
+
+    return sum / sqrt(norm2);
+}
+
+template float  QueryNormScalarProduct<float>(const float* pVect1, const float* pVect2, size_t qty);
+template double QueryNormScalarProduct<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 template <> 
 float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
