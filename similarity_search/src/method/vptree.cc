@@ -246,6 +246,10 @@ void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
   if (bucket_) {
     --MaxLeavesToVisit;
 
+    if (CacheOptimizedBucket_) {
+      _mm_prefetch(CacheOptimizedBucket_, _MM_HINT_T0);
+    }
+
     for (unsigned i = 0; i < bucket_->size(); ++i) {
       const Object* Obj = (*bucket_)[i];
       dist_t distQC = query->DistanceObjLeft(Obj);
