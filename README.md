@@ -74,7 +74,7 @@ Prerequisites
 6. Only for Linux: Eigen (dev version)
 6. An Intel or AMD processor that supports SSE 4.2 is recommended
 
-To install additional packages on Ubuntu 14 Linux, type the following
+To install prerequisite packages on Ubuntu 14 Linux, type the following
 ```
 sudo apt-get install libboost1.54-all-dev libgsl0-dev libeigen3-dev
 ```
