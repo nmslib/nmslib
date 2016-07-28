@@ -1,0 +1,120 @@
+/**
+ * Non-metric Space Library
+ *
+ * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+ *
+ * For the complete list of contributors and further details see:
+ * https://github.com/searchivarius/NonMetricSpaceLib 
+ * 
+ * Copyright (c) 2016
+ *
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
+#ifndef _FALCONN_METHOD_H_
+#define _FALCONN_METHOD_H_
+
+#include <string>
+#include <sstream>
+
+#include "index.h"
+
+#define METH_FALCONN             "falconn"
+
+namespace similarity {
+
+using std::string;
+
+/*
+ * This is a wrapper for FALCONN library: https://github.com/FALCONN-LIB/FALCONN
+ *
+ * Practical and Optimal LSH for Angular Distance
+ * Alexandr Andoni, Piotr Indyk, Thijs Laarhoven, Ilya Razenshteyn, Ludwig Schmidt
+ * NIPS 2015
+ *
+ */
+
+template <typename dist_t>
+class FALCONN : public Index<dist_t> {
+ public:
+  /*
+   * The constructor here space and data-objects' references,
+   * which are guaranteed to be be valid during testing.
+   * So, we can memorize them safely.
+   */
+  FALCONN(Space<dist_t>& space, 
+              const ObjectVector& data) : data_(data), space_(space) {}
+
+  /*
+   * This function is supposed to create a search index (or call a 
+   * function to create it)!
+   */
+  void CreateIndex(const AnyParams& IndexParams) override {
+    AnyParamManager  pmgr(IndexParams);
+    pmgr.GetParamOptional("doSeqSearch",  
+                          bDoSeqSearch_, 
+      // One should always specify the default value of an optional parameter!
+                          false
+                          );
+    // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
+    pmgr.CheckUnused();
+    // Always call ResetQueryTimeParams() to set query-time parameters to their default values
+    this->ResetQueryTimeParams();
+  }
+
+  /*
+   * One can implement functions for index serialization and reading.
+   * However, this is not required.
+   */
+  // SaveIndex is not necessarily implemented
+  virtual void SaveIndex(const string& location) override {
+    throw runtime_error("SaveIndex is not implemented for method: " + StrDesc());
+  }
+  // LoadIndex is not necessarily implemented
+  virtual void LoadIndex(const string& location) override {
+    throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
+  }
+
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
+
+  ~FALCONN(){};
+
+  /* 
+   * Just the name of the method, consider printing crucial parameter values
+   */
+  const std::string StrDesc() const override { 
+    stringstream str;
+    str << "Dummy method: " << (bDoSeqSearch_ ? " does seq. search " : " does nothing (really dummy)"); 
+    return str.str();
+  }
+
+  /* 
+   *  One needs to implement two search functions.
+   */
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
+
+  /*
+   * In rare cases, mostly when we wrap up 3rd party methods,
+   * we simply duplicate the data set. This function
+   * let the experimentation code know this, so it could
+   * adjust the memory consumption of the index.
+   *
+   * Note, however, that this method doesn't create any data duplicates.
+   */
+  virtual bool DuplicateData() const override { return false; }
+
+ private:
+  bool                    data_duplicate_;
+  const ObjectVector&     data_;
+  Space<dist_t>&          space_;
+  bool                    bDoSeqSearch_;
+  // disable copy and assign
+  DISABLE_COPY_AND_ASSIGN(FALCONN);
+};
+
+}   // namespace similarity
+
+#endif     // _FALCONN_METHOD_H_

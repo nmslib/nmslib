@@ -26,6 +26,10 @@ if (WITHOUT_LSH OR WIN32)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_space.cc)
 endif()
 
+if (WITHOUT_FALCONN OR WIN32) 
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/falconn.cc)
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 message(STATUS "Header files: ${HDR_FILES}")
 message(STATUS "Source files: ${SRC_FILES}")
