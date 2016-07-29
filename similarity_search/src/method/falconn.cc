@@ -95,11 +95,6 @@ void FALCONN<dist_t>::createSparseDataPoint(const Object* o, SparseFalconnPoint&
   for (const SparseVectElem<dist_t>& e : target) {
     p.push_back(make_pair(e.id_, e.val_ * norm));
   }
-#if 1
-  dist_t s = 0;
-  for (auto e: p) s += e.second * e.second;
-  LOG(LIB_INFO) << "@@@@@@@@@@ NORM SQ: " << s;
-#endif
 }
 
 template <typename dist_t>
