@@ -22,7 +22,6 @@
 
 #include <falconn/core/data_storage.h>
 #include <falconn/lsh_nn_table.h>
-#include <jmorecfg.h>
 
 #include "index.h"
 
@@ -76,14 +75,21 @@ class FALCONN : public Index<dist_t> {
   virtual bool DuplicateData() const override { return true; }
 
  private:
+
+  typedef falconn::DenseVector<dist_t>    DenseFalconnPoint;
+  typedef falconn::SparseVector<dist_t>   SparseFalconnPoint;
+
+  void copyData(bool normData);
+  void createSparseDataPoint(const Object* o, SparseFalconnPoint& p, bool normData) const;
+  // createDenseDataPoint assumes that p was initialized using dim_ as the number of elements.
+  void createDenseDataPoint(const Object* o, DenseFalconnPoint& p, bool normData) const;
+
   const ObjectVector&     data_;
   Space<dist_t>&          space_;
   bool                    sparse_;
   size_t                  dim_; // only for dense vector spaces
   size_t                  num_probes_;
-
-  typedef falconn::DenseVector<dist_t>    DenseFalconnPoint;
-  typedef falconn::SparseVector<dist_t>   SparseFalconnPoint;
+  bool                    norm_data_;
 
   vector<DenseFalconnPoint> falconn_data_dense_;
   vector<SparseFalconnPoint> falconn_data_sparse_;
@@ -93,6 +99,8 @@ class FALCONN : public Index<dist_t> {
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(FALCONN);
+
+
 };
 
 }   // namespace similarity

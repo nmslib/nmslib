@@ -48,6 +48,9 @@
 #if !defined(_MSC_VER)
 #include "factory/method/nndes.h"
 #endif
+#if !defined(WITHOUT_FALCONN) && !defined(_MSC_VER)
+#include "factory/method/falconn.h"
+#endif
 
 namespace similarity {
 
@@ -178,6 +181,8 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
   REGISTER_METHOD_CREATOR(int,    METH_NNDES, CreateNNDescent)
 
+  REGISTER_METHOD_CREATOR(float,  METH_FALCONN, CreateFALCONN)
+  REGISTER_METHOD_CREATOR(double, METH_FALCONN, CreateFALCONN)
 #endif
   // SA-tree
   REGISTER_METHOD_CREATOR(float,  METH_SATREE, CreateSATree)

@@ -30,29 +30,80 @@ using namespace std;
 
 #include "method/falconn.h"
 
-#include <falconn/core/polytope_hash.h>
-
 const string PARAM_HASH_FAMILY                = "hash_family";
-const string PARAM_HASH_FAMILY_CROSS_POLYTOPE = "polytope";
+const string PARAM_HASH_FAMILY_CROSS_POLYTOPE = "cross_polytope";
 const string PARAM_HASH_FAMILY_HYPERPLANE     = "hyperplane";
 
-const string PARAM_STORAGE_HASH_TABLE = "storage_hash_table";
-const string PARAM_NUM_HASH_BITS      = "num_hash_bits";
-const string PARAM_NUM_HASH_TABLES    = "num_hash_tables";
-const string PARAM_NUM_PROBES         = "num_probes"; // This is going to be a query-time parameter
-const string PARAM_NUM_ROTATIONS      = "num_rotations";
-const string PARAM_SEED               = "seed";
-const string PARAM_FEATURE_HASHING_DIM = "feature_hashing_dimension";
+const string PARAM_STORAGE_HASH_TABLE   = "storage_hash_table";
+const string PARAM_NUM_HASH_BITS        = "num_hash_bits";
+const string PARAM_NUM_HASH_TABLES      = "num_hash_tables";
+const string PARAM_NUM_PROBES           = "num_probes"; // This is going to be a query-time parameter
+const string PARAM_NUM_ROTATIONS        = "num_rotations";
+const string PARAM_SEED                 = "seed";
+const string PARAM_FEATURE_HASHING_DIM  = "feature_hashing_dimension";
+const string PARAM_NORM_DATA            = "norm_data";
 
 
 namespace similarity {
 
 using namespace falconn;
 
+// storage_hash_table_from_string is a modification of FALCONN's python_wrapper.h
+StorageHashTable storage_hash_table_from_string(string str) {
+  ToLower(str);
+  for (int ii = 0; ii < static_cast<int>(kStorageHashTableStrings.size());
+       ++ii) {
+    if (str == kStorageHashTableStrings[ii]) {
+      return StorageHashTable(ii);
+    }
+  }
+  stringstream err;
+  err << "Unknown value of the parameter " << PARAM_STORAGE_HASH_TABLE << " valid values are: ";
+  for (int ii = 0; ii < static_cast<int>(kStorageHashTableStrings.size()); ++ii) {
+    if (ii) err << ",";
+    err << kStorageHashTableStrings[ii];
+  }
+  throw runtime_error(err.str());
+}
+
 template <typename dist_t>
-FALCONN<dist_t>::FALCONN(Space<dist_t>& space,
-                              const ObjectVector& data) : data_(data), space_(space), sparse_(false),
-                                                          dim_(0), num_probes_(10) {
+ void FALCONN<dist_t>::createDenseDataPoint(const Object* o, DenseFalconnPoint& p, bool normData) const {
+  CHECK(sizeof(dist_t)*dim_ == o->datalength());
+  const dist_t *pVect = reinterpret_cast<const dist_t*>(o->data());
+  for (size_t i = 0; i < dim_; ++i) {
+    p[i] = pVect[i];
+  }
+  if (normData) {
+    p.normalize();
+  }
+}
+
+template <typename dist_t>
+void FALCONN<dist_t>::createSparseDataPoint(const Object* o, SparseFalconnPoint& p, bool normData) const {
+  p.clear();
+  vector<SparseVectElem<dist_t>> target;
+  UnpackSparseElements(o->data(), o->datalength(), target);
+
+  dist_t norm = 1;
+  if (normData) {
+    norm = 0;
+    for (const SparseVectElem<dist_t>& e : target) {
+      norm += e.val_ *e.val_;
+    }
+    norm = 1/ sqrt(norm);
+  }
+  for (const SparseVectElem<dist_t>& e : target) {
+    p.push_back(make_pair(e.id_, e.val_ * norm));
+  }
+#if 1
+  dist_t s = 0;
+  for (auto e: p) s += e.second * e.second;
+  LOG(LIB_INFO) << "@@@@@@@@@@ NORM SQ: " << s;
+#endif
+}
+
+template <typename dist_t>
+void FALCONN<dist_t>::copyData(bool normData) {
   SpaceSparseVectorInter<dist_t>* pSparseSpace = dynamic_cast<SpaceSparseVectorInter<dist_t>*>(&space_);
   VectorSpace<dist_t>*            pDenseSpace  = dynamic_cast<VectorSpace<dist_t>*>(&space_);
 
@@ -63,12 +114,9 @@ FALCONN<dist_t>::FALCONN(Space<dist_t>& space,
   if (pSparseSpace != nullptr) {
     LOG(LIB_INFO) << "Creating a sparse vector data set!";
     sparse_ = true;
+    SparseFalconnPoint p;
     for (const Object* o: data_) {
-      vector<SparseVectElem<dist_t>> target;
-      UnpackSparseElements(o->data(), o->datalength(), target);
-      SparseFalconnPoint p;
-      for (const SparseVectElem<dist_t>& e : target)
-        p.push_back(make_pair(e.id_, e.val_));
+      createSparseDataPoint(o, p, normData);
       falconn_data_sparse_.push_back(p);
     }
   }
@@ -77,12 +125,19 @@ FALCONN<dist_t>::FALCONN(Space<dist_t>& space,
     dim_ = data_[0]->datalength() / sizeof(dist_t);
     DenseFalconnPoint p(dim_);
     for (const Object* o: data_) {
-      const dist_t *pVect = reinterpret_cast<const dist_t*>(o->data());
-      for (size_t i = 0; i < dim_; ++i) p[i] = pVect[i];
+      createDenseDataPoint(o, p, normData);
       falconn_data_dense_.emplace_back(p);
     }
   }
 }
+
+
+template <typename dist_t>
+FALCONN<dist_t>::FALCONN(Space<dist_t>& space,
+                         const ObjectVector& data) : data_(data), space_(space), sparse_(false),
+                                                     dim_(0), num_probes_(10) {
+}
+
 
 template <typename dist_t>
 void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
@@ -90,9 +145,24 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
 
   LSHConstructionParameters params;
   params.distance_function = DistanceFunction::EuclideanSquared;
+  // we want to use all the available threads to set up
+  params.num_setup_threads = 0;
+
+  norm_data_ = true;
+
+  pmgr.GetParamOptional(PARAM_NORM_DATA, norm_data_, true);
+
+  copyData(norm_data_);
 
   pmgr.GetParamOptional(PARAM_SEED, params.seed, 4057218);
 
+  {
+    string hash_table_storage_type;
+    ToLower(hash_table_storage_type);
+    // The flat hash table seems to be the most efficient
+    pmgr.GetParamOptional(PARAM_STORAGE_HASH_TABLE, hash_table_storage_type, "flat_hash_table");
+    params.storage_hash_table = storage_hash_table_from_string(hash_table_storage_type);
+  }
 
   {
     string lsh_family_str;
@@ -125,8 +195,6 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
   size_t num_hash_bits = max<size_t>(2, static_cast<size_t>(ceil(log2(data_.size()))));
   pmgr.GetParamOptional(PARAM_NUM_HASH_BITS, num_hash_bits, num_hash_bits);
 
-
-
   /*
    *  Number of rotations controls the number of pseudo-random rotations for
    *  the cross-polytope LSH, FALCONN's manual advised to set it to 1 for the dense data,
@@ -138,9 +206,11 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
   if (!sparse_) {
     params.dimension = dim_;
     compute_number_of_hash_functions<DenseFalconnPoint>(num_hash_bits, &params);
+    falconn_table_dense_ = construct_table<DenseFalconnPoint>(falconn_data_dense_, params);
   } else {
     pmgr.GetParamRequired(PARAM_FEATURE_HASHING_DIM, params.feature_hashing_dimension);
     compute_number_of_hash_functions<SparseFalconnPoint>(num_hash_bits, &params);
+    falconn_table_sparse_ = construct_table<SparseFalconnPoint>(falconn_data_sparse_, params);
   }
 
   // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
@@ -152,7 +222,21 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
 
 template <typename dist_t>
 void FALCONN<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
-  throw runtime_error("To be implemented!");
+  vector<IdType> ids;
+
+  if (sparse_) {
+    SparseFalconnPoint sparseQ;
+    createSparseDataPoint(query->QueryObject(), sparseQ, norm_data_);
+    falconn_table_sparse_->find_k_nearest_neighbors(sparseQ, query->GetK(), &ids);
+  } else {
+    DenseFalconnPoint  denseQ(dim_);
+    createDenseDataPoint(query->QueryObject(), denseQ, norm_data_);
+    falconn_table_dense_->find_k_nearest_neighbors(denseQ, query->GetK(), &ids);
+  }
+  // Recomputing distances for k nearest neighbors should have a very small impact on overall performance
+  for (IdType ii : ids) {
+    query->CheckAndAddToResult(data_[ii]);
+  }
 }
 
 template <typename dist_t>
