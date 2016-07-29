@@ -110,9 +110,12 @@ void FALCONN<dist_t>::copyData(bool normData) {
     LOG(LIB_INFO) << "Copying a sparse vector data set.";
     sparse_ = true;
     SparseFalconnPoint p;
+    dim_ = 0;
     for (const Object* o: data_) {
       createSparseDataPoint(o, p, normData);
       falconn_data_sparse_.push_back(p);
+      if (p.size())
+        dim_ = max<size_t>(dim_, p.back().first);
     }
   }
   if (pDenseSpace != nullptr) {
@@ -199,14 +202,13 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
   size_t num_rotations_default = sparse_ ? 2 : 1;
   pmgr.GetParamOptional(PARAM_NUM_ROTATIONS, params.num_rotations, num_rotations_default);
 
+  params.dimension = dim_;
+
   if (!sparse_) {
-    params.dimension = dim_;
     compute_number_of_hash_functions<DenseFalconnPoint>(num_hash_bits, &params);
-    falconn_table_dense_ = construct_table<DenseFalconnPoint>(falconn_data_dense_, params);
   } else {
     pmgr.GetParamRequired(PARAM_FEATURE_HASHING_DIM, params.feature_hashing_dimension);
     compute_number_of_hash_functions<SparseFalconnPoint>(num_hash_bits, &params);
-    falconn_table_sparse_ = construct_table<SparseFalconnPoint>(falconn_data_sparse_, params);
   }
 
   LOG(LIB_INFO) << "Normalize data?:      " << norm_data_;
@@ -224,6 +226,14 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
 
   // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
   pmgr.CheckUnused();
+
+  if (!sparse_) {
+    falconn_table_dense_ = construct_table<DenseFalconnPoint>(falconn_data_dense_, params);
+  } else {
+    falconn_table_sparse_ = construct_table<SparseFalconnPoint>(falconn_data_sparse_, params);
+  }
+
+
   // Always call ResetQueryTimeParams() to set query-time parameters to their default values
   this->ResetQueryTimeParams();
 }
