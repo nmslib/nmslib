@@ -112,7 +112,7 @@ void FALCONN<dist_t>::copyData(bool normData) {
     throw runtime_error("Only sparse and dense vector spaces are supported!");
   }
   if (pSparseSpace != nullptr) {
-    LOG(LIB_INFO) << "Creating a sparse vector data set!";
+    LOG(LIB_INFO) << "Copying a sparse vector data set.";
     sparse_ = true;
     SparseFalconnPoint p;
     for (const Object* o: data_) {
@@ -121,7 +121,7 @@ void FALCONN<dist_t>::copyData(bool normData) {
     }
   }
   if (pDenseSpace != nullptr) {
-    LOG(LIB_INFO) << "Creating a dense vector data set!";
+    LOG(LIB_INFO) << "Copying a dense vector data set.";
     dim_ = data_[0]->datalength() / sizeof(dist_t);
     DenseFalconnPoint p(dim_);
     for (const Object* o: data_) {
@@ -129,6 +129,7 @@ void FALCONN<dist_t>::copyData(bool normData) {
       falconn_data_dense_.emplace_back(p);
     }
   }
+  LOG(LIB_INFO) << "Dataset is copied.";
 }
 
 
@@ -192,7 +193,7 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
    * According to FALCONN's manual, it should be approx. equal to
    * the binary logarithm of the number of data points
    */
-  size_t num_hash_bits = max<size_t>(2, static_cast<size_t>(ceil(log2(data_.size()))));
+  size_t num_hash_bits = max<size_t>(2, static_cast<size_t>(floor(log2(data_.size()>>1))));
   pmgr.GetParamOptional(PARAM_NUM_HASH_BITS, num_hash_bits, num_hash_bits);
 
   /*
@@ -212,6 +213,19 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
     compute_number_of_hash_functions<SparseFalconnPoint>(num_hash_bits, &params);
     falconn_table_sparse_ = construct_table<SparseFalconnPoint>(falconn_data_sparse_, params);
   }
+
+  LOG(LIB_INFO) << "Normalize data?:      " << norm_data_;
+  LOG(LIB_INFO) << "#dim:                 " << params.dimension;
+  LOG(LIB_INFO) << "#of feature-hash dim: " << params.feature_hashing_dimension;
+
+  LOG(LIB_INFO) << "Hash family:          " << kLSHFamilyStrings[(size_t)params.lsh_family];
+  LOG(LIB_INFO) << "Table storage type:   " << kStorageHashTableStrings[(size_t)params.storage_hash_table];
+
+  LOG(LIB_INFO) << "#of hash tables:      " << params.k;
+  LOG(LIB_INFO) << "#of hash bits:        " << num_hash_bits;
+  LOG(LIB_INFO) << "#of rotations:        " << params.num_rotations;
+
+  LOG(LIB_INFO) << "seed:                 " << params.seed;
 
   // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
   pmgr.CheckUnused();
