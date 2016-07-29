@@ -128,7 +128,6 @@ if (NOT WIN32)
 endif()
 
 if ((NOT WITHOUT_FALCONN) AND (NOT WIN32))
-  include_directories (${PROJECT_SOURCE_DIR}/falconn)
   if (NOT EIGEN3_FOUND)
     message (FATAL_ERROR "FALCONN requires Eigen3, but Eigen3 isn't be found.")
   endif ()

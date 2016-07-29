@@ -18,6 +18,11 @@
 
 #include <string>
 #include <sstream>
+#include <memory>
+
+#include <falconn/core/data_storage.h>
+#include <falconn/lsh_nn_table.h>
+#include <jmorecfg.h>
 
 #include "index.h"
 
@@ -39,30 +44,9 @@ using std::string;
 template <typename dist_t>
 class FALCONN : public Index<dist_t> {
  public:
-  /*
-   * The constructor here space and data-objects' references,
-   * which are guaranteed to be be valid during testing.
-   * So, we can memorize them safely.
-   */
-  FALCONN(Space<dist_t>& space, 
-              const ObjectVector& data) : data_(data), space_(space) {}
+  FALCONN(Space<dist_t>& space, const ObjectVector& data);
 
-  /*
-   * This function is supposed to create a search index (or call a 
-   * function to create it)!
-   */
-  void CreateIndex(const AnyParams& IndexParams) override {
-    AnyParamManager  pmgr(IndexParams);
-    pmgr.GetParamOptional("doSeqSearch",  
-                          bDoSeqSearch_, 
-      // One should always specify the default value of an optional parameter!
-                          false
-                          );
-    // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
-    pmgr.CheckUnused();
-    // Always call ResetQueryTimeParams() to set query-time parameters to their default values
-    this->ResetQueryTimeParams();
-  }
+  virtual void CreateIndex(const AnyParams& IndexParams) override;
 
   /*
    * One can implement functions for index serialization and reading.
@@ -81,36 +65,32 @@ class FALCONN : public Index<dist_t> {
 
   ~FALCONN(){};
 
-  /* 
-   * Just the name of the method, consider printing crucial parameter values
-   */
-  const std::string StrDesc() const override { 
-    stringstream str;
-    str << "Dummy method: " << (bDoSeqSearch_ ? " does seq. search " : " does nothing (really dummy)"); 
-    return str.str();
-  }
+  const std::string StrDesc() const override { return METH_FALCONN; }
 
-  /* 
-   *  One needs to implement two search functions.
-   */
-  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(RangeQuery<dist_t>* query, IdType) const override {
+    throw runtime_error("Range search is not supported!");
+  }
   void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  /*
-   * In rare cases, mostly when we wrap up 3rd party methods,
-   * we simply duplicate the data set. This function
-   * let the experimentation code know this, so it could
-   * adjust the memory consumption of the index.
-   *
-   * Note, however, that this method doesn't create any data duplicates.
-   */
-  virtual bool DuplicateData() const override { return false; }
+  // We do duplicate the data set here
+  virtual bool DuplicateData() const override { return true; }
 
  private:
-  bool                    data_duplicate_;
   const ObjectVector&     data_;
   Space<dist_t>&          space_;
-  bool                    bDoSeqSearch_;
+  bool                    sparse_;
+  size_t                  dim_; // only for dense vector spaces
+  size_t                  num_probes_;
+
+  typedef falconn::DenseVector<dist_t>    DenseFalconnPoint;
+  typedef falconn::SparseVector<dist_t>   SparseFalconnPoint;
+
+  vector<DenseFalconnPoint> falconn_data_dense_;
+  vector<SparseFalconnPoint> falconn_data_sparse_;
+
+  std::unique_ptr<falconn::LSHNearestNeighborTable<DenseFalconnPoint, int32_t>>   falconn_table_dense_;
+  std::unique_ptr<falconn::LSHNearestNeighborTable<SparseFalconnPoint, int32_t>>  falconn_table_sparse_;
+
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(FALCONN);
 };
