@@ -189,9 +189,12 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
   /*
    * This parameter controls the number of buckets per table,
    * According to FALCONN's manual, it should be approx. equal to
-   * the binary logarithm of the number of data points
+   * the binary logarithm of the number of data points.
+   *
+   * The current formula mimics the Glove setup in ann_benchmarks,
+   * where a roughly 2^20 entry data sets uses 16-bit tables.
    */
-  size_t num_hash_bits = max<size_t>(2, static_cast<size_t>(floor(log2(data_.size()>>1))));
+  size_t num_hash_bits = max<size_t>(2, static_cast<size_t>(floor(log2(data_.size()>>4))));
   pmgr.GetParamOptional(PARAM_NUM_HASH_BITS, num_hash_bits, num_hash_bits);
 
   /*
@@ -211,18 +214,19 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
     compute_number_of_hash_functions<SparseFalconnPoint>(num_hash_bits, &params);
   }
 
-  LOG(LIB_INFO) << "Normalize data?:      " << norm_data_;
-  LOG(LIB_INFO) << "#dim:                 " << params.dimension;
-  LOG(LIB_INFO) << "#of feature-hash dim: " << params.feature_hashing_dimension;
+  LOG(LIB_INFO) << "Normalize data?:            " << norm_data_;
+  LOG(LIB_INFO) << "#dim:                       " << params.dimension;
+  LOG(LIB_INFO) << "#of feature-hash dim:       " << params.feature_hashing_dimension;
 
-  LOG(LIB_INFO) << "Hash family:          " << kLSHFamilyStrings[(size_t)params.lsh_family];
-  LOG(LIB_INFO) << "Table storage type:   " << kStorageHashTableStrings[(size_t)params.storage_hash_table];
+  LOG(LIB_INFO) << "Hash family:                " << kLSHFamilyStrings[(size_t)params.lsh_family];
+  LOG(LIB_INFO) << "Table storage type:         " << kStorageHashTableStrings[(size_t)params.storage_hash_table];
 
-  LOG(LIB_INFO) << "#of hash tables:      " << params.k;
-  LOG(LIB_INFO) << "#of hash bits:        " << num_hash_bits;
-  LOG(LIB_INFO) << "#of rotations:        " << params.num_rotations;
+  LOG(LIB_INFO) << "#of hash tables:            " << params.l;
+  LOG(LIB_INFO) << "#of hash func. per table:   " << params.k;
+  LOG(LIB_INFO) << "#of hash bits:              " << num_hash_bits;
+  LOG(LIB_INFO) << "#of rotations:              " << params.num_rotations;
 
-  LOG(LIB_INFO) << "seed:                 " << params.seed;
+  LOG(LIB_INFO) << "seed:                       " << params.seed;
 
   // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
   pmgr.CheckUnused();
