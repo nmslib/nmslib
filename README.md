@@ -1,7 +1,7 @@
 =================
 Non-Metric Space Library (NMSLIB)
 =================
-The latest release is [1.5.2](https://github.com/searchivarius/nmslib/releases/tag/v1.5.2)
+The latest release is [1.5.3](https://github.com/searchivarius/nmslib/releases/tag/v1.5.3)
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
 
