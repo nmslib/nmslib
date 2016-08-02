@@ -1,2 +1,0 @@
-MethodName	Recall	RelPosError	NumCloser	QueryTime	DistComp	ImprEfficiency	ImprDistComp	Mem
-"bbtree"	1	1	0	108.618	286347	0.506779	1.74264	598
