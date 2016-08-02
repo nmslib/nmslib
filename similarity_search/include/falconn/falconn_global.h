@@ -102,6 +102,70 @@ struct QueryStatistics {
   double average_num_unique_candidates = 0;
 };
 
+template <typename PointType>
+struct PointTypeConverter {
+};
+
+template <>
+struct PointTypeConverter<DenseVector<float>> {
+  typedef DenseVector<float>             DensePointType;
+  typedef similarity::KNNQuery<float>    NMSLIBQuery;
+};
+
+template <>
+struct PointTypeConverter<DenseVector<double>> {
+  typedef DenseVector<double>             DensePointType;
+  typedef similarity::KNNQuery<double>    NMSLIBQuery;
+};
+
+template <>
+struct PointTypeConverter<SparseVector<float>> {
+  typedef DenseVector<float>             DensePointType;
+  typedef similarity::KNNQuery<float>    NMSLIBQuery;
+};
+
+template <>
+struct PointTypeConverter<SparseVector<double>> {
+  typedef DenseVector<double>             DensePointType;
+  typedef similarity::KNNQuery<double>    NMSLIBQuery;
+};
+
+template <class dist_t>
+void toDenseVector(const SparseVector<dist_t>& v, DenseVector<dist_t>& res, size_t dim) {
+  res = DenseVector<dist_t>(dim);
+  res.setZero();
+
+  for (auto e: v) {
+    if (e.first < dim) {
+      res[e.first] = e.second;
+    }
+  }
+}
+
+template <class dist_t>
+void toDenseVector(const DenseVector<dist_t>& v, DenseVector<dist_t>& res, size_t dim) {
+  res = v;
+}
+
+template <class dist_t>
+void fromDenseVector(const DenseVector<dist_t>& v, DenseVector<dist_t>& res) {
+  res = v;
+}
+
+template <class dist_t>
+void fromDenseVector(const DenseVector<dist_t>& v,
+                     SparseVector<dist_t>& res,
+                     dist_t eps = 2*std::numeric_limits<dist_t>::min()
+) {
+  res.clear();
+  for (size_t ii = 0; ii < v.rows(); ++ii)
+    if (fabs(v[ii])>=eps) {
+      res.emplace_back(make_pair(ii, v[ii]));
+    }
+}
+
+
+
 }  // namespace falconn
 
 // Workaround for the CYGWIN bug described in

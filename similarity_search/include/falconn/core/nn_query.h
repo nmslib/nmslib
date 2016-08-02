@@ -10,6 +10,9 @@
 #include <utility>
 #include <vector>
 
+#include "object.h"
+#include "knnquery.h"
+
 #include "../falconn_global.h"
 #include "heap.h"
 
@@ -82,6 +85,9 @@ class NearestNeighborQuery {
 
   void find_k_nearest_neighbors(const LSHTablePointType& q,
                                 const ComparisonPointType& q_comp,
+                                const typename PointTypeConverter<LSHTablePointType>::DensePointType* pCenter,
+                                similarity::KNNQuery<DistanceType>* pNMSLIBQuery,
+                                const similarity::ObjectVector* pNMSLIBData,
                                 int_fast64_t k, int_fast64_t num_probes,
                                 int_fast64_t max_num_candidates,
                                 std::vector<LSHTableKeyType>* result) {
@@ -92,10 +98,19 @@ class NearestNeighborQuery {
     auto start_time = std::chrono::high_resolution_clock::now();
     stats_num_queries_ += 1;
 
+    LSHTablePointType qCentered;
+
+    if (pCenter != nullptr) {
+      typename PointTypeConverter<LSHTablePointType>::DensePointType tmp;
+      toDenseVector(q, tmp, pCenter->rows());
+      tmp -= *pCenter;
+      fromDenseVector(tmp, qCentered);
+    }
+
     std::vector<LSHTableKeyType>& res = *result;
     res.clear();
 
-    table_query_->get_unique_candidates(q, num_probes, max_num_candidates,
+    table_query_->get_unique_candidates(pCenter == nullptr ? q : qCentered, num_probes, max_num_candidates,
                                         &candidates_);
 
     heap_.reset();
@@ -103,35 +118,54 @@ class NearestNeighborQuery {
 
     auto distance_start_time = std::chrono::high_resolution_clock::now();
 
-    typename DataStorage::SubsequenceIterator iter =
-        data_storage_.get_subsequence(candidates_);
+    if (pNMSLIBQuery == nullptr) {
+      int_fast64_t initially_inserted = 0;
 
-    int_fast64_t initially_inserted = 0;
-    for (; initially_inserted < k; ++initially_inserted) {
-      if (iter.is_valid()) {
-        heap_.insert_unsorted(-dst_(q_comp, iter.get_point()), iter.get_key());
-        ++iter;
-      } else {
-        break;
-      }
-    }
+      typename DataStorage::SubsequenceIterator iter =
+          data_storage_.get_subsequence(candidates_);
 
-    if (initially_inserted >= k) {
-      heap_.heapify();
-      while (iter.is_valid()) {
-        DistanceType cur_distance = dst_(q_comp, iter.get_point());
-        if (cur_distance < -heap_.min_key()) {
-          heap_.replace_top(-cur_distance, iter.get_key());
+      for (; initially_inserted < k; ++initially_inserted) {
+        if (iter.is_valid()) {
+          heap_.insert_unsorted(-dst_(q_comp, iter.get_point()), iter.get_key());
+          ++iter;
+        } else {
+          break;
         }
-        ++iter;
       }
-    }
 
-    res.resize(initially_inserted);
-    std::sort(heap_.get_data().begin(),
-              heap_.get_data().begin() + initially_inserted);
-    for (int_fast64_t ii = 0; ii < initially_inserted; ++ii) {
-      res[ii] = heap_.get_data()[initially_inserted - ii - 1].data;
+      if (initially_inserted >= k) {
+        heap_.heapify();
+        while (iter.is_valid()) {
+          DistanceType cur_distance = dst_(q_comp, iter.get_point());
+          if (cur_distance < -heap_.min_key()) {
+            heap_.replace_top(-cur_distance, iter.get_key());
+          }
+          ++iter;
+        }
+      }
+
+      res.resize(initially_inserted);
+      std::sort(heap_.get_data().begin(),
+                heap_.get_data().begin() + initially_inserted);
+      for (int_fast64_t ii = 0; ii < initially_inserted; ++ii) {
+        res[ii] = heap_.get_data()[initially_inserted - ii - 1].data;
+      }
+    } else {
+      size_t ki = 0;
+      CHECK_MSG(pNMSLIBData != nullptr, "If NMSLIB query object is not NULL, NMSLIB data pointer shouldn't be NULL either!");
+      const similarity::ObjectVector& ndata = *pNMSLIBData;
+
+      const size_t NNP = 3;
+      if (candidates_.size() > NNP) {
+        for (size_t k = 0; k < NNP; ++k)
+          _mm_prefetch(ndata[candidates_[k]]->buffer(), _MM_HINT_T0);
+      }
+
+      for (; ki < candidates_.size(); ++ki) {
+        int key = candidates_[ki];
+        pNMSLIBQuery->CheckAndAddToResult(ndata[key]);
+        if (ki + NNP < candidates_.size()) _mm_prefetch(ndata[candidates_[ki+NNP]]->buffer(), _MM_HINT_T0);
+      }
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();

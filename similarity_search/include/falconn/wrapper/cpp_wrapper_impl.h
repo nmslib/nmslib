@@ -3,6 +3,7 @@
 
 #include <type_traits>
 
+
 #include "../core/bit_packed_flat_hash_table.h"
 #include "../core/composite_hash_table.h"
 #include "../core/cosine_distance.h"
@@ -359,9 +360,12 @@ class LSHNNTableWrapper : public LSHNearestNeighborTable<PointType, KeyType> {
                                             max_num_candidates_);
   }
 
-  void find_k_nearest_neighbors(const PointType& q, int_fast64_t k,
+  void find_k_nearest_neighbors(const PointType& q,  const typename PointTypeConverter<PointType>::DensePointType* pCenter,
+                                similarity::KNNQuery<DistanceType>* pNMSLIBQuery,
+                                const similarity::ObjectVector* pNMSLIBData,
+                                int_fast64_t k,
                                 std::vector<KeyType>* result) {
-    nn_query_->find_k_nearest_neighbors(q, q, k, num_probes_,
+    nn_query_->find_k_nearest_neighbors(q, q, pCenter, pNMSLIBQuery, pNMSLIBData, k, num_probes_,
                                         max_num_candidates_, result);
   }
 
@@ -411,8 +415,9 @@ class StaticTableFactory {
       DataStorageType;
 
   StaticTableFactory(const PointSet& points,
+                     const typename PointTypeConverter<PointType>::DensePointType* pCenter,
                      const LSHConstructionParameters& params)
-      : points_(points), params_(params) {}
+      : points_(points), center_(pCenter), params_(params) {}
 
   std::unique_ptr<LSHNearestNeighborTable<PointType, KeyType>> setup() {
     if (params_.dimension < 1) {
@@ -630,7 +635,7 @@ class StaticTableFactory {
                                  CompositeHashTableType, DataStorageType>
         LSHTableType;
     std::unique_ptr<LSHTableType> lsh_table(
-        new LSHTableType(lsh.get(), composite_table.get(), *data_storage_,
+        new LSHTableType(lsh.get(), composite_table.get(), *data_storage_, center_,
                          params_.num_setup_threads));
 
     std::unique_ptr<typename LSHTableType::Query> query(
@@ -660,6 +665,7 @@ class StaticTableFactory {
   const static int_fast32_t kCompositeHashTableIndex = 4;
 
   const PointSet& points_;
+  const typename PointTypeConverter<PointType>::DensePointType* center_;
   const LSHConstructionParameters& params_;
   std::unique_ptr<DataStorageType> data_storage_;
   int_fast32_t num_bits_;
@@ -689,8 +695,11 @@ LSHConstructionParameters get_default_parameters(
 
 template <typename PointType, typename KeyType, typename PointSet>
 std::unique_ptr<LSHNearestNeighborTable<PointType, KeyType>> construct_table(
-    const PointSet& points, const LSHConstructionParameters& params) {
+    const PointSet& points,
+    const typename PointTypeConverter<PointType>::DensePointType* pCenter,
+    const LSHConstructionParameters& params) {
   wrapper::StaticTableFactory<PointType, KeyType, PointSet> factory(points,
+                                                                    pCenter,
                                                                     params);
   return std::move(factory.setup());
 }

@@ -79,7 +79,7 @@ class FALCONN : public Index<dist_t> {
   typedef falconn::DenseVector<dist_t>    DenseFalconnPoint;
   typedef falconn::SparseVector<dist_t>   SparseFalconnPoint;
 
-  void copyData(bool normData);
+  void copyData(bool normData, bool centerData, size_t max_sparse_dim_to_center);
   void createSparseDataPoint(const Object* o, SparseFalconnPoint& p, bool normData) const;
   // createDenseDataPoint assumes that p was initialized using dim_ as the number of elements.
   void createDenseDataPoint(const Object* o, DenseFalconnPoint& p, bool normData) const;
@@ -90,9 +90,14 @@ class FALCONN : public Index<dist_t> {
   size_t                  dim_; // only for dense vector spaces
   size_t                  num_probes_;
   bool                    norm_data_;
+  bool                    center_data_;
+  size_t                  max_sparse_dim_to_center_;
+  bool                    use_falconn_dist_;
 
   vector<DenseFalconnPoint> falconn_data_dense_;
   vector<SparseFalconnPoint> falconn_data_sparse_;
+
+  unique_ptr<DenseFalconnPoint>  center_point_;
 
   std::unique_ptr<falconn::LSHNearestNeighborTable<DenseFalconnPoint, int32_t>>   falconn_table_dense_;
   std::unique_ptr<falconn::LSHNearestNeighborTable<SparseFalconnPoint, int32_t>>  falconn_table_sparse_;

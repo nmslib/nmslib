@@ -11,6 +11,9 @@
 
 #include "falconn_global.h"
 
+#include "object.h"
+#include "knnquery.h"
+
 ///
 /// The main namespace.
 ///
@@ -75,7 +78,10 @@ class LSHNearestNeighborTable {
   /// Find the keys of the k closest candidates in the probing sequence for q.
   /// The keys are returned in order of increasing distance to q.
   ///
-  virtual void find_k_nearest_neighbors(const PointType& q, int_fast64_t k,
+  virtual void find_k_nearest_neighbors(const PointType& q, const typename PointTypeConverter<PointType>::DensePointType* pCenter,
+                                        typename PointTypeConverter<PointType>::NMSLIBQuery* pNMSLIBQuery,
+                                        const similarity::ObjectVector* pNMSLIBData,
+                                        int_fast64_t k,
                                         std::vector<KeyType>* result) = 0;
 
   ///
@@ -367,7 +373,7 @@ struct PlainArrayPointSet {
 template <typename PointType, typename KeyType = int32_t,
           typename PointSet = std::vector<PointType>>
 std::unique_ptr<LSHNearestNeighborTable<PointType, KeyType>> construct_table(
-    const PointSet& points, const LSHConstructionParameters& params);
+    const PointSet& points, const typename PointTypeConverter<PointType>::DensePointType* pCenter, const LSHConstructionParameters& params);
 
 }  // namespace falconn
 

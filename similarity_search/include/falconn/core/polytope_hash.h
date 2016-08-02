@@ -153,13 +153,14 @@ class CrossPolytopeHashBase {
   // TODO: Can the FHT rotations be faster by doing 8 rotations (AVX float
   // register size) in parallel? If so, the table setup time could be made
   // faster by using a batch FHT below.
-  template <typename BatchVectorType>
+  template <typename BatchVectorType, typename PointType>
   class BatchHash {
    public:
-    BatchHash(const Derived& parent)
+    BatchHash(const Derived& parent, const typename PointTypeConverter<PointType>::DensePointType* pCenter)
         : parent_(parent),
           tmp_vector_(parent.rotation_dim_),
-          fht_helper_(parent.rotation_dim_) {}
+          fht_helper_(parent.rotation_dim_),
+          center_(pCenter) {}
 
     void batch_hash_single_table(const BatchVectorType& points, int_fast32_t l,
                                  std::vector<HashType>* res) {
@@ -168,14 +169,24 @@ class CrossPolytopeHashBase {
         res->resize(nn);
       }
 
+      typename PointTypeConverter<PointType>::DensePointType interm_dense;
+      PointType                                              interm_orig;
+
       typename BatchVectorType::FullSequenceIterator iter =
           points.get_full_sequence();
       for (int_fast64_t ii = 0; ii < nn; ++ii) {
         (*res)[ii] = 0;
         int_fast32_t pattern = l * parent_.k_ * parent_.num_rotations_;
 
+        const auto& point = center_ == nullptr ? iter.get_point() : interm_orig;
+        if (center_ != nullptr) {
+          toDenseVector(iter.get_point(), interm_dense, center_->rows());
+          interm_dense -= *center_;
+          fromDenseVector(interm_dense, interm_orig);
+        }
+
         for (int_fast32_t jj = 0; jj < parent_.k_ - 1; ++jj) {
-          parent_.embed(iter.get_point(), l, jj, &tmp_vector_);
+          parent_.embed(point, l, jj, &tmp_vector_);
 
           for (int_fast32_t rot = 0; rot < parent_.num_rotations_; ++rot) {
             tmp_vector_ =
@@ -189,7 +200,7 @@ class CrossPolytopeHashBase {
               (*res)[ii] | decodeCP(tmp_vector_, parent_.rotation_dim_);
         }
 
-        parent_.embed(iter.get_point(), l, parent_.k_ - 1, &tmp_vector_);
+        parent_.embed(point, l, parent_.k_ - 1, &tmp_vector_);
         for (int_fast32_t rot = 0; rot < parent_.num_rotations_; ++rot) {
           tmp_vector_ =
               tmp_vector_.cwiseProduct(parent_.random_signs_[pattern]);
@@ -208,6 +219,7 @@ class CrossPolytopeHashBase {
     const Derived& parent_;
     RotatedVectorType tmp_vector_;
     cp_hash_helpers::FHTHelper<CoordinateType> fht_helper_;
+    const typename PointTypeConverter<PointType>::DensePointType* center_;
   };
 
   int_fast32_t get_l() const { return l_; }

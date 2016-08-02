@@ -28,6 +28,7 @@ using std::ofstream;
 using std::cerr;
 using std::stringstream;
 using std::runtime_error;
+using std::string;
 
 enum LogSeverity {LIB_INFO, LIB_WARNING, LIB_ERROR, LIB_FATAL};
 enum LogChoice  {LIB_LOGNONE, LIB_LOGFILE, LIB_LOGSTDERR};

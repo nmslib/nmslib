@@ -54,11 +54,11 @@ class HyperplaneHashBase {
   // TODO: specialize template for faster batch hyperplane setup (if the batch
   // vector type is also an Eigen matrix, we can just do a single matrix-matrix
   // multiplication.)
-  template <typename BatchVectorType>
+  template <typename BatchVectorType, typename PointType>
   class BatchHash {
    public:
-    BatchHash(const Derived& parent)
-        : parent_(parent), tmp_vector_(parent.get_k()) {}
+    BatchHash(const Derived& parent, const typename PointTypeConverter<PointType>::DensePointType* pCenter)
+        : parent_(parent), tmp_vector_(parent.get_k()), center_(pCenter) {}
 
     void batch_hash_single_table(const BatchVectorType& points, int_fast32_t l,
                                  std::vector<HashType>* res) {
@@ -69,8 +69,16 @@ class HyperplaneHashBase {
 
       typename BatchVectorType::FullSequenceIterator iter =
           points.get_full_sequence();
+      typename PointTypeConverter<PointType>::DensePointType interm_dense;
+      PointType                                              interm_orig;
       for (int_fast64_t ii = 0; ii < nn; ++ii) {
-        parent_.get_multiplied_vector_single_table(iter.get_point(), l,
+        const auto& point = center_ == nullptr ? iter.get_point() : interm_orig;
+        if (center_ != nullptr) {
+          toDenseVector(iter.get_point(), interm_dense, center_->rows());
+          interm_dense -= *center_;
+          fromDenseVector(interm_dense, interm_orig);
+        }
+        parent_.get_multiplied_vector_single_table(point, l,
                                                    &tmp_vector_);
         (*res)[ii] = compute_hash_single_table(tmp_vector_);
         ++iter;
@@ -80,6 +88,7 @@ class HyperplaneHashBase {
    private:
     const Derived& parent_;
     TransformedVectorType tmp_vector_;
+    const typename PointTypeConverter<PointType>::DensePointType* center_;
   };
 
   void reserve_transformed_vector_memory(TransformedVectorType* tv) const {

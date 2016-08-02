@@ -66,7 +66,8 @@ class StaticLSHTable
                            StaticLSHTable<PointType, KeyType, LSH, HashType,
                                           HashTable, DataStorageType>> {
  public:
-  StaticLSHTable(LSH* lsh, HashTable* hash_table, const DataStorageType& points,
+  StaticLSHTable(LSH* lsh, HashTable* hash_table, 
+                 const DataStorageType& points, const typename PointTypeConverter<PointType>::DensePointType* pCenter,
                  int_fast32_t num_setup_threads)
       : BasicLSHTable<LSH, HashTable,
                       StaticLSHTable<PointType, KeyType, LSH, HashType,
@@ -96,7 +97,7 @@ class StaticLSHTable
       }
       thread_results.push_back(std::async(
           std::launch::async, &StaticLSHTable::setup_table_range, this,
-          next_table_range_start, next_table_range_end, points));
+          next_table_range_start, next_table_range_end, points, pCenter));
       next_table_range_start = next_table_range_end + 1;
     }
 
@@ -277,8 +278,8 @@ class StaticLSHTable
   int_fast64_t n_;
 
   void setup_table_range(int_fast32_t from, int_fast32_t to,
-                         const DataStorageType& points) {
-    typename LSH::template BatchHash<DataStorageType> bh(*(this->lsh_));
+                         const DataStorageType& points, const typename PointTypeConverter<PointType>::DensePointType* pCenter) {
+    typename LSH::template BatchHash<DataStorageType, PointType> bh(*(this->lsh_), pCenter);
     std::vector<HashType> table_hashes;
     for (int_fast32_t ii = from; ii <= to; ++ii) {
       bh.batch_hash_single_table(points, ii, &table_hashes);

@@ -42,7 +42,12 @@ const string PARAM_NUM_ROTATIONS        = "num_rotations";
 const string PARAM_SEED                 = "seed";
 const string PARAM_FEATURE_HASHING_DIM  = "feature_hashing_dimension";
 const string PARAM_NORM_DATA            = "norm_data";
+const string PARAM_CENTER_DATA          = "center_data";
+const string PARAM_MAX_SPARSE_DIM_TO_CENTER = "max_sparse_dim_to_center";
+const string PARAM_USE_FALCONN_DIST     = "use_falconn_dist";
 
+const size_t MAX_DIM_TO_PRINT                 = 1000;
+const size_t MAX_SPARSE_DIM_TO_CENTER_DEFAULT = 10000;
 
 namespace similarity {
 
@@ -98,7 +103,7 @@ void FALCONN<dist_t>::createSparseDataPoint(const Object* o, SparseFalconnPoint&
 }
 
 template <typename dist_t>
-void FALCONN<dist_t>::copyData(bool normData) {
+void FALCONN<dist_t>::copyData(bool normData, bool centerData, size_t max_sparse_dim_to_center) {
   SpaceSparseVectorInter<dist_t>* pSparseSpace = dynamic_cast<SpaceSparseVectorInter<dist_t>*>(&space_);
   VectorSpace<dist_t>*            pDenseSpace  = dynamic_cast<VectorSpace<dist_t>*>(&space_);
 
@@ -115,7 +120,19 @@ void FALCONN<dist_t>::copyData(bool normData) {
       createSparseDataPoint(o, p, normData);
       falconn_data_sparse_.push_back(p);
       if (p.size())
-        dim_ = max<size_t>(dim_, p.back().first);
+        dim_ = max<size_t>(dim_, p.back().first+1);
+    }
+    if (centerData) {
+      size_t effDim = min<size_t>(max_sparse_dim_to_center, dim_);
+      center_point_.reset(new DenseFalconnPoint(effDim));
+      center_point_->setZero();
+      DenseFalconnPoint tmp;
+      float num = 0;
+      for (const auto & v : falconn_data_sparse_) {
+        toDenseVector(v, tmp, effDim);
+        *center_point_ += (tmp - *center_point_)/(num + 1);
+        num = num + 1;
+      }
     }
   }
   if (pDenseSpace != nullptr) {
@@ -126,8 +143,29 @@ void FALCONN<dist_t>::copyData(bool normData) {
       createDenseDataPoint(o, p, normData);
       falconn_data_dense_.emplace_back(p);
     }
+    if (centerData) {
+      center_point_.reset(new DenseFalconnPoint(dim_));
+      center_point_->setZero();
+      float num = 0;
+      for (const auto & v : falconn_data_dense_) {
+        *center_point_ += (v - *center_point_)/(num + 1);
+        num = num + 1;
+      }
+    }
   }
   LOG(LIB_INFO) << "Dataset is copied.";
+  if (centerData) {
+    stringstream cstr;
+    for (size_t ii = 0; ii < center_point_->rows(); ++ii) {
+      if (ii + 1 == MAX_DIM_TO_PRINT) {cstr << " ..."; break;}
+      cstr << " " << (*center_point_)[ii];
+    }
+    if (pSparseSpace != nullptr) {
+      SparseFalconnPoint p;
+      fromDenseVector(*center_point_, p);
+      LOG(LIB_INFO) << "Center point (" << p.size() << " is the total # of non-zero elements): " << cstr.str();
+    } else LOG(LIB_INFO) << "Center point: " << cstr.str();
+  }
 }
 
 
@@ -147,11 +185,21 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
   // we want to use all the available threads to set up
   params.num_setup_threads = 0;
 
+  use_falconn_dist_ = false;
+
+  pmgr.GetParamOptional(PARAM_USE_FALCONN_DIST, use_falconn_dist_, false);
+
   norm_data_ = true;
 
   pmgr.GetParamOptional(PARAM_NORM_DATA, norm_data_, true);
 
-  copyData(norm_data_);
+  center_data_ = false;
+
+  pmgr.GetParamOptional(PARAM_CENTER_DATA, center_data_, false);
+
+  pmgr.GetParamOptional(PARAM_MAX_SPARSE_DIM_TO_CENTER, max_sparse_dim_to_center_, MAX_SPARSE_DIM_TO_CENTER_DEFAULT);
+
+  copyData(norm_data_, center_data_, max_sparse_dim_to_center_);
 
   pmgr.GetParamOptional(PARAM_SEED, params.seed, 4057218);
 
@@ -214,27 +262,32 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
     compute_number_of_hash_functions<SparseFalconnPoint>(num_hash_bits, &params);
   }
 
-  LOG(LIB_INFO) << "Normalize data?:            " << norm_data_;
-  LOG(LIB_INFO) << "#dim:                       " << params.dimension;
-  LOG(LIB_INFO) << "#of feature-hash dim:       " << params.feature_hashing_dimension;
+  LOG(LIB_INFO) << "Normalize data?:                " << norm_data_;
+  LOG(LIB_INFO) << "Center data?:                   " << center_data_;
+  LOG(LIB_INFO) << "#dim:                           " << params.dimension;
+  LOG(LIB_INFO) << "#of feature-hash dim:           " << params.feature_hashing_dimension;
+  LOG(LIB_INFO) << "max # of sparse dim. to center: " << max_sparse_dim_to_center_;
+  LOG(LIB_INFO) << "Using FALCONN distance func.?:  " << use_falconn_dist_;
 
-  LOG(LIB_INFO) << "Hash family:                " << kLSHFamilyStrings[(size_t)params.lsh_family];
-  LOG(LIB_INFO) << "Table storage type:         " << kStorageHashTableStrings[(size_t)params.storage_hash_table];
+  LOG(LIB_INFO) << "Hash family:                    " << kLSHFamilyStrings[(size_t)params.lsh_family];
+  LOG(LIB_INFO) << "Table storage type:             " << kStorageHashTableStrings[(size_t)params.storage_hash_table];
 
-  LOG(LIB_INFO) << "#of hash tables:            " << params.l;
-  LOG(LIB_INFO) << "#of hash func. per table:   " << params.k;
-  LOG(LIB_INFO) << "#of hash bits:              " << num_hash_bits;
-  LOG(LIB_INFO) << "#of rotations:              " << params.num_rotations;
+  LOG(LIB_INFO) << "#of hash tables:                " << params.l;
+  LOG(LIB_INFO) << "#of hash func. per table:       " << params.k;
+  LOG(LIB_INFO) << "#of hash bits:                  " << num_hash_bits;
+  LOG(LIB_INFO) << "#of rotations:                  " << params.num_rotations;
 
-  LOG(LIB_INFO) << "seed:                       " << params.seed;
+  LOG(LIB_INFO) << "seed:                           " << params.seed;
 
   // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
   pmgr.CheckUnused();
 
   if (!sparse_) {
-    falconn_table_dense_ = construct_table<DenseFalconnPoint>(falconn_data_dense_, params);
+    falconn_table_dense_
+        = construct_table<DenseFalconnPoint, IdType>(falconn_data_dense_, center_point_.get(), params);
   } else {
-    falconn_table_sparse_ = construct_table<SparseFalconnPoint>(falconn_data_sparse_, params);
+    falconn_table_sparse_
+        = construct_table<SparseFalconnPoint, IdType>(falconn_data_sparse_, center_point_.get(), params);
   }
 
 
@@ -247,18 +300,30 @@ template <typename dist_t>
 void FALCONN<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   vector<IdType> ids;
 
-  if (sparse_) {
-    SparseFalconnPoint sparseQ;
-    createSparseDataPoint(query->QueryObject(), sparseQ, norm_data_);
-    falconn_table_sparse_->find_k_nearest_neighbors(sparseQ, query->GetK(), &ids);
+  if (use_falconn_dist_) {
+    if (sparse_) {
+      SparseFalconnPoint sparseQ;
+      createSparseDataPoint(query->QueryObject(), sparseQ, norm_data_);
+      falconn_table_sparse_->find_k_nearest_neighbors(sparseQ, center_point_.get(), nullptr, nullptr, query->GetK(), &ids);
+    } else {
+      DenseFalconnPoint denseQ(dim_);
+      createDenseDataPoint(query->QueryObject(), denseQ, norm_data_);
+      falconn_table_dense_->find_k_nearest_neighbors(denseQ, center_point_.get(), nullptr, nullptr, query->GetK(), &ids);
+    }
+    // Recomputing distances for k nearest neighbors should have a very small impact on overall performance
+    for (IdType ii : ids) {
+      query->CheckAndAddToResult(data_[ii]);
+    }
   } else {
-    DenseFalconnPoint  denseQ(dim_);
-    createDenseDataPoint(query->QueryObject(), denseQ, norm_data_);
-    falconn_table_dense_->find_k_nearest_neighbors(denseQ, query->GetK(), &ids);
-  }
-  // Recomputing distances for k nearest neighbors should have a very small impact on overall performance
-  for (IdType ii : ids) {
-    query->CheckAndAddToResult(data_[ii]);
+    if (sparse_) {
+      SparseFalconnPoint sparseQ;
+      createSparseDataPoint(query->QueryObject(), sparseQ, norm_data_);
+      falconn_table_sparse_->find_k_nearest_neighbors(sparseQ, center_point_.get(), query, &data_, query->GetK(), &ids);
+    } else {
+      DenseFalconnPoint denseQ(dim_);
+      createDenseDataPoint(query->QueryObject(), denseQ, norm_data_);
+      falconn_table_dense_->find_k_nearest_neighbors(denseQ, center_point_.get(), query, &data_, query->GetK(), &ids);
+    }
   }
 }
 
