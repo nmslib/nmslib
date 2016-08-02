@@ -18,6 +18,7 @@
 #define _FACTORY_PIVOT_NEIGHB_H_
 
 #include <method/pivot_neighb_invindx.h>
+#include <method/qa/pivot_neighb_invindx_qa1.h>
 
 namespace similarity {
 
@@ -33,6 +34,20 @@ Index<dist_t>* CreatePivotNeighbInvertedIndex(
     const ObjectVector& DataObjects) {
   
   return new PivotNeighbInvertedIndex<dist_t>(
+      PrintProgress,
+      space,
+      DataObjects
+  );
+}
+
+template <typename dist_t>
+Index<dist_t>* CreatePivotNeighbInvertedIndexQA1(
+    bool PrintProgress,
+    const string& SpaceType,
+    Space<dist_t>& space,
+    const ObjectVector& DataObjects) {
+
+  return new PivotNeighbInvertedIndexQA1<dist_t>(
       PrintProgress,
       space,
       DataObjects

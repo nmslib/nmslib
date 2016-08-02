@@ -131,6 +131,9 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
 
+  REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_INVINDEX_QA1, CreatePivotNeighbInvertedIndexQA1)
+
+
   // Rank aggregation approach (omedrank) by Fagin et al
   REGISTER_METHOD_CREATOR(float,  METH_OMEDRANK, CreateOMedRank)
   REGISTER_METHOD_CREATOR(double, METH_OMEDRANK, CreateOMedRank)

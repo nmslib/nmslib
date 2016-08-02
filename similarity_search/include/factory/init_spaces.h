@@ -32,11 +32,15 @@
 #if !defined(_MSC_VER)
 #include "factory/space/space_sqfd.h"
 #endif
+#include "factory/space/space_qa1.h"
 
 namespace similarity {
 
 
 inline void initSpaces() {
+  // Registering a QA space
+  REGISTER_SPACE_CREATOR(float,  SPACE_QA1,  CreateQA1)
+
   // Registering a dummy space
   REGISTER_SPACE_CREATOR(int,    SPACE_DUMMY,  CreateDummy)
   REGISTER_SPACE_CREATOR(float,  SPACE_DUMMY,  CreateDummy)
