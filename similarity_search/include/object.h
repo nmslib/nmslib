@@ -38,6 +38,16 @@ using std::string;
 using std::stringstream;
 using std::numeric_limits;
 
+/*
+ * Each Object can carry an additional payload that isn't stored in a main buffer.
+ * This payload should be stored inside the class inherited from ObjectPayload.
+ */
+class ObjectPayload {
+public:
+  virtual ~ObjectPayload() {};
+  virtual ObjectPayload * Clone() = 0;
+};
+
 /* 
  * Structure of object: | 4-byte id | 4-byte label | 8-byte datasize | data ........ |
  * We need data to be aligned on 8-byte boundaries.
@@ -51,9 +61,9 @@ using std::numeric_limits;
 
 class Object {
  public:
-  explicit Object(char* buffer) : buffer_(buffer), memory_allocated_(false) {}
+  explicit Object(char* buffer) : buffer_(buffer), memory_allocated_(false), payload_(NULL) {}
 
-  Object(IdType id, LabelType label, size_t datalength, const void* data) {
+  Object(IdType id, LabelType label, size_t datalength, const void* data) : payload_(NULL) {
     buffer_ = new char[ID_SIZE + LABEL_SIZE + DATALENGTH_SIZE + datalength];
     CHECK(buffer_ != NULL);
     memory_allocated_ = true;
@@ -71,10 +81,11 @@ class Object {
     }
   }
 
-  ~Object() {
+  virtual ~Object() {
     if (memory_allocated_) {
       delete[] buffer_;
     }
+    delete payload_;
   }
 
   static Object* CreateNewEmptyObject(size_t datalength) {
@@ -86,6 +97,7 @@ class Object {
 
   Object* Clone() const {
     Object* clone = new Object(id(), label(), datalength(), data());
+    if (payload_ != nullptr) clone->SetPayload(payload_->Clone());
     return clone;
   }
 
@@ -94,6 +106,8 @@ class Object {
   inline size_t datalength()    const { return *(reinterpret_cast<size_t*>(buffer_ + LABEL_SIZE + ID_SIZE));}
   inline const char* data() const { return buffer_ + ID_SIZE + LABEL_SIZE+ DATALENGTH_SIZE; }
   inline char* data()             { return buffer_ + ID_SIZE + LABEL_SIZE+ DATALENGTH_SIZE; }
+  inline ObjectPayload * GetPayload() const { return payload_ ; }
+  inline void SetPayload(ObjectPayload *payload) { payload_ = payload; }
 
   inline const char* buffer()  const { return buffer_; }
   inline size_t bufferlength() const { return ID_SIZE + LABEL_SIZE+ DATALENGTH_SIZE + datalength(); }
@@ -156,6 +170,7 @@ class Object {
  private:
   char* buffer_;
   bool  memory_allocated_;
+  ObjectPayload * payload_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(Object);
