@@ -109,7 +109,7 @@ void FALCONN<dist_t>::copyData(bool normData, bool centerData, size_t max_sparse
 
   if (data_.empty()) return;
   if (pSparseSpace == nullptr && pDenseSpace == nullptr) {
-    throw runtime_error("Only sparse and dense vector spaces are supported!");
+    throw runtime_error("Only dense vector spaces and FAST sparse vector spaces are supported!");
   }
   if (pSparseSpace != nullptr) {
     LOG(LIB_INFO) << "Copying a sparse vector data set.";

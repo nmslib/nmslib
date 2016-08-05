@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <ostream>
 #include <functional>
+#include <cstdint>
 
 #include <string.h>
 #include "global.h"
