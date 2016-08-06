@@ -122,7 +122,7 @@ class FalconnHeapMod1 {
     this->heap_down(0);
   }
 
-  void update_top_key(const KeyType& key) {
+  void replace_top_key(const KeyType& key) {
     this->v_[0].key = key;
     this->heap_down(0);
   }

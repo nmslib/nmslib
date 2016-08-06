@@ -15,6 +15,7 @@
  */
 
 #include <unordered_map>
+#include <queue>
 
 #include "space.h"
 #include "knnquery.h"
@@ -34,9 +35,41 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   const Object* o = query->QueryObject();
   UnpackSparseElements(o->data(), o->datalength(), query_vect);
 
+#if 0
+  vector<IdType> postPos(query_vect.size());
+  vector<const PostList*> posts(query_vect.size());
+
+  for (size_t qi = 0; qi < query_vect.size(); ++qi) {
+    auto it = index_.find(query_vect[qi].id_);
+    if (it != index_.end()) { // There may be out-of-vocabulary words
+      const PostList& pl = *it->second;
+      posts[qi] = &pl;
+    }
+
+  }
+
+  for (IdType did = 0;did < data_.size(); ++did) {
+    float accum = 0;
+    for (size_t qi = 0; qi < query_vect.size(); ++qi) {
+      const PostList* pPostList = posts[qi];
+      if (pPostList == nullptr) continue;
+
+      while (postPos[qi] < pPostList->qty_ && pPostList->entries_[postPos[qi]].doc_id_ < did) {
+        postPos[qi]++;
+      }
+      if (postPos[qi] < pPostList->qty_ && pPostList->entries_[postPos[qi]].doc_id_ == did) {
+        accum += query_vect[qi].val_ * pPostList->entries_[postPos[qi]].val_;
+      }
+    }
+    if (accum > 0) query->CheckAndAddToResult(-accum, data_[did]);
+  }
+
+#else
   size_t K = query->GetK();
-  FalconnHeapMod1<dist_t, IdType>                 tmpResQueue;
-  FalconnHeapMod1<IdType, PostListQueryState>     postListQueue;
+
+  FalconnHeapMod1<dist_t, IdType>             tmpResQueue;
+  FalconnHeapMod1<IdType, int32_t>            postListQueue;
+  vector<unique_ptr<PostListQueryState>>      queryStates(query_vect.size());
 
   size_t wordQty = 0;
   for (auto e : query_vect) {
@@ -47,7 +80,12 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
       ++wordQty;
     }
   }
+
+  // While some people expect the result set to always contain at least k entries,
+  // it's not clear what we return here
   if (0 == wordQty) return;
+
+  unsigned qsi = 0;
   for (auto eQuery : query_vect) {
     uint32_t wordId = eQuery.id_;
     auto it = index_.find(wordId);
@@ -57,20 +95,25 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 #endif
       const PostList& pl = *it->second;
       CHECK(pl.qty_ > 0);
-      postListQueue.push(-pl.entries_[0].doc_id_,
-                         PostListQueryState(pl, eQuery.val_, eQuery.val_ * pl.entries_[0].val_));
+
+      queryStates[qsi].reset(new PostListQueryState(pl, eQuery.val_, eQuery.val_ * pl.entries_[0].val_));
+      postListQueue.push(-pl.entries_[0].doc_id_, qsi);
       ++wordQty;
     }
+    ++qsi;
   }
 
   dist_t   accum = 0; //
 
   while (!postListQueue.empty()) {
     IdType minDocIdNeg = postListQueue.top_key();
+
     while (!postListQueue.empty() && postListQueue.top_key() == minDocIdNeg) {
-      PostListQueryState& queryState = postListQueue.top_data();
+      unsigned qsi = postListQueue.top_data();
+      PostListQueryState& queryState = *queryStates[qsi];
       const PostList& pl = *queryState.post_;
       accum += queryState.qval_x_docval_;
+      //accum += queryState.qval_ * pl.entries_[queryState.post_pos_].val_;
       queryState.post_pos_++; // This will update data inside queue
       /*
        * If we didn't reach the end of the posting list, we retrieve the next document id.
@@ -86,16 +129,23 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
          * 1) obtain the next doc id
          * 2) compute the contribution of the current document to the overall dot product (val_ * qval_)
          */
-        postListQueue.update_top_key(-eDoc.doc_id_);
+        postListQueue.replace_top_key(-eDoc.doc_id_);
         queryState.qval_x_docval_ = eDoc.val_ * queryState.qval_;
       } else postListQueue.pop();
     }
 
     // tmpResQueue is a MAX-QUEUE (which is what we need, b/c we maximize the dot product
-    if (tmpResQueue.size() < K || tmpResQueue.top_key() == accum)
-      tmpResQueue.push(accum, -minDocIdNeg);
-    else if (tmpResQueue.top_key() < accum)
-      tmpResQueue.replace_top(accum, -minDocIdNeg);
+    dist_t negAccum = -accum;
+#if 1
+    // This one seems to be a bit faster
+    if (tmpResQueue.size() < K || tmpResQueue.top_key() == negAccum)
+      tmpResQueue.push(negAccum, -minDocIdNeg);
+    else if (tmpResQueue.top_key() > negAccum)
+      tmpResQueue.replace_top(-accum, -minDocIdNeg);
+#else
+    query->CheckAndAddToResult(negAccum, data_[-minDocIdNeg]);
+#endif
+
     accum = 0;
   }
 
@@ -103,13 +153,16 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 #ifdef SANITY_CHECKS
     CHECK(tmpResQueue.top_data() >= 0);
 #endif
+
 #if 0
     query->CheckAndAddToResult(-tmpResQueue.top_key(), data_[tmpResQueue.top_data()]);
 #else
+    // This branch recomputes the distance, but it normally has a negligibly small effect on the run-time
     query->CheckAndAddToResult(data_[tmpResQueue.top_data()]);
 #endif
     tmpResQueue.pop();
   }
+#endif
 }
 
 template <typename dist_t>
