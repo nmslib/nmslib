@@ -84,7 +84,7 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
       const PostList& pl = *queryState.post_;
       accum += queryState.qval_x_docval_;
       //accum += queryState.qval_ * pl.entries_[queryState.post_pos_].val_;
-      queryState.post_pos_++; // This will update data inside queue
+      queryState.post_pos_++;
       /*
        * If we didn't reach the end of the posting list, we retrieve the next document id.
        * Then, we push this update element down the priority queue.

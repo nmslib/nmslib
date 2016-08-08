@@ -454,6 +454,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
   GetPermutationPPIndex(pivot_, query, &perm_q);
 
   vector<unsigned>          counter(chunk_index_size_);
+  vector<const Object*>     tmp_cand(chunk_index_size_);
 
 
 
@@ -558,9 +559,20 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
             counter[p]++;
           }
         }
+        size_t cand_tmp_qty = 0;
         for (size_t i = 0; i < chunkQty; ++i) {
           if (counter[i] >= min_times_) {
-            if (!skip_checking_) query->CheckAndAddToResult(data_start[i]);
+            tmp_cand[cand_tmp_qty++]=data_start[i];
+          }
+        }
+        if (!skip_checking_) {
+          for (size_t i = 0; i < cand_tmp_qty; ++i) {
+            query->CheckAndAddToResult(tmp_cand[i]);
+            if (i + 3 < cand_tmp_qty) {
+              _mm_prefetch(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
+              _mm_prefetch(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
+              _mm_prefetch(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
+            }
           }
         }
       } else if (inv_proc_alg_ == kMerge) {
