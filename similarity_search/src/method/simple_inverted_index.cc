@@ -35,36 +35,6 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   const Object* o = query->QueryObject();
   UnpackSparseElements(o->data(), o->datalength(), query_vect);
 
-#if 0
-  vector<IdType> postPos(query_vect.size());
-  vector<const PostList*> posts(query_vect.size());
-
-  for (size_t qi = 0; qi < query_vect.size(); ++qi) {
-    auto it = index_.find(query_vect[qi].id_);
-    if (it != index_.end()) { // There may be out-of-vocabulary words
-      const PostList& pl = *it->second;
-      posts[qi] = &pl;
-    }
-
-  }
-
-  for (IdType did = 0;did < data_.size(); ++did) {
-    float accum = 0;
-    for (size_t qi = 0; qi < query_vect.size(); ++qi) {
-      const PostList* pPostList = posts[qi];
-      if (pPostList == nullptr) continue;
-
-      while (postPos[qi] < pPostList->qty_ && pPostList->entries_[postPos[qi]].doc_id_ < did) {
-        postPos[qi]++;
-      }
-      if (postPos[qi] < pPostList->qty_ && pPostList->entries_[postPos[qi]].doc_id_ == did) {
-        accum += query_vect[qi].val_ * pPostList->entries_[postPos[qi]].val_;
-      }
-    }
-    if (accum > 0) query->CheckAndAddToResult(-accum, data_[did]);
-  }
-
-#else
   size_t K = query->GetK();
 
   FalconnHeapMod1<dist_t, IdType>             tmpResQueue;
@@ -162,7 +132,6 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 #endif
     tmpResQueue.pop();
   }
-#endif
 }
 
 template <typename dist_t>
