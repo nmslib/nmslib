@@ -173,7 +173,8 @@ Related publications
 -----------------------
 
 Most important related papers are listed below in the chronological order: 
-
+* L. Boytsov, D. Novak, Y. Malkov, E. Nyberg  (2016). [*Off the Beaten Path: Let’s Replace Term-Based Retrieval
+with k-NN Search*, to appear in proceedings CIKM'16](http://boytsov.info/pubs/cikm2016.pdf).
 * Malkov, Y.A., Yashunin, D.A.. (2016). [Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs. CoRR](http://arxiv.org/abs/1603.09320), abs/1603.09320. [**[BibTex]**](http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=2016arXiv160309320M&data_type=BIBTEX&db_key=PRE&nocookieset=1)
 * Bilegsaikhan, N., Boytsov, L. 2015 [Permutation Search Methods are Efficient, Yet Faster Search is Possible](http://boytsov.info/pubs/p2332-naidan-arxiv.pdf) PVLDB, 8(12):1618--1629, 2015 [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/corr/NaidanBN15)
 * Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)
