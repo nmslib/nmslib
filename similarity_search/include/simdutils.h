@@ -13,7 +13,7 @@
  * Note that __GNUC__ is also defined for Intel and Clang,
  * which do understand __attribute__ ((aligned(16)))
  */
-
+#pragma once
 #if defined(__GNUC__)
 #define PORTABLE_ALIGN16 __attribute__((aligned(16)))
 #else
