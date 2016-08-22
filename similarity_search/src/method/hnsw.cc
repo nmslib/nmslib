@@ -43,6 +43,9 @@
 #include <sstream>
 #include <typeinfo>
 
+#include "sort_arr_bi.h"
+#define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 100
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -68,6 +71,62 @@ namespace similarity {
     template <typename dist_t>    Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t>& space,   const ObjectVector& data) :
         space_(space), PrintProgress_(PrintProgress), data_(data) {}
 
+    void checkList1(vector<HnswNode*> list) {
+        
+        int ok = 1;
+        for (size_t i = 0; i < list.size(); i++) {
+            for (size_t j = 0; j < list[i]->allFriends[0].size(); j++) {
+                for (size_t k = j+1; k < list[i]->allFriends[0].size(); k++) {
+                    if (list[i]->allFriends[0][j] == list[i]->allFriends[0][k]) {
+                        cout << "\nDuplicate links\n\n\n\n\n!!!!!";
+                        ok = 0;
+                    }
+                }
+                if (list[i]->allFriends[0][j] == list[i]) {
+                    cout << "\nLink to the same element\n\n\n\n\n!!!!!";
+                    ok = 0;
+                }
+            }
+            
+        }
+        if (ok)
+            cout << "\nOK\n";
+        else
+            cout << "\nNOT OK!!!\n";
+        return;
+    }
+
+    void getDegreeDistr(string filename, vector<HnswNode*> list) {        
+        ofstream out(filename);
+        size_t maxdegree = 0;
+        for (HnswNode* node : list) {
+            if (node->allFriends[0].size() > maxdegree)
+                maxdegree = node->allFriends[0].size();
+        }
+        
+ 
+        vector<int> distrin = vector<int>(1000);
+        vector<int> distrout = vector<int>(1000);
+        vector<int> inconnections = vector<int>(list.size());
+        vector<int> outconnections = vector<int>(list.size());
+        for (size_t i = 0; i < list.size();i++) {
+            for (HnswNode* node : list[i]->allFriends[0]) {
+                outconnections[list[i]->getId()]++;
+                inconnections[node->getId()]++;
+            }            
+        }
+        
+        for (size_t i = 0; i < list.size(); i++) {
+            distrin[inconnections[i]]++;
+            distrout[outconnections[i]]++;            
+        }
+        
+        for (size_t i = 0; i < distrin.size(); i++) {
+            out<<i<<"\t"<<distrin[i]<<"\t"<< distrout[i]<<"\n";
+        }
+        out.close();
+        return;
+    }
     template <typename dist_t> void Hnsw<dist_t>::CreateIndex(const AnyParams& IndexParams)
     {
 
@@ -85,11 +144,14 @@ namespace similarity {
         indexThreadQty_ = omp_get_max_threads();
 #endif
         pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, indexThreadQty_);
+        //indexThreadQty_ = 1;
         pmgr.GetParamOptional("efConstruction", efConstruction_, 200);
         pmgr.GetParamOptional("maxM", maxM_, M_);
         pmgr.GetParamOptional("maxM0", maxM0_, M_ * 2);
         pmgr.GetParamOptional("mult", mult_, 1 / log(1.0*M_));
-        pmgr.GetParamOptional("delaunay_type", delaunay_type_, 1);
+        pmgr.GetParamOptional("delaunay_type", delaunay_type_, 2);
+        int post_;
+        pmgr.GetParamOptional("post", post_, 0);
         int skip_optimized_index = 0;
         pmgr.GetParamOptional("skip_optimized_index", skip_optimized_index, 0);
         
@@ -109,13 +171,13 @@ namespace similarity {
           pmgr.CheckUnused();
           return;
         }
-
+        ElList_.resize(data_.size());
         // One entry should be added before all the threads are started, or else add() will not work properly
         HnswNode *first = new HnswNode(data_[0], 0 /* id == 0 */);        
         first->init(getRandomLevel(mult_), maxM_, maxM0_);        
         maxlevel_ = first->level;
         enterpoint_ = first;
-        addToElementListSynchronized(first);
+        ElList_[0] = first;
 
         visitedlistpool = new VisitedListPool(indexThreadQty_, data_.size());
 
@@ -125,12 +187,95 @@ namespace similarity {
         for (int id = 1; id < data_.size(); ++id) {
             HnswNode* node = new HnswNode(data_[id], id);
             add(&space_, node); 
-
+            ElList_[id] = node;
             if (progress_bar) ++(*progress_bar);
-
         }
 
+        
+        if (post_ == 1 || post_ == 2) {
+            
+            vector <HnswNode *> temp;
+            temp.swap(ElList_);
+            ElList_.resize(data_.size());
+            first = new HnswNode(data_[0], 0 /* id == 0 */);
+            first->init(getRandomLevel(mult_), maxM_, maxM0_);
+            maxlevel_ = first->level;
+            enterpoint_ = first;
+            ElList_[0] = first;
+            /// Making the same index in reverse order 
+            unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
+#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
+            for (int id = data_.size() - 1; id >= 1; id--) {
+                HnswNode* node = new HnswNode(data_[id], id);
+                add(&space_, node);
+                ElList_[id] = node;
+                if (progress_bar1) ++(*progress_bar1);
+            }
+            int maxF = 0;
 
+            //int degrees[100] = {0};
+#pragma omp parallel for schedule(dynamic,128) num_threads(indexThreadQty_)
+            for (int id = 1; id < data_.size(); ++id) {
+                HnswNode* node1 = ElList_[id];
+                HnswNode* node2 = temp[id];
+                vector<HnswNode *> f1 = node1->getAllFriends(0);
+                vector<HnswNode *> f2 = node2->getAllFriends(0);
+                unordered_set<size_t> intersect = unordered_set<size_t>();
+                for (HnswNode *cur : f1) {
+                    intersect.insert(cur->getId());
+                }
+                for (HnswNode *cur : f2) {
+                    intersect.insert(cur->getId());
+                }
+                if (intersect.size() > maxF)
+                    maxF = intersect.size();
+                vector<HnswNode *> rez = vector<HnswNode *>();
+                
+                if (post_ == 2) {
+                    priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
+                    for (int cur : intersect) {
+                        resultSet.emplace(space_.IndexTimeDistance(ElList_[cur]->getData(), ElList_[id]->getData()), ElList_[cur]);
+                    }
+
+                    switch (delaunay_type_) {
+                    case 0:
+                        while (resultSet.size() > maxM0_)
+                            resultSet.pop();
+                        break;
+                    case 2:
+                    case 1:
+                        ElList_[id]->getNeighborsByHeuristic1(resultSet, maxM0_, &space_);
+                        break;
+                    case 3:
+                        ElList_[id]->getNeighborsByHeuristic3(resultSet, maxM0_, &space_, 0);
+                        break;
+                    }                    
+                    while (!resultSet.empty()) {
+                        rez.push_back(resultSet.top().getMSWNodeHier());                        
+                        resultSet.pop();
+                    }
+                }
+                else 
+                if (post_ == 1) {
+                    maxM0_ = maxF;
+
+                    for (int cur : intersect) {
+                        rez.push_back(ElList_[cur]);
+                    }
+                }
+
+                ElList_[id]->allFriends[0].swap(rez);
+                //degrees[ElList_[id]->allFriends[0].size()]++;
+            }
+            for (int i = 0; i < temp.size(); i++)
+                delete temp[i];
+            temp.clear();
+           
+
+        }
+        // Uncomment for debug mode
+        //checkList1(ElList_);
+        
         data_level0_memory_ = NULL;
         linkLists_ = NULL;
 
@@ -141,10 +286,10 @@ namespace similarity {
         }
 
         int friendsSectionSize = (maxM0_ + 1)*sizeof(int);
+
         //Checking for maximum size of the datasection:
         int dataSectionSize = 1;
-        for (int i = 0; i < ElList_.size(); i++) {
-            ElList_[i]->id_ = i;
+        for (int i = 0; i < ElList_.size(); i++) {            
             if (ElList_[i]->getData()->bufferlength()>dataSectionSize)
                 dataSectionSize = ElList_[i]->getData()->bufferlength();
         }
@@ -271,9 +416,20 @@ namespace similarity {
         int tmp;
         pmgr.GetParamOptional("searchMethod", tmp, 0); // this is just to prevent terminating the program when searchMethod is specified
 
+        string tmps;
+        pmgr.GetParamOptional("algoType", tmps, "hybrid");
+        ToLower(tmps);
+        if (tmps == "v1merge") searchAlgoType_ = kV1Merge;
+        else if (tmps == "old") searchAlgoType_ = kOld;
+        else if (tmps == "hybrid") searchAlgoType_ = kHybrid;
+        else {
+          throw runtime_error("algoType should be one of the following: old, v1merge");
+        }
+
         pmgr.CheckUnused();
         LOG(LIB_INFO) << "Set HNSW query-time parameters:";
         LOG(LIB_INFO) << "ef(Search)         =" << ef_;
+        LOG(LIB_INFO) << "algoType           =" << searchAlgoType_;
     }
 
     template <typename dist_t>
@@ -307,9 +463,6 @@ namespace similarity {
 
         NewElement->init(curlevel, maxM_, maxM0_);       
 
-        
-
-
         int maxlevelcopy = maxlevel_;
         HnswNode *ep = enterpoint_;
         if (curlevel < maxlevelcopy) {
@@ -323,8 +476,6 @@ namespace similarity {
                 while (changed) {
                     changed = false;
                     unique_lock<mutex>  lock(curNode->accessGuard_);
-
-
                     const vector<HnswNode*>& neighbor = curNode->getAllFriends(level);
                     int size = neighbor.size();
                     for (int i = 0; i < size; i++) {
@@ -351,7 +502,7 @@ namespace similarity {
         
         for (int level = min(curlevel, maxlevelcopy); level >= 0; level--) {
 			priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
-            kSearchElementsWithAttemptsLevel(space, NewElement->getData(), efConstruction_, resultSet, ep, level);//DOTO: make level
+            kSearchElementsWithAttemptsLevel(space, NewElement->getData(), efConstruction_, resultSet, ep, level);
            
             switch (delaunay_type_) {
             case 0:
@@ -359,10 +510,13 @@ namespace similarity {
                     resultSet.pop();
                 break;
             case 1:
-                NewElement->getNeighborsByDistanceHeuristic(resultSet, M_, space);
+                NewElement->getNeighborsByHeuristic1(resultSet, M_, space);
                 break;
             case 2:
-                NewElement->getNeighborsByMiniGreedySearches(resultSet, M_, space, level);
+                NewElement->getNeighborsByHeuristic2(resultSet, M_, space, level);
+                break;
+            case 3:
+                NewElement->getNeighborsByHeuristic3(resultSet, M_, space, level);
                 break;
             }
             while (!resultSet.empty()) {
@@ -378,7 +532,6 @@ namespace similarity {
         }
         if (lock != nullptr)
             delete lock;
-        addToElementListSynchronized(NewElement);
     }
 
 
@@ -389,8 +542,6 @@ namespace similarity {
         Hnsw<dist_t>::kSearchElementsWithAttemptsLevel(const Space<dist_t>* space,
             const Object* queryObj, size_t efConstruction, priority_queue<HnswNodeDistCloser<dist_t>>& resultSet, HnswNode* ep, int level) const
     {
-
-        
 #if EXTEND_USE_EXTENDED_NEIGHB_AT_CONSTR!=0
         priority_queue<HnswNodeDistCloser<dist_t>> fullResultSet;
 #endif
@@ -498,13 +649,18 @@ namespace similarity {
 
     template <typename dist_t>
     void Hnsw<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const  {
+        bool useOld = searchAlgoType_ == kOld || (searchAlgoType_ == kHybrid && ef_ >= 1000);
+        //cout << "Ef = " << ef_ << " use old = " << useOld << endl;
         switch (searchMethod_) {
                 default:
                   throw runtime_error("Invalid searchMethod: " + ConvertToString(searchMethod_));
                   break;
             		case 0:
                         /// Basic search using Nmslib data structure:
-                        const_cast<Hnsw*>(this)->baseSearchAlgorithm(query);
+                      if (useOld)
+                        const_cast<Hnsw *>(this)->baseSearchAlgorithmOld(query);
+                      else
+                        const_cast<Hnsw *>(this)->baseSearchAlgorithmV1Merge(query);
             			break;
             		case 1:
                         /// Experimental search using Nmslib data structure (should not be used):
@@ -512,13 +668,19 @@ namespace similarity {
             			break;
             		case 3:
                         /// Basic search using optimized index(cosine+L2)
-                        const_cast<Hnsw*>(this)->SearchL2Custom(query);
+                        if (useOld)
+                          const_cast<Hnsw*>(this)->SearchL2CustomOld(query);
+                        else
+                          const_cast<Hnsw *>(this)->SearchL2CustomV1Merge(query);
             			break;
             		case 4:
                         /// Basic search using optimized index with one-time normalized cosine similarity
                         /// Only for cosine similarity!
-                        const_cast<Hnsw*>(this)->SearchCosineNormalized(query);
-            			break;
+                        if (useOld)
+                          const_cast<Hnsw *>(this)->SearchCosineNormalizedOld(query);
+                        else
+                          const_cast<Hnsw *>(this)->SearchCosineNormalizedV1Merge(query);
+                        break;
             		};
     }
 
@@ -621,7 +783,7 @@ namespace similarity {
 
 
     	template <typename dist_t>
-    	void Hnsw<dist_t>::baseSearchAlgorithm(KNNQuery<dist_t>* query) {
+    	void Hnsw<dist_t>::baseSearchAlgorithmOld(KNNQuery<dist_t> *query) {
     		VisitedList * vl = visitedlistpool->getFreeVisitedList();
     		unsigned int *massVisited = vl->mass;
     		unsigned int currentV = vl->curV;
@@ -721,6 +883,131 @@ namespace similarity {
     		visitedlistpool->releaseVisitedList(vl);
     
     	}
+
+template <typename dist_t>
+void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
+  VisitedList * vl = visitedlistpool->getFreeVisitedList();
+  unsigned int *massVisited = vl->mass;
+  unsigned int currentV = vl->curV;
+
+  HnswNode* provider;
+  int maxlevel1 = enterpoint_->level;
+  provider = enterpoint_;
+
+  const Object* currObj = provider->getData();
+
+  dist_t d = query->DistanceObjLeft(currObj);
+  dist_t curdist = d;
+  HnswNode *curNode = provider;
+  for (int i = maxlevel1; i > 0; i--) {
+    bool changed = true;
+    while (changed) {
+      changed = false;
+
+      const vector<HnswNode*>& neighbor = curNode->getAllFriends(i);
+      for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
+        _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
+      }
+      for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
+        currObj = (*iter)->getData();
+        d = query->DistanceObjLeft(currObj);
+        if (d < curdist) {
+          curdist = d;
+          curNode = *iter;
+          changed = true;
+        }
+      }
+    }
+  }
+
+
+  SortArrBI<dist_t,HnswNode*> sortedArr(max<size_t>(ef_, query->GetK()));
+  sortedArr.push_unsorted_grow(curdist, curNode);
+
+  int_fast32_t  currElem = 0;
+
+  typedef typename SortArrBI<dist_t, HnswNode*>::Item  QueueItem;
+  vector<QueueItem>& queueData = sortedArr.get_data();
+  vector<QueueItem>  itemBuff(16*M_);
+
+  massVisited[curNode->getId()] = currentV;
+  //visitedQueue.insert(curNode->getId());
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // PHASE TWO OF THE SEARCH
+  // Extraction of the neighborhood to find k nearest neighbors.
+  ////////////////////////////////////////////////////////////////////////////////
+
+  while(currElem < min(sortedArr.size(),ef_)){
+    auto& e = queueData[currElem];
+    CHECK(!e.used);
+    e.used = true;
+    HnswNode* initNode = e.data;
+    ++currElem;
+
+    size_t itemQty = 0;
+    dist_t topKey = sortedArr.top_key();
+
+    const vector<HnswNode*>& neighbor = (initNode)->getAllFriends(0);
+
+    size_t curId;
+
+    for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
+      _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
+      _mm_prefetch((char *)(massVisited + (*iter)->getId()), _MM_HINT_T0);
+    }
+    //calculate distance to each neighbor
+    for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
+
+      curId = (*iter)->getId();
+
+      if (!(massVisited[curId] == currentV))
+      {
+        massVisited[curId] = currentV;
+        currObj = (*iter)->getData();
+        d = query->DistanceObjLeft(currObj);
+
+        if (d < topKey || sortedArr.size() < ef_) {
+          itemBuff[itemQty++]=QueueItem(d, *iter);
+        }
+      }
+    }
+
+    if (itemQty) {
+      _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
+      std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+
+      size_t insIndex=0;
+      if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+        insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+        if (insIndex < currElem) {
+          //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
+          currElem = insIndex;
+        }
+      } else {
+        for (size_t ii = 0; ii < itemQty; ++ii) {
+          size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
+
+          if (insIndex < currElem) {
+            //LOG(LIB_INFO) << "@@@ " << currElem << " -> " << insIndex;
+            currElem = insIndex;
+          }
+        }
+      }
+    }
+    // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+    while (currElem < sortedArr.size() && queueData[currElem].used == true)
+      ++currElem;
+  }
+
+  for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+    query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
+  }
+
+  visitedlistpool->releaseVisitedList(vl);
+
+}
         // Experimental search algorithm
     	template <typename dist_t>
     	void Hnsw<dist_t>::listPassingModifiedAlgorithm(KNNQuery<dist_t>* query) {

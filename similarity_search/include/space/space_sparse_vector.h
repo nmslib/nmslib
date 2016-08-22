@@ -107,7 +107,6 @@ public:
   // Sparse vectors have no fixed dimensionality
   virtual size_t GetElemQty(const Object* object) const {return 0;}
 
-  virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const = 0;
 protected:
   void ReadSparseVec(std::string line, size_t line_num, IdType& label, vector<ElemType>& v) const;
   virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const  = 0;
@@ -135,15 +134,10 @@ public:
     }
   }
 
-  Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const {
+  virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const override {
     return new Object(id, label, InpVect.size() * sizeof(ElemType), &InpVect[0]);
   };
 
-  virtual dist_t ScalarProduct(const Object* obj1, const Object* obj2) const {
-    SpaceNormScalarProduct distObjNormSP;
-    return SpaceSparseVectorSimpleStorage<dist_t>::
-                            ComputeDistanceHelper(obj1, obj2, distObjNormSP);
-  }
 protected:
   DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorSimpleStorage);
 
@@ -156,13 +150,6 @@ protected:
     for (size_t i = 0; i < qty; ++i) v[i] = beg[i];
   }
 
-  struct SpaceNormScalarProduct {
-    dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
-     return NormScalarProduct(x, y, length);
-    }
-  };
-
-  
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 
   /* 

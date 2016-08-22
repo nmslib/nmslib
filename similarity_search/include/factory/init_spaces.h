@@ -113,10 +113,13 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_COSINE_SIMILARITY, CreateSparseCosineSimilarity)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_ANGULAR_DISTANCE, CreateSparseAngularDistance)
   REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_ANGULAR_DISTANCE, CreateSparseAngularDistance)
+  REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_NEGATIVE_SCALAR, CreateSparseNegativeScalarProduct)
+  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR, CreateSparseQueryNormNegativeScalarProduct)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_COSINE_SIMILARITY_FAST, CreateSparseCosineSimilarityFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_ANGULAR_DISTANCE_FAST, CreateSparseAngularDistanceFast)
-
+  REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_NEGATIVE_SCALAR_FAST, CreateSparseNegativeScalarProductFast)
+  REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST, CreateSparseQueryNormNegativeScalarProductFast)
 
   REGISTER_SPACE_CREATOR(float,  "savch",  CreateSavch)
 

@@ -30,6 +30,9 @@
 #include "ported_boost_progress.h"
 #include "method/hnsw.h"
 
+#include "sort_arr_bi.h"
+#define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 100
+
 #include <vector>
 #include <limits>
 #include <algorithm>    // std::min
@@ -38,10 +41,48 @@
 #else
 #define PORTABLE_ALIGN16 __declspec(align(16))
 #endif
+#if defined(__GNUC__)
+#define PORTABLE_ALIGN32 __attribute__((aligned(32)))
+#else
+#define PORTABLE_ALIGN32 __declspec(align(32))
+#endif
+
+#ifdef __AVX__
+#define USE_AVX
+#endif
+
 //#define DIST_CALC 
 namespace similarity {
 	float L2SqrSIMD16Ext(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
+#ifdef USE_AVX
+		size_t qty16 = qty >> 4;
 
+		const float* pEnd1 = pVect1 + (qty16 << 4);
+
+		__m256  diff, v1, v2;
+		__m256  sum = _mm256_set1_ps(0);
+
+		while (pVect1 < pEnd1) 
+        {
+			//_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
+			v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
+			v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
+			diff = _mm256_sub_ps(v1, v2);
+			sum = _mm256_add_ps(sum, _mm256_mul_ps(diff, diff));
+
+            v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
+            v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
+            diff = _mm256_sub_ps(v1, v2);
+            sum = _mm256_add_ps(sum, _mm256_mul_ps(diff, diff));
+
+		}
+
+		_mm256_store_ps(TmpRes, sum);
+		float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3]+ TmpRes[4] + TmpRes[5] + TmpRes[6] + TmpRes[7];
+
+
+		return (res);
+#else
 		//size_t qty4 = qty >> 2;
 		size_t qty16 = qty >> 4;
 
@@ -53,7 +94,7 @@ namespace similarity {
 		__m128  sum = _mm_set1_ps(0);
 
 		while (pVect1 < pEnd1) {
-			_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
+			//_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
 			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
 			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
 			diff = _mm_sub_ps(v1, v2);
@@ -75,25 +116,13 @@ namespace similarity {
 			sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
 		}
 
-		/*while (pVect1 < pEnd2) {
-		v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
-		v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
-		diff = _mm_sub_ps(v1, v2);
-		sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
-		}*/
-
-		//float PORTABLE_ALIGN16 TmpRes[4];
-
 		_mm_store_ps(TmpRes, sum);
 		float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 
-		/*while (pVect1 < pEnd3) {
-		float diff = *pVect1++ - *pVect2++;
-		res += diff * diff;
-		}*/
-
-		return sqrt(res);
+		return (res);
+#endif
 	};
+
 	float L2SqrSIMDExt(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
 
 		size_t qty4 = qty >> 2;
@@ -107,7 +136,7 @@ namespace similarity {
 		__m128  sum = _mm_set1_ps(0);
 
 		while (pVect1 < pEnd1) {
-			_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
+			//_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
 			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
 			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
 			diff = _mm_sub_ps(v1, v2);
@@ -136,8 +165,7 @@ namespace similarity {
 		sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
 		}
 
-		//float PORTABLE_ALIGN16 TmpRes[4];
-
+		
 		_mm_store_ps(TmpRes, sum);
 		float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 
@@ -149,17 +177,50 @@ namespace similarity {
 		return sqrt(res);
 	};
 	float ScalarProductSIMD(const float* __restrict pVect1, const float*  __restrict pVect2, size_t qty, float  *  __restrict TmpRes) {
+#ifdef USE_AVX
 		size_t qty16 = qty / 16;
 		size_t qty4 = qty / 4;
 
 		const float* pEnd1 = pVect1 + 16 * qty16;
 		const float* pEnd2 = pVect1 + 4 * qty4;
-		//const float* pEnd3 = pVect1 + qty;
+
+		__m256  sum256 = _mm256_set1_ps(0);
+
+		while (pVect1 < pEnd1) {
+			//_mm_prefetch((char*)(pVect2 + 16), _MM_HINT_T0);
+
+			__m256 v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
+			__m256 v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
+			sum256 = _mm256_add_ps(sum256, _mm256_mul_ps(v1, v2));
+
+			v1 = _mm256_loadu_ps(pVect1); pVect1 += 8;
+			v2 = _mm256_loadu_ps(pVect2); pVect2 += 8;
+			sum256 = _mm256_add_ps(sum256, _mm256_mul_ps(v1, v2));
+		}
+
+		__m128  v1, v2;
+		__m128  sum_prod = _mm_add_ps(_mm256_extractf128_ps(sum256, 0),
+																	_mm256_extractf128_ps(sum256, 1));
+
+		while (pVect1 < pEnd2) {
+			v1 = _mm_loadu_ps(pVect1); pVect1 += 4;
+			v2 = _mm_loadu_ps(pVect2); pVect2 += 4;
+			sum_prod = _mm_add_ps(sum_prod, _mm_mul_ps(v1, v2));
+		}
+
+		_mm_store_ps(TmpRes, sum_prod);
+		float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];;
+        return  1.0f -sum;
+		//return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
+#else
+		size_t qty16 = qty / 16;
+		size_t qty4 = qty / 4;
+
+		const float* pEnd1 = pVect1 + 16 * qty16;
+		const float* pEnd2 = pVect1 + 4 * qty4;
 
 		__m128  v1, v2;
 		__m128  sum_prod = _mm_set1_ps(0);
-		//__m128  sum_square1 = sum_prod;
-		//__m128  sum_square2 = sum_prod;
 
 		while (pVect1 < pEnd1) {
 
@@ -194,19 +255,13 @@ namespace similarity {
 
 		_mm_store_ps(TmpRes, sum_prod);
 		float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
-		/*while (pVect1 < pEnd3) {
-			//cout << "!!!";
-			sum += (*pVect1) * (*pVect2);
-
-			++pVect1; ++pVect2;
-		}*/
-		//return -sum;
 
 		return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
+#endif
 	};
 
 	float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes) {
-        
+
 		size_t qty16 = qty / 16;
 		size_t qty4 = qty / 4;
 		
@@ -284,13 +339,13 @@ namespace similarity {
 
 	/****************************************************************
 
-	UNIVERSAL FUNCTION FOR CUSTOM MADE
+	UNIVERSAL FUNCTION FOR CUSTOM DISTANCES
 
 	****************************************************************/
 	template <typename dist_t>
-	void Hnsw<dist_t>::SearchL2Custom(KNNQuery<dist_t>* query) {
+	void Hnsw<dist_t>::SearchL2CustomOld(KNNQuery<dist_t>* query) {
 		float *pVectq = (float *)((char *)query->QueryObject()->data());
-		float PORTABLE_ALIGN16 TmpRes[4];
+		float PORTABLE_ALIGN32 TmpRes[8];
 		size_t qty = query->QueryObject()->datalength() >> 2;
 
 		VisitedList * vl = visitedlistpool->getFreeVisitedList();
@@ -392,16 +447,145 @@ namespace similarity {
 		visitedlistpool->releaseVisitedList(vl);
 
 	}
+
+template <typename dist_t>
+void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
+	float *pVectq = (float *)((char *)query->QueryObject()->data());
+	float PORTABLE_ALIGN32 TmpRes[8];
+	size_t qty = query->QueryObject()->datalength() >> 2;
+
+	VisitedList * vl = visitedlistpool->getFreeVisitedList();
+	unsigned int *massVisited = vl->mass;
+	unsigned int currentV = vl->curV;
+
+
+
+	int maxlevel1 = maxlevel_;
+	int curNodeNum = enterpointId_;
+	dist_t curdist = (fstdistfunc_(pVectq, (float *)(data_level0_memory_ + enterpointId_*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+
+
+	for (int i = maxlevel1; i > 0; i--) {
+		bool changed = true;
+		while (changed) {
+			changed = false;
+			int  *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1)*(i - 1)*sizeof(int));
+			int size = *data;
+			for (int j = 1; j <= size; j++) {
+				_mm_prefetch(data_level0_memory_ + (*(data + j))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+			}
+#ifdef DIST_CALC
+			query->distance_computations_ += size;
+#endif
+
+			for (int j = 1; j <= size; j++) {
+				int tnum = *(data + j);
+
+				dist_t d = (fstdistfunc_(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+				if (d < curdist) {
+					curdist = d;
+					curNodeNum = tnum;
+					changed = true;
+				}
+			}
+
+
+		}
+	}
+
+	SortArrBI<dist_t,int> sortedArr(max<size_t>(ef_, query->GetK()));
+	sortedArr.push_unsorted_grow(curdist, curNodeNum);
+
+	int_fast32_t  currElem = 0;
+
+	typedef typename SortArrBI<dist_t, int>::Item  QueueItem;
+	vector<QueueItem>& queueData = sortedArr.get_data();
+	vector<QueueItem>  itemBuff(8*30);
+
+	massVisited[curNodeNum] = currentV;
+
+	while(currElem < min(sortedArr.size(),ef_)){
+		auto& e = queueData[currElem];
+		CHECK(!e.used);
+		e.used = true;
+		curNodeNum = e.data;
+		++currElem;
+
+		size_t itemQty = 0;
+		dist_t topKey = sortedArr.top_key();
+
+		int  *data = (int *)(data_level0_memory_ + curNodeNum*memoryPerObject_ + offsetLevel0_);
+		int size = *data;
+		_mm_prefetch((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
+		_mm_prefetch((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
+		_mm_prefetch(data_level0_memory_ + (*(data + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+		_mm_prefetch((char *)(data + 2), _MM_HINT_T0);
+
+		for (int j = 1; j <= size; j++) {
+			int tnum = *(data + j);
+			_mm_prefetch((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
+			_mm_prefetch(data_level0_memory_ + (*(data + j + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+			if (!(massVisited[tnum] == currentV))
+			{
+
+#ifdef DIST_CALC
+				query->distance_computations_++;
+#endif
+				massVisited[tnum] = currentV;
+				char *currObj1 = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+				dist_t d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
+
+				if (d < topKey || sortedArr.size() < ef_) {
+					itemBuff[itemQty++]=QueueItem(d, tnum);
+				}
+			}
+		}
+		if (itemQty) {
+			_mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
+			std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+
+			size_t insIndex = 0;
+			if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+				insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+				if (insIndex < currElem) {
+					currElem = insIndex;
+				}
+			} else {
+				for (size_t ii = 0; ii < itemQty; ++ii) {
+					size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
+					if (insIndex < currElem) {
+						currElem = insIndex;
+					}
+				}
+			}
+			// because itemQty > 1, there would be at least item in sortedArr
+			_mm_prefetch(data_level0_memory_ + sortedArr.top_item().data * memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
+		}
+		// To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+		while (currElem < sortedArr.size() && queueData[currElem].used == true)
+			++currElem;
+	}
+
+	for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+		int tnum = queueData[i].data;
+		char *currObj = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+		query->CheckAndAddToResult(queueData[i].key, new Object(currObj));
+	}
+	visitedlistpool->releaseVisitedList(vl);
+
+}
+
 	/****************************************************************
 
 	Search function for cosine
 
 	****************************************************************/
 	template <typename dist_t>
-	void Hnsw<dist_t>::SearchCosineNormalized(KNNQuery<dist_t>* query) {
+	void Hnsw<dist_t>::SearchCosineNormalizedOld(KNNQuery<dist_t> *query) {
 		
 		float *pVectq = (float *)((char *)query->QueryObject()->data());
-        float PORTABLE_ALIGN16 TmpRes[4];
+        float PORTABLE_ALIGN32 TmpRes[8];
         size_t qty = query->QueryObject()->datalength() >> 2;
 
 
@@ -519,7 +703,154 @@ namespace similarity {
 
 
 	}
-	
+
+template <typename dist_t>
+void Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query) {
+
+	float *pVectq = (float *)((char *)query->QueryObject()->data());
+	float PORTABLE_ALIGN32 TmpRes[8];
+	size_t qty = query->QueryObject()->datalength() >> 2;
+
+
+	float *v = pVectq;
+	float sum = 0;
+	for (int i = 0; i < qty; i++) {
+		sum += v[i] * v[i];
+	}
+	if (sum != 0.0) {
+		sum = 1 / sqrt(sum);
+		for (int i = 0; i < qty; i++) {
+			v[i] *= sum;
+		}
+	}
+
+
+
+
+	VisitedList * vl = visitedlistpool->getFreeVisitedList();
+	unsigned int *massVisited = vl->mass;
+	unsigned int currentV = vl->curV;
+
+
+	int maxlevel1 = maxlevel_;
+	int curNodeNum = enterpointId_;
+	dist_t curdist = (ScalarProductSIMD(pVectq, (float *)(data_level0_memory_ + enterpointId_*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+
+
+	for (int i = maxlevel1; i > 0; i--) {
+		bool changed = true;
+		while (changed) {
+			changed = false;
+			int  *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1)*(i - 1)*sizeof(int));
+			int size = *data;
+			for (int j = 1; j <= size; j++) {
+				_mm_prefetch(data_level0_memory_ + (*(data + j))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+			}
+#ifdef DIST_CALC
+			query->distance_computations_ += size;
+#endif
+
+			for (int j = 1; j <= size; j++) {
+				int tnum = *(data + j);
+
+				dist_t d = (ScalarProductSIMD(pVectq, (float *)(data_level0_memory_ + tnum*memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
+				if (d < curdist) {
+					curdist = d;
+					curNodeNum = tnum;
+					changed = true;
+				}
+			}
+
+
+		}
+	}
+
+	SortArrBI<dist_t,int> sortedArr(max<size_t>(ef_, query->GetK()));
+	sortedArr.push_unsorted_grow(curdist, curNodeNum);
+
+	int_fast32_t  currElem = 0;
+
+	typedef typename SortArrBI<dist_t, int>::Item  QueueItem;
+	vector<QueueItem>& queueData = sortedArr.get_data();
+	vector<QueueItem>  itemBuff(8*30);
+
+	massVisited[curNodeNum] = currentV;
+
+
+	while(currElem < min(sortedArr.size(),ef_)){
+		auto& e = queueData[currElem];
+		CHECK(!e.used);
+		e.used = true;
+		curNodeNum = e.data;
+		++currElem;
+
+		size_t itemQty = 0;
+		dist_t topKey = sortedArr.top_key();
+
+		int  *data = (int *)(data_level0_memory_ + curNodeNum*memoryPerObject_ + offsetLevel0_);
+		int size = *data;
+		_mm_prefetch((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
+		_mm_prefetch((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
+		_mm_prefetch(data_level0_memory_ + (*(data + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+		_mm_prefetch((char *)(data + 2), _MM_HINT_T0);
+
+		for (int j = 1; j <= size; j++) {
+			int tnum = *(data + j);
+			_mm_prefetch((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
+			_mm_prefetch(data_level0_memory_ + (*(data + j + 1))*memoryPerObject_ + offsetData_, _MM_HINT_T0);
+			if (!(massVisited[tnum] == currentV))
+			{
+
+#ifdef DIST_CALC
+				query->distance_computations_++;
+#endif
+				massVisited[tnum] = currentV;
+				char *currObj1 = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+				dist_t d = (ScalarProductSIMD(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
+
+				if (d < topKey || sortedArr.size() < ef_) {
+					itemBuff[itemQty++]=QueueItem(d, tnum);
+				}
+			}
+		}
+
+		if (itemQty) {
+			_mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
+			std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+
+			size_t insIndex = 0;
+			if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+				insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+				if (insIndex < currElem) {
+					currElem = insIndex;
+				}
+			} else {
+				for (size_t ii = 0; ii < itemQty; ++ii) {
+					size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
+					if (insIndex < currElem) {
+						currElem = insIndex;
+					}
+				}
+			}
+			// because itemQty > 1, there would be at least item in sortedArr
+			_mm_prefetch(data_level0_memory_ + sortedArr.top_item().data * memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
+		}
+		// To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+		while (currElem < sortedArr.size() && queueData[currElem].used == true)
+			++currElem;
+	}
+
+	for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+		int tnum = queueData[i].data;
+		char *currObj = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+		query->CheckAndAddToResult(queueData[i].key, new Object(currObj));
+	}
+	visitedlistpool->releaseVisitedList(vl);
+
+}
+
+
 	template class Hnsw<float>;
 	template class Hnsw<double>;
 	template class Hnsw<int>;

@@ -69,7 +69,6 @@ class RuntimeErrorWrapper {
 #define LOG(severity) \
   Logger(severity, __FILE__, __LINE__, __FUNCTION__).stream()
 
-
 #define CHECK(condition) \
   if (!(condition)) {\
     LOG(LIB_ERROR) << "Check failed: " << #condition;  \

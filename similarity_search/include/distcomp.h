@@ -64,14 +64,30 @@ template <class T> T AngularDistance(const T *p1, const T *p2, size_t qty);
 template <class T> T CosineSimilarity(const T *p1, const T *p2, size_t qty);
 // Scalar product divided by vector Euclidean norms
 template <class T> T NormScalarProduct(const T *p1, const T *p2, size_t qty);
+// Sclar product divided by query vector Euclidean norm
+// Query is the second argument (by convention we use only left queries, where a data point is the left argument)
+// We don't have a SIMD version for QueryNormScalarProduct function yet.
+template <class T> T QueryNormScalarProduct(const T *p1, const T *p2, size_t qty);
 template <class T> T NormScalarProductSIMD(const T *p1, const T *p2, size_t qty);
 
 // Scalar product that is not normalized 
 template <class T> T ScalarProduct(const T *p1, const T *p2, size_t qty);
 template <class T> T ScalarProductSIMD(const T *p1, const T *p2, size_t qty);
 
-// Fast scalar product between sparse vectors (using SIMD)
-float ScalarProductFast(const char* pData1, size_t len1, const char* pData2, size_t len2);
+// Fast normalized-scalar product between sparse vectors (using SIMD)
+float NormSparseScalarProductFast(const char* pData1, size_t len1, const char* pData2, size_t len2);
+/*
+ * Fast query-side normalized-scalar product between sparse vectors (using SIMD).
+ * By our standard convention of using left queries, the query is the right argument.
+ */
+float QueryNormSparseScalarProductFast(const char* pData, size_t lenData, const char* pQuery, size_t lenQuery);
+// Fast scalar product between sparse vectors without normalization (using SIMD)
+float SparseScalarProductFast(const char* pData1, size_t len1, const char* pData2, size_t len2);
+
+/*
+ * Sometimes due to rounding errors, we get values > 1 or < -1.
+ * This throws off other functions that use scalar product, e.g., acos
+ */
 
 /*
  *  Itakura-Saito distance

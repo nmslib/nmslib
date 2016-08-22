@@ -30,8 +30,10 @@
 #include "space_sparse_vector.h"
 #include "distcomp.h"
 
-#define SPACE_SPARSE_COSINE_SIMILARITY  "cosinesimil_sparse"
-#define SPACE_SPARSE_ANGULAR_DISTANCE   "angulardist_sparse"
+#define SPACE_SPARSE_COSINE_SIMILARITY          "cosinesimil_sparse"
+#define SPACE_SPARSE_ANGULAR_DISTANCE           "angulardist_sparse"
+#define SPACE_SPARSE_NEGATIVE_SCALAR            "negdotprod_sparse"
+#define SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR "querynorm_negdotprod_sparse"
 
 namespace similarity {
 
@@ -54,7 +56,7 @@ class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t>
   struct SpaceAngularDist {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = AngularDistance(x, y, length);
-      // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
+      // This shouldn't normally happen, but let's keep this check
       if (std::isnan(val)) throw runtime_error("SpaceAngularDist Bug: NAN dist!!!!");
       return val;
     }
@@ -82,13 +84,66 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t
   struct SpaceCosineSimilarityDist {
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = CosineSimilarity(x, y, length);
-      // TODO: @leo shouldn't happen any more, but let's keep this check here for a while
+      // This shouldn't normally happen, but let's keep this check
       if (std::isnan(val)) throw runtime_error("SpaceCosineSimilarityDist Bug: NAN dist!!!!");
       return val;
     }
   };
   SpaceCosineSimilarityDist        distObjCosineSimilarity_;
   DISABLE_COPY_AND_ASSIGN(SpaceSparseCosineSimilarity);
+};
+
+template <typename dist_t>
+class SpaceSparseNegativeScalarProduct : public SpaceSparseVectorSimpleStorage<dist_t> {
+public:
+  explicit SpaceSparseNegativeScalarProduct() {}
+  virtual ~SpaceSparseNegativeScalarProduct() {}
+
+  virtual std::string StrDesc() const {
+    return "NegativeScalarProduct";
+  }
+
+protected:
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
+    return SpaceSparseVectorSimpleStorage<dist_t>::
+    ComputeDistanceHelper(obj1, obj2, distObjNegativeScalarProduct_);
+  }
+private:
+  struct SpaceNegativeScalarDist {
+    dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
+      return -ScalarProductSIMD(x, y, length);
+    }
+  };
+  SpaceNegativeScalarDist        distObjNegativeScalarProduct_;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseNegativeScalarProduct);
+};
+
+template <typename dist_t>
+class SpaceSparseQueryNormNegativeScalarProduct : public SpaceSparseVectorSimpleStorage<dist_t> {
+public:
+  explicit SpaceSparseQueryNormNegativeScalarProduct() {}
+  virtual ~SpaceSparseQueryNormNegativeScalarProduct() {}
+
+  virtual std::string StrDesc() const {
+    return "QueryNormNegativeScalarProduct";
+  }
+
+protected:
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
+    return SpaceSparseVectorSimpleStorage<dist_t>::
+    ComputeDistanceHelper(obj1, obj2, distObjQueryNormNegativeScalarProduct_);
+  }
+private:
+  struct SpaceNegativeQueryNormScalarDist {
+    dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
+      // This shouldn't normally happen, but let's keep this check
+      dist_t val = QueryNormScalarProduct(x, y, length);
+      if (std::isnan(val)) throw runtime_error("SpaceNegativeQueryNormScalarDist Bug: NAN dist!!!!");
+      return -val;
+    }
+  };
+  SpaceNegativeQueryNormScalarDist        distObjQueryNormNegativeScalarProduct_;
+  DISABLE_COPY_AND_ASSIGN(SpaceSparseQueryNormNegativeScalarProduct);
 };
 
 

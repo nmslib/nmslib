@@ -1,7 +1,7 @@
 =================
 Non-Metric Space Library (NMSLIB)
 =================
-The latest release is [1.5.1](https://github.com/searchivarius/nmslib/releases/tag/v1.5.1)
+The latest release is [1.5.3](https://github.com/searchivarius/nmslib/releases/tag/v1.5.3)
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
 
@@ -32,11 +32,11 @@ As of **May 2016** results are:
 <tr width="100%" border="0" style="border:none">
 <td border="0" align="center" style="border:none">
 1.19M 100d GloVe, cosine similarity.
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/glove.png" width="400">
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/docs/figures/glove.png" width="400">
 </td>
 <td border="0"  align="center" style="border:none">
 1M 128d SIFT features, Euclidean distance:
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/pserv/docs/figures/sift.png" width="400">
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/docs/figures/sift.png" width="400">
 </td>
 </tr></table>
 
@@ -66,7 +66,7 @@ The LSHKIT, which is embedded in our library, is distributed under the GNU Gener
 Prerequisites
 -----------------------
 
-1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 14 (version 12 can also be used, but the project fileds need to be downgraded).
+1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 14 (version 12 can probably be used as well, but the project fileds need to be downgraded).
 2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well. 
 3. Boost (dev version). For Windows, the core library and the standalone sample application do not require Boost.
 4. Only for Linux: CMake (GNU make is also required) 
@@ -74,6 +74,10 @@ Prerequisites
 6. Only for Linux: Eigen (dev version)
 6. An Intel or AMD processor that supports SSE 4.2 is recommended
 
+To install prerequisite packages on Ubuntu 14 Linux, type the following
+```
+sudo apt-get install libboost1.54-all-dev libgsl0-dev libeigen3-dev
+```
 
 Quick start on Linux
 -----------------------
@@ -169,7 +173,8 @@ Related publications
 -----------------------
 
 Most important related papers are listed below in the chronological order: 
-
+* L. Boytsov, D. Novak, Y. Malkov, E. Nyberg  (2016). [Off the Beaten Path: Let’s Replace Term-Based Retrieval
+with k-NN Search.](http://boytsov.info/pubs/cikm2016.pdf) To appear in proceedings CIKM'16.
 * Malkov, Y.A., Yashunin, D.A.. (2016). [Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs. CoRR](http://arxiv.org/abs/1603.09320), abs/1603.09320. [**[BibTex]**](http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=2016arXiv160309320M&data_type=BIBTEX&db_key=PRE&nocookieset=1)
 * Bilegsaikhan, N., Boytsov, L. 2015 [Permutation Search Methods are Efficient, Yet Faster Search is Possible](http://boytsov.info/pubs/p2332-naidan-arxiv.pdf) PVLDB, 8(12):1618--1629, 2015 [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/corr/NaidanBN15)
 * Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)

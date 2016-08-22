@@ -34,8 +34,8 @@ SpaceSparseCosineSimilarityFast::HiddenDistance(const Object* obj1, const Object
   CHECK(obj1->datalength() > 0);
   CHECK(obj2->datalength() > 0);
 
-  float val = 1 - ScalarProductFast(obj1->data(), obj1->datalength(),
-                                    obj2->data(), obj2->datalength());
+  float val = 1 - NormSparseScalarProductFast(obj1->data(), obj1->datalength(),
+                                              obj2->data(), obj2->datalength());
 
   return max(val, float(0));
 }
@@ -45,8 +45,28 @@ SpaceSparseAngularDistanceFast::HiddenDistance(const Object* obj1, const Object*
   CHECK(obj1->datalength() > 0);
   CHECK(obj2->datalength() > 0);
 
-  return acos(ScalarProductFast(obj1->data(), obj1->datalength(),
-                                obj2->data(), obj2->datalength()));
+  return acos(NormSparseScalarProductFast(obj1->data(), obj1->datalength(),
+                                          obj2->data(), obj2->datalength()));
+}
+
+float
+SpaceSparseNegativeScalarProductFast::HiddenDistance(const Object* obj1, const Object* obj2) const {
+  CHECK(obj1->datalength() > 0);
+  CHECK(obj2->datalength() > 0);
+
+  return -SparseScalarProductFast(obj1->data(), obj1->datalength(),
+                                  obj2->data(), obj2->datalength());
+
+}
+
+float
+SpaceSparseQueryNormNegativeScalarProductFast::HiddenDistance(const Object* obj1, const Object* obj2) const {
+  CHECK(obj1->datalength() > 0);
+  CHECK(obj2->datalength() > 0);
+
+  return -QueryNormSparseScalarProductFast(obj1->data(), obj1->datalength(),
+                                           obj2->data(), obj2->datalength());
+
 }
 
 

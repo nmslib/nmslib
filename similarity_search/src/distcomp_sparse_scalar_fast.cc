@@ -55,6 +55,20 @@ const static __m128i shuffle_mask16[16] = {
 */
 #define MAX_BUFFER_QTY  8192
 
+struct ScalarProductFastRes {
+  const float prod_;
+  const float normCoeff1_;
+  const float normCoeff2_;
+
+
+  ScalarProductFastRes(const float prod = 0,
+                       const float norm1 = 0,
+                       const float norm2 = 0) :
+      prod_(prod),
+      normCoeff1_(norm1),
+      normCoeff2_(norm2) { }
+};
+
 /*
  * The efficient SIMD intersection is based on the code of Daniel Lemire (lemire.me). 
  *
@@ -82,25 +96,26 @@ const static __m128i shuffle_mask16[16] = {
  *    zero values (handling those requires a check).
  *
  */
-float ScalarProductFast(const char* pData1, size_t len1,
-                        const char* pData2, size_t len2) {
-  float           norm1 = 0, norm2 = 0;
-  size_t          blockQty1 = 0, blockQty2 = 0;
-  const size_t*   pBlockQtys1 = NULL; 
-  const size_t*   pBlockQtys2 = NULL; 
-  const size_t*   pBlockOffs1 = NULL; 
-  const size_t*   pBlockOffs2 = NULL; 
-  const char*     pBlockBeg1 = NULL; 
-  const char*     pBlockBeg2 = NULL;
+ScalarProductFastRes SparseScalarProductFastIntern(const char* pData1, size_t len1,
+                              const char* pData2, size_t len2) {
+  float norm1 = 0, norm2 = 0;
+  float normCoeff1 = 1, normCoeff2 = 1;
+  size_t blockQty1 = 0, blockQty2 = 0;
+  const size_t *pBlockQtys1 = NULL;
+  const size_t *pBlockQtys2 = NULL;
+  const size_t *pBlockOffs1 = NULL;
+  const size_t *pBlockOffs2 = NULL;
+  const char *pBlockBeg1 = NULL;
+  const char *pBlockBeg2 = NULL;
 
-  float                        buf1[MAX_BUFFER_QTY];
-  float                        buf2[MAX_BUFFER_QTY];
-  unique_ptr<float[]>        mem1;
-  unique_ptr<float[]>        mem2;
-  size_t                    allocQty = 0;
+  float buf1[MAX_BUFFER_QTY];
+  float buf2[MAX_BUFFER_QTY];
+  unique_ptr<float[]> mem1;
+  unique_ptr<float[]> mem2;
+  size_t allocQty = 0;
 
-  ParseSparseElementHeader(pData1, blockQty1, norm1, pBlockQtys1, pBlockOffs1, pBlockBeg1);
-  ParseSparseElementHeader(pData2, blockQty2, norm2, pBlockQtys2, pBlockOffs2, pBlockBeg2);
+  ParseSparseElementHeader(pData1, blockQty1, norm1, normCoeff1, pBlockQtys1, pBlockOffs1, pBlockBeg1);
+  ParseSparseElementHeader(pData2, blockQty2, norm2, normCoeff2, pBlockQtys2, pBlockOffs2, pBlockBeg2);
 
   float sum = 0;
 
@@ -110,18 +125,18 @@ float ScalarProductFast(const char* pData1, size_t len1,
 
   while (bid1 < blockQty1 && bid2 < blockQty2) {
     if (pBlockOffs1[bid1] == pBlockOffs2[bid2]) {
-      size_t qty1    = pBlockQtys1[bid1];
-      const uint16_t* pBlockIds1 = reinterpret_cast<const uint16_t*>(pBlockBeg1);
-      const float*    pBlockVals1 = reinterpret_cast<const float*>(pBlockIds1 + qty1);
+      size_t qty1 = pBlockQtys1[bid1];
+      const uint16_t *pBlockIds1 = reinterpret_cast<const uint16_t *>(pBlockBeg1);
+      const float *pBlockVals1 = reinterpret_cast<const float *>(pBlockIds1 + qty1);
 
-      size_t qty2    = pBlockQtys2[bid2];
-      const uint16_t* pBlockIds2 = reinterpret_cast<const uint16_t*>(pBlockBeg2);
-      const float*    pBlockVals2 = reinterpret_cast<const float*>(pBlockIds2 + qty2);
+      size_t qty2 = pBlockQtys2[bid2];
+      const uint16_t *pBlockIds2 = reinterpret_cast<const uint16_t *>(pBlockBeg2);
+      const float *pBlockVals2 = reinterpret_cast<const float *>(pBlockIds2 + qty2);
 
       size_t mx = max(qty1, qty2);
 
-      float* val1 = buf1;
-      float* val2 = buf2;
+      float *val1 = buf1;
+      float *val2 = buf2;
 
       /* 
        * Let's do some flexible memory allocation. 
@@ -129,21 +144,21 @@ float ScalarProductFast(const char* pData1, size_t len1,
        * otherwise allocate a large chunk of memory      
        */
       if (mx > MAX_BUFFER_QTY) {
-          if (allocQty < mx) {
-              mem1.reset(new float[mx]);
-              mem2.reset(new float[mx]);
-              allocQty = mx;
-          }
-          val1 = mem1.get();
-          val2 = mem2.get();
+        if (allocQty < mx) {
+          mem1.reset(new float[mx]);
+          mem2.reset(new float[mx]);
+          allocQty = mx;
+        }
+        val1 = mem1.get();
+        val2 = mem2.get();
       }
-  
-      float* pVal1 = val1;
-      float* pVal2 = val2;
+
+      float *pVal1 = val1;
+      float *pVal2 = val2;
 
       size_t i1 = 0, i2 = 0;
-      size_t iEnd1 = qty1 / 8 * 8; 
-      size_t iEnd2 = qty2 / 8 * 8; 
+      size_t iEnd1 = qty1 / 8 * 8;
+      size_t iEnd2 = qty2 / 8 * 8;
 
 #ifdef PORTABLE_SSE4
       if (i1 < iEnd1 && i2 < iEnd2) {
@@ -215,12 +230,12 @@ float ScalarProductFast(const char* pData1, size_t len1,
       }
   scalar_inter:
 #else
-    #pragma message WARN("No SSE 4.2, defaulting to scalar implementation!")
+#pragma message WARN("No SSE 4.2, defaulting to scalar implementation!")
 #endif
 
       while (i1 < qty1 && i2 < qty2) {
         if (pBlockIds1[i1] == pBlockIds2[i2]) {
-          *pVal1++ = pBlockVals1[i1]; 
+          *pVal1++ = pBlockVals1[i1];
           *pVal2++ = pBlockVals2[i2];
           ++i1;
           ++i2;
@@ -228,7 +243,7 @@ float ScalarProductFast(const char* pData1, size_t len1,
           ++i1;
         } else {
           ++i2;
-        } 
+        }
       }
 
       pBlockBeg1 += elemSize * pBlockQtys1[bid1++];
@@ -238,7 +253,6 @@ float ScalarProductFast(const char* pData1, size_t len1,
 
       CHECK(resQty == pVal2 - val2);
 
-      
 
 #ifdef PORTABLE_SSE4
       ssize_t resQty4 = resQty / 4 * 4;
@@ -252,17 +266,21 @@ float ScalarProductFast(const char* pData1, size_t len1,
                                          _mm_loadu_ps(val2 + k)));
         }
 
+#if 0
         sum += MM_EXTRACT_FLOAT(sum128, 0);
         sum += MM_EXTRACT_FLOAT(sum128, 1);
         sum += MM_EXTRACT_FLOAT(sum128, 2);
         sum += MM_EXTRACT_FLOAT(sum128, 3);
+#else
+        sum += mm128_sum(sum128);
+#endif
       }
 
       for (ssize_t k = resQty4; k < resQty; ++k)
           sum += val1[k] * val2[k];
 #else
       for (ssize_t k = 0; k < resQty; ++k)
-          sum += val1[k] * val2[k];
+        sum += val1[k] * val2[k];
 #endif
 
     } else if (pBlockOffs1[bid1] < pBlockOffs2[bid2]) {
@@ -281,15 +299,27 @@ float ScalarProductFast(const char* pData1, size_t len1,
     pBlockBeg2 += elemSize * pBlockQtys2[bid2++];
   }
 
-  CHECK(pBlockBeg1 - pData1 == (ssize_t)len1);
-  CHECK(pBlockBeg2 - pData2 == (ssize_t)len2);
+  CHECK(pBlockBeg1 - pData1 == (ssize_t) len1);
+  CHECK(pBlockBeg2 - pData2 == (ssize_t) len2);
 
- /* 
-  * Sometimes due to rounding errors, we get values > 1 or < -1.
-  * This throws off other functions that use scalar product, e.g., acos
-  */
-
-  return max(float(-1), min(float(1), sum / sqrt(norm1) / sqrt(norm2)));
+  return ScalarProductFastRes(sum, normCoeff1, normCoeff2);
 }
+
+
+float NormSparseScalarProductFast(const char* pData1, size_t len1, const char* pData2, size_t len2) {
+  ScalarProductFastRes res = SparseScalarProductFastIntern(pData1, len1, pData2, len2);
+  float val = res.prod_ * res.normCoeff1_ * res.normCoeff2_;
+  return max(float(-1), min(float(1), val));
+}
+
+float QueryNormSparseScalarProductFast(const char* pData1, size_t len1, const char* pData2, size_t len2) {
+  ScalarProductFastRes res = SparseScalarProductFastIntern(pData1, len1, pData2, len2);
+  return res.prod_ * res.normCoeff2_;
+}
+
+float SparseScalarProductFast(const char* pData1, size_t len1, const char* pData2, size_t len2) {
+  return SparseScalarProductFastIntern(pData1, len1, pData2, len2).prod_;
+}
+
 
 }
