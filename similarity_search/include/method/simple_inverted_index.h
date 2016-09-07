@@ -20,7 +20,6 @@
 #include <sstream>
 #include <unordered_map>
 #include <memory>
-#include <bits/unique_ptr.h>
 
 #include "index.h"
 #include "space/space_sparse_scalar_fast.h"
