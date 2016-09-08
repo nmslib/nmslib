@@ -29,6 +29,7 @@
 #include "factory/space/space_sparse_scalar.h"
 #include "factory/space/space_savch.h"
 #include "factory/space/space_word_embed.h"
+#include "factory/space/space_ab_diverg.h"
 #if !defined(_MSC_VER)
 #include "factory/space/space_sqfd.h"
 #endif
@@ -132,6 +133,9 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
   REGISTER_SPACE_CREATOR(double, SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
 #endif
+
+  REGISTER_SPACE_CREATOR(float,  SPACE_AB_DIVERG,  CreateAlphaBetaDiverg)
+  REGISTER_SPACE_CREATOR(double, SPACE_AB_DIVERG,  CreateAlphaBetaDiverg)
 }
 
 }

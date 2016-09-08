@@ -184,6 +184,19 @@ template <typename T> T LPGenericDistance(const T* x, const T* y, const int leng
 
 template <typename T> T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p);
 
+/*
+ * Various less-standard divergences
+ */
+
+/*
+ * Alpha-beta divergence.
+ * 
+ * Póczos, Barnabás, Liang Xiong, Dougal J. Sutherland, and Jeff Schneider (2012). “Nonparametric kernel
+ * estimators for image classification”. In: Computer Vision and Pattern Recognition (CVPR), 2012 IEEE
+ * Conference on, pages 2989–2996
+ */
+template <typename T> T alpha_beta_divergence(const T* x, const T* y, const int length, float alpha, float beta);
+
 
 /*
  * Rank correlations
