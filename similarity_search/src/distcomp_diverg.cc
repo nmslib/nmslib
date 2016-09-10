@@ -42,7 +42,7 @@ template  double alpha_beta_divergence(const double* x, const double* y, const i
 template <typename T> T renyi_divergence(const T* x, const T* y, const int length, float alpha) {
   static T minCheck = 0.9999; // somewhat arbitrarily
   T res = 0;
-  float beta = alpha - 1.0; 
+  float beta = 1.0 - alpha; 
   for (int i = 0; i < length; ++i) {
     res += pow(x[i], alpha)*pow(y[i], beta);  
   } 
