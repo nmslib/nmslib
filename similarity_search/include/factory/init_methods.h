@@ -46,6 +46,7 @@
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
 #include "factory/method/simple_inverted_index.h"
+#include "factory/method/wand_inverted_index.h"
 #if !defined(_MSC_VER)
 #include "factory/method/nndes.h"
 #endif
@@ -177,6 +178,7 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
 
   REGISTER_METHOD_CREATOR(float,  METH_SIMPLE_INV_INDEX, CreateSimplInvIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_WAND_INV_INDEX, CreateWANDInvIndex)
 
 #if !defined(_MSC_VER)
   // Another KNN-graph, which is computed via NN-descent

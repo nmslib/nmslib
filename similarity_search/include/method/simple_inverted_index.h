@@ -78,7 +78,7 @@ class SimplInvIndex : public Index<dist_t> {
 
   virtual bool DuplicateData() const override { return false; }
 
- private:
+ protected:
   struct PostEntry {
     IdType   doc_id_; // IdType is signed
     dist_t   val_;
@@ -97,14 +97,24 @@ class SimplInvIndex : public Index<dist_t> {
       delete [] entries_;
     }
   };
+
+  /**
+   * A structure that keeps information about current state of search within one posting list.
+   */
   struct PostListQueryState {
+    // pointer to the posting list (fixed from the beginning)
     const PostList*  post_;
+    // actual position in the list
     size_t           post_pos_;
-    dist_t           qval_;
+    // value of the respective term in the query (fixed from the beginning)
+    const dist_t           qval_;
+    // product of the values in query in the document (for given term)
     dist_t           qval_x_docval_;
+
     PostListQueryState(const PostList& pl, dist_t qval, dist_t qval_x_docval)
         : post_(&pl), post_pos_(0), qval_(qval), qval_x_docval_(qval_x_docval) {}
   };
+
   const ObjectVector&                                      data_;
   SpaceSparseNegativeScalarProductFast*                    pSpace_;
   std::unordered_map<unsigned, std::unique_ptr<PostList>>  index_;
