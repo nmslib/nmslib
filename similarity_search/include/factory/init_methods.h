@@ -47,6 +47,7 @@
 #include "factory/method/omedrank.h"
 #include "factory/method/simple_inverted_index.h"
 #include "factory/method/wand_inverted_index.h"
+#include "factory/method/blkmax_inverted_index.h"
 #if !defined(_MSC_VER)
 #include "factory/method/nndes.h"
 #endif
@@ -179,6 +180,7 @@ inline void initMethods() {
 
   REGISTER_METHOD_CREATOR(float,  METH_SIMPLE_INV_INDEX, CreateSimplInvIndex)
   REGISTER_METHOD_CREATOR(float,  METH_WAND_INV_INDEX, CreateWANDInvIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_BLKMAX_INV_INDEX, CreateBlockMaxInvIndex)
 
 #if !defined(_MSC_VER)
   // Another KNN-graph, which is computed via NN-descent

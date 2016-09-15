@@ -38,7 +38,7 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   size_t K = query->GetK();
 
   // sorted list (priority queue) of pairs (doc_id, its_position_in_the_posting_list)
-  //   the doc_ids are negative for some reason
+  //   the doc_ids are negative to keep the queue ordered the way we need
   FalconnHeapMod1<IdType, int32_t>            postListQueue;
   // state information for each query-term posting list
   vector<unique_ptr<PostListQueryState>>      queryStates(query_vect.size());
@@ -142,8 +142,13 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 
 template <typename dist_t>
 void SimplInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
-  AnyParamManager  pmgr(IndexParams);
-  pmgr.CheckUnused();
+  AnyParamManager pmgr(IndexParams);
+  CreateIndex(pmgr);
+}
+
+template <typename dist_t>
+void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
+  ParamManager.CheckUnused();
   // Always call ResetQueryTimeParams() to set query-time parameters to their default values
   this->ResetQueryTimeParams();
 

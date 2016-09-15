@@ -39,7 +39,7 @@ void WandInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   size_t K = query->GetK();
 
   // sorted list (priority queue) of pairs (doc_id, its_position_in_the_posting_list)
-  //   the doc_ids are negative for some reason
+  //   the doc_ids are negative to keep the queue ordered the way we need
   FalconnHeapMod1<IdType, int32_t>            postListQueue;
   // state information for each query-term posting list WAND
   vector<unique_ptr<PostListQueryStateWAND>>      queryStates(query_vect.size());
@@ -146,8 +146,14 @@ void WandInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 
 template <typename dist_t>
 void WandInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
+  AnyParamManager pmgr(IndexParams);
+  CreateIndex(pmgr);
+}
+
+template <typename dist_t>
+void WandInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
   // create the index first
-  SimplInvIndex<dist_t>::CreateIndex(IndexParams);
+  SimplInvIndex<dist_t>::CreateIndex(ParamManager);
 
   for (const auto& dictEntry : SimplInvIndex<dist_t>::index_) {
     dist_t termMax = 0;

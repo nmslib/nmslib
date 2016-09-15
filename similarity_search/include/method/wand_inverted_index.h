@@ -51,6 +51,9 @@ class WandInvIndex : public SimplInvIndex<dist_t> {
 
  protected:
 
+  // a protected creator that has already a created parameter manager
+  void CreateIndex(AnyParamManager& ParamManager);
+
   typedef typename SimplInvIndex<dist_t>::PostList PostList;
   typedef typename SimplInvIndex<dist_t>::PostEntry PostEntry;
 
@@ -62,7 +65,7 @@ class WandInvIndex : public SimplInvIndex<dist_t> {
     const PostList*  post_;
     // value of the respective term in the query (fixed from the beginning)
     const dist_t           qval_;
-    // product of the value in query and max contribution for given term
+    // product of the value in query and MAX contribution for given term
     const dist_t max_term_contr_;
 
     // actual position in the list

@@ -79,6 +79,10 @@ class SimplInvIndex : public Index<dist_t> {
   virtual bool DuplicateData() const override { return false; }
 
  protected:
+
+  // a protected creator that has already a created parameter manager
+  void CreateIndex(AnyParamManager& ParamManager);
+
   struct PostEntry {
     IdType   doc_id_; // IdType is signed
     dist_t   val_;
