@@ -56,6 +56,8 @@ static PyMethodDef nmslibMethods[] = {
   {"loadIndex", loadIndex, METH_VARARGS},
   {"setQueryTimeParams", setQueryTimeParams, METH_VARARGS},
   {"knnQuery", knnQuery, METH_VARARGS},
+  {"getDataPoint", getDataPoint, METH_VARARGS},
+  {"getDataPointQty", getDataPointQty, METH_VARARGS},
   {"freeIndex", freeIndex, METH_VARARGS},
   {NULL, NULL}
 };
@@ -77,9 +79,12 @@ static PyTypeObject NmslibDist_Type = {
 };
 
 using BoolObject = std::pair<bool,const Object*>;
-typedef BoolObject (*DataParserFunc)(PyObject*,int,int);
+typedef BoolObject (*DataReaderFunc)(PyObject*,int,int);
 BoolObject readVector(PyObject* data, int id, int dist_type);
 BoolObject readString(PyObject* data, int id, int dist_type);
+typedef PyObject* (*DataWriterFunc)(const Object*);
+PyObject*  writeVector(const Object*);
+PyObject*  writeString(const Object*);
 
 const int kDataVector = 1;
 const int kDataString = 2;
@@ -88,9 +93,13 @@ const std::map<std::string, int> NMSLIB_DATA_TYPES = {
   {"VECTOR", kDataVector},
   {"STRING", kDataString},
 };
-const std::map<int, DataParserFunc> NMSLIB_DATA_PARSERS = {
+const std::map<int, DataReaderFunc> NMSLIB_DATA_READERS = {
   {kDataVector, &readVector},
   {kDataString, &readString},
+};
+const std::map<int, DataWriterFunc> NMSLIB_DATA_WRITERS = {
+  {kDataVector, &writeVector},
+  {kDataString, &writeString},
 };
 
 const int kDistFloat = 4;
@@ -192,6 +201,43 @@ BoolObject readString(PyObject* data, int id, int dist_type) {
   return std::make_pair(true, z);
 }
 
+PyObject* writeString(const Object* obj) {
+  unique_ptr<char[]> str_copy;
+Py_BEGIN_ALLOW_THREADS
+  str_copy.reset(new char[obj->datalength()+1]);
+  char *s =str_copy.get();
+  s[obj->datalength()] = 0;
+  memcpy(s, obj->data(), obj->datalength()*sizeof(char));
+Py_END_ALLOW_THREADS
+  PyObject* v = PyString_FromString(str_copy.get());
+  if (!v) {
+    return NULL;
+  }
+  return v;
+}
+
+PyObject* writeVector(const Object* obj) {
+  // Could in principal use Py_*ALLOW_THREADS here, but it's not 
+  // very useful b/c it would apply only to a very short and fast
+  // fragment of code. In that, it seems that we have to start blocking
+  // as soon as we start calling Python API functions.
+  const float* arr = reinterpret_cast<const float*>(obj->data());
+  size_t       qty = obj->datalength() / sizeof(float);
+  PyObject* z = PyList_New(qty);
+  if (!z) {
+    return NULL;
+  }
+  for (size_t i = 0; i < qty; ++i) {
+    PyObject* v = PyFloat_FromDouble(arr[i]);
+    if (!v) {
+      Py_DECREF(z);
+      return NULL;
+    }
+    PyList_SET_ITEM(z, i, v);
+  }
+  return z;
+}
+
 template <typename T>
 class IndexWrapper {
  public:
@@ -230,6 +276,12 @@ class IndexWrapper {
   void AddDataPoint(const Object* z) {
     data_.push_back(z);
   }
+
+  const Object* GetDataPoint(size_t index) {
+    return data_.at(index);
+  }
+
+
 
   void CreateIndex(const AnyParams& index_params) {
     // Delete previously created index
@@ -355,8 +407,8 @@ template <typename T>
 PyObject* _addDataPoint(PyObject* ptr, IdType id, PyObject* data) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
-  auto iter = NMSLIB_DATA_PARSERS.find(index->GetDataType());
-  if (iter == NMSLIB_DATA_PARSERS.end()) {
+  auto iter = NMSLIB_DATA_READERS.find(index->GetDataType());
+  if (iter == NMSLIB_DATA_READERS.end()) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
   }
@@ -500,8 +552,8 @@ template <typename T>
 PyObject* _knnQuery(PyObject* ptr, int k, PyObject* data) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
-  auto iter = NMSLIB_DATA_PARSERS.find(index->GetDataType());
-  if (iter == NMSLIB_DATA_PARSERS.end()) {
+  auto iter = NMSLIB_DATA_READERS.find(index->GetDataType());
+  if (iter == NMSLIB_DATA_READERS.end()) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
   }
@@ -529,6 +581,63 @@ PyObject* knnQuery(PyObject* self, PyObject* args) {
     return _knnQuery<float>(ptr, k, data);
   } else {
     return _knnQuery<int>(ptr, k, data);
+  }
+}
+
+template <typename T>
+PyObject* _getDataPoint(PyObject* ptr, int id) {
+  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+      PyLong_AsVoidPtr(ptr));
+  if (id < 0 || static_cast<size_t>(id) >= index->GetDataPointQty()) {
+    raise << "The data point index should be >= 0 & < " << index->GetDataPointQty();
+    return NULL;
+  }
+  auto iter = NMSLIB_DATA_WRITERS.find(index->GetDataType());
+  if (iter == NMSLIB_DATA_WRITERS.end()) {
+    raise << "unknown data type - " << index->GetDataType();
+    return NULL;
+  }
+  const Object* obj = index->GetDataPoint(id);
+  return (*iter->second)(obj);
+}
+
+PyObject* getDataPoint(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  int       index;
+  if (!PyArg_ParseTuple(args, "Oi", &ptr, &index)) {
+    raise << "Error reading parameters (expecting: index ref, object index)";
+    return NULL;
+  }
+
+  if (IsDistFloat(ptr)) {
+    return _getDataPoint<float>(ptr, index);
+  } else {
+    return _getDataPoint<int>(ptr, index);
+  }
+}
+
+template <typename T>
+PyObject* _getDataPointQty(PyObject* ptr) {
+  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+      PyLong_AsVoidPtr(ptr));
+  PyObject* tmp = PyInt_FromLong(index->GetDataPointQty());
+  if (tmp == NULL) {
+    return NULL;
+  }
+  return tmp;
+}
+
+PyObject* getDataPointQty(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  if (!PyArg_ParseTuple(args, "O", &ptr)) {
+    raise << "Error reading parameters (expecting: index ref)";
+    return NULL;
+  }
+
+  if (IsDistFloat(ptr)) {
+    return _getDataPointQty<float>(ptr);
+  } else {
+    return _getDataPointQty<int>(ptr);
   }
 }
 

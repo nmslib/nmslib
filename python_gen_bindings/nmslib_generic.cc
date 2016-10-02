@@ -56,6 +56,8 @@ static PyMethodDef nmslibMethods[] = {
   {"loadIndex", loadIndex, METH_VARARGS},
   {"setQueryTimeParams", setQueryTimeParams, METH_VARARGS},
   {"knnQuery", knnQuery, METH_VARARGS},
+  {"getDataPoint", getDataPoint, METH_VARARGS},
+  {"getDataPointQty", getDataPointQty, METH_VARARGS},
   {"freeIndex", freeIndex, METH_VARARGS},
   {NULL, NULL}
 };
@@ -158,6 +160,7 @@ class IndexWrapperBase {
   virtual void LoadIndex(const string&) = 0;
   virtual void SetQueryTimeParams(const AnyParams&) = 0;
   virtual void AddDataPoint(const Object* z) { data_.push_back(z); }
+  virtual PyObject* GetDataPoint(size_t index) = 0;
   virtual PyObject* KnnQuery(int k, const Object* query) = 0;
   virtual unique_ptr<Object> CreateObjFromStr(const string& s, int id) = 0;
 
@@ -253,6 +256,21 @@ Py_END_ALLOW_THREADS
     return z;
   }
 
+  PyObject* GetDataPoint(size_t index) override {
+    const Object* obj = data_.at(index);
+    unique_ptr<char[]> str_copy;
+Py_BEGIN_ALLOW_THREADS
+    string str = space_->CreateStrFromObj(obj, ConvertToString(obj->id()));
+    str_copy.reset(new char[str.size()+1]);
+    memcpy(str_copy.get(), str.c_str(), str.size()+1);
+Py_END_ALLOW_THREADS
+    PyObject* v = PyString_FromString(str_copy.get());
+    if (!v) {
+      return NULL;
+    }
+    return v;
+  }
+
  private:
   Index<T>* index_;
   Space<T>* space_;
@@ -318,6 +336,9 @@ PyObject* addDataPoint(PyObject* self, PyObject* args) {
   }
 
   IndexWrapperBase* pIndex = reinterpret_cast<IndexWrapperBase*>(PyLong_AsVoidPtr(ptr));
+  unique_ptr<Object> obj;
+
+Py_BEGIN_ALLOW_THREADS
 
   auto res = ReadString(dataPoint);
 
@@ -326,7 +347,11 @@ PyObject* addDataPoint(PyObject* self, PyObject* args) {
     return NULL;
   }
 
-  pIndex->AddDataPoint(pIndex->CreateObjFromStr(res.second, id).release());
+  obj.reset(pIndex->CreateObjFromStr(res.second, id).release());
+
+Py_END_ALLOW_THREADS
+
+  pIndex->AddDataPoint(obj.release());
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -422,6 +447,35 @@ PyObject* knnQuery(PyObject* self, PyObject* args) {
   }
   std::unique_ptr<const Object> query_obj(pIndex->CreateObjFromStr(res.second, 0));
   return pIndex->KnnQuery(k, query_obj.get());
+}
+
+PyObject* getDataPoint(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  int       index;
+  if (!PyArg_ParseTuple(args, "Oi", &ptr, &index)) {
+    raise << "Error reading parameters (expecting: index ref, object index)";
+    return NULL;
+  }
+  IndexWrapperBase* pIndex = reinterpret_cast<IndexWrapperBase*>(PyLong_AsVoidPtr(ptr));
+  if (index < 0 || static_cast<size_t>(index) >= pIndex->GetDataPointQty()) {
+    raise << "The data point index should be >= 0 & < " << pIndex->GetDataPointQty();
+    return NULL;
+  }
+  return pIndex->GetDataPoint(index);
+}
+
+PyObject* getDataPointQty(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  if (!PyArg_ParseTuple(args, "O", &ptr)) {
+    raise << "Error reading parameters (expecting: index ref)";
+    return NULL;
+  }
+  IndexWrapperBase* pIndex = reinterpret_cast<IndexWrapperBase*>(PyLong_AsVoidPtr(ptr));
+  PyObject* tmp = PyInt_FromLong(pIndex->GetDataPointQty());
+  if (tmp == NULL) {
+    return NULL;
+  }
+  return tmp;
 }
 
 PyObject* freeIndex(PyObject* self, PyObject* args) {

@@ -26,6 +26,8 @@ PyObject* createIndex(PyObject* self, PyObject* args);
 PyObject* saveIndex(PyObject* self, PyObject* args);
 PyObject* loadIndex(PyObject* self, PyObject* args);
 PyObject* knnQuery(PyObject* self, PyObject* args);
+PyObject* getDataPoint(PyObject* self, PyObject* args);
+PyObject* getDataPointQty(PyObject* self, PyObject* args);
 PyObject* freeIndex(PyObject* self, PyObject* args);
 
 #endif

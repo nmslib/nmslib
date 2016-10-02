@@ -3,6 +3,8 @@
 import sys
 import nmslib_generic
 
+MAX_PRINT_QTY=50
+
 def read_data(file_name):
     f=open(file_name) 
     for line in f:
@@ -22,6 +24,14 @@ def test_vector_fresh():
 
     for id, data in enumerate(read_data('sample_dataset.txt')):
       nmslib_generic.addDataPoint(index, id, data)
+
+    print 'Let\'s print a few data entries'
+    print 'We have added %d data points' % nmslib_generic.getDataPointQty(index) 
+
+
+    for i in range(0,min(MAX_PRINT_QTY,nmslib_generic.getDataPointQty(index))):
+       print nmslib_generic.getDataPoint(index,i)
+
     print 'Let\'s invoke the index-build process'
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
@@ -61,6 +71,13 @@ def test_vector_loaded():
 
     for id, data in enumerate(read_data('sample_dataset.txt')):
       nmslib_generic.addDataPoint(index, id, data)
+
+    print 'Let\'s print a few data entries'
+    print 'We have added %d data points' % nmslib_generic.getDataPointQty(index) 
+
+    for i in range(0,min(MAX_PRINT_QTY,nmslib_generic.getDataPointQty(index))):
+       print nmslib_generic.getDataPoint(index,i)
+
     print 'Let\'s invoke the index-build process'
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
@@ -100,8 +117,15 @@ def test_string_fresh():
                              space_param,
                              method_name,
                              nmslib_generic.DistType.INT)
+
     for id, data in enumerate(DATA_STRS):
-        nmslib_generic.addDataPoint(index, id, data)
+      nmslib_generic.addDataPoint(index, id, data)
+
+    print 'Let\'s print a few data entries'
+    print 'We have added %d data points' % nmslib_generic.getDataPointQty(index) 
+
+    for i in range(0,min(MAX_PRINT_QTY,nmslib_generic.getDataPointQty(index))):
+       print nmslib_generic.getDataPoint(index,i)
 
     print 'Let\'s invoke the index-build process'
 
@@ -143,8 +167,15 @@ def test_string_loaded():
                              space_param,
                              method_name,
                              nmslib_generic.DistType.INT)
+
     for id, data in enumerate(DATA_STRS):
-        nmslib_generic.addDataPoint(index, id, data)
+      nmslib_generic.addDataPoint(index, id, data)
+
+    print 'Let\'s print a few data entries'
+    print 'We have added %d data points' % nmslib_generic.getDataPointQty(index) 
+
+    for i in range(0,min(MAX_PRINT_QTY,nmslib_generic.getDataPointQty(index))):
+       print nmslib_generic.getDataPoint(index,i)
 
     print 'Let\'s invoke the index-build process'
 

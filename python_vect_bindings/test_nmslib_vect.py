@@ -3,6 +3,8 @@
 import sys
 import nmslib_vector
 
+MAX_PRINT_QTY=50
+
 def read_data(fn):
     with open(fn) as f:
       for line in f:
@@ -22,6 +24,15 @@ def test_vector_fresh():
 
     for id, data in enumerate(read_data('sample_dataset.txt')):
         nmslib_vector.addDataPoint(index, id, data)
+
+    print 'Let\'s print a few data entries'
+    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index) 
+
+    for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
+       print nmslib_vector.getDataPoint(index,i)
+
+    print 'Let\'s invoke the index-build process'
+
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
@@ -60,6 +71,15 @@ def test_vector_loaded():
 
     for id, data in enumerate(read_data('sample_dataset.txt')):
         nmslib_vector.addDataPoint(index, id, data)
+
+    print 'Let\'s print a few data entries'
+    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index) 
+
+    for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
+       print nmslib_vector.getDataPoint(index,i)
+
+    print 'Let\'s invoke the index-build process'
+
 
     query_time_param = ['initSearchAttempts=3']
 
@@ -100,6 +120,15 @@ def test_string_fresh():
     for id, data in enumerate(DATA_STRS):
         nmslib_vector.addDataPoint(index, id, data)
 
+    print 'Let\'s print a few data entries'
+    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index) 
+
+    for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
+       print nmslib_vector.getDataPoint(index,i)
+
+    print 'Let\'s invoke the index-build process'
+
+
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
 
@@ -139,6 +168,15 @@ def test_string_loaded():
                              nmslib_vector.DistType.INT)
     for id, data in enumerate(DATA_STRS):
         nmslib_vector.addDataPoint(index, id, data)
+
+    print 'Let\'s print a few data entries'
+    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index) 
+
+    for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
+       print nmslib_vector.getDataPoint(index,i)
+
+    print 'Let\'s invoke the index-build process'
+
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
