@@ -92,6 +92,7 @@ const size_t AVG_EMBED_FIELD_FEATURE_QTY = 1;
 
 const char *const BM25_FEATURE_NAME = "bm25";
 const char *const COSINE_FEATURE_NAME = "cosine";
+const char *const MODEL1_FEATURE_NAME = "model1";
 const vector<string> FEATURE_TYPES = {BM25_FEATURE_NAME,
                                       "tfidf",
                                       "model1",
@@ -734,8 +735,11 @@ DataFileInputStateQA1::DataFileInputStateQA1(const string& headerFileName) {
     string simpleIndexType;
     if (checkPrefixGetRest(SIMPLE_INDEX_TYPE, line, simpleIndexType)) {
       ToLower(simpleIndexType);
-      CHECK_MSG(simpleIndexType == BM25_FEATURE_NAME || simpleIndexType == COSINE_FEATURE_NAME,
-               "The simple index type is " + string(BM25_FEATURE_NAME) + " or " + string(COSINE_FEATURE_NAME));
+      CHECK_MSG(simpleIndexType == BM25_FEATURE_NAME || simpleIndexType == COSINE_FEATURE_NAME || simpleIndexType == MODEL1_FEATURE_NAME,
+               "The simple index type is "
+               + string(BM25_FEATURE_NAME) + " or "
+               + string(COSINE_FEATURE_NAME) + " or "
+               + string(MODEL1_FEATURE_NAME));
       CHECK_MSG(getline(istrm, line),
                 "Cannot read line " + lexical_cast<string>(mLineNum) + " from '" + headerFileName + "'");
 
@@ -899,14 +903,23 @@ DataFileInputStateQA1::DataFileInputStateQA1(const string& headerFileName) {
      * Also note that the simple index similarity will use the first field only!
      */
     if (!simpleIndexType.empty()) {
-      CHECK_MSG(simpleIndexType == BM25_FEATURE_NAME || simpleIndexType == COSINE_FEATURE_NAME,
-                "The simple index type is " + string(BM25_FEATURE_NAME) + " or " + string(COSINE_FEATURE_NAME));
       featureWeightsPivots.resize(1);
       featureWeightsPivots[0] = 1;
       for (auto & v: featureMasksPivots) {
         v = 0;
       }
-      featureMasksPivots[0] = (simpleIndexType == BM25_FEATURE_NAME ? BM25_FLAG : COSINE_FLAG);
+      if (simpleIndexType == BM25_FEATURE_NAME)
+        featureMasksPivots[0] = BM25_FLAG;
+      else if (simpleIndexType == COSINE_FEATURE_NAME)
+        featureMasksPivots[0] = COSINE_FLAG;
+      else if (simpleIndexType == MODEL1_FEATURE_NAME)
+        featureMasksPivots[0] = MODEL1_FLAG;
+      else throw runtime_error(
+            "The simple index type should be "
+            + string(BM25_FEATURE_NAME) + " or "
+            + string(COSINE_FEATURE_NAME) + " or "
+            + string(MODEL1_FEATURE_NAME)
+        );
     }
 
     logFeatureMasks("regular", featureMasks);
