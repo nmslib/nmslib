@@ -585,7 +585,7 @@ int main(int argc, char *argv[]) {
 
 #if SIMPLE_SERVER
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
-  LOG(LIB_INFO) << "Starting a simple server.";
+  LOG(LIB_INFO) << "Started a simple server.";
 #else
   boost::shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(threadQty);
   boost::shared_ptr<PosixThreadFactory> threadFactory = boost::shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
@@ -596,7 +596,7 @@ int main(int argc, char *argv[]) {
                            transportFactory,
                            protocolFactory,
                            threadManager);
-  LOG(LIB_INFO) << "Starting a server with a " << threadQty << " thread-pool.";
+  LOG(LIB_INFO) << "Started a server with a " << threadQty << " thread-pool.";
 #endif
   server.serve();
   return 0;
