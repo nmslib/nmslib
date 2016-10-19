@@ -49,7 +49,7 @@ using namespace apache::thrift::transport;
 namespace po = boost::program_options;
 
 enum SearchType {
-  kKNNSearch, kRangeSearch
+  kNoSearch, kKNNSearch, kRangeSearch
 };
 
 static void Usage(const char *prog,
@@ -105,9 +105,7 @@ void ParseCommandLineForClient(int argc, char*argv[],
     }
     searchType = kRangeSearch;
   } else {
-    cerr << "One has to specify either range or KNN-search parameter";
-    Usage(argv[0], ProgOptDesc);
-    exit(1);
+    searchType = kNoSearch;
   }
 
   retExternId = vm.count("retExternId") != 0;
@@ -143,8 +141,10 @@ int main(int argc, char *argv[]) {
   string        s;
   stringstream  ss;
 
-  while (getline(cin, s)) {
-    ss << s << endl;
+  if (kNoSearch != searchType) {
+    while (getline(cin, s)) {
+      ss << s << endl;
+    }
   }
 
   string queryObjStr = ss.str();
@@ -158,20 +158,21 @@ int main(int argc, char *argv[]) {
     transport->open();
 
     try {
+
       if (!queryTimeParams.empty()) {
         client.setQueryTimeParams(queryTimeParams);
       }
 
-      ReplyEntryList res;
-
       WallClockTimer wtm;
-
       wtm.reset();
+
+      ReplyEntryList res;
 
       if (kKNNSearch == searchType) {
         cout << "Running a " << k << "-NN query" << endl;;
         client.knnQuery(res, k, queryObjStr, retExternId, retObj);
-      } else {
+      } 
+      if (kRangeSearch == searchType) {
         cout << "Running a range query with radius = " << r << endl;
         client.rangeQuery(res, r, queryObjStr, retExternId, retObj);
       }
