@@ -182,7 +182,9 @@ class SortArrBI {
     if (num_elems_ < v_.size()) num_elems_++;
     // curr + 1 <= num_elems_
 
-    memmove(&v_[curr+1], &v_[curr], (num_elems_ - (1 + curr)) * sizeof(v_[0]));
+    if(num_elems_ - (1 + curr) > 0)
+		   memmove(&v_[curr+1], &v_[curr], (num_elems_ - (1 + curr)) * sizeof(v_[0]));
+
 
     v_[curr].used = false;
     v_[curr].key  = key;
