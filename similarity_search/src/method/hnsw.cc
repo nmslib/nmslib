@@ -69,8 +69,10 @@ namespace similarity {
     float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes);
 
     template <typename dist_t>    Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t>& space,   const ObjectVector& data) :
-        space_(space), PrintProgress_(PrintProgress), data_(data) {}
-
+        space_(space), PrintProgress_(PrintProgress), data_(data),
+	visitedlistpool(nullptr), enterpoint_(nullptr), data_level0_memory_(nullptr), linkLists_(nullptr), fstdistfunc_(nullptr)
+	{}
+	
     void checkList1(vector<HnswNode*> list) {
         
         int ok = 1;
