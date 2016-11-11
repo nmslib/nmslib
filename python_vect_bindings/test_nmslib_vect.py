@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import os
 import time
 import numpy as np
 import nmslib_vector
@@ -19,21 +20,24 @@ def read_data_fast(fn, sep='\t'):
     return df.as_matrix().astype(np.float32)
 
 
-def read_data_fast_chunked(fn, chunksize, sep='\t'):
+def read_data_fast_batch(fn, batch_size, sep='\t'):
     import pandas
-    for df in pandas.read_csv(fn, sep=sep, header=None, chunksize=chunksize):
+    for df in pandas.read_csv(fn, sep=sep, header=None, chunksize=batch_size):
         yield df.as_matrix().astype(np.float32)
 
 
-
-def test_vector_load(bulk=True, bulk_chunked=True, seq=True):
+def test_vector_load(fast=True, fast_batch=True, seq=True):
     space_type = 'cosinesimil'
     space_param = []
     method_name = 'small_world_rand'
     index_name  = method_name + '.index'
-    f = '/home/bileg/foo.txt'   # use gen.py to generate this file
+    f = '/tmp/foo.txt'
+    if not os.path.isfile(f):
+        print 'creating %s' % f
+	np.savetxt(f, np.random.rand(100000,1000), delimiter="\t")
+	print 'done'
 
-    if bulk:
+    if fast:
         index = nmslib_vector.init(
                              space_type,
                              space_param,
@@ -44,10 +48,10 @@ def test_vector_load(bulk=True, bulk_chunked=True, seq=True):
         data = read_data_fast(f)
 	nmslib_vector.addDataPointBatch(index, np.arange(len(data), dtype=np.int32), data)
         end = time.time()
-        print 'bulk: added data in %s secs' % (end - start)
+        print 'fast: added data in %s secs' % (end - start)
 	nmslib_vector.freeIndex(index)
 
-    if bulk_chunked:
+    if fast_batch:
         index = nmslib_vector.init(
                              space_type,
                              space_param,
@@ -56,12 +60,12 @@ def test_vector_load(bulk=True, bulk_chunked=True, seq=True):
                              nmslib_vector.DistType.FLOAT)
         start = time.time()
 	offset = 0
-        for data in read_data_fast_chunked(f, 10000):
+        for data in read_data_fast_batch(f, 10000):
 	    nmslib_vector.addDataPointBatch(index, np.arange(len(data), dtype=np.int32) + offset, data)
 	    offset += data.shape[0]
         end = time.time()
 	print 'offset', offset
-        print 'bulk_chunked: added data in %s secs' % (end - start)
+        print 'fast_batch: added data in %s secs' % (end - start)
 	nmslib_vector.freeIndex(index)
 
     if seq:
@@ -79,7 +83,7 @@ def test_vector_load(bulk=True, bulk_chunked=True, seq=True):
 	nmslib_vector.freeIndex(index)
 
 
-def test_vector_fresh(bulk=True):
+def test_vector_fresh(fast=True):
     space_type = 'cosinesimil'
     space_param = []
     method_name = 'small_world_rand'
@@ -92,7 +96,7 @@ def test_vector_fresh(bulk=True):
                              nmslib_vector.DistType.FLOAT)
 
     start = time.time()
-    if bulk:
+    if fast:
         data = read_data_fast('sample_dataset.txt')
 	nmslib_vector.addDataPointBatch(index, np.arange(len(data), dtype=np.int32), data)
     else:
@@ -125,7 +129,7 @@ def test_vector_fresh(bulk=True):
     k = 3
 
     start = time.time()
-    if bulk:
+    if fast:
         num_threads = 10
         query = read_data_fast('sample_queryset.txt')
 	res = nmslib_vector.knnQueryBatch(index, num_threads, k, query)
@@ -193,10 +197,10 @@ if __name__ == '__main__':
     print nmslib_vector.DistType.INT
     print nmslib_vector.DistType.FLOAT
 
-    #test_vector_load()
-    
+    test_vector_load()
+
     test_vector_fresh()
-    #test_vector_fresh(False)
+    test_vector_fresh(False)
     test_vector_loaded()
 
 
