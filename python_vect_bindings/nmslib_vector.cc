@@ -487,6 +487,7 @@ PyObject* _addDataPointBatch(PyObject* ptr,
           << "whereas data contains " << num_vec << " elements";
     return NULL;
   }
+#if 1
   const int* id = reinterpret_cast<int*>(ids->data);
   for (int i = 0; i < num_vec; ++i) {
     //const int id = *reinterpret_cast<int32_t*>(PyArray_GETPTR1(ids, i));
@@ -494,6 +495,44 @@ PyObject* _addDataPointBatch(PyObject* ptr,
     const Object* z = new Object(id[i], -1, num_dim * sizeof(float), buf);
     index->AddDataPoint(z);
   }
+#else
+  const int num_threads = 10;
+  std::queue<std::pair<int,int>> q;
+  std::mutex m;
+  const int* id = reinterpret_cast<int*>(ids->data);
+  for (int i = 0; i < num_vec; ++i) {       // TODO: this can be improved by not adding all
+    q.push(std::make_pair(i, id[i]));
+  }
+  std::mutex md;
+  std::vector<std::thread> threads;
+  for (int i = 0; i < num_threads; ++i) {
+    threads.push_back(std::thread(
+            [&]() {
+              for (;;) {
+              std::pair<int,int> idx;
+                {
+                  std::unique_lock<std::mutex> lock(m);
+                  if (q.empty()) {
+                    break;
+                  }
+                  idx = q.front();
+                  q.pop();
+                }
+                const float* buf = reinterpret_cast<float*>(
+                    data->data + idx.first * data->strides[0]);
+                const Object* z = new Object(
+                    idx.second, -1, num_dim * sizeof(float), buf);
+                {
+                  std::unique_lock<std::mutex> lock(md);
+                  index->AddDataPoint(z);
+                }
+              }
+            }));
+  }
+  for (auto& thread : threads) {
+    thread.join();
+  }
+#endif
   Py_INCREF(Py_None);
   return Py_None;
 }
