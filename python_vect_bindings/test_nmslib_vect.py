@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import sys
+import time
+import numpy as np
 import nmslib_vector
 
 MAX_PRINT_QTY=50
@@ -10,7 +12,14 @@ def read_data(fn):
       for line in f:
         yield [float(v) for v in line.strip().split()]
 
-def test_vector_fresh():
+
+def read_data_fast(fn, sep='\t'):
+    import pandas
+    df = pandas.read_csv(fn, sep=sep, header=None)
+    return df.as_matrix().astype(np.float32)
+
+
+def test_vector_load(bulk=True):
     space_type = 'cosinesimil'
     space_param = []
     method_name = 'small_world_rand'
@@ -22,17 +31,48 @@ def test_vector_fresh():
                              nmslib_vector.DataType.VECTOR,
                              nmslib_vector.DistType.FLOAT)
 
-    for id, data in enumerate(read_data('sample_dataset.txt')):
-        nmslib_vector.addDataPoint(index, id, data)
+    f = '/home/bileg/foo.txt'   # use gen.py to generate this file
+
+    start = time.time()
+    if bulk:
+        data = read_data_fast(f)
+	nmslib_vector.addDataPointBatch(index, np.arange(len(data), dtype=np.int32), data)
+    else:
+        for id, data in enumerate(read_data(f)):
+            nmslib_vector.addDataPoint(index, id, data)
+    end = time.time()
+    print 'added data in %s secs (bulk %s)' % (end - start, bulk)
+
+
+def test_vector_fresh(bulk=True):
+    space_type = 'cosinesimil'
+    space_param = []
+    method_name = 'small_world_rand'
+    index_name  = method_name + '.index'
+    index = nmslib_vector.init(
+                             space_type,
+                             space_param,
+                             method_name,
+                             nmslib_vector.DataType.VECTOR,
+                             nmslib_vector.DistType.FLOAT)
+
+    start = time.time()
+    if bulk:
+        data = read_data_fast('sample_dataset.txt')
+	nmslib_vector.addDataPointBatch(index, np.arange(len(data), dtype=np.int32), data)
+    else:
+        for id, data in enumerate(read_data('sample_dataset.txt')):
+            nmslib_vector.addDataPoint(index, id, data)
+    end = time.time()
+    print 'added data in %s secs' % (end - start)
 
     print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index) 
+    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index)
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
        print nmslib_vector.getDataPoint(index,i)
 
     print 'Let\'s invoke the index-build process'
-
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
@@ -47,9 +87,21 @@ def test_vector_fresh():
 
     print "Results for the freshly created index:"
 
-    k = 2
-    for idx, data in enumerate(read_data('sample_queryset.txt')):
-        print idx, nmslib_vector.knnQuery(index, k, data)
+    k = 3
+
+    start = time.time()
+    if bulk:
+        num_threads = 10
+        query = read_data_fast('sample_queryset.txt')
+	res = nmslib_vector.knnQueryBatch(index, num_threads, k, query)
+	for idx, v in enumerate(res):
+            print idx, v
+    else:
+        for idx, data in enumerate(read_data('sample_queryset.txt')):
+            print idx, nmslib_vector.knnQuery(index, k, data)
+    end = time.time()
+    print 'querying done in %s secs' % (end - start)
+    sys.exit(1)
 
     nmslib_vector.saveIndex(index, index_name)
 
@@ -73,7 +125,7 @@ def test_vector_loaded():
         nmslib_vector.addDataPoint(index, id, data)
 
     print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index) 
+    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index)
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
        print nmslib_vector.getDataPoint(index,i)
@@ -86,7 +138,7 @@ def test_vector_loaded():
     nmslib_vector.loadIndex(index, index_name)
 
     print "The index %s is loaded" % index_name
-  
+
     nmslib_vector.setQueryTimeParams(index,query_time_param)
 
     print 'Query time parameters are set'
@@ -100,103 +152,6 @@ def test_vector_loaded():
     nmslib_vector.freeIndex(index)
 
 
-def test_string_fresh():
-    DATA_STRS = ["xyz", "beagcfa", "cea", "cb",
-                  "d", "c", "bdaf", "ddcd",
-                  "egbfa", "a", "fba", "bcccfe",
-                  "ab", "bfgbfdc", "bcbbgf", "bfbb"
-    ]
-    QUERY_STRS = ["abc", "def", "ghik"]
-    space_type = 'leven'
-    space_param = []
-    method_name = 'small_world_rand'
-    index_name  = method_name + '.index'
-    index = nmslib_vector.init(
-                             space_type,
-                             space_param,
-                             method_name,
-                             nmslib_vector.DataType.STRING,
-                             nmslib_vector.DistType.INT)
-    for id, data in enumerate(DATA_STRS):
-        nmslib_vector.addDataPoint(index, id, data)
-
-    print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index) 
-
-    for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
-       print nmslib_vector.getDataPoint(index,i)
-
-    print 'Let\'s invoke the index-build process'
-
-
-    index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
-    query_time_param = ['initSearchAttempts=3']
-
-    nmslib_vector.createIndex(index, index_param)
-    nmslib_vector.setQueryTimeParams(index, query_time_param)
-
-    print 'Query time parameters are set'
-
-    print "Results for the freshly created index:"
-
-    k = 2
-    for idx, data in enumerate(QUERY_STRS):
-        print idx, nmslib_vector.knnQuery(index, k, data)
-
-    nmslib_vector.saveIndex(index, index_name)
-
-    print "The index %s is saved" % index_name
-
-    nmslib_vector.freeIndex(index)
-
-def test_string_loaded():
-    DATA_STRS = ["xyz", "beagcfa", "cea", "cb",
-                  "d", "c", "bdaf", "ddcd",
-                  "egbfa", "a", "fba", "bcccfe",
-                  "ab", "bfgbfdc", "bcbbgf", "bfbb"
-    ]
-    QUERY_STRS = ["abc", "def", "ghik"]
-    space_type = 'leven'
-    space_param = []
-    method_name = 'small_world_rand'
-    index_name  = method_name + '.index'
-    index = nmslib_vector.init(
-                             space_type,
-                             space_param,
-                             method_name,
-                             nmslib_vector.DataType.STRING,
-                             nmslib_vector.DistType.INT)
-    for id, data in enumerate(DATA_STRS):
-        nmslib_vector.addDataPoint(index, id, data)
-
-    print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib_vector.getDataPointQty(index) 
-
-    for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
-       print nmslib_vector.getDataPoint(index,i)
-
-    print 'Let\'s invoke the index-build process'
-
-
-    index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
-    query_time_param = ['initSearchAttempts=3']
-
-    nmslib_vector.loadIndex(index, index_name)
-
-    print "The index %s is loaded" % index_name
-
-    nmslib_vector.setQueryTimeParams(index, query_time_param)
-
-    print 'Query time parameters are set'
-
-    print "Results for the loaded index:"
-
-    k = 2
-    for idx, data in enumerate(QUERY_STRS):
-        print idx, nmslib_vector.knnQuery(index, k, data)
-
-    nmslib_vector.freeIndex(index)
-
 if __name__ == '__main__':
 
     print nmslib_vector.DataType.VECTOR
@@ -204,10 +159,12 @@ if __name__ == '__main__':
     print nmslib_vector.DistType.INT
     print nmslib_vector.DistType.FLOAT
 
+    #test_vector_load(False)
+    #test_vector_load(True)
+
     test_vector_fresh()
+    #test_vector_fresh(False)
     test_vector_loaded()
-    test_string_fresh()
-    test_string_loaded()
 
 
 

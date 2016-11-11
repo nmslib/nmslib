@@ -15,15 +15,20 @@
  */
 
 #include <Python.h>
+#include <numpy/arrayobject.h>
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <map>
 #include <utility>
+#include <thread>
+#include <queue>
+#include <mutex>
 #include "space.h"
 #include "init.h"
 #include "index.h"
@@ -51,11 +56,13 @@ using StringVector = std::vector<std::string>;
 static PyMethodDef nmslibMethods[] = {
   {"init", init, METH_VARARGS},
   {"addDataPoint", addDataPoint, METH_VARARGS},
+  {"addDataPointBatch", addDataPointBatch, METH_VARARGS},
   {"createIndex", createIndex, METH_VARARGS},
   {"saveIndex", saveIndex, METH_VARARGS},
   {"loadIndex", loadIndex, METH_VARARGS},
   {"setQueryTimeParams", setQueryTimeParams, METH_VARARGS},
   {"knnQuery", knnQuery, METH_VARARGS},
+  {"knnQueryBatch", knnQueryBatch, METH_VARARGS},
   {"getDataPoint", getDataPoint, METH_VARARGS},
   {"getDataPointQty", getDataPointQty, METH_VARARGS},
   {"freeIndex", freeIndex, METH_VARARGS},
@@ -84,7 +91,7 @@ BoolObject readVector(PyObject* data, int id, int dist_type);
 BoolObject readString(PyObject* data, int id, int dist_type);
 typedef PyObject* (*DataWriterFunc)(const Object*);
 PyObject*  writeVector(const Object*);
-PyObject*  writeString(const Object*);
+//PyObject*  writeString(const Object*);
 
 const int kDataVector = 1;
 const int kDataString = 2;
@@ -95,11 +102,11 @@ const std::map<std::string, int> NMSLIB_DATA_TYPES = {
 };
 const std::map<int, DataReaderFunc> NMSLIB_DATA_READERS = {
   {kDataVector, &readVector},
-  {kDataString, &readString},
+  //{kDataString, &readString},
 };
 const std::map<int, DataWriterFunc> NMSLIB_DATA_WRITERS = {
   {kDataVector, &writeVector},
-  {kDataString, &writeString},
+  //{kDataString, &writeString},
 };
 
 const int kDistFloat = 4;
@@ -114,6 +121,7 @@ PyMODINIT_FUNC initnmslib_vector() {
   if (module == NULL) {
     return;
   }
+  import_array();
   // data type
   NmslibData_Type.tp_new = PyType_GenericNew;
   NmslibData_Type.tp_name = "nmslib_vector.DataType";
@@ -191,33 +199,8 @@ BoolObject readVector(PyObject* data, int id, int dist_type) {
   return std::make_pair(true, z);
 }
 
-BoolObject readString(PyObject* data, int id, int dist_type) {
-  if (!PyString_Check(data)) {
-    raise << "expected DataType.String";
-    return std::make_pair(false, nullptr);
-  }
-  const char* s = PyString_AsString(data);
-  const Object* z = new Object(id, -1, strlen(s)*sizeof(char), s);
-  return std::make_pair(true, z);
-}
-
-PyObject* writeString(const Object* obj) {
-  unique_ptr<char[]> str_copy;
-Py_BEGIN_ALLOW_THREADS
-  str_copy.reset(new char[obj->datalength()+1]);
-  char *s =str_copy.get();
-  s[obj->datalength()] = 0;
-  memcpy(s, obj->data(), obj->datalength()*sizeof(char));
-Py_END_ALLOW_THREADS
-  PyObject* v = PyString_FromString(str_copy.get());
-  if (!v) {
-    return NULL;
-  }
-  return v;
-}
-
 PyObject* writeVector(const Object* obj) {
-  // Could in principal use Py_*ALLOW_THREADS here, but it's not 
+  // Could in principal use Py_*ALLOW_THREADS here, but it's not
   // very useful b/c it would apply only to a very short and fast
   // fragment of code. In that, it seems that we have to start blocking
   // as soon as we start calling Python API functions.
@@ -241,7 +224,7 @@ PyObject* writeVector(const Object* obj) {
 template <typename T>
 class IndexWrapper {
  public:
-  IndexWrapper(int dist_type, int data_type, 
+  IndexWrapper(int dist_type, int data_type,
                const char* space_type,
                const AnyParams& space_param,
                const char* method_name)
@@ -280,8 +263,6 @@ class IndexWrapper {
   const Object* GetDataPoint(size_t index) {
     return data_.at(index);
   }
-
-
 
   void CreateIndex(const AnyParams& index_params) {
     // Delete previously created index
@@ -339,6 +320,47 @@ Py_END_ALLOW_THREADS
     return z;
   }
 
+  std::vector<IntVector> KnnQueryBatch(const int num_threads, const int k,
+                                       const ObjectVector& query_objects) {
+    std::vector<IntVector> query_res(query_objects.size());
+    std::queue<std::pair<size_t, const Object*>> q;
+    std::mutex m;
+    for (size_t i = 0; i < query_objects.size(); ++i) {       // TODO: this can be improved by not adding all
+      q.push(std::make_pair(i, query_objects[i]));
+    }
+    std::vector<std::thread> threads;
+    for (int i = 0; i < num_threads; ++i) {
+      threads.push_back(std::thread(
+              [&]() {
+                for (;;) {
+                  std::pair<size_t, const Object*> query;
+                  {
+                    std::unique_lock<std::mutex> lock(m);
+                    if (q.empty()) {
+                      break;
+                    }
+                    query = q.front();
+                    q.pop();
+                  }
+                  IntVector& ids = query_res[query.first];
+                  KNNQueue<T>* res;
+                  KNNQuery<T> knn(*space_, query.second, k);
+                  index_->Search(&knn, -1);
+                  res = knn.Result()->Clone();
+                  while (!res->Empty()) {
+                    ids.insert(ids.begin(), res->TopObject()->id());
+                    res->Pop();
+                  }
+                  delete res;
+                }
+              }));
+    }
+    for (auto& thread : threads) {
+      thread.join();
+    }
+    return query_res;
+  }
+
  private:
   const int dist_type_;
   const int data_type_;
@@ -356,14 +378,14 @@ inline bool IsDistFloat(PyObject* ptr) {
 
 template <typename T>
 PyObject* _init(int dist_type,
-                     int data_type,
-                     const char* space_type,
-                     const AnyParams& space_param,
-                     const char* method_name) {
-  IndexWrapper<T>* 
-      index(new IndexWrapper<T>(dist_type, data_type, 
-                                space_type, space_param, 
-                                method_name));
+                int data_type,
+                const char* space_type,
+                const AnyParams& space_param,
+                const char* method_name) {
+  IndexWrapper<T>* index(new IndexWrapper<T>(
+          dist_type, data_type,
+          space_type, space_param,
+          method_name));
   if (!index) {
     raise << "failed to create IndexWrapper";
     return NULL;
@@ -377,10 +399,11 @@ PyObject* init(PyObject* self, PyObject* args) {
   char* method_name;
   int dist_type, data_type;
   if (!PyArg_ParseTuple(args, "sO!sii",
-          &space_type, &PyList_Type, &space_param_list, 
+          &space_type, &PyList_Type, &space_param_list,
           &method_name,
           &data_type, &dist_type)) {
-    raise << "Error reading parameters (expecting: space type, space parameter list, index/method name, data type, distance value type)";
+    raise << "Error reading parameters (expecting: space type, space parameter "
+          << "list, index/method name, data type, distance value type)";
     return NULL;
   }
 
@@ -395,12 +418,16 @@ PyObject* init(PyObject* self, PyObject* args) {
           dist_type, data_type, space_type, space_param,
           method_name);
     case kDistInt:
-      return _init<int>(
-          dist_type, data_type, space_type, space_param,
-          method_name);
+      {
+        raise << "This version is optimized for vectors. "
+              << "Use generic bindings for dist type - " << dist_type;
+        return NULL;
+      }
     default:
-      raise << "unknown dist type - " << dist_type;
-      return NULL;
+      {
+        raise << "unknown dist type - " << dist_type;
+        return NULL;
+      }
   }
 }
 template <typename T>
@@ -433,7 +460,59 @@ PyObject* addDataPoint(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     return _addDataPoint<float>(ptr, id, data);
   } else {
-    return _addDataPoint<int>(ptr, id, data);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
+  }
+}
+
+template <typename T>
+PyObject* _addDataPointBatch(PyObject* ptr,
+                             PyArrayObject* ids,
+                             PyArrayObject* data) {
+  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+      PyLong_AsVoidPtr(ptr));
+  if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
+    raise << "ids should be 1 dimensional int32 vector";
+    return NULL;
+  }
+  if (data->descr->type_num != NPY_FLOAT32 || data->nd != 2) {
+    raise << "data should be 2 dimensional float32 vector";
+    return NULL;
+  }
+  const int num_vec = PyArray_DIM(data, 0);
+  const int num_dim = PyArray_DIM(data, 1);
+  if (num_vec != PyArray_DIM(ids, 0)) {
+    raise << "ids contains " << PyArray_DIM(ids, 0) << " elements "
+          << "whereas data contains " << num_vec << " elements";
+    return NULL;
+  }
+  const int* id = reinterpret_cast<int*>(ids->data);
+  for (int i = 0; i < num_vec; ++i) {
+    //const int id = *reinterpret_cast<int32_t*>(PyArray_GETPTR1(ids, i));
+    const float* buf = reinterpret_cast<float*>(data->data + i * data->strides[0]);
+    const Object* z = new Object(id[i], -1, num_dim * sizeof(float), buf);
+    index->AddDataPoint(z);
+  }
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+PyObject* addDataPointBatch(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  PyArrayObject* ids;
+  PyArrayObject* data;
+  if (!PyArg_ParseTuple(args, "OO!O!", &ptr,
+                        &PyArray_Type, &ids, &PyArray_Type, &data)) {
+    raise << "Error reading parameters";
+    return NULL;
+  }
+  if (IsDistFloat(ptr)) {
+    return _addDataPointBatch<float>(ptr, ids, data);
+  } else {
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
 }
 
@@ -464,7 +543,9 @@ PyObject* createIndex(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     _createIndex<float>(ptr, index_params);
   } else {
-    _createIndex<int>(ptr, index_params);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
   Py_RETURN_NONE;
 }
@@ -488,7 +569,9 @@ PyObject* saveIndex(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     _saveIndex<float>(ptr, file_name);
   } else {
-    _saveIndex<int>(ptr, file_name);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
   Py_RETURN_NONE;
 }
@@ -512,7 +595,9 @@ PyObject* loadIndex(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     _loadIndex<float>(ptr, file_name);
   } else {
-    _loadIndex<int>(ptr, file_name);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
   Py_RETURN_NONE;
 }
@@ -542,7 +627,9 @@ PyObject* setQueryTimeParams(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     _setQueryTimeParams<float>(ptr, query_time_params);
   } else {
-    _setQueryTimeParams<int>(ptr, query_time_params);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
 
   return Py_None;
@@ -580,7 +667,73 @@ PyObject* knnQuery(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     return _knnQuery<float>(ptr, k, data);
   } else {
-    return _knnQuery<int>(ptr, k, data);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
+  }
+}
+
+template <typename T>
+PyObject* _knnQueryBatch(PyObject* ptr,
+                         const int num_threads,
+                         const int k,
+                         PyArrayObject* data) {
+  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+      PyLong_AsVoidPtr(ptr));
+  if (data->descr->type_num != NPY_FLOAT32 || data->nd != 2) {
+    raise << "data should be 2 dimensional float32 vector";
+    return NULL;
+  }
+  const int num_vec = PyArray_DIM(data, 0);
+  const int num_dim = PyArray_DIM(data, 1);
+  ObjectVector query_objects;
+  for (int i = 0; i < num_vec; ++i) {
+    const float* buf = reinterpret_cast<float*>(data->data + i * data->strides[0]);
+    const Object* z = new Object(0, -1, num_dim * sizeof(float), buf);
+    query_objects.push_back(z);
+  }
+
+  std::vector<IntVector> query_res;
+Py_BEGIN_ALLOW_THREADS
+  query_res = index->KnnQueryBatch(num_threads, k, query_objects);
+Py_END_ALLOW_THREADS
+
+  int dims[2];
+  dims[0] = num_vec;
+  dims[1] = k;
+  PyArrayObject* ret = (PyArrayObject*)PyArray_FromDims(2, dims, PyArray_INT);
+  if (!ret) {
+    raise << "failed to create numpy array";
+    return NULL;
+  }
+  for (size_t i = 0; i < query_res.size(); ++i) {
+    for (size_t j = 0; j < query_res[i].size() && j < k; ++j) {
+      *reinterpret_cast<int*>(PyArray_GETPTR2(ret, i, j)) = query_res[i][j];
+    }
+  }
+  return PyArray_Return(ret);
+}
+
+PyObject* knnQueryBatch(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  int num_threads;
+  int k;
+  PyArrayObject* data;
+  if (!PyArg_ParseTuple(args, "OiiO!", &ptr, &num_threads,
+                        &k, &PyArray_Type, &data)) {
+    raise << "Error reading parameters";
+    return NULL;
+  }
+  if (k < 1) {
+    raise << "k (" << k << ") should be >=1";
+    return NULL;
+  }
+  if (IsDistFloat(ptr)) {
+    return _knnQueryBatch<float>(ptr, num_threads, k, data);
+  } else {
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
 }
 
@@ -612,7 +765,9 @@ PyObject* getDataPoint(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     return _getDataPoint<float>(ptr, index);
   } else {
-    return _getDataPoint<int>(ptr, index);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
 }
 
@@ -637,7 +792,9 @@ PyObject* getDataPointQty(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     return _getDataPointQty<float>(ptr);
   } else {
-    return _getDataPointQty<int>(ptr);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
 }
 
@@ -656,7 +813,9 @@ PyObject* freeIndex(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     _freeIndex<float>(ptr);
   } else {
-    _freeIndex<int>(ptr);
+    raise << "This version is optimized for vectors. "
+          << "Use generic bindings for dist type - int";
+    return NULL;
   }
   Py_RETURN_NONE;
 }
