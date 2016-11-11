@@ -69,8 +69,10 @@ namespace similarity {
     float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes);
 
     template <typename dist_t>    Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t>& space,   const ObjectVector& data) :
-        space_(space), PrintProgress_(PrintProgress), data_(data) {}
-
+        space_(space), PrintProgress_(PrintProgress), data_(data),
+	visitedlistpool(nullptr), enterpoint_(nullptr), data_level0_memory_(nullptr), linkLists_(nullptr), fstdistfunc_(nullptr)
+	{}
+	
     void checkList1(vector<HnswNode*> list) {
         
         int ok = 1;
@@ -354,8 +356,10 @@ namespace similarity {
 
         memset(data_level0_memory_, 1, memoryPerObject_*ElList_.size());
         LOG(LIB_INFO) << "Making optimized index";
+        data_rearranged_.resize(ElList_.size());
         for (long i = 0; i < ElList_.size(); i++) {            
             ElList_[i]->copyDataAndLevel0LinksToOptIndex(data_level0_memory_ + (size_t)i*memoryPerObject_, offsetLevel0_, offsetData_);
+            data_rearranged_[i] = new Object(data_level0_memory_ + (i)*memoryPerObject_ + offsetData_);
         };
         ////////////////////////////////////////////////////////////////////////
         //
@@ -452,6 +456,7 @@ namespace similarity {
         }
         for (int i = 0; i < ElList_.size(); i++)
             delete ElList_[i];
+        for (const Object* p : data_rearranged_) delete p;
     }
     
     template <typename dist_t>

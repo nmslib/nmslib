@@ -14,6 +14,9 @@
  * which do understand __attribute__ ((aligned(16)))
  */
 
+#ifndef SIMDUTILS_H
+#define SIMDUTILS_H
+
 #if defined(__GNUC__)
 #define PORTABLE_ALIGN16 __attribute__((aligned(16)))
 #else
@@ -61,5 +64,8 @@
 #include <intrin.h>
 
 #define  __builtin_popcount(t) __popcnt(t)
+
+#endif
+
 
 #endif
