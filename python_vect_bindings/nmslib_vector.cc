@@ -470,6 +470,10 @@ template <typename T>
 PyObject* _addDataPointBatch(PyObject* ptr,
                              PyArrayObject* ids,
                              PyArrayObject* data) {
+  if (data->flags & NPY_FORTRAN) {
+    raise << "the order of data should be C not FORTRAN";
+    return NULL;
+  }
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
   if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
@@ -717,10 +721,14 @@ PyObject* _knnQueryBatch(PyObject* ptr,
                          const int num_threads,
                          const int k,
                          PyArrayObject* data) {
+  if (data->flags & NPY_FORTRAN) {
+    raise << "the order of query should be C not FORTRAN";
+    return NULL;
+  }
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
   if (data->descr->type_num != NPY_FLOAT32 || data->nd != 2) {
-    raise << "data should be 2 dimensional float32 vector";
+    raise << "query should be 2 dimensional float32 vector";
     return NULL;
   }
   const int num_vec = PyArray_DIM(data, 0);
