@@ -136,7 +136,6 @@ def test_vector_fresh(bulk=True):
             print idx, nmslib_vector.knnQuery(index, k, data)
     end = time.time()
     print 'querying done in %s secs' % (end - start)
-    sys.exit(1)
 
     nmslib_vector.saveIndex(index, index_name)
 
