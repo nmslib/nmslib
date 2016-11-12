@@ -91,7 +91,6 @@ BoolObject readVector(PyObject* data, int id, int dist_type);
 BoolObject readString(PyObject* data, int id, int dist_type);
 typedef PyObject* (*DataWriterFunc)(const Object*);
 PyObject*  writeVector(const Object*);
-//PyObject*  writeString(const Object*);
 
 const int kDataVector = 1;
 const int kDataString = 2;
@@ -102,11 +101,9 @@ const std::map<std::string, int> NMSLIB_DATA_TYPES = {
 };
 const std::map<int, DataReaderFunc> NMSLIB_DATA_READERS = {
   {kDataVector, &readVector},
-  //{kDataString, &readString},
 };
 const std::map<int, DataWriterFunc> NMSLIB_DATA_WRITERS = {
   {kDataVector, &writeVector},
-  //{kDataString, &writeString},
 };
 
 const int kDistFloat = 4;
@@ -513,7 +510,7 @@ PyObject* _addDataPointBatch(PyObject* ptr,
     threads.push_back(std::thread(
             [&]() {
               for (;;) {
-              std::pair<int,int> idx;
+                std::pair<int,int> idx;
                 {
                   std::unique_lock<std::mutex> lock(m);
                   if (q.empty()) {
@@ -611,12 +608,12 @@ PyObject* saveIndex(PyObject* self, PyObject* args) {
 
   if (IsDistFloat(ptr)) {
     _saveIndex<float>(ptr, file_name);
+    Py_RETURN_NONE;
   } else {
     raise << "This version is optimized for vectors. "
           << "Use generic bindings for dist type - int";
     return NULL;
   }
-  Py_RETURN_NONE;
 }
 
 template <typename T>
@@ -637,12 +634,12 @@ PyObject* loadIndex(PyObject* self, PyObject* args) {
 
   if (IsDistFloat(ptr)) {
     _loadIndex<float>(ptr, file_name);
+    Py_RETURN_NONE;
   } else {
     raise << "This version is optimized for vectors. "
           << "Use generic bindings for dist type - int";
     return NULL;
   }
-  Py_RETURN_NONE;
 }
 
 template <typename T>
@@ -669,13 +666,12 @@ PyObject* setQueryTimeParams(PyObject* self, PyObject* args) {
 
   if (IsDistFloat(ptr)) {
     _setQueryTimeParams<float>(ptr, query_time_params);
+    Py_RETURN_NONE;
   } else {
     raise << "This version is optimized for vectors. "
           << "Use generic bindings for dist type - int";
     return NULL;
   }
-
-  return Py_None;
 }
 
 template <typename T>
@@ -859,11 +855,11 @@ PyObject* freeIndex(PyObject* self, PyObject* args) {
   }
   if (IsDistFloat(ptr)) {
     _freeIndex<float>(ptr);
+    Py_RETURN_NONE;
   } else {
     raise << "This version is optimized for vectors. "
           << "Use generic bindings for dist type - int";
     return NULL;
   }
-  Py_RETURN_NONE;
 }
 
