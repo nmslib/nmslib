@@ -582,12 +582,12 @@ PyObject* createIndex(PyObject* self, PyObject* args) {
 
   if (IsDistFloat(ptr)) {
     _createIndex<float>(ptr, index_params);
+    Py_RETURN_NONE;
   } else {
     raise << "This version is optimized for vectors. "
           << "Use generic bindings for dist type - int";
     return NULL;
   }
-  Py_RETURN_NONE;
 }
 
 template <typename T>
@@ -749,6 +749,7 @@ Py_END_ALLOW_THREADS
     raise << "failed to create numpy array";
     return NULL;
   }
+  PyArray_ENABLEFLAGS(ret, NPY_ARRAY_OWNDATA);
   for (size_t i = 0; i < query_res.size(); ++i) {
     for (size_t j = 0; j < query_res[i].size() && j < k; ++j) {
       *reinterpret_cast<int*>(PyArray_GETPTR2(ret, i, j)) = query_res[i][j];
