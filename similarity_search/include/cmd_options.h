@@ -226,14 +226,24 @@ class CmdParam {
     parsed_ = true;
   }
 
+  std::string ParamOptStr() {
+    return long_name_ +
+           (long_name_.empty() || short_name_.empty() ? "" : ", ") +
+           short_name_;
+  }
+
+  std::string ParamDesc(const string& addPadd) {
+    std::stringstream ss;
+    ss << descr_ << " " 
+       << endl << addPadd << (required_ ? "" : ptr_->ToString());
+    return ss.str();
+  }
+
   std::string ToString() {
     std::stringstream ss;
-    std::cout << std::setw(30)
-        << long_name_ +
-           (long_name_.empty() || short_name_.empty() ? "" : ", ") +
-           short_name_
-        << " : " << descr_
-        << " " << (required_ ? "" : ptr_->ToString());
+    std::cout 
+        << "\t" << ParamOptStr() << " : " << endl
+        << "\t\t" << ParamDesc("\t\t"); 
     return ss.str();
   }
 
