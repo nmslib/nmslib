@@ -192,6 +192,20 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
       (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
     }
   }
+
+  // Let's collect pivot occurrence statistics
+  vector<size_t> pivotOcurrQty(num_pivot_);
+
+  for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
+    auto & chunkPostLists = *posting_lists_[chunkId];
+    for (size_t i = 0; i < num_pivot_; ++i)
+      pivotOcurrQty[i] += chunkPostLists[i].size();
+  }
+  stringstream str;
+  for (size_t i = 0; i < num_pivot_; ++i) {
+    str << pivotOcurrQty[i] << " , ";
+  }
+  LOG(LIB_INFO) << "Pivot occurrences stat.:" << str.str();
 }
 
 template <typename dist_t>
