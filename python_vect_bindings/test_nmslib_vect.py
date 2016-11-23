@@ -102,10 +102,13 @@ def test_vector_fresh(fast=True):
     start = time.time()
     if fast:
         data = read_data_fast('sample_dataset.txt')
-        nmslib_vector.addDataPointBatch(index, np.arange(len(data), dtype=np.int32), data)
+        positions = nmslib_vector.addDataPointBatch(index, np.arange(len(data), dtype=np.int32), data)
     else:
         for id, data in enumerate(read_data('sample_dataset.txt')):
-            nmslib_vector.addDataPoint(index, id, data)
+            pos = nmslib_vector.addDataPoint(index, id, data)
+	    if id != pos:
+                print 'id %s != pos %s' % (id, pos)
+		sys.exit(1)
     end = time.time()
     print 'added data in %s secs' % (end - start)
 
@@ -113,7 +116,7 @@ def test_vector_fresh(fast=True):
     print 'We have added %d data points' % nmslib_vector.getDataPointQty(index)
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib_vector.getDataPointQty(index))):
-       print nmslib_vector.getDataPoint(index,i)
+       print nmslib_vector.getDataPoint(index, i)
 
     print 'Let\'s invoke the index-build process'
 
@@ -164,7 +167,10 @@ def test_vector_loaded():
                              nmslib_vector.DistType.FLOAT)
 
     for id, data in enumerate(read_data('sample_dataset.txt')):
-        nmslib_vector.addDataPoint(index, id, data)
+        pos = nmslib_vector.addDataPoint(index, id, data)
+	if id != pos:
+            print 'id %s != pos %s' % (id, pos)
+	    sys.exit(1)
 
     print 'Let\'s print a few data entries'
     print 'We have added %d data points' % nmslib_vector.getDataPointQty(index)

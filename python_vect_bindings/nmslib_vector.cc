@@ -342,6 +342,13 @@ class IndexWrapper {
     return data_.size() - 1;
   }
 
+  void SetDataPoint(const Object* z, size_t idx) {
+    if (idx >= data_.size()) {
+      data_.resize(idx + 1);
+    }
+    data_[idx] = z;
+  }
+
   const Object* GetDataPoint(size_t index) {
     return data_.at(index);
   }
@@ -724,6 +731,7 @@ Py_BEGIN_ALLOW_THREADS
     const int num_threads = 10;
     std::queue<std::pair<int,const Object*>> q;
     std::mutex m;
+    const size_t num_vec = index->GetDataPointQty();
     for (int i = 0; i < n.size(); ++i) {       // TODO: this can be improved by not adding all (i.e. fixed size thread-pool)
       q.push(std::make_pair(i, n[i]));
     }
@@ -744,7 +752,9 @@ Py_BEGIN_ALLOW_THREADS
                   }
                   {
                     std::unique_lock<std::mutex> lock(md);
-                    ptr[p.first] = index->AddDataPoint(p.second);
+                    //ptr[p.first] = index->AddDataPoint(p.second);
+                    index->SetDataPoint(p.second, num_vec + p.first);
+                    ptr[p.first] = num_vec + p.first;
                   }
                 }
               }));
