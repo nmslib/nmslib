@@ -88,9 +88,9 @@ static PyTypeObject NmslibDist_Type = {
 };
 
 using BoolObject = std::pair<bool,const Object*>;
-typedef BoolObject (*DataReaderFunc)(const Space<float>* index, PyObject*,int,int);
-BoolObject readDenseVector(const Space<float>* index, PyObject* data, int id, int dist_type);
-BoolObject readSparseVector(const Space<float>* index, PyObject* data, int id, int dist_type);
+typedef BoolObject (*DataReaderFunc)(const Space<float>*, PyObject*, int, int);
+BoolObject readDenseVector(const Space<float>*, PyObject*, int, int);
+BoolObject readSparseVector(const Space<float>*, PyObject*, int, int);
 typedef PyObject* (*DataWriterFunc)(const Object*);
 PyObject* writeDenseVector(const Object*);
 PyObject* writeSparseVector(const Object*);
