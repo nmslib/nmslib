@@ -42,8 +42,8 @@ def bench_sparse_vector(batch=True):
     for i in res[0]:
         print int(i), distance.cosine(q0, dataset[int(i),:])
 
-    space_type = 'cosinesimil_sparse'
-    #space_type = 'cosinesimil_sparse_fast'
+    #space_type = 'cosinesimil_sparse'
+    space_type = 'cosinesimil_sparse_fast'
     space_param = []
     method_name = 'small_world_rand'
     index_name  = method_name + '_sparse.index'

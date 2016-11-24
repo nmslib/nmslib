@@ -88,10 +88,9 @@ static PyTypeObject NmslibDist_Type = {
 };
 
 using BoolObject = std::pair<bool,const Object*>;
-typedef BoolObject (*DataReaderFunc)(PyObject*,int,int);
-BoolObject readDenseVector(PyObject* data, int id, int dist_type);
-BoolObject readSparseVector(PyObject* data, int id, int dist_type);
-BoolObject readString(PyObject* data, int id, int dist_type);
+typedef BoolObject (*DataReaderFunc)(const Space<float>* index, PyObject*,int,int);
+BoolObject readDenseVector(const Space<float>* index, PyObject* data, int id, int dist_type);
+BoolObject readSparseVector(const Space<float>* index, PyObject* data, int id, int dist_type);
 typedef PyObject* (*DataWriterFunc)(const Object*);
 PyObject* writeDenseVector(const Object*);
 PyObject* writeSparseVector(const Object*);
@@ -190,7 +189,10 @@ bool readList(PyListObject* lst, std::vector<T>& z, F&& f) {
   return true;
 }
 
-BoolObject readDenseVector(PyObject* data, int id, int dist_type) {
+BoolObject readDenseVector(const Space<float>* space,
+                           PyObject* data,
+                           int id,
+                           int dist_type) {
   if (!PyList_Check(data)) {
     raise << "expected DataType.DENSE_VECTOR";
     return std::make_pair(false, nullptr);
@@ -204,7 +206,10 @@ BoolObject readDenseVector(PyObject* data, int id, int dist_type) {
   return std::make_pair(true, z);
 }
 
-BoolObject readSparseVector(PyObject* data, int id, int dist_type) {
+BoolObject readSparseVector(const Space<float>* space,
+                            PyObject* data,
+                            int id,
+                            int dist_type) {
   if (!PyList_Check(data)) {
     raise << "expected DataType.SPARSE_VECTOR";
     return std::make_pair(false, nullptr);
@@ -241,8 +246,8 @@ BoolObject readSparseVector(PyObject* data, int id, int dist_type) {
             static_cast<uint32_t>(index), static_cast<float>(value)));
   }
   std::sort(arr.begin(), arr.end());
-  const Object* z = new Object(
-      id, -1, arr.size()*sizeof(SparseVectElem<float>), &arr[0]);
+  const Object* z = reinterpret_cast<const SpaceSparseVector<float>*>(
+      space)->CreateObjFromVect(id, -1, arr);
   return std::make_pair(true, z);
 }
 
@@ -336,6 +341,7 @@ class IndexWrapper {
   inline int GetDistType() { return dist_type_; }
   inline int GetDataType() { return data_type_; }
   inline size_t GetDataPointQty() { return data_.size(); }
+  inline const Space<T>* GetSpace() const { return space_; }
 
   size_t AddDataPoint(const Object* z) {
     data_.push_back(z);
@@ -528,7 +534,7 @@ PyObject* _addDataPoint(PyObject* ptr, IdType id, PyObject* data) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
   }
-  auto res = (*iter->second)(data, id, index->GetDistType());
+  auto res = (*iter->second)(index->GetSpace(), data, id, index->GetDistType());
   if (!res.first) {
     raise << "Cannot create a data-point object!";
     return NULL;
@@ -571,7 +577,10 @@ class ValueException : std::exception {
 
 class NumpyDenseMatrix {
  public:
-  NumpyDenseMatrix(PyArrayObject* ids, PyObject* matrix) {
+  NumpyDenseMatrix(const Space<float>* space,
+                   PyArrayObject* ids,
+                   PyObject* matrix)
+      : space_(space) {
     if (ids) {
       if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
         throw ValueException("id field should be 1 dimensional int32 vector");
@@ -615,6 +624,7 @@ class NumpyDenseMatrix {
   }
 
  private:
+  const Space<float>* space_;
   int num_vec_;
   int num_dim_;
   const int* id_;
@@ -655,7 +665,10 @@ PyArrayObject* GetAttrAsNumpyArray(PyObject* obj,
 
 class NumpySparseMatrix {
  public:
-  NumpySparseMatrix(PyArrayObject* ids, PyObject* matrix) {
+  NumpySparseMatrix(const Space<float>* space,
+                    PyArrayObject* ids,
+                    PyObject* matrix)
+      : space_(reinterpret_cast<const SpaceSparseVector<float>*>(space)) {
     if (ids) {
       if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
         throw ValueException("id field should be 1 dimensional int32 vector");
@@ -678,7 +691,7 @@ class NumpySparseMatrix {
   const int size() const { return n_ - 1; }
 
   const Object* operator[](ssize_t idx) const {
-    std::vector<SparseVectElem<float>> z;
+    std::vector<SparseVectElem<float>> arr;
     const int beg_ptr = indptr_[idx];
     const int end_ptr = indptr_[idx+1];
     for (int k = beg_ptr; k < end_ptr; ++k) {
@@ -687,18 +700,19 @@ class NumpySparseMatrix {
       if (std::isnan(data_[k])) {
         throw ValueException("Bug: nan in NumpySparseMatrix");
       }
-      z.push_back(SparseVectElem<float>(static_cast<uint32_t>(j), data_[k]));
+      arr.push_back(SparseVectElem<float>(static_cast<uint32_t>(j), data_[k]));
     }
-    if (z.empty()) {
+    if (arr.empty()) {
       // TODO(@bileg): should we allow this?
       throw ValueException("sparse marix's row is empty (ie, all zero values)");
     }
-    std::sort(z.begin(), z.end());
+    std::sort(arr.begin(), arr.end());
     int id = id_ ? id_[idx] : 0;
-    return new Object(id, -1, z.size()*sizeof(SparseVectElem<float>), &z[0]);
+    return space_->CreateObjFromVect(id, -1, arr);
   }
 
  private:
+  const SpaceSparseVector<float>* space_;
   int n_;
   const int* id_;
   const int* indices_;
@@ -711,7 +725,7 @@ PyObject* _addDataPointBatch(IndexWrapper<T>* index,
                              PyArrayObject* ids,
                              PyObject* matrix) {
   try {
-    N n(ids, matrix);
+    N n(index->GetSpace(), ids, matrix);
     int dims[1];
     dims[0] = n.size();
     PyArrayObject* positions = reinterpret_cast<PyArrayObject*>(
@@ -933,7 +947,7 @@ PyObject* _knnQuery(PyObject* ptr, int k, PyObject* data) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
   }
-  auto res = (*iter->second)(data, 0, index->GetDistType());
+  auto res = (*iter->second)(index->GetSpace(), data, 0, index->GetDistType());
   if (!res.first) {
     return NULL;
   }
@@ -970,7 +984,7 @@ PyObject* _knnQueryBatch(IndexWrapper<T>* index,
   ObjectVector query_objects;
   int dims[2];
   try {
-    N n(nullptr, matrix);
+    N n(index->GetSpace(), nullptr, matrix);
     for (int i = 0; i < n.size(); ++i) {
       query_objects.push_back(n[i]);
     }
