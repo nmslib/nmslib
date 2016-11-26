@@ -235,7 +235,8 @@ BoolObject readSparseVector(const Space<float>* space, PyObject* data, int id) {
   return std::make_pair(true, z);
 }
 
-BoolObject readString(const Space<int>* space, PyObject* data, int id) {
+template <typename T>
+BoolObject readString(const Space<T>* space, PyObject* data, int id) {
   if (!PyString_Check(data)) {
     raise << "expected DataType.STRING";
     return std::make_pair(false, nullptr);
@@ -254,6 +255,62 @@ BoolObject readObjectAsString(const Space<T>* space, PyObject* data, int id) {
   const char* s = PyString_AsString(data);
   const Object* z = space->CreateObjFromStr(id, -1,  s, NULL).release();
   return std::make_pair(true, z);
+}
+
+template <typename T>
+BoolObject readObject(const int data_type,
+                      const Space<T>* space,
+                      PyObject* data,
+                      const int id,
+                      const int dist_type) {
+  raise << "not implemented for data_type "
+        << data_type << " and dist_type "
+        << dist_type;
+  return std::make_pair(false, nullptr);
+}
+
+template <>
+BoolObject readObject(const int data_type,
+                      const Space<float>* space,
+                      PyObject* data,
+                      const int id,
+                      const int dist_type) {
+  if (dist_type != kDistFloat) {
+    raise << "expected float dist_type";
+    return std::make_pair(false, nullptr);
+  }
+  switch (data_type) {
+    case kDataDenseVector:
+      return readDenseVector(space, data, id);
+    case kDataSparseVector:
+      return readSparseVector(space, data, id);
+    case kDataObjectAsString:
+      return readObjectAsString(space, data, id);
+    default:
+      raise << "not implemented";
+      return std::make_pair(false, nullptr);
+  }
+}
+
+template <>
+BoolObject readObject(const int data_type,
+                      const Space<int>* space,
+                      PyObject* data,
+                      const int id,
+                      const int dist_type) {
+  if (dist_type != kDistInt) {
+    raise << "expected int dist_type";
+    return std::make_pair(false, nullptr);
+  }
+  switch (data_type) {
+    case kDataString:
+      return readString(space, data, id);
+    case kDataObjectAsString:
+      return readObjectAsString(space, data, id);
+    default:
+      raise << "not implemented";
+      return std::make_pair(false, nullptr);
+  }
 }
 
 template <typename T>
@@ -350,307 +407,50 @@ Py_END_ALLOW_THREADS
 }
 
 template <typename T>
-class IndexWrapper {
- public:
-  IndexWrapper(int dist_type, int data_type,
-               const char* space_type,
-               const AnyParams& space_param,
-               const char* method_name)
-      : dist_type_(dist_type),
-        data_type_(data_type),
-        space_type_(space_type),
-        method_name_(method_name),
-        index_(nullptr),
-        space_(nullptr) {
-    space_ = SpaceFactoryRegistry<T>::Instance()
-        .CreateSpace(space_type_.c_str(), space_param);
-  }
-
-  ~IndexWrapper() {
-    delete space_;
-    delete index_;
-    for (auto p : data_) {
-      delete p;
-    }
-  }
-
-  inline int GetDistType() const { return dist_type_; }
-  inline int GetDataType() const { return data_type_; }
-  inline size_t GetDataPointQty() const { return data_.size(); }
-  inline const Space<T>* GetSpace() const { return space_; }
-
-  size_t AddDataPoint(const Object* z) {
-    data_.push_back(z);
-    return data_.size() - 1;
-  }
-
-  void SetDataPoint(const Object* z, size_t idx) {
-    if (idx >= data_.size()) {
-      data_.resize(idx + 1);
-    }
-    data_[idx] = z;
-  }
-
-  const Object* GetDataPoint(size_t index) {
-    return data_.at(index);
-  }
-
-  void CreateIndex(const AnyParams& index_params) {
-    // Delete previously created index
-    delete index_;
-    index_ = MethodFactoryRegistry<T>::Instance()
-        .CreateMethod(PRINT_PROGRESS,
-                      method_name_, space_type_,
-                      *space_, data_);
-    index_->CreateIndex(index_params);
-  }
-
-  void SaveIndex(const string& fileName) {
-    index_->SaveIndex(fileName);
-  }
-
-  void LoadIndex(const string& fileName) {
-    // Delete previously created index
-    delete index_;
-    index_ = MethodFactoryRegistry<T>::Instance()
-        .CreateMethod(PRINT_PROGRESS,
-                      method_name_, space_type_,
-                      *space_, data_);
-    index_->LoadIndex(fileName);
-  }
-
-  void SetQueryTimeParams(const AnyParams& p) {
-    index_->SetQueryTimeParams(p);
-  }
-
-  PyObject* KnnQuery(int k, const Object* query) {
-    IntVector ids;
-Py_BEGIN_ALLOW_THREADS
-    KNNQueue<T>* res;
-    KNNQuery<T> knn(*space_, query, k);
-    index_->Search(&knn, -1);
-    res = knn.Result()->Clone();
-    while (!res->Empty()) {
-      ids.insert(ids.begin(), res->TopObject()->id());
-      res->Pop();
-    }
-    delete res;
-Py_END_ALLOW_THREADS
-    PyObject* z = PyList_New(ids.size());
-    if (!z) {
-      return NULL;
-    }
-    for (size_t i = 0; i < ids.size(); ++i) {
-      PyObject* v = PyInt_FromLong(ids[i]);
-      if (!v) {
-        Py_DECREF(z);
-        return NULL;
-      }
-      PyList_SET_ITEM(z, i, v);
-    }
-    return z;
-  }
-
-  std::vector<IntVector> KnnQueryBatch(const int num_threads, const int k,
-                                       const ObjectVector& query_objects) {
-    std::vector<IntVector> query_res(query_objects.size());
-    std::queue<std::pair<size_t, const Object*>> q;
-    std::mutex m;
-    for (size_t i = 0; i < query_objects.size(); ++i) {       // TODO: this can be improved by not adding all (ie. fixed size thread-pool)
-      q.push(std::make_pair(i, query_objects[i]));
-    }
-    std::vector<std::thread> threads;
-    for (int i = 0; i < num_threads; ++i) {
-      threads.push_back(std::thread(
-              [&]() {
-                for (;;) {
-                  std::pair<size_t, const Object*> query;
-                  {
-                    std::unique_lock<std::mutex> lock(m);
-                    if (q.empty()) {
-                      break;
-                    }
-                    query = q.front();
-                    q.pop();
-                  }
-                  IntVector& ids = query_res[query.first];
-                  KNNQueue<T>* res;
-                  KNNQuery<T> knn(*space_, query.second, k);
-                  index_->Search(&knn, -1);
-                  res = knn.Result()->Clone();
-                  while (!res->Empty()) {
-                    ids.insert(ids.begin(), res->TopObject()->id());
-                    res->Pop();
-                  }
-                  delete res;
-                }
-              }));
-    }
-    for (auto& thread : threads) {
-      thread.join();
-    }
-    return query_res;
-  }
-
- private:
-  const int dist_type_;
-  const int data_type_;
-  const std::string space_type_;
-  const std::string method_name_;
-  const AnyParams method_index_param_;
-  Index<T>* index_;
-  Space<T>* space_;
-  ObjectVector data_;
-};
-
-inline bool IsDistFloat(PyObject* ptr) {
-  return *(reinterpret_cast<int*>(PyLong_AsVoidPtr(ptr))) == kDistFloat;
-}
-
-template <typename T>
-PyObject* _init(int dist_type,
-                int data_type,
-                const char* space_type,
-                const AnyParams& space_param,
-                const char* method_name) {
-  IndexWrapper<T>* index(new IndexWrapper<T>(
-          dist_type, data_type,
-          space_type, space_param,
-          method_name));
-  if (!index) {
-    raise << "failed to create IndexWrapper";
-    return NULL;
-  }
-  return PyLong_FromVoidPtr(reinterpret_cast<void*>(index));
-}
-
-PyObject* init(PyObject* self, PyObject* args) {
-  char* space_type;
-  PyListObject* space_param_list;
-  char* method_name;
-  int dist_type, data_type;
-  if (!PyArg_ParseTuple(args, "sO!sii",
-          &space_type, &PyList_Type, &space_param_list,
-          &method_name,
-          &data_type, &dist_type)) {
-    raise << "Error reading parameters (expecting: space type, space parameter "
-          << "list, index/method name, data type, distance value type)";
-    return NULL;
-  }
-
-  StringVector space_param;
-  if (!readList(space_param_list, space_param, PyString_AsString)) {
-    return NULL;
-  }
-
-  switch (dist_type) {
-    case kDistFloat:
-      return _init<float>(
-          dist_type, data_type, space_type, space_param,
-          method_name);
-    case kDistInt:
-      return _init<int>(
-          dist_type, data_type, space_type, space_param,
-          method_name);
-    default:
-      raise << "unknown dist type - " << dist_type;
-      return NULL;
-  }
-}
-
-template <typename T>
-BoolObject readObject(int data_type,
-                      const Space<T>* space,
-                      PyObject* data,
-                      int id,
-                      int dist_type) {
-  raise << "not implemented for data_type "
-        << data_type << " and dist_type "
-        << dist_type;
+BoolPyObject writeObject(const int data_type,
+                         const Space<T>* space,
+                         const Object* obj) {
+  raise << "writeObject is not implemented";
   return std::make_pair(false, nullptr);
 }
 
 template <>
-BoolObject readObject(int data_type,
-                      const Space<float>* space,
-                      PyObject* data,
-                      int id,
-                      int dist_type) {
-  if (dist_type != kDistFloat) {
-    raise << "expected float dist_type";
-    return std::make_pair(false, nullptr);
-  }
+BoolPyObject writeObject(const int data_type,
+                         const Space<float>* space,
+                         const Object* obj) {
   switch (data_type) {
     case kDataDenseVector:
-      return readDenseVector(space, data, id);
+      return writeDenseVector(space, obj);
     case kDataSparseVector:
-      return readSparseVector(space, data, id);
+      return writeSparseVector(space, obj);
+    case kDataString:
+      return writeString(space, obj);
     case kDataObjectAsString:
-      return readObjectAsString(space, data, id);
+      return writeObjectAsString(space, obj);
     default:
-      raise << "not implemented";
+      raise << "write function is not implemented for data type "
+            << data_type << " and dist type float";
       return std::make_pair(false, nullptr);
   }
 }
 
 template <>
-BoolObject readObject(int data_type,
-                      const Space<int>* space,
-                      PyObject* data,
-                      int id,
-                      int dist_type) {
-  if (dist_type != kDistInt) {
-    raise << "expected int dist_type";
-    return std::make_pair(false, nullptr);
-  }
+BoolPyObject writeObject(int data_type,
+                         const Space<int>* space,
+                         const Object* obj) {
   switch (data_type) {
+    case kDataDenseVector:
+      return writeDenseVector(space, obj);
+    case kDataSparseVector:
+      return writeSparseVector(space, obj);
     case kDataString:
-      return readString(space, data, id);
+      return writeString(space, obj);
     case kDataObjectAsString:
-      return readObjectAsString(space, data, id);
+      return writeObjectAsString(space, obj);
     default:
-      raise << "not implemented";
+      raise << "write function is not implemented for data type "
+            << data_type << " and dist type int";
       return std::make_pair(false, nullptr);
-  }
-}
-
-template <typename T>
-PyObject* _addDataPoint(PyObject* ptr, IdType id, PyObject* data) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
-      PyLong_AsVoidPtr(ptr));
-  if (index->GetDataType() != kDataDenseVector &&
-      index->GetDataType() != kDataSparseVector &&
-      index->GetDataType() != kDataString &&
-      index->GetDataType() != kDataObjectAsString) {
-    raise << "unknown data type - " << index->GetDataType();
-    return NULL;
-  }
-  auto res = readObject(
-      index->GetDataType(), index->GetSpace(), data, id, index->GetDistType());
-  if (!res.first) {
-    raise << "Cannot create a data-point object!";
-    return NULL;
-  }
-  PyObject* pos = PyInt_FromLong(index->AddDataPoint(res.second));
-  if (pos == NULL) {
-    raise << "failed to create PyObject";
-    return NULL;
-  }
-  return pos;
-}
-
-PyObject* addDataPoint(PyObject* self, PyObject* args) {
-  PyObject* ptr;
-  PyObject* data;
-  int32_t   id;
-  if (!PyArg_ParseTuple(args, "OiO", &ptr, &id, &data)) {
-    raise << "Error reading parameters (expecting: index ref, object (as a string))";
-    return NULL;
-  }
-  if (IsDistFloat(ptr)) {
-    return _addDataPoint<float>(ptr, id, data);
-  } else {
-    return _addDataPoint<int>(ptr, id, data);
   }
 }
 
@@ -665,8 +465,22 @@ class ValueException : std::exception {
   std::string msg_;
 };
 
-class NumpyDenseMatrix {
+
+class NumpyMatrix {
  public:
+  virtual ~NumpyMatrix() {}
+  virtual const int size() const = 0;
+  virtual const Object* operator[](ssize_t idx) const = 0;
+};
+
+class NumpyDenseMatrix : public NumpyMatrix {
+ public:
+  NumpyDenseMatrix(const Space<int>* space,
+                   PyArrayObject* ids,
+                   PyObject* matrix) {
+    throw ValueException("NumpyDenseMatrix is not implemented for int spaces");
+  }
+
   NumpyDenseMatrix(const Space<float>* space,
                    PyArrayObject* ids,
                    PyObject* matrix)
@@ -706,9 +520,9 @@ class NumpyDenseMatrix {
 
   ~NumpyDenseMatrix() {}
 
-  const int size() const { return num_vec_; }
+  const int size() const override { return num_vec_; }
 
-  const Object* operator[](ssize_t idx) const {
+  const Object* operator[](ssize_t idx) const override {
     int id = id_ ? id_[idx] : 0;
     return new Object(id, -1, num_dim_ * sizeof(float), data_[idx]);
   }
@@ -753,8 +567,14 @@ PyArrayObject* GetAttrAsNumpyArray(PyObject* obj,
   return arr;
 }
 
-class NumpySparseMatrix {
+class NumpySparseMatrix : public NumpyMatrix {
  public:
+  NumpySparseMatrix(const Space<int>* space,
+                    PyArrayObject* ids,
+                    PyObject* matrix) {
+    throw ValueException("NumpySparseMatrix is not implemented for int spaces");
+  }
+
   NumpySparseMatrix(const Space<float>* space,
                     PyArrayObject* ids,
                     PyObject* matrix)
@@ -778,9 +598,9 @@ class NumpySparseMatrix {
 
   ~NumpySparseMatrix() {}
 
-  const int size() const { return n_ - 1; }
+  const int size() const override { return n_ - 1; }
 
-  const Object* operator[](ssize_t idx) const {
+  const Object* operator[](ssize_t idx) const override {
     std::vector<SparseVectElem<float>> arr;
     const int beg_ptr = indptr_[idx];
     const int end_ptr = indptr_[idx+1];
@@ -810,38 +630,235 @@ class NumpySparseMatrix {
   const float* data_;
 };
 
-template <typename T, typename N>
-PyObject* _addDataPointBatch(IndexWrapper<T>* index,
-                             PyArrayObject* ids,
-                             PyObject* matrix) {
-  try {
-    N n(index->GetSpace(), ids, matrix);
-    int dims[1];
-    dims[0] = n.size();
-    PyArrayObject* positions = reinterpret_cast<PyArrayObject*>(
-        PyArray_FromDims(1, dims, PyArray_INT));
-    if (!positions) {
-      raise << "failed to create numpy array for positions";
+
+class IndexWrapperBase {
+ public:
+  IndexWrapperBase(int dist_type,
+                   int data_type,
+                   const char* space_type,
+                   const char* method_name)
+      : dist_type_(dist_type),
+        data_type_(data_type),
+        space_type_(space_type),
+        method_name_(method_name) {
+  }
+
+  virtual ~IndexWrapperBase() {
+    for (auto p : data_) {
+      delete p;
+    }
+  }
+
+  inline int GetDistType() const { return dist_type_; }
+  inline int GetDataType() const { return data_type_; }
+  inline size_t GetDataPointQty() const { return data_.size(); }
+
+  virtual size_t AddDataPoint(const Object* z) {
+    data_.push_back(z);
+    return data_.size() - 1;
+  }
+
+  virtual void SetDataPoint(const Object* z, size_t idx) {
+    if (idx >= data_.size()) {
+      data_.resize(idx + 1);
+    }
+    data_[idx] = z;
+  }
+
+  virtual const BoolObject ReadObject(int id, PyObject* data) = 0;
+  virtual const BoolPyObject WriteObject(size_t index) = 0;
+  virtual void CreateIndex(const AnyParams& index_params) = 0;
+  virtual void SaveIndex(const string& fileName) = 0;
+  virtual void LoadIndex(const string& fileName) = 0;
+  virtual void SetQueryTimeParams(const AnyParams& p) = 0;
+  virtual PyObject* KnnQuery(int k, const Object* query) = 0;
+  virtual std::vector<IntVector> KnnQueryBatch(const int num_threads,
+                                               const int k,
+                                               const ObjectVector& query_objects) = 0;
+
+  virtual PyObject* AddDataPointBatch(PyArrayObject* ids,
+                                      PyObject* matrix) = 0;
+
+  virtual PyObject* KnnQueryBatch(const int num_threads,
+                                  const int k,
+                                  PyObject* matrix) = 0;
+
+ protected:
+  const int dist_type_;
+  const int data_type_;
+  const std::string space_type_;
+  const std::string method_name_;
+  ObjectVector data_;
+};
+
+template <typename T>
+class IndexWrapper : public IndexWrapperBase {
+ public:
+  IndexWrapper(int dist_type,
+               int data_type,
+               const char* space_type,
+               const AnyParams& space_param,
+               const char* method_name)
+      : IndexWrapperBase(dist_type, data_type, space_type, method_name),
+        index_(nullptr),
+        space_(nullptr) {
+    space_ = SpaceFactoryRegistry<T>::Instance()
+        .CreateSpace(space_type_.c_str(), space_param);
+  }
+
+  ~IndexWrapper() {
+    delete space_;
+    delete index_;
+  }
+
+  const BoolObject ReadObject(int id, PyObject* data) override {
+    return readObject(data_type_, space_, data, id, dist_type_);
+  }
+
+  const BoolPyObject WriteObject(size_t index) override {
+    return writeObject(data_type_, space_, data_[index]);
+  }
+
+  void CreateIndex(const AnyParams& index_params) override {
+    // Delete previously created index
+    delete index_;
+    index_ = MethodFactoryRegistry<T>::Instance()
+        .CreateMethod(PRINT_PROGRESS,
+                      method_name_, space_type_,
+                      *space_, data_);
+    index_->CreateIndex(index_params);
+  }
+
+  void SaveIndex(const string& fileName) override {
+    index_->SaveIndex(fileName);
+  }
+
+  void LoadIndex(const string& fileName) override {
+    // Delete previously created index
+    delete index_;
+    index_ = MethodFactoryRegistry<T>::Instance()
+        .CreateMethod(PRINT_PROGRESS,
+                      method_name_, space_type_,
+                      *space_, data_);
+    index_->LoadIndex(fileName);
+  }
+
+  void SetQueryTimeParams(const AnyParams& p) override {
+    index_->SetQueryTimeParams(p);
+  }
+
+  PyObject* KnnQuery(int k, const Object* query) override {
+    IntVector ids;
+Py_BEGIN_ALLOW_THREADS
+    KNNQueue<T>* res;
+    KNNQuery<T> knn(*space_, query, k);
+    index_->Search(&knn, -1);
+    res = knn.Result()->Clone();
+    while (!res->Empty()) {
+      ids.insert(ids.begin(), res->TopObject()->id());
+      res->Pop();
+    }
+    delete res;
+Py_END_ALLOW_THREADS
+    PyObject* z = PyList_New(ids.size());
+    if (!z) {
       return NULL;
     }
-    PyArray_ENABLEFLAGS(positions, NPY_ARRAY_OWNDATA);
-    int* ptr = reinterpret_cast<int*>(positions->data);
-#if 1
-    for (int i = 0; i < n.size(); ++i) {
-      ptr[i] = index->AddDataPoint(n[i]);
+    for (size_t i = 0; i < ids.size(); ++i) {
+      PyObject* v = PyInt_FromLong(ids[i]);
+      if (!v) {
+        Py_DECREF(z);
+        return NULL;
+      }
+      PyList_SET_ITEM(z, i, v);
     }
-#else
-Py_BEGIN_ALLOW_THREADS
-    const int num_threads = 10;
-    std::queue<std::pair<int,const Object*>> q;
+    return z;
+  }
+
+  std::vector<IntVector> KnnQueryBatch(const int num_threads,
+                                       const int k,
+                                       const ObjectVector& query_objects) override {
+    std::vector<IntVector> query_res(query_objects.size());
+    std::queue<std::pair<size_t, const Object*>> q;
     std::mutex m;
-    const size_t num_vec = index->GetDataPointQty();
-    for (int i = 0; i < n.size(); ++i) {       // TODO: this can be improved by not adding all (i.e. fixed size thread-pool)
-      q.push(std::make_pair(i, n[i]));
+    for (size_t i = 0; i < query_objects.size(); ++i) {       // TODO: this can be improved by not adding all (ie. fixed size thread-pool)
+      q.push(std::make_pair(i, query_objects[i]));
     }
-    std::mutex md;
     std::vector<std::thread> threads;
     for (int i = 0; i < num_threads; ++i) {
+      threads.push_back(std::thread(
+              [&]() {
+                for (;;) {
+                  std::pair<size_t, const Object*> query;
+                  {
+                    std::unique_lock<std::mutex> lock(m);
+                    if (q.empty()) {
+                      break;
+                    }
+                    query = q.front();
+                    q.pop();
+                  }
+                  IntVector& ids = query_res[query.first];
+                  KNNQueue<T>* res;
+                  KNNQuery<T> knn(*space_, query.second, k);
+                  index_->Search(&knn, -1);
+                  res = knn.Result()->Clone();
+                  while (!res->Empty()) {
+                    ids.insert(ids.begin(), res->TopObject()->id());
+                    res->Pop();
+                  }
+                  delete res;
+                }
+              }));
+    }
+    for (auto& thread : threads) {
+      thread.join();
+    }
+    return query_res;
+  }
+
+  PyObject* AddDataPointBatch(PyArrayObject* ids,
+                              PyObject* matrix) override {
+    try {
+      std::unique_ptr<NumpyMatrix> n;
+      switch (data_type_) {
+        case kDataDenseVector:
+          n.reset(new NumpyDenseMatrix(space_, ids, matrix));
+          break;
+        case kDataSparseVector:
+          n.reset(new NumpySparseMatrix(space_, ids, matrix));
+          break;
+        default:
+          raise << "AddDataPointBatch is ot yet implemented for data type "
+                << data_type_;
+          return NULL;
+      }
+      int dims[1];
+      dims[0] = n->size();
+      PyArrayObject* positions = reinterpret_cast<PyArrayObject*>(
+          PyArray_FromDims(1, dims, PyArray_INT));
+      if (!positions) {
+        raise << "failed to create numpy array for positions";
+        return NULL;
+      }
+      PyArray_ENABLEFLAGS(positions, NPY_ARRAY_OWNDATA);
+      int* ptr = reinterpret_cast<int*>(positions->data);
+#if 1
+      for (int i = 0; i < n->size(); ++i) {
+        ptr[i] = AddDataPoint((*(n.get()))[i]);
+      }
+#else
+Py_BEGIN_ALLOW_THREADS
+      const int num_threads = 10;
+      std::queue<std::pair<int,const Object*>> q;
+      std::mutex m;
+      const size_t num_vec = GetDataPointQty();
+      for (int i = 0; i < n->size(); ++i) {       // TODO: this can be improved by not adding all (i.e. fixed size thread-pool)
+        q.push(std::make_pair(i, (*(n.get()))[i]));
+      }
+      std::mutex md;
+      std::vector<std::thread> threads;
+      for (int i = 0; i < num_threads; ++i) {
       threads.push_back(std::thread(
               [&]() {
                 for (;;) {
@@ -856,40 +873,163 @@ Py_BEGIN_ALLOW_THREADS
                   }
                   {
                     std::unique_lock<std::mutex> lock(md);
-                    //ptr[p.first] = index->AddDataPoint(p.second);
-                    index->SetDataPoint(p.second, num_vec + p.first);
+                    //ptr[p.first] = AddDataPoint(p.second);
+                    SetDataPoint(p.second, num_vec + p.first);
                     ptr[p.first] = num_vec + p.first;
                   }
                 }
               }));
-    }
-    for (auto& thread : threads) {
-      thread.join();
-    }
+      }
+      for (auto& thread : threads) {
+        thread.join();
+      }
 Py_END_ALLOW_THREADS
 #endif
-    return PyArray_Return(positions);
-  } catch (const ValueException& e) {
-    raise << e.what();
-    return NULL;
+      return PyArray_Return(positions);
+    } catch (const ValueException& e) {
+      raise << e.what();
+      return NULL;
+    }
   }
+
+  PyObject* KnnQueryBatch(const int num_threads,
+                          const int k,
+                          PyObject* matrix) override {
+    ObjectVector query_objects;
+    int dims[2];
+    try {
+      std::unique_ptr<NumpyMatrix> n;
+      switch (data_type_) {
+        case kDataDenseVector:
+          n.reset(new NumpyDenseMatrix(space_, nullptr, matrix));
+          break;
+        case kDataSparseVector:
+          n.reset(new NumpySparseMatrix(space_, nullptr, matrix));
+          break;
+        default:
+          raise << "KnnQueryBatch is ot yet implemented for data type "
+                << data_type_;
+          return NULL;
+      }
+      for (int i = 0; i < n->size(); ++i) {
+        query_objects.push_back((*(n.get()))[i]);
+      }
+      dims[0] = n->size();
+      dims[1] = k;
+    } catch (const ValueException& e) {
+      raise << e.what();
+      return NULL;
+    }
+
+    std::vector<IntVector> query_res;
+Py_BEGIN_ALLOW_THREADS
+    query_res = KnnQueryBatch(num_threads, k, query_objects);
+Py_END_ALLOW_THREADS
+
+    PyArrayObject* ret = reinterpret_cast<PyArrayObject*>(
+        PyArray_FromDims(2, dims, PyArray_INT));
+    if (!ret) {
+      raise << "failed to create numpy result array";
+      return NULL;
+    }
+    PyArray_ENABLEFLAGS(ret, NPY_ARRAY_OWNDATA);
+    for (size_t i = 0; i < query_res.size(); ++i) {
+      for (size_t j = 0; j < query_res[i].size() && j < k; ++j) {
+        *reinterpret_cast<int*>(PyArray_GETPTR2(ret, i, j)) = query_res[i][j];
+      }
+    }
+    return PyArray_Return(ret);
+  }
+
+ private:
+  Index<T>* index_;
+  Space<T>* space_;
+};
+
+inline bool IsDistFloat(PyObject* ptr) {
+  return *(reinterpret_cast<int*>(PyLong_AsVoidPtr(ptr))) == kDistFloat;
 }
 
 template <typename T>
-PyObject* _addDataPointBatch(PyObject* ptr,
-                             PyArrayObject* ids,
-                             PyObject* matrix) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
-      PyLong_AsVoidPtr(ptr));
-  switch (index->GetDataType()) {
-    case kDataDenseVector:
-      return _addDataPointBatch<T, NumpyDenseMatrix>(index, ids, matrix);
-    case kDataSparseVector:
-      return _addDataPointBatch<T, NumpySparseMatrix>(index, ids, matrix);
+PyObject* _init(int dist_type,
+                int data_type,
+                const char* space_type,
+                const AnyParams& space_param,
+                const char* method_name) {
+  IndexWrapper<T>* index(new IndexWrapper<T>(
+          dist_type, data_type,
+          space_type, space_param,
+          method_name));
+  if (!index) {
+    raise << "failed to create IndexWrapper";
+    return NULL;
+  }
+  return PyLong_FromVoidPtr(reinterpret_cast<void*>(
+          static_cast<IndexWrapperBase*>(index)));
+}
+
+PyObject* init(PyObject* self, PyObject* args) {
+  char* space_type;
+  PyListObject* space_param_list;
+  char* method_name;
+  int dist_type, data_type;
+  if (!PyArg_ParseTuple(args, "sO!sii",
+          &space_type, &PyList_Type, &space_param_list,
+          &method_name,
+          &data_type, &dist_type)) {
+    raise << "Error reading parameters (expecting: space type, space parameter "
+          << "list, index/method name, data type, distance value type)";
+    return NULL;
+  }
+
+  StringVector space_param;
+  if (!readList(space_param_list, space_param, PyString_AsString)) {
+    return NULL;
+  }
+
+  switch (dist_type) {
+    case kDistFloat:
+      return _init<float>(
+          dist_type, data_type, space_type, space_param,
+          method_name);
+    case kDistInt:
+      return _init<int>(
+          dist_type, data_type, space_type, space_param,
+          method_name);
     default:
-      raise << "Not yet implemented for data type " << index->GetDataType();
+      raise << "unknown dist type - " << dist_type;
       return NULL;
   }
+}
+
+PyObject* addDataPoint(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  PyObject* data;
+  int32_t   id;
+  if (!PyArg_ParseTuple(args, "OiO", &ptr, &id, &data)) {
+    raise << "Error reading parameters (expecting: index ref, object (as a string))";
+    return NULL;
+  }
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
+      PyLong_AsVoidPtr(ptr));
+  if (index->GetDataType() != kDataDenseVector &&
+      index->GetDataType() != kDataSparseVector &&
+      index->GetDataType() != kDataString &&
+      index->GetDataType() != kDataObjectAsString) {
+    raise << "unknown data type - " << index->GetDataType();
+    return NULL;
+  }
+  auto res = index->ReadObject(id, data);
+  if (!res.first) {
+    raise << "Cannot create a data-point object!";
+    return NULL;
+  }
+  PyObject* pos = PyInt_FromLong(index->AddDataPoint(res.second));
+  if (pos == NULL) {
+    raise << "failed to create PyObject";
+    return NULL;
+  }
+  return pos;
 }
 
 PyObject* addDataPointBatch(PyObject* self, PyObject* args) {
@@ -900,52 +1040,29 @@ PyObject* addDataPointBatch(PyObject* self, PyObject* args) {
     raise << "Error reading parameters";
     return NULL;
   }
-  if (IsDistFloat(ptr)) {
-    return _addDataPointBatch<float>(ptr, ids, data);
-  } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
-  }
-}
-
-template <typename T>
-void _createIndex(PyObject* ptr, const AnyParams& index_params) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
       PyLong_AsVoidPtr(ptr));
-Py_BEGIN_ALLOW_THREADS
-  index->CreateIndex(index_params);
-Py_END_ALLOW_THREADS
+  return index->AddDataPointBatch(ids, data);
 }
 
 PyObject* createIndex(PyObject* self, PyObject* args) {
   PyObject*     ptr;
   PyListObject* param_list;
-
   if (!PyArg_ParseTuple(args, "OO!", &ptr, &PyList_Type, &param_list)) {
     raise << "Error reading parameters (expecting: index ref, parameter list)";
     return NULL;
   }
-
   StringVector index_params;
   if (!readList(param_list, index_params, PyString_AsString)) {
     raise << "Cannot convert an argument to a list";
     return NULL;
   }
-
-  if (IsDistFloat(ptr)) {
-    _createIndex<float>(ptr, index_params);
-  } else {
-    _createIndex<int>(ptr, index_params);
-  }
-  Py_RETURN_NONE;
-}
-
-template <typename T>
-void _saveIndex(PyObject* ptr, const string& fileName) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
       PyLong_AsVoidPtr(ptr));
-  index->SaveIndex(fileName);
+Py_BEGIN_ALLOW_THREADS
+  index->CreateIndex(index_params);
+Py_END_ALLOW_THREADS
+  Py_RETURN_NONE;
 }
 
 PyObject* saveIndex(PyObject* self, PyObject* args) {
@@ -956,20 +1073,12 @@ PyObject* saveIndex(PyObject* self, PyObject* args) {
     raise << "Error reading parameters (expecting: index ref, file name)";
     return NULL;
   }
-
-  if (IsDistFloat(ptr)) {
-    _saveIndex<float>(ptr, file_name);
-  } else {
-    _saveIndex<int>(ptr, file_name);
-  }
-  Py_RETURN_NONE;
-}
-
-template <typename T>
-void _loadIndex(PyObject* ptr, const string& fileName) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
       PyLong_AsVoidPtr(ptr));
-  index->LoadIndex(fileName);
+Py_BEGIN_ALLOW_THREADS
+  index->SaveIndex(file_name);
+Py_END_ALLOW_THREADS
+  Py_RETURN_NONE;
 }
 
 PyObject* loadIndex(PyObject* self, PyObject* args) {
@@ -980,60 +1089,32 @@ PyObject* loadIndex(PyObject* self, PyObject* args) {
     raise << "Error reading parameters (expecting: index ref, file name)";
     return NULL;
   }
-
-  if (IsDistFloat(ptr)) {
-    _loadIndex<float>(ptr, file_name);
-  } else {
-    _loadIndex<int>(ptr, file_name);
-  }
-  Py_RETURN_NONE;
-}
-
-template <typename T>
-void _setQueryTimeParams(PyObject* ptr, const AnyParams& qp) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
       PyLong_AsVoidPtr(ptr));
-  index->SetQueryTimeParams(qp);
+Py_BEGIN_ALLOW_THREADS
+  index->LoadIndex(file_name);
+Py_END_ALLOW_THREADS
+  Py_RETURN_NONE;
 }
 
 PyObject* setQueryTimeParams(PyObject* self, PyObject* args) {
   PyListObject* param_list;
   PyObject*     ptr;
-
   if (!PyArg_ParseTuple(args, "OO!", &ptr, &PyList_Type, &param_list)) {
     raise << "Error reading parameters (expecting: index ref, parameter list)";
     return NULL;
   }
-
   StringVector query_time_params;
   if (!readList(param_list, query_time_params, PyString_AsString)) {
     raise << "Cannot convert an argument to a list";
     return NULL;
   }
-
-  if (IsDistFloat(ptr)) {
-    _setQueryTimeParams<float>(ptr, query_time_params);
-  } else {
-    _setQueryTimeParams<int>(ptr, query_time_params);
-  }
-  Py_RETURN_NONE;
-}
-
-template <typename T>
-PyObject* _knnQuery(PyObject* ptr, int k, PyObject* data) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
       PyLong_AsVoidPtr(ptr));
-  if (index->GetDataType() != kDataDenseVector &&
-      index->GetDataType() != kDataSparseVector &&
-      index->GetDataType() != kDataString &&
-      index->GetDataType() != kDataObjectAsString) {
-    raise << "unknown data type - " << index->GetDataType();
-    return NULL;
-  }
-  auto res = readObject(
-      index->GetDataType(), index->GetSpace(), data, 0, index->GetDistType());
-  std::unique_ptr<const Object> query_obj(res.second);
-  return index->KnnQuery(k, query_obj.get());
+Py_BEGIN_ALLOW_THREADS
+  index->SetQueryTimeParams(query_time_params);
+Py_END_ALLOW_THREADS
+  Py_RETURN_NONE;
 }
 
 PyObject* knnQuery(PyObject* self, PyObject* args) {
@@ -1048,69 +1129,18 @@ PyObject* knnQuery(PyObject* self, PyObject* args) {
     raise << "k (" << k << ") should be >=1";
     return NULL;
   }
-  if (IsDistFloat(ptr)) {
-    return _knnQuery<float>(ptr, k, data);
-  } else {
-    return _knnQuery<int>(ptr, k, data);
-  }
-}
-
-template <typename T, typename N>
-PyObject* _knnQueryBatch(IndexWrapper<T>* index,
-                         const int num_threads,
-                         const int k,
-                         PyObject* matrix) {
-  ObjectVector query_objects;
-  int dims[2];
-  try {
-    N n(index->GetSpace(), nullptr, matrix);
-    for (int i = 0; i < n.size(); ++i) {
-      query_objects.push_back(n[i]);
-    }
-    dims[0] = n.size();
-    dims[1] = k;
-  } catch (const ValueException& e) {
-    raise << e.what();
-    return NULL;
-  }
-
-  std::vector<IntVector> query_res;
-Py_BEGIN_ALLOW_THREADS
-  query_res = index->KnnQueryBatch(num_threads, k, query_objects);
-Py_END_ALLOW_THREADS
-
-  PyArrayObject* ret = reinterpret_cast<PyArrayObject*>(
-      PyArray_FromDims(2, dims, PyArray_INT));
-  if (!ret) {
-    raise << "failed to create numpy result array";
-    return NULL;
-  }
-  PyArray_ENABLEFLAGS(ret, NPY_ARRAY_OWNDATA);
-  for (size_t i = 0; i < query_res.size(); ++i) {
-    for (size_t j = 0; j < query_res[i].size() && j < k; ++j) {
-      *reinterpret_cast<int*>(PyArray_GETPTR2(ret, i, j)) = query_res[i][j];
-    }
-  }
-  return PyArray_Return(ret);
-}
-
-template <typename T>
-PyObject* _knnQueryBatch(PyObject* ptr,
-                         const int num_threads,
-                         const int k,
-                         PyObject* matrix) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
       PyLong_AsVoidPtr(ptr));
-  switch (index->GetDataType()) {
-    case kDataDenseVector:
-      return _knnQueryBatch<T, NumpyDenseMatrix>(index, num_threads, k, matrix);
-    case kDataSparseVector:
-      return _knnQueryBatch<T, NumpySparseMatrix>(index, num_threads, k, matrix);
-    default:
-      raise << "This version is optimized for DENSE_VECTOR and SPARSE_VECTOR "
-            << "Use generic binding for data type " << index->GetDataType();
-      return NULL;
+  if (index->GetDataType() != kDataDenseVector &&
+      index->GetDataType() != kDataSparseVector &&
+      index->GetDataType() != kDataString &&
+      index->GetDataType() != kDataObjectAsString) {
+    raise << "unknown data type - " << index->GetDataType();
+    return NULL;
   }
+  auto res = index->ReadObject(0, data);
+  std::unique_ptr<const Object> query_obj(res.second);
+  return index->KnnQuery(k, query_obj.get());
 }
 
 PyObject* knnQueryBatch(PyObject* self, PyObject* args) {
@@ -1127,102 +1157,29 @@ PyObject* knnQueryBatch(PyObject* self, PyObject* args) {
     raise << "k (" << k << ") should be >=1";
     return NULL;
   }
-  if (IsDistFloat(ptr)) {
-    return _knnQueryBatch<float>(ptr, num_threads, k, data);
-  } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
+      PyLong_AsVoidPtr(ptr));
+  return index->KnnQueryBatch(num_threads, k, data);
+}
+
+PyObject* getDataPoint(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  int       id;
+  if (!PyArg_ParseTuple(args, "Oi", &ptr, &id)) {
+    raise << "Error reading parameters (expecting: index ref, object index)";
     return NULL;
   }
-}
-
-template <typename T>
-BoolPyObject writeObject(int data_type,
-                         const Space<T>* space,
-                         const Object* obj) {
-  raise << "writeObject is not implemented";
-  return std::make_pair(false, nullptr);
-}
-
-template <>
-BoolPyObject writeObject(int data_type,
-                         const Space<float>* space,
-                         const Object* obj) {
-  switch (data_type) {
-    case kDataDenseVector:
-      return writeDenseVector(space, obj);
-    case kDataSparseVector:
-      return writeSparseVector(space, obj);
-    case kDataString:
-      return writeString(space, obj);
-    case kDataObjectAsString:
-      return writeObjectAsString(space, obj);
-    default:
-      raise << "write function is not implemented for data type "
-            << data_type << " and dist type float";
-      return std::make_pair(false, nullptr);
-  }
-}
-
-template <>
-BoolPyObject writeObject(int data_type,
-                         const Space<int>* space,
-                         const Object* obj) {
-  switch (data_type) {
-    case kDataDenseVector:
-      return writeDenseVector(space, obj);
-    case kDataSparseVector:
-      return writeSparseVector(space, obj);
-    case kDataString:
-      return writeString(space, obj);
-    case kDataObjectAsString:
-      return writeObjectAsString(space, obj);
-    default:
-      raise << "write function is not implemented for data type "
-            << data_type << " and dist type int";
-      return std::make_pair(false, nullptr);
-  }
-}
-
-template <typename T>
-PyObject* _getDataPoint(PyObject* ptr, int id) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
       PyLong_AsVoidPtr(ptr));
   if (id < 0 || static_cast<size_t>(id) >= index->GetDataPointQty()) {
     raise << "The data point index should be >= 0 & < " << index->GetDataPointQty();
     return NULL;
   }
-  const Object* obj = index->GetDataPoint(id);
-  auto res = writeObject(index->GetDataType(), index->GetSpace(), obj);
+  auto res = index->WriteObject(id);
   if (!res.first) {
     return NULL;
   }
   return res.second;
-}
-
-PyObject* getDataPoint(PyObject* self, PyObject* args) {
-  PyObject* ptr;
-  int       index;
-  if (!PyArg_ParseTuple(args, "Oi", &ptr, &index)) {
-    raise << "Error reading parameters (expecting: index ref, object index)";
-    return NULL;
-  }
-  if (IsDistFloat(ptr)) {
-    return _getDataPoint<float>(ptr, index);
-  } else {
-    return _getDataPoint<int>(ptr, index);
-  }
-}
-
-template <typename T>
-PyObject* _getDataPointQty(PyObject* ptr) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
-      PyLong_AsVoidPtr(ptr));
-  PyObject* tmp = PyInt_FromLong(index->GetDataPointQty());
-  if (tmp == NULL) {
-    return NULL;
-  }
-  return tmp;
 }
 
 PyObject* getDataPointQty(PyObject* self, PyObject* args) {
@@ -1231,19 +1188,13 @@ PyObject* getDataPointQty(PyObject* self, PyObject* args) {
     raise << "Error reading parameters (expecting: index ref)";
     return NULL;
   }
-
-  if (IsDistFloat(ptr)) {
-    return _getDataPointQty<float>(ptr);
-  } else {
-    return _getDataPointQty<int>(ptr);
-  }
-}
-
-template <typename T>
-void _freeIndex(PyObject* ptr) {
-  IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
       PyLong_AsVoidPtr(ptr));
-  delete index;
+  PyObject* tmp = PyInt_FromLong(index->GetDataPointQty());
+  if (tmp == NULL) {
+    return NULL;
+  }
+  return tmp;
 }
 
 PyObject* freeIndex(PyObject* self, PyObject* args) {
@@ -1251,11 +1202,9 @@ PyObject* freeIndex(PyObject* self, PyObject* args) {
   if (!PyArg_ParseTuple(args, "O", &ptr)) {
     return NULL;
   }
-  if (IsDistFloat(ptr)) {
-    _freeIndex<float>(ptr);
-  } else {
-    _freeIndex<int>(ptr);
-  }
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
+      PyLong_AsVoidPtr(ptr));
+  delete index;
   Py_RETURN_NONE;
 }
 
