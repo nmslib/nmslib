@@ -88,33 +88,23 @@ static PyTypeObject NmslibDist_Type = {
 };
 
 using BoolObject = std::pair<bool,const Object*>;
-typedef BoolObject (*DataReaderFunc)(const Space<float>*, PyObject*, int, int);
-BoolObject readDenseVector(const Space<float>*, PyObject*, int, int);
-BoolObject readSparseVector(const Space<float>*, PyObject*, int, int);
-typedef PyObject* (*DataWriterFunc)(const Object*);
-PyObject* writeDenseVector(const Object*);
-PyObject* writeSparseVector(const Object*);
+using BoolString = std::pair<bool,string>;
+using BoolPyObject = std::pair<bool,PyObject*>;
 
 const int kDataDenseVector = 1;
 const int kDataString = 2;
 const int kDataSparseVector = 3;
+const int kDataObjectAsString = 4;
 
 const std::map<std::string, int> NMSLIB_DATA_TYPES = {
   {"DENSE_VECTOR", kDataDenseVector},
   {"STRING", kDataString},
   {"SPARSE_VECTOR", kDataSparseVector},
-};
-const std::map<int, DataReaderFunc> NMSLIB_DATA_READERS = {
-  {kDataDenseVector, &readDenseVector},
-  {kDataSparseVector, &readSparseVector},
-};
-const std::map<int, DataWriterFunc> NMSLIB_DATA_WRITERS = {
-  {kDataDenseVector, &writeDenseVector},
-  {kDataSparseVector, &writeSparseVector},
+  {"OBJECT_AS_STRING", kDataObjectAsString},
 };
 
-const int kDistFloat = 4;
-const int kDistInt = 5;
+const int kDistFloat = 14;
+const int kDistInt = 15;
 const std::map<std::string, int> NMSLIB_DIST_TYPES = {
   {"FLOAT", kDistFloat},
   {"INT", kDistInt}
@@ -189,10 +179,7 @@ bool readList(PyListObject* lst, std::vector<T>& z, F&& f) {
   return true;
 }
 
-BoolObject readDenseVector(const Space<float>* space,
-                           PyObject* data,
-                           int id,
-                           int dist_type) {
+BoolObject readDenseVector(const Space<float>* space, PyObject* data, int id) {
   if (!PyList_Check(data)) {
     raise << "expected DataType.DENSE_VECTOR";
     return std::make_pair(false, nullptr);
@@ -206,10 +193,7 @@ BoolObject readDenseVector(const Space<float>* space,
   return std::make_pair(true, z);
 }
 
-BoolObject readSparseVector(const Space<float>* space,
-                            PyObject* data,
-                            int id,
-                            int dist_type) {
+BoolObject readSparseVector(const Space<float>* space, PyObject* data, int id) {
   if (!PyList_Check(data)) {
     raise << "expected DataType.SPARSE_VECTOR";
     return std::make_pair(false, nullptr);
@@ -251,7 +235,45 @@ BoolObject readSparseVector(const Space<float>* space,
   return std::make_pair(true, z);
 }
 
-PyObject* writeDenseVector(const Object* obj) {
+BoolObject readString(const Space<int>* space, PyObject* data, int id) {
+  if (!PyString_Check(data)) {
+    raise << "expected DataType.STRING";
+    return std::make_pair(false, nullptr);
+  }
+  const char* s = PyString_AsString(data);
+  const Object* z = new Object(id, -1, strlen(s), s);
+  return std::make_pair(true, z);
+}
+
+template <typename T>
+BoolObject readObjectAsString(const Space<T>* space, PyObject* data, int id) {
+  if (!PyString_Check(data)) {
+    raise << "expected DataType.OBJECT_AS_STRING";
+    return std::make_pair(false, nullptr);
+  }
+  const char* s = PyString_AsString(data);
+  const Object* z = space->CreateObjFromStr(id, -1,  s, NULL).release();
+  return std::make_pair(true, z);
+}
+
+template <typename T>
+BoolPyObject writeString(const Space<T>* space, const Object* obj) {
+  unique_ptr<char[]> str_copy;
+Py_BEGIN_ALLOW_THREADS
+  str_copy.reset(new char[obj->datalength()+1]);
+  char *s =str_copy.get();
+  s[obj->datalength()] = 0;
+  memcpy(s, obj->data(), obj->datalength()*sizeof(char));
+Py_END_ALLOW_THREADS
+  PyObject* v = PyString_FromString(str_copy.get());
+  if (!v) {
+    return std::make_pair(false, nullptr);
+  }
+  return std::make_pair(true, v);
+}
+
+template <typename T>
+BoolPyObject writeDenseVector(const Space<T>* space, const Object* obj) {
   // Could in principal use Py_*ALLOW_THREADS here, but it's not
   // very useful b/c it would apply only to a very short and fast
   // fragment of code. In that, it seems that we have to start blocking
@@ -260,38 +282,39 @@ PyObject* writeDenseVector(const Object* obj) {
   size_t       qty = obj->datalength() / sizeof(float);
   PyObject* z = PyList_New(qty);
   if (!z) {
-    return NULL;
+    return std::make_pair(false, nullptr);
   }
   for (size_t i = 0; i < qty; ++i) {
     PyObject* v = PyFloat_FromDouble(arr[i]);
     if (!v) {
       Py_DECREF(z);
-      return NULL;
+      return std::make_pair(false, nullptr);
     }
     PyList_SET_ITEM(z, i, v);
   }
-  return z;
+  return std::make_pair(true, z);
 }
 
-PyObject* writeSparseVector(const Object* obj) {
+template <typename T>
+BoolPyObject writeSparseVector(const Space<T>* space, const Object* obj) {
   const SparseVectElem<float>* arr =
       reinterpret_cast<const SparseVectElem<float>*>(obj->data());
   size_t qty = obj->datalength() / sizeof(SparseVectElem<float>);
   PyObject* z = PyList_New(qty);
   if (!z) {
-    return NULL;
+    return std::make_pair(false, nullptr);
   }
   for (size_t i = 0; i < qty; ++i) {
     PyObject* id = PyInt_FromLong(arr[i].id_);
     if (!id) {
       Py_DECREF(z);
-      return NULL;
+      return std::make_pair(false, nullptr);
     }
     PyObject* v = PyFloat_FromDouble(arr[i].val_);
     if (!v) {
       Py_DECREF(z);
       Py_DECREF(id);
-      return NULL;
+      return std::make_pair(false, nullptr);
     }
     PyObject* p = PyList_New(2);
     if (!p) {
@@ -299,13 +322,31 @@ PyObject* writeSparseVector(const Object* obj) {
       Py_DECREF(z);
       Py_DECREF(id);
       Py_DECREF(v);
-      return NULL;
+      return std::make_pair(false, nullptr);
     }
     PyList_SET_ITEM(p, 0, id);
     PyList_SET_ITEM(p, 1, v);
     PyList_SET_ITEM(z, i, p);
   }
-  return z;
+  return std::make_pair(true, z);
+}
+
+
+template <typename T>
+BoolPyObject writeObjectAsString(const Space<T> *space, const Object* obj) {
+  unique_ptr<char[]> str_copy;
+Py_BEGIN_ALLOW_THREADS
+  std::stringstream ss;
+  ss << obj->id();
+  std::string str = space->CreateStrFromObj(obj, ss.str());
+  str_copy.reset(new char[str.size()+1]);
+  memcpy(str_copy.get(), str.c_str(), str.size()+1);
+Py_END_ALLOW_THREADS
+  PyObject* v = PyString_FromString(str_copy.get());
+  if (!v) {
+    return std::make_pair(false, nullptr);
+  }
+  return std::make_pair(true, v);
 }
 
 template <typename T>
@@ -326,21 +367,16 @@ class IndexWrapper {
   }
 
   ~IndexWrapper() {
-    //cout << "(nmslib) Mopping up" << endl;
     delete space_;
-    //cout << "(nmslib) Deleted space" << endl;
     delete index_;
-    //cout << "(nmslib) Deleted index" << endl;
     for (auto p : data_) {
       delete p;
     }
-    //cout << "(nmslib) Deleted wrapper Object instance" << endl;
-    //cout << "(nmslib) Mopping up finished" << endl;
   }
 
-  inline int GetDistType() { return dist_type_; }
-  inline int GetDataType() { return data_type_; }
-  inline size_t GetDataPointQty() { return data_.size(); }
+  inline int GetDistType() const { return dist_type_; }
+  inline int GetDataType() const { return data_type_; }
+  inline size_t GetDataPointQty() const { return data_.size(); }
   inline const Space<T>* GetSpace() const { return space_; }
 
   size_t AddDataPoint(const Object* z) {
@@ -404,7 +440,7 @@ Py_END_ALLOW_THREADS
     if (!z) {
       return NULL;
     }
-    for (int i = static_cast<int>(ids.size())-1; i >= 0; --i) {
+    for (size_t i = 0; i < ids.size(); ++i) {
       PyObject* v = PyInt_FromLong(ids[i]);
       if (!v) {
         Py_DECREF(z);
@@ -513,28 +549,84 @@ PyObject* init(PyObject* self, PyObject* args) {
           dist_type, data_type, space_type, space_param,
           method_name);
     case kDistInt:
-      {
-        raise << "This version is optimized for vectors. "
-              << "Use generic bindings for dist type - " << dist_type;
-        return NULL;
-      }
+      return _init<int>(
+          dist_type, data_type, space_type, space_param,
+          method_name);
     default:
-      {
-        raise << "unknown dist type - " << dist_type;
-        return NULL;
-      }
+      raise << "unknown dist type - " << dist_type;
+      return NULL;
   }
 }
+
+template <typename T>
+BoolObject readObject(int data_type,
+                      const Space<T>* space,
+                      PyObject* data,
+                      int id,
+                      int dist_type) {
+  raise << "not implemented for data_type "
+        << data_type << " and dist_type "
+        << dist_type;
+  return std::make_pair(false, nullptr);
+}
+
+template <>
+BoolObject readObject(int data_type,
+                      const Space<float>* space,
+                      PyObject* data,
+                      int id,
+                      int dist_type) {
+  if (dist_type != kDistFloat) {
+    raise << "expected float dist_type";
+    return std::make_pair(false, nullptr);
+  }
+  switch (data_type) {
+    case kDataDenseVector:
+      return readDenseVector(space, data, id);
+    case kDataSparseVector:
+      return readSparseVector(space, data, id);
+    case kDataObjectAsString:
+      return readObjectAsString(space, data, id);
+    default:
+      raise << "not implemented";
+      return std::make_pair(false, nullptr);
+  }
+}
+
+template <>
+BoolObject readObject(int data_type,
+                      const Space<int>* space,
+                      PyObject* data,
+                      int id,
+                      int dist_type) {
+  if (dist_type != kDistInt) {
+    raise << "expected int dist_type";
+    return std::make_pair(false, nullptr);
+  }
+  switch (data_type) {
+    case kDataString:
+      return readString(space, data, id);
+    case kDataObjectAsString:
+      return readObjectAsString(space, data, id);
+    default:
+      raise << "not implemented";
+      return std::make_pair(false, nullptr);
+  }
+}
+
 template <typename T>
 PyObject* _addDataPoint(PyObject* ptr, IdType id, PyObject* data) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
-  auto iter = NMSLIB_DATA_READERS.find(index->GetDataType());
-  if (iter == NMSLIB_DATA_READERS.end()) {
+  if (index->GetDataType() != kDataDenseVector &&
+      index->GetDataType() != kDataSparseVector &&
+      index->GetDataType() != kDataString &&
+      index->GetDataType() != kDataObjectAsString) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
   }
-  auto res = (*iter->second)(index->GetSpace(), data, id, index->GetDistType());
+  auto res = readObject(
+      index->GetDataType(), index->GetSpace(), data, id, index->GetDistType());
   if (!res.first) {
     raise << "Cannot create a data-point object!";
     return NULL;
@@ -558,9 +650,7 @@ PyObject* addDataPoint(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     return _addDataPoint<float>(ptr, id, data);
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    return _addDataPoint<int>(ptr, id, data);
   }
 }
 
@@ -797,8 +887,7 @@ PyObject* _addDataPointBatch(PyObject* ptr,
     case kDataSparseVector:
       return _addDataPointBatch<T, NumpySparseMatrix>(index, ids, matrix);
     default:
-      raise << "This version is optimized for DENSE_VECTOR and SPARSE_VECTOR "
-            << "Use generic binding for data type " << index->GetDataType();
+      raise << "Not yet implemented for data type " << index->GetDataType();
       return NULL;
   }
 }
@@ -846,12 +935,10 @@ PyObject* createIndex(PyObject* self, PyObject* args) {
 
   if (IsDistFloat(ptr)) {
     _createIndex<float>(ptr, index_params);
-    Py_RETURN_NONE;
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    _createIndex<int>(ptr, index_params);
   }
+  Py_RETURN_NONE;
 }
 
 template <typename T>
@@ -872,12 +959,10 @@ PyObject* saveIndex(PyObject* self, PyObject* args) {
 
   if (IsDistFloat(ptr)) {
     _saveIndex<float>(ptr, file_name);
-    Py_RETURN_NONE;
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    _saveIndex<int>(ptr, file_name);
   }
+  Py_RETURN_NONE;
 }
 
 template <typename T>
@@ -898,12 +983,10 @@ PyObject* loadIndex(PyObject* self, PyObject* args) {
 
   if (IsDistFloat(ptr)) {
     _loadIndex<float>(ptr, file_name);
-    Py_RETURN_NONE;
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    _loadIndex<int>(ptr, file_name);
   }
+  Py_RETURN_NONE;
 }
 
 template <typename T>
@@ -930,27 +1013,25 @@ PyObject* setQueryTimeParams(PyObject* self, PyObject* args) {
 
   if (IsDistFloat(ptr)) {
     _setQueryTimeParams<float>(ptr, query_time_params);
-    Py_RETURN_NONE;
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    _setQueryTimeParams<int>(ptr, query_time_params);
   }
+  Py_RETURN_NONE;
 }
 
 template <typename T>
 PyObject* _knnQuery(PyObject* ptr, int k, PyObject* data) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
-  auto iter = NMSLIB_DATA_READERS.find(index->GetDataType());
-  if (iter == NMSLIB_DATA_READERS.end()) {
+  if (index->GetDataType() != kDataDenseVector &&
+      index->GetDataType() != kDataSparseVector &&
+      index->GetDataType() != kDataString &&
+      index->GetDataType() != kDataObjectAsString) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
   }
-  auto res = (*iter->second)(index->GetSpace(), data, 0, index->GetDistType());
-  if (!res.first) {
-    return NULL;
-  }
+  auto res = readObject(
+      index->GetDataType(), index->GetSpace(), data, 0, index->GetDistType());
   std::unique_ptr<const Object> query_obj(res.second);
   return index->KnnQuery(k, query_obj.get());
 }
@@ -970,9 +1051,7 @@ PyObject* knnQuery(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     return _knnQuery<float>(ptr, k, data);
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    return _knnQuery<int>(ptr, k, data);
   }
 }
 
@@ -1058,6 +1137,54 @@ PyObject* knnQueryBatch(PyObject* self, PyObject* args) {
 }
 
 template <typename T>
+BoolPyObject writeObject(int data_type,
+                         const Space<T>* space,
+                         const Object* obj) {
+  raise << "writeObject is not implemented";
+  return std::make_pair(false, nullptr);
+}
+
+template <>
+BoolPyObject writeObject(int data_type,
+                         const Space<float>* space,
+                         const Object* obj) {
+  switch (data_type) {
+    case kDataDenseVector:
+      return writeDenseVector(space, obj);
+    case kDataSparseVector:
+      return writeSparseVector(space, obj);
+    case kDataString:
+      return writeString(space, obj);
+    case kDataObjectAsString:
+      return writeObjectAsString(space, obj);
+    default:
+      raise << "write function is not implemented for data type "
+            << data_type << " and dist type float";
+      return std::make_pair(false, nullptr);
+  }
+}
+
+template <>
+BoolPyObject writeObject(int data_type,
+                         const Space<int>* space,
+                         const Object* obj) {
+  switch (data_type) {
+    case kDataDenseVector:
+      return writeDenseVector(space, obj);
+    case kDataSparseVector:
+      return writeSparseVector(space, obj);
+    case kDataString:
+      return writeString(space, obj);
+    case kDataObjectAsString:
+      return writeObjectAsString(space, obj);
+    default:
+      raise << "write function is not implemented for data type "
+            << data_type << " and dist type int";
+      return std::make_pair(false, nullptr);
+  }
+}
+
+template <typename T>
 PyObject* _getDataPoint(PyObject* ptr, int id) {
   IndexWrapper<T>* index = reinterpret_cast<IndexWrapper<T>*>(
       PyLong_AsVoidPtr(ptr));
@@ -1065,13 +1192,12 @@ PyObject* _getDataPoint(PyObject* ptr, int id) {
     raise << "The data point index should be >= 0 & < " << index->GetDataPointQty();
     return NULL;
   }
-  auto iter = NMSLIB_DATA_WRITERS.find(index->GetDataType());
-  if (iter == NMSLIB_DATA_WRITERS.end()) {
-    raise << "unknown data type - " << index->GetDataType();
+  const Object* obj = index->GetDataPoint(id);
+  auto res = writeObject(index->GetDataType(), index->GetSpace(), obj);
+  if (!res.first) {
     return NULL;
   }
-  const Object* obj = index->GetDataPoint(id);
-  return (*iter->second)(obj);
+  return res.second;
 }
 
 PyObject* getDataPoint(PyObject* self, PyObject* args) {
@@ -1081,13 +1207,10 @@ PyObject* getDataPoint(PyObject* self, PyObject* args) {
     raise << "Error reading parameters (expecting: index ref, object index)";
     return NULL;
   }
-
   if (IsDistFloat(ptr)) {
     return _getDataPoint<float>(ptr, index);
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    return _getDataPoint<int>(ptr, index);
   }
 }
 
@@ -1112,9 +1235,7 @@ PyObject* getDataPointQty(PyObject* self, PyObject* args) {
   if (IsDistFloat(ptr)) {
     return _getDataPointQty<float>(ptr);
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    return _getDataPointQty<int>(ptr);
   }
 }
 
@@ -1132,11 +1253,9 @@ PyObject* freeIndex(PyObject* self, PyObject* args) {
   }
   if (IsDistFloat(ptr)) {
     _freeIndex<float>(ptr);
-    Py_RETURN_NONE;
   } else {
-    raise << "This version is optimized for vectors. "
-          << "Use generic bindings for dist type - int";
-    return NULL;
+    _freeIndex<int>(ptr);
   }
+  Py_RETURN_NONE;
 }
 
