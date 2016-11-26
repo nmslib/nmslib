@@ -478,7 +478,7 @@ class NumpyDenseMatrix : public NumpyMatrix {
   NumpyDenseMatrix(const Space<int>* space,
                    PyArrayObject* ids,
                    PyObject* matrix) {
-    throw ValueException("NumpyDenseMatrix is not implemented for int spaces");
+    throw ValueException("NumpyDenseMatrix is not implemented for int dist");
   }
 
   NumpyDenseMatrix(const Space<float>* space,
@@ -572,7 +572,7 @@ class NumpySparseMatrix : public NumpyMatrix {
   NumpySparseMatrix(const Space<int>* space,
                     PyArrayObject* ids,
                     PyObject* matrix) {
-    throw ValueException("NumpySparseMatrix is not implemented for int spaces");
+    throw ValueException("NumpySparseMatrix is not implemented for int dist");
   }
 
   NumpySparseMatrix(const Space<float>* space,
