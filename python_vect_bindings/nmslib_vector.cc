@@ -284,6 +284,8 @@ BoolObject readObject(const int data_type,
       return readDenseVector(space, data, id);
     case kDataSparseVector:
       return readSparseVector(space, data, id);
+    case kDataString:
+      return readString(space, data, id);
     case kDataObjectAsString:
       return readObjectAsString(space, data, id);
     default:
@@ -388,7 +390,6 @@ BoolPyObject writeSparseVector(const Space<T>* space, const Object* obj) {
   return std::make_pair(true, z);
 }
 
-
 template <typename T>
 BoolPyObject writeObjectAsString(const Space<T> *space, const Object* obj) {
   unique_ptr<char[]> str_copy;
@@ -464,7 +465,6 @@ class ValueException : std::exception {
  private:
   std::string msg_;
 };
-
 
 class NumpyMatrix {
  public:
@@ -629,7 +629,6 @@ class NumpySparseMatrix : public NumpyMatrix {
   const int* indptr_;
   const float* data_;
 };
-
 
 class IndexWrapperBase {
  public:
