@@ -466,14 +466,14 @@ class ValueException : std::exception {
   std::string msg_;
 };
 
-class NumpyMatrix {
+class BatchObjects {
  public:
-  virtual ~NumpyMatrix() {}
+  virtual ~BatchObjects() {}
   virtual const int size() const = 0;
   virtual const Object* operator[](ssize_t idx) const = 0;
 };
 
-class NumpyDenseMatrix : public NumpyMatrix {
+class NumpyDenseMatrix : public BatchObjects {
  public:
   NumpyDenseMatrix(const Space<int>* space,
                    PyArrayObject* ids,
@@ -567,7 +567,7 @@ PyArrayObject* GetAttrAsNumpyArray(PyObject* obj,
   return arr;
 }
 
-class NumpySparseMatrix : public NumpyMatrix {
+class NumpySparseMatrix : public BatchObjects {
  public:
   NumpySparseMatrix(const Space<int>* space,
                     PyArrayObject* ids,
@@ -630,6 +630,98 @@ class NumpySparseMatrix : public NumpyMatrix {
   const float* data_;
 };
 
+class BatchStrings : public BatchObjects {
+ public:
+  BatchStrings(const Space<int>* space,
+               PyArrayObject* ids,
+               PyObject* data) {
+    Init(ids, data);
+  }
+
+  BatchStrings(const Space<float>* space,
+               PyArrayObject* ids,
+               PyObject* data) {
+    Init(ids, data);
+  }
+
+  ~BatchStrings() {}
+
+  const int size() const override { return num_str_; }
+
+  const Object* operator[](ssize_t idx) const override {
+    int id = id_ ? id_[idx] : 0;
+    return new Object(id, -1, strlen(data_[idx]), data_[idx]);
+  }
+
+ protected:
+  void Init(PyArrayObject* ids, PyObject* data) {
+    if (ids) {
+      if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
+        throw ValueException("id field should be 1 dimensional int32 vector");
+      }
+      id_ = reinterpret_cast<int*>(ids->data);
+    } else {
+      id_ = nullptr;
+    }
+    if (!PyList_Check(data)) {
+      throw ValueException("expected list of strings");
+    }
+    PyListObject* l = reinterpret_cast<PyListObject*>(data);
+    PyErr_Clear();
+    num_str_ = PyList_GET_SIZE(l);
+    for (int i = 0; i < num_str_; ++i) {
+      PyObject* item = PyList_GET_ITEM(l, i);
+      if (PyErr_Occurred()) {
+        throw ValueException("failed to read string from list");
+      }
+      if (!PyString_Check(item)) {
+        throw ValueException("expected DataType.STRING");
+      }
+      data_.push_back(PyString_AsString(item));
+    }
+  }
+
+  int num_str_;
+  const int* id_;
+  std::vector<const char*> data_;
+};
+
+class BatchObjectStrings : public BatchStrings {
+ public:
+  BatchObjectStrings(const Space<int>* space,
+                     PyArrayObject* ids,
+                     PyObject* data)
+      : BatchStrings(space, ids, data),
+        space_int_(space),
+        space_float_(nullptr) {
+    Init(ids, data);
+  }
+
+  BatchObjectStrings(const Space<float>* space,
+                     PyArrayObject* ids,
+                     PyObject* data)
+      : BatchStrings(space, ids, data),
+        space_int_(nullptr),
+        space_float_(space) {
+    Init(ids, data);
+  }
+
+  ~BatchObjectStrings() {}
+
+  const Object* operator[](ssize_t idx) const override {
+    int id = id_ ? id_[idx] : 0;
+    if (space_int_) {
+      return space_int_->CreateObjFromStr(id, -1,  data_[idx], NULL).release();
+    } else {
+      return space_float_->CreateObjFromStr(id, -1,  data_[idx], NULL).release();
+    }
+  }
+
+ private:
+  const Space<int>* space_int_;        // TODO(@bileg) this one is a bit ugly
+  const Space<float>* space_float_;    // but there's no workaround
+};
+
 class IndexWrapperBase {
  public:
   IndexWrapperBase(int dist_type,
@@ -676,11 +768,11 @@ class IndexWrapperBase {
                                                const ObjectVector& query_objects) = 0;
 
   virtual PyObject* AddDataPointBatch(PyArrayObject* ids,
-                                      PyObject* matrix) = 0;
+                                      PyObject* data) = 0;
 
   virtual PyObject* KnnQueryBatch(const int num_threads,
                                   const int k,
-                                  PyObject* matrix) = 0;
+                                  PyObject* data) = 0;
 
  protected:
   const int dist_type_;
@@ -817,18 +909,24 @@ Py_END_ALLOW_THREADS
   }
 
   PyObject* AddDataPointBatch(PyArrayObject* ids,
-                              PyObject* matrix) override {
+                              PyObject* data) override {
     try {
-      std::unique_ptr<NumpyMatrix> n;
+      std::unique_ptr<BatchObjects> n;
       switch (data_type_) {
         case kDataDenseVector:
-          n.reset(new NumpyDenseMatrix(space_, ids, matrix));
+          n.reset(new NumpyDenseMatrix(space_, ids, data));
           break;
         case kDataSparseVector:
-          n.reset(new NumpySparseMatrix(space_, ids, matrix));
+          n.reset(new NumpySparseMatrix(space_, ids, data));
+          break;
+        case kDataString:
+          n.reset(new BatchStrings(space_, ids, data));
+          break;
+        case kDataObjectAsString:
+          n.reset(new BatchObjectStrings(space_, ids, data));
           break;
         default:
-          raise << "AddDataPointBatch is ot yet implemented for data type "
+          raise << "AddDataPointBatch is not yet implemented for data type "
                 << data_type_;
           return NULL;
       }
@@ -893,20 +991,26 @@ Py_END_ALLOW_THREADS
 
   PyObject* KnnQueryBatch(const int num_threads,
                           const int k,
-                          PyObject* matrix) override {
+                          PyObject* data) override {
     ObjectVector query_objects;
     int dims[2];
     try {
-      std::unique_ptr<NumpyMatrix> n;
+      std::unique_ptr<BatchObjects> n;
       switch (data_type_) {
         case kDataDenseVector:
-          n.reset(new NumpyDenseMatrix(space_, nullptr, matrix));
+          n.reset(new NumpyDenseMatrix(space_, nullptr, data));
           break;
         case kDataSparseVector:
-          n.reset(new NumpySparseMatrix(space_, nullptr, matrix));
+          n.reset(new NumpySparseMatrix(space_, nullptr, data));
+          break;
+        case kDataString:
+          n.reset(new BatchStrings(space_, nullptr, data));
+          break;
+        case kDataObjectAsString:
+          n.reset(new BatchObjectStrings(space_, nullptr, data));
           break;
         default:
-          raise << "KnnQueryBatch is ot yet implemented for data type "
+          raise << "KnnQueryBatch is not yet implemented for data type "
                 << data_type_;
           return NULL;
       }

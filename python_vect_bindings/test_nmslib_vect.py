@@ -258,7 +258,7 @@ def test_sparse_vector_fresh():
     nmslib_vector.freeIndex(index)
 
 
-def test_string_fresh():
+def test_string_fresh(batch=True):
     DATA_STRS = ["xyz", "beagcfa", "cea", "cb",
                  "d", "c", "bdaf", "ddcd",
                  "egbfa", "a", "fba", "bcccfe",
@@ -277,8 +277,12 @@ def test_string_fresh():
                              nmslib_vector.DataType.STRING,
                              nmslib_vector.DistType.INT)
 
-    for id, data in enumerate(DATA_STRS):
-        nmslib_vector.addDataPoint(index, id, data)
+    if batch:
+        print 'DATA_STRS', DATA_STRS
+        positions = nmslib_vector.addDataPointBatch(index, np.arange(len(DATA_STRS), dtype=np.int32), DATA_STRS)
+    else:
+        for id, data in enumerate(DATA_STRS):
+            nmslib_vector.addDataPoint(index, id, data)
 
     print 'Let\'s print a few data entries'
     print 'We have added %d data points' % nmslib_vector.getDataPointQty(index)
@@ -299,6 +303,9 @@ def test_string_fresh():
     print "Results for the freshly created index:"
 
     k = 2
+    if batch:
+        num_threads = 10
+        res = nmslib_vector.knnQueryBatch(index, num_threads, k, QUERY_STRS)
     for idx, data in enumerate(QUERY_STRS):
         res = nmslib_vector.knnQuery(index, k, data)
         print idx, data, res, [DATA_STRS[i] for i in res]
@@ -361,7 +368,7 @@ def test_string_loaded():
     nmslib_vector.freeIndex(index)
 
 
-def test_object_as_string_fresh():
+def test_object_as_string_fresh(batch=True):
     space_type = 'cosinesimil'
     space_param = []
     method_name = 'small_world_rand'
@@ -375,8 +382,12 @@ def test_object_as_string_fresh():
                              nmslib_vector.DataType.OBJECT_AS_STRING,
                              nmslib_vector.DistType.FLOAT)
 
-    for id, data in enumerate(read_data_as_string('sample_dataset.txt')):
-        nmslib_vector.addDataPoint(index, id, data)
+    if batch:
+        data = [s for s in read_data_as_string('sample_dataset.txt')]
+        positions = nmslib_vector.addDataPointBatch(index, np.arange(len(data), dtype=np.int32), data)
+    else:
+        for id, data in enumerate(read_data_as_string('sample_dataset.txt')):
+            nmslib_vector.addDataPoint(index, id, data)
 
     print 'Let\'s print a few data entries'
     print 'We have added %d data points' % nmslib_vector.getDataPointQty(index)
@@ -418,11 +429,11 @@ if __name__ == '__main__':
     print 'SPARSE_VECTOR', nmslib_vector.DataType.SPARSE_VECTOR
     print 'OBJECT_AS_STRING', nmslib_vector.DataType.OBJECT_AS_STRING
 
-    print nmslib_vector.DistType.INT
-    print nmslib_vector.DistType.FLOAT
+    print 'DistType.INT', nmslib_vector.DistType.INT
+    print 'DistType.FLOAT', nmslib_vector.DistType.FLOAT
 
 
-    #test_vector_load()
+    test_vector_load()
 
     test_vector_fresh()
     test_vector_fresh(False)
@@ -432,7 +443,9 @@ if __name__ == '__main__':
     test_sparse_vector_fresh()
 
     test_string_fresh()
+    test_string_fresh(False)
     test_string_loaded()
 
     test_object_as_string_fresh()
+    test_object_as_string_fresh(False)
 
