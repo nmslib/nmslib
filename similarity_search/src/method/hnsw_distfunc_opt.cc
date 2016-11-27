@@ -395,7 +395,8 @@ namespace similarity {
 
 		closestDistQueuei.emplace(curdist, curNodeNum);
 
-		query->CheckAndAddToResult(curdist, new Object(data_level0_memory_ + (curNodeNum)*memoryPerObject_ + offsetData_));
+		//query->CheckAndAddToResult(curdist, new Object(data_level0_memory_ + (curNodeNum)*memoryPerObject_ + offsetData_));
+		query->CheckAndAddToResult(curdist, data_rearranged_[curNodeNum]);
 		massVisited[curNodeNum] = currentV;
 
 		while (!candidateQueuei.empty()) {
@@ -432,7 +433,8 @@ namespace similarity {
 					if (closestDistQueuei.top().getDistance() > d || closestDistQueuei.size() < ef_) {
 						candidateQueuei.emplace(-d, tnum);
 						_mm_prefetch(data_level0_memory_ + candidateQueuei.top().element*memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
-						query->CheckAndAddToResult(d, new Object(currObj1));
+						//query->CheckAndAddToResult(d, new Object(currObj1));
+						query->CheckAndAddToResult(d, data_rearranged_[tnum]);
 						closestDistQueuei.emplace(d, tnum);
 
 						if (closestDistQueuei.size() > ef_) {
@@ -569,8 +571,9 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 
 	for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
 		int tnum = queueData[i].data;
-		char *currObj = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
-		query->CheckAndAddToResult(queueData[i].key, new Object(currObj));
+		//char *currObj = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+		//query->CheckAndAddToResult(queueData[i].key, new Object(currObj));
+		query->CheckAndAddToResult(queueData[i].key, data_rearranged_[tnum]);
 	}
 	visitedlistpool->releaseVisitedList(vl);
 
@@ -650,7 +653,8 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
 
         closestDistQueuei.emplace(curdist, curNodeNum);
 
-        query->CheckAndAddToResult(curdist, new Object(data_level0_memory_ + (curNodeNum)*memoryPerObject_ + offsetData_));
+        //query->CheckAndAddToResult(curdist, new Object(data_level0_memory_ + (curNodeNum)*memoryPerObject_ + offsetData_));
+        query->CheckAndAddToResult(curdist, data_rearranged_[curNodeNum]);
         massVisited[curNodeNum] = currentV;
 
         while (!candidateQueuei.empty()) {
@@ -687,7 +691,8 @@ void Hnsw<dist_t>::SearchL2CustomV1Merge(KNNQuery<dist_t> *query) {
                     if (closestDistQueuei.top().getDistance() > d || closestDistQueuei.size() < ef_) {
                         candidateQueuei.emplace(-d, tnum);
                         _mm_prefetch(data_level0_memory_ + candidateQueuei.top().element*memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
-                        query->CheckAndAddToResult(d, new Object(currObj1));
+                        //query->CheckAndAddToResult(d, new Object(currObj1));
+                        query->CheckAndAddToResult(d, data_rearranged_[tnum]);
                         closestDistQueuei.emplace(d, tnum);
 
                         if (closestDistQueuei.size() > ef_) {
@@ -843,8 +848,9 @@ void Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query) {
 
 	for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
 		int tnum = queueData[i].data;
-		char *currObj = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
-		query->CheckAndAddToResult(queueData[i].key, new Object(currObj));
+		//char *currObj = (data_level0_memory_ + tnum*memoryPerObject_ + offsetData_);
+		//query->CheckAndAddToResult(queueData[i].key, new Object(currObj));
+		query->CheckAndAddToResult(queueData[i].key, data_rearranged_[tnum]);
 	}
 	visitedlistpool->releaseVisitedList(vl);
 

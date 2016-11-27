@@ -551,7 +551,7 @@ namespace similarity {
         unsigned int totalElementsStored_;
 
         const ObjectVector&   data_;// We do not copy objects
-        //ObjectVector          data_; // We copy all the data
+        ObjectVector          data_rearranged_; 
 
         mutable mutex         ElListGuard_;
         mutable mutex         MaxLevelGuard_;
