@@ -660,7 +660,7 @@ class BatchStrings : public BatchObjects<dist_t> {
         throw ValueException("failed to read string from list");
       }
       if (!PyString_Check(item)) {
-        throw ValueException("expected DataType.STRING");
+        throw ValueException("expected list of strings");
       }
       data_.push_back(PyString_AsString(item));
     }
