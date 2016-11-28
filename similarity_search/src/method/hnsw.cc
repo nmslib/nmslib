@@ -30,6 +30,7 @@
 #include <iostream>
 #include <mmintrin.h>
 
+#include "simd.h"
 #include "space.h"
 #include "knnquery.h"
 #include "rangequery.h"
