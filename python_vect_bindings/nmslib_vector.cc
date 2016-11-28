@@ -358,6 +358,10 @@ BoolPyObject writeDenseVector(const Space<dist_t>* space, const Object* obj) {
 
 template <typename dist_t>
 BoolPyObject writeSparseVector(const Space<dist_t>* space, const Object* obj) {
+  if (!std::is_same<dist_t, float>::value) {
+    raise << "writeSparseVector is only for float elements";
+    return std::make_pair(false, nullptr);
+  }
   const SparseVectElem<float>* arr =
       reinterpret_cast<const SparseVectElem<float>*>(obj->data());
   size_t qty = obj->datalength() / sizeof(SparseVectElem<float>);
