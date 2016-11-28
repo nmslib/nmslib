@@ -208,6 +208,18 @@ def test_vector_loaded():
 
     nmslib_vector.freeIndex(index)
 
+def gen_sparse_data():
+    n = 1000
+    q = 100
+    dim = 5000
+
+    data = np.random.binomial(1, 0.01, size=(n, dim))
+    print data.shape
+    np.savetxt('sample_sparse_dataset.txt', data, delimiter='\t')
+
+    query = np.random.binomial(1, 0.01, size=(q, dim))
+    print query.shape
+    np.savetxt('sample_sparse_queryset.txt', query, delimiter='\t')
 
 def test_sparse_vector_fresh():
     space_type = 'cosinesimil_sparse'
@@ -439,7 +451,7 @@ if __name__ == '__main__':
     test_vector_fresh(False)
     test_vector_loaded()
 
-
+    gen_sparse_data()
     test_sparse_vector_fresh()
 
     test_string_fresh()
