@@ -235,8 +235,8 @@ BoolObject readSparseVector(const Space<float>* space, PyObject* data, int id) {
   return std::make_pair(true, z);
 }
 
-template <typename T>
-BoolObject readString(const Space<T>* space, PyObject* data, int id) {
+template <typename dist_t>
+BoolObject readString(const Space<dist_t>* space, PyObject* data, int id) {
   if (!PyString_Check(data)) {
     raise << "expected DataType.STRING";
     return std::make_pair(false, nullptr);
@@ -246,8 +246,10 @@ BoolObject readString(const Space<T>* space, PyObject* data, int id) {
   return std::make_pair(true, z);
 }
 
-template <typename T>
-BoolObject readObjectAsString(const Space<T>* space, PyObject* data, int id) {
+template <typename dist_t>
+BoolObject readObjectAsString(const Space<dist_t>* space,
+                              PyObject* data,
+                              int id) {
   if (!PyString_Check(data)) {
     raise << "expected DataType.OBJECT_AS_STRING";
     return std::make_pair(false, nullptr);
@@ -257,9 +259,9 @@ BoolObject readObjectAsString(const Space<T>* space, PyObject* data, int id) {
   return std::make_pair(true, z);
 }
 
-template <typename T>
+template <typename dist_t>
 BoolObject readObject(const int data_type,
-                      const Space<T>* space,
+                      const Space<dist_t>* space,
                       PyObject* data,
                       const int id,
                       const int dist_type) {
@@ -315,8 +317,8 @@ BoolObject readObject(const int data_type,
   }
 }
 
-template <typename T>
-BoolPyObject writeString(const Space<T>* space, const Object* obj) {
+template <typename dist_t>
+BoolPyObject writeString(const Space<dist_t>* space, const Object* obj) {
   unique_ptr<char[]> str_copy;
 Py_BEGIN_ALLOW_THREADS
   str_copy.reset(new char[obj->datalength()+1]);
@@ -331,8 +333,8 @@ Py_END_ALLOW_THREADS
   return std::make_pair(true, v);
 }
 
-template <typename T>
-BoolPyObject writeDenseVector(const Space<T>* space, const Object* obj) {
+template <typename dist_t>
+BoolPyObject writeDenseVector(const Space<dist_t>* space, const Object* obj) {
   // Could in principal use Py_*ALLOW_THREADS here, but it's not
   // very useful b/c it would apply only to a very short and fast
   // fragment of code. In that, it seems that we have to start blocking
@@ -354,8 +356,8 @@ BoolPyObject writeDenseVector(const Space<T>* space, const Object* obj) {
   return std::make_pair(true, z);
 }
 
-template <typename T>
-BoolPyObject writeSparseVector(const Space<T>* space, const Object* obj) {
+template <typename dist_t>
+BoolPyObject writeSparseVector(const Space<dist_t>* space, const Object* obj) {
   const SparseVectElem<float>* arr =
       reinterpret_cast<const SparseVectElem<float>*>(obj->data());
   size_t qty = obj->datalength() / sizeof(SparseVectElem<float>);
@@ -390,8 +392,9 @@ BoolPyObject writeSparseVector(const Space<T>* space, const Object* obj) {
   return std::make_pair(true, z);
 }
 
-template <typename T>
-BoolPyObject writeObjectAsString(const Space<T> *space, const Object* obj) {
+template <typename dist_t>
+BoolPyObject writeObjectAsString(const Space<dist_t> *space,
+                                 const Object* obj) {
   unique_ptr<char[]> str_copy;
 Py_BEGIN_ALLOW_THREADS
   std::stringstream ss;
@@ -407,9 +410,9 @@ Py_END_ALLOW_THREADS
   return std::make_pair(true, v);
 }
 
-template <typename T>
+template <typename dist_t>
 BoolPyObject writeObject(const int data_type,
-                         const Space<T>* space,
+                         const Space<dist_t>* space,
                          const Object* obj) {
   raise << "writeObject is not implemented";
   return std::make_pair(false, nullptr);
@@ -466,6 +469,7 @@ class ValueException : std::exception {
   std::string msg_;
 };
 
+template <typename dist_t>
 class BatchObjects {
  public:
   virtual ~BatchObjects() {}
@@ -473,18 +477,16 @@ class BatchObjects {
   virtual const Object* operator[](ssize_t idx) const = 0;
 };
 
-class NumpyDenseMatrix : public BatchObjects {
+template <typename dist_t>
+class NumpyDenseMatrix : public BatchObjects<dist_t> {
  public:
-  NumpyDenseMatrix(const Space<int>* space,
+  NumpyDenseMatrix(const Space<dist_t>* space,
                    PyArrayObject* ids,
                    PyObject* matrix) {
-    throw ValueException("NumpyDenseMatrix is not implemented for int dist");
-  }
-
-  NumpyDenseMatrix(const Space<float>* space,
-                   PyArrayObject* ids,
-                   PyObject* matrix)
-      : space_(space) {
+    if (!std::is_same<dist_t, float>::value) {
+      throw ValueException("NumpyDenseMatrix is only for float dist");
+    }
+    space_ = space;
     if (ids) {
       if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
         throw ValueException("id field should be 1 dimensional int32 vector");
@@ -528,7 +530,7 @@ class NumpyDenseMatrix : public BatchObjects {
   }
 
  private:
-  const Space<float>* space_;
+  const Space<dist_t>* space_;
   int num_vec_;
   int num_dim_;
   const int* id_;
@@ -567,18 +569,16 @@ PyArrayObject* GetAttrAsNumpyArray(PyObject* obj,
   return arr;
 }
 
-class NumpySparseMatrix : public BatchObjects {
+template <typename dist_t>
+class NumpySparseMatrix : public BatchObjects<dist_t> {
  public:
-  NumpySparseMatrix(const Space<int>* space,
+  NumpySparseMatrix(const Space<dist_t>* space,
                     PyArrayObject* ids,
                     PyObject* matrix) {
-    throw ValueException("NumpySparseMatrix is not implemented for int dist");
-  }
-
-  NumpySparseMatrix(const Space<float>* space,
-                    PyArrayObject* ids,
-                    PyObject* matrix)
-      : space_(reinterpret_cast<const SpaceSparseVector<float>*>(space)) {
+    if (!std::is_same<dist_t, float>::value) {
+      throw ValueException("NumpyDenseMatrix is only for float dist");
+    }
+    space_ = reinterpret_cast<const SpaceSparseVector<dist_t>*>(space);
     if (ids) {
       if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
         throw ValueException("id field should be 1 dimensional int32 vector");
@@ -601,7 +601,7 @@ class NumpySparseMatrix : public BatchObjects {
   const int size() const override { return n_ - 1; }
 
   const Object* operator[](ssize_t idx) const override {
-    std::vector<SparseVectElem<float>> arr;
+    std::vector<SparseVectElem<dist_t>> arr;
     const int beg_ptr = indptr_[idx];
     const int end_ptr = indptr_[idx+1];
     for (int k = beg_ptr; k < end_ptr; ++k) {
@@ -610,7 +610,7 @@ class NumpySparseMatrix : public BatchObjects {
       if (std::isnan(data_[k])) {
         throw ValueException("Bug: nan in NumpySparseMatrix");
       }
-      arr.push_back(SparseVectElem<float>(static_cast<uint32_t>(j), data_[k]));
+      arr.push_back(SparseVectElem<dist_t>(static_cast<uint32_t>(j), data_[k]));
     }
     if (arr.empty()) {
       // TODO(@bileg): should we allow this?
@@ -622,7 +622,7 @@ class NumpySparseMatrix : public BatchObjects {
   }
 
  private:
-  const SpaceSparseVector<float>* space_;
+  const SpaceSparseVector<dist_t>* space_;
   int n_;
   const int* id_;
   const int* indices_;
@@ -630,31 +630,12 @@ class NumpySparseMatrix : public BatchObjects {
   const float* data_;
 };
 
-class BatchStrings : public BatchObjects {
+template <typename dist_t>
+class BatchStrings : public BatchObjects<dist_t> {
  public:
-  BatchStrings(const Space<int>* space,
+  BatchStrings(const Space<dist_t>* space,
                PyArrayObject* ids,
                PyObject* data) {
-    Init(ids, data);
-  }
-
-  BatchStrings(const Space<float>* space,
-               PyArrayObject* ids,
-               PyObject* data) {
-    Init(ids, data);
-  }
-
-  ~BatchStrings() {}
-
-  const int size() const override { return num_str_; }
-
-  const Object* operator[](ssize_t idx) const override {
-    int id = id_ ? id_[idx] : 0;
-    return new Object(id, -1, strlen(data_[idx]), data_[idx]);
-  }
-
- protected:
-  void Init(PyArrayObject* ids, PyObject* data) {
     if (ids) {
       if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
         throw ValueException("id field should be 1 dimensional int32 vector");
@@ -681,45 +662,40 @@ class BatchStrings : public BatchObjects {
     }
   }
 
+  ~BatchStrings() {}
+
+  const int size() const override { return num_str_; }
+
+  const Object* operator[](ssize_t idx) const override {
+    int id = id_ ? id_[idx] : 0;
+    return new Object(id, -1, strlen(data_[idx]), data_[idx]);
+  }
+
+ protected:
   int num_str_;
   const int* id_;
   std::vector<const char*> data_;
 };
 
-class BatchObjectStrings : public BatchStrings {
+template <typename dist_t>
+class BatchObjectStrings : public BatchStrings<dist_t> {
  public:
-  BatchObjectStrings(const Space<int>* space,
+  BatchObjectStrings(const Space<dist_t>* space,
                      PyArrayObject* ids,
                      PyObject* data)
-      : BatchStrings(space, ids, data),
-        space_int_(space),
-        space_float_(nullptr) {
-    Init(ids, data);
-  }
-
-  BatchObjectStrings(const Space<float>* space,
-                     PyArrayObject* ids,
-                     PyObject* data)
-      : BatchStrings(space, ids, data),
-        space_int_(nullptr),
-        space_float_(space) {
-    Init(ids, data);
+      : BatchStrings<dist_t>(space, ids, data),
+        space_(space) {
   }
 
   ~BatchObjectStrings() {}
 
   const Object* operator[](ssize_t idx) const override {
-    int id = id_ ? id_[idx] : 0;
-    if (space_int_) {
-      return space_int_->CreateObjFromStr(id, -1,  data_[idx], NULL).release();
-    } else {
-      return space_float_->CreateObjFromStr(id, -1,  data_[idx], NULL).release();
-    }
+    int id = this->id_ ? this->id_[idx] : 0;
+    return space_->CreateObjFromStr(id, -1, this->data_[idx], NULL).release();
   }
 
  private:
-  const Space<int>* space_int_;        // TODO(@bileg) this one is a bit ugly
-  const Space<float>* space_float_;    // but there's no workaround
+  const Space<dist_t>* space_;
 };
 
 class IndexWrapperBase {
@@ -782,7 +758,7 @@ class IndexWrapperBase {
   ObjectVector data_;
 };
 
-template <typename T>
+template <typename dist_t>
 class IndexWrapper : public IndexWrapperBase {
  public:
   IndexWrapper(int dist_type,
@@ -793,7 +769,7 @@ class IndexWrapper : public IndexWrapperBase {
       : IndexWrapperBase(dist_type, data_type, space_type, method_name),
         index_(nullptr),
         space_(nullptr) {
-    space_ = SpaceFactoryRegistry<T>::Instance()
+    space_ = SpaceFactoryRegistry<dist_t>::Instance()
         .CreateSpace(space_type_.c_str(), space_param);
   }
 
@@ -813,7 +789,7 @@ class IndexWrapper : public IndexWrapperBase {
   void CreateIndex(const AnyParams& index_params) override {
     // Delete previously created index
     delete index_;
-    index_ = MethodFactoryRegistry<T>::Instance()
+    index_ = MethodFactoryRegistry<dist_t>::Instance()
         .CreateMethod(PRINT_PROGRESS,
                       method_name_, space_type_,
                       *space_, data_);
@@ -827,7 +803,7 @@ class IndexWrapper : public IndexWrapperBase {
   void LoadIndex(const string& fileName) override {
     // Delete previously created index
     delete index_;
-    index_ = MethodFactoryRegistry<T>::Instance()
+    index_ = MethodFactoryRegistry<dist_t>::Instance()
         .CreateMethod(PRINT_PROGRESS,
                       method_name_, space_type_,
                       *space_, data_);
@@ -841,8 +817,8 @@ class IndexWrapper : public IndexWrapperBase {
   PyObject* KnnQuery(int k, const Object* query) override {
     IntVector ids;
 Py_BEGIN_ALLOW_THREADS
-    KNNQueue<T>* res;
-    KNNQuery<T> knn(*space_, query, k);
+    KNNQueue<dist_t>* res;
+    KNNQuery<dist_t> knn(*space_, query, k);
     index_->Search(&knn, -1);
     res = knn.Result()->Clone();
     while (!res->Empty()) {
@@ -890,8 +866,8 @@ Py_END_ALLOW_THREADS
                     q.pop();
                   }
                   IntVector& ids = query_res[query.first];
-                  KNNQueue<T>* res;
-                  KNNQuery<T> knn(*space_, query.second, k);
+                  KNNQueue<dist_t>* res;
+                  KNNQuery<dist_t> knn(*space_, query.second, k);
                   index_->Search(&knn, -1);
                   res = knn.Result()->Clone();
                   while (!res->Empty()) {
@@ -911,19 +887,19 @@ Py_END_ALLOW_THREADS
   PyObject* AddDataPointBatch(PyArrayObject* ids,
                               PyObject* data) override {
     try {
-      std::unique_ptr<BatchObjects> n;
+      std::unique_ptr<BatchObjects<dist_t>> n;
       switch (data_type_) {
         case kDataDenseVector:
-          n.reset(new NumpyDenseMatrix(space_, ids, data));
+          n.reset(new NumpyDenseMatrix<dist_t>(space_, ids, data));
           break;
         case kDataSparseVector:
-          n.reset(new NumpySparseMatrix(space_, ids, data));
+          n.reset(new NumpySparseMatrix<dist_t>(space_, ids, data));
           break;
         case kDataString:
-          n.reset(new BatchStrings(space_, ids, data));
+          n.reset(new BatchStrings<dist_t>(space_, ids, data));
           break;
         case kDataObjectAsString:
-          n.reset(new BatchObjectStrings(space_, ids, data));
+          n.reset(new BatchObjectStrings<dist_t>(space_, ids, data));
           break;
         default:
           raise << "AddDataPointBatch is not yet implemented for data type "
@@ -995,19 +971,19 @@ Py_END_ALLOW_THREADS
     ObjectVector query_objects;
     int dims[2];
     try {
-      std::unique_ptr<BatchObjects> n;
+      std::unique_ptr<BatchObjects<dist_t>> n;
       switch (data_type_) {
         case kDataDenseVector:
-          n.reset(new NumpyDenseMatrix(space_, nullptr, data));
+          n.reset(new NumpyDenseMatrix<dist_t>(space_, nullptr, data));
           break;
         case kDataSparseVector:
-          n.reset(new NumpySparseMatrix(space_, nullptr, data));
+          n.reset(new NumpySparseMatrix<dist_t>(space_, nullptr, data));
           break;
         case kDataString:
-          n.reset(new BatchStrings(space_, nullptr, data));
+          n.reset(new BatchStrings<dist_t>(space_, nullptr, data));
           break;
         case kDataObjectAsString:
-          n.reset(new BatchObjectStrings(space_, nullptr, data));
+          n.reset(new BatchObjectStrings<dist_t>(space_, nullptr, data));
           break;
         default:
           raise << "KnnQueryBatch is not yet implemented for data type "
@@ -1045,21 +1021,21 @@ Py_END_ALLOW_THREADS
   }
 
  private:
-  Index<T>* index_;
-  Space<T>* space_;
+  Index<dist_t>* index_;
+  Space<dist_t>* space_;
 };
 
 inline bool IsDistFloat(PyObject* ptr) {
   return *(reinterpret_cast<int*>(PyLong_AsVoidPtr(ptr))) == kDistFloat;
 }
 
-template <typename T>
+template <typename dist_t>
 PyObject* _init(int dist_type,
                 int data_type,
                 const char* space_type,
                 const AnyParams& space_param,
                 const char* method_name) {
-  IndexWrapper<T>* index(new IndexWrapper<T>(
+  IndexWrapper<dist_t>* index(new IndexWrapper<dist_t>(
           dist_type, data_type,
           space_type, space_param,
           method_name));
