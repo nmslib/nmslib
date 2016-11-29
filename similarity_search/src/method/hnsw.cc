@@ -766,6 +766,8 @@ namespace similarity {
         input.read(data_level0_memory_, data_plus_links0_size);            
         linkLists_ = (char**)malloc(sizeof(void*)*totalElementsStored_);
 
+        data_rearranged_.resize(totalElementsStored_);
+
         for (size_t i = 0; i < totalElementsStored_; i++) {
             unsigned int linkListSize;
             input.read((char*)&linkListSize, sizeof(unsigned int));
@@ -777,7 +779,7 @@ namespace similarity {
                 linkLists_[i] = (char *) malloc(linkListSize);
                 input.read(linkLists_[i], linkListSize);
             }
-
+            data_rearranged_[i] = new Object(data_level0_memory_ + (i)*memoryPerObject_ + offsetData_);
         }
         LOG(LIB_INFO) << "Finished loading index";
         visitedlistpool = new VisitedListPool(1, totalElementsStored_);
