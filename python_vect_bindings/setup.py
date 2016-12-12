@@ -1,12 +1,21 @@
 from distutils.core import setup, Extension
+import sys
+import numpy as np
 
 libdir='../similarity_search'
 release = '%s/release' % libdir
 
+if sys.platform.startswith('linux'):
+    libraries=['gsl', 'gslcblas', 'boost_program_options']
+    extra_objects=['%s/libNonMetricSpaceLib.a' % release, '%s/liblshkit.a' % release]
+else:
+    libraries=[]
+    extra_objects=['%s/libNonMetricSpaceLib.a' % release]
+
 nmslib_vector = Extension('nmslib_vector', ['nmslib_vector.cc'],
-        include_dirs=['%s/include' % libdir, '%s/release' % libdir],
-        libraries=['gsl', 'gslcblas', 'boost_program_options'],
-        extra_objects=['%s/libNonMetricSpaceLib.a' % release, '%s/liblshkit.a' % release],
+        include_dirs=['%s/include' % libdir, '%s/release' % libdir, np.get_include()],
+        libraries=libraries,
+        extra_objects=extra_objects,
         extra_compile_args=['-std=c++11', '-fno-strict-aliasing'])
 
 
