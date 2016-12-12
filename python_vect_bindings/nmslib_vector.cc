@@ -920,26 +920,26 @@ Py_END_ALLOW_THREADS
       }
       PyArray_ENABLEFLAGS(positions, NPY_ARRAY_OWNDATA);
       int* ptr = reinterpret_cast<int*>(positions->data);
-#if 1
+#if 0
       for (int i = 0; i < n->size(); ++i) {
         ptr[i] = AddDataPoint((*(n.get()))[i]);
       }
 #else
 Py_BEGIN_ALLOW_THREADS
-      const int num_threads = 10;
-      std::queue<std::pair<int,const Object*>> q;
+      const unsigned num_threads = std::thread::hardware_concurrency();
+      std::queue<int> q;
       std::mutex m;
       const size_t num_vec = GetDataPointQty();
       for (int i = 0; i < n->size(); ++i) {       // TODO: this can be improved by not adding all (i.e. fixed size thread-pool)
-        q.push(std::make_pair(i, (*(n.get()))[i]));
+        q.push(i);
       }
       std::mutex md;
       std::vector<std::thread> threads;
-      for (int i = 0; i < num_threads; ++i) {
+      for (unsigned i = 0; i < num_threads; ++i) {
       threads.push_back(std::thread(
               [&]() {
                 for (;;) {
-                  std::pair<int,const Object*> p;
+                  int p;
                   {
                     std::unique_lock<std::mutex> lock(m);
                     if (q.empty()) {
@@ -949,10 +949,12 @@ Py_BEGIN_ALLOW_THREADS
                     q.pop();
                   }
                   {
-                    std::unique_lock<std::mutex> lock(md);
-                    //ptr[p.first] = AddDataPoint(p.second);
-                    SetDataPoint(p.second, num_vec + p.first);
-                    ptr[p.first] = num_vec + p.first;
+                    const Object* pNewObj = (*(n.get()))[p]; // This one doesn't need to be locked
+                    {
+                      std::unique_lock<std::mutex> lock(md);
+                      SetDataPoint(pNewObj, num_vec + p);
+                      ptr[p] = num_vec + p;
+                    }
                   }
                 }
               }));
