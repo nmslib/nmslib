@@ -286,7 +286,7 @@ def test_string_fresh(batch=True):
                              space_type,
                              space_param,
                              method_name,
-                             nmslib_vector.DataType.STRING,
+                             nmslib_vector.DataType.OBJECT_AS_STRING,
                              nmslib_vector.DistType.INT)
 
     if batch:
@@ -345,7 +345,7 @@ def test_string_loaded():
                              space_type,
                              space_param,
                              method_name,
-                             nmslib_vector.DataType.STRING,
+                             nmslib_vector.DataType.OBJECT_AS_STRING,
                              nmslib_vector.DistType.INT)
 
     for id, data in enumerate(DATA_STRS):
@@ -437,7 +437,6 @@ def test_object_as_string_fresh(batch=True):
 if __name__ == '__main__':
 
     print 'DENSE_VECTOR', nmslib_vector.DataType.DENSE_VECTOR
-    print 'STRING', nmslib_vector.DataType.STRING
     print 'SPARSE_VECTOR', nmslib_vector.DataType.SPARSE_VECTOR
     print 'OBJECT_AS_STRING', nmslib_vector.DataType.OBJECT_AS_STRING
 
