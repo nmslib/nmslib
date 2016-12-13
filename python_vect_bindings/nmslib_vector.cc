@@ -88,17 +88,14 @@ static PyTypeObject NmslibDist_Type = {
 };
 
 using BoolObject = std::pair<bool,const Object*>;
-using BoolString = std::pair<bool,string>;
 using BoolPyObject = std::pair<bool,PyObject*>;
 
 const int kDataDenseVector = 1;
-const int kDataString = 2;
-const int kDataSparseVector = 3;
-const int kDataObjectAsString = 4;
+const int kDataSparseVector = 2;
+const int kDataObjectAsString = 3;
 
 const std::map<std::string, int> NMSLIB_DATA_TYPES = {
   {"DENSE_VECTOR", kDataDenseVector},
-  {"STRING", kDataString},
   {"SPARSE_VECTOR", kDataSparseVector},
   {"OBJECT_AS_STRING", kDataObjectAsString},
 };
@@ -236,17 +233,6 @@ BoolObject readSparseVector(const Space<float>* space, PyObject* data, int id) {
 }
 
 template <typename dist_t>
-BoolObject readString(const Space<dist_t>* space, PyObject* data, int id) {
-  if (!PyString_Check(data)) {
-    raise << "expected DataType.STRING";
-    return std::make_pair(false, nullptr);
-  }
-  const char* s = PyString_AsString(data);
-  const Object* z = new Object(id, -1, strlen(s), s);
-  return std::make_pair(true, z);
-}
-
-template <typename dist_t>
 BoolObject readObjectAsString(const Space<dist_t>* space,
                               PyObject* data,
                               int id) {
@@ -286,8 +272,6 @@ BoolObject readObject(const int data_type,
       return readDenseVector(space, data, id);
     case kDataSparseVector:
       return readSparseVector(space, data, id);
-    case kDataString:
-      return readString(space, data, id);
     case kDataObjectAsString:
       return readObjectAsString(space, data, id);
     default:
@@ -307,30 +291,12 @@ BoolObject readObject(const int data_type,
     return std::make_pair(false, nullptr);
   }
   switch (data_type) {
-    case kDataString:
-      return readString(space, data, id);
     case kDataObjectAsString:
       return readObjectAsString(space, data, id);
     default:
       raise << "not implemented";
       return std::make_pair(false, nullptr);
   }
-}
-
-template <typename dist_t>
-BoolPyObject writeString(const Space<dist_t>* space, const Object* obj) {
-  unique_ptr<char[]> str_copy;
-Py_BEGIN_ALLOW_THREADS
-  str_copy.reset(new char[obj->datalength()+1]);
-  char *s =str_copy.get();
-  s[obj->datalength()] = 0;
-  memcpy(s, obj->data(), obj->datalength()*sizeof(char));
-Py_END_ALLOW_THREADS
-  PyObject* v = PyString_FromString(str_copy.get());
-  if (!v) {
-    return std::make_pair(false, nullptr);
-  }
-  return std::make_pair(true, v);
 }
 
 template <typename dist_t>
@@ -431,8 +397,6 @@ BoolPyObject writeObject(const int data_type,
       return writeDenseVector(space, obj);
     case kDataSparseVector:
       return writeSparseVector(space, obj);
-    case kDataString:
-      return writeString(space, obj);
     case kDataObjectAsString:
       return writeObjectAsString(space, obj);
     default:
@@ -451,8 +415,6 @@ BoolPyObject writeObject(int data_type,
       return writeDenseVector(space, obj);
     case kDataSparseVector:
       return writeSparseVector(space, obj);
-    case kDataString:
-      return writeString(space, obj);
     case kDataObjectAsString:
       return writeObjectAsString(space, obj);
     default:
@@ -635,11 +597,12 @@ class NumpySparseMatrix : public BatchObjects<dist_t> {
 };
 
 template <typename dist_t>
-class BatchStrings : public BatchObjects<dist_t> {
+class BatchObjectStrings : public BatchObjects<dist_t> {
  public:
-  BatchStrings(const Space<dist_t>* space,
-               PyArrayObject* ids,
-               PyObject* data) {
+  BatchObjectStrings(const Space<dist_t>* space,
+                     PyArrayObject* ids,
+                     PyObject* data)
+      : space_(space) {
     if (ids) {
       if (ids->descr->type_num != NPY_INT32 || ids->nd != 1) {
         throw ValueException("id field should be 1 dimensional int32 vector");
@@ -666,40 +629,20 @@ class BatchStrings : public BatchObjects<dist_t> {
     }
   }
 
-  ~BatchStrings() {}
+  ~BatchObjectStrings() {}
 
   const int size() const override { return num_str_; }
 
   const Object* operator[](ssize_t idx) const override {
     int id = id_ ? id_[idx] : 0;
-    return new Object(id, -1, strlen(data_[idx]), data_[idx]);
+    return space_->CreateObjFromStr(id, -1, data_[idx], NULL).release();
   }
 
  protected:
+  const Space<dist_t>* space_;
   int num_str_;
   const int* id_;
   std::vector<const char*> data_;
-};
-
-template <typename dist_t>
-class BatchObjectStrings : public BatchStrings<dist_t> {
- public:
-  BatchObjectStrings(const Space<dist_t>* space,
-                     PyArrayObject* ids,
-                     PyObject* data)
-      : BatchStrings<dist_t>(space, ids, data),
-        space_(space) {
-  }
-
-  ~BatchObjectStrings() {}
-
-  const Object* operator[](ssize_t idx) const override {
-    int id = this->id_ ? this->id_[idx] : 0;
-    return space_->CreateObjFromStr(id, -1, this->data_[idx], NULL).release();
-  }
-
- private:
-  const Space<dist_t>* space_;
 };
 
 class IndexWrapperBase {
@@ -899,9 +842,6 @@ Py_END_ALLOW_THREADS
         case kDataSparseVector:
           n.reset(new NumpySparseMatrix<dist_t>(space_, ids, data));
           break;
-        case kDataString:
-          n.reset(new BatchStrings<dist_t>(space_, ids, data));
-          break;
         case kDataObjectAsString:
           n.reset(new BatchObjectStrings<dist_t>(space_, ids, data));
           break;
@@ -984,9 +924,6 @@ Py_END_ALLOW_THREADS
           break;
         case kDataSparseVector:
           n.reset(new NumpySparseMatrix<dist_t>(space_, nullptr, data));
-          break;
-        case kDataString:
-          n.reset(new BatchStrings<dist_t>(space_, nullptr, data));
           break;
         case kDataObjectAsString:
           n.reset(new BatchObjectStrings<dist_t>(space_, nullptr, data));
@@ -1099,7 +1036,6 @@ PyObject* addDataPoint(PyObject* self, PyObject* args) {
       PyLong_AsVoidPtr(ptr));
   if (index->GetDataType() != kDataDenseVector &&
       index->GetDataType() != kDataSparseVector &&
-      index->GetDataType() != kDataString &&
       index->GetDataType() != kDataObjectAsString) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
@@ -1218,7 +1154,6 @@ PyObject* knnQuery(PyObject* self, PyObject* args) {
       PyLong_AsVoidPtr(ptr));
   if (index->GetDataType() != kDataDenseVector &&
       index->GetDataType() != kDataSparseVector &&
-      index->GetDataType() != kDataString &&
       index->GetDataType() != kDataObjectAsString) {
     raise << "unknown data type - " << index->GetDataType();
     return NULL;
