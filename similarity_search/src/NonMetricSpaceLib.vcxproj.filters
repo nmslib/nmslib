@@ -164,9 +164,6 @@
     <ClCompile Include="space.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="method\nndes.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="method\permutation_inverted_index.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
