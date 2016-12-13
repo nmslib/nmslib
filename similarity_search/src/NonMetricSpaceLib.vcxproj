@@ -270,6 +270,8 @@
     <ClInclude Include="..\include\method\vptree_utils.h" />
     <ClInclude Include="..\include\space\space_bit_hamming.h" />
     <ClInclude Include="..\include\space\space_bregman.h" />
+    <ClInclude Include="..\include\space\space_ab_diverg.h" />
+    <ClInclude Include="..\include\space\space_renyi_diverg.h" />
     <ClInclude Include="..\include\space\space_dummy.h" />
     <ClInclude Include="..\include\space\space_js.h" />
     <ClInclude Include="..\include\space\space_lp.h" />
@@ -290,6 +292,7 @@
     <ClCompile Include="distcomp_rankcorr.cc" />
     <ClCompile Include="distcomp_scalar.cc" />
     <ClCompile Include="distcomp_sparse_scalar_fast.cc" />
+    <ClCompile Include="distcomp_diverg.cc" />
     <ClCompile Include="experimentconf.cc" />
     <ClCompile Include="global.cc" />
     <ClCompile Include="init.cc" />
@@ -320,6 +323,8 @@
     <ClCompile Include="utils.cc" />
     <ClCompile Include="space\space_bit_hamming.cc" />
     <ClCompile Include="space\space_bregman.cc" />
+    <ClCompile Include="space\space_ab_diverg.cc" />
+    <ClCompile Include="space\space_renyi_diverg.cc" />
     <ClCompile Include="space\space_dummy.cc" />
     <ClCompile Include="space\space_js.cc" />
     <ClCompile Include="space\space_lp.cc" />

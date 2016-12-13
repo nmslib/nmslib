@@ -49,6 +49,12 @@
     <ClCompile Include="space\space_bregman.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="space\space_ab_diverg.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="space\space_renyi_diverg.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="space\space_dummy.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -344,6 +350,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\space\space_bregman.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\space\space_ab_diverg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\space\space_renyi_diverg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\space\space_dummy.h">
