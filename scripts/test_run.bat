@@ -59,13 +59,13 @@ set ERRORLEVEL=0
 set LN=1
 
 rem exit /B exit only the function, not the script and there seems to be no good standard way to exit the script
-call :do_run 0 "napp" "-c numPivot=512,numPivotIndex=64 " 0 "-t numPivotSearch=40 -t numPivotSearch=42 -t numPivotSearch=44 -t numPivotSearch=46 -t numPivotSearch=48" "napp.index" 
+call :do_run 0 "napp" "-c numPivot=512,numPivotIndex=64 " 0 "-t numPivotSearch=40 -t numPivotSearch=42 -t numPivotSearch=44 -t numPivotSearch=46 -t numPivotSearch=48" "napp_%SPACE%.index" 
 if ERRORLEVEL 1 (
   echo "====================================="
   echo "Failure!"
   exit /B 1
 )
-call :do_run 1 "sw-graph" "-c NN=10 " 0 "-t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "sw-graph.index" 
+call :do_run 1 "sw-graph" "-c NN=10 " 0 "-t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "sw-graph_%SPACE%.index" 
 if ERRORLEVEL 1 (
   echo "====================================="
   echo "Failure!"
