@@ -540,18 +540,19 @@ namespace similarity {
         size_t                ef_;
         size_t                searchMethod_;
         size_t                indexThreadQty_;
-        VisitedListPool       *visitedlistpool;
         const Space<dist_t>&  space_;
         bool                  PrintProgress_;
         int                   delaunay_type_;
         double                mult_;
         int                   maxlevel_;
-        HnswNode           *enterpoint_;
         unsigned int enterpointId_;
         unsigned int totalElementsStored_;
 
         const ObjectVector&   data_;// We do not copy objects
         ObjectVector          data_rearranged_; 
+
+        VisitedListPool       *visitedlistpool;
+        HnswNode              *enterpoint_;
 
         mutable mutex         ElListGuard_;
         mutable mutex         MaxLevelGuard_;

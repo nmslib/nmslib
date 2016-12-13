@@ -60,8 +60,11 @@
 #define PORTABLE_ALIGN16 __declspec(align(16))
 #endif
 
-
 namespace similarity {
+
+// This is the counter to keep the size of neighborhood information (for one node)
+// TODO Can this one overflow? I really doubt
+    typedef uint32_t SIZEMASS_TYPE;
 
     using namespace std;
     /*Functions from hnsw_distfunc_opt.cc:*/
@@ -393,7 +396,8 @@ namespace similarity {
                 linkLists_[i] = nullptr;
                 continue;
             }
-            int sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);
+            // TODO Can this one overflow? I really doubt
+            SIZEMASS_TYPE sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);
             total_memory_allocated += sizemass;
             char *linkList = (char*)malloc(sizemass);
             linkLists_[i] = linkList;
@@ -698,16 +702,17 @@ namespace similarity {
         std::ofstream output(location, std::ios::binary);
         streampos position;
         totalElementsStored_ = ElList_.size();        
-        output.write((char*)&totalElementsStored_, sizeof(size_t));
-        output.write((char*)&memoryPerObject_, sizeof(size_t));
-        output.write((char*)&offsetLevel0_, sizeof(size_t));
-        output.write((char*)&offsetData_, sizeof(size_t));
-        output.write((char*)&maxlevel_, sizeof(size_t));
-        output.write((char*)&enterpointId_, sizeof(size_t));
-        output.write((char*)&maxM_, sizeof(size_t));
-        output.write((char*)&maxM0_, sizeof(size_t));
-        output.write((char*)&dist_func_type_, sizeof(size_t));       
-        output.write((char*)&searchMethod_, sizeof(searchMethod_));
+
+        writeBinaryPOD(output, totalElementsStored_);
+        writeBinaryPOD(output, memoryPerObject_);
+        writeBinaryPOD(output, offsetLevel0_);
+        writeBinaryPOD(output, offsetData_);
+        writeBinaryPOD(output, maxlevel_);
+        writeBinaryPOD(output, enterpointId_);
+        writeBinaryPOD(output, maxM_);
+        writeBinaryPOD(output, maxM0_);
+        writeBinaryPOD(output, dist_func_type_);
+        writeBinaryPOD(output, searchMethod_);
 
             
             
@@ -720,8 +725,9 @@ namespace similarity {
         //size_t total_memory_allocated = 0;
 
         for (size_t i = 0; i < totalElementsStored_; i++) {            
-            unsigned int sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);       
-            output.write((char*)&sizemass, sizeof(unsigned int));
+            // TODO Can this one overflow? I really doubt
+            SIZEMASS_TYPE sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);       
+            writeBinaryPOD(output, sizemass);
             if((sizemass))
                 output.write(linkLists_[i], sizemass);
         };        
@@ -738,16 +744,16 @@ namespace similarity {
         
         //input.seekg(0, std::ios::beg);
 
-        input.read((char*)(&totalElementsStored_), sizeof(size_t)); 
-        input.read((char*)(&memoryPerObject_), sizeof(size_t));
-        input.read((char*)&offsetLevel0_, sizeof(size_t));
-        input.read((char*)&offsetData_, sizeof(size_t));
-        input.read((char*)&maxlevel_, sizeof(size_t));
-        input.read((char*)&enterpointId_, sizeof(size_t));
-        input.read((char*)&maxM_, sizeof(size_t));
-        input.read((char*)&maxM0_, sizeof(size_t));
-        input.read((char*)&dist_func_type_, sizeof(size_t));
-        input.read((char*)&searchMethod_, sizeof(searchMethod_));
+        readBinaryPOD(input, totalElementsStored_);
+        readBinaryPOD(input, memoryPerObject_);
+        readBinaryPOD(input, offsetLevel0_);
+        readBinaryPOD(input, offsetData_);
+        readBinaryPOD(input, maxlevel_);
+        readBinaryPOD(input, enterpointId_);
+        readBinaryPOD(input, maxM_);
+        readBinaryPOD(input, maxM0_);
+        readBinaryPOD(input, dist_func_type_);
+        readBinaryPOD(input, searchMethod_);
 
         LOG(LIB_INFO) << "searchMethod: " << searchMethod_;
         
@@ -770,8 +776,8 @@ namespace similarity {
         data_rearranged_.resize(totalElementsStored_);
 
         for (size_t i = 0; i < totalElementsStored_; i++) {
-            unsigned int linkListSize;
-            input.read((char*)&linkListSize, sizeof(unsigned int));
+            SIZEMASS_TYPE linkListSize;
+            readBinaryPOD(input, linkListSize);
             position = input.tellg();
             if (linkListSize == 0) {
                 linkLists_[i] = nullptr;
