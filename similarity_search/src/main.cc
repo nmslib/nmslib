@@ -142,6 +142,7 @@ void RunExper(bool                                bPrintProgress,
              const string&                        QueryFile,
              const string&                        CacheGSFilePrefix,
              float                                maxCacheGSRelativeQty,
+             bool                                 recallOnly,
              IdTypeUnsign                         MaxNumData,
              IdTypeUnsign                         MaxNumQuery,
              const                                vector<unsigned>& knn,
@@ -426,6 +427,7 @@ void RunExper(bool                                bPrintProgress,
                                     ThreadTestQty, 
                                     TestSetId,
                                     managerGS,
+                                    recallOnly,
                                     ExpResRange, ExpResKNN,
                                     config, 
                                     *IndexPtr, 
@@ -516,6 +518,7 @@ int main(int ac, char* av[]) {
   string                QueryFile;
   string                CacheGSFilePrefix;
   float                 maxCacheGSRelativeQty;
+  bool                  recallOnly;
   IdTypeUnsign          MaxNumData;
   IdTypeUnsign          MaxNumQuery;
   vector<unsigned>      knn;
@@ -544,6 +547,7 @@ int main(int ac, char* av[]) {
                          QueryFile,
                          CacheGSFilePrefix,
                          maxCacheGSRelativeQty,
+                         recallOnly,
                          MaxNumData,
                          MaxNumQuery,
                          knn,
@@ -585,6 +589,7 @@ int main(int ac, char* av[]) {
                     QueryFile,
                     CacheGSFilePrefix,
                     maxCacheGSRelativeQty,
+                    recallOnly,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -607,7 +612,8 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                      maxCacheGSRelativeQty,
+                    maxCacheGSRelativeQty,
+                    recallOnly,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -630,7 +636,8 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                       maxCacheGSRelativeQty,
+                    recallOnly,
+                    maxCacheGSRelativeQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,

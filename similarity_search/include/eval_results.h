@@ -45,16 +45,18 @@ class EvalResults {
 public:
   EvalResults(const typename similarity::Space<dist_t>& space,
               const typename similarity::KNNQuery<dist_t>* query,
-              const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
+              const GoldStandard<dist_t>& gs,
+              bool  recallOnly) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
     GetKNNData(query);
-    ComputeMetrics(query->QueryObject()->label());
+    ComputeMetrics(query->QueryObject()->label(), recallOnly);
   }
 
   EvalResults(const typename similarity::Space<dist_t>& space,
               const typename similarity::RangeQuery<dist_t>* query,
-              const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
+              const GoldStandard<dist_t>& gs,
+              bool  recallOnly) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
     GetRangeData(query);
-    ComputeMetrics(query->QueryObject()->label());
+    ComputeMetrics(query->QueryObject()->label(),recallOnly);
   }
 
   /* 
@@ -171,7 +173,7 @@ private:
     std::sort(ApproxEntries_.begin(), ApproxEntries_.end());
   }
 
-  void ComputeMetrics(LabelType queryLabel) {
+  void ComputeMetrics(LabelType queryLabel, bool recallOnly) {
     size_t ExactResultSize = K_ ? min(K_,ExactResultIds_.size()) /* If the data set is tiny
                                                                     there may be less than K_
                                                                     answers */
@@ -180,40 +182,42 @@ private:
 
     ClassCorrect_      = kClassUnknown;
     Recall_            = EvalRecall<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    RecallAt1_         = NumberCloser_ > 0.1 ? 0.0 : 1;
-    PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-    LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    if (!recallOnly) {
+      NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+      RecallAt1_         = NumberCloser_ > 0.1 ? 0.0 : 1;
+      PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+      LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
 
-    // 2 Obtain class result
-    if (queryLabel >= 0) {
-      unordered_map<LabelType, int>  hClassQty;
-      vector<pair<int,LabelType>>    vClassQty;
+      // 2 Obtain class result
+      if (queryLabel >= 0) {
+        unordered_map<LabelType, int>  hClassQty;
+        vector<pair<int, LabelType>>    vClassQty;
 
-      for (size_t k = 0; k < ApproxEntries_.size(); ++k) {
-        hClassQty[ApproxEntries_[k].mLabel]++;
-      }
-      for (auto elem:hClassQty) {
-        /* 
-         * Revert here: qty now should go first:
-         * the minus sign will make sort put entries
-         * with the largest qty first.
-         */
-        vClassQty.push_back(make_pair(-elem.second, elem.first));
-      }
-      sort(vClassQty.begin(), vClassQty.end());
-      if (!vClassQty.empty()) {
-        ClassCorrect_ = vClassQty[0].second == queryLabel ? kClassCorrect : kClassWrong;
+        for (size_t k = 0; k < ApproxEntries_.size(); ++k) {
+          hClassQty[ApproxEntries_[k].mLabel]++;
+        }
+        for (auto elem : hClassQty) {
+          /*
+            * Revert here: qty now should go first:
+            * the minus sign will make sort put entries
+            * with the largest qty first.
+            */
+          vClassQty.push_back(make_pair(-elem.second, elem.first));
+        }
+        sort(vClassQty.begin(), vClassQty.end());
+        if (!vClassQty.empty()) {
+          ClassCorrect_ = vClassQty[0].second == queryLabel ? kClassCorrect : kClassWrong;
+        }
       }
     }
   }
 
-  double                              RecallAt1_;
-  double                              NumberCloser_;
-  double                              LogRelPosError_;
-  double                              Recall_;
-  ClassResult                         ClassCorrect_;
-  double                              PrecisionOfApprox_;
+  double                              RecallAt1_        = 0;
+  double                              NumberCloser_     = 0;
+  double                              LogRelPosError_   = 0;
+  double                              Recall_           = 0;
+  ClassResult                         ClassCorrect_     = kClassWrong;
+  double                              PrecisionOfApprox_= 0;
 
   std::vector<ResultEntry<dist_t>>    ApproxEntries_;
   std::unordered_set<IdType>          ApproxResultIds_;

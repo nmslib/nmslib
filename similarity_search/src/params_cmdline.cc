@@ -48,6 +48,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                       string&                 QueryFile,
                       string&                 CacheGSFilePrefix,
                       float&                  maxCacheGSRelativeQty,
+                      bool&                   recallOnly,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,
@@ -91,6 +92,8 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                                &CacheGSFilePrefix, false, CACHE_PREFIX_GS_PARAM_DEFAULT));
   cmd_options.Add(new CmdParam(MAX_CACHE_GS_QTY_PARAM_OPT, MAX_CACHE_GS_QTY_PARAM_MSG,
                                &maxCacheGSRelativeQty, false, MAX_CACHE_GS_QTY_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(RECALL_ONLY_PARAM_OPT, RECALL_ONLY_PARAM_MSG,
+                               &recallOnly, false, RECALL_ONLY_PARAM_DEFAULT));
   cmd_options.Add(new CmdParam(LOG_FILE_PARAM_OPT, LOG_FILE_PARAM_MSG,
                                &LogFile, false, LOG_FILE_PARAM_DEFAULT));
   cmd_options.Add(new CmdParam(MAX_NUM_QUERY_PARAM_OPT, MAX_NUM_QUERY_PARAM_MSG,

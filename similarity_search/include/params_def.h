@@ -55,6 +55,10 @@ const std::string MAX_CACHE_GS_QTY_PARAM_OPT     = "maxCacheGSRelativeQty,";
 const std::string MAX_CACHE_GS_QTY_PARAM_MSG     = "a maximum number of gold standard entries to compute/cache, note that it is relative to the number of result entries.";
 const float MAX_CACHE_GS_QTY_PARAM_DEFAULT       = 10.0;
 
+const std::string RECALL_ONLY_PARAM_OPT          = "recallOnly";
+const std::string RECALL_ONLY_PARAM_MSG          = "if tset, only recall is computed, but not other effectiveness metrics";
+const bool RECALL_ONLY_PARAM_DEFAULT             = false;
+
 const std::string LOG_FILE_PARAM_OPT             = "logFile,l";
 const std::string LOG_FILE_PARAM_MSG             = "log file";
 const std::string LOG_FILE_PARAM_DEFAULT         = "";
