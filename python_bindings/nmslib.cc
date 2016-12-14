@@ -42,7 +42,7 @@
 #include "spacefactory.h"
 #include "ztimer.h"
 #include "logging.h"
-#include "nmslib_vector.h"
+#include "nmslib.h"
 
 const bool PRINT_PROGRESS=true;
 
@@ -107,15 +107,15 @@ const std::map<std::string, int> NMSLIB_DIST_TYPES = {
   {"INT", kDistInt}
 };
 
-PyMODINIT_FUNC initnmslib_vector() {
-  PyObject* module = Py_InitModule("nmslib_vector", nmslibMethods);
+PyMODINIT_FUNC initnmslib() {
+  PyObject* module = Py_InitModule("nmslib", nmslibMethods);
   if (module == NULL) {
     return;
   }
   import_array();
   // data type
   NmslibData_Type.tp_new = PyType_GenericNew;
-  NmslibData_Type.tp_name = "nmslib_vector.DataType";
+  NmslibData_Type.tp_name = "nmslib.DataType";
   NmslibData_Type.tp_basicsize = sizeof(NmslibData);
   NmslibData_Type.tp_flags = Py_TPFLAGS_DEFAULT;
   NmslibData_Type.tp_dict = PyDict_New();
@@ -132,7 +132,7 @@ PyMODINIT_FUNC initnmslib_vector() {
         reinterpret_cast<PyObject*>(&NmslibData_Type));
   // dist type
   NmslibDist_Type.tp_new = PyType_GenericNew;
-  NmslibDist_Type.tp_name = "nmslib_vector.DistType";
+  NmslibDist_Type.tp_name = "nmslib.DistType";
   NmslibDist_Type.tp_basicsize = sizeof(NmslibDist);
   NmslibDist_Type.tp_flags = Py_TPFLAGS_DEFAULT;
   NmslibDist_Type.tp_dict = PyDict_New();

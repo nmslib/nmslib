@@ -14,10 +14,10 @@
  *
  */
 
-#ifndef _PY_NMSLIB_H_
-#define _PY_NMSLIB_H_
+#ifndef _PY_NMSLIB_ALL_H_
+#define _PY_NMSLIB_ALL_H_
 
-extern "C" void initnmslib_vector();
+extern "C" void initnmslib();
 
 PyObject* init(PyObject* self, PyObject* args);
 PyObject* addDataPoint(PyObject* self, PyObject* args);
