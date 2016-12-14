@@ -15,8 +15,9 @@ else:
 nmslib = Extension('nmslib', ['nmslib.cc'],
         include_dirs=['%s/include' % libdir, '%s/release' % libdir, np.get_include()],
         libraries=libraries,
+        extra_link_args=['-fopenmp', '-shared', '-pthread'],
         extra_objects=extra_objects,
-        extra_compile_args=['-std=c++11', '-fno-strict-aliasing'])
+        extra_compile_args=['-std=c++11', '-fno-strict-aliasing', '-Wall', '-Ofast', '-fno-strict-aliasing'])
 
 
 if __name__ == '__main__':

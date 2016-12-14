@@ -3,7 +3,7 @@ NON_METRIC_SPACE_LIBRARY=../similarity_search
 NON_METRIC_SPACE_LIBRARY_INC=$(NON_METRIC_SPACE_LIBRARY)/include
 NON_METRIC_SPACE_LIBRARY_LIB=$(NON_METRIC_SPACE_LIBRARY)/release
 PYTHON_INC=/usr/include/python$(PYTHON_VERSION)
-ADD_LIBS= -lrt -lgsl -lgslcblas -lboost_program_options -fopenmp
+ADD_LIBS= -lrt -lgsl -lgslcblas -fopenmp
 
 CXXFLAGS=-c -fpic -Wall -I$(PYTHON_INC) -I$(NON_METRIC_SPACE_LIBRARY_INC) -std=c++11 -Ofast -fno-strict-aliasing
 LDFLAGS=-shared -lpython$(PYTHON_VERSION) -pthread 
