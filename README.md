@@ -15,7 +15,7 @@ NMSLIB is an **extendible library**, which means that is possible to add new sea
 
 Leo(nid) Boytsov is a maintainer. Leo is supported by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa) and the following NSF grant: "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". Bileg was supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
 
-**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**.
+**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. For generic questions/inquiries, please, use Gitter (see the badge above). Bug reports should be submitted to issues.
 
 NMSLIB is generic yet fast!
 =================
@@ -72,16 +72,27 @@ Prerequisites
 -----------------------
 
 1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 14 (version 12 can probably be used as well, but the project fileds need to be downgraded).
-2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well. 
-3. Only for Linux: CMake (GNU make is also required) 
+2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows and MAC as well. 
+3. Only for Linux/MAC: CMake (GNU make is also required) 
 4. An Intel or AMD processor that supports SSE 4.2 is recommended
 5. Extended version of the library requires dev version of : Boost, GNU scientific library, and Eigen3.
-
 
 To install additional prerequisite packages on Ubuntu, type the following
 ```
 sudo apt-get install libboost-all-dev libgsl0-dev libeigen3-dev
 ```
+
+Limitations
+-----------------------
+
+1. Currently only static data sets are supported
+2. HNSW does not work with Clang
+3. HNSW currently duplicates memory to create optimized indices
+4. Non-optimized HNSW indices cannot be saved
+5. Python 3 is not yet supported
+6. Range/threshold search is not supported by many methods including SW-graph/HNSW
+
+We plan to resolve these issues in the future.
 
 Quick start on Linux
 -----------------------
