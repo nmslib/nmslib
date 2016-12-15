@@ -86,12 +86,12 @@ struct MethodTestCase {
                    mQueryTimeParams(queryTimeParams),
                    mRecallMin(recallMin),
                    mRecallMax(recallMax),
+                   mRecallOnly(recallOnly),
                    mNumCloserMin(numCloserMin),
                    mNumCloserMax(numCloserMax),
                    mImprDistCompMin(imprDistCompMin),
                    mImprDistCompMax(imprDistCompMax),
-                   mKNN(knn), mRange(range),
-                   mRecallOnly(recallOnly)
+                   mKNN(knn), mRange(range)
                 {
                   ToLower(mDistType);
                   ToLower(spaceType);

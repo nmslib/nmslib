@@ -36,9 +36,7 @@
 
 
 #ifdef PORTABLE_SSE4
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <tmmintrin.h>
+#include <simd.h>
 
 
 /*

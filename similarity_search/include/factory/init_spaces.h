@@ -31,7 +31,7 @@
 #include "factory/space/space_word_embed.h"
 #include "factory/space/space_ab_diverg.h"
 #include "factory/space/space_renyi_diverg.h"
-#if !defined(_MSC_VER)
+#if defined(WITH_EXTRAS)
 #include "factory/space/space_sqfd.h"
 #endif
 
@@ -125,7 +125,7 @@ inline void initSpaces() {
 
   REGISTER_SPACE_CREATOR(float,  "savch",  CreateSavch)
 
-#if !defined(_MSC_VER)
+#if defined(WITH_EXTRAS)
   // Signature Quadratic Form Distance
   REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_HEURISTIC_FUNC, CreateSqfdHeuristicFunc)
   REGISTER_SPACE_CREATOR(double, SPACE_SQFD_HEURISTIC_FUNC, CreateSqfdHeuristicFunc)

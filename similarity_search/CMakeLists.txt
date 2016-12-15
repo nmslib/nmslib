@@ -61,26 +61,23 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         # MACOSX
         set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wunreachable-code -Wcast-align -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X -fpic")
         set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wunreachable-code -Wcast-align -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X -fpic")
-        set (WITHOUT_LSH YES)
-        set (PORTABLE_SSE4 YES)
     else()
         set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wunreachable-code -Wcast-align -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X -fopenmp -march=native -fpic")
         set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wunreachable-code -Wcast-align -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X -fopenmp -march=native -fpic")
     endif()
     #message(FATAL_ERROR "CLANG ${CMAKE_SYSTEM_NAME}")
 elseif(WIN32)
-    # TODO add support for later versions?
-    if(NOT MSVC12)
-         message(FATAL_ERROR "On Windows, only MSVC version 12 is supported!") 
+    # TODO how can we add support for later versions? There seems to be no flag with the semantics "version x or higher"
+    if(NOT MSVC12 AND NOT MSVC14)
+         message(FATAL_ERROR "On Windows, only MSVC version 12 and 14 are supported!") 
     endif()
-    set (WITHOUT_LSH YES)
 else ()
-    message(FATAL_ERROR "Please, use GCC, Clang, or the Intel compiler!")
+    message(FATAL_ERROR "Unrecognized compiler (use GCC, Clang, Intel compiler, or MSVC (on Windows)!")
 endif()
 
-if (WITHOUT_LSH)
-    message(STATUS "Will build without LSH")
-    add_definitions (-DWITHOUT_LSH=1)
+if (WITH_EXTRAS)
+    message(STATUS "Will build with extra stuff...")
+    add_definitions (-DWITH_EXTRAS=1)
 endif()
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -90,8 +87,7 @@ message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
-# GSL is needed by lshkit, yet NO lshkit for Win32 and MACOSX 
-if ((NOT WITHOUT_LSH) AND (NOT WIN32))
+if (WITH_EXTRAS)
   find_package (GSL REQUIRED)
   if (GSL_FOUND)
       message (STATUS "Found GSL.")
@@ -103,31 +99,35 @@ if ((NOT WITHOUT_LSH) AND (NOT WIN32))
 
   include_directories (${PROJECT_SOURCE_DIR}/lshkit/include)
   add_subdirectory (lshkit)
+
+  find_package(Eigen3 3 REQUIRED)
+  if (EIGEN3_FOUND)
+    message (STATUS "Found Eigen3.")
+    include_directories (${EIGEN3_INCLUDE_DIR})
+  else ()
+    message (FATAL_ERROR "Could not locate Eigen3.")
+  endif ()
+
+  # Can be used to hardwire boost location.
+  #set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
+  #set (Boost_INCLUDE_DIR ${BOOST_ROOT})
+  #set (Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
+
+  # Alternatively one can do:
+  # export BOOST_ROOT=<A location where boost is downloaded and compiled>
+  # cmake . -DCMAKE_LIBRARY_PATH=<Boost and other library dir> -DCMAKE_INCLUDE_PATH=<Boost and other library include path> -DBoost_NO_SYSTEM_PATHS=true
+
+  find_package (Boost 1.48 COMPONENTS system filesystem REQUIRED)
+
+  if (Boost_FOUND)
+    message (STATUS "Found BOOST.")
+    include_directories (${Boost_INCLUDE_DIR})
+    include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
+    link_directories (${Boost_LIBRARY_DIR})
+  else ()
+    message (FATAL_ERROR "Could not locate BOOST.")
+  endif ()
 endif()
-
-find_package(Eigen3 3 REQUIRED)
-if (EIGEN3_FOUND)
-  message (STATUS "Found Eigen3.")
-  include_directories (${EIGEN3_INCLUDE_DIR})
-else ()
-  message (FATAL_ERROR "Could not locate Eigen3.")
-endif ()
-
-# Can be used to hardwire boost location.
-#set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
-#set (Boost_INCLUDE_DIR ${BOOST_ROOT})
-#set (Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
-
-find_package (Boost 1.48 COMPONENTS system filesystem REQUIRED)
-
-if (Boost_FOUND)
-  message (STATUS "Found BOOST.")
-  include_directories (${Boost_INCLUDE_DIR})
-  include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
-  link_directories (${Boost_LIBRARY_DIR})
-else ()
-  message (FATAL_ERROR "Could not locate BOOST.")
-endif ()
 
 add_subdirectory (src)
 add_subdirectory (test)
