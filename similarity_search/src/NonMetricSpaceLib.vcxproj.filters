@@ -185,6 +185,10 @@
     <ClCompile Include="method\nonmetr_list_clust.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="distcomp_diverg.cc" />
+    <ClCompile Include="method\simple_inverted_index.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\distcomp.h">
@@ -470,6 +474,9 @@
     <ClInclude Include="..\include\method\vptree_old.h" />
     <ClInclude Include="..\include\factory\space\space_word_embed.h" />
     <ClInclude Include="..\include\space\space_word_embed.h" />
+    <ClInclude Include="..\include\method\simple_inverted_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
