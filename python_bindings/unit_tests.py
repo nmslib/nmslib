@@ -54,7 +54,7 @@ class DenseTests(unittest.TestCase):
         positions = nmslib.addDataPointBatch(self.index,
                           np.array([0,1,2], dtype=np.int32),
                           np.array([[0.34,0.54], [0.55,0.52], [0.21,0.68]], dtype=np.float32))
-        nt.assert_array_equal(np.array([0,1,2], dtype=np.int32), np.sort(positions))
+        nt.assert_array_equal(np.array([0,1,2], dtype=np.int32), positions)
 
 
 class SparseTests(unittest.TestCase):
@@ -105,7 +105,7 @@ class SparseTests(unittest.TestCase):
         positions = nmslib.addDataPointBatch(self.index,
                           np.array([0,1,2], dtype=np.int32),
                           m)
-        nt.assert_array_equal(np.array([0,1,2], dtype=np.int32), np.sort(positions))
+        nt.assert_array_equal(np.array([0,1,2], dtype=np.int32), positions)
 
 class StringTests1(unittest.TestCase):
     def setUp(self):
@@ -140,7 +140,7 @@ class StringTests1(unittest.TestCase):
         positions = nmslib.addDataPointBatch(self.index,
                           np.array([0,1,2], dtype=np.int32),
                           ["string1", "string2", "string3"])
-        nt.assert_array_equal(np.array([0,1,2], dtype=np.int32), np.sort(positions))
+        nt.assert_array_equal(np.array([0,1,2], dtype=np.int32), positions)
 
 class StringTests2(unittest.TestCase):
     def setUp(self):
@@ -175,7 +175,7 @@ class StringTests2(unittest.TestCase):
         positions = nmslib.addDataPointBatch(self.index,
                           np.array([0,1,2], dtype=np.int32),
                           ["string1", "string2", "string3"])
-        nt.assert_array_equal(np.array([0,1,2], dtype=np.int32), np.sort(positions))
+        nt.assert_array_equal(np.array([0,1,2], dtype=np.int32), positions)
 
 
 if __name__ == '__main__':

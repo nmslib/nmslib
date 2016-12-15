@@ -216,8 +216,8 @@ TEST(Test_BitHamming) {
   }
 }
 
-#if !defined(_MSC_VER)
-TEST(Test_SFQD) {
+#if defined(WITH_EXTRAS)
+TEST(Test_SQFD) {
   const char* sqfdParams[] = {"alpha=1", NULL} ; 
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
     EXPECT_EQ(true, fullTest<float>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));

@@ -217,6 +217,7 @@
     <ClInclude Include="..\include\method\omedrank.h" />
     <ClInclude Include="..\include\method\perm_lsh_bin.h" />
     <ClInclude Include="..\include\method\projection_index_incremental.h" />
+    <ClInclude Include="..\include\method\simple_inverted_index.h" />
     <ClInclude Include="..\include\method\small_world_rand_old.h" />
     <ClInclude Include="..\include\method\vptree_old.h" />
     <ClInclude Include="..\include\object.h" />
@@ -309,6 +310,7 @@
     <ClCompile Include="method\permutation_prefix_index.cc" />
     <ClCompile Include="method\perm_lsh_bin.cc" />
     <ClCompile Include="method\projection_index_incremental.cc" />
+    <ClCompile Include="method\simple_inverted_index.cc" />
     <ClCompile Include="method\small_world_rand_split.cc" />
     <ClCompile Include="params.cc" />
     <ClCompile Include="params_cmdline.cc" />

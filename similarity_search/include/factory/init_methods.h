@@ -23,6 +23,7 @@
 #include "factory/method/lsh.h"
 #include "factory/method/lsh_multiprobe.h"
 #include "factory/method/nndes.h"
+#include "factory/method/falconn.h"
 #endif
 #include "factory/method/dummy.h"
 #include "factory/method/bbtree.h"
@@ -45,6 +46,7 @@
 #include "factory/method/spatial_approx_tree.h"
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
+#include "factory/method/simple_inverted_index.h"
 
 namespace similarity {
 
@@ -68,22 +70,6 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_LIST_CLUSTERS, CreateListClusters)
   REGISTER_METHOD_CREATOR(double, METH_LIST_CLUSTERS, CreateListClusters)
   REGISTER_METHOD_CREATOR(int,    METH_LIST_CLUSTERS, CreateListClusters)
-
-#if defined(WITH_EXTRAS)
-  // Regular LSH
-  REGISTER_METHOD_CREATOR(float,  METH_LSH_CAUCHY, CreateLSHCauchy)
-  REGISTER_METHOD_CREATOR(float,  METH_LSH_GAUSSIAN, CreateLSHGaussian)
-  REGISTER_METHOD_CREATOR(float,  METH_LSH_THRESHOLD, CreateLSHThreshold)
-
-  // Multiprobe LSH
-  REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE, CreateLSHMultiprobe)
-  REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE_SYN, CreateLSHMultiprobe)
-
-  // Another KNN-graph, which is computed via NN-descent
-  REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)
-  REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
-  REGISTER_METHOD_CREATOR(int,    METH_NNDES, CreateNNDescent)
-#endif
 
   // Multi-vantage point tree
   REGISTER_METHOD_CREATOR(float,  METH_MVPTREE, CreateMultiVantagePointTree)
@@ -193,6 +179,28 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_NON_METR_LISTCLUST, CreateNonMetrListClust)
   REGISTER_METHOD_CREATOR(int,    METH_NON_METR_LISTCLUST, CreateNonMetrListClust)
 
+  // Classic DAAT inverted index
+  REGISTER_METHOD_CREATOR(float,  METH_SIMPLE_INV_INDEX, CreateSimplInvIndex)
+
+#if defined(WITH_EXTRAS)
+  // Regular LSH
+  REGISTER_METHOD_CREATOR(float,  METH_LSH_CAUCHY, CreateLSHCauchy)
+  REGISTER_METHOD_CREATOR(float,  METH_LSH_GAUSSIAN, CreateLSHGaussian)
+  REGISTER_METHOD_CREATOR(float,  METH_LSH_THRESHOLD, CreateLSHThreshold)
+
+  // Multiprobe LSH
+  REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE, CreateLSHMultiprobe)
+  REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE_SYN, CreateLSHMultiprobe)
+
+  // Another KNN-graph, which is computed via NN-descent
+  REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)
+  REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
+  REGISTER_METHOD_CREATOR(int,    METH_NNDES, CreateNNDescent)
+
+  // FALCONN LSH
+  REGISTER_METHOD_CREATOR(float,  METH_FALCONN, CreateFALCONN)
+  REGISTER_METHOD_CREATOR(double, METH_FALCONN, CreateFALCONN)
+#endif
 }
 
 
