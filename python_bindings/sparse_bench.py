@@ -7,7 +7,7 @@ import time
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.spatial import distance
-import nmslib_vector
+import nmslib
 import pysparnn as snn
 from common import *
 
@@ -49,16 +49,15 @@ def bench_sparse_vector(batch=True):
     index_name  = method_name + '_sparse.index'
     if os.path.isfile(index_name):
         os.remove(index_name)
-    index = nmslib_vector.init(
-                             space_type,
-                             space_param,
-                             method_name,
-                             nmslib_vector.DataType.SPARSE_VECTOR,
-                             nmslib_vector.DistType.FLOAT)
+    index = nmslib.init(space_type,
+                        space_param,
+                        method_name,
+                        nmslib.DataType.SPARSE_VECTOR,
+                        nmslib.DistType.FLOAT)
 
     if batch:
         with TimeIt('batch add'):
-            positions = nmslib_vector.addDataPointBatch(index, np.arange(len(dataset), dtype=np.int32), data_matrix)
+            positions = nmslib.addDataPointBatch(index, np.arange(len(dataset), dtype=np.int32), data_matrix)
         print 'positions', positions
     else:
         d = []
@@ -70,7 +69,7 @@ def bench_sparse_vector(batch=True):
                 q.append([[i, v] for i, v in enumerate(data) if v > 0])
         with TimeIt('adding points'):
             for id, data in enumerate(d):
-                nmslib_vector.addDataPoint(index, id, data)
+                nmslib.addDataPoint(index, id, data)
 
     print 'Let\'s invoke the index-build process'
 
@@ -78,11 +77,11 @@ def bench_sparse_vector(batch=True):
     query_time_param = ['initSearchAttempts=3']
 
     with TimeIt('building index'):
-        nmslib_vector.createIndex(index, index_param)
+        nmslib.createIndex(index, index_param)
 
     print 'The index is created'
 
-    nmslib_vector.setQueryTimeParams(index,query_time_param)
+    nmslib.setQueryTimeParams(index,query_time_param)
 
     print 'Query time parameters are set'
 
@@ -91,7 +90,7 @@ def bench_sparse_vector(batch=True):
     with TimeIt('knn query'):
         if batch:
             num_threads = 10
-            res = nmslib_vector.knnQueryBatch(index, num_threads, k, query_matrix)
+            res = nmslib.knnQueryBatch(index, num_threads, k, query_matrix)
             for idx, v in enumerate(res):
                 if idx < 5:
                     print idx, v
@@ -100,15 +99,15 @@ def bench_sparse_vector(batch=True):
                         print 'q0', i, distance.cosine(q0, dataset[i,:])
         else:
             for idx, data in enumerate(q):
-                res = nmslib_vector.knnQuery(index, k, data)
+                res = nmslib.knnQuery(index, k, data)
                 if idx < 5:
                     print idx, res
 
-    nmslib_vector.saveIndex(index, index_name)
+    nmslib.saveIndex(index, index_name)
 
     print "The index %s is saved" % index_name
 
-    nmslib_vector.freeIndex(index)
+    nmslib.freeIndex(index)
 
 
 
