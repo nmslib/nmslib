@@ -29,6 +29,8 @@
 #include "method/pivot_neighb_invindx.h"
 #include "utils.h"
 
+#include "falconn_heap_mod.h"
+
 namespace similarity {
 
 using std::vector;
@@ -104,7 +106,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   if (num_prefix_ > num_pivot_) {
     PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix (" << num_prefix_ << ") "
-                             << "should be less than or equal to numPivot (" << num_pivot_ << ")";
+                             << "should be <= numPivot (" << num_pivot_ << ")";
     THROW_RUNTIME_ERR(err);
   }
 
@@ -190,6 +192,20 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
       (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
     }
   }
+
+  // Let's collect pivot occurrence statistics
+  vector<size_t> pivotOcurrQty(num_pivot_);
+
+  for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
+    auto & chunkPostLists = *posting_lists_[chunkId];
+    for (size_t i = 0; i < num_pivot_; ++i)
+      pivotOcurrQty[i] += chunkPostLists[i].size();
+  }
+  stringstream str;
+  for (size_t i = 0; i < num_pivot_; ++i) {
+    str << pivotOcurrQty[i] << " , ";
+  }
+  LOG(LIB_INFO) << "Pivot occurrences stat.:" << str.str();
 }
 
 template <typename dist_t>
@@ -249,6 +265,13 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeP
 
   pmgr.GetParamOptional("minTimes",        min_times_, 2);
   pmgr.GetParamOptional("numPivotSearch",  min_times_, 2);
+
+  pmgr.GetParamOptional("numPrefixSearch",num_prefix_search_, num_prefix_);
+  if (num_prefix_search_ > num_pivot_) {
+    PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefixSearch (" << num_prefix_search_ << ") "
+                             << "should be <= numPivot (" << num_pivot_ << ")";
+    THROW_RUNTIME_ERR(err);
+  }
   
   if (inv_proc_alg == PERM_PROC_FAST_SCAN) {
     inv_proc_alg_ = kScan; 
@@ -256,6 +279,10 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeP
     inv_proc_alg_ = kMap; 
   } else if (inv_proc_alg == PERM_PROC_MERGE) {
     inv_proc_alg_ = kMerge; 
+  } else if (inv_proc_alg == PERM_PROC_PRIOR_QUEUE) {
+    inv_proc_alg_ = kPriorQueue;
+  } else if (inv_proc_alg == PERM_PROC_WAND) {
+    inv_proc_alg_ = kWAND;
   } else {
     stringstream err;
     err << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
@@ -275,12 +302,17 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeP
   pmgr.CheckUnused();
   
   LOG(LIB_INFO) << "Set query-time parameters for PivotNeighbInvertedIndex:";
-  LOG(LIB_INFO) << "# pivots to search (minTimes) = " << min_times_;
+  LOG(LIB_INFO) << "# pivot overlap (minTimes)    = " << min_times_;
+  LOG(LIB_INFO) << "# pivots to query (numPrefixSearch) = " << num_prefix_search_;
   LOG(LIB_INFO) << "# dbScanFrac                  = " << db_scan_frac_;
   LOG(LIB_INFO) << "# knnAmp                      = " << knn_amp_;
   LOG(LIB_INFO) << "# useSort                     = " << use_sort_;
   LOG(LIB_INFO) << "invProcAlg (code)             = " << inv_proc_alg_ << "(" << toString(inv_proc_alg_) << ")";
   LOG(LIB_INFO) << "# skipChecking                = " << skip_checking_;
+
+  if (use_sort_ && (inv_proc_alg_ == kWAND || inv_proc_alg_ == kPriorQueue)) {
+    throw runtime_error("Unsupported invProcAlg " + toString(inv_proc_alg_) + " in the sorting mode useSort=1"); 
+  }
 }
 
 template <typename dist_t>
@@ -454,6 +486,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
   GetPermutationPPIndex(pivot_, query, &perm_q);
 
   vector<unsigned>          counter(chunk_index_size_);
+  vector<const Object*>     tmp_cand(chunk_index_size_);
 
 
 
@@ -476,7 +509,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
 
       if (inv_proc_alg_ == kMap) {
         std::unordered_map<uint32_t, uint32_t> map_counter;
-        for (size_t i = 0; i < num_prefix_; ++i) {
+        for (size_t i = 0; i < num_prefix_search_; ++i) {
           for (auto& p : chunkPostLists[perm_q[i]]) {
             map_counter[p]++;
           }
@@ -495,7 +528,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
         for (size_t i = 0; i < candidates.size(); ++i) {
           candidates[i].second = i;
         }
-        for (size_t i = 0; i < num_prefix_; ++i) {
+        for (size_t i = 0; i < num_prefix_search_; ++i) {
           for (auto& p : chunkPostLists[perm_q[i]]) {
             candidates[p].first--;
           }
@@ -504,7 +537,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
         VectIdCount   tmpRes[2];
         unsigned      prevRes = 0;
 
-        for (size_t i = 0; i < num_prefix_; ++i) {
+        for (size_t i = 0; i < num_prefix_search_; ++i) {
           postListUnion(tmpRes[prevRes], chunkPostLists[perm_q[i]], tmpRes[1-prevRes]);
           prevRes = 1 - prevRes;
         }
@@ -517,7 +550,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
           }
         }
       } else {
-        PREPARE_RUNTIME_ERR(err) << "Bug, unknown inv_proc_alg_: " << inv_proc_alg_;
+        PREPARE_RUNTIME_ERR(err) << "Bug, unsupported inv_proc_alg_ in the sorting mode useSort=1: " << toString(inv_proc_alg_);
         THROW_RUNTIME_ERR(err);
       }
 
@@ -538,7 +571,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
     } else {
       if (inv_proc_alg_ == kMap) {
         std::unordered_map<uint32_t, uint32_t> map_counter;
-        for (size_t i = 0; i < num_prefix_; ++i) {
+        for (size_t i = 0; i < num_prefix_search_; ++i) {
           for (auto& p : chunkPostLists[perm_q[i]]) {
             map_counter[p]++;
           }
@@ -553,20 +586,137 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
         if (chunkId) {
           memset(&counter[0], 0, sizeof(counter[0])*counter.size());
         }
-        for (size_t i = 0; i < num_prefix_; ++i) {
+        for (size_t i = 0; i < num_prefix_search_; ++i) {
           for (auto& p : chunkPostLists[perm_q[i]]) {
             counter[p]++;
           }
         }
+        size_t cand_tmp_qty = 0;
         for (size_t i = 0; i < chunkQty; ++i) {
           if (counter[i] >= min_times_) {
-            if (!skip_checking_) query->CheckAndAddToResult(data_start[i]);
+            tmp_cand[cand_tmp_qty++]=data_start[i];
           }
         }
+        if (!skip_checking_) {
+          for (size_t i = 0; i < cand_tmp_qty; ++i) {
+            query->CheckAndAddToResult(tmp_cand[i]);
+            if (i + 3 < cand_tmp_qty) {
+              _mm_prefetch(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
+              _mm_prefetch(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
+              _mm_prefetch(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
+            }
+          }
+        }
+      } else if (inv_proc_alg_ == kWAND) {
+        vector<unique_ptr<PostListQueryState>>      queryStates(num_prefix_search_);
+
+        FalconnHeapMod1<IdType, int32_t>            postListQueue;
+
+        for (unsigned iq = 0; iq < num_prefix_search_; ++iq) {
+          const PostingListInt& pl = chunkPostLists[perm_q[iq]];
+          if (!pl.empty()) {
+            queryStates[iq].reset(new PostListQueryState(pl));
+            postListQueue.push(-pl[0], iq);
+          }
+        }
+
+        // This is essentially Broder's WAND algorithm
+        size_t min_times_idx = min_times_ - 1;
+
+        size_t cand_tmp_qty = 0;
+
+        vector<pair<IdType, int32_t>> state_ids(num_prefix_search_);
+        while (postListQueue.size() >= min_times_) {
+          for (size_t ii = 0; ii < min_times_; ++ii) {
+            postListQueue.extract_top(state_ids[ii].first, state_ids[ii].second);
+          }
+          size_t sqty = min_times_;
+          IdType minDocIdNeg = state_ids[0].first; 
+          if (minDocIdNeg == state_ids[min_times_idx].first) {
+            // match found, extract all remaining posting states with the !
+            while (!postListQueue.empty() && postListQueue.top_key() == minDocIdNeg) { 
+              postListQueue.extract_top(state_ids[sqty].first, state_ids[sqty].second);
+              ++sqty;
+            }
+            //if (!skip_checking_) query->CheckAndAddToResult(data_start[-minDocIdNeg]);
+            tmp_cand[cand_tmp_qty++]=data_start[-minDocIdNeg];
+          }
+          // Advance pointers
+          for (size_t ii = 0; ii < sqty; ++ii) {
+            unsigned qsi = state_ids[ii].second;
+            PostListQueryState& queryState = *queryStates[qsi];
+            const PostingListInt& pl = *queryState.post_;
+            size_t pos = queryState.post_pos_;
+            while (pos < pl.size() && pl[pos] <= -minDocIdNeg) pos++;
+            if (pos < pl.size()) {
+               queryState.post_pos_ = pos;
+               postListQueue.push(-pl[pos], qsi);
+            }
+          }
+        }
+
+        if (!skip_checking_) {
+          for (size_t i = 0; i < cand_tmp_qty; ++i) {
+            query->CheckAndAddToResult(tmp_cand[i]);
+            if (i + 3 < cand_tmp_qty) {
+              _mm_prefetch(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
+              _mm_prefetch(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
+              _mm_prefetch(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
+            }
+          }
+        }
+      } else if (inv_proc_alg_ == kPriorQueue) {
+        vector<unique_ptr<PostListQueryState>>      queryStates(num_prefix_search_);
+
+        FalconnHeapMod1<IdType, int32_t>            postListQueue;
+
+        size_t cand_tmp_qty = 0;
+
+        for (unsigned iq = 0; iq < num_prefix_search_; ++iq) {
+          const PostingListInt& pl = chunkPostLists[perm_q[iq]];
+          if (!pl.empty()) {
+            queryStates[iq].reset(new PostListQueryState(pl));
+            postListQueue.push(-pl[0], iq);
+          }
+        }
+
+        unsigned accum = 0;
+        while (!postListQueue.empty()) {
+          IdType minDocIdNeg = postListQueue.top_key();
+          while (!postListQueue.empty() && postListQueue.top_key() == minDocIdNeg) {
+            unsigned qsi = postListQueue.top_data();
+
+            PostListQueryState& queryState = *queryStates[qsi];
+            const PostingListInt& pl = *queryState.post_;
+            accum++;
+            queryState.post_pos_++; // This will update data inside queue
+            if (queryState.post_pos_ < pl.size()) {
+              IdType docIdNeg = -pl[queryState.post_pos_];
+              postListQueue.replace_top_key(docIdNeg);
+            } else postListQueue.pop();
+          }
+          if (accum >= min_times_) {
+            tmp_cand[cand_tmp_qty++]=data_start[-minDocIdNeg];
+            //if (!skip_checking_) query->CheckAndAddToResult(data_start[-minDocIdNeg]);
+          }
+          accum = 0;
+        }
+
+        if (!skip_checking_) {
+          for (size_t i = 0; i < cand_tmp_qty; ++i) {
+            query->CheckAndAddToResult(tmp_cand[i]);
+            if (i + 3 < cand_tmp_qty) {
+              _mm_prefetch(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
+              _mm_prefetch(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
+              _mm_prefetch(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
+            }
+          }
+        }
+
       } else if (inv_proc_alg_ == kMerge) {
         VectIdCount   tmpRes[2];
         unsigned      prevRes = 0;
-        for (size_t i = 0; i < num_prefix_; ++i) {
+        for (size_t i = 0; i < num_prefix_search_; ++i) {
           postListUnion(tmpRes[prevRes], chunkPostLists[perm_q[i]], tmpRes[1-prevRes]);
           prevRes = 1 - prevRes;
         }

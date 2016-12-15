@@ -47,11 +47,13 @@ using std::mutex;
  * 1) The inverted file is split into small parts. In doing so, we aim to
  *    achieve better caching properties of the counter array used in ScanCount.
  * 2) The index is not compressed (though it could be)
- * 3) Instead of the adaptive union algorithm, we use a well-known ScanCount algorithm (by default). 
+ * 3) We support different number of pivots K during indexing and searching (unlike the original paper),
+ *    which is controlled by the parameter numPrefixSearch.
+ * 4) Instead of the adaptive union algorithm, we use a well-known ScanCount algorithm (by default). 
  *    The overall time spent on processing of the inverted file is 20-30% of the overall
  *    search time. Thus, the retrieval time cannot be substantially improved by
  *    replacing ScanCount with even better approach (should one exist).
- * 4) We also implemented several other simple algorithms for posting processing, to compare
+ * 5) We also implemented several other simple algorithms for posting processing, to compare
  *    against ScanCount. For instance, the merge-sort union algorithms is about 2-3 times as slow.
  *
  *  For an example of using ScanCount see, e.g.:
@@ -93,6 +95,7 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   size_t  knn_amp_;
   float   db_scan_frac_;
   size_t  num_prefix_;       // K in the original paper
+  size_t  num_prefix_search_;// K used during search (our modification can use a different K)
   size_t  min_times_;        // t in the original paper
   bool    use_sort_;
   bool    skip_checking_;
@@ -103,13 +106,17 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   enum eAlgProctype {
     kScan,
     kMap,
-    kMerge
+    kMerge,
+    kPriorQueue,
+    kWAND
   } inv_proc_alg_;
 
-  string toString(eAlgProctype type) {
+  string toString(eAlgProctype type) const {
     if (type == kScan)   return PERM_PROC_FAST_SCAN;
     if (type == kMap)    return PERM_PROC_MAP;
     if (type == kMerge)  return PERM_PROC_MERGE;
+    if (type == kPriorQueue) return PERM_PROC_PRIOR_QUEUE;
+    if (type == kWAND) return PERM_PROC_WAND;
     return "unknown";
   }
 
@@ -129,6 +136,13 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   }
   
   vector<shared_ptr<vector<PostingListInt>>> posting_lists_;
+
+  struct PostListQueryState {
+    const PostingListInt*  post_;
+    size_t                 post_pos_;
+    PostListQueryState(const PostingListInt& pl)
+        : post_(&pl), post_pos_(0) {}
+  };
 
   template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
