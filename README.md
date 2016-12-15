@@ -56,8 +56,7 @@ What's new in version 1.6 ([see this page for more details](https://github.com/s
 General information
 -----------------------
 
-A detailed description is given [in the 
-](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes.
+A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
