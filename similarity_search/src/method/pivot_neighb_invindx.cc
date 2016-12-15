@@ -28,6 +28,7 @@
 #include "incremental_quick_select.h"
 #include "method/pivot_neighb_invindx.h"
 #include "utils.h"
+#include "simd.h"
 
 #include "falconn_heap_mod.h"
 

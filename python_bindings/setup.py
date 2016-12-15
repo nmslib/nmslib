@@ -8,14 +8,16 @@ release = '%s/release' % libdir
 if sys.platform.startswith('linux'):
     libraries=['gsl', 'gslcblas', 'boost_program_options']
     extra_objects=['%s/libNonMetricSpaceLib.a' % release, '%s/liblshkit.a' % release]
+    extra_link_args=['-fopenmp', '-shared', '-pthread']
 else:
     libraries=[]
     extra_objects=['%s/libNonMetricSpaceLib.a' % release]
+    extra_link_args=[]
 
 nmslib = Extension('nmslib', ['nmslib.cc'],
         include_dirs=['%s/include' % libdir, '%s/release' % libdir, np.get_include()],
         libraries=libraries,
-        extra_link_args=['-fopenmp', '-shared', '-pthread'],
+        extra_link_args=extra_link_args,
         extra_objects=extra_objects,
         extra_compile_args=['-std=c++11', '-fno-strict-aliasing', '-Wall', '-Ofast', '-fno-strict-aliasing'])
 
