@@ -39,6 +39,9 @@
 #include <thread>
 #include <condition_variable>
 #include <queue>
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <tmmintrin.h>
 
 
 #define METH_HNSW      "hnsw"
@@ -537,18 +540,19 @@ namespace similarity {
         size_t                ef_;
         size_t                searchMethod_;
         size_t                indexThreadQty_;
-        VisitedListPool       *visitedlistpool;
         const Space<dist_t>&  space_;
         bool                  PrintProgress_;
         int                   delaunay_type_;
         double                mult_;
         int                   maxlevel_;
-        HnswNode           *enterpoint_;
         unsigned int enterpointId_;
         unsigned int totalElementsStored_;
 
         const ObjectVector&   data_;// We do not copy objects
         ObjectVector          data_rearranged_; 
+
+        VisitedListPool       *visitedlistpool;
+        HnswNode              *enterpoint_;
 
         mutable mutex         ElListGuard_;
         mutable mutex         MaxLevelGuard_;
@@ -570,22 +574,23 @@ namespace similarity {
         DISABLE_COPY_AND_ASSIGN(Hnsw);
     };
 
-
+    typedef unsigned char vl_type;
     class VisitedList {
-    public: unsigned int curV;
-    public:	unsigned int *mass;
+    public: vl_type curV;
+    public:	vl_type *mass;
     public: unsigned int numelements;
     public:
         VisitedList(int  numelements1) {
-            curV = 0;
+            curV = -1;
             numelements = numelements1;
-            mass = new unsigned int[numelements];
+            mass = new vl_type[numelements];
         }
         void reset() {
             curV++;
             if (curV == 0)
             {
-                memset(mass, 0, sizeof(int)*numelements);
+                memset(mass, 0, sizeof(vl_type)*numelements);
+                curV++;
             }
         };
         ~VisitedList() {
@@ -599,9 +604,7 @@ namespace similarity {
     //
     /////////////////////////////////////////////////////////
 
-    class VisitedListPool {
-        vector<unsigned int*> listPool;
-        vector<unsigned int*> curV;
+    class VisitedListPool {        
         deque<VisitedList*> pool;
         mutex poolguard;
         int maxpools;
@@ -613,16 +616,19 @@ namespace similarity {
                 pool.push_front(new VisitedList(numelements));
         }
         VisitedList * getFreeVisitedList() {
-            unique_lock<mutex> lock(poolguard);
-            if (pool.size() > 0) {
-                VisitedList *rez = pool.front();
-                rez->reset();
-                pool.pop_front();
-                return rez;
+            VisitedList *rez;
+            {
+                unique_lock<mutex> lock(poolguard);
+                if (pool.size() > 0) {
+                    rez = pool.front();
+                    pool.pop_front();
+                }
+                else {
+                    rez = new VisitedList(numelements);                    
+                }
             }
-            else {
-                return new VisitedList(numelements);
-            }
+            rez->reset();
+            return rez;
 
         };
         void releaseVisitedList(VisitedList *vl) {

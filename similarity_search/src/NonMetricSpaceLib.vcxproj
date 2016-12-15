@@ -58,14 +58,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</IntDir>
-    <IncludePath>C:\local\boost_1_59_0;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\local\boost_1_59_0\lib64-msvc-14.0;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
     <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</IntDir>
-    <IncludePath>C:\local\boost_1_59_0\;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>C:\local\boost_1_59_0\lib64-msvc-14.0;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\MainLib\</OutDir>
@@ -91,6 +91,7 @@
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
       <OpenMPSupport>true</OpenMPSupport>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -132,6 +133,7 @@
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <StructMemberAlignment>16Bytes</StructMemberAlignment>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -167,6 +169,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OpenMPSupport>true</OpenMPSupport>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -267,6 +270,8 @@
     <ClInclude Include="..\include\method\vptree_utils.h" />
     <ClInclude Include="..\include\space\space_bit_hamming.h" />
     <ClInclude Include="..\include\space\space_bregman.h" />
+    <ClInclude Include="..\include\space\space_ab_diverg.h" />
+    <ClInclude Include="..\include\space\space_renyi_diverg.h" />
     <ClInclude Include="..\include\space\space_dummy.h" />
     <ClInclude Include="..\include\space\space_js.h" />
     <ClInclude Include="..\include\space\space_lp.h" />
@@ -287,6 +292,7 @@
     <ClCompile Include="distcomp_rankcorr.cc" />
     <ClCompile Include="distcomp_scalar.cc" />
     <ClCompile Include="distcomp_sparse_scalar_fast.cc" />
+    <ClCompile Include="distcomp_diverg.cc" />
     <ClCompile Include="experimentconf.cc" />
     <ClCompile Include="global.cc" />
     <ClCompile Include="init.cc" />
@@ -297,7 +303,6 @@
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">TurnOffAllWarnings</WarningLevel>
     </ClCompile>
     <ClCompile Include="method\hnsw_distfunc_opt.cc" />
-    <ClCompile Include="method\nndes.cc" />
     <ClCompile Include="method\nonmetr_list_clust.cc" />
     <ClCompile Include="method\omedrank.cc" />
     <ClCompile Include="method\permutation_inverted_index.cc" />
@@ -318,6 +323,8 @@
     <ClCompile Include="utils.cc" />
     <ClCompile Include="space\space_bit_hamming.cc" />
     <ClCompile Include="space\space_bregman.cc" />
+    <ClCompile Include="space\space_ab_diverg.cc" />
+    <ClCompile Include="space\space_renyi_diverg.cc" />
     <ClCompile Include="space\space_dummy.cc" />
     <ClCompile Include="space\space_js.cc" />
     <ClCompile Include="space\space_lp.cc" />

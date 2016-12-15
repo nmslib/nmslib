@@ -18,12 +18,14 @@ list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
 # of library source files:
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
 
-# NO lshkit for Win32 and MACOSX
-if (WITHOUT_LSH OR WIN32)
-
+if (NOT WITH_EXTRAS)
+  # Extra methods
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_multiprobe.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_space.cc)
+
+  # Extra spaces
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/space/space_sqfd.cc)
 endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -40,13 +42,11 @@ else (Threads_FOUND)
 endif (Threads_FOUND)
 
 add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES})
-if ((NOT WITHOUT_LSH) AND (NOT WIN32))
+if (WITH_EXTRAS)
   add_dependencies (NonMetricSpaceLib lshkit)
   set(LSHKIT_LIB "lshkit")
-else()
-# NO lshkit for Win32
-  set(LSHKIT_LIB "")
 endif()
+
 add_executable (experiment main.cc)
 add_executable (tune_vptree tune_vptree.cc)
 # The following line is necessary to create an executable for the dummy application:

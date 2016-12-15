@@ -31,23 +31,18 @@ add_dependencies (bunit NonMetricSpaceLib)
 add_dependencies (report_intr_dim NonMetricSpaceLib)
 add_dependencies (test_clust NonMetricSpaceLib)
 
-if ((NOT WITHOUT_LSH) AND (NOT WIN32))
-  add_executable (bench_projection bench_projection.cc)
+add_executable (bench_projection bench_projection.cc)
+add_dependencies (bench_projection NonMetricSpaceLib)
 
+if (WITH_EXTRAS) 
   add_dependencies (bunit lshkit)
   add_dependencies (bench_distfunc lshkit)
-  add_dependencies (bench_projection NonMetricSpaceLib)
 
   set(LSHKIT_LIB "lshkit")
   set(GSL_LIB    ${GSL_LIBRARIES})
   set(BOOST_LIB  ${Boost_LIBRARIES})
 
   target_link_libraries (bench_projection NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
-else()
-# NO lshkit for Win32 and MACOSX
-  set(LSHKIT_LIB "")
-  set(GSL_LIB "")
-  set(BOOST_LIB ${Boost_LIBRARIES})
 endif()
 
 target_link_libraries (bunit NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
@@ -55,6 +50,7 @@ target_link_libraries (test_integr NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${
 target_link_libraries (bench_distfunc NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
 target_link_libraries (test_clust NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
 target_link_libraries (report_intr_dim NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (bench_projection NonMetricSpaceLib ${LSHKIT_LIB} ${GSL_LIB} ${BOOST_LIB})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")
