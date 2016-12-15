@@ -18,11 +18,11 @@
 
 #include "methodfactory.h"
 
-
-#if !defined(WITHOUT_LSH) && !defined(_MSC_VER)
-// These guys won't work on Windows and MACOSX yet
+// Some extra stuff
+#if defined(WITH_EXTRAS)
 #include "factory/method/lsh.h"
 #include "factory/method/lsh_multiprobe.h"
+#include "factory/method/nndes.h"
 #endif
 #include "factory/method/dummy.h"
 #include "factory/method/bbtree.h"
@@ -45,13 +45,6 @@
 #include "factory/method/spatial_approx_tree.h"
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
-#include "factory/method/simple_inverted_index.h"
-#if !defined(_MSC_VER)
-#include "factory/method/nndes.h"
-#endif
-#if !defined(WITHOUT_FALCONN) && !defined(_MSC_VER)
-#include "factory/method/falconn.h"
-#endif
 
 namespace similarity {
 
@@ -76,8 +69,7 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_LIST_CLUSTERS, CreateListClusters)
   REGISTER_METHOD_CREATOR(int,    METH_LIST_CLUSTERS, CreateListClusters)
 
-#if !defined(WITHOUT_LSH) && !defined(_MSC_VER)
-// These guys won't work on Windows and MACOSX yet
+#if defined(WITH_EXTRAS)
   // Regular LSH
   REGISTER_METHOD_CREATOR(float,  METH_LSH_CAUCHY, CreateLSHCauchy)
   REGISTER_METHOD_CREATOR(float,  METH_LSH_GAUSSIAN, CreateLSHGaussian)
@@ -86,6 +78,11 @@ inline void initMethods() {
   // Multiprobe LSH
   REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE, CreateLSHMultiprobe)
   REGISTER_METHOD_CREATOR(float,  METH_LSH_MULTIPROBE_SYN, CreateLSHMultiprobe)
+
+  // Another KNN-graph, which is computed via NN-descent
+  REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)
+  REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
+  REGISTER_METHOD_CREATOR(int,    METH_NNDES, CreateNNDescent)
 #endif
 
   // Multi-vantage point tree
@@ -176,17 +173,6 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
 
-  REGISTER_METHOD_CREATOR(float,  METH_SIMPLE_INV_INDEX, CreateSimplInvIndex)
-
-#if !defined(_MSC_VER)
-  // Another KNN-graph, which is computed via NN-descent
-  REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)
-  REGISTER_METHOD_CREATOR(double, METH_NNDES, CreateNNDescent)
-  REGISTER_METHOD_CREATOR(int,    METH_NNDES, CreateNNDescent)
-
-  REGISTER_METHOD_CREATOR(float,  METH_FALCONN, CreateFALCONN)
-  REGISTER_METHOD_CREATOR(double, METH_FALCONN, CreateFALCONN)
-#endif
   // SA-tree
   REGISTER_METHOD_CREATOR(float,  METH_SATREE, CreateSATree)
   REGISTER_METHOD_CREATOR(double, METH_SATREE, CreateSATree)
