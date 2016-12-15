@@ -76,7 +76,9 @@ else ()
 endif()
 
 if (WITH_EXTRAS)
+    message(STATUS "******************************")
     message(STATUS "Will build with extra stuff...")
+    message(STATUS "******************************")
     add_definitions (-DWITH_EXTRAS=1)
 endif()
 
