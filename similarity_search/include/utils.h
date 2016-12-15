@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <sstream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <cstring>
@@ -218,7 +219,7 @@ inline void ConvertFromString<string>(const string& s, string& o) {
 }
 
 /*
- * "fields" each occupy a single line, they are in the format:
+ * Text "fields" each occupy a single line, they are in the format:
  * fieldName:fieldValue.
  */
 
@@ -247,6 +248,19 @@ inline void WriteField(ostream& out, const string& fieldName, const FieldType& f
         runtime_error("Error writing to an output stream, field name: " + fieldName);
   }
 }
+
+
+template <typename T> 
+void writeBinaryPOD(ostream& out, const T& podRef) {
+  out.write((char*)&podRef, sizeof(T));
+}
+
+template <typename T> 
+static void readBinaryPOD(istream& in, T& podRef) {
+  in.read((char*)&podRef, sizeof(T));
+}
+
+/**/
 
 inline void ToLower(string &s) {
   for (size_t i = 0; i < s.size(); ++i) s[i] = std::tolower(s[i]);

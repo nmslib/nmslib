@@ -20,6 +20,10 @@
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <tmmintrin.h>
+
 
 namespace similarity {
 

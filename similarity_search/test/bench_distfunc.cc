@@ -25,7 +25,7 @@
 #include "space/space_sparse_scalar_fast.h"
 #include "space/space_sparse_vector.h"
 #include "space/space_scalar.h"
-#ifndef _MSC_VER
+#ifdef WITH_EXTRAS
 #include "space/space_sqfd.h"
 #endif
 #include "distcomp.h"
@@ -1190,7 +1190,7 @@ void TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 
 }
 
-#if !defined(_MSC_VER)
+#if defined(WITH_EXTRAS)
 
 template <class T>
 void TestSQFDGeneric(size_t N, size_t Rep, SqfdFunction<T>& func) {
@@ -1934,7 +1934,7 @@ int main(int argc, char* argv[]) {
 
     int dim = 128;
 
-#if !defined(_MSC_VER)
+#if defined(WITH_EXTRAS)
     nTest++;
     TestSQFDMinus<float>(2000, 50);
     nTest++;

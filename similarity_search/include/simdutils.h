@@ -14,13 +14,14 @@
  * which do understand __attribute__ ((aligned(16)))
  */
 
+#ifndef SIMDUTILS_H
+#define SIMDUTILS_H
+
 #if defined(__GNUC__)
 #define PORTABLE_ALIGN16 __attribute__((aligned(16)))
 #else
 #define PORTABLE_ALIGN16 __declspec(align(16))
 #endif
-
-#ifndef WITHOUT_SIMD
 
 // On Win64 SSE2 is always enabled
 // http://stackoverflow.com/questions/1067630/sse2-option-in-visual-c-x64
@@ -33,13 +34,9 @@
 #define PORTABLE_SSE4
 #endif
 
-#endif    // WITHOUT_SIMD
-
 
 #ifdef PORTABLE_SSE4
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <tmmintrin.h>
+#include <simd.h>
 
 
 /*
@@ -50,22 +47,23 @@
 #define MM_EXTRACT_DOUBLE(v,i) _mm_cvtsd_f64(_mm_shuffle_pd(v, v, _MM_SHUFFLE2(0, i)))
 #define MM_EXTRACT_FLOAT(v,i) _mm_cvtss_f32(_mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, i)))
 
-/*
+
+ /*
  * However, if we need to extract many numbers to sum the up, it is more efficient no
  * not to use the above MM_EXTRACT_FLOAT (https://github.com/searchivarius/BlogCode/tree/master/2016/bench_sums)
- * 
+ *
  */
-inline float mm128_sum(__m128 reg) {
-  float PORTABLE_ALIGN16 TmpRes[4];
-  _mm_store_ps(TmpRes, reg);
-  return TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
-};
 
 #endif
+
+
 
 #ifdef _MSC_VER
 #include <intrin.h>
 
 #define  __builtin_popcount(t) __popcnt(t)
+
+#endif
+
 
 #endif

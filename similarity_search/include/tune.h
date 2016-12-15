@@ -168,10 +168,13 @@ void GetOptimalAlphas(bool bPrintProgres,
           vector<shared_ptr<AnyParams>> vQueryTimeParams;
           vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(QueryTimeParams)));
 
+          const bool recallOnly = true; // don't need anything except recall here
+
           Experiments<dist_t>::RunAll(false /* don't print info */, 
                                       ThreadTestQty,
                                       TestSetId,
                                       *vManagerGS[TestSetId],
+                                      recallOnly,
                                       ExpResRange, ExpResKNN,
                                       config, 
                                       *MethodPtr,

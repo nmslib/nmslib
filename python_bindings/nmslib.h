@@ -14,18 +14,22 @@
  *
  */
 
-#ifndef _PY_NMSLIB_GENERIC_H_
-#define _PY_NMSLIB_GENERIC_H_
+#ifndef _PY_NMSLIB_ALL_H_
+#define _PY_NMSLIB_ALL_H_
 
-extern "C" void initnmslib_generic();
+extern "C" void initnmslib();
 
 PyObject* init(PyObject* self, PyObject* args);
 PyObject* addDataPoint(PyObject* self, PyObject* args);
+PyObject* addDataPointBatch(PyObject* self, PyObject* args);
+PyObject* setQueryTimeParams(PyObject* self, PyObject* args);
 PyObject* createIndex(PyObject* self, PyObject* args);
 PyObject* saveIndex(PyObject* self, PyObject* args);
 PyObject* loadIndex(PyObject* self, PyObject* args);
-PyObject* setQueryTimeParams(PyObject* self, PyObject* args);
 PyObject* knnQuery(PyObject* self, PyObject* args);
+PyObject* knnQueryBatch(PyObject* self, PyObject* args);
+PyObject* getDataPoint(PyObject* self, PyObject* args);
+PyObject* getDataPointQty(PyObject* self, PyObject* args);
 PyObject* freeIndex(PyObject* self, PyObject* args);
 
 #endif

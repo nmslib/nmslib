@@ -70,14 +70,14 @@ void ParseCommandLineForClient(int argc, char*argv[],
                       ) {
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
-    (HELP_PARAM_OPT,    HELP_PARAM_MSG)
-    (PORT_PARAM_OPT,    po::value<int>(&port)->required(), PORT_PARAM_MSG)
-    (ADDR_PARAM_OPT,    po::value<string>(&host)->required(), ADDR_PARAM_MSG)
-    (KNN_PARAM_OPT,     po::value<int>(&k), KNN_PARAM_MSG)
-    (RANGE_PARAM_OPT,   po::value<double>(&r), RANGE_PARAM_MSG)
-    (QUERY_TIME_PARAMS_PARAM_OPT, po::value<string>(&queryTimeParams)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG)
-    (RET_EXT_ID_PARAM_OPT,   RET_EXT_ID_PARAM_MSG)
-    (RET_OBJ_PARAM_OPT, RET_EXT_ID_PARAM_MSG)
+    (HELP_PARAM_OPT.c_str(),    HELP_PARAM_MSG.c_str())
+    (PORT_PARAM_OPT.c_str(),    po::value<int>(&port)->required(), PORT_PARAM_MSG.c_str())
+    (ADDR_PARAM_OPT.c_str(),    po::value<string>(&host)->required(), ADDR_PARAM_MSG.c_str())
+    (KNN_PARAM_OPT.c_str(),     po::value<int>(&k), KNN_PARAM_MSG.c_str())
+    (RANGE_PARAM_OPT.c_str(),   po::value<double>(&r), RANGE_PARAM_MSG.c_str())
+    (QUERY_TIME_PARAMS_PARAM_OPT.c_str(), po::value<string>(&queryTimeParams)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG.c_str())
+    (RET_EXT_ID_PARAM_OPT.c_str(),   RET_EXT_ID_PARAM_MSG.c_str())
+    (RET_OBJ_PARAM_OPT.c_str(), RET_EXT_ID_PARAM_MSG.c_str())
     ;
 
   po::variables_map vm;

@@ -29,7 +29,9 @@
 #include "factory/space/space_sparse_scalar.h"
 #include "factory/space/space_savch.h"
 #include "factory/space/space_word_embed.h"
-#if !defined(_MSC_VER)
+#include "factory/space/space_ab_diverg.h"
+#include "factory/space/space_renyi_diverg.h"
+#if defined(WITH_EXTRAS)
 #include "factory/space/space_sqfd.h"
 #endif
 
@@ -123,7 +125,7 @@ inline void initSpaces() {
 
   REGISTER_SPACE_CREATOR(float,  "savch",  CreateSavch)
 
-#if !defined(_MSC_VER)
+#if defined(WITH_EXTRAS)
   // Signature Quadratic Form Distance
   REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_HEURISTIC_FUNC, CreateSqfdHeuristicFunc)
   REGISTER_SPACE_CREATOR(double, SPACE_SQFD_HEURISTIC_FUNC, CreateSqfdHeuristicFunc)
@@ -132,6 +134,12 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
   REGISTER_SPACE_CREATOR(double, SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
 #endif
+
+  REGISTER_SPACE_CREATOR(float,  SPACE_AB_DIVERG,  CreateAlphaBetaDiverg)
+  REGISTER_SPACE_CREATOR(double, SPACE_AB_DIVERG,  CreateAlphaBetaDiverg)
+
+  REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG,  CreateRenyiDiverg)
+  REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG,  CreateRenyiDiverg)
 }
 
 }

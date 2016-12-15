@@ -272,7 +272,9 @@ ScalarProductFastRes SparseScalarProductFastIntern(const char* pData1, size_t le
         sum += MM_EXTRACT_FLOAT(sum128, 2);
         sum += MM_EXTRACT_FLOAT(sum128, 3);
 #else
-        sum += mm128_sum(sum128);
+        float PORTABLE_ALIGN16 TmpRes[4];
+        _mm_store_ps(TmpRes, sum128);
+        sum += (TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3]);
 #endif
       }
 

@@ -17,6 +17,9 @@
 #include <memory>
 #include <iostream>
 #include <mmintrin.h>
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <tmmintrin.h>
 
 #include "space.h"
 #include "knnquery.h"
