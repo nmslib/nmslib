@@ -15,7 +15,7 @@ NMSLIB is an **extendible library**, which means that is possible to add new sea
 
 Leo(nid) Boytsov is a maintainer. Leo is supported by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa) and the following NSF grant: "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". Bileg was supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
 
-**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. For generic questions/inquiries, please, use Gitter (see the badge above). Bug reports should be submitted to issues.
+**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. For generic questions/inquiries, please, use Gitter (see the badge above). Bug reports should be submitted as GitHub issues.
 
 NMSLIB is generic yet fast!
 =================
@@ -49,9 +49,10 @@ What's new in version 1.6 ([see this page for more details](https://github.com/s
 
 1. Improved portability (+MACOS)
 2. Easier build: core NMSLIB has no dependencies
-3. Improved Python bindings: dense, sparse, and generic bindings are now in the single module!
+3. Improved Python bindings: dense, sparse, and generic bindings are now in the single module! We als have batch addition and querying functions.
 3. New baselines, including [FALCONN library](https://github.com/FALCONN-LIB/FALCONN)
 4. New spaces (Renyi-divergence, alpha-beta divergence, sparse inner product)
+5. We changed the semantics of boolean command line options: they now have to accept a numerical value (0 or 1).
 
 General information
 -----------------------
@@ -74,7 +75,7 @@ Prerequisites
 2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows and MAC as well. 
 3. Only for Linux/MAC: CMake (GNU make is also required) 
 4. An Intel or AMD processor that supports SSE 4.2 is recommended
-5. Extended version of the library requires dev version of : Boost, GNU scientific library, and Eigen3.
+5. Extended version of the library requires a development version of the following libraries: Boost, GNU scientific library, and Eigen3.
 
 To install additional prerequisite packages on Ubuntu, type the following
 ```
