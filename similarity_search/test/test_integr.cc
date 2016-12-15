@@ -271,19 +271,19 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", "desiredRecall=0.5,tuneK=1,T=5,L=25,H=16535", "",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.45, 0.6, 45, 80, 90, 130),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", "desiredRecall=0.5,tuneK=10,T=5,L=25,H=16535", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 0.45, 0.6, 10, 40, 80, 120),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.45, 0.6, 10, 40, 70, 120),  
   // *************** Guassian LSH tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_gaussian", "W=2,L=5,M=40,H=16535", "",
 
                 1 /* KNN-1 */, 0 /* no range search */ , 0.85, 0.95, 0.1, 40, 90, 130),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_gaussian", "W=2,L=5,M=40,H=16535", "",
 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.68, 0.82, 0.1, 50, 80, 120),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.68, 0.82, 0.1, 50, 70, 120),  
   // *************** Cauchy LSH tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_cauchy", "W=2,L=5,M=10,H=16535", "",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.9, 0.1, 50, 90, 130),  
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_cauchy", "W=2,L=5,M=10,H=16535", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 0.5, 0.8, 0.1, 50, 80, 120),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.5, 0.8, 0.1, 50, 70, 120),  
   // *************** Thresholding LSH tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_threshold", "L=5,M=60,H=16535", "",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.8, 0.99, 0.1, 50, 40, 70),  
