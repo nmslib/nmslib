@@ -29,7 +29,7 @@
 #include <exception>
 
 // Uncomment this to disable tests taking long time
-#define DISABLE_LONG_TESTS
+//#define DISABLE_LONG_TESTS
 
 namespace similarity {
 

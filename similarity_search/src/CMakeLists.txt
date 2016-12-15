@@ -23,6 +23,7 @@ if (NOT WITH_EXTRAS)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_multiprobe.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_space.cc)
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/falconn.cc)
 
   # Extra spaces
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/space/space_sqfd.cc)
