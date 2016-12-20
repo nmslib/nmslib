@@ -91,7 +91,7 @@ void RunExper(
     const string&          SpaceType,
     shared_ptr<AnyParams>  SpaceParams,
     const string&          DataFile,
-    IdTypeUnsign           MaxNumData,
+    unsigned               MaxNumData,
     const string&          ClustType,
     IdTypeUnsign           ClustQty,
     // reductive CLARANS parameters
@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
   string                  ClustType;
   IdTypeUnsign            ClustQty;
   string                  DataFile;
-  IdTypeUnsign            MaxNumData;
+  unsigned                MaxNumData;
 
 // reductive CLARANS parameters
   IdTypeUnsign            maxMetaIterQty;
