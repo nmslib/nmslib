@@ -49,7 +49,7 @@ What's new in version 1.6 ([see this page for more details](https://github.com/s
 
 1. Improved portability (Can now be built on MACOS)
 2. Easier build: core NMSLIB has no dependencies
-3. Improved Python bindings: dense, sparse, and generic bindings are now in the single module! We als have batch addition and querying functions.
+3. Improved Python bindings: dense, sparse, and generic bindings are now in the single module! We also have batch addition and querying functions.
 3. New baselines, including [FALCONN library](https://github.com/FALCONN-LIB/FALCONN)
 4. New spaces (Renyi-divergence, alpha-beta divergence, sparse inner product)
 5. We changed the semantics of boolean command line options: they now have to accept a numerical value (0 or 1).
