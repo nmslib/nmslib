@@ -132,6 +132,8 @@ if (WITH_EXTRAS)
 endif()
 
 add_subdirectory (src)
-add_subdirectory (test)
+if (NOT WITHOUT_TESTS)
+    add_subdirectory (test)
+endif()
 
 message (STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CXX_COMPILER_VERSION}")
