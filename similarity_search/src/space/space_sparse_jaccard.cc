@@ -56,6 +56,8 @@ static void ReadIdList(string line, LabelType& label, vector<IdType>& v)
     LOG(LIB_ERROR) << "Exception: " << e.what();
     LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'";
   }
+
+  sort(v.begin(), v.end());
 }
 
 /** Standard functions to read/write/create objects */ 

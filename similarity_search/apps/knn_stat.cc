@@ -84,7 +84,7 @@ void sampleDist(string spaceType,
   vector<vector<dist_t>> outMatrix(knn);
 
   for (size_t qid = 0; qid < knnQueryQty; ++qid) {
-    LOG(LIB_INFO) << "query id: " << qid;
+    LOG(LIB_INFO) << "query index : " << qid << " id: " << queries[qid]->id();
     KNNQuery<dist_t> query(*space, queries[qid], knn);
 
     // Brute force search
