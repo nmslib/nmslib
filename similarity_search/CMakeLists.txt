@@ -133,5 +133,6 @@ endif()
 
 add_subdirectory (src)
 add_subdirectory (test)
+add_subdirectory (apps)
 
 message (STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CXX_COMPILER_VERSION}")

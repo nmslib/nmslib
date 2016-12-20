@@ -18,10 +18,9 @@
 #define ID_TYPE_H
 
 #include <cstdint>
+#include <limits>
 
 namespace similarity {
-
-using std::numeric_limits;
 
 /* 
  * We are not gonna have billions of records or labels in the foreseeable future
@@ -34,12 +33,12 @@ using std::numeric_limits;
  */
 typedef int32_t  IdType;
 typedef uint32_t IdTypeUnsign;
-const IdTypeUnsign MAX_DATASET_QTY = numeric_limits<IdType>::max();
+const IdTypeUnsign MAX_DATASET_QTY = std::numeric_limits<IdType>::max();
 
 typedef int32_t LabelType;
 
 #define LABEL_PREFIX "label:"
-#define EMPTY_LABEL  numeric_limits<LabelType>::min()
+#define EMPTY_LABEL  std::numeric_limits<LabelType>::min()
 
 const size_t ID_SIZE         = sizeof(IdType);
 const size_t LABEL_SIZE      = sizeof(LabelType);
