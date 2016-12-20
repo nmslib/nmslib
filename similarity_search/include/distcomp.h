@@ -240,7 +240,7 @@ inline float JaccardSparse(const IdType *pArr1, size_t qty1, const IdType *pArr2
   if (!qty1 || !qty2) return 0; // let's say it's perfect overlap
   unsigned qtyInter = IntersectSizeScalarFast(pArr1, qty1, pArr2, qty2);
   float    qtyS = qty1 + qty2;
-  return qtyInter/(qtyS - qtyInter);
+  return 1 - qtyInter/(qtyS - qtyInter);
 }
 
 }

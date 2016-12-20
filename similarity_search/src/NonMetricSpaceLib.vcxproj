@@ -199,7 +199,6 @@
     <ClInclude Include="..\include\factory\method\proj_vptree.h" />
     <ClInclude Include="..\include\factory\method\small_world_rand_old.h" />
     <ClInclude Include="..\include\factory\space\space_edist.h" />
-    <ClInclude Include="..\include\factory\space\space_savch.h" />
     <ClInclude Include="..\include\factory\space\space_sqfd.h" />
     <ClInclude Include="..\include\factory\space\space_word_embed.h" />
     <ClInclude Include="..\include\floatdiff.h" />
