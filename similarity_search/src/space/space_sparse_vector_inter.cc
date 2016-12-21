@@ -64,6 +64,31 @@ Object* SpaceSparseVectorInter<dist_t>::CreateObjFromVect(IdType id, LabelType l
   }
 }
 
+template <typename dist_t>
+unsigned
+SpaceSparseVectorInter<dist_t>::ComputeOverlap(const Object* obj1, 
+                                               const Object* obj2) const {
+  vector<SparseVectElem<dist_t>> elems1, elems2;
+  UnpackSparseElements(obj1->data(), obj1->datalength(), elems1);
+  UnpackSparseElements(obj2->data(), obj2->datalength(), elems2);
+  vector<IdType> ids1, ids2;
+  for (SparseVectElem<dist_t> e: elems1)
+    ids1.push_back(e.id_);
+  for (SparseVectElem<dist_t> e: elems2)
+    ids2.push_back(e.id_);
+  return IntersectSizeScalarFast(&ids1[0], ids1.size(), &ids2[0], ids2.size());
+
+} 
+
+template <typename dist_t>
+size_t
+SpaceSparseVectorInter<dist_t>::GetElemQty(const Object* obj) const {
+  vector<SparseVectElem<dist_t>> elems;
+  UnpackSparseElements(obj->data(), obj->datalength(), elems);
+  return elems.size();
+
+} 
+
 template class SpaceSparseVectorInter<float>;
 template class SpaceSparseVectorInter<double>;
 
