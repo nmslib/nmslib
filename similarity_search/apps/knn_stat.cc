@@ -222,9 +222,9 @@ void sampleDist(string spaceType,
 
     for (size_t i = 0; i < outNN3WayOverlapMatrix.size(); ++i) {
       const vector<unsigned>& overlaps = outNN3WayOverlapMatrix[i];
-      if (!overlaps.empty()) outOverlapNN << overlaps[0];
+      if (!overlaps.empty()) out3WayOverlapNN << overlaps[0];
       for (size_t k = 1; k < overlaps.size(); ++k) {
-        outOverlapNN << "\t" << overlaps[k];
+        out3WayOverlapNN << "\t" << overlaps[k];
       }
       out3WayOverlapNN << endl;
     }
@@ -350,6 +350,8 @@ int main(int argc, char *argv[]) {
   } catch (const exception& e) {
     LOG(LIB_FATAL) << "Exception: " << e.what();
   }
+
+  LOG(LIB_INFO) << "All is done!";
 
   return 0;
 }
