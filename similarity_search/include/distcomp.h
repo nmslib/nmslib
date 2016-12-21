@@ -235,6 +235,7 @@ unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
 // Returns the size of the intersection
 unsigned IntersectSizeScalarFast(const IdType *pArr1, size_t qty1, const IdType *pArr2, size_t qty2);
 unsigned IntersectSizeScalarStand(const IdType *pArr1, size_t qty1, const IdType *pArr2, size_t qty2);
+unsigned IntersectSizeScalar3way(const IdType *pArr1, size_t qty1, const IdType *pArr2, size_t qty2, const IdType* pArr3, size_t qty3);
 
 inline float JaccardSparse(const IdType *pArr1, size_t qty1, const IdType *pArr2, size_t qty2) {
   if (!qty1 || !qty2) return 0; // let's say it's perfect overlap

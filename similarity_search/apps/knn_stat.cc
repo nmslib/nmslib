@@ -33,6 +33,15 @@ using namespace similarity;
 using namespace std;
 
 template <class dist_t>
+struct DistOverlapOverlap {
+  DistOverlapOverlap(dist_t dist, unsigned overlap, unsigned overlap3way) : 
+                    dist_(dist), overlap_(overlap), overlap3way_(overlap3way) {}
+  dist_t    dist_;
+  unsigned  overlap_;
+  unsigned  overlap3way_;
+};
+
+template <class dist_t>
 void sampleDist(string spaceType,
                 string inFile, string pivotFile, unsigned maxNumPivots, string outFilePrefix,
                 unsigned knn, 
@@ -71,6 +80,7 @@ void sampleDist(string spaceType,
     vector<string>    tmp;
     unique_ptr<DataFileInputState> inpState(space->ReadDataset(data, tmp, inFile, maxNumData));
     space->UpdateParamsFromFile(*inpState);
+    LOG(LIB_INFO) << "Read " << data.size() << " data points";
   }
   if (!pivotFile.empty()) {
     vector<string>    tmp;
@@ -107,6 +117,7 @@ void sampleDist(string spaceType,
 
   vector<vector<dist_t>>  outNNDistMatrix(knn);
   vector<vector<unsigned>> outNNOverlapMatrix(knn);
+  vector<vector<unsigned>> outNN3WayOverlapMatrix(knn);
 
   vector<vector<dist_t>> outPivDistMatrix(pivotQty);
 
@@ -151,23 +162,31 @@ void sampleDist(string spaceType,
     unique_ptr<KNNQueue<dist_t>> knnQ(query.Result()->Clone());
 
 
-    vector<pair<dist_t,unsigned>> dists_overlaps;
+    vector<DistOverlapOverlap<dist_t>> dists_overlaps;
     dists_overlaps.reserve(knn);
 
     // Extracting results
     while (!knnQ->Empty()) {
       unsigned overlap = 0;
+      unsigned best3way_overlap = 0;
       if (pJaccardSpace || pInterSpace) {
         overlap = pJaccardSpace ? 
                           pJaccardSpace->ComputeOverlap(knnQ->TopObject(), queries[qid]):
                           pInterSpace->ComputeOverlap(knnQ->TopObject(), queries[qid]); 
+        for (size_t pid = 0; pid < pivotQty; ++pid) {
+          unsigned overlap3way = pJaccardSpace ? 
+                          pJaccardSpace->ComputeOverlap(knnQ->TopObject(), queries[qid], pivots[pid]):
+                          pInterSpace->ComputeOverlap(knnQ->TopObject(), queries[qid], pivots[pid]); 
+          if (overlap3way > best3way_overlap) best3way_overlap = overlap3way;
+        }
       }
-      dists_overlaps.insert(dists_overlaps.begin(),make_pair(knnQ->TopDistance(),overlap));
+      dists_overlaps.insert(dists_overlaps.begin(),DistOverlapOverlap<dist_t>(knnQ->TopDistance(),overlap,best3way_overlap));
       knnQ->Pop();
     }
     for (size_t k = 0; k < min<size_t>(dists_overlaps.size(), knn); ++k) {
-      outNNDistMatrix[k].push_back(dists_overlaps[k].first);
-      outNNOverlapMatrix[k].push_back(dists_overlaps[k].second);
+      outNNDistMatrix[k].push_back(dists_overlaps[k].dist_);
+      outNNOverlapMatrix[k].push_back(dists_overlaps[k].overlap_);
+      outNN3WayOverlapMatrix[k].push_back(dists_overlaps[k].overlap3way_);
     }
   }
 
@@ -197,6 +216,19 @@ void sampleDist(string spaceType,
       outOverlapNN << endl;
     }
     outOverlapNN.close();
+
+    string    outFile3WayOverlapNN = outFilePrefix + "_3way_overlap_qty_NN.tsv";
+    ofstream  out3WayOverlapNN(outFile3WayOverlapNN);
+
+    for (size_t i = 0; i < outNN3WayOverlapMatrix.size(); ++i) {
+      const vector<unsigned>& overlaps = outNN3WayOverlapMatrix[i];
+      if (!overlaps.empty()) outOverlapNN << overlaps[0];
+      for (size_t k = 1; k < overlaps.size(); ++k) {
+        outOverlapNN << "\t" << overlaps[k];
+      }
+      out3WayOverlapNN << endl;
+    }
+    out3WayOverlapNN.close();
   }
 
   for (size_t i = 0; i < pivotQty; ++i) {

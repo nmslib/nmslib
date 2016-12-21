@@ -65,7 +65,7 @@ Object* SpaceSparseVectorInter<dist_t>::CreateObjFromVect(IdType id, LabelType l
 }
 
 template <typename dist_t>
-unsigned
+size_t
 SpaceSparseVectorInter<dist_t>::ComputeOverlap(const Object* obj1, 
                                                const Object* obj2) const {
   vector<SparseVectElem<dist_t>> elems1, elems2;
@@ -77,6 +77,26 @@ SpaceSparseVectorInter<dist_t>::ComputeOverlap(const Object* obj1,
   for (SparseVectElem<dist_t> e: elems2)
     ids2.push_back(e.id_);
   return IntersectSizeScalarFast(&ids1[0], ids1.size(), &ids2[0], ids2.size());
+
+} 
+
+template <typename dist_t>
+size_t
+SpaceSparseVectorInter<dist_t>::ComputeOverlap(const Object* obj1, 
+                                               const Object* obj2,
+                                               const Object* obj3) const {
+  vector<SparseVectElem<dist_t>> elems1, elems2, elems3;
+  UnpackSparseElements(obj1->data(), obj1->datalength(), elems1);
+  UnpackSparseElements(obj2->data(), obj2->datalength(), elems2);
+  UnpackSparseElements(obj3->data(), obj3->datalength(), elems3);
+  vector<IdType> ids1, ids2, ids3;
+  for (SparseVectElem<dist_t> e: elems1)
+    ids1.push_back(e.id_);
+  for (SparseVectElem<dist_t> e: elems2)
+    ids2.push_back(e.id_);
+  for (SparseVectElem<dist_t> e: elems3)
+    ids3.push_back(e.id_);
+  return IntersectSizeScalar3way(&ids1[0], ids1.size(), &ids2[0], ids2.size(), &ids3[0], ids3.size());
 
 } 
 

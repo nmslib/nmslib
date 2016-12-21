@@ -61,7 +61,8 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
 
   virtual size_t GetElemQty(const Object* object) const;
 
-  unsigned ComputeOverlap(const Object* pObj1, const Object* pObj2) const;
+  size_t ComputeOverlap(const Object* pObj1, const Object* pObj2) const;
+  size_t ComputeOverlap(const Object* pObj1, const Object* pObj2, const Object* pObj3) const;
  protected:
   DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorInter);
 

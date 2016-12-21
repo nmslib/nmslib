@@ -13,9 +13,52 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+#include <algorithm>
+
 #include "distcomp.h"
 
+using namespace std;
+
 namespace similarity {
+
+// This 3-way intersection counter isn't super fast
+unsigned IntersectSizeScalar3way(const IdType *A, const size_t lenA, 
+                                 const IdType *B, const size_t lenB,
+                                 const IdType *C, const size_t lenC) {
+
+  if (lenA == 0 || lenB == 0 || lenC == 0) return 0;
+  unsigned res = 0;
+
+  const IdType *endA = A + lenA;
+  const IdType *endB = B + lenB;
+  const IdType *endC = C + lenC;
+
+
+  while (A < endA && B < endB && C < endC) {
+    IdType minVal = min(*A, min(*B, *C));
+    size_t qty = 0;
+    while (*A < minVal) {
+      if (++A == endA) return res; // reached the end before find value >= minVal
+    }
+    if (*A == minVal) {
+      ++qty; ++A;
+    }
+    while (*B < minVal) {
+      if (++B == endB) return res; // reached the end before find value >= minVal
+    }
+    if (*B == minVal) {
+      ++qty; ++B;
+    }
+    while (*C < minVal) {
+      if (++C == endC) return res; // reached the end before find value >= minVal
+    }
+    if (*C == minVal) {
+      ++qty; ++C;
+    }
+    if (qty ==3) ++res;
+  } 
+  return res;
+}
 
 /*
  * Finds the size of the intersection:
@@ -31,7 +74,7 @@ unsigned IntersectSizeScalarFast(const IdType *A, const size_t lenA,
   const IdType *endA = A + lenA;
   const IdType *endB = B + lenB;
 
-  while (1) {
+  while (true) {
     while (*A < *B) {
     SKIP_FIRST_COMPARE:
       if (++A == endA)

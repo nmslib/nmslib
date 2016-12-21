@@ -102,6 +102,12 @@ class SpaceSparseJaccard : public Space<dist_t> {
     const IdType* p2 = reinterpret_cast<const IdType*>(pObj2->data());
     return IntersectSizeScalarFast(p1, GetElemQty(pObj1), p2, GetElemQty(pObj2));
   }
+  unsigned ComputeOverlap(const Object* pObj1, const Object* pObj2, const Object* pObj3) const {
+    const IdType* p1 = reinterpret_cast<const IdType*>(pObj1->data());
+    const IdType* p2 = reinterpret_cast<const IdType*>(pObj2->data());
+    const IdType* p3 = reinterpret_cast<const IdType*>(pObj3->data());
+    return IntersectSizeScalar3way(p1, GetElemQty(pObj1), p2, GetElemQty(pObj2), p3, GetElemQty(pObj3));
+  }
  protected:
  /*
   * This function should always be protected.
