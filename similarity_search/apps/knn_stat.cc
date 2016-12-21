@@ -211,8 +211,8 @@ void sampleDist(string spaceType,
   outPiv.close();
 
   if (pJaccardSpace || pInterSpace) {
-    string outFileOverlapQty  = outFilePrefix + "_overlap_qty.tsv";
-    string outFileOverlapFrac = outFilePrefix + "_overlap_frac.tsv";
+    string outFileOverlapQty  = outFilePrefix + "_overlap_qty_pivots.tsv";
+    string outFileOverlapFrac = outFilePrefix + "_overlap_frac_pivots.tsv";
 
     ofstream  outOverlapQty(outFileOverlapQty);
     ofstream  outOverlapFrac(outFileOverlapFrac);
