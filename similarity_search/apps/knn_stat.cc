@@ -93,8 +93,8 @@ void sampleDist(string spaceType,
 
   vector<char>      isQuery(N);
 
-  string    outFilePiv = outFilePrefix + "_pivots.tsv";
-  ofstream  outPiv(outFilePiv);
+  string    outFileDistPiv = outFilePrefix + "_dists_pivots.tsv";
+  ofstream  outDistPiv(outFileDistPiv);
 
   LOG(LIB_INFO) << "knnQueryQty=" << knnQueryQty;
 
@@ -233,14 +233,14 @@ void sampleDist(string spaceType,
 
   for (size_t i = 0; i < pivotQty; ++i) {
     const vector<dist_t>& dists3= outPivDistMatrix[i];
-    if (!dists3.empty()) outPiv << dists3[0];
+    if (!dists3.empty()) outDistPiv << dists3[0];
     for (size_t k = 1; k < dists3.size(); ++k) {
-      outPiv << "\t" << dists3[k];
+      outDistPiv << "\t" << dists3[k];
     }
-    outPiv << endl;
+    outDistPiv << endl;
   }
 
-  outPiv.close();
+  outDistPiv.close();
 
   if (pJaccardSpace || pInterSpace) {
     string outFileOverlapQty  = outFilePrefix + "_overlap_qty_pivots.tsv";
