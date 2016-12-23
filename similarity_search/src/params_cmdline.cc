@@ -80,7 +80,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                                &DistType, false, DIST_TYPE_FLOAT));
   cmd_options.Add(new CmdParam(DATA_FILE_PARAM_OPT, DATA_FILE_PARAM_MSG,
                                &DataFile, true));
-  cmd_options.Add(new CmdParam(MAX_NUM_DATA_PARAM_OPT, MAX_NUM_QUERY_PARAM_MSG,
+  cmd_options.Add(new CmdParam(MAX_NUM_DATA_PARAM_OPT, MAX_NUM_DATA_PARAM_MSG,
                                &MaxNumData, false, MAX_NUM_DATA_PARAM_DEFAULT));
   cmd_options.Add(new CmdParam(QUERY_FILE_PARAM_OPT, QUERY_FILE_PARAM_MSG,
                                &QueryFile, false, QUERY_FILE_PARAM_DEFAULT));

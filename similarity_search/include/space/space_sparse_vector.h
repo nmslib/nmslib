@@ -109,7 +109,7 @@ public:
   virtual size_t GetElemQty(const Object* object) const {return 0;}
 
 protected:
-  void ReadSparseVec(std::string line, size_t line_num, IdType& label, vector<ElemType>& v) const;
+  void ReadSparseVec(std::string line, size_t line_num, LabelType& label, vector<ElemType>& v) const;
   virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const  = 0;
   DISABLE_COPY_AND_ASSIGN(SpaceSparseVector);
 };
