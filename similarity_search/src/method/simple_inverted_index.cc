@@ -28,62 +28,65 @@ namespace similarity {
 
 using namespace std;
 
-
 template <typename dist_t>
 void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
+  // the query vector, its size is the number of query terms (non-zero dimensions of the query vector)
   vector<SparseVectElem<dist_t>>    query_vect;
   const Object* o = query->QueryObject();
   UnpackSparseElements(o->data(), o->datalength(), query_vect);
 
   size_t K = query->GetK();
 
-  FalconnHeapMod1<dist_t, IdType>             tmpResQueue;
+  // sorted list (priority queue) of pairs (doc_id, its_position_in_the_posting_list)
+  //   the doc_ids are negative to keep the queue ordered the way we need
   FalconnHeapMod1<IdType, int32_t>            postListQueue;
+  // state information for each query-term posting list
   vector<unique_ptr<PostListQueryState>>      queryStates(query_vect.size());
 
+  // number of valid query terms (that are in the dictionary)
   size_t wordQty = 0;
-  for (auto e : query_vect) {
-    auto it = index_.find(e.id_);
-    if (it != index_.end()) { // There may be out-of-vocabulary words
-      const PostList& pl = *it->second;
-      CHECK(pl.qty_ > 0);
-      ++wordQty;
-    }
-  }
-
-  // While some people expect the result set to always contain at least k entries,
-  // it's not clear what we return here
-  if (0 == wordQty) return;
-
+  // query term index
   unsigned qsi = 0;
+  // initialize queryStates and postListQueue variables
   for (auto eQuery : query_vect) {
-    uint32_t wordId = eQuery.id_;
-    auto it = index_.find(wordId);
+    auto it = index_.find(eQuery.id_);
     if (it != index_.end()) { // There may be out-of-vocabulary words
 #ifdef SANITY_CHECKS
       CHECK(it->second.get() != nullptr);
 #endif
       const PostList& pl = *it->second;
       CHECK(pl.qty_ > 0);
-
-      queryStates[qsi].reset(new PostListQueryState(pl, eQuery.val_, eQuery.val_ * pl.entries_[0].val_));
-      postListQueue.push(-pl.entries_[0].doc_id_, qsi);
       ++wordQty;
+      // initialize the queryStates[query_term_index]  to the first position in the posting list
+      queryStates[qsi].reset(new PostListQueryState(pl, eQuery.val_, eQuery.val_ * pl.entries_[0].val_));
+      // initialize the postListQueue to the first position - insert pair (-doc_id, query_term_index)
+      postListQueue.push(-pl.entries_[0].doc_id_, qsi);
     }
     ++qsi;
   }
 
-  dist_t   accum = 0; //
+  // While some people expect the result set to always contain at least k entries,
+  // it's not clear what we return here
+  if (0 == wordQty) return;
+
+  // temporary queue with the top-K results  (ordered by the accumulated values so that top value is the smallest=worst document)
+  FalconnHeapMod1<dist_t, IdType>             tmpResQueue;
+  // accumulation of PostListQueryState.qval_x_docval_ for each document (DAAT)
+  dist_t   accum = 0;
 
   while (!postListQueue.empty()) {
+    // index of the posting list with the current SMALLEST doc_id
     IdType minDocIdNeg = postListQueue.top_key();
 
+    // this while accumulates values for one document (DAAT), specifically for the one with   doc_id = -minDocIdNeg
     while (!postListQueue.empty() && postListQueue.top_key() == minDocIdNeg) {
       unsigned qsi = postListQueue.top_data();
       PostListQueryState& queryState = *queryStates[qsi];
       const PostList& pl = *queryState.post_;
       accum += queryState.qval_x_docval_;
       //accum += queryState.qval_ * pl.entries_[queryState.post_pos_].val_;
+
+      // move to next position in the posting list
       queryState.post_pos_++;
       /*
        * If we didn't reach the end of the posting list, we retrieve the next document id.
@@ -92,7 +95,8 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
        * On reaching the end of the posting list, we evict the entry from the priority queue.
        */
       if (queryState.post_pos_ < pl.qty_) {
-        const auto& eDoc = pl.entries_[queryState.post_pos_];
+        // the next entry in the posting list
+        const PostEntry& eDoc = pl.entries_[queryState.post_pos_];
         /*
          * Leo thinks it may be beneficial to access the posting list entry only once.
          * This access is used for two things
@@ -108,10 +112,12 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
     dist_t negAccum = -accum;
 #if 1
     // This one seems to be a bit faster
+    // DAVID: THIS CONSTRUCTION IS WRONG. DUE TO THE FIRST CONDITION, THERE MIGHT BE MORE THAN K DOCUMENTS IN THE
+    // RESULT, RIGHT? BUT THE SECOND FORK ONLY REPLACES ONE OF THE "WORST" DOCUMENTS
     if (tmpResQueue.size() < K || tmpResQueue.top_key() == negAccum)
       tmpResQueue.push(negAccum, -minDocIdNeg);
     else if (tmpResQueue.top_key() > negAccum)
-      tmpResQueue.replace_top(-accum, -minDocIdNeg);
+      tmpResQueue.replace_top(negAccum, -minDocIdNeg);
 #else
     query->CheckAndAddToResult(negAccum, data_[-minDocIdNeg]);
 #endif
@@ -136,8 +142,13 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 
 template <typename dist_t>
 void SimplInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
-  AnyParamManager  pmgr(IndexParams);
-  pmgr.CheckUnused();
+  AnyParamManager pmgr(IndexParams);
+  CreateIndex(pmgr);
+}
+
+template <typename dist_t>
+void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
+  ParamManager.CheckUnused();
   // Always call ResetQueryTimeParams() to set query-time parameters to their default values
   this->ResetQueryTimeParams();
 
@@ -152,13 +163,15 @@ void SimplInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     for (const auto& e : tmp_vect) dict_qty[e.id_] ++;
   }
 
-  // Create posting-list place holders
-  unordered_map<unsigned, size_t> post_pos;
   LOG(LIB_INFO) << "Actually creating the index";
+  // post_pos is a map of positions in the postings lists? (initialized as zeros)
+  unordered_map<unsigned, size_t> post_pos;
+  // Create posting-list place holders
   for (const auto dictEntry : dict_qty) {
     unsigned wordId = dictEntry.first;
     size_t   qty = dictEntry.second;
     post_pos.insert(make_pair(wordId, 0));
+    // insert into index_ PostLists with pre-allocated number of PostEntries
     index_.insert(make_pair(wordId, unique_ptr<PostList>(new PostList(qty))));
   }
 
@@ -166,16 +179,21 @@ void SimplInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   for (size_t did = 0; did < data_.size(); ++did) {
     tmp_vect.clear();
     UnpackSparseElements(data_[did]->data(), data_[did]->datalength(), tmp_vect);
+    // iterate over all terms in the document (non-zero values in the sparse vector)
     for (const auto& e : tmp_vect) {
       const auto wordId = e.id_;
+      // posting list for given term (the value is probably a pair [position/key, value] ?)
       auto itPost     = index_.find(wordId);
+      // actual position in the posting list
       auto itPostPos  = post_pos.find(wordId);
 #ifdef SANITY_CHECKS
       CHECK(itPost != index_.end());
       CHECK(itPostPos != post_pos.end());
       CHECK(itPost->second.get() != nullptr);
 #endif
+      // the actual posting list
       PostList& pl = *itPost->second;
+      // get actual position in the list (and shift it by +1)
       size_t curr_pos = itPostPos->second++;;
       CHECK(curr_pos < pl.qty_);
       pl.entries_[curr_pos] = PostEntry(did, e.val_);

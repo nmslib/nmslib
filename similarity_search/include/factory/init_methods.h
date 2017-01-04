@@ -47,6 +47,8 @@
 #include "factory/method/vptree.h"
 #include "factory/method/omedrank.h"
 #include "factory/method/simple_inverted_index.h"
+#include "factory/method/wand_inverted_index.h"
+#include "factory/method/blkmax_inverted_index.h"
 
 namespace similarity {
 
@@ -181,6 +183,10 @@ inline void initMethods() {
 
   // Classic DAAT inverted index
   REGISTER_METHOD_CREATOR(float,  METH_SIMPLE_INV_INDEX, CreateSimplInvIndex)
+  // WAND and block-max WAND inverted indices
+  REGISTER_METHOD_CREATOR(float,  METH_WAND_INV_INDEX, CreateWANDInvIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_BLKMAX_INV_INDEX, CreateBlockMaxInvIndex)
+  
 
 #if defined(WITH_EXTRAS)
   // Regular LSH
