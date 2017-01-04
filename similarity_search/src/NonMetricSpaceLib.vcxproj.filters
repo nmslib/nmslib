@@ -49,6 +49,12 @@
     <ClCompile Include="space\space_bregman.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="space\space_ab_diverg.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="space\space_renyi_diverg.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="space\space_dummy.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -164,9 +170,6 @@
     <ClCompile Include="space.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="method\nndes.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="method\permutation_inverted_index.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -180,6 +183,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="method\nonmetr_list_clust.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distcomp_diverg.cc" />
+    <ClCompile Include="method\simple_inverted_index.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -349,6 +356,12 @@
     <ClInclude Include="..\include\space\space_bregman.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\space\space_ab_diverg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\space\space_renyi_diverg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\space\space_dummy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -380,9 +393,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\space\space_vector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\factory\space\space_savch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\space\space_vector_gen.h">
@@ -461,6 +471,9 @@
     <ClInclude Include="..\include\method\vptree_old.h" />
     <ClInclude Include="..\include\factory\space\space_word_embed.h" />
     <ClInclude Include="..\include\space\space_word_embed.h" />
+    <ClInclude Include="..\include\method\simple_inverted_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

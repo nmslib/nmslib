@@ -27,6 +27,7 @@
 #include "method/vptree.h"
 #include "method/vptree_utils.h"
 #include "methodfactory.h"
+#include "simd.h"
 
 #define MIN_PIVOT_SELECT_DATA_QTY 10
 #define MAX_PIVOT_SELECT_ATTEMPTS 5
@@ -245,6 +246,10 @@ void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (bucket_) {
     --MaxLeavesToVisit;
+
+    if (CacheOptimizedBucket_) {
+      _mm_prefetch(CacheOptimizedBucket_, _MM_HINT_T0);
+    }
 
     for (unsigned i = 0; i < bucket_->size(); ++i) {
       const Object* Obj = (*bucket_)[i];

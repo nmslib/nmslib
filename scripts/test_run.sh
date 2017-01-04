@@ -29,7 +29,7 @@ fi
 
 # If you have python, latex, and PGF installed, 
 # you can set the following variable to 1 to generate a performance plot.
-GEN_PLOT=$3
+GEN_PLOT=$4
 if [ "$GEN_PLOT" = "" ] ; then
   echo "Specify a plot-generation flag: 1 to generate plots (3d arg)"
   exit 1
@@ -43,7 +43,7 @@ LOG_FILE_PREFIX="log_$K"
 BIN_DIR="../similarity_search"
 GS_CACHE_DIR="gs_cache"
 mkdir -p $GS_CACHE_DIR
-CACHE_PREFIX_GS=$GS_CACHE_DIR/test_run.tq=$THREAD_QTY
+CACHE_PREFIX_GS=$GS_CACHE_DIR/test_run.sp=${SPACE}_tq=$THREAD_QTY
 
 rm -f $RESULT_FILE.*
 rm -f $LOG_FILE_PREFIX.*
@@ -60,7 +60,7 @@ function do_run {
     exit 1
   fi
   if [ "$DO_APPEND" = "1" ] ; then
-    APPEND_FLAG=" -a "
+    APPEND_FLAG=" -a 1 "
   fi
   METHOD_NAME="$2"
   if [ "$METHOD_NAME" = "" ] ; then
@@ -72,11 +72,16 @@ function do_run {
     echo "Specify INDEX_ARGS (3d arg of the function do_run)"
     exit 1
   fi
-  QUERY_ARGS="$4"
-  INDEX_NAME="$5"
+  RECALL_ONLY="$4"
+  if [ "$RECALL_ONLY" = "" ] ; then
+    echo "Specify the RECALL_ONLY flag (4th argument of the function do_run)" 
+    exit 1
+  fi
+  QUERY_ARGS="$5"
+  INDEX_NAME="$6"
 
   if [ "$INDEX_NAME" = "" ] ; then
-    cmd="$BIN_DIR/release/experiment $COMMON_ARGS -m "$METHOD_NAME" $INDEX_ARGS $QUERY_ARGS $APPEND_FLAG -l ${LOG_FILE_PREFIX}.$LN"
+    cmd="$BIN_DIR/release/experiment $COMMON_ARGS -m "$METHOD_NAME" $INDEX_ARGS $QUERY_ARGS $APPEND_FLAG -l ${LOG_FILE_PREFIX}.$LN --recallOnly $RECALL_ONLY"
     echo "$cmd"
     bash -c "$cmd"
     if [ "$?" != "0" ] ; then
@@ -87,7 +92,7 @@ function do_run {
     # Indices are to be deleted manually!
     rm -f ${INDEX_NAME}*
 
-    cmd="$BIN_DIR/release/experiment $COMMON_ARGS -S "$INDEX_NAME" -m "$METHOD_NAME" $INDEX_ARGS $APPEND_FLAG -l ${LOG_FILE_PREFIX}_index.$LN"
+    cmd="$BIN_DIR/release/experiment $COMMON_ARGS -S "$INDEX_NAME" -m "$METHOD_NAME" $INDEX_ARGS $APPEND_FLAG -l ${LOG_FILE_PREFIX}_index.$LN --recallOnly $RECALL_ONLY"
     echo "$cmd"
     bash -c "$cmd"
     if [ "$?" != "0" ] ; then
@@ -95,7 +100,7 @@ function do_run {
       exit 1 
     fi
 
-    cmd="$BIN_DIR/release/experiment $COMMON_ARGS -L "$INDEX_NAME" -m "$METHOD_NAME" $QUERY_ARGS $APPEND_FLAG -l ${LOG_FILE_PREFIX}_query.$LN"
+    cmd="$BIN_DIR/release/experiment $COMMON_ARGS -L "$INDEX_NAME" -m "$METHOD_NAME" $QUERY_ARGS $APPEND_FLAG -l ${LOG_FILE_PREFIX}_query.$LN --recallOnly $RECALL_ONLY"
     echo "$cmd"
     bash -c "$cmd"
     if [ "$?" != "0" ] ; then
@@ -107,20 +112,20 @@ function do_run {
 }
 
 # Methods that may create an index (at least for some spaces)
-do_run 0 "napp" " -c numPivot=512,numPivotIndex=64 " "-t numPivotSearch=40 -t numPivotSearch=42 -t numPivotSearch=44 -t numPivotSearch=46 -t numPivotSearch=48" "napp.index"
-do_run 1 "sw-graph" " -c NN=10 " " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "sw-graph.index"
+do_run 0 "napp" " -c numPivot=512,numPivotIndex=64 " 0 "-t numPivotSearch=40 -t numPivotSearch=42 -t numPivotSearch=44 -t numPivotSearch=46 -t numPivotSearch=48" "napp_${SPACE}.index"
+do_run 1 "sw-graph" " -c NN=10 " 0 " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "sw-graph_${SPACE}.index"
 if [ "$SPACE" = "l2" -o "$SPACE" = "cosinesimil" ] ; then 
-  do_run 1 "hnsw"     " -c M=10 "  " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "hnsw.index"
+  do_run 1 "hnsw"     " -c M=10 " 1 " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "hnsw_${SPACE}.index"
 else
-  do_run 1 "hnsw"     " -c M=10 "  " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" 
+  do_run 1 "hnsw"     " -c M=10 " 0 " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" 
 fi
 
 # Methods that do not support creation of an index
-do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.99,chunkBucket=1 " ""
-do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.975,chunkBucket=1 " ""
-do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.95,chunkBucket=1 " ""
-do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.925,chunkBucket=1 " ""
-do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.9,chunkBucket=1 " ""
+do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.99,chunkBucket=1   0 " ""
+do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.975,chunkBucket=1  0 " ""
+do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.95,chunkBucket=1   0 " ""
+do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.925,chunkBucket=1  0 " ""
+do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.9,chunkBucket=1    0 " ""
 
 if [ "$GEN_PLOT" = 1 ] ; then
   ./genplot_configurable.py -i ${RESULT_FILE}_K=${K}.dat -o plot_${K}_NN -x 1~norm~Recall -y 1~log~ImprEfficiency -l "1~south west" -t "Improvement in efficiency vs recall" -n "MethodName" -a axis_desc.txt -m meth_desc.txt

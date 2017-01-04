@@ -5,8 +5,8 @@
  * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
+ * https://github.com/searchivarius/NonMetricSpaceLib
+ *
  * Copyright (c) 2014
  *
  * This code is released under the
@@ -16,8 +16,6 @@
 #include <string>
 #include <fstream>
 
-#include <boost/program_options.hpp>
-
 #include "knnquery.h"
 #include "knnqueue.h"
 #include "space.h"
@@ -25,17 +23,10 @@
 #include "projection.h"
 #include "spacefactory.h"
 #include "init.h"
+#include "cmd_options.h"
 
 using namespace similarity;
 using namespace std;
-
-namespace po = boost::program_options;
-
-static void Usage(const char *prog,
-                  const po::options_description& desc) {
-    std::cout << prog << std::endl
-              << desc << std::endl;
-}
 
 template <class dist_t>
 void benchProjection(size_t repeatQty,
@@ -105,7 +96,7 @@ void benchProjection(size_t repeatQty,
   LOG(LIB_INFO) << "sampleKNNTotalQty=" << sampleKNNTotalQty;
   LOG(LIB_INFO) << "recreating projections #times=" << repeatQty;
 
-  if (N > 0) 
+  if (N > 0)
   for (size_t rr = 0; rr < repeatQty; ++rr) {
     LOG(LIB_INFO) << "Creating projection object set " << (rr + 1) << " out of " << repeatQty;
     projObj.reset(
@@ -132,7 +123,7 @@ void benchProjection(size_t repeatQty,
 
     CHECK(vId1.size() == vId2.size());
     CHECK(vId1.size() == vOrigDist.size());
-  
+
 
     size_t iter = 0;
     size_t startId = vOrigDist.size();
@@ -165,12 +156,12 @@ void benchProjection(size_t repeatQty,
 
         if (selectIndex >= 0 && selectIndex < vOrigDist.size() - startId) {
           size_t replIndex = selectIndex + startId;
-          vOrigDist[replIndex] = knnQ->TopDistance(); 
+          vOrigDist[replIndex] = knnQ->TopDistance();
           vId1[replIndex] = id1;
           vId2[replIndex] = knnQ->TopObject()->id();
         }
 
-        knnQ->Pop(); 
+        knnQ->Pop();
       }
     }
 
@@ -207,63 +198,62 @@ int main(int argc, char *argv[]) {
   unsigned    repeatQty = 1;
 
 
-  po::options_description ProgOptDesc("Allowed options");
-  ProgOptDesc.add_options()
-    ("help,h", "produce help message")
-    ("spaceType,s",     po::value<string>(&spaceType)->required(),
-                        "space type, e.g., l1, l2, lp:p=0.5")
-    ("projSpaceType",   po::value<string>(&projSpaceType)->default_value("l2"),
-                        "space type in the projection space, e.g., l1, l2, lp:p=0.5. "
-                        "should be a dense vector space!")
-    ("distType",        po::value<string>(&distType)->default_value(DIST_TYPE_FLOAT),
-                        "distance value type: float, double")
-    ("inFile,i",        po::value<string>(&inFile)->required(),
-                        "input data file")
-    ("outFile,o",       po::value<string>(&outFile)->required(),
-                        "output data file")
-    ("projType,p",      po::value<string>(&projType)->required(),
-                        "projection type")
-    ("sampleRandPairQty",po::value<unsigned>(&sampleRandPairQty)->default_value(0),
-                        "number of randomly selected pairs")
-    ("sampleKNNQueryQty",po::value<unsigned>(&sampleKNNQueryQty)->default_value(0),
-                        "number of randomly selected queries")
-    ("sampleKNNTotalQty",po::value<unsigned>(&sampleKNNTotalQty)->default_value(0),
-                        "a total number of randomly selected queries' nearest neighbors (should be >= sampleKNNQueryQty)")
-    ("knn,k",           po::value<unsigned>(&knn)->default_value(0),
-                        "use this number of nearest neighbors (should be > 0 if sampleKNNQueryQty > 0)")
-    ("repeat,r",        po::value<unsigned>(&repeatQty)->default_value(10),
-                        "recreate projections this number of times")
-    ("intermDim",       po::value<unsigned>(&nIntermDim)->default_value(0),
-                        "intermediate dimensionality, used only for sparse vector spaces")
-    ("projDim",          po::value<unsigned>(&nDstDim)->required(),
-                        "dimensionality in the target space (where we project to)")
-    ("binThreshold",    po::value<unsigned>(&binThreshold)->default_value(0),
-                        "binarization threshold, used only for permutations")
-    ("maxNumData",      po::value<unsigned>(&maxNumData)->default_value(0),
-                        "if non-zero, only the first maxNumData elements are used")
-    ("logFile,l",       po::value<string>(&logFile)->default_value(""),
-                        "log file")
-     ;
+  CmdOptions cmd_options;
 
-  po::variables_map vm;
+
+  cmd_options.Add(new CmdParam("spaceType,s", "space type, e.g., l1, l2, lp:p=0.5",
+                               &spaceType, true));
+  cmd_options.Add(new CmdParam("projSpaceType",
+                               "space type in the projection space, e.g., l1, l2, lp:p=0.5. should be a dense vector space!",
+                               &projSpaceType, false, "l2"));
+  cmd_options.Add(new CmdParam("distType", "distance value type: float, double",
+                               &distType, false, std::string(DIST_TYPE_FLOAT)));
+  cmd_options.Add(new CmdParam("inFile,i", "input data file",
+                               &inFile, true));
+  cmd_options.Add(new CmdParam("outFile,o", "output data file",
+                               &outFile, true));
+  cmd_options.Add(new CmdParam("projType,p", "projection type",
+                               &projType, true));
+  cmd_options.Add(new CmdParam("sampleRandPairQty", "number of randomly selected pairs",
+                               &sampleRandPairQty, false, 0));
+  cmd_options.Add(new CmdParam("sampleKNNQueryQty", "number of randomly selected queries",
+                               &sampleKNNQueryQty, false, 0));
+  cmd_options.Add(new CmdParam("sampleKNNTotalQty", "a total number of randomly selected queries' nearest neighbors (should be >= sampleKNNQueryQty)",
+                               &sampleKNNTotalQty, false, 0));
+  cmd_options.Add(new CmdParam("knn,k", "use this number of nearest neighbors (should be > 0 if sampleKNNQueryQty > 0)",
+                               &knn, 0));
+  cmd_options.Add(new CmdParam("repeat,r", "recreate projections this number of times",
+                               &repeatQty, false, 10));
+  cmd_options.Add(new CmdParam("intermDim", "intermediate dimensionality, used only for sparse vector spaces",
+                               &nIntermDim, 0));
+  cmd_options.Add(new CmdParam("projDim", "dimensionality in the target space (where we project to)",
+                               &nDstDim, true));
+  cmd_options.Add(new CmdParam("binThreshold", "binarization threshold, used only for permutations",
+                               &binThreshold, false, 0));
+  cmd_options.Add(new CmdParam("maxNumData", "if non-zero, only the first maxNumData elements are used",
+                               &maxNumData, false, 0));
+  cmd_options.Add(new CmdParam("logFile,l", "log file", &logFile, false, ""));
 
   try {
-    po::store(po::parse_command_line(argc, argv, ProgOptDesc), vm);
-    po::notify(vm);
-  } catch (const exception& e) {
-    Usage(argv[0], ProgOptDesc);
+    cmd_options.Parse(argc, argv);
+  } catch (const CmdParserException& e) {
+    cmd_options.ToString();
+    std::cout.flush();
     LOG(LIB_FATAL) << e.what();
-  }
-
-  if (vm.count("help")  ) {
-    Usage(argv[0], ProgOptDesc);
-    exit(0);
+  } catch (const std::exception& e) {
+    cmd_options.ToString();
+    std::cout.flush();
+    LOG(LIB_FATAL) << e.what();
+  } catch (...) {
+    cmd_options.ToString();
+    std::cout.flush();
+    LOG(LIB_FATAL) << "Failed to parse cmd arguments";
   }
 
   initLibrary(logFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, logFile.c_str());
 
   LOG(LIB_INFO) << "Program arguments are processed";
-  
+
 
   ToLower(distType);
 
@@ -291,11 +281,8 @@ int main(int argc, char *argv[]) {
       LOG(LIB_FATAL) << "Unsupported distance type: '" << distType << "'";
     }
   } catch (const exception& e) {
-    Usage(argv[0], ProgOptDesc);
     LOG(LIB_FATAL) << "Exception: " << e.what();
   }
 
-    
-
   return 0;
-};
+}

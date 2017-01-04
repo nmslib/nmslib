@@ -25,7 +25,8 @@
 #include "space/space_sparse_scalar_fast.h"
 #include "space/space_sparse_vector.h"
 #include "space/space_scalar.h"
-#ifndef _MSC_VER
+#include "space/space_sparse_jaccard.h"
+#ifdef WITH_EXTRAS
 #include "space/space_sqfd.h"
 #endif
 #include "distcomp.h"
@@ -35,7 +36,7 @@
 
 #include "../test/testdataset.h"
 
-#define TEST_SPEED_DOUBLE 1
+#define TEST_SPEED_DOUBLE 0
 
 #define TEST_SPEED_ LP 1
 #define RANGE          8.0f
@@ -1190,7 +1191,7 @@ void TestSpearmanFootruleSIMD(size_t N, size_t dim, size_t Rep) {
 
 }
 
-#if !defined(_MSC_VER)
+#if defined(WITH_EXTRAS)
 
 template <class T>
 void TestSQFDGeneric(size_t N, size_t Rep, SqfdFunction<T>& func) {
@@ -1921,6 +1922,48 @@ void TestBitHamming(size_t N, size_t dim, size_t Rep) {
 
 }
 
+template <class dist_t>
+void TestSparseJaccardSimilarity(const string& dataFile, size_t N, size_t Rep) {
+    typedef float T;
+
+    unique_ptr<SpaceSparseJaccard<dist_t>>  space(new SpaceSparseJaccard<dist_t>());
+    ObjectVector                            elems;
+    vector<string>                          tmp;
+
+    unique_ptr<DataFileInputState> inpState(space->ReadDataset(elems, tmp, dataFile,  N)); 
+    space->UpdateParamsFromFile(*inpState);
+
+    N = min(N, elems.size());
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * space->IndexTimeDistance(elems[j-1], elems[j]) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " File: " << dataFile << 
+            " Elapsed: " << tDiff / 1e3 << " ms " << 
+            " # of sparse Jaccard similarity dist second: " << (1e6/tDiff) * N * Rep ;
+
+}
+
 }  // namespace similarity
 
 using namespace similarity;
@@ -1934,7 +1977,7 @@ int main(int argc, char* argv[]) {
 
     int dim = 128;
 
-#if !defined(_MSC_VER)
+#if defined(WITH_EXTRAS)
     nTest++;
     TestSQFDMinus<float>(2000, 50);
     nTest++;
@@ -2042,6 +2085,9 @@ int main(int argc, char* argv[]) {
     nTest++;
     TestSparseQueryNormNegativeScalarProduct<float>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
 
+    nTest++;
+    TestSparseJaccardSimilarity<float>(sampleDataPrefix + "sparse_ids_5K.txt", 1000, 1000);
+
 #if TEST_SPEED_DOUBLE
     nTest++;
     TestSparseCosineSimilarity<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
@@ -2059,6 +2105,10 @@ int main(int argc, char* argv[]) {
     TestSparseQueryNormNegativeScalarProduct<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
     TestSparseQueryNormNegativeScalarProduct<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
+
+
+    nTest++;
+    TestSparseJaccardSimilarity<double>(sampleDataPrefix + "sparse_ids_5K.txt", 1000, 1000);
 #endif
 
 

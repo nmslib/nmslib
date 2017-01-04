@@ -91,10 +91,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0, 0, 1, 1),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", "multiThread=1,threadQty=4", "",
                 0 /* no-knn search */, 0.2 /* range 0.2 */ , 1.0, 1.0, 0, 0, 1, 1),  
-#if !defined(_MSC_VER)
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", "NN=10,rho=0.5,delta=0.001", "initSearchAttempts=10",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
-#endif
+
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "small_world_rand", "NN=10,initIndexAttempts=1", "initSearchAttempts=1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 40, 52),  
   // 4 different types of projections
@@ -268,31 +265,33 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", "bucketSize=10", "",
                 0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 0.999, 1.0, 0.0, 0.0, 1.2, 2.4),  
 
-#ifndef _MSC_VER
-  // no LSH for Windows
+#ifdef WITH_EXTRAS
   // *************** multi-probe LSH tests ******************** //
   // knn
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", "desiredRecall=0.5,tuneK=1,T=5,L=25,H=16535", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.45, 0.6, 45, 80, 90, 130),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.45, 0.6, 45, 80, 70, 130),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", "desiredRecall=0.5,tuneK=10,T=5,L=25,H=16535", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 0.45, 0.6, 10, 40, 80, 120),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.45, 0.6, 10, 40, 70, 130),  
   // *************** Guassian LSH tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_gaussian", "W=2,L=5,M=40,H=16535", "",
 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.85, 0.95, 0.1, 40, 90, 130),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.85, 0.95, 0.1, 40, 70, 130),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_gaussian", "W=2,L=5,M=40,H=16535", "",
 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.68, 0.82, 0.1, 50, 80, 120),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.68, 0.82, 0.1, 50, 70, 130),  
   // *************** Cauchy LSH tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_cauchy", "W=2,L=5,M=10,H=16535", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.9, 0.1, 50, 90, 130),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.9, 0.1, 50, 70, 130),  
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_cauchy", "W=2,L=5,M=10,H=16535", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 0.5, 0.8, 0.1, 50, 80, 120),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.5, 0.8, 0.1, 50, 70, 120),  
   // *************** Thresholding LSH tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_threshold", "L=5,M=60,H=16535", "",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.8, 0.99, 0.1, 50, 40, 70),  
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_threshold", "L=5,M=60,H=16535", "",
                 10 /* KNN-10 */, 0 /* no range search */ , 0.65, 0.85, 0.1, 50, 40, 70),  
+  // Old NN-descent
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", "NN=10,rho=0.5,delta=0.001", "initSearchAttempts=10",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
 #endif
 #endif
 };

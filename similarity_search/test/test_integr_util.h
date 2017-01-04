@@ -53,6 +53,7 @@ struct MethodTestCase {
   string  mQueryTimeParams;
   float   mRecallMin;
   float   mRecallMax;
+  bool    mRecallOnly;
   float   mNumCloserMin;
   float   mNumCloserMax;
   float   mImprDistCompMin;
@@ -70,12 +71,13 @@ struct MethodTestCase {
                string queryTimeParams,
                unsigned  knn,
                float range, 
-               float recallMin = 0, 
-               float recallMax = 0,
-               float numCloserMin = 0, 
-               float numCloserMax = 0,
-               float imprDistCompMin = 0, 
-               float imprDistCompMax = 0) :
+               float recallMin,
+               float recallMax,
+               float numCloserMin,
+               float numCloserMax,
+               float imprDistCompMin,
+               float imprDistCompMax,
+               bool recallOnly = false) :
                    mDistType(distType),
                    mSpaceType(spaceType),
                    mDataSet(dataSet),
@@ -84,6 +86,7 @@ struct MethodTestCase {
                    mQueryTimeParams(queryTimeParams),
                    mRecallMin(recallMin),
                    mRecallMax(recallMax),
+                   mRecallOnly(recallOnly),
                    mNumCloserMin(numCloserMin),
                    mNumCloserMax(numCloserMax),
                    mImprDistCompMin(imprDistCompMin),
@@ -342,6 +345,8 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
       shared_ptr<AnyParams>           IndexParams; 
       vector<shared_ptr<AnyParams>>   vQueryTimeParams;
 
+      bool recallOnly = vTestCases[MethNum].mRecallOnly;
+
       {
         vector<string>     desc;
         ParseArg(vTestCases[MethNum].mIndexParams, desc);
@@ -419,6 +424,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                                   ThreadTestQty,
                                   TestSetId,
                                   managerGS,
+                                  recallOnly,
                                   ExpResRangeTmp, ExpResKNNTmp,
                                   config, 
                                   *IndexPtr, 

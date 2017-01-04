@@ -15,10 +15,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGUID>{3244B2CA-B3D3-41BC-BD55-D3C937D7D00B}</ProjectGUID>
+    <ProjectGUID>{0C7221CD-0703-4299-A779-1E45E26FA47F}</ProjectGUID>
     <Keyword>Win32Proj</Keyword>
     <Platform>Win32</Platform>
-    <ProjectName>bench_distfunc</ProjectName>
+    <ProjectName>experiment</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -48,30 +48,30 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">bench_distfunc</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">experiment</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">bench_distfunc</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">experiment</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">bench_distfunc</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">experiment</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\bench_distfunc\</OutDir>
-    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\bench_distfunc\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\experiment\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\experiment\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\bench_distfunc\</OutDir>
-    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\bench_distfunc\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\experiment\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\experiment\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\bench_distfunc\</OutDir>
-    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\bench_distfunc\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\experiment\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\experiment\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -93,6 +93,7 @@
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
       <OpenMPSupport>true</OpenMPSupport>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -117,7 +118,7 @@
       <SubSystem>Console</SubSystem>
       <Version>
       </Version>
-      <ProfileGuidedDatabase>$(OutDir)$(TargetName)$(TargetExt).pgd</ProfileGuidedDatabase>
+      <ProfileGuidedDatabase>$(OutDir)experiment_$(TargetName).pgd</ProfileGuidedDatabase>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -141,10 +142,11 @@
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName)$(TargetExt)_compile.pdb</ProgramDataBaseFileName>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Fast</FloatingPointModel>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FloatingPointModel>Fast</FloatingPointModel>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OpenMPSupport>true</OpenMPSupport>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -176,7 +178,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -195,6 +197,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <OpenMPSupport>true</OpenMPSupport>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -225,7 +228,8 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bench_distfunc.cc" />
+    <ClCompile Include="main.cc" />
+    <ClCompile Include="params_cmdline.cc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(SolutionDir)src\NonMetricSpaceLib.vcxproj">

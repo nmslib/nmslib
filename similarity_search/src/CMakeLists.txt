@@ -12,22 +12,17 @@ file(GLOB PROJ_HDR_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}
 file(GLOB OTH_HDR_FILES)
 set(HDR_FILES ${PROJ_HDR_FILES} ${OTH_HDR_FILES})
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/space/*.cc ${PROJECT_SOURCE_DIR}/src/method/*.cc)
-list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/main.cc)
-list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
-# The dummy application file also needs to be removed from the list
-# of library source files:
-list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
 
-# NO lshkit for Win32 and MACOSX
-if (WITHOUT_LSH OR WIN32)
-
+if (NOT WITH_EXTRAS)
+  # Extra methods
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_multiprobe.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_space.cc)
-endif()
-
-if (WITHOUT_FALCONN OR WIN32) 
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/falconn.cc)
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/nndes.cc)
+
+  # Extra spaces
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/space/space_sqfd.cc)
 endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -44,25 +39,9 @@ else (Threads_FOUND)
 endif (Threads_FOUND)
 
 add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES})
-if ((NOT WITHOUT_LSH) AND (NOT WIN32))
+if (WITH_EXTRAS)
   add_dependencies (NonMetricSpaceLib lshkit)
-  set(LSHKIT_LIB "lshkit")
-else()
-# NO lshkit for Win32
-  set(LSHKIT_LIB "")
 endif()
-add_executable (experiment main.cc)
-add_executable (tune_vptree tune_vptree.cc)
-# The following line is necessary to create an executable for the dummy application:
-add_executable (dummy_app dummy_app.cc)
-
-target_link_libraries (experiment NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (tune_vptree NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-# What are the libraries that we need to link with for dummy_app?
-target_link_libraries (dummy_app NonMetricSpaceLib ${LSHKIT_LIB} 
-                                                          ${Boost_LIBRARIES} 
-                                                          ${GSL_LIBRARIES} 
-                                                          ${CMAKE_THREAD_LIBS_INIT})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")

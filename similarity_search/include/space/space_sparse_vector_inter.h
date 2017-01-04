@@ -58,6 +58,11 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
                                      size_t nElem) const;
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
   virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const ;
+
+  virtual size_t GetElemQty(const Object* object) const;
+
+  size_t ComputeOverlap(const Object* pObj1, const Object* pObj2) const;
+  size_t ComputeOverlap(const Object* pObj1, const Object* pObj2, const Object* pObj3) const;
  protected:
   DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorInter);
 

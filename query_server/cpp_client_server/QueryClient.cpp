@@ -49,7 +49,7 @@ using namespace apache::thrift::transport;
 namespace po = boost::program_options;
 
 enum SearchType {
-  kKNNSearch, kRangeSearch
+  kNoSearch, kKNNSearch, kRangeSearch
 };
 
 static void Usage(const char *prog,
@@ -70,14 +70,14 @@ void ParseCommandLineForClient(int argc, char*argv[],
                       ) {
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
-    (HELP_PARAM_OPT,    HELP_PARAM_MSG)
-    (PORT_PARAM_OPT,    po::value<int>(&port)->required(), PORT_PARAM_MSG)
-    (ADDR_PARAM_OPT,    po::value<string>(&host)->required(), ADDR_PARAM_MSG)
-    (KNN_PARAM_OPT,     po::value<int>(&k), KNN_PARAM_MSG)
-    (RANGE_PARAM_OPT,   po::value<double>(&r), RANGE_PARAM_MSG)
-    (QUERY_TIME_PARAMS_PARAM_OPT, po::value<string>(&queryTimeParams)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG)
-    (RET_EXT_ID_PARAM_OPT,   RET_EXT_ID_PARAM_MSG)
-    (RET_OBJ_PARAM_OPT, RET_EXT_ID_PARAM_MSG)
+    (HELP_PARAM_OPT.c_str(),    HELP_PARAM_MSG.c_str())
+    (PORT_PARAM_OPT.c_str(),    po::value<int>(&port)->required(), PORT_PARAM_MSG.c_str())
+    (ADDR_PARAM_OPT.c_str(),    po::value<string>(&host)->required(), ADDR_PARAM_MSG.c_str())
+    (KNN_PARAM_OPT.c_str(),     po::value<int>(&k), KNN_PARAM_MSG.c_str())
+    (RANGE_PARAM_OPT.c_str(),   po::value<double>(&r), RANGE_PARAM_MSG.c_str())
+    (QUERY_TIME_PARAMS_PARAM_OPT.c_str(), po::value<string>(&queryTimeParams)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG.c_str())
+    (RET_EXT_ID_PARAM_OPT.c_str(),   RET_EXT_ID_PARAM_MSG.c_str())
+    (RET_OBJ_PARAM_OPT.c_str(), RET_EXT_ID_PARAM_MSG.c_str())
     ;
 
   po::variables_map vm;
@@ -105,9 +105,7 @@ void ParseCommandLineForClient(int argc, char*argv[],
     }
     searchType = kRangeSearch;
   } else {
-    cerr << "One has to specify either range or KNN-search parameter";
-    Usage(argv[0], ProgOptDesc);
-    exit(1);
+    searchType = kNoSearch;
   }
 
   retExternId = vm.count("retExternId") != 0;
@@ -143,8 +141,10 @@ int main(int argc, char *argv[]) {
   string        s;
   stringstream  ss;
 
-  while (getline(cin, s)) {
-    ss << s << endl;
+  if (kNoSearch != searchType) {
+    while (getline(cin, s)) {
+      ss << s << endl;
+    }
   }
 
   string queryObjStr = ss.str();
@@ -158,20 +158,21 @@ int main(int argc, char *argv[]) {
     transport->open();
 
     try {
+
       if (!queryTimeParams.empty()) {
         client.setQueryTimeParams(queryTimeParams);
       }
 
-      ReplyEntryList res;
-
       WallClockTimer wtm;
-
       wtm.reset();
+
+      ReplyEntryList res;
 
       if (kKNNSearch == searchType) {
         cout << "Running a " << k << "-NN query" << endl;;
         client.knnQuery(res, k, queryObjStr, retExternId, retObj);
-      } else {
+      } 
+      if (kRangeSearch == searchType) {
         cout << "Running a range query with radius = " << r << endl;
         client.rangeQuery(res, r, queryObjStr, retExternId, retObj);
       }

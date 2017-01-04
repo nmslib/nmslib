@@ -14,7 +14,7 @@
  *
  */
 
-#if !defined(_MSC_VER)
+#if defined(WITH_EXTRAS)
 
 #include <string.h>
 #include "space.h"

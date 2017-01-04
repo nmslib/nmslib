@@ -427,20 +427,20 @@ void ParseCommandLineForServer(int argc, char*argv[],
 
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
-    (HELP_PARAM_OPT,    HELP_PARAM_MSG)
-    (DEBUG_PARAM_OPT,   po::bool_switch(&debugPrint), DEBUG_PARAM_MSG)
-    (PORT_PARAM_OPT,    po::value<int>(&port)->required(), PORT_PARAM_MSG)
-    (THREAD_PARAM_OPT,  po::value<size_t>(&threadQty)->default_value(defaultThreadQty), THREAD_PARAM_MSG)
-    (LOG_FILE_PARAM_OPT,po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT), LOG_FILE_PARAM_MSG)
-    (SPACE_TYPE_PARAM_OPT,    po::value<string>(&spaceParamStr)->required(),                SPACE_TYPE_PARAM_MSG)
-    (DIST_TYPE_PARAM_OPT,     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG)
-    (DATA_FILE_PARAM_OPT,     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG)
-    (MAX_NUM_DATA_PARAM_OPT,  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG)
-    (METHOD_PARAM_OPT,        po::value<string>(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG)
-    (LOAD_INDEX_PARAM_OPT,    po::value<string>(&LoadIndexLoc)->default_value(LOAD_INDEX_PARAM_DEFAULT),   LOAD_INDEX_PARAM_MSG)
-    (SAVE_INDEX_PARAM_OPT,    po::value<string>(&SaveIndexLoc)->default_value(SAVE_INDEX_PARAM_DEFAULT),   SAVE_INDEX_PARAM_MSG)
-    (QUERY_TIME_PARAMS_PARAM_OPT, po::value<string>(&queryTimeParamStr)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG)
-    (INDEX_TIME_PARAMS_PARAM_OPT, po::value<string>(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG)
+    (HELP_PARAM_OPT.c_str(),          HELP_PARAM_MSG.c_str())
+    (DEBUG_PARAM_OPT.c_str(),         po::bool_switch(&debugPrint), DEBUG_PARAM_MSG.c_str())
+    (PORT_PARAM_OPT.c_str(),          po::value<int>(&port)->required(), PORT_PARAM_MSG.c_str())
+    (THREAD_PARAM_OPT.c_str(),        po::value<size_t>(&threadQty)->default_value(defaultThreadQty), THREAD_PARAM_MSG.c_str())
+    (LOG_FILE_PARAM_OPT.c_str(),      po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT), LOG_FILE_PARAM_MSG.c_str())
+    (SPACE_TYPE_PARAM_OPT.c_str(),    po::value<string>(&spaceParamStr)->required(),                SPACE_TYPE_PARAM_MSG.c_str())
+    (DIST_TYPE_PARAM_OPT.c_str(),     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG.c_str())
+    (DATA_FILE_PARAM_OPT.c_str(),     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG.c_str())
+    (MAX_NUM_DATA_PARAM_OPT.c_str(),  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG.c_str())
+    (METHOD_PARAM_OPT.c_str(),        po::value<string>(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG.c_str())
+    (LOAD_INDEX_PARAM_OPT.c_str(),    po::value<string>(&LoadIndexLoc)->default_value(LOAD_INDEX_PARAM_DEFAULT),   LOAD_INDEX_PARAM_MSG.c_str())
+    (SAVE_INDEX_PARAM_OPT.c_str(),    po::value<string>(&SaveIndexLoc)->default_value(SAVE_INDEX_PARAM_DEFAULT),   SAVE_INDEX_PARAM_MSG.c_str())
+    (QUERY_TIME_PARAMS_PARAM_OPT.c_str(), po::value<string>(&queryTimeParamStr)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG.c_str())
+    (INDEX_TIME_PARAMS_PARAM_OPT.c_str(), po::value<string>(&indexTimeParamStr)->default_value(""), INDEX_TIME_PARAMS_PARAM_MSG.c_str())
     ;
 
   po::variables_map vm;
@@ -585,7 +585,7 @@ int main(int argc, char *argv[]) {
 
 #if SIMPLE_SERVER
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
-  LOG(LIB_INFO) << "Starting a simple server.";
+  LOG(LIB_INFO) << "Started a simple server.";
 #else
   boost::shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(threadQty);
   boost::shared_ptr<PosixThreadFactory> threadFactory = boost::shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
@@ -596,7 +596,7 @@ int main(int argc, char *argv[]) {
                            transportFactory,
                            protocolFactory,
                            threadManager);
-  LOG(LIB_INFO) << "Starting a server with a " << threadQty << " thread-pool.";
+  LOG(LIB_INFO) << "Started a server with a " << threadQty << " thread-pool.";
 #endif
   server.serve();
   return 0;

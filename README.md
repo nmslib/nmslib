@@ -1,17 +1,21 @@
 =================
+
+[![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Non-Metric Space Library (NMSLIB)
 =================
-The latest release is [1.5.3](https://github.com/searchivarius/nmslib/releases/tag/v1.5.3)
+The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes.
 -----------------
-Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
+Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
+
+The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic non-metric** spaces. Being comprehensive is important, because no single method is likely to be sufficient in all cases. Also note that exact solutions are hardly efficient in high dimensions and/or non-metric spaces. Hence, the main focus is on **approximate** methods.
 
 NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
-**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin, Daniel Lemire, Alexander Ponomarenko.
+**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov. With contributions from Yury Malkov, David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin, Bob Poekert, @orgoro, Daniel Lemire, Alexander Ponomarenko.
 
-Leo(nid) Boytsov is a maintainer. Leo is backed by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa). Bileg was  supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
+Leo(nid) Boytsov is a maintainer. Leo is supported by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa) and the following NSF grant: "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". Bileg was supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
 
-**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**.
+**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. For generic questions/inquiries, please, use Gitter (see the badge above). Bug reports should be submitted as GitHub issues.
 
 NMSLIB is generic yet fast!
 =================
@@ -40,44 +44,55 @@ As of **May 2016** results are:
 </td>
 </tr></table>
 
-What's new in version 1.5
+What's new in version 1.6 ([see this page for more details](https://github.com/searchivarius/nmslib/releases/tag/v1.6) )
 -----------------------
 
-1. A new efficient method: a hierarchical (navigable) small-world graph (HNSW), contributed by Yury Malkov (@yurymalkov). Works with g++, Visual Studio, Intel Compiler, but doesn't work with Clang yet.
-2. A query server, which can have clients in C++, Java, Python, and other languages supported by Apache Thrift
-3. Python bindings for vector **and non**-vector spaces
-4. Improved performance of two core methods SW-graph and NAPP
-5. Better handling of the gold standard data in the benchmarking utility *experiment*
-6. Updated API that permits search methods to serialize indices
-7. Improved documentation (e.g., we added tuning guidelines for best methods)
+1. Improved portability (+MACOS)
+2. Easier build: core NMSLIB has no dependencies
+3. Improved Python bindings: dense, sparse, and generic bindings are now in the single module! We als have batch addition and querying functions.
+3. New baselines, including [FALCONN library](https://github.com/FALCONN-LIB/FALCONN)
+4. New spaces (Renyi-divergence, alpha-beta divergence, sparse inner product)
+5. We changed the semantics of boolean command line options: they now have to accept a numerical value (0 or 1).
 
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse.
+A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes.
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
 
 To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13). Some other related papers are listed in the end.
 
-The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. The k-NN graph construction algorithm *NN-Descent* due to Dong et al. 2011 (see the links below), which is also embedded in our library, seems to be covered by a free-to-use license, similar to Apache 2.
+* The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
+* The k-NN graph construction algorithm *NN-Descent* due to Dong et al. 2011 (see the links below), which is also embedded in our library, seems to be covered by a free-to-use license, similar to Apache 2.
+* FALCONN library's licence is MIT.
 
 Prerequisites
 -----------------------
 
 1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 14 (version 12 can probably be used as well, but the project fileds need to be downgraded).
-2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows as well. 
-3. Boost (dev version). For Windows, the core library and the standalone sample application do not require Boost.
-4. Only for Linux: CMake (GNU make is also required) 
-5. Only for Linux: GNU scientific library (dev version)
-6. Only for Linux: Eigen (dev version)
-6. An Intel or AMD processor that supports SSE 4.2 is recommended
+2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows and MAC as well. 
+3. Only for Linux/MAC: CMake (GNU make is also required) 
+4. An Intel or AMD processor that supports SSE 4.2 is recommended
+5. Extended version of the library requires a development version of the following libraries: Boost, GNU scientific library, and Eigen3.
 
-To install prerequisite packages on Ubuntu 14 Linux, type the following
+To install additional prerequisite packages on Ubuntu, type the following
 ```
-sudo apt-get install libboost1.54-all-dev libgsl0-dev libeigen3-dev
+sudo apt-get install libboost-all-dev libgsl0-dev libeigen3-dev
 ```
+
+Limitations
+-----------------------
+
+1. Currently only static data sets are supported
+2. HNSW does not work with Clang
+3. HNSW currently duplicates memory to create optimized indices
+4. Non-optimized HNSW indices cannot be saved
+5. Python 3 is not yet supported
+6. Range/threshold search is not supported by many methods including SW-graph/HNSW
+
+We plan to resolve these issues in the future.
 
 Quick start on Linux
 -----------------------
@@ -85,6 +100,11 @@ Quick start on Linux
 To compile, go to the directory **similarity_search** and type:  
 ```bash
 cmake .
+make  
+```
+To build an extended version (need extra library):
+```bash
+cmake . -DWITH_EXTRAS=1
 make  
 ```
 
@@ -130,30 +150,23 @@ Python bindings (Linux-only)
 -----------------------
 
 We provide basic Python bindings (for Linux and Python 2.7). To build bindings for dense vector spaces, build the library first. Then, change the directory to
-[python_vect_bindings](python_vect_bindings) and type:
-```make
-sudo make install
+[python_bindings](python_bindings) and type (requires Python distutils):
 ```
-
-For an example of using our library in Python, see the script [test_nmslib_vect.py](python_vect_bindings/test_nmslib_vect.py). Generic bindings can be found in the directory [python_gen_bindings](python_gen_bindings).
+python setup.py build
+sudo python setup.py install
+```
+For examples of using Python API, please, see *.py files in the folder [python_bindings](python_bindings).
 
 Quick start on Windows
 -----------------------
 Building on Windows is straightforward.
 Download [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). 
-Download and install respective [Boost binaries (**64-bit version 59**)](http://sourceforge.net/projects/boost/files/boost-binaries/1.59.0/boost_1_59_0-msvc-14.0-64.exe/download). Please, use the **default** installation directory on disk ``c:`` (otherwise, it will be necessary to update project files).
 
 Afterwards, you can simply use the provided  [Visual Studio solution file](similarity_search/NonMetricSpaceLib.sln).
 The solution file references several project (\*.vcxproj) files: 
 [NonMetricSpaceLib.vcxproj](similarity_search/src/NonMetricSpaceLib.vcxproj)
 is the main project file that is used to build the library itself.
 The output is stored in the folder **similarity_search\x64**.
-
-Also note that the core library, the test utilities,
- as well as examples of the standalone applications (projects **sample_standalone_app1**
-and **sample_standalone_app2**)
-can be built **without installing Boost**. 
-
 
 Data sets
 -----------------------
@@ -173,7 +186,8 @@ Related publications
 -----------------------
 
 Most important related papers are listed below in the chronological order: 
-
+* L. Boytsov, D. Novak, Y. Malkov, E. Nyberg  (2016). [Off the Beaten Path: Let’s Replace Term-Based Retrieval
+with k-NN Search.](http://boytsov.info/pubs/cikm2016.pdf) To appear in proceedings CIKM'16.
 * Malkov, Y.A., Yashunin, D.A.. (2016). [Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs. CoRR](http://arxiv.org/abs/1603.09320), abs/1603.09320. [**[BibTex]**](http://adsabs.harvard.edu/cgi-bin/nph-bib_query?bibcode=2016arXiv160309320M&data_type=BIBTEX&db_key=PRE&nocookieset=1)
 * Bilegsaikhan, N., Boytsov, L. 2015 [Permutation Search Methods are Efficient, Yet Faster Search is Possible](http://boytsov.info/pubs/p2332-naidan-arxiv.pdf) PVLDB, 8(12):1618--1629, 2015 [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/corr/NaidanBN15)
 * Ponomarenko, A., Averlin, N., Bilegsaikhan, N., Boytsov, L., 2014. [Comparative Analysis of Data Structures for Approximate Nearest Neighbor Search.](http://boytsov.info/pubs/da2014.pdf) [**[BibTex]**](http://scholar.google.com/scholar.bib?q=info:yOjNiT2Ql4AJ:scholar.google.com/&output=citation&hl=en&ct=citation&cd=0)

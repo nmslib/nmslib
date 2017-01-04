@@ -30,6 +30,7 @@
 #include <iostream>
 #include <mmintrin.h>
 
+#include "simd.h"
 #include "space.h"
 #include "knnquery.h"
 #include "rangequery.h"
@@ -59,8 +60,11 @@
 #define PORTABLE_ALIGN16 __declspec(align(16))
 #endif
 
-
 namespace similarity {
+
+// This is the counter to keep the size of neighborhood information (for one node)
+// TODO Can this one overflow? I really doubt
+    typedef uint32_t SIZEMASS_TYPE;
 
     using namespace std;
     /*Functions from hnsw_distfunc_opt.cc:*/
@@ -69,8 +73,10 @@ namespace similarity {
     float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t &qty, float *TmpRes);
 
     template <typename dist_t>    Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t>& space,   const ObjectVector& data) :
-        space_(space), PrintProgress_(PrintProgress), data_(data) {}
-
+        space_(space), PrintProgress_(PrintProgress), data_(data),
+	visitedlistpool(nullptr), enterpoint_(nullptr), data_level0_memory_(nullptr), linkLists_(nullptr), fstdistfunc_(nullptr)
+	{}
+	
     void checkList1(vector<HnswNode*> list) {
         
         int ok = 1;
@@ -354,8 +360,10 @@ namespace similarity {
 
         memset(data_level0_memory_, 1, memoryPerObject_*ElList_.size());
         LOG(LIB_INFO) << "Making optimized index";
+        data_rearranged_.resize(ElList_.size());
         for (long i = 0; i < ElList_.size(); i++) {            
             ElList_[i]->copyDataAndLevel0LinksToOptIndex(data_level0_memory_ + (size_t)i*memoryPerObject_, offsetLevel0_, offsetData_);
+            data_rearranged_[i] = new Object(data_level0_memory_ + (i)*memoryPerObject_ + offsetData_);
         };
         ////////////////////////////////////////////////////////////////////////
         //
@@ -388,7 +396,8 @@ namespace similarity {
                 linkLists_[i] = nullptr;
                 continue;
             }
-            int sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);
+            // TODO Can this one overflow? I really doubt
+            SIZEMASS_TYPE sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);
             total_memory_allocated += sizemass;
             char *linkList = (char*)malloc(sizemass);
             linkLists_[i] = linkList;
@@ -452,6 +461,7 @@ namespace similarity {
         }
         for (int i = 0; i < ElList_.size(); i++)
             delete ElList_[i];
+        for (const Object* p : data_rearranged_) delete p;
     }
     
     template <typename dist_t>
@@ -548,8 +558,8 @@ namespace similarity {
         
 #if USE_BITSET_FOR_INDEXING
         VisitedList * vl = visitedlistpool->getFreeVisitedList();
-        unsigned int *mass = vl->mass;
-        unsigned int curV = vl->curV;
+        vl_type *mass = vl->mass;
+        vl_type curV = vl->curV;
 #else
         unordered_set<HnswNode*>             visited;
 #endif
@@ -692,16 +702,17 @@ namespace similarity {
         std::ofstream output(location, std::ios::binary);
         streampos position;
         totalElementsStored_ = ElList_.size();        
-        output.write((char*)&totalElementsStored_, sizeof(size_t));
-        output.write((char*)&memoryPerObject_, sizeof(size_t));
-        output.write((char*)&offsetLevel0_, sizeof(size_t));
-        output.write((char*)&offsetData_, sizeof(size_t));
-        output.write((char*)&maxlevel_, sizeof(size_t));
-        output.write((char*)&enterpointId_, sizeof(size_t));
-        output.write((char*)&maxM_, sizeof(size_t));
-        output.write((char*)&maxM0_, sizeof(size_t));
-        output.write((char*)&dist_func_type_, sizeof(size_t));       
-        output.write((char*)&searchMethod_, sizeof(searchMethod_));
+
+        writeBinaryPOD(output, totalElementsStored_);
+        writeBinaryPOD(output, memoryPerObject_);
+        writeBinaryPOD(output, offsetLevel0_);
+        writeBinaryPOD(output, offsetData_);
+        writeBinaryPOD(output, maxlevel_);
+        writeBinaryPOD(output, enterpointId_);
+        writeBinaryPOD(output, maxM_);
+        writeBinaryPOD(output, maxM0_);
+        writeBinaryPOD(output, dist_func_type_);
+        writeBinaryPOD(output, searchMethod_);
 
             
             
@@ -714,8 +725,9 @@ namespace similarity {
         //size_t total_memory_allocated = 0;
 
         for (size_t i = 0; i < totalElementsStored_; i++) {            
-            unsigned int sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);       
-            output.write((char*)&sizemass, sizeof(unsigned int));
+            // TODO Can this one overflow? I really doubt
+            SIZEMASS_TYPE sizemass = ((ElList_[i]->level)*(maxM_ + 1))*sizeof(int);       
+            writeBinaryPOD(output, sizemass);
             if((sizemass))
                 output.write(linkLists_[i], sizemass);
         };        
@@ -732,16 +744,16 @@ namespace similarity {
         
         //input.seekg(0, std::ios::beg);
 
-        input.read((char*)(&totalElementsStored_), sizeof(size_t)); 
-        input.read((char*)(&memoryPerObject_), sizeof(size_t));
-        input.read((char*)&offsetLevel0_, sizeof(size_t));
-        input.read((char*)&offsetData_, sizeof(size_t));
-        input.read((char*)&maxlevel_, sizeof(size_t));
-        input.read((char*)&enterpointId_, sizeof(size_t));
-        input.read((char*)&maxM_, sizeof(size_t));
-        input.read((char*)&maxM0_, sizeof(size_t));
-        input.read((char*)&dist_func_type_, sizeof(size_t));
-        input.read((char*)&searchMethod_, sizeof(searchMethod_));
+        readBinaryPOD(input, totalElementsStored_);
+        readBinaryPOD(input, memoryPerObject_);
+        readBinaryPOD(input, offsetLevel0_);
+        readBinaryPOD(input, offsetData_);
+        readBinaryPOD(input, maxlevel_);
+        readBinaryPOD(input, enterpointId_);
+        readBinaryPOD(input, maxM_);
+        readBinaryPOD(input, maxM0_);
+        readBinaryPOD(input, dist_func_type_);
+        readBinaryPOD(input, searchMethod_);
 
         LOG(LIB_INFO) << "searchMethod: " << searchMethod_;
         
@@ -761,9 +773,11 @@ namespace similarity {
         input.read(data_level0_memory_, data_plus_links0_size);            
         linkLists_ = (char**)malloc(sizeof(void*)*totalElementsStored_);
 
+        data_rearranged_.resize(totalElementsStored_);
+
         for (size_t i = 0; i < totalElementsStored_; i++) {
-            unsigned int linkListSize;
-            input.read((char*)&linkListSize, sizeof(unsigned int));
+            SIZEMASS_TYPE linkListSize;
+            readBinaryPOD(input, linkListSize);
             position = input.tellg();
             if (linkListSize == 0) {
                 linkLists_[i] = nullptr;
@@ -772,7 +786,7 @@ namespace similarity {
                 linkLists_[i] = (char *) malloc(linkListSize);
                 input.read(linkLists_[i], linkListSize);
             }
-
+            data_rearranged_[i] = new Object(data_level0_memory_ + (i)*memoryPerObject_ + offsetData_);
         }
         LOG(LIB_INFO) << "Finished loading index";
         visitedlistpool = new VisitedListPool(1, totalElementsStored_);
@@ -785,8 +799,8 @@ namespace similarity {
     	template <typename dist_t>
     	void Hnsw<dist_t>::baseSearchAlgorithmOld(KNNQuery<dist_t> *query) {
     		VisitedList * vl = visitedlistpool->getFreeVisitedList();
-    		unsigned int *massVisited = vl->mass;
-    		unsigned int currentV = vl->curV;
+            vl_type *massVisited = vl->mass;
+            vl_type currentV = vl->curV;
 
     		HnswNode* provider;
     		int maxlevel1 = enterpoint_->level;
@@ -887,8 +901,8 @@ namespace similarity {
 template <typename dist_t>
 void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
   VisitedList * vl = visitedlistpool->getFreeVisitedList();
-  unsigned int *massVisited = vl->mass;
-  unsigned int currentV = vl->curV;
+  vl_type *massVisited = vl->mass;
+  vl_type currentV = vl->curV;
 
   HnswNode* provider;
   int maxlevel1 = enterpoint_->level;
@@ -1015,8 +1029,8 @@ void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
                                // for zero level it is set to ef
             //Getting the visitedlist
     		VisitedList * vl = visitedlistpool->getFreeVisitedList();
-    		unsigned int *massVisited = vl->mass;
-    		unsigned int currentV = vl->curV;
+            vl_type *massVisited = vl->mass;
+            vl_type currentV = vl->curV;
     
     		int maxlevel1 = enterpoint_->level;    
     
@@ -1083,7 +1097,7 @@ void Hnsw<dist_t>::baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query) {
                 currentV++;
                 vl->curV++;// not to forget updating in the pool
     			if (currentV == 0) {
-    				memset(massVisited, 0, ElList_.size()*sizeof(int));
+    				memset(massVisited, 0, ElList_.size()*sizeof(vl_type));
     				currentV++;
                     vl->curV++;// not to forget updating in the pool
     			}

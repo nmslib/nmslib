@@ -7,7 +7,7 @@
  * For the complete list of contributors and further details see:
  * https://github.com/searchivarius/NonMetricSpaceLib 
  * 
- * Copyright (c) 2014
+ * Copyright (c) 2016
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -24,6 +24,7 @@
 #include <limits>
 
 #include "permutation_type.h"
+#include "idtype.h"
 
 namespace similarity {
 
@@ -184,6 +185,25 @@ template <typename T> T LPGenericDistance(const T* x, const T* y, const int leng
 
 template <typename T> T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p);
 
+/*
+ * Various less-standard divergences
+ */
+
+/*
+ * Alpha-beta divergence.
+ * 
+ * Póczos, Barnabás, Liang Xiong, Dougal J. Sutherland, and Jeff Schneider (2012). “Nonparametric kernel
+ * estimators for image classification”. In: Computer Vision and Pattern Recognition (CVPR), 2012 IEEE
+ * Conference on, pages 2989–2996
+ */
+template <typename T> T alpha_beta_divergence(const T* x, const T* y, const int length, float alpha, float beta);
+/*
+ * Renyi divergence.
+ * Rényi, Alfréd (1961). "On measures of information and entropy". 
+ * Proceedings of the fourth Berkeley Symposium on Mathematics, Statistics and Probability 1960. pp. 547–561. 
+ */
+template <typename T> T renyi_divergence(const T* x, const T* y, const int length, float alpha);
+
 
 /*
  * Rank correlations
@@ -210,6 +230,18 @@ unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
   }
 
   return res;
+}
+
+// Returns the size of the intersection
+unsigned IntersectSizeScalarFast(const IdType *pArr1, size_t qty1, const IdType *pArr2, size_t qty2);
+unsigned IntersectSizeScalarStand(const IdType *pArr1, size_t qty1, const IdType *pArr2, size_t qty2);
+unsigned IntersectSizeScalar3way(const IdType *pArr1, size_t qty1, const IdType *pArr2, size_t qty2, const IdType* pArr3, size_t qty3);
+
+inline float JaccardSparse(const IdType *pArr1, size_t qty1, const IdType *pArr2, size_t qty2) {
+  if (!qty1 || !qty2) return 0; // let's say it's perfect overlap
+  unsigned qtyInter = IntersectSizeScalarFast(pArr1, qty1, pArr2, qty2);
+  float    qtyS = qty1 + qty2;
+  return 1 - qtyInter/(qtyS - qtyInter);
 }
 
 }
