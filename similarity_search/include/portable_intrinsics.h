@@ -2,42 +2,32 @@
  * Non-metric Space Library
  *
  * Authors: Bilegsaikhan Naidan, Leonid Boytsov.
- * Copyright (c) 2014
+ * Copyright (c) 2017
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
 
-/* 
- * Note that __GNUC__ is also defined for Intel and Clang,
- * which do understand __attribute__ ((aligned(16)))
- */
+#pragma once
 
-#ifndef SIMDUTILS_H
-#define SIMDUTILS_H
+#include <portable_align.h>
+#include <portable_popcount.h>
 
-#if defined(__GNUC__)
-#define PORTABLE_ALIGN16 __attribute__((aligned(16)))
-#else
-#define PORTABLE_ALIGN16 __declspec(align(16))
-#endif
-
-// On Win64 SSE2 is always enabled
+// On 64-bit platforms SSE2 is always present, but Windows doesn't set SSE2 flag
 // http://stackoverflow.com/questions/1067630/sse2-option-in-visual-c-x64
 #if defined(__SSE2__) || defined(__AVX__) || defined(_MSC_VER)
 #define PORTABLE_SSE2
 #endif
 
-// Unfortunately on Win32/64, there is not separate option for SSE4
+// Unfortunately on Win32/64, windows does not define SSE4
 #if defined(__SSE4_2__) || defined(__AVX__)
 #define PORTABLE_SSE4
 #endif
 
 
-#ifdef PORTABLE_SSE4
-#include <simd.h>
-
+#if defined(PORTABLE_SSE4)
+#include <portable_simd.h>
 
 /*
  * Based on explanations/suggestions from here
@@ -54,16 +44,8 @@
  *
  */
 
+#elif defined(PORTABLE_SSE2)
+#include <portable_simd.h>
 #endif
 
 
-
-#ifdef _MSC_VER
-#include <intrin.h>
-
-#define  __builtin_popcount(t) __popcnt(t)
-
-#endif
-
-
-#endif

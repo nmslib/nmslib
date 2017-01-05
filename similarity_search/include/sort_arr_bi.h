@@ -22,7 +22,6 @@
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
-#include "simd.h"
 
 /*
  * This is not a fully functional heap and this is done on purpose.

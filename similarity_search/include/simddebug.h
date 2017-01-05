@@ -17,11 +17,10 @@
 #ifndef _SIMD_DEBUG_H_
 #define _SIMD_DEBUG_H_
 
+#include "portable_intrinsics.h"
 
-#ifdef __SSE4_2__
-#include <immintrin.h>
-#include <mmintrin.h>
-#include <emmintrin.h>
+
+#ifdef PORTABLE_SSE4
 
 #include <iostream>
 #include <string>

@@ -1,3 +1,13 @@
+/**
+ * Non-metric Space Library
+ *
+ * Authors: Bilegsaikhan Naidan, Leonid Boytsov.
+ * Copyright (c) 2017
+ *
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
 #pragma once
 
 #if (defined(__x86_64__) || defined(__i386__))

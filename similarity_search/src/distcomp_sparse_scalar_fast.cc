@@ -18,7 +18,7 @@
 
 #include "utils.h"
 #include "logging.h"
-#include "simdutils.h"
+#include "portable_intrinsics.h"
 
 #include "space/space_sparse_vector_inter.h"
 

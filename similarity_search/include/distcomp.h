@@ -23,6 +23,8 @@
 #include <cstdlib>
 #include <limits>
 
+#include <portable_popcount.h>
+
 #include "permutation_type.h"
 #include "idtype.h"
 
@@ -217,9 +219,6 @@ int SpearmanFootruleSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty)
 int SpearmanRhoSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 
 //unsigned BitHamming(const uint32_t* a, const uint32_t* b, size_t qty);
-
-#include "simdutils.h"
-
 
 unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {
   unsigned res = 0;

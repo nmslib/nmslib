@@ -41,8 +41,8 @@ public:
                    const string& datafile,
                    const string& queryfile,
                    unsigned TestSetQty, // The # of times the datafile is randomly divided into the query and the test set
-                   IdTypeUnsign MaxNumData,
-                   IdTypeUnsign MaxNumQueryToRun,
+                   unsigned MaxNumData,
+                   unsigned MaxNumQueryToRun,
                    const typename std::vector<unsigned>& knn,
                    float eps,
                    const typename std::vector<dist_t>& range)
