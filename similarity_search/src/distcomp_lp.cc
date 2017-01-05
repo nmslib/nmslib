@@ -14,20 +14,16 @@
  *
  */
 #include "distcomp.h"
-#include "simdutils.h"
 #include "string.h"
 #include "logging.h"
 #include "utils.h"
 #include "pow.h"
+#include "portable_intrinsics.h"
 
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
 #include <cmath>
-
-#ifdef PORTABLE_SSE2
-#include <immintrin.h>
-#endif
 
 namespace similarity {
 

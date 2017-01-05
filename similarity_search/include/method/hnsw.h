@@ -28,8 +28,8 @@
 
 #include "index.h"
 #include "params.h"
+
 #include <condition_variable>
-#include <immintrin.h>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -37,10 +37,7 @@
 #include <mutex>
 #include <queue>
 #include <set>
-#include <smmintrin.h>
 #include <thread>
-#include <thread>
-#include <tmmintrin.h>
 #include <unordered_set>
 
 #define METH_HNSW "hnsw"

@@ -20,6 +20,9 @@
 #include <string>
 #include <cmath>
 
+// This is only for _mm_prefetch
+#include <mmintrin.h>
+
 #include "space.h"
 #include "rangequery.h"
 #include "knnquery.h"
@@ -27,7 +30,6 @@
 #include "method/vptree.h"
 #include "method/vptree_utils.h"
 #include "methodfactory.h"
-#include "simd.h"
 
 #define MIN_PIVOT_SELECT_DATA_QTY 10
 #define MAX_PIVOT_SELECT_ATTEMPTS 5

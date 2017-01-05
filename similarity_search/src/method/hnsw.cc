@@ -28,13 +28,13 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
+// This is only for _mm_prefetch
 #include <mmintrin.h>
 
 #include "knnquery.h"
 #include "method/hnsw.h"
 #include "ported_boost_progress.h"
 #include "rangequery.h"
-#include "simd.h"
 #include "space.h"
 #include "space/space_lp.h"
 

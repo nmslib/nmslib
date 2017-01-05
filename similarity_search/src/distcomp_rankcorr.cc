@@ -17,18 +17,13 @@
 #include <cmath>
 
 #include "distcomp.h"
-#include "simdutils.h"
+#include "portable_intrinsics.h"
 #include "utils.h"
 
 namespace similarity {
 
 using namespace std;
 
-#ifdef PORTABLE_SSE4
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <tmmintrin.h>
-#endif
 
 int SpearmanFootrule(const PivotIdType* x, const PivotIdType* y, size_t qty) {
   int res = 0;

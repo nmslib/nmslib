@@ -16,10 +16,8 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
+// This is only for _mm_prefetch
 #include <mmintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <tmmintrin.h>
 
 #include "space.h"
 #include "knnquery.h"

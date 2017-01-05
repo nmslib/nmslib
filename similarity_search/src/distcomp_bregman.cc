@@ -16,15 +16,12 @@
 #include "distcomp.h"
 #include "string.h"
 #include "utils.h"
-#include "simdutils.h"
+#include "portable_intrinsics.h"
 
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
 
-#ifdef PORTABLE_SSE2
-#include <immintrin.h>
-#endif
 
 namespace similarity {
 

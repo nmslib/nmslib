@@ -13,16 +13,13 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+#include "portable_intrinsics.h"
 #include "distcomp.h"
 #include "string.h"
-#include "utils.h"
 
 #include <cstdlib>
 #include <limits>
 #include <algorithm>
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <tmmintrin.h>
 
 
 namespace similarity {
