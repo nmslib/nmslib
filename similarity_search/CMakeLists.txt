@@ -82,10 +82,20 @@ if (WITH_EXTRAS)
     add_definitions (-DWITH_EXTRAS=1)
 endif()
 
-if (NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE Release CACHE STRING "Build types: Release Debug" FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
-message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+if (WIN32)
+    # With MSVC build types are useless, it's all handled by MSVC itself,
+    # which creates build-specific output folders. However, they will all
+    # be placed inside the debug subfolder.
+    # To avoid this, we set these output variables.
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+else()
+    if (NOT CMAKE_BUILD_TYPE)
+        set (CMAKE_BUILD_TYPE Release CACHE STRING "Build types: Release Debug" FORCE)
+    endif (NOT CMAKE_BUILD_TYPE)
+    message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+endif()
 
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
