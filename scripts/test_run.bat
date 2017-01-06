@@ -39,7 +39,7 @@ set QUERY_QTY=500
 set RESULT_FILE=output_file
 set K=10
 set LOG_FILE_PREFIX=log_%K%
-set BIN_DIR=..\similarity_search\x64\Release\experiment
+set BIN_DIR=..\similarity_search\Release\
 set GS_CACHE_DIR=gs_cache
 if not exist %GS_CACHE_DIR% (
   mkdir %GS_CACHE_DIR%
