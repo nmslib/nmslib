@@ -36,7 +36,7 @@ endif()
 #message(FATAL_ERROR "stopping... compiler version is: ${CMAKE_CXX_COMPILER_ID} ${CXX_COMPILER_VERSION}")
 
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     # require at least gcc 4.7
     if (CXX_COMPILER_VERSION VERSION_LESS 4.7)
         message(FATAL_ERROR "GCC version must be at least 4.7!")
@@ -47,13 +47,13 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     #set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wunreachable-code -Ofast -lm -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -fopenmp -fpic -msse4.2")
     set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wunreachable-code -Wcast-align -Ofast -lm -lrt -DNDEBUG -std=c++11 -fopenmp  -DHAVE_CXX0X -march=native -Wl,--no-as-needed -fpic")
     set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wunreachable-code -Wcast-align -ggdb  -lm -lrt -DNDEBUG -std=c++11 -fopenmp  -DHAVE_CXX0X -march=native -Wl,--no-as-needed -fpic")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     if (CXX_COMPILER_VERSION VERSION_LESS 14.0.1)
         message(FATAL_ERROR "Intel version must be at least 14.0.1!")
     endif()
     set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wunreachable-code -Ofast -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -openmp   -march=native -fpic")
     set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wunreachable-code -ggdb  -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -openmp   -march=native -fpic")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     if (CXX_COMPILER_VERSION VERSION_LESS 4.2.1)
         message(FATAL_ERROR "Clang version must be at least 3.4 (GCC >= 4.2.1 equivalent)!")
     endif()
@@ -82,10 +82,20 @@ if (WITH_EXTRAS)
     add_definitions (-DWITH_EXTRAS=1)
 endif()
 
-if (NOT CMAKE_BUILD_TYPE)
-    set (CMAKE_BUILD_TYPE Release CACHE STRING "Build types: Release Debug" FORCE)
-endif (NOT CMAKE_BUILD_TYPE)
-message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+if (WIN32)
+    # With MSVC build types are useless, it's all handled by MSVC itself,
+    # which creates build-specific output folders. However, they will all
+    # be placed inside the debug subfolder.
+    # To avoid this, we set these output variables.
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+else()
+    if (NOT CMAKE_BUILD_TYPE)
+        set (CMAKE_BUILD_TYPE Release CACHE STRING "Build types: Release Debug" FORCE)
+    endif (NOT CMAKE_BUILD_TYPE)
+    message (STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+endif()
 
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -94,7 +94,7 @@ TEST(TestRecallFloatRealCase1) {
    }
   };
   vector<float> expLogRelPosError {
-    0.15505974124111666
+    static_cast<float>(0.15505974124111666)
   };
   
   EXPECT_EQ(exactEntries.size(), approxEntries.size());
