@@ -78,7 +78,76 @@ SpaceSparseVectorInter<dist_t>::ComputeOverlap(const Object* obj1,
     ids2.push_back(e.id_);
   return IntersectSizeScalarFast(&ids1[0], ids1.size(), &ids2[0], ids2.size());
 
-} 
+}
+
+template <typename dist_t>
+OverlapInfo 
+SpaceSparseVectorInter<dist_t>::ComputeOverlapInfo(const Object* objA, const Object* objB) const {
+  vector<SparseVectElem<dist_t>> elemsA, elemsB;
+  UnpackSparseElements(objA->data(), objA->datalength(), elemsA);
+  UnpackSparseElements(objB->data(), objB->datalength(), elemsB);
+  OverlapInfo res;
+
+  float norm_left = 0;
+  {
+    for (uint32_t A = 0; A < elemsA.size(); ++A)
+      norm_left += elemsA[A].val_*elemsA[A].val_;
+    norm_left = sqrt(norm_left);
+  }
+
+  float norm_right = 0;
+  {
+    for (uint32_t B = 0; B < elemsB.size(); ++B)
+      norm_right += elemsB[B].val_*elemsB[B].val_;
+    norm_right = sqrt(norm_right);
+  }
+   
+  uint32_t A = 0, B = 0;
+
+  while (A < elemsA.size() && B < elemsA.size()) {
+    uint32_t idA = elemsA[A].id_;
+    uint32_t idB = elemsB[B].id_;
+    if (idA < idB) {
+      res.diff_sum_left_norm_ += elemsA[A].val_; 
+      A++;
+    } else if (idA > idB) {
+      res.diff_sum_right_norm_ = elemsB[B].val_;
+      B++;
+    } else {
+    // *A == *B
+      res.overlap_dotprod_norm_ += elemsA[A].val_*elemsB[B].val_; 
+      res.overlap_sum_left_norm_ += elemsA[A].val_; 
+      res.overlap_sum_right_norm_ = elemsB[B].val_;
+      res.overlap_qty_++;
+      A++; B++;
+    }
+  }
+
+  while (A < elemsA.size()) {
+    res.diff_sum_left_norm_ += elemsA[A].val_; 
+    A++;
+  }
+
+  while (B < elemsB.size()) {
+    res.diff_sum_right_norm_ = elemsB[B].val_;
+    B++;
+  }
+
+  if (norm_left > 0) {
+    float inv = 1.0/norm_left;
+    res.overlap_sum_left_norm_ *= inv;
+    res.diff_sum_left_norm_    *= inv;
+    res.overlap_dotprod_norm_  *= inv;
+  }
+  if (norm_right > 0) {
+    float inv = 1.0/norm_right;
+    res.overlap_sum_right_norm_ *= inv;
+    res.diff_sum_right_norm_    *= inv;
+    res.overlap_dotprod_norm_   *= inv;
+  }
+
+  return res;
+}
 
 template <typename dist_t>
 size_t

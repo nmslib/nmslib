@@ -37,6 +37,15 @@ namespace similarity {
 
 using std::vector;
 
+struct OverlapInfo {
+  uint32_t  overlap_qty_ = 0;
+  float     overlap_dotprod_norm_ = 0;
+  float     overlap_sum_left_norm_ = 0;
+  float     overlap_sum_right_norm_ = 0;
+  float     diff_sum_left_norm_ = 0; 
+  float     diff_sum_right_norm_ = 0;
+};
+
 /*
  *
  * This helper base class is different from the SpaceSparseVectorSimpleStorage class
@@ -63,6 +72,7 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
 
   size_t ComputeOverlap(const Object* pObj1, const Object* pObj2) const;
   size_t ComputeOverlap(const Object* pObj1, const Object* pObj2, const Object* pObj3) const;
+  OverlapInfo ComputeOverlapInfo(const Object* pObj1, const Object* pObj2) const;
  protected:
   DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorInter);
 
