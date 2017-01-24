@@ -187,103 +187,111 @@ void sampleDist(string spaceType,
 
   for (unsigned tid = 0; tid < thread::hardware_concurrency(); ++tid) 
   qThreads.push_back(thread([&]() {
-    size_t qid = 0;
-    {
-      unique_lock<mutex> lock(mQueue);
-      if (qidQueue.empty()) return;
-      qid = qidQueue.front();
-      qidQueue.pop(); 
-      LOG(LIB_INFO) << "query index : " << qid << " id: " << queries[qid]->id();
-    }
-    KNNQuery<dist_t> query(*space, queries[qid], knn);
-
-    vector<dist_t> pivDist(pivotQty);
-    for (size_t pid = 0; pid < pivotQty; ++pid) {
-      pivDist[pid]=space->IndexTimeDistance(pivots[pid], queries[qid]); // Pivot plays the role of an object => it's a left argument
-    }
-    sort(pivDist.begin(),pivDist.end());
-    for (size_t pid = 0; pid < pivotQty; ++pid) {
-      outPivDistMatrix[pid].push_back(pivDist[pid]);
-    }
-    if (pJaccardSpace || pInterSpace) {
-      vector<unsigned> pivOverlap(pivotQty);
-      for (size_t pid = 0; pid < pivotQty; ++pid) {
-        pivOverlap[pid]=pJaccardSpace ? 
-                          pJaccardSpace->ComputeOverlap(pivots[pid], queries[qid]):
-                          pInterSpace->ComputeOverlap(pivots[pid], queries[qid]); 
+    while (true) {
+      size_t qid = 0;
+      {
+        unique_lock<mutex> lock(mQueue);
+        if (qidQueue.empty()) return;
+        qid = qidQueue.front();
+        qidQueue.pop(); 
+        LOG(LIB_INFO) << "query index : " << qid << " id: " << queries[qid]->id();
       }
-      sort(pivOverlap.begin(),pivOverlap.end(), [](unsigned qty1, unsigned qty2)->bool{ return qty1 > qty2;});
-      float elemQty = pJaccardSpace ? pJaccardSpace->GetElemQty(queries[qid]) : 
-                                      pInterSpace->GetElemQty(queries[qid]);
-      float elemQtyInv = 1.0f/elemQty;
+      KNNQuery<dist_t> query(*space, queries[qid], knn);
+
+      vector<dist_t> pivDist(pivotQty);
       for (size_t pid = 0; pid < pivotQty; ++pid) {
-        outPivOverlapQtyMatrix[pid].push_back(pivOverlap[pid]);
-        outPivOverlapFracMatrix[pid].push_back(pivOverlap[pid]*elemQtyInv);
+        pivDist[pid]=space->IndexTimeDistance(pivots[pid], queries[qid]); // Pivot plays the role of an object => it's a left argument
       }
-    }
-
-    // Brute force search
-    for (size_t k = 0; k < N; ++k) 
-    if (!isQuery[k]) {
-      query.CheckAndAddToResult(data[k]);
-    }
-
-    unique_ptr<KNNQueue<dist_t>> knnQ(query.Result()->Clone());
-
-
-    vector<RichOverlapStat<dist_t>> knn_overlap_stat;
-    knn_overlap_stat.reserve(knn);
-
-    // Extracting results
-    while (!knnQ->Empty()) {
-      OverlapInfo oinfo;
-
-      size_t best3way_overlap_qty = 0;
-
-      if (pJaccardSpace || pInterSpace) {
-        if (pJaccardSpace) 
-          oinfo.overlap_qty_ = pJaccardSpace->ComputeOverlap(knnQ->TopObject(), queries[qid]);
-        if (pInterSpace) {
-          oinfo = pInterSpace->ComputeOverlapInfo(knnQ->TopObject(), queries[qid]); 
-        }
-
+      sort(pivDist.begin(),pivDist.end());
+      {
+        unique_lock<mutex> lock(mOut);
         for (size_t pid = 0; pid < pivotQty; ++pid) {
-          uint32_t overlap3way_qty = pJaccardSpace ? 
-                          pJaccardSpace->ComputeOverlap(knnQ->TopObject(), queries[qid], pivots[pid]):
-                          pInterSpace->ComputeOverlap(knnQ->TopObject(), queries[qid], pivots[pid]); 
-          if (overlap3way_qty > best3way_overlap_qty) best3way_overlap_qty = overlap3way_qty;
+         outPivDistMatrix[pid].push_back(pivDist[pid]);
         }
       }
-      knn_overlap_stat.insert(knn_overlap_stat.begin(),
-                              RichOverlapStat<dist_t>(knnQ->TopDistance(), 
-                                                      oinfo.overlap_qty_, best3way_overlap_qty,
-                                                      oinfo.overlap_dotprod_norm_, 
-                                                      oinfo.overlap_mean_left_,  oinfo.overlap_std_left_,  
-                                                      oinfo.diff_mean_left_, oinfo.diff_std_left_,
-                                                      oinfo.overlap_mean_right_, oinfo.overlap_std_right_, 
-                                                      oinfo.diff_mean_right_, oinfo.diff_std_right_
-      ));
-      knnQ->Pop();
-    }
-    {
-      unique_lock<mutex> lock(mOut);
+      if (pJaccardSpace || pInterSpace) {
+        vector<unsigned> pivOverlap(pivotQty);
+        for (size_t pid = 0; pid < pivotQty; ++pid) {
+          pivOverlap[pid]=pJaccardSpace ? 
+                            pJaccardSpace->ComputeOverlap(pivots[pid], queries[qid]):
+                            pInterSpace->ComputeOverlap(pivots[pid], queries[qid]); 
+        }
+        sort(pivOverlap.begin(),pivOverlap.end(), [](unsigned qty1, unsigned qty2)->bool{ return qty1 > qty2;});
+        float elemQty = pJaccardSpace ? pJaccardSpace->GetElemQty(queries[qid]) : 
+                                        pInterSpace->GetElemQty(queries[qid]);
+        float elemQtyInv = 1.0f/elemQty;
+        {
+          unique_lock<mutex> lock(mOut);
+          for (size_t pid = 0; pid < pivotQty; ++pid) {
+            outPivOverlapQtyMatrix[pid].push_back(pivOverlap[pid]);
+            outPivOverlapFracMatrix[pid].push_back(pivOverlap[pid]*elemQtyInv);
+          }
+        }
+      }
 
-      for (size_t k = 0; k < min<size_t>(knn_overlap_stat.size(), knn); ++k) {
-        outNNDistMatrix[k].push_back(knn_overlap_stat[k].dist_);
-        outNNOverlapQtyMatrix[k].push_back(knn_overlap_stat[k].overlap_qty_);
-        outNN3WayOverlapQtyMatrix[k].push_back(knn_overlap_stat[k].overlap3way_qty_);
+      // Brute force search
+      for (size_t k = 0; k < N; ++k) 
+      if (!isQuery[k]) {
+        query.CheckAndAddToResult(data[k]);
+      }
 
-        outNNOverlapDotprodNormMatrix[k].push_back(knn_overlap_stat[k].overlap_dotprod_norm_);
+      unique_ptr<KNNQueue<dist_t>> knnQ(query.Result()->Clone());
 
-        outNNOverlapMeanLeftMatrix[k].push_back(knn_overlap_stat[k].overlap_mean_left_);
-        outNNOverlapSTDLeftMatrix[k].push_back(knn_overlap_stat[k].overlap_std_left_);
-        outNNDiffMeanLeftMatrix[k].push_back(knn_overlap_stat[k].diff_mean_left_);
-        outNNDiffSTDLeftMatrix[k].push_back(knn_overlap_stat[k].diff_std_left_);
 
-        outNNOverlapMeanRightMatrix[k].push_back(knn_overlap_stat[k].overlap_mean_right_);
-        outNNOverlapSTDRightMatrix[k].push_back(knn_overlap_stat[k].overlap_std_right_);
-        outNNDiffMeanRightMatrix[k].push_back(knn_overlap_stat[k].diff_mean_right_);
-        outNNDiffSTDRightMatrix[k].push_back(knn_overlap_stat[k].diff_std_right_);
+      vector<RichOverlapStat<dist_t>> knn_overlap_stat;
+      knn_overlap_stat.reserve(knn);
+
+      // Extracting results
+      while (!knnQ->Empty()) {
+        OverlapInfo oinfo;
+
+        size_t best3way_overlap_qty = 0;
+
+        if (pJaccardSpace || pInterSpace) {
+          if (pJaccardSpace) 
+            oinfo.overlap_qty_ = pJaccardSpace->ComputeOverlap(knnQ->TopObject(), queries[qid]);
+          if (pInterSpace) {
+            oinfo = pInterSpace->ComputeOverlapInfo(knnQ->TopObject(), queries[qid]); 
+          }
+
+          for (size_t pid = 0; pid < pivotQty; ++pid) {
+            uint32_t overlap3way_qty = pJaccardSpace ? 
+                            pJaccardSpace->ComputeOverlap(knnQ->TopObject(), queries[qid], pivots[pid]):
+                            pInterSpace->ComputeOverlap(knnQ->TopObject(), queries[qid], pivots[pid]); 
+            if (overlap3way_qty > best3way_overlap_qty) best3way_overlap_qty = overlap3way_qty;
+          }
+        }
+        knn_overlap_stat.insert(knn_overlap_stat.begin(),
+                                RichOverlapStat<dist_t>(knnQ->TopDistance(), 
+                                                        oinfo.overlap_qty_, best3way_overlap_qty,
+                                                        oinfo.overlap_dotprod_norm_, 
+                                                        oinfo.overlap_mean_left_,  oinfo.overlap_std_left_,  
+                                                        oinfo.diff_mean_left_, oinfo.diff_std_left_,
+                                                        oinfo.overlap_mean_right_, oinfo.overlap_std_right_, 
+                                                        oinfo.diff_mean_right_, oinfo.diff_std_right_
+        ));
+        knnQ->Pop();
+      }
+      {
+        unique_lock<mutex> lock(mOut);
+
+        for (size_t k = 0; k < min<size_t>(knn_overlap_stat.size(), knn); ++k) {
+          outNNDistMatrix[k].push_back(knn_overlap_stat[k].dist_);
+          outNNOverlapQtyMatrix[k].push_back(knn_overlap_stat[k].overlap_qty_);
+          outNN3WayOverlapQtyMatrix[k].push_back(knn_overlap_stat[k].overlap3way_qty_);
+
+          outNNOverlapDotprodNormMatrix[k].push_back(knn_overlap_stat[k].overlap_dotprod_norm_);
+
+          outNNOverlapMeanLeftMatrix[k].push_back(knn_overlap_stat[k].overlap_mean_left_);
+          outNNOverlapSTDLeftMatrix[k].push_back(knn_overlap_stat[k].overlap_std_left_);
+          outNNDiffMeanLeftMatrix[k].push_back(knn_overlap_stat[k].diff_mean_left_);
+          outNNDiffSTDLeftMatrix[k].push_back(knn_overlap_stat[k].diff_std_left_);
+
+          outNNOverlapMeanRightMatrix[k].push_back(knn_overlap_stat[k].overlap_mean_right_);
+          outNNOverlapSTDRightMatrix[k].push_back(knn_overlap_stat[k].overlap_std_right_);
+          outNNDiffMeanRightMatrix[k].push_back(knn_overlap_stat[k].diff_mean_right_);
+          outNNDiffSTDRightMatrix[k].push_back(knn_overlap_stat[k].diff_std_right_);
+        }
       }
     }
   }));

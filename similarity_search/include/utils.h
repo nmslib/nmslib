@@ -121,6 +121,14 @@ dist_t Mean(const dist_t* array, const unsigned size) {
   return result / size;
 }
 
+template <typename dist_t>
+dist_t Sum(const dist_t* array, const unsigned size) {
+  dist_t result = 0.0;
+  for (unsigned i = 0; i < size; ++i)
+    result += array[i];
+  return result;
+}
+
 // This is a corrected sample STD, so size should be >= 2
 template <typename dist_t>
 dist_t Variance(const dist_t* array, const unsigned size, const dist_t mean) {

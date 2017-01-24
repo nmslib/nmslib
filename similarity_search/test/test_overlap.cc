@@ -100,6 +100,12 @@ vector<size_t> vInterQty = {
 TEST(TestIntersect2Way) {
   EXPECT_EQ(vvIds1.size(), vvIds2.size());
   EXPECT_EQ(vvIds1.size(), vInterQty.size());
+
+  /*
+   * Note for tests below: 
+   * isnan() doesn't work in the fast-math mode.
+   * Perhaps, I need to use some custom implementation.
+   */
   
   for (size_t i = 0; i < vvIds1.size(); ++i) {
     size_t qty1 = IntersectSizeScalarFast(&vvIds1[i][0], vvIds1[i].size(), 
@@ -113,14 +119,15 @@ TEST(TestIntersect2Way) {
         qty2 != vInterQty[i])
          LOG(LIB_INFO) << "Failed test (basic intersect funcs), index: " << i;
 
-    const float oneElemVal = 0.15;
+    const float oneElemVal1 = 0.1;
+    const float oneElemVal2 = 0.2;
     vector<SparseVectElem<float>> elems1, elems2;
   
     for (IdType id1 : vvIds1[i]) {
-      elems1.push_back(SparseVectElem<float>(id1, oneElemVal));
+      elems1.push_back(SparseVectElem<float>(id1, oneElemVal1));
     } 
     for (IdType id2 : vvIds2[i]) {
-      elems2.push_back(SparseVectElem<float>(id2, oneElemVal));
+      elems2.push_back(SparseVectElem<float>(id2, oneElemVal2));
     } 
     OverlapInfo oinfo = SpaceSparseVectorInter<float>::ComputeOverlapInfo(elems1, elems2);
 
@@ -130,13 +137,12 @@ TEST(TestIntersect2Way) {
     EXPECT_EQ((size_t)oinfo.overlap_qty_, vInterQty[i]);
     
     float vectQty1 = elems1.size();
-    float norm1 = sqrt(oneElemVal*oneElemVal*vectQty1);
+    float norm1 = sqrt(oneElemVal1*oneElemVal1*vectQty1);
     float vectQty2 = elems2.size();
-    float norm2 = sqrt(oneElemVal*oneElemVal*vectQty2);
+    float norm2 = sqrt(oneElemVal2*oneElemVal2*vectQty2);
 
     float overlap_qty = oinfo.overlap_qty_;
-    float overlap_dotprod_norm = std::min(norm1, norm2) >0 ? overlap_qty * oneElemVal * oneElemVal / (norm1 * norm2) : 0; 
-    //float overlap_dotprod_norm =  overlap_qty * oneElemVal * oneElemVal / (norm1 * norm2) ;
+    float overlap_dotprod_norm = std::min(norm1, norm2) >0 ? overlap_qty * oneElemVal1 * oneElemVal2 / (norm1 * norm2) : 0; 
     CHECK(!isnan(overlap_dotprod_norm));
   
     const float eps = 0.0001f; // somewhat adhoc
@@ -144,20 +150,115 @@ TEST(TestIntersect2Way) {
     EXPECT_EQ_EPS(overlap_dotprod_norm, oinfo.overlap_dotprod_norm_, eps);
     //cerr << overlap_dotprod_norm << " # " << isnan(overlap_dotprod_norm) << " -> " << oinfo.overlap_dotprod_norm_ << endl;
 
-    float diff_sum_left    = oneElemVal*(vectQty1 - overlap_qty);
+    float diff_sum_left    = oneElemVal1*(vectQty1 - overlap_qty);
     CHECK(!isnan(diff_sum_left));
     EXPECT_EQ_EPS(diff_sum_left, oinfo.diff_sum_left_, eps);
-    float overlap_sum_left = oneElemVal*overlap_qty;
+    EXPECT_EQ_EPS(vectQty1 > overlap_qty ? oneElemVal1 : 0, oinfo.diff_mean_left_, eps);
+
+    float overlap_sum_left = oneElemVal1*overlap_qty;
     CHECK(!isnan(overlap_sum_left));
     EXPECT_EQ_EPS(overlap_sum_left, oinfo.overlap_sum_left_, eps);
+    EXPECT_EQ_EPS(overlap_qty > 0 ? oneElemVal1 : 0, oinfo.overlap_mean_left_, eps);
 
-    float diff_sum_right = oneElemVal*(vectQty2 - overlap_qty);
+    float diff_sum_right = oneElemVal2*(vectQty2 - overlap_qty);
     CHECK(!isnan(diff_sum_right));
     EXPECT_EQ_EPS(diff_sum_right, oinfo.diff_sum_right_, eps);
-    float overlap_sum_right = oneElemVal*overlap_qty;
+    EXPECT_EQ_EPS(vectQty2 > overlap_qty ? oneElemVal2 : 0, oinfo.diff_mean_right_, eps);
+
+    float overlap_sum_right = oneElemVal2*overlap_qty;
     CHECK(!isnan(overlap_sum_left));
     EXPECT_EQ_EPS(overlap_sum_right, oinfo.overlap_sum_right_, eps);
+    EXPECT_EQ_EPS(overlap_qty > 0 ? oneElemVal2 : 0, oinfo.overlap_mean_right_, eps);
   }
+}
+
+TEST(TestOverlapInfoDetailed) {
+  /* 
+   * In this function, we carry out a more detailed testing with a focus on on correctness of computation of STD and mean.
+   * We try to consider all typical combinations of the overlap and remaining part sizes.
+   */
+  const size_t COMBIN_QTY = 5;
+  for (size_t qDiffLeft = 0; qDiffLeft < COMBIN_QTY; ++qDiffLeft)
+  for (size_t qOverlap = 0; qOverlap < COMBIN_QTY; ++qOverlap)
+  for (size_t qDiffRight = 0; qDiffRight < COMBIN_QTY; ++qDiffRight) {
+    vector<float> vDiffLeft, vOverlapLeft;
+    vector<float> vDiffRight, vOverlapRight;
+
+    vector<IdType>                vIds1, vIds2;
+    vector<SparseVectElem<float>> elems1, elems2;
+
+    const float oneElemMul1 = 0.1;
+    const float oneElemMul2 = 0.2;
+
+    float norm1 = 0, norm2 = 0;
+
+    for (size_t id = 0; id < qDiffLeft; ++id) {
+      vIds1.push_back(id);
+      float val1 = id * oneElemMul1;
+      elems1.emplace_back(id, val1);
+      vDiffLeft.push_back(val1);
+      norm1 += val1 * val1;
+    }
+    float overlap_dotprod_norm = 0;
+    for (size_t id = COMBIN_QTY; id < COMBIN_QTY + qOverlap; ++id) {
+      vIds1.push_back(id);
+      float val1 = id * oneElemMul1;
+      elems1.emplace_back(id, val1);
+      vOverlapLeft.push_back(val1);
+      norm1 += val1 * val1;
+
+      float val2 = id * oneElemMul2;
+      vIds2.push_back(id);
+      elems2.emplace_back(id, val2);
+      vOverlapRight.push_back(val2);
+      norm2 += val2 * val2;
+
+      overlap_dotprod_norm += val1 * val2;
+    }
+    for (size_t id = 2*COMBIN_QTY; id < 2*COMBIN_QTY + qDiffRight; ++id) {
+      vIds2.push_back(id);
+      float val2 = id * oneElemMul2;
+      elems2.emplace_back(id, val2);
+      vDiffRight.push_back(val2);
+      norm2 += val2 * val2;
+    }
+    norm1 = sqrt(norm1);
+    norm2 = sqrt(norm2);
+    if (norm1 > 0) overlap_dotprod_norm /= norm1;
+    if (norm2 > 0) overlap_dotprod_norm /= norm2;
+
+    size_t qty1 = IntersectSizeScalarFast(&vIds1[0], vIds1.size(), 
+                                          &vIds2[0], vIds2.size());
+    size_t qty2 = IntersectSizeScalarStand(&vIds1[0], vIds1.size(), 
+                                          &vIds2[0], vIds2.size());
+    EXPECT_EQ(qty1, qOverlap);
+    EXPECT_EQ(qty2, qOverlap);
+
+    OverlapInfo oinfo = SpaceSparseVectorInter<float>::ComputeOverlapInfo(elems1, elems2);
+
+    EXPECT_EQ(qOverlap, (size_t)oinfo.overlap_qty_);
+    
+    const float eps = 0.0001f; // somewhat adhoc
+
+    EXPECT_EQ_EPS(overlap_dotprod_norm, oinfo.overlap_dotprod_norm_, eps);
+
+    EXPECT_EQ_EPS(Sum(&vDiffLeft[0], vDiffLeft.size()), oinfo.diff_sum_left_, eps);
+    EXPECT_EQ_EPS(Mean(&vDiffLeft[0], vDiffLeft.size()), oinfo.diff_mean_left_, eps);
+    EXPECT_EQ_EPS(StdDev(&vDiffLeft[0], vDiffLeft.size()), oinfo.diff_std_left_, eps);
+
+    EXPECT_EQ_EPS(Sum(&vOverlapLeft[0], vOverlapLeft.size()), oinfo.overlap_sum_left_, eps);
+    EXPECT_EQ_EPS(Mean(&vOverlapLeft[0], vOverlapLeft.size()), oinfo.overlap_mean_left_, eps);
+    EXPECT_EQ_EPS(StdDev(&vOverlapLeft[0], vOverlapLeft.size()), oinfo.overlap_std_left_, eps);
+
+    EXPECT_EQ_EPS(Sum(&vDiffRight[0], vDiffRight.size()), oinfo.diff_sum_right_, eps);
+    EXPECT_EQ_EPS(Mean(&vDiffRight[0], vDiffRight.size()), oinfo.diff_mean_right_, eps);
+    EXPECT_EQ_EPS(StdDev(&vDiffRight[0], vDiffRight.size()), oinfo.diff_std_right_, eps);
+
+    EXPECT_EQ_EPS(Sum(&vOverlapRight[0], vOverlapRight.size()), oinfo.overlap_sum_right_, eps);
+    EXPECT_EQ_EPS(Mean(&vOverlapRight[0], vOverlapRight.size()), oinfo.overlap_mean_right_, eps);
+    EXPECT_EQ_EPS(StdDev(&vOverlapRight[0], vOverlapRight.size()), oinfo.overlap_std_right_, eps);
+
+  } 
 }
 
 vector<vector<IdType>> vvAddIds1 = {

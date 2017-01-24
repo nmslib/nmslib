@@ -41,7 +41,7 @@ using std::vector;
 struct OverlapInfo {
   uint32_t  overlap_qty_ = 0; // The number of shared dimension, i.e., a vectors' overlap
   // The dot product of elements from the overlap, normalized by vector norms,
-  // it is also equal to 2 - cosine distance
+  // it is also equal to 1 - cosine distance
   float     overlap_dotprod_norm_ = 0;
 
   // Overlap statistics for the left vector (left argument of the cosine distance)
