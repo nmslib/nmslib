@@ -82,11 +82,19 @@ SpaceSparseVectorInter<dist_t>::ComputeOverlap(const Object* obj1,
 
 template <typename dist_t>
 OverlapInfo 
-SpaceSparseVectorInter<dist_t>::ComputeOverlapInfo(const Object* objA, const Object* objB) const {
+SpaceSparseVectorInter<dist_t>::ComputeOverlapInfo(const Object* objA, const Object* objB) {
   vector<SparseVectElem<dist_t>> elemsA, elemsB;
   UnpackSparseElements(objA->data(), objA->datalength(), elemsA);
   UnpackSparseElements(objB->data(), objB->datalength(), elemsB);
+  return ComputeOverlapInfo(elemsA, elemsB);
+}
+
+template <typename dist_t>
+OverlapInfo 
+SpaceSparseVectorInter<dist_t>::ComputeOverlapInfo(const vector<SparseVectElem<dist_t>>& elemsA, const vector<SparseVectElem<dist_t>>& elemsB) {
   OverlapInfo res;
+
+  // 1. Compute norms
 
   float norm_left = 0;
   {
@@ -101,48 +109,114 @@ SpaceSparseVectorInter<dist_t>::ComputeOverlapInfo(const Object* objA, const Obj
       norm_right += elemsB[B].val_*elemsB[B].val_;
     norm_right = sqrt(norm_right);
   }
+
+  // 2. Compute basic overlap statistics and some of values
+  //    in matching and non-matching vector parts
    
   uint32_t A = 0, B = 0;
 
-  while (A < elemsA.size() && B < elemsA.size()) {
+  while (A < elemsA.size() && B < elemsB.size()) {
     uint32_t idA = elemsA[A].id_;
     uint32_t idB = elemsB[B].id_;
     if (idA < idB) {
-      res.diff_sum_left_norm_ += elemsA[A].val_; 
+      res.diff_sum_left_ += elemsA[A].val_; 
       A++;
     } else if (idA > idB) {
-      res.diff_sum_right_norm_ = elemsB[B].val_;
+      res.diff_sum_right_ += elemsB[B].val_;
       B++;
     } else {
     // *A == *B
       res.overlap_dotprod_norm_ += elemsA[A].val_*elemsB[B].val_; 
-      res.overlap_sum_left_norm_ += elemsA[A].val_; 
-      res.overlap_sum_right_norm_ = elemsB[B].val_;
+      res.overlap_sum_left_ += elemsA[A].val_; 
+      res.overlap_sum_right_ += elemsB[B].val_;
       res.overlap_qty_++;
       A++; B++;
     }
   }
 
   while (A < elemsA.size()) {
-    res.diff_sum_left_norm_ += elemsA[A].val_; 
+    res.diff_sum_left_ += elemsA[A].val_; 
     A++;
   }
 
   while (B < elemsB.size()) {
-    res.diff_sum_right_norm_ = elemsB[B].val_;
+    res.diff_sum_right_ += elemsB[B].val_;
     B++;
   }
 
+  // 3. Convert sums into mean values
+
+  if (res.overlap_qty_ > 0) {
+    res.overlap_mean_left_  = res.overlap_sum_left_ / res.overlap_qty_;
+    res.overlap_mean_right_ = res.overlap_sum_right_ / res.overlap_qty_;
+  }
+  size_t left_diff_qty = elemsA.size() - res.overlap_qty_;
+  if (left_diff_qty) {
+    res.diff_mean_left_ = res.diff_sum_left_ / left_diff_qty;
+  }
+  size_t right_diff_qty = elemsB.size() - res.overlap_qty_;
+  if (right_diff_qty) {
+    res.diff_mean_right_ = res.diff_sum_right_ / right_diff_qty;
+  }
+
+  // 4. Compute standard deviations by iterating over arrays once again
+
+  A = 0; B = 0;
+
+  while (A < elemsA.size() && B < elemsB.size()) {
+    uint32_t idA = elemsA[A].id_;
+    uint32_t idB = elemsB[B].id_;
+    if (idA < idB) {
+      float vA = elemsA[A].val_ - res.diff_mean_left_; 
+      res.diff_std_left_ += vA*vA; 
+      A++;
+    } else if (idA > idB) {
+      float vB = elemsB[B].val_ - res.diff_mean_right_;
+      res.diff_std_right_ += vB*vB; 
+      B++;
+    } else {
+    // *A == *B
+      float vA = elemsA[A].val_ - res.overlap_mean_left_; 
+      res.overlap_std_left_ += vA*vA;
+
+      float vB = elemsB[B].val_ - res.overlap_mean_right_;
+      res.overlap_std_right_ += vB*vB; 
+
+      A++; B++;
+    }
+  }
+
+  while (A < elemsA.size()) {
+    float vA = elemsA[A].val_ - res.diff_mean_left_; 
+    res.diff_std_left_ += vA*vA; 
+    A++;
+  }
+
+  while (B < elemsB.size()) {
+    float vB = elemsB[B].val_ - res.diff_mean_right_;
+    res.diff_std_right_ += vB*vB; 
+    B++;
+  }
+  // 5. Normalize STDs
+
+  if (res.overlap_qty_ > 1) {
+    res.overlap_std_left_ = sqrt(res.overlap_std_left_/(res.overlap_qty_-1));
+    res.overlap_std_right_ = sqrt(res.overlap_std_right_/(res.overlap_qty_-1));
+  }
+  if (left_diff_qty > 1) {
+    res.diff_std_left_ = sqrt(res.diff_std_left_/(left_diff_qty-1));
+  }
+  if (right_diff_qty>1) {
+    res.diff_std_right_ = sqrt(res.diff_std_right_/(right_diff_qty-1));
+  }
+
+  // 6. Normalize dot product
   if (norm_left > 0) {
     float inv = 1.0/norm_left;
-    res.overlap_sum_left_norm_ *= inv;
-    res.diff_sum_left_norm_    *= inv;
-    res.overlap_dotprod_norm_  *= inv;
+    res.overlap_dotprod_norm_   *= inv;
   }
   if (norm_right > 0) {
     float inv = 1.0/norm_right;
-    res.overlap_sum_right_norm_ *= inv;
-    res.diff_sum_right_norm_    *= inv;
     res.overlap_dotprod_norm_   *= inv;
   }
 

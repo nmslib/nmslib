@@ -16,6 +16,9 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <thread>
+#include <mutex>
+#include <queue>
 
 #include "knnquery.h"
 #include "knnqueue.h"
@@ -35,16 +38,34 @@ using namespace std;
 
 template <class dist_t>
 struct RichOverlapStat {
-  RichOverlapStat(dist_t dist, unsigned overlap_qty, unsigned overlap3way_qty,
-                  float overlap_dotprod_norm, float overlap_sum_right_norm, float diff_sum_right_norm) : 
-                    dist_(dist), overlap_qty_(overlap_qty), overlap3way_qty_(overlap3way_qty),
-                    overlap_dotprod_norm_(overlap_dotprod_norm), overlap_sum_right_norm_(overlap_sum_right_norm), diff_sum_right_norm_(diff_sum_right_norm) {}
+  RichOverlapStat(dist_t dist, 
+                  unsigned overlap_qty, unsigned overlap3way_qty,
+                  float overlap_dotprod_norm, 
+                  float overlap_mean_left, float overlap_std_left,
+                  float diff_mean_left, float diff_std_left,
+                  float overlap_mean_right, float overlap_std_right,
+                  float diff_mean_right, float diff_std_right) : 
+                    dist_(dist), 
+                    overlap_qty_(overlap_qty), overlap3way_qty_(overlap3way_qty),
+                    overlap_dotprod_norm_(overlap_dotprod_norm), 
+                    overlap_mean_left_(overlap_mean_left), overlap_std_left_(overlap_std_left),
+                    diff_mean_left_(diff_mean_left), diff_std_left_(diff_std_left), 
+                    overlap_mean_right_(overlap_mean_right), overlap_std_right_(overlap_std_right), 
+                    diff_mean_right_(diff_mean_right), diff_std_right_(diff_std_right) {}
   dist_t    dist_;
   uint32_t  overlap_qty_;
   uint32_t  overlap3way_qty_;
   float     overlap_dotprod_norm_;
-  float     overlap_sum_right_norm_;
-  float     diff_sum_right_norm_;
+
+  float     overlap_mean_left_;
+  float     overlap_std_left_;
+  float     diff_mean_left_ ;
+  float     diff_std_left_ ;
+
+  float     overlap_mean_right_;
+  float     overlap_std_right_;
+  float     diff_mean_right_;
+  float     diff_std_right_;
 };
 
 template <typename elemType>
@@ -134,20 +155,46 @@ void sampleDist(string spaceType,
   size_t pivotQty = pivots.size();
 
   vector<vector<dist_t>>   outNNDistMatrix(knn);
+
   vector<vector<unsigned>> outNNOverlapQtyMatrix(knn);
   vector<vector<unsigned>> outNN3WayOverlapQtyMatrix(knn);
-  vector<vector<float>>    outNNOverlapDotprodRightNormMatrix(knn);
-  vector<vector<float>>    outNNOverlapSumRightNormMatrix(knn);
-  vector<vector<float>>    outNNDiffSumRightNormMatrix(knn);
-  vector<vector<float>>    outNNDiffSumOveralpSumRightNormRatioMatrix(knn);
+  vector<vector<float>>    outNNOverlapDotprodNormMatrix(knn);
 
-  vector<vector<dist_t>> outPivDistMatrix(pivotQty);
+  vector<vector<float>>    outNNOverlapMeanLeftMatrix(knn);
+  vector<vector<float>>    outNNOverlapSTDLeftMatrix(knn);
+  vector<vector<float>>    outNNDiffMeanLeftMatrix(knn);
+  vector<vector<float>>    outNNDiffSTDLeftMatrix(knn);
+
+  vector<vector<float>>    outNNOverlapMeanRightMatrix(knn);
+  vector<vector<float>>    outNNOverlapSTDRightMatrix(knn);
+  vector<vector<float>>    outNNDiffMeanRightMatrix(knn);
+  vector<vector<float>>    outNNDiffSTDRightMatrix(knn);
+
+  vector<vector<dist_t>>   outPivDistMatrix(pivotQty);
 
   vector<vector<unsigned>> outPivOverlapQtyMatrix(pivotQty);
   vector<vector<float>>    outPivOverlapFracMatrix(pivotQty);
 
+  queue<size_t>   qidQueue; 
+  vector<thread>  qThreads; 
+  mutex         mQueue;
+  mutex         mOut;
+
   for (size_t qid = 0; qid < knnQueryQty; ++qid) {
-    LOG(LIB_INFO) << "query index : " << qid << " id: " << queries[qid]->id();
+    qidQueue.push(qid);
+  }
+
+
+  for (unsigned tid = 0; tid < thread::hardware_concurrency(); ++tid) 
+  qThreads.push_back(thread([&]() {
+    size_t qid = 0;
+    {
+      unique_lock<mutex> lock(mQueue);
+      if (qidQueue.empty()) return;
+      qid = qidQueue.front();
+      qidQueue.pop(); 
+      LOG(LIB_INFO) << "query index : " << qid << " id: " << queries[qid]->id();
+    }
     KNNQuery<dist_t> query(*space, queries[qid], knn);
 
     vector<dist_t> pivDist(pivotQty);
@@ -189,20 +236,15 @@ void sampleDist(string spaceType,
 
     // Extracting results
     while (!knnQ->Empty()) {
-      uint32_t overlap_qty = 0;
-      uint32_t best3way_overlap_qty = 0;
-      float    overlap_dotprod_norm = 0;
-      float    overlap_sum_right_norm = 0;
-      float    diff_sum_right_norm = 0;
+      OverlapInfo oinfo;
+
+      size_t best3way_overlap_qty = 0;
 
       if (pJaccardSpace || pInterSpace) {
-        if (pJaccardSpace) overlap_qty = pJaccardSpace->ComputeOverlap(knnQ->TopObject(), queries[qid]);
+        if (pJaccardSpace) 
+          oinfo.overlap_qty_ = pJaccardSpace->ComputeOverlap(knnQ->TopObject(), queries[qid]);
         if (pInterSpace) {
-          OverlapInfo oinfo = pInterSpace->ComputeOverlapInfo(knnQ->TopObject(), queries[qid]); 
-          overlap_qty             = oinfo.overlap_qty_;
-          overlap_dotprod_norm    = oinfo.overlap_dotprod_norm_;
-          overlap_sum_right_norm  = oinfo.overlap_sum_right_norm_;
-          diff_sum_right_norm = oinfo.diff_sum_right_norm_;
+          oinfo = pInterSpace->ComputeOverlapInfo(knnQ->TopObject(), queries[qid]); 
         }
 
         for (size_t pid = 0; pid < pivotQty; ++pid) {
@@ -213,21 +255,41 @@ void sampleDist(string spaceType,
         }
       }
       knn_overlap_stat.insert(knn_overlap_stat.begin(),
-                              RichOverlapStat<dist_t>(knnQ->TopDistance(), overlap_qty, best3way_overlap_qty,
-                                                      overlap_dotprod_norm, overlap_sum_right_norm, diff_sum_right_norm));
+                              RichOverlapStat<dist_t>(knnQ->TopDistance(), 
+                                                      oinfo.overlap_qty_, best3way_overlap_qty,
+                                                      oinfo.overlap_dotprod_norm_, 
+                                                      oinfo.overlap_mean_left_,  oinfo.overlap_std_left_,  
+                                                      oinfo.diff_mean_left_, oinfo.diff_std_left_,
+                                                      oinfo.overlap_mean_right_, oinfo.overlap_std_right_, 
+                                                      oinfo.diff_mean_right_, oinfo.diff_std_right_
+      ));
       knnQ->Pop();
     }
-    for (size_t k = 0; k < min<size_t>(knn_overlap_stat.size(), knn); ++k) {
-      outNNDistMatrix[k].push_back(knn_overlap_stat[k].dist_);
-      outNNOverlapQtyMatrix[k].push_back(knn_overlap_stat[k].overlap_qty_);
-      outNN3WayOverlapQtyMatrix[k].push_back(knn_overlap_stat[k].overlap3way_qty_);
+    {
+      unique_lock<mutex> lock(mOut);
 
-      outNNOverlapDotprodRightNormMatrix[k].push_back(knn_overlap_stat[k].overlap_dotprod_norm_);
-      outNNOverlapSumRightNormMatrix[k].push_back(knn_overlap_stat[k].overlap_sum_right_norm_);
-      outNNDiffSumRightNormMatrix[k].push_back(knn_overlap_stat[k].diff_sum_right_norm_);
+      for (size_t k = 0; k < min<size_t>(knn_overlap_stat.size(), knn); ++k) {
+        outNNDistMatrix[k].push_back(knn_overlap_stat[k].dist_);
+        outNNOverlapQtyMatrix[k].push_back(knn_overlap_stat[k].overlap_qty_);
+        outNN3WayOverlapQtyMatrix[k].push_back(knn_overlap_stat[k].overlap3way_qty_);
 
-      outNNDiffSumOveralpSumRightNormRatioMatrix[k].push_back(knn_overlap_stat[k].diff_sum_right_norm_/knn_overlap_stat[k].overlap_sum_right_norm_);
+        outNNOverlapDotprodNormMatrix[k].push_back(knn_overlap_stat[k].overlap_dotprod_norm_);
+
+        outNNOverlapMeanLeftMatrix[k].push_back(knn_overlap_stat[k].overlap_mean_left_);
+        outNNOverlapSTDLeftMatrix[k].push_back(knn_overlap_stat[k].overlap_std_left_);
+        outNNDiffMeanLeftMatrix[k].push_back(knn_overlap_stat[k].diff_mean_left_);
+        outNNDiffSTDLeftMatrix[k].push_back(knn_overlap_stat[k].diff_std_left_);
+
+        outNNOverlapMeanRightMatrix[k].push_back(knn_overlap_stat[k].overlap_mean_right_);
+        outNNOverlapSTDRightMatrix[k].push_back(knn_overlap_stat[k].overlap_std_right_);
+        outNNDiffMeanRightMatrix[k].push_back(knn_overlap_stat[k].diff_mean_right_);
+        outNNDiffSTDRightMatrix[k].push_back(knn_overlap_stat[k].diff_std_right_);
+      }
     }
+  }));
+
+  for (auto& oneThread : qThreads) {
+    oneThread.join();
   }
 
   outputMatrix(outFilePrefix + "_dist_NN.tsv", outNNDistMatrix);
@@ -236,10 +298,17 @@ void sampleDist(string spaceType,
     outputMatrix(outFilePrefix + "_overlap_qty_NN.tsv", outNNOverlapQtyMatrix);
     outputMatrix(outFilePrefix + "_3way_overlap_qty_NN.tsv", outNN3WayOverlapQtyMatrix);
     if (pInterSpace) {
-      outputMatrix(outFilePrefix + "_overlap_dotprod_norm_NN.tsv", outNNOverlapDotprodRightNormMatrix);
-      outputMatrix(outFilePrefix + "_overlap_sum_right_norm_NN.tsv", outNNOverlapSumRightNormMatrix);
-      outputMatrix(outFilePrefix + "_diff_sum_right_norm_NN.tsv", outNNDiffSumRightNormMatrix);
-      outputMatrix(outFilePrefix + "_diff_sum_overlap_sum_norm_ratio_NN.tsv", outNNDiffSumOveralpSumRightNormRatioMatrix);
+      outputMatrix(outFilePrefix + "_overlap_dotprod_norm_NN.tsv", outNNOverlapDotprodNormMatrix);
+
+      outputMatrix(outFilePrefix + "_overlap_mean_left_NN.tsv",     outNNOverlapMeanLeftMatrix);
+      outputMatrix(outFilePrefix + "_overlap_std_left_NN.tsv",      outNNOverlapSTDLeftMatrix);
+      outputMatrix(outFilePrefix + "_diff_mean_left_NN.tsv",        outNNDiffMeanLeftMatrix);
+      outputMatrix(outFilePrefix + "_diff_std_left_NN.tsv",         outNNDiffSTDLeftMatrix);
+
+      outputMatrix(outFilePrefix + "_overlap_mean_right_NN.tsv",    outNNOverlapMeanRightMatrix);
+      outputMatrix(outFilePrefix + "_overlap_std_right_NN.tsv",     outNNOverlapSTDRightMatrix);
+      outputMatrix(outFilePrefix + "_diff_mean_right_NN.tsv",       outNNDiffMeanRightMatrix);
+      outputMatrix(outFilePrefix + "_diff_std_right_NN.tsv",        outNNDiffSTDRightMatrix);
     }
     outputMatrix(outFilePrefix + "_overlap_qty_pivots.tsv", outPivOverlapQtyMatrix);
     outputMatrix(outFilePrefix + "_overlap_frac_pivots.tsv", outPivOverlapFracMatrix);

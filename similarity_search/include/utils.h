@@ -113,13 +113,37 @@ inline T RandomReal() {
 
 void RStrip(char* str);
 
-double Mean(const double* array, const unsigned size);
+template <typename dist_t>
+dist_t Mean(const dist_t* array, const unsigned size) {
+  dist_t result = 0.0;
+  for (unsigned i = 0; i < size; ++i)
+    result += array[i];
+  return result / size;
+}
 
-double Variance(const double* array, const unsigned size);
+// This is a corrected sample STD, so size should be >= 2
+template <typename dist_t>
+dist_t Variance(const dist_t* array, const unsigned size, const dist_t mean) {
+  dist_t result = 0.0;
+  if (size >= 2) {
+    for (unsigned i = 0; i < size; ++i) {
+      dist_t diff = (mean - array[i]);
+      result += diff * diff; 
+    }
+    result /= (size-1);
+  }
+  return result;
+}
 
-double Variance(const double* array, const unsigned size, const double mean);
+template <typename dist_t>
+dist_t Variance(const dist_t* array, const unsigned size) {
+  return Variance(array, size, Mean(array, size));
+}
 
-double StdDev(const double* array, const unsigned size);
+template <typename dist_t>
+dist_t StdDev(const dist_t* array, const unsigned size) {
+  return sqrt(Variance(array, size));
+}
 
 /*
  * A maximum number of random operations (e.g. while searching
