@@ -17,18 +17,12 @@
 #include <memory>
 #include <cmath>
 #include <fstream>
-#include <string>
-#include <sstream>
-#include <cstdint>
 #include <vector>
+#include <limits>
 
 #include "utils.h"
-#include "object.h"
 #include "space/space_sparse_scalar_fast.h"
-#include "logging.h"
-#include "distcomp.h"
 #include "experimentconf.h"
-#include "inmem_inv_index.h"
 
 namespace similarity {
 
@@ -50,6 +44,7 @@ SpaceSparseAngularDistanceFast::HiddenDistance(const Object* obj1, const Object*
   CHECK(obj1->datalength() > 0);
   CHECK(obj2->datalength() > 0);
 
+  // NormSparseScalarProductFast ensures ret value is in [-1,1]
   return acos(NormSparseScalarProductFast(obj1->data(), obj1->datalength(),
                                           obj2->data(), obj2->datalength()));
 }
@@ -74,41 +69,14 @@ SpaceSparseQueryNormNegativeScalarProductFast::HiddenDistance(const Object* obj1
 
 }
 
-// Now let's describe an implementation of efficient all-pivot distance computation
 
-class SpaceDotProdPivotIndex : public PivotIndex<float> {
-public:
-  // If hashTrickDim > 0, we use the hashing trick as a simple means to reduce dimensionality
-  // at the expense of accuracy loss
-  SpaceDotProdPivotIndex(const Space<float>& space,
-                         const ObjectVector pivots,
-                         bool  bNormData,
-                         bool  bNormQuery,
-                         size_t hashTrickDim = 0) :
-    space_(space), pivots_(pivots), bNormData_(bNormData), bNormQuery_(bNormQuery) {
-    createIndex();
-  }
-  virtual void ComputePivotDistancesIndexTime(const Object* pObj, vector<float>& vResDist) const override;
-  virtual void ComputePivotDistancesQueryTime(const Query<float>* pQuery, vector<float>& vResDist) const override;
-private:
-  InMemInvIndex         invIndex_;
-  const Space<float>&   space_;
-  ObjectVector          pivots_;
-  bool                  bNormData_;
-  bool                  bNormQuery_;
-  size_t                hashTrickDim_;
-
-  void createIndex();
-  void GenVectElems(const Object& obj, bool bNorm, vector<SparseVectElem<float>>& pivElems);
-};
-
-void SpaceDotProdPivotIndex::GenVectElems(const Object& obj, bool bNorm, vector<SparseVectElem<float>>& pivElems) {
+void SpaceDotProdPivotIndexBase::GenVectElems(const Object& obj, bool bNorm, vector<SparseVectElem<float>>& pivElems) const {
   pivElems.clear();
   if (hashTrickDim_) {
     vector<float> tmp(hashTrickDim_);
     space_.CreateDenseVectFromObj(&obj, &tmp[0], hashTrickDim_);
     for (size_t id = 0; id < hashTrickDim_; ++id)
-    if (fabs(tmp[id]) > 0) {
+    if (fabs(tmp[id]) > numeric_limits<float>::min()) {
       pivElems.push_back(SparseVectElem<float>(id, tmp[id]));
     }
   } else {
@@ -129,22 +97,39 @@ void SpaceDotProdPivotIndex::GenVectElems(const Object& obj, bool bNorm, vector<
                              pBlockOff,
                              pBlockBegin);
     CHECK(obj.datalength() >= (pBlockBegin-reinterpret_cast<const char*>(obj.data())));
-    for (auto & e : pivElems) {
+    for (SparseVectElem<float> & e : pivElems) {
       e.val_ *= normCoeff;
     }
   }
 }
 
-void SpaceDotProdPivotIndex::createIndex() {
+void SpaceDotProdPivotIndexBase::createIndex() {
   for (size_t pivId = 0; pivId < pivots_.size(); ++pivId) {
     vector<SparseVectElem<float>> pivElems;
     GenVectElems(*pivots_[pivId], bNormData_, pivElems);
     for (size_t i = 0; i < pivElems.size(); ++i) {
-      auto e = pivElems[i];
+      SparseVectElem<float> e = pivElems[i];
       invIndex_.addEntry(e.id_, SimpleInvEntry(pivId, e.val_));
     }
   }
   // Sorting of inverted index posting lists can be done, but it is not really needed for fast all-pivot distance computation
   //invIndex_.sort(); //
+}
+
+void SpaceDotProdPivotIndexBase::ComputePivotDistancesIndexTime(const Object* pObj, vector<float>& vResDist) const {
+  vector<SparseVectElem<float>> queryElems;
+  GenVectElems(*pObj, bNormQuery_, queryElems);
+
+  vResDist.resize(pivots_.size());
+  for (size_t pivId = 0; pivId < pivots_.size(); ++pivId)
+    vResDist[pivId] = 0;
+
+  for (auto qe : queryElems) {
+    const vector<SimpleInvEntry> *pEntries = invIndex_.getDict(qe.id_);
+    if (pEntries != nullptr) {
+      for (auto pe : *pEntries)
+        vResDist[pe.id_] += pe.weight_;
+    }
+  }
 }
 }  // namespace similarity

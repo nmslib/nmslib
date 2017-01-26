@@ -157,7 +157,8 @@ class Space {
    * i.e., when we call functions ComputePivotDistancesIndexTime and
    * ComputePivotDistancesQueryTime.
    */
-  virtual PivotIndex<dist_t>* CreatePivotIndex(const ObjectVector& pivots) {
+  virtual PivotIndex<dist_t>* CreatePivotIndex(const ObjectVector& pivots,
+                                               size_t hashTrickDim = 0) const {
     return new DummyPivotIndex<dist_t>(*this, pivots);
   }
 
