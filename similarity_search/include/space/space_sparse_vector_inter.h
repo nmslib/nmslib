@@ -175,6 +175,8 @@ inline  void UnpackSparseElements(const char* pBuff, size_t dataLen,
 {
   typedef SparseVectElem<dist_t> ElemType;
 
+  OutVect.clear(); // just in case
+
   size_t            blockQty = 0;
   dist_t            SqSum = 0;
   float             normCoeff = 0;
