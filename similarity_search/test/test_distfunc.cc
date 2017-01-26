@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <cmath>
+#include <spacefactory.h>
 
 #include "bunit.h"
 #include "space.h"
@@ -905,6 +906,74 @@ bool TestSparseQueryNormNegativeScalarProductAgree(const string& dataFile, size_
     return true;
 }
 
+// Limitation: this is only for spaces without params
+bool TestPivotIndex(const string& spaceName,
+                    bool useDummyIndex,
+                    const string& dataFile, size_t dataQty,
+                    const string& pivotFile, size_t pivotQty) {
+
+  LOG(LIB_INFO) << "space: " << spaceName << " real pivot index?: " << !useDummyIndex << endl <<
+                   " dataFile: " << dataFile << endl <<
+                   " pivotFile: " << pivotFile;
+  try {
+    typedef float T;
+
+    AnyParams emptyParams;
+
+    unique_ptr<Space<T>> space(SpaceFactoryRegistry<T>::Instance().CreateSpace(spaceName, emptyParams));
+
+    ObjectVector                                 data;
+    ObjectVector                                 pivots;
+    vector<string>                               tmp;
+
+    float maxRelDiff = 1e-6f;
+    float maxAbsDiff = 1e-6f;
+
+    unique_ptr<DataFileInputState> inpStateFast(space->ReadDataset(data, tmp, dataFile,  dataQty));
+    space->UpdateParamsFromFile(*inpStateFast);
+    space->ReadDataset(pivots, tmp, pivotFile, pivotQty);
+
+    unique_ptr<PivotIndex<T>>  pivIndx(useDummyIndex ? 
+      new DummyPivotIndex<T>(*space, pivots)
+       :
+      space->CreatePivotIndex(pivots,
+                              0 /* Let's not test using the hashing trick here, b/c distances would be somewhat different */));
+
+    for (size_t did = 0; did < dataQty; ++did) {
+      vector<T> vDst;
+      pivIndx->ComputePivotDistancesIndexTime(data[did], vDst);
+      CHECK_MSG(vDst.size() == pivotQty, "ComputePivotDistancesIndexTime returns incorrect # of elements different from the # of pivots");
+
+      for (size_t pid = 0; pid < pivotQty; ++pid) {
+        T val2 = space->IndexTimeDistance(pivots[pid], data[did]);
+        T val1 = vDst[pid];
+
+        float AbsDiff1 = fabs(val1 - val2);
+        float RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val2)),T(1e-18));
+
+        if (RelDiff1 > maxRelDiff && AbsDiff1 > maxAbsDiff) {
+            cerr << "Bug in fast computation of all-pivot distance, " << 
+              " space: " << spaceName << " real pivot index?: " << !useDummyIndex << endl <<
+              " dataFile: " << dataFile << endl <<
+              " pivotFile: " << pivotFile << endl <<
+              " data index: " << did << " pivot index: " << pid << endl <<
+              " val1 = " << val1 << " val2 = " << val2 <<
+              " Diff: " << (val1 - val2) <<
+              " RelDiff1: " << RelDiff1 <<
+              " AbsDiff1: " << AbsDiff1 << endl;
+            return false;
+        }
+      }
+    }
+  } catch (const exception& e) {
+    LOG(LIB_INFO) << "Got exception while testing: " << e.what();
+    return false;
+  }
+  return true;
+}
+
+
+
 
 #ifdef DISABLE_LONG_TESTS
 TEST(DISABLE_TestAgree) {
@@ -1027,6 +1096,39 @@ TEST(TestAgree) {
 
     EXPECT_EQ(0, nFail);
 }
+
+#ifdef DISABLE_LONG_TESTS
+TEST(DISABLE_TestAgreePivotIndex) {
+#else
+TEST(TestAgreePivotIndex) {
+#endif
+    int nTest  = 0;
+    int nFail = 0;
+
+    const size_t dataQty = 1000;
+    const size_t pivotQty = 100;
+
+    vector<string> vDataFiles = {"sparse_5K.txt", "sparse_wiki_5K.txt"}; 
+    vector<string> vSpaces = {SPACE_SPARSE_COSINE_SIMILARITY_FAST, SPACE_SPARSE_ANGULAR_DISTANCE_FAST, 
+                              SPACE_SPARSE_NEGATIVE_SCALAR_FAST, SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST};
+    const string pivotFile = "sparse_pivots1K_termQty5K_maxId=100K.txt";
+
+    for (string spaceName : vSpaces)
+      for (string dataFile : vDataFiles) {
+        // 1. test with a dummy pivot index
+        nTest++;
+        nFail += !TestPivotIndex(spaceName, true, sampleDataPrefix + dataFile, dataQty, sampleDataPrefix + pivotFile, pivotQty);
+
+        // 2. test with a real pivot index
+        nTest++;
+        nFail += !TestPivotIndex(spaceName, false, sampleDataPrefix + dataFile, dataQty, sampleDataPrefix + pivotFile, pivotQty);
+    }
+
+    LOG(LIB_INFO) << nTest << " (sub) tests performed " << nFail << " failed";
+
+    EXPECT_EQ(0, nFail);
+}
+
 
 }  // namespace similarity
 

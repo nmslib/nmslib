@@ -96,7 +96,7 @@ void SpaceDotProdPivotIndexBase::GenVectElems(const Object& obj, bool bNorm, vec
                              pBlockQty,
                              pBlockOff,
                              pBlockBegin);
-    CHECK(obj.datalength() >= (pBlockBegin-reinterpret_cast<const char*>(obj.data())));
+    CHECK(ssize_t(obj.datalength()) >= (pBlockBegin-reinterpret_cast<const char*>(obj.data())));
     for (SparseVectElem<float> & e : pivElems) {
       e.val_ *= normCoeff;
     }
@@ -129,7 +129,7 @@ void SpaceDotProdPivotIndexBase::ComputePivotDistancesIndexTime(const Object* pO
     const vector<SimpleInvEntry> *pEntries = invIndex_.getDict(qe.id_);
     if (pEntries != nullptr) {
       for (auto pe : *pEntries)
-        vResDist[pe.id_] += pe.weight_;
+        vResDist[pe.id_] += qe.val_ * pe.weight_;
     }
   }
 }
