@@ -85,7 +85,8 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
       : data_(data),  
         space_(space), 
         PrintProgress_(PrintProgress),
-        recreate_points_(false)  {
+        recreate_points_(false),
+        disable_pivot_index_(false) {
 }
 
 
@@ -106,6 +107,8 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  thread::hardware_concurrency());
   pmgr.GetParamOptional("recreatePoints", recreate_points_,  false);
+  pmgr.GetParamOptional("disablePivotIndex", disable_pivot_index_, false);
+  pmgr.GetParamOptional("hashTrickDim", hash_trick_dim_, 0);
 
   if (num_prefix_ > num_pivot_) {
     PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix (" << num_prefix_ << ") "
@@ -128,6 +131,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
   LOG(LIB_INFO) << "# pivotFile                   = " << pivot_file_;
   LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
   LOG(LIB_INFO) << "# pivots to index (numPrefix) = " << num_prefix_;
+  LOG(LIB_INFO) << "# hash trick dimensionionality= " << hash_trick_dim_;
   LOG(LIB_INFO) << "Do we recreate points during indexing when computing distances to pivots?  = " << recreate_points_;
 
   if (pivot_file_.empty())
@@ -140,6 +144,8 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
     }
     genPivot_ = pivot_;
   }
+  // Attempt to create an efficient pivot index, after pivots are loaded/created
+  initPivotIndex();
 
   posting_lists_.resize(indexQty);
 
@@ -212,6 +218,38 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
 }
 
 template <typename dist_t>
+void PivotNeighbInvertedIndex<dist_t>::GetPermutationPPIndexEfficiently(const Object* pObj, Permutation& p) const {
+  vector<dist_t> vDst;
+
+  pivot_index_->ComputePivotDistancesIndexTime(pObj, vDst);
+  GetPermutationPPIndexEfficiently(p, vDst);
+}
+
+template <typename dist_t>
+void PivotNeighbInvertedIndex<dist_t>::GetPermutationPPIndexEfficiently(const Query<dist_t>* pQuery, Permutation& p) const {
+  vector<dist_t> vDst;
+
+  pivot_index_->ComputePivotDistancesQueryTime(pQuery, vDst);
+  GetPermutationPPIndexEfficiently(p, vDst);
+}
+
+template <typename dist_t>
+void PivotNeighbInvertedIndex<dist_t>::GetPermutationPPIndexEfficiently(Permutation &p, const vector <dist_t> &vDst) const {
+  vector<DistInt<dist_t>> dists;
+  p.clear();
+
+  for (size_t i = 0; i < pivot_.size(); ++i) {
+    dists.push_back(std::make_pair(vDst[i], static_cast<PivotIdType>(i)));
+  }
+  sort(dists.begin(), dists.end());
+  // dists.second = pivot id    i.e.  \Pi_o(i)
+
+  for (size_t i = 0; i < pivot_.size(); ++i) {
+    p.push_back(dists[i].second);
+  }
+}
+
+template <typename dist_t>
 void 
 PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* progress_bar, mutex& display_mutex) {
   size_t minId = chunkId * chunk_index_size_;
@@ -232,7 +270,7 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* pr
       pObj=extObj.get();
     }
 
-    GetPermutationPPIndex(pivot_, space_, pObj, &perm);
+    GetPermutationPPIndexEfficiently(pObj, perm);
     for (size_t j = 0; j < num_prefix_; ++j) {
       chunkPostLists[perm[j]].push_back(id);
     }
@@ -440,7 +478,8 @@ void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
     }
     genPivot_ = pivot_;
   }
-
+  // Attempt to create an efficient pivot index, after pivots are loaded
+  initPivotIndex();
 
   posting_lists_.resize(indexQty);
 
@@ -486,7 +525,7 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
 
 
   Permutation perm_q;
-  GetPermutationPPIndex(pivot_, query, &perm_q);
+  GetPermutationPPIndexEfficiently(query, perm_q);
 
   vector<unsigned>          counter(chunk_index_size_);
   vector<const Object*>     tmp_cand(chunk_index_size_);

@@ -104,6 +104,7 @@ void SpaceDotProdPivotIndexBase::GenVectElems(const Object& obj, bool bNorm, vec
 }
 
 void SpaceDotProdPivotIndexBase::createIndex() {
+  LOG(LIB_INFO) << "Creating an index, hash trick dim: " << hashTrickDim_ << " norm. data?: " << bNormData_ << " norm. query?: " << bNormQuery_;
   for (size_t pivId = 0; pivId < pivots_.size(); ++pivId) {
     vector<SparseVectElem<float>> pivElems;
     GenVectElems(*pivots_[pivId], bNormData_, pivElems);

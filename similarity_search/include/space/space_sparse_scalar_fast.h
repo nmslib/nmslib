@@ -21,6 +21,7 @@
 #include <limits>
 #include <map>
 #include <stdexcept>
+#include <algorithm>
 
 #include <string.h>
 #include "global.h"
@@ -52,7 +53,7 @@ public:
                              bool  bNormData,
                              bool  bNormQuery,
                              size_t hashTrickDim = 0) :
-    space_(space), pivots_(pivots), bNormData_(bNormData), bNormQuery_(bNormQuery) {
+    space_(space), pivots_(pivots), bNormData_(bNormData), bNormQuery_(bNormQuery), hashTrickDim_(hashTrickDim) {
     createIndex();
   }
   virtual void ComputePivotDistancesIndexTime(const Object* pObj, vector<float>& vResDist) const override;
@@ -91,7 +92,7 @@ protected:
         SpaceDotProdPivotIndexBase(space, pivots, true, true, hashTrickDim) {}
     virtual void ComputePivotDistancesIndexTime(const Object* pObj, vector<float>& vResDist) const override {
       SpaceDotProdPivotIndexBase::ComputePivotDistancesIndexTime(pObj, vResDist);
-      for (float &val : vResDist) val = max(0f, 1f - val); // converting dot-product to cosine distance
+      for (float &val : vResDist) val = max(0.0f, 1.0f - val); // converting dot-product to cosine distance
     }
   };
 
