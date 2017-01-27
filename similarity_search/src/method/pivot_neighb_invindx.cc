@@ -203,6 +203,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
   }
 
   // Let's collect pivot occurrence statistics
+#ifdef PRINT_PIVOT_OCCURR_STAT
   vector<size_t> pivotOcurrQty(num_pivot_);
 
   for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
@@ -215,6 +216,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
     str << pivotOcurrQty[i] << " , ";
   }
   LOG(LIB_INFO) << "Pivot occurrences stat.:" << str.str();
+#endif
 }
 
 template <typename dist_t>
@@ -382,6 +384,8 @@ void PivotNeighbInvertedIndex<dist_t>::SaveIndex(const string &location) {
   WriteField(outFile, "chunkIndexSize", chunk_index_size_); lineNum++;
   WriteField(outFile, "indexQty", posting_lists_.size()); lineNum++;
   WriteField(outFile, "pivotFile", pivot_file_); lineNum++;
+  WriteField(outFile, "disablePivotIndex", disable_pivot_index_); lineNum++;
+  WriteField(outFile, "hashTrickDim", hash_trick_dim_); lineNum++;
 
   if (pivot_file_.empty()) {
     // Save pivots positions
@@ -424,6 +428,8 @@ void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
   size_t indexQty;
   ReadField(inFile, "indexQty", indexQty);  lineNum++;
   ReadField(inFile, "pivotFile", pivot_file_); lineNum++;
+  ReadField(inFile, "disablePivotIndex", disable_pivot_index_); lineNum++;
+  ReadField(inFile, "hashTrickDim", hash_trick_dim_); lineNum++;
 
   string line;
   if (pivot_file_.empty()) {

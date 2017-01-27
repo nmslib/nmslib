@@ -1111,7 +1111,7 @@ TEST(TestAgreePivotIndex) {
     vector<string> vDataFiles = {"sparse_5K.txt", "sparse_wiki_5K.txt"}; 
     vector<string> vSpaces = {SPACE_SPARSE_COSINE_SIMILARITY_FAST, SPACE_SPARSE_ANGULAR_DISTANCE_FAST, 
                               SPACE_SPARSE_NEGATIVE_SCALAR_FAST, SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST};
-    const string pivotFile = "sparse_pivots1K_termQty5K_maxId=100K.txt";
+    const string pivotFile = "sparse_pivots1K_termQty5K_maxId_100K.txt";
 
     for (string spaceName : vSpaces)
       for (string dataFile : vDataFiles) {
