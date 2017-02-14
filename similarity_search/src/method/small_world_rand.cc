@@ -39,7 +39,6 @@
 #define START_WITH_E0_AT_QUERY_TIME
 
 #define USE_BITSET_FOR_INDEXING 1
-//#define USE_ALTERNATIVE_FOR_INDEXING 
 
 namespace similarity {
 
@@ -109,7 +108,7 @@ template <typename dist_t>
 SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
                                        const Space<dist_t>& space,
                                        const ObjectVector& data) : 
-                                       space_(space), data_(data), PrintProgress_(PrintProgress) {}
+                                       space_(space), data_(data), PrintProgress_(PrintProgress), use_proxy_dist_(false) {}
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams) 
@@ -121,11 +120,13 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
   efSearch_ = NN_;
   pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   1);
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
+  pmgr.GetParamOptional("useProxyDist",       use_proxy_dist_,      false);
 
   LOG(LIB_INFO) << "NN                  = " << NN_;
   LOG(LIB_INFO) << "efConstruction_     = " << efConstruction_;
   LOG(LIB_INFO) << "initIndexAttempts   = " << initIndexAttempts_;
   LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
+  LOG(LIB_INFO) << "useProxyDist        = " << use_proxy_dist_;
 
   pmgr.CheckUnused();
 
@@ -269,12 +270,8 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
     priority_queue <dist_t>                     closestDistQueue;                      
     priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
 
-#ifdef USE_ALTERNATIVE_FOR_INDEXING
-    dist_t d = space_.ProxyDistance(queryObj, provider->getData());
-    #pragma message "Using an alternative/proxy function for indexing, not the original one!"          
-#else
-    dist_t d = space_.IndexTimeDistance(queryObj, provider->getData());
-#endif
+    dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(queryObj, provider->getData()) : 
+                                  space_.IndexTimeDistance(queryObj, provider->getData());
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
 
     candidateSet.push(ev);
@@ -350,12 +347,8 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
         if (visited.find(pNeighbor) == visited.end()) {
           visited.insert(pNeighbor);
 #endif
-#ifdef USE_ALTERNATIVE_FOR_INDEXING
-          d = space_.ProxyDistance(queryObj, pNeighbor->getData());
-          #pragma message "Using an alternative/proxy function for indexing, not the original one!"          
-#else
-          d = space_.IndexTimeDistance(queryObj, pNeighbor->getData());
-#endif
+          d = use_proxy_dist_ ? space_.ProxyDistance(queryObj, pNeighbor->getData()) : 
+                                space_.IndexTimeDistance(queryObj, pNeighbor->getData());
 
           if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
             closestDistQueue.push(d);
