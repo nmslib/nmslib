@@ -52,7 +52,8 @@ class SpaceAlphaBetaDiverg : public VectorSpaceSimpleStorage<dist_t> {
 
   virtual std::string StrDesc() const;
  protected:
-  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const override;
+  virtual dist_t ProxyDistance(const Object* obj1, const Object* obj2) const override;
  private:
   DISABLE_COPY_AND_ASSIGN(SpaceAlphaBetaDiverg);
   float alpha_, beta_;
