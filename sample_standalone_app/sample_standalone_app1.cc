@@ -70,6 +70,7 @@ void printResults(KNNQuery<float>* qobj) {
     cout << res->TopObject()->id() << " : " << res->TopDistance() << endl;
     res->Pop();
   }
+  delete res;
 }
 
 void printResults(RangeQuery<float>* qobj) {

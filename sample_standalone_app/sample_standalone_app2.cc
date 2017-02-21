@@ -49,6 +49,7 @@ float compAvgDist(KNNQuery<float>* qobj) {
     ++qty;
     res->Pop();
   }
+  delete res;
   return sum/qty;
 }
 
