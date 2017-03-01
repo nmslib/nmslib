@@ -159,6 +159,10 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_SEQ_SEARCH_SYN, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(int,    METH_SEQ_SEARCH_SYN, CreateSeqSearch)
 
+  REGISTER_METHOD_CREATOR(float,  METH_SYM_SEQ_SEARCH, CreateSymSeqSearch)
+  REGISTER_METHOD_CREATOR(double, METH_SYM_SEQ_SEARCH, CreateSymSeqSearch)
+  REGISTER_METHOD_CREATOR(int,    METH_SYM_SEQ_SEARCH, CreateSymSeqSearch)
+
   // Small-word (KNN-graph) with randomly generated neighborhood-networks
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND, CreateSmallWorldRand)

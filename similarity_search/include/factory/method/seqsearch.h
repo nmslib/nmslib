@@ -18,6 +18,7 @@
 #define _FACTORY_SEQ_SEARCH_H
 
 #include <method/seqsearch.h>
+#include <method/sym_seqsearch.h>
 
 namespace similarity {
 
@@ -31,6 +32,14 @@ Index<dist_t>* CreateSeqSearch(bool PrintProgress,
                            Space<dist_t>& space,
                            const ObjectVector& DataObjects) {
   return new SeqSearch<dist_t>(space, DataObjects);
+}
+
+template <typename dist_t>
+Index<dist_t>* CreateSymSeqSearch(bool PrintProgress,
+                           const string& SpaceType,
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+  return new SymSeqSearch<dist_t>(space, DataObjects);
 }
 
 /*
