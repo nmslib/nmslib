@@ -84,8 +84,10 @@ struct OneTranEntryShort {
 };
 
 struct DocEntryPtr {
-  QTY_TYPE       mWordIdsQty = 0;  //  a number of elements for mpWordIds, mpQtys, mpBM25IDF, mpLuceneIDF
-  QTY_TYPE       mWordIdSeqQty = 0; // a number of elements for mpWordIdSeq
+  QTY_TYPE       mWordIdsQty = 0;      //  a number of elements for mpWordIds, mpQtys, mpBM25IDF, mpLuceneIDF
+  QTY_TYPE       mWordIdsTotalQty = 0; //  a total number of unique words in a document
+  QTY_TYPE       mWordIdSeqQty = 0; // a number of elements for mpWordIdSeq, it could be zero when mWordIdsTotalQty > 0,
+                                    // b/c we do not necessarily store 
   QTY_TYPE       mWordEmbedDim = 0; ; // a dimensionality of averaged word embeddings
 
   const WORD_ID_TYPE*  mpWordIds = NULL;   // unique word ids
@@ -106,18 +108,20 @@ struct DocEntryPtr {
 
 struct DocEntryHeader {
   const QTY_TYPE    mWordIdsQty;
+  const QTY_TYPE    mWordIdsTotalQty;
   const QTY_TYPE    mWordIdSeqQty;
   const QTY_TYPE    mWordEmbedDim;
 #ifdef PRECOMPUTE_TRAN_TABLES
   const int32_t     mTranRecQty; // negative value means that entries weren't precomputed
 #endif
   DocEntryHeader(unsigned wordIdsQty,
+                 unsigned wordIdsTotalQty,
                  unsigned wordIdSeqQty,
                  unsigned wordEmbedDim
 #ifdef PRECOMPUTE_TRAN_TABLES
       , int tranReqQty
 #endif
-  ) : mWordIdsQty(wordIdsQty), mWordIdSeqQty(wordIdSeqQty), mWordEmbedDim(wordEmbedDim)
+  ) : mWordIdsQty(wordIdsQty), mWordIdsTotalQty(wordIdsTotalQty), mWordIdSeqQty(wordIdSeqQty), mWordEmbedDim(wordEmbedDim)
 #ifdef PRECOMPUTE_TRAN_TABLES
       ,mTranRecQty(tranReqQty)
 #endif
@@ -155,6 +159,7 @@ struct DocEntryParser {
   vector<IDF_TYPE>      mvBM25IDF;
   vector<IDF_TYPE>      mvLuceneIDF;
   vector<QTY_TYPE>      mvQtys;      // # of word occurrences corresponding to memorized ids
+  unsigned              mWordIdsTotalQty = 0;
   vector<WORD_ID_TYPE>  mvWordIdSeq; // a sequence of word IDs (can contain repeats)
 };
 

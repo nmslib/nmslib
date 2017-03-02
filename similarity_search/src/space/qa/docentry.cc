@@ -68,13 +68,21 @@ DocEntryParser::DocEntryParser(const InMemFwdIndexReader &indxReader, size_t fie
   boost::split(vParts1, line, boost::is_any_of("\t "));
 
   if (!line.empty()) {
-    for (size_t i = 0; i < vParts1.size(); ++i) {
+    if (vParts1.size() == 2 && vParts1[0] == "@") {
       try {
-        int wordId = boost::lexical_cast<int>(vParts1[i]);
-
-        mvWordIdSeq.push_back(wordId);
+        mWordIdsTotalQty = boost::lexical_cast<unsigned>(vParts1[0]);
       } catch (const boost::bad_lexical_cast &) {
         throw runtime_error("Invalid document entry format in the second (cannot convert word id to integer)");
+      }
+    } else {
+      for (size_t i = 0; i < vParts1.size(); ++i) {
+        try {
+          int wordId = boost::lexical_cast<int>(vParts1[i]);
+
+          mvWordIdSeq.push_back(wordId);
+        } catch (const boost::bad_lexical_cast &) {
+          throw runtime_error("Invalid document entry format in the second (cannot convert word id to integer)");
+        }
       }
     }
   }

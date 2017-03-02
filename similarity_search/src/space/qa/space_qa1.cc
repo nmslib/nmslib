@@ -320,7 +320,7 @@ static void computeTranFeaturesFromFlippedTable(
   model1prob = logScore;
   simpleTran1 = shareTranPairQty;
   simpleTran2 = shareTranPairQty / (float)
-      max(1.0f, (float)queryObj.mWordIdSeqQty * docObj.mWordIdSeqQty);
+      max(1.0f, (float)queryObj.mWordIdsTotalQty * docObj.mWordIdsTotalQty);
 
 }
 
@@ -421,7 +421,7 @@ static void computeTranFeaturesFromFlippedTableHashPayload(
   model1prob = logScore;
   simpleTran1 = shareTranPairQty;
   simpleTran2 = shareTranPairQty / (float)
-      max(1.0f, (float)queryObj.mWordIdSeqQty * docObj.mWordIdSeqQty);
+      max(1.0f, (float)queryObj.mWordIdsTotalQty * docObj.mWordIdsTotalQty);
 
 }
 
@@ -555,7 +555,7 @@ static void computeTranFeaturesFromFlippedTableUsingPrecompTable(
   model1prob = logScore;
   simpleTran1 = shareTranPairQty;
   simpleTran2 = shareTranPairQty / (float)
-      max(1.0f, (float)queryObj.mWordIdSeqQty * docObj.mWordIdSeqQty);
+      max(1.0f, (float)queryObj.mWordIdsTotalQty * docObj.mWordIdsTotalQty);
 }
 #endif
 
@@ -633,7 +633,7 @@ static void computeTranFeaturesFromTranBasedHash(
   model1prob = logScore;
   simpleTran1 = shareTranPairQty;
   simpleTran2 = shareTranPairQty / (float)
-      max(1.0f, (float)queryObj.mWordIdSeqQty * docObj.mWordIdSeqQty);
+      max(1.0f, (float)queryObj.mWordIdsTotalQty * docObj.mWordIdsTotalQty);
 
 }
 #endif
@@ -1273,7 +1273,7 @@ SpaceQA1::computeBM25PivotIndex(const ObjectVector& pivots) const {
 
       SimpleInvIndex&     invIndex = *(*holder)[fieldId];
       float               invAvgDocLen = params.mIndxReader.getInvAvgDocLen(fieldId);
-      float               docLen = objPivot.mWordIdSeqQty;
+      float               docLen = objPivot.mWordIdsTotalQty;
 
 
       for (IdTypeUnsign ia = 0; ia < objPivot.mWordIdsQty; ++ia) {
@@ -1754,7 +1754,7 @@ SpaceQA1::CreateObjFromStr(IdType id, LabelType label, const string& objStr,
       }
     #endif
 
-      DocEntryHeader        dhead(de.mvWordIds.size(), de.mvWordIdSeq.size(),
+      DocEntryHeader        dhead(de.mvWordIds.size(), de.mWordIdsTotalQty, de.mvWordIdSeq.size(),
                                   pSpaceParams->mWordEmbeddings[fieldId] != NULL ? pSpaceParams->mWordEmbeddings[fieldId]->getDim() : 0
                                   #ifdef PRECOMPUTE_TRAN_TABLES
                                         ,tranRecQty
@@ -1886,6 +1886,10 @@ SpaceQA1::CreateObjFromStr(IdType id, LabelType label, const string& objStr,
                 "Bug: docEntry.mWordIdsQty (" + lexical_cast<string>(docEntry.mWordIdsQty) + ") " +
                 " != docEntryHeaders[fieldId].mWordIdsQty (" + lexical_cast<string>(docEntryHeaders[fieldId].mWordIdsQty) + ") " +
                 " fieldId = " + lexical_cast<string>(fieldId));
+        CHECK_MSG(docEntry.mWordIdsTotalQty == docEntryHeaders[fieldId].mWordIdsTotalQty,
+                "Bug: docEntry.mWordIdsTotalQty (" + lexical_cast<string>(docEntry.mWordIdsTotalQty) + ") " +
+                " != docEntryHeaders[fieldId].mWordIdsTotalQty (" + lexical_cast<string>(docEntryHeaders[fieldId].mWordIdsTotalQty) + ") " +
+                " fieldId = " + lexical_cast<string>(fieldId));
         CHECK_MSG(docEntry.mWordIdSeqQty == docEntryHeaders[fieldId].mWordIdSeqQty,
                 "Bug: docEntry.mWordIdSeqQty (" + lexical_cast<string>(docEntry.mWordIdSeqQty) + ") " +
                 " != docEntryHeaders[fieldId].mWordIdSeqQty (" + lexical_cast<string>(docEntryHeaders[fieldId].mWordIdSeqQty) + ") " +
@@ -1976,9 +1980,13 @@ string SpaceQA1::CreateStrFromObj(const Object* pObj, const string& externId /* 
       str << docEntry.mpWordIds[i] << ':' << docEntry.mpQtys[i];
     }
     str << endl;
-    for (QTY_TYPE i = 0; i < docEntry.mWordIdSeqQty; ++i) {
-      if (i) str << " ";
-      str << docEntry.mpWordIdSeq[i];
+    if (!docEntry.mWordIdSeqQty) {
+      str << "@ " << docEntry.mWordIdsTotalQty;
+    } else {
+      for (QTY_TYPE i = 0; i < docEntry.mWordIdSeqQty; ++i) {
+        if (i) str << " ";
+        str << docEntry.mpWordIdSeq[i];
+      }
     }
     str << endl;
   }

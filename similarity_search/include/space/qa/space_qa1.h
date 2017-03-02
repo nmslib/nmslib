@@ -343,6 +343,7 @@ private:
     const DocEntryHeader* pHeader = reinterpret_cast<const DocEntryHeader*>(pBufPtr);
     pBufPtr += sizeof(*pHeader);
     docEntry.mWordIdsQty   = pHeader->mWordIdsQty;
+    docEntry.mWordIdsTotalQty = pHeader->mWordIdsTotalQty;
     docEntry.mWordIdSeqQty = pHeader->mWordIdSeqQty;
     docEntry.mWordEmbedDim = pHeader->mWordEmbedDim;
 

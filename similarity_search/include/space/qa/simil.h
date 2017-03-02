@@ -103,7 +103,7 @@ public:
       }
     }
 
-    float docLen = doc.mWordIdSeqQty;
+    float docLen = doc.mWordIdsTotalQty;
     float lengthNorm = docLen > 0 ? ((float) (1.0 / sqrt((float) docLen))) : 0;
 
     size_t iQuery = 0, iDoc = 0;
@@ -154,7 +154,7 @@ public:
     size_t queryTermQty = query.mWordIdsQty;
 
     float normBM25 = 0;
-    float docLen = doc.mWordIdSeqQty;
+    float docLen = doc.mWordIdsTotalQty;
 
     size_t iQuery = 0, iDoc = 0;
 
