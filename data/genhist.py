@@ -25,7 +25,7 @@ outf = args['outf']
 dim  = args['dim']
 
 f=open(outf, 'w')
-for i in xrange(nd+1):
+for i in xrange(nd):
   arr = numpy.array([random.random() for _ in xrange(dim)])
   arr /= sum(arr)
   f.write("\t".join([("%.5f" % v) for v in arr]) + "\n")
