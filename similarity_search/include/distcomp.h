@@ -184,6 +184,13 @@ template <typename T> T LPGenericDistance(const T* x, const T* y, const int leng
 
 template <typename T> T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p);
 
+/*
+ * Renyi divergence.
+ * Rényi, Alfréd (1961). "On measures of information and entropy". 
+ * Proceedings of the fourth Berkeley Symposium on Mathematics, Statistics and Probability 1960. pp. 547–561. 
+ */
+template <typename T> T renyi_divergence(const T* x, const T* y, const int length, float alpha);
+
 
 /*
  * Rank correlations

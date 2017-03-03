@@ -45,14 +45,16 @@ class SymSeqSearch : public Index<dist_t> {
   Space<dist_t>&          space_;
   const ObjectVector&     data_;
 
-  enum FilterType { kMin, kAvg };
+  enum FilterType { kNone, kReverse, kMin, kAvg };
   
   FilterType              filterType_ = kMin;
   size_t                  filterK_ = 0;
 
-  dist_t SymDistance(const Query<dist_t>&  q, const Object* o) {
-    dist_t d1 = q.Distance(q.QueryObject(), o);
-    dist_t d2 = q.Distance(o, q.QueryObject());
+  dist_t SymDistance(const Query<dist_t>*  q, const Object* o) const {
+    if (filterType_ == kNone) return q->Distance(o, q->QueryObject());
+    if (filterType_ == kReverse) return q->Distance(q->QueryObject(), o);
+    dist_t d1 = q->Distance(q->QueryObject(), o);
+    dist_t d2 = q->Distance(o, q->QueryObject());
     return filterType_ == kMin ? min(d1, d2) : (d1+d2)*0.5;
   }
 

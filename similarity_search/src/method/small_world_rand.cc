@@ -38,7 +38,7 @@
 #define START_WITH_E0_AT_QUERY_TIME
 
 #define USE_BITSET_FOR_INDEXING 1
-//#define USE_ALTERNATIVE_FOR_INDEXING 
+#define USE_ALTERNATIVE_FOR_INDEXING 
 
 namespace similarity {
 

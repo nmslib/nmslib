@@ -41,7 +41,7 @@ EmbeddingReaderAndRecoder::EmbeddingReaderAndRecoder(const string& inpFileName, 
   string strObj;
   size_t lineNum = 0;
 
-  while (getline(inpFile, strObj) != nullptr) {
+  while (getline(inpFile, strObj)) {
     ++lineNum;
 
     ssize_t pos = -1;
