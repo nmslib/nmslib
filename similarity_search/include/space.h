@@ -117,8 +117,9 @@ class Space {
   // This function is public and it is not supposed to be used in the query-mode
   dist_t IndexTimeDistance(const Object* obj1, const Object* obj2) const {
     if (!bIndexPhase) {
-      throw runtime_error(string("The public function ") + __func__ + 
-                                 " function is accessible only during the indexing phase!");
+      PREPARE_RUNTIME_ERR(err) <<  "The public function " << __func__ << 
+                                 " function is accessible only during the indexing phase!";
+      THROW_RUNTIME_ERR(err);
     }
     return HiddenDistance(obj1, obj2);
   }

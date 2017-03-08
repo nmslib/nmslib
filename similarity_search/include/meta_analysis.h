@@ -48,6 +48,8 @@ public:
     LoadTime_       .resize(TestSetQty);
     SaveTime_       .resize(TestSetQty);
     QueryPerSec_    .resize(TestSetQty);
+    Found_          .resize(TestSetQty);
+    FoundQty_       .resize(TestSetQty);
   }
 
   // Let's protect Add* functions, b/c them can be called from different threads  
@@ -96,6 +98,15 @@ public:
   void SetImprDistComp(size_t SetId, double ImprDistComp) {
     ImprDistComp_[SetId] = ImprDistComp;
   }
+  void AddFound(size_t SetId, const vector<char>& Found) {
+    size_t fqty = Found.size();
+    if (Found_[SetId].size() < fqty) 
+      Found_[SetId].resize(fqty);
+    FoundQty_[SetId]++;
+    for (size_t fid = 0; fid < fqty; ++fid) {
+      Found_[SetId][fid] += Found[fid];
+    }
+  }
 
   void ComputeAll() {
     ComputeOneSimple("Recall", Recall_, RecallAvg, RecallConfMin, RecallConfMax);
@@ -114,6 +125,22 @@ public:
     ComputeOneSimple("LoadTime", LoadTime_, LoadTimeAvg, LoadTimeConfMin, LoadTimeConfMax);
     ComputeOneSimple("SaveTime", SaveTime_, SaveTimeAvg, SaveTimeConfMin, SaveTimeConfMax);
     ComputeOneSimple("QueryPerSec", QueryPerSec_, QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax);
+    // For probabilities to miss/found a neighbor at a given rank,
+    // a plain mean is computed
+    double totFoundQty = 0;
+    for (size_t SetId = 0; SetId < Found_.size(); ++SetId) {
+      totFoundQty += FoundQty_[SetId];
+      if (FoundAvg.size() < Found_[SetId].size()) 
+        FoundAvg.resize(Found_[SetId].size());
+      for (size_t fid = 0; fid < Found_[SetId].size(); ++fid) {
+        FoundAvg[fid] += Found_[SetId][fid];
+      }
+    } 
+    for (size_t SetId = 0; SetId < Found_.size(); ++SetId) {
+      for (size_t fid = 0; fid < Found_[SetId].size(); ++fid) {
+        FoundAvg[fid] /= totFoundQty;
+      }
+    }
   }
 
   double GetRecallAvg() const { return RecallAvg;} 
@@ -175,6 +202,8 @@ public:
   double GetDistCompAvg() const { return DistCompAvg;} 
   double GetDistCompConfMin() const{return DistCompConfMin;}; 
   double GetDistCompConfMax() const { return DistCompConfMax;}
+
+  const vector<double> GetFoundAvg() const { return FoundAvg; }
 private:
 double RecallAvg, RecallConfMin, RecallConfMax;
 double PrecisionOfApproxAvg, PrecisionOfApproxConfMin, PrecisionOfApproxConfMax;
@@ -192,6 +221,7 @@ double LoadTimeAvg, LoadTimeConfMin, LoadTimeConfMax;
 double SaveTimeAvg, SaveTimeConfMin, SaveTimeConfMax;
 double QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax;
 double zVal_;
+vector<double> FoundAvg;
 
 vector<vector<double>>   Recall_; 
 vector<vector<double>>   PrecisionOfApprox_; 
@@ -208,6 +238,8 @@ vector<double>           IndexTime_;
 vector<double>           LoadTime_; 
 vector<double>           SaveTime_; 
 vector<double>           QueryPerSec_; 
+vector<vector<double>>   Found_; 
+vector<double>           FoundQty_; 
 
 MetaAnalysis(){} // be private!
 

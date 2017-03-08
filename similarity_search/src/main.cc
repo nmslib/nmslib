@@ -51,9 +51,11 @@ using std::string;
 using std::stringstream;
 
 void OutData(bool DoAppend, const string& FilePrefix,
-             const string& Print, const string& Header, const string& Data) {
+             const string& Print, 
+             const string& Header, const string& Data, const string& Found) {
   string FileNameData = FilePrefix + ".dat";
   string FileNameRep  = FilePrefix + ".rep";
+  string FileNameFound = FilePrefix + ".fnd";
 
   LOG(LIB_INFO) << "DoAppend? " << DoAppend;
 
@@ -76,11 +78,25 @@ void OutData(bool DoAppend, const string& FilePrefix,
   if (!DoAppend) {
       OutFileData << Header;
   }
+
+
+  std::ofstream   OutFileFound(FileNameFound.c_str(),
+                              (DoAppend ? std::ios::app : (std::ios::trunc | std::ios::out)));
+
+  if (!OutFileFound) {
+    LOG(LIB_FATAL) << "Cannot create output file: '" << FileNameFound << "'";
+  }
+  OutFileFound.exceptions(std::ios::badbit);
+
+
   OutFileData<< Data;
   OutFileRep<< Print;
 
   OutFileRep.close();
   OutFileData.close();
+
+  OutFileFound << Found;
+  OutFileFound.close();
 }
 
 template <typename dist_t>
@@ -91,8 +107,9 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
                     const string& QueryTimeParamStr,
                     string& PrintStr, // For display
                     string& HeaderStr,
-                    string& DataStr   /* to be processed by a script */) {
-  std::stringstream Print, Data, Header;
+                    string& DataStr   /* to be processed by a script */,
+                    string& FoundStr) {
+  std::stringstream Print, Data, Header, Found;
 
   ExpRes.ComputeAll();
 
@@ -121,8 +138,17 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   PrintStr  = produceHumanReadableReport(config, ExpRes, MethodName, IndexParamStr, QueryTimeParamStr);
 
+  bool f = false;
+  for (double p : ExpRes.GetFoundAvg()) {
+    if (f) Found << "\t";
+    f = true;
+    Found << p;
+  }
+  Found << std::endl;
+
   DataStr   = Data.str();
   HeaderStr = Header.str();
+  FoundStr  = Found.str();
 };
 
 template <typename dist_t>
@@ -292,7 +318,7 @@ void RunExper(bool                                bPrintProgress,
     }
   }
 
-  for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
+  for (size_t TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
 
     string indexLocAdd = "";
@@ -452,14 +478,14 @@ void RunExper(bool                                bPrintProgress,
       // Don't overwrite file after we output data at least for one method!
       bool DoAppendHere = DoAppend || MethNum;
 
-      string Print, Data, Header;
+      string Print, Data, Header, Found;
 
       for (size_t i = 0; i < config.GetRange().size(); ++i) {
         MetaAnalysis* res = ExpResRange[i][MethNum];
 
         ProcessResults(config, *res, MethodDescStr,
                       IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
-                      Print, Header, Data);
+                      Print, Header, Data, Found);
         LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
         LOG(LIB_INFO) << Print;
         LOG(LIB_INFO) << "Data: " << Header << Data;
@@ -467,7 +493,7 @@ void RunExper(bool                                bPrintProgress,
         if (!ResFilePrefix.empty()) {
           stringstream str;
           str << ResFilePrefix << "_r=" << config.GetRange()[i];
-          OutData(DoAppendHere, str.str(), Print, Header, Data);
+          OutData(DoAppendHere, str.str(), Print, Header, Data, Found);
         }
 
         delete res;
@@ -478,7 +504,7 @@ void RunExper(bool                                bPrintProgress,
 
         ProcessResults(config, *res, MethodDescStr,
                       IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
-                      Print, Header, Data);
+                      Print, Header, Data, Found);
         LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
         LOG(LIB_INFO) << Print;
         LOG(LIB_INFO) << "Data: " << Header << Data;
@@ -486,7 +512,7 @@ void RunExper(bool                                bPrintProgress,
         if (!ResFilePrefix.empty()) {
           stringstream str;
           str << ResFilePrefix << "_K=" << config.GetKNN()[i];
-          OutData(DoAppendHere, str.str(), Print, Header, Data);
+          OutData(DoAppendHere, str.str(), Print, Header, Data, Found);
         }
 
         delete res;

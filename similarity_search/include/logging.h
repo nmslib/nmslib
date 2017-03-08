@@ -94,6 +94,7 @@ class RuntimeErrorWrapper {
 #define PREPARE_RUNTIME_ERR(var) \
   RuntimeErrorWrapper var(__FILE__, __LINE__, __FUNCTION__); var.stream()
 #define THROW_RUNTIME_ERR(var) \
+  LOG(LIB_ERROR) << "An exception to be thrown: " << var.stream().str(); \
   throw runtime_error(var.stream().str())
 
 #endif     // _LOGGING_H_

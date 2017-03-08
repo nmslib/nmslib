@@ -206,6 +206,7 @@ private:
   const Space<dist_t>&  space_;
   ObjectVector          data_; // We copy all the data
   bool                  PrintProgress_;
+  bool                  use_proxy_dist_;
 
   mutable mutex   ElListGuard_;
   ElementList     ElList_;

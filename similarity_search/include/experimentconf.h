@@ -116,11 +116,11 @@ public:
 
   void PrintInfo() const;
   void SelectTestSet(int SetNum);
-  int GetTestSetToRunQty() const {
+  unsigned GetTestSetToRunQty() const {
     if (!noQueryData_) return 1;
     return testSetToRunQty_;
   }
-  int GetTestSetTotalQty() const {
+  unsigned GetTestSetTotalQty() const {
     if (!noQueryData_) return 1;
     return testSetQty_;
   }

@@ -96,6 +96,11 @@ public:
      */
   double GetRecall()          const { return Recall_; }
     /*
+     * A more detailed recall information for k-NN: 
+     * for neighbors of all possible ranks i <= k, is this neighbor found?
+     */
+  const vector<char>& GetFound() const { return found_; }
+    /*
      * Classification correctness
      */
   ClassResult GetClassCorrect()          const { return ClassCorrect_; }
@@ -185,7 +190,16 @@ private:
     PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
     LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
 
-    // 2 Obtain class result
+    // 2 For k-NN search, we want to compute a fraction of found neighbors at a given rank
+    if (K_ > 0) {
+      CHECK_MSG(SortedAllEntries_.size() >= ExactResultSize, "Bug: SortedAllEntries_.size() < ExactResultSize");
+      found_.resize(ExactResultSize);
+      for (size_t i = 0; i < ExactResultSize; i++) {
+        found_[i] = ApproxResultIds_.find(SortedAllEntries_[i].mId) != ApproxResultIds_.end();
+      }
+    }
+
+    // 3 Obtain class result
     if (queryLabel >= 0) {
       unordered_map<LabelType, int>  hClassQty;
       vector<pair<int,LabelType>>    vClassQty;
@@ -214,6 +228,7 @@ private:
   double                              Recall_;
   ClassResult                         ClassCorrect_;
   double                              PrecisionOfApprox_;
+  vector<char>                        found_;
 
   std::vector<ResultEntry<dist_t>>    ApproxEntries_;
   std::unordered_set<IdType>          ApproxResultIds_;

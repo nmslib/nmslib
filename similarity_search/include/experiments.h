@@ -331,6 +331,7 @@ public:
           ExpRes[MethNum]->AddLogRelPosError(TestSetId, Eval.GetLogRelPos());
           ExpRes[MethNum]->AddNumCloser(TestSetId, Eval.GetNumCloser());
           ExpRes[MethNum]->AddRecallAt1(TestSetId, Eval.GetRecallAt1());
+          ExpRes[MethNum]->AddFound(TestSetId, Eval.GetFound());
 
         }
       }
