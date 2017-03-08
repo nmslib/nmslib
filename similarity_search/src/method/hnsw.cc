@@ -370,7 +370,7 @@ namespace similarity {
         };
         ////////////////////////////////////////////////////////////////////////
         //
-        // The next step is needed only fos cosine similarity space
+        // The next step is needed only for cosine similarity space
         // All vectors are normalized, so we don't have to normalize them later
         //
         ////////////////////////////////////////////////////////////////////////
