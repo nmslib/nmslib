@@ -70,9 +70,9 @@ DocEntryParser::DocEntryParser(const InMemFwdIndexReader &indxReader, size_t fie
   if (!line.empty()) {
     if (vParts1.size() == 2 && vParts1[0] == "@") {
       try {
-        mWordIdsTotalQty = boost::lexical_cast<unsigned>(vParts1[0]);
+        mWordIdsTotalQty = boost::lexical_cast<unsigned>(vParts1[1]);
       } catch (const boost::bad_lexical_cast &) {
-        throw runtime_error("Invalid document entry format in the second (cannot convert word id to integer)");
+        throw runtime_error("Invalid document entry format in the second (cannot convert number of unique words to integer)");
       }
     } else {
       for (size_t i = 0; i < vParts1.size(); ++i) {
