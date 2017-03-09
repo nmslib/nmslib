@@ -93,6 +93,7 @@ const size_t AVG_EMBED_FIELD_FEATURE_QTY = 1;
 const char *const BM25_FEATURE_NAME = "bm25";
 const char *const COSINE_FEATURE_NAME = "cosine";
 const char *const MODEL1_FEATURE_NAME = "model1";
+const char *const BM25_SYMMETR_FEATURE_NAME = "bm25_symmetr";
 const vector<string> FEATURE_TYPES = {BM25_FEATURE_NAME,
                                       "tfidf",
                                       "model1",
@@ -100,7 +101,8 @@ const vector<string> FEATURE_TYPES = {BM25_FEATURE_NAME,
                                       "overall_match",
                                       "lcs",
                                       COSINE_FEATURE_NAME,
-                                      "avg_embed"};
+                                      "avg_embed",
+                                      BM25_SYMMETR_FEATURE_NAME};
 // Must be all 2^i with different i
 enum FeatureTypeFlags {
   BM25_FLAG = 1,
@@ -110,7 +112,8 @@ enum FeatureTypeFlags {
   OVERALL_MATCH_FLAG = 16,
   LCS_FLAG = 32,
   COSINE_FLAG = 64,
-  AVG_EMBED_FLAG = 128
+  AVG_EMBED_FLAG = 128,
+  BM25_SYMMETR_FLAG = 256
 };
 
 const vector<uint64_t> FEATURE_TYPE_MASKS = {BM25_FLAG,
@@ -120,7 +123,8 @@ const vector<uint64_t> FEATURE_TYPE_MASKS = {BM25_FLAG,
                                              OVERALL_MATCH_FLAG,
                                              LCS_FLAG,
                                              COSINE_FLAG,
-                                             AVG_EMBED_FLAG};
+                                             AVG_EMBED_FLAG,
+                                             BM25_SYMMETR_FLAG};
 
 static bool checkPrefixGetRest(const string &prefix, const string &line, string &rest) {
   rest.clear();
@@ -735,11 +739,12 @@ DataFileInputStateQA1::DataFileInputStateQA1(const string& headerFileName) {
     string simpleIndexType;
     if (checkPrefixGetRest(SIMPLE_INDEX_TYPE, line, simpleIndexType)) {
       ToLower(simpleIndexType);
-      CHECK_MSG(simpleIndexType == BM25_FEATURE_NAME || simpleIndexType == COSINE_FEATURE_NAME || simpleIndexType == MODEL1_FEATURE_NAME,
+      CHECK_MSG(simpleIndexType == BM25_FEATURE_NAME || simpleIndexType == COSINE_FEATURE_NAME || simpleIndexType == MODEL1_FEATURE_NAME || simpleIndexType == BM25_SYMMETR_FEATURE_NAME,
                "The simple index type is "
                + string(BM25_FEATURE_NAME) + " or "
                + string(COSINE_FEATURE_NAME) + " or "
-               + string(MODEL1_FEATURE_NAME));
+               + string(MODEL1_FEATURE_NAME) + " or "
+               + string(BM25_SYMMETR_FEATURE_NAME));
       CHECK_MSG(getline(istrm, line),
                 "Cannot read line " + lexical_cast<string>(mLineNum) + " from '" + headerFileName + "'");
 
@@ -881,6 +886,10 @@ DataFileInputStateQA1::DataFileInputStateQA1(const string& headerFileName) {
         featureQty += AVG_EMBED_FIELD_FEATURE_QTY;
         mask ^= AVG_EMBED_FLAG;
       }
+      if (mask & BM25_SYMMETR_FLAG) {
+        ++featureQty;
+        mask ^= BM25_SYMMETR_FLAG;
+      }
 
       CHECK_MSG(0 == mask,
                 "Bug: it looks like we didn't take into account all the features for field "  + lexical_cast<string>(fieldId));
@@ -914,11 +923,14 @@ DataFileInputStateQA1::DataFileInputStateQA1(const string& headerFileName) {
         featureMasksPivots[0] = COSINE_FLAG;
       else if (simpleIndexType == MODEL1_FEATURE_NAME)
         featureMasksPivots[0] = MODEL1_FLAG;
+      else if (simpleIndexType == BM25_SYMMETR_FEATURE_NAME)
+        featureMasksPivots[0] = BM25_SYMMETR_FLAG;
       else throw runtime_error(
             "The simple index type should be "
             + string(BM25_FEATURE_NAME) + " or "
             + string(COSINE_FEATURE_NAME) + " or "
-            + string(MODEL1_FEATURE_NAME)
+            + string(MODEL1_FEATURE_NAME) + " or " 
+            + string(BM25_SYMMETR_FEATURE_NAME)
         );
     }
 
@@ -998,6 +1010,7 @@ float SpaceQA1::DistanceInternal(const Object* pObjData, const Object* pObjQuery
 
     float scoreBM25 = 0, scoreTFIDFLucene = 0, scoreCosine = 0, scoreOverallMatch = 0;
     float queryNorm = 1.0f / max(1.0f, (float) objQuery.mWordIdsQty);
+    float scoreBM25Symm = 0;
 
     if (featMask & (BM25_FLAG | OVERALL_MATCH_FLAG)) {
       // BM25 and the overall match flag will be computed mostly together
@@ -1107,6 +1120,18 @@ float SpaceQA1::DistanceInternal(const Object* pObjData, const Object* pObjQuery
       ++featId;
 #endif
       featVals[featId] = 1 + ScalarProductSIMD(objData.mpIDFWeightAvgWordEmbed, objQuery.mpIDFWeightAvgWordEmbed, objData.mWordEmbedDim);
+      ++featId;
+    }
+
+    if (featMask & (BM25_SYMMETR_FLAG)) {
+      SimilarityFunctions::computeSimilBm25Symmetr(true /* normalize all scores */,
+                                            objQuery, objData,
+                                            params.mIndxReader.getInvAvgDocLen(fieldId),
+                                            scoreBM25Symm);
+    }
+
+    if (featMask & BM25_SYMMETR_FLAG) {
+      featVals[featId] = scoreBM25Symm;
       ++featId;
     }
 

@@ -202,6 +202,54 @@ public:
     }
   }
 
+  /*
+   * This is a symmetric version of BM25, where both queries and documents use the same term normalization
+   * method.
+   */
+  static void computeSimilBm25Symmetr(bool bNormByQueryLen,
+                               const DocEntryPtr &query, const DocEntryPtr &doc,
+                               const float invAvgDocLen,
+                               float &scoreBM25Symm) {
+    scoreBM25Symm = 0;
+
+    size_t docTermQty = doc.mWordIdsQty;
+    size_t queryTermQty = query.mWordIdsQty;
+
+    float docLenDoc = doc.mWordIdsTotalQty;
+    float docLenQuery = query.mWordIdsTotalQty;
+
+    size_t iQuery = 0, iDoc = 0;
+
+    while (iQuery < queryTermQty && iDoc < docTermQty) {
+      WORD_ID_TYPE queryWordId = query.mpWordIds[iQuery];
+      WORD_ID_TYPE docWordId = doc.mpWordIds[iDoc];
+
+      if (queryWordId < docWordId) {
+        ++iQuery;
+      }
+      else if (queryWordId > docWordId) ++iDoc;
+      else {
+
+        {
+          /* begin BM25-related calculations */
+          float idf = query.mpBM25IDF[iQuery];
+
+          float tfDoc = doc.mpQtys[iDoc];
+          float normTfDoc = (tfDoc * (BM25_K1 + 1)) / (tfDoc + BM25_K1 * (1 - BM25_B + BM25_B * docLenDoc * invAvgDocLen));
+          float tfQuery = query.mpQtys[iQuery];
+          float normTfQuery = (tfQuery * (BM25_K1 + 1)) / (tfQuery + BM25_K1 * (1 - BM25_B + BM25_B * docLenQuery * invAvgDocLen));
+
+          scoreBM25Symm += idf * normTfDoc * normTfQuery;
+
+          /* end BM25-related calculations */
+        }
+
+        ++iQuery;
+        ++iDoc;
+      }
+    }
+  }
+
   static QTY_TYPE computeLCS(const WORD_ID_TYPE *pSeq1, size_t len1,
                              const WORD_ID_TYPE *pSeq2, size_t len2) {
     if (len2 > len1) {
