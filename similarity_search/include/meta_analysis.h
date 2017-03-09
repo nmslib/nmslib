@@ -127,7 +127,7 @@ public:
     ComputeOneSimple("QueryPerSec", QueryPerSec_, QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax);
     // For probabilities to miss/found a neighbor at a given rank,
     // a plain mean is computed
-    double totFoundQty = 0;
+    double totFoundQty = 0; // A total number of times the function AddFound() was called (for all SetId)
     for (size_t SetId = 0; SetId < Found_.size(); ++SetId) {
       totFoundQty += FoundQty_[SetId];
       if (FoundAvg.size() < Found_[SetId].size()) 
@@ -136,10 +136,8 @@ public:
         FoundAvg[fid] += Found_[SetId][fid];
       }
     } 
-    for (size_t SetId = 0; SetId < Found_.size(); ++SetId) {
-      for (size_t fid = 0; fid < Found_[SetId].size(); ++fid) {
-        FoundAvg[fid] /= totFoundQty;
-      }
+    for (size_t fid = 0; fid < FoundAvg.size(); ++fid) {
+      FoundAvg[fid] /= totFoundQty;
     }
   }
 
