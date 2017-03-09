@@ -84,6 +84,7 @@ DocEntryParser::DocEntryParser(const InMemFwdIndexReader &indxReader, size_t fie
           throw runtime_error("Invalid document entry format in the second (cannot convert word id to integer)");
         }
       }
+      mWordIdsTotalQty = mvWordIdSeq.size();
     }
   }
 }
