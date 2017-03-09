@@ -206,10 +206,9 @@ public:
    * This is a symmetric version of BM25, where both queries and documents use the same term normalization
    * method.
    */
-  static void computeSimilBm25Symmetr(bool bNormByQueryLen,
-                               const DocEntryPtr &query, const DocEntryPtr &doc,
-                               const float invAvgDocLen,
-                               float &scoreBM25Symm) {
+  static void computeSimilBm25Symmetr(const DocEntryPtr &query, const DocEntryPtr &doc,
+                                      const float invAvgDocLen,
+                                      float &scoreBM25Symm) {
     scoreBM25Symm = 0;
 
     size_t docTermQty = doc.mWordIdsQty;

@@ -1124,10 +1124,9 @@ float SpaceQA1::DistanceInternal(const Object* pObjData, const Object* pObjQuery
     }
 
     if (featMask & (BM25_SYMMETR_FLAG)) {
-      SimilarityFunctions::computeSimilBm25Symmetr(true /* normalize all scores */,
-                                            objQuery, objData,
-                                            params.mIndxReader.getInvAvgDocLen(fieldId),
-                                            scoreBM25Symm);
+      SimilarityFunctions::computeSimilBm25Symmetr(objQuery, objData,
+                                                   params.mIndxReader.getInvAvgDocLen(fieldId),
+                                                   scoreBM25Symm);
     }
 
     if (featMask & BM25_SYMMETR_FLAG) {
