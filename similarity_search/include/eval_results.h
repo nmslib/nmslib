@@ -222,6 +222,30 @@ private:
     }
   }
 
+  /*
+   * A similarity measure for indefinite rankings
+   * W Webber, A Moffat, J Zobel - ACM Transactions on Information Systems, 2010
+   */
+  static float 
+  ComputeRBO(const vector<ResultEntry<dist_t>>& exactRes, const vector<ResultEntry<dist_t>>& approxRes, 
+                   float p, size_t K) {
+    unordered_set<IdType> seen;
+    K = std::min(K, 
+                 std::min(exactRes.size(), approxRes.size()));
+    float rbo = 0, mult = 1;
+    float overlap = 0;
+    for (size_t rank = 0; rank < K; ++rank) {
+      seen.insert(exactRes[rank].mId); 
+      // At this point, set 'seen' contains IDs for items with ranks up to a given one
+      IdType approxId = approxRes[rank].mId;
+      if (seen.find(approxId) != seen.end()) 
+        overlap++; 
+      rbo += mult * overlap / rank;
+      mult *= p;
+    }
+    return rbo * (1-p);
+  }
+
   double                              RecallAt1_;
   double                              NumberCloser_;
   double                              LogRelPosError_;
