@@ -123,7 +123,7 @@ void GetOptimalAlphas(bool bPrintProgres,
         for (size_t i = 0; i < config.GetKNN().size(); ++i) {
           ExpResKNN[i][0] = &Stat;
         }
-        for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
+        for (unsigned TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
           config.SelectTestSet(TestSetId);
 #ifdef DETAILED_PRINT_INFO
           if (bPrintProgres) {
@@ -171,7 +171,7 @@ void GetOptimalAlphas(bool bPrintProgres,
           Experiments<dist_t>::RunAll(false /* don't print info */, 
                                       ThreadTestQty,
                                       TestSetId,
-                                      *vManagerGS[TestSetId],
+                                      *vManagerGS[TestSetId], {},
                                       ExpResRange, ExpResKNN,
                                       config, 
                                       *MethodPtr,

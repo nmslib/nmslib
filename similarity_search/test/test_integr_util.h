@@ -109,7 +109,7 @@ bool ProcessAndCheckResults(
 
   ExpRes.ComputeAll();
 
-  PrintStr  = produceHumanReadableReport(config, ExpRes, testCase.mMethodName, testCase.mIndexParams, testCase.mQueryTimeParams);
+  PrintStr  = produceHumanReadableReport(config, {} /* no RBO here */, ExpRes, testCase.mMethodName, testCase.mIndexParams, testCase.mQueryTimeParams);
 
   bool bFail = false;
 
@@ -328,7 +328,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
   }
 
 
-  for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
+  for (unsigned TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);
 
     LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
@@ -418,7 +418,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
       Experiments<dist_t>::RunAll(true /* print progress */, 
                                   ThreadTestQty,
                                   TestSetId,
-                                  managerGS,
+                                  managerGS, {},
                                   ExpResRangeTmp, ExpResKNNTmp,
                                   config, 
                                   *IndexPtr, 

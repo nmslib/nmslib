@@ -58,6 +58,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                       string&                 QueryFile,
                       string&                 CacheGSFilePrefix,
                       float&                  maxCacheGSRelativeQty,
+                      vector<float>&          pRBO,
                       unsigned&               MaxNumData,
                       unsigned&               MaxNumQuery,
                       vector<unsigned>&       knn,
@@ -69,11 +70,13 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
   knn.clear();
   RangeArg.clear();
   QueryTimeParams.clear();
+  pRBO.clear();
 
   string          indexTimeParamStr;
   vector<string>  vQueryTimeParamStr;
   string          spaceParamStr;
   string          knnArg;
+  string          pRBOArg;
   // Conversion to double is due to an Intel's bug with __builtin_signbit being undefined for float
   double          epsTmp;
 
@@ -93,6 +96,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
     (SAVE_INDEX_PARAM_OPT,    po::value<string>(&SaveIndexLoc)->default_value(SAVE_INDEX_PARAM_DEFAULT),   SAVE_INDEX_PARAM_MSG)
     (CACHE_PREFIX_GS_PARAM_OPT,  po::value<string>(&CacheGSFilePrefix)->default_value(CACHE_PREFIX_GS_PARAM_DEFAULT),  CACHE_PREFIX_GS_PARAM_MSG)
     (MAX_CACHE_GS_QTY_PARAM_OPT, po::value<float>(&maxCacheGSRelativeQty)->default_value(MAX_CACHE_GS_QTY_PARAM_DEFAULT),    MAX_CACHE_GS_QTY_PARAM_MSG)
+    (RBO_PARAM_OPT,           po::value< string>(&pRBOArg),                                                RBO_PARAM_MSG)
     (LOG_FILE_PARAM_OPT,      po::value<string>(&LogFile)->default_value(LOG_FILE_PARAM_DEFAULT),          LOG_FILE_PARAM_MSG)
     (MAX_NUM_QUERY_PARAM_OPT, po::value<unsigned>(&MaxNumQuery)->default_value(MAX_NUM_QUERY_PARAM_DEFAULT), MAX_NUM_QUERY_PARAM_MSG)
     (TEST_SET_QTY_PARAM_OPT,  po::value<unsigned>(&TestSetQty)->default_value(TEST_SET_QTY_PARAM_DEFAULT),   TEST_SET_QTY_PARAM_MSG)
@@ -158,6 +162,13 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
       if (!SplitStr(knnArg, knn, ',')) {
         Usage(argv[0], ProgOptDesc);
         LOG(LIB_FATAL) << "Wrong format of the KNN argument: '" << knnArg;
+      }
+    }
+
+    if (vm.count(RBO_PARAM_OPT)) {
+      if (!SplitStr(pRBOArg, pRBO, ',')) {
+        Usage(argv[0], ProgOptDesc);
+        LOG(LIB_FATAL) << "Wrong format of the " << RBO_PARAM_OPT << " argument: '" << knnArg;
       }
     }
 

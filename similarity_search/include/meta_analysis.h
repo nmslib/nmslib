@@ -50,6 +50,8 @@ public:
     QueryPerSec_    .resize(TestSetQty);
     Found_          .resize(TestSetQty);
     FoundQty_       .resize(TestSetQty);
+    RBO_            .resize(TestSetQty);
+    RBOQty_         .resize(TestSetQty);
   }
 
   // Let's protect Add* functions, b/c them can be called from different threads  
@@ -107,6 +109,15 @@ public:
       Found_[SetId][fid] += Found[fid];
     }
   }
+  void AddRBO(size_t SetId, const vector<double>& RBO) {
+    size_t rqty = RBO.size();
+    if (RBO_[SetId].size() < rqty)
+      RBO_[SetId].resize(rqty);
+    RBOQty_[SetId]++;
+    for (size_t rid = 0; rid < rqty; ++rid) {
+      RBO_[SetId][rid] += RBO[rid];
+    }
+  }
 
   void ComputeAll() {
     ComputeOneSimple("Recall", Recall_, RecallAvg, RecallConfMin, RecallConfMax);
@@ -125,19 +136,32 @@ public:
     ComputeOneSimple("LoadTime", LoadTime_, LoadTimeAvg, LoadTimeConfMin, LoadTimeConfMax);
     ComputeOneSimple("SaveTime", SaveTime_, SaveTimeAvg, SaveTimeConfMin, SaveTimeConfMax);
     ComputeOneSimple("QueryPerSec", QueryPerSec_, QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax);
-    // For probabilities to miss/found a neighbor at a given rank,
-    // a plain mean is computed
-    double totFoundQty = 0; // A total number of times the function AddFound() was called (for all SetId)
-    for (size_t SetId = 0; SetId < Found_.size(); ++SetId) {
-      totFoundQty += FoundQty_[SetId];
-      if (FoundAvg.size() < Found_[SetId].size()) 
-        FoundAvg.resize(Found_[SetId].size());
-      for (size_t fid = 0; fid < Found_[SetId].size(); ++fid) {
-        FoundAvg[fid] += Found_[SetId][fid];
+    {
+      // For probabilities to miss/found a neighbor at a given rank,
+      // a plain mean is computed
+      double totFoundQty = 0; // A total number of times the function AddFound() was called (for all SetId)
+      for (size_t SetId = 0; SetId < Found_.size(); ++SetId) {
+        totFoundQty += FoundQty_[SetId];
+        if (FoundAvg.size() < Found_[SetId].size()) 
+          FoundAvg.resize(Found_[SetId].size());
+        for (size_t fid = 0; fid < Found_[SetId].size(); ++fid) {
+          FoundAvg[fid] += Found_[SetId][fid];
+        }
+      } 
+      for (size_t fid = 0; fid < FoundAvg.size(); ++fid)
+        FoundAvg[fid] /= totFoundQty;
+    }
+    {
+      double totRBOQty = 0; // A total number of times the function AddRBO() was called (for all SetId)
+      for (size_t SetId = 0; SetId < Found_.size(); ++SetId) {
+        totRBOQty += RBOQty_[SetId];
+        if (RBOAvg.size() < RBO_[SetId].size())
+          RBOAvg.resize(RBO_[SetId].size());
+        for (size_t rid = 0; rid < RBO_[SetId].size(); ++rid)
+          RBOAvg[rid] += RBO_[SetId][rid];
       }
-    } 
-    for (size_t fid = 0; fid < FoundAvg.size(); ++fid) {
-      FoundAvg[fid] /= totFoundQty;
+      for (size_t rid = 0; rid < RBOAvg.size(); ++rid)
+        RBOAvg[rid] /= totRBOQty;
     }
   }
 
@@ -202,6 +226,7 @@ public:
   double GetDistCompConfMax() const { return DistCompConfMax;}
 
   const vector<double> GetFoundAvg() const { return FoundAvg; }
+  const vector<double> GetRBOAvg() const { return RBOAvg; }
 private:
 double RecallAvg, RecallConfMin, RecallConfMax;
 double PrecisionOfApproxAvg, PrecisionOfApproxConfMin, PrecisionOfApproxConfMax;
@@ -220,6 +245,7 @@ double SaveTimeAvg, SaveTimeConfMin, SaveTimeConfMax;
 double QueryPerSecAvg, QueryPerSecConfMin, QueryPerSecConfMax;
 double zVal_;
 vector<double> FoundAvg;
+vector<double> RBOAvg;
 
 vector<vector<double>>   Recall_; 
 vector<vector<double>>   PrecisionOfApprox_; 
@@ -238,6 +264,8 @@ vector<double>           SaveTime_;
 vector<double>           QueryPerSec_; 
 vector<vector<double>>   Found_; 
 vector<double>           FoundQty_; 
+vector<vector<double>>   RBO_;
+vector<double>           RBOQty_;
 
 MetaAnalysis(){} // be private!
 

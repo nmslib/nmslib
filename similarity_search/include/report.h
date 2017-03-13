@@ -18,6 +18,7 @@
 
 #include <sstream>
 #include <string>
+#include <iomanip>
 
 #include "meta_analysis.h"
 #include "experiments.h"
@@ -29,9 +30,16 @@ namespace similarity {
   using std::endl;
   using std::stringstream;
 
+  string fieldRBOName(float p, unsigned precision=4) {
+    stringstream str;
+    str << "RBO_p=" << setprecision(precision) << p; 
+    return str.str();
+  }
+
   template <class dist_t>
   inline string produceHumanReadableReport(
                     const ExperimentConfig<dist_t>& config,
+                    const vector<float>& pRBO,
                     MetaAnalysis& ExpRes,
                     const string& MethDescStr,
                     const string& IndexParamStr,
@@ -60,6 +68,13 @@ namespace similarity {
     Print << "------------------------------------" << std::endl;
     Print << "ImprEfficiency:    " << round2(ExpRes.GetImprEfficiencyAvg()) << " -> " << "["  <<  round2(ExpRes.GetImprEfficiencyConfMin()) << " \t" << round2(ExpRes.GetImprEfficiencyConfMax()) << "]" << std::endl;
     Print << "ImprDistComp:      " << round2(ExpRes.GetImprDistCompAvg()) << " -> " << "[" << round2(ExpRes.GetImprDistCompAvg()) << " \t"<< round2(ExpRes.GetImprDistCompConfMax()) << "]" << std::endl;
+    if (!pRBO.empty()) {
+      Print << "------------------------------------" << std::endl;
+      CHECK(pRBO.size() == ExpRes.GetRBOAvg().size());
+      for (unsigned rid = 0; rid < pRBO.size(); ++rid) {
+        Print << fieldRBOName(pRBO[rid]) << ": " << round2(ExpRes.GetRBOAvg()[rid]) << std::endl;
+      }
+    }
     Print << "------------------------------------" << std::endl;
     Print << "Memory Usage:      " << round2(ExpRes.GetMemAvg()) << " MB" << std::endl;
     Print << "Index Time:        " << round2(ExpRes.GetIndexTimeAvg()) << " sec" << std::endl;

@@ -68,6 +68,9 @@
 #define KNN_PARAM_OPT            "knn,k"
 #define KNN_PARAM_MSG            "comma-separated values of K for the k-NN search"
 
+#define RBO_PARAM_OPT            "pRBO"
+#define RBO_PARAM_MSG            "comma-separated values of persistence parameter to compute RBO"
+
 #define RANGE_PARAM_OPT          "range,r"
 #define RANGE_PARAM_MSG          "comma-separated radii for the range searches"
 

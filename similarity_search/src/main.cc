@@ -101,6 +101,7 @@ void OutData(bool DoAppend, const string& FilePrefix,
 
 template <typename dist_t>
 void ProcessResults(const ExperimentConfig<dist_t>& config,
+                    const vector<float>&            pRBO,
                     MetaAnalysis& ExpRes,
                     const string& MethodName,
                     const string& IndexParamStr,
@@ -113,7 +114,12 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tRecall@1\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tIndexParams\tQueryTimeParams\tNumData" << std::endl;
+  Header << "MethodName\tRecall\tRecall@1\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tIndexParams\tQueryTimeParams\tNumData";
+  CHECK(pRBO.size() == ExpRes.GetRBOAvg().size());
+  for (size_t rid = 0; rid < pRBO.size(); ++rid) {
+    Header << "\t" << fieldRBOName(pRBO[rid]);
+  } 
+  Header  << std::endl;
 
   Data << "\"" << MethodName << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
@@ -134,9 +140,12 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << "\"" << IndexParamStr << "\"" << "\t";
   Data << "\"" << QueryTimeParamStr << "\"" << "\t";
   Data << config.GetDataObjects().size();
+  for (size_t rid = 0; rid < pRBO.size(); ++rid) {
+    Data << "\t" << ExpRes.GetRBOAvg()[rid];
+  }
   Data << std::endl;
 
-  PrintStr  = produceHumanReadableReport(config, ExpRes, MethodName, IndexParamStr, QueryTimeParamStr);
+  PrintStr  = produceHumanReadableReport(config, pRBO, ExpRes, MethodName, IndexParamStr, QueryTimeParamStr);
 
   bool f = false;
   for (double p : ExpRes.GetFoundAvg()) {
@@ -168,6 +177,7 @@ void RunExper(bool                                bPrintProgress,
              const string&                        QueryFile,
              const string&                        CacheGSFilePrefix,
              float                                maxCacheGSRelativeQty,
+             const vector<float>&                 pRBO,
              IdTypeUnsign                         MaxNumData,
              IdTypeUnsign                         MaxNumQuery,
              const                                vector<unsigned>& knn,
@@ -451,7 +461,7 @@ void RunExper(bool                                bPrintProgress,
         Experiments<dist_t>::RunAll(bPrintProgress,
                                     ThreadTestQty, 
                                     TestSetId,
-                                    managerGS,
+                                    managerGS, pRBO,
                                     ExpResRange, ExpResKNN,
                                     config, 
                                     *IndexPtr, 
@@ -483,7 +493,7 @@ void RunExper(bool                                bPrintProgress,
       for (size_t i = 0; i < config.GetRange().size(); ++i) {
         MetaAnalysis* res = ExpResRange[i][MethNum];
 
-        ProcessResults(config, *res, MethodDescStr,
+        ProcessResults(config, pRBO, *res, MethodDescStr,
                       IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
                       Print, Header, Data, Found);
         LOG(LIB_INFO) << "Range: " << config.GetRange()[i];
@@ -502,7 +512,7 @@ void RunExper(bool                                bPrintProgress,
       for (size_t i = 0; i < config.GetKNN().size(); ++i) {
         MetaAnalysis* res = ExpResKNN[i][MethNum];
 
-        ProcessResults(config, *res, MethodDescStr,
+        ProcessResults(config, pRBO, *res, MethodDescStr,
                       IndexTimeParams->ToString(), QueryTimeParams[MethNum]->ToString(), 
                       Print, Header, Data, Found);
         LOG(LIB_INFO) << "KNN: " << config.GetKNN()[i];
@@ -542,6 +552,7 @@ int main(int ac, char* av[]) {
   string                QueryFile;
   string                CacheGSFilePrefix;
   float                 maxCacheGSRelativeQty;
+  vector<float>         pRBO;
   IdTypeUnsign          MaxNumData;
   IdTypeUnsign          MaxNumQuery;
   vector<unsigned>      knn;
@@ -570,6 +581,7 @@ int main(int ac, char* av[]) {
                          QueryFile,
                          CacheGSFilePrefix,
                          maxCacheGSRelativeQty,
+                         pRBO,
                          MaxNumData,
                          MaxNumQuery,
                          knn,
@@ -611,6 +623,7 @@ int main(int ac, char* av[]) {
                     QueryFile,
                     CacheGSFilePrefix,
                     maxCacheGSRelativeQty,
+                    pRBO,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -633,7 +646,8 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                      maxCacheGSRelativeQty,
+                    maxCacheGSRelativeQty,
+                    pRBO,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -656,7 +670,8 @@ int main(int ac, char* av[]) {
                     DataFile,
                     QueryFile,
                     CacheGSFilePrefix,
-                       maxCacheGSRelativeQty,
+                    maxCacheGSRelativeQty,
+                    pRBO,
                     MaxNumData,
                     MaxNumQuery,
                     knn,

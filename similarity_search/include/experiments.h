@@ -65,6 +65,7 @@ public:
                      unsigned                             ThreadTestQty,
                      size_t                               TestSetId,
                      const GoldStandardManager<dist_t>&   managerGS,
+                     const vector<float>                  pRBO,
                      vector<vector<MetaAnalysis*>>&       ExpResRange,
                      vector<vector<MetaAnalysis*>>&       ExpResKNN,
                      const ExperimentConfig<dist_t>&      config,
@@ -81,7 +82,7 @@ public:
         RangeCreator<dist_t>  cr(radius);
         Execute<RangeQuery<dist_t>, RangeCreator<dist_t>>(LogInfo,
                                                   ThreadTestQty, TestSetId,
-                                                  managerGS.GetRangeGS(i),
+                                                  managerGS.GetRangeGS(i), pRBO,
                                                   ExpResRange[i], config, cr, 
                                                   Method, QueryTimeParams);
       }
@@ -93,7 +94,7 @@ public:
         KNNCreator<dist_t>  cr(K, config.GetEPS());
         Execute<KNNQuery<dist_t>, KNNCreator<dist_t>>(LogInfo,
                                               ThreadTestQty, TestSetId,
-                                              managerGS.GetKNNGS(i),
+                                              managerGS.GetKNNGS(i), pRBO,
                                               ExpResKNN[i], config, cr, 
                                               Method, QueryTimeParams);
       }
@@ -201,6 +202,7 @@ public:
   template <typename QueryType, typename QueryCreatorType>
   static void Execute(bool LogInfo, unsigned ThreadTestQty, size_t TestSetId,
                      const vector<unique_ptr<GoldStandard<dist_t>>> &goldStand,
+                     const vector<float>                            pRBO,
                      std::vector<MetaAnalysis*>&                    ExpRes,
                      const ExperimentConfig<dist_t>&                config,
                      const QueryCreatorType&                        QueryCreator,
@@ -315,7 +317,7 @@ public:
 
           const GoldStandard<dist_t>&  QueryGS = *goldStand[q];
 
-          EvalResults<dist_t>     Eval(config.GetSpace(), pQuery, QueryGS);
+          EvalResults<dist_t>     Eval(config.GetSpace(), pQuery, QueryGS, pRBO);
 
           NumCloser[MethNum]    += Eval.GetNumCloser();
           RecallAt1[MethNum]    += Eval.GetRecallAt1();
@@ -332,6 +334,7 @@ public:
           ExpRes[MethNum]->AddNumCloser(TestSetId, Eval.GetNumCloser());
           ExpRes[MethNum]->AddRecallAt1(TestSetId, Eval.GetRecallAt1());
           ExpRes[MethNum]->AddFound(TestSetId, Eval.GetFound());
+          ExpRes[MethNum]->AddRBO(TestSetId, Eval.GetRBO());
 
         }
       }

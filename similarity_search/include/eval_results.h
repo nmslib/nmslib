@@ -127,7 +127,7 @@ public:
     *  ACM Transactions on Information Systems (TOIS) 28.4 (2010): 20.
     *
     */
-  const vector<double> GetRBO() const { return vRBO_; }
+  const vector<double>& GetRBO() const { return vRBO_; }
 private:
   size_t K_;
 
@@ -213,7 +213,7 @@ private:
     }
 
     // 3 Compute RBO for k-NN search only
-    if (K_ > 0) {
+    if (K_ > 0 && !pRBO_.empty()) {
       vector<IdType> ids1, ids2;
 
       for (ResultEntry<dist_t> e : SortedAllEntries_)
