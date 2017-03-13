@@ -18,6 +18,7 @@
 #define ID_TYPE_H
 
 #include <cstdint>
+#include <limits>
 
 namespace similarity {
 

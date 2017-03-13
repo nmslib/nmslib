@@ -30,6 +30,7 @@
 #include "index.h"
 #include "knnqueue.h"
 #include "eval_metrics.h"
+#include "rbo.h"
 
 namespace similarity {
 
@@ -45,14 +46,16 @@ class EvalResults {
 public:
   EvalResults(const typename similarity::Space<dist_t>& space,
               const typename similarity::KNNQuery<dist_t>* query,
-              const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
+              const GoldStandard<dist_t>& gs,
+              const vector<float>& pRBO) : K_(0), SortedAllEntries_(gs.GetSortedEntries()), pRBO_(pRBO) {
     GetKNNData(query);
     ComputeMetrics(query->QueryObject()->label());
   }
 
   EvalResults(const typename similarity::Space<dist_t>& space,
               const typename similarity::RangeQuery<dist_t>* query,
-              const GoldStandard<dist_t>& gs) : K_(0), SortedAllEntries_(gs.GetSortedEntries()) {
+              const GoldStandard<dist_t>& gs,
+              const vector<float>& pRBO) : K_(0), SortedAllEntries_(gs.GetSortedEntries()), pRBO_(pRBO) {
     GetRangeData(query);
     ComputeMetrics(query->QueryObject()->label());
   }
@@ -115,6 +118,16 @@ public:
     * 1/K sum_{i=1}^K   i/pos(i)
     */
   double GetPrecisionOfApprox() const { return PrecisionOfApprox_; }
+
+   /*
+    *  The RBO indefinite rank similarity metric (computed only for k-NN search, but not for range search):
+    *
+    *  Webber, William, Alistair Moffat, and Justin Zobel. 
+    *  "A similarity measure for indefinite rankings." 
+    *  ACM Transactions on Information Systems (TOIS) 28.4 (2010): 20.
+    *
+    */
+  const vector<double> GetRBO() const { return vRBO_; }
 private:
   size_t K_;
 
@@ -199,7 +212,21 @@ private:
       }
     }
 
-    // 3 Obtain class result
+    // 3 Compute RBO for k-NN search only
+    if (K_ > 0) {
+      vector<IdType> ids1, ids2;
+
+      for (ResultEntry<dist_t> e : SortedAllEntries_)
+        ids1.push_back(e.mId);
+      for (ResultEntry<dist_t> e : ApproxEntries_)
+        ids2.push_back(e.mId);
+
+      for (float p: pRBO_) {
+        vRBO_.push_back(ComputeRBO(ids1, ids2, p));
+      }
+    }
+
+    // 4 Obtain class result
     if (queryLabel >= 0) {
       unordered_map<LabelType, int>  hClassQty;
       vector<pair<int,LabelType>>    vClassQty;
@@ -222,37 +249,14 @@ private:
     }
   }
 
-  /*
-   * A similarity measure for indefinite rankings
-   * W Webber, A Moffat, J Zobel - ACM Transactions on Information Systems, 2010
-   */
-  static float 
-  ComputeRBO(const vector<ResultEntry<dist_t>>& exactRes, const vector<ResultEntry<dist_t>>& approxRes, 
-                   float p, size_t K) {
-    unordered_set<IdType> seen;
-    K = std::min(K, 
-                 std::min(exactRes.size(), approxRes.size()));
-    float rbo = 0, mult = 1;
-    float overlap = 0;
-    for (size_t rank = 0; rank < K; ++rank) {
-      seen.insert(exactRes[rank].mId); 
-      // At this point, set 'seen' contains IDs for items with ranks up to a given one
-      IdType approxId = approxRes[rank].mId;
-      if (seen.find(approxId) != seen.end()) 
-        overlap++; 
-      rbo += mult * overlap / rank;
-      mult *= p;
-    }
-    return rbo * (1-p);
-  }
-
-  double                              RecallAt1_;
-  double                              NumberCloser_;
-  double                              LogRelPosError_;
-  double                              Recall_;
+  double                              RecallAt1_  = 0;
+  double                              NumberCloser_  = 0;
+  double                              LogRelPosError_  = 0;
+  double                              Recall_  = 0;
   ClassResult                         ClassCorrect_;
   double                              PrecisionOfApprox_;
   vector<char>                        found_;
+  vector<double>                      vRBO_;
 
   std::vector<ResultEntry<dist_t>>    ApproxEntries_;
   std::unordered_set<IdType>          ApproxResultIds_;
@@ -264,6 +268,7 @@ private:
    * of increasing distance from the query.
    */
   const std::vector<ResultEntry<dist_t>>& SortedAllEntries_;
+  const vector<float>                     pRBO_;
 };
 
 }
