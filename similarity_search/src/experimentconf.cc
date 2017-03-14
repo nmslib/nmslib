@@ -180,8 +180,10 @@ void ExperimentConfig<dist_t>::Read(istream& controlStream,
     stringstream err;
     err << "The specified # queries (" << maxNumQueryToRun_ << ") "
         << " exceeds the value (" << maxNumQuery_ << ") "
-        << " in the gold standard cache.";
-    throw runtime_error(err.str());
+        << " in the gold standard cache. Only " << maxNumQuery_ << " queries will be used";
+    LOG(LIB_INFO) << err.str();
+    maxNumQueryToRun_ = maxNumQuery_;
+    //throw runtime_error(err.str());
   }
 
   if (noQueryData_) {
@@ -231,7 +233,7 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
     for (size_t i = 0; i < origDataAssignment_.size(); ++i) {
       int dst = origDataAssignment_[i];
       if (dst >= 0) {
-        if (dst >= testSetQty_) {
+        if (static_cast<unsigned>(dst) >= testSetQty_) {
           stringstream err;
           err << "Bug: an assignment id (" << dst <<
               ") is > # of sets (" << testSetQty_ << ")";
@@ -266,7 +268,7 @@ void ExperimentConfig<dist_t>::Write(ostream& controlStream, ostream& binaryStre
       for (size_t i = 0; i < OrigQty; ++i) {
         int dst = origDataAssignment_[i];
 
-        if (dst == SetNum) {
+        if (dst == static_cast<int>(SetNum)) {
           if (!bFirst) line << " ";
           bFirst = false;
           line << i;
