@@ -24,6 +24,8 @@
 *
 *
 */
+
+#include "portable_simd.h"
 #include "method/hnsw.h"
 #include "knnquery.h"
 #include "ported_boost_progress.h"

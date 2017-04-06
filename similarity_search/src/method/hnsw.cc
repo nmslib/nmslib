@@ -31,6 +31,7 @@
 // This is only for _mm_prefetch
 #include <mmintrin.h>
 
+#include "portable_simd.h"
 #include "knnquery.h"
 #include "method/hnsw.h"
 #include "ported_boost_progress.h"
