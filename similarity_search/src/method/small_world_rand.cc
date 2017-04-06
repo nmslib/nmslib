@@ -19,6 +19,7 @@
 // This is only for _mm_prefetch
 #include <mmintrin.h>
 
+#include "portable_simd.h"
 #include "space.h"
 #include "knnquery.h"
 #include "knnqueue.h"
