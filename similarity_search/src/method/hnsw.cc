@@ -355,7 +355,7 @@ namespace similarity {
         LOG(LIB_INFO) << "searchMethod			  = " << searchMethod_;
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
 
-        int total_memory_allocated = (memoryPerObject_ * ElList_.size());
+        size_t total_memory_allocated = (memoryPerObject_ * ElList_.size());
         data_level0_memory_ = (char *)malloc(memoryPerObject_ * ElList_.size());
 
         offsetLevel0_ = dataSectionSize;
