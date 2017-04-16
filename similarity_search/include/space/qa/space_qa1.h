@@ -35,6 +35,7 @@
 #include "distcomp.h"
 
 #include <space/space_vector.h>
+#include <space/space_sparse_vector.h>
 
 #include <space/qa/simil.h>
 #include <space/qa/docentry.h>
@@ -314,6 +315,9 @@ class SpaceQA1 : public Space<float> {
   void setDontPrecomputeFlag(bool flag) const { mDontPrecomputeFlag = flag; }
 
   virtual float ProxyDistance(const Object* pObjData, const Object* pObjQuery) const override;
+
+  void extractBM25QueryVector(vector<SparseVectElem<float>>&, const Object* pObjQuery) const;
+  void extractBM25DocVector(vector<SparseVectElem<float>>&, const Object* pObjDoc) const;
  protected:
 
  /*

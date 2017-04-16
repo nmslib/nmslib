@@ -48,6 +48,7 @@
 #if !defined(_MSC_VER)
 #include "factory/method/nndes.h"
 #endif
+#include "factory/method/simple_inverted_index.h"
 
 namespace similarity {
 
@@ -206,6 +207,8 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_NON_METR_LISTCLUST, CreateNonMetrListClust)
   REGISTER_METHOD_CREATOR(int,    METH_NON_METR_LISTCLUST, CreateNonMetrListClust)
 
+  // Classic DAAT inverted index
+  REGISTER_METHOD_CREATOR(float,  METH_SIMPLE_INV_INDEX_QA1, CreateSimplInvIndexQA1)
 }
 
 

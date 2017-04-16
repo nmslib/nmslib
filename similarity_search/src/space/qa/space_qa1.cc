@@ -957,6 +957,52 @@ DataFileInputStateQA1::DataFileInputStateQA1(const string& headerFileName) {
   }
 };
 
+void SpaceQA1::extractBM25QueryVector(vector<SparseVectElem<float>>& res, const Object* pObjQuery) const {
+  DocEntryPtr query;
+
+  const char* pBuffPtrQuery = NULL;
+  const FIELD_QTY_TYPE fieldQtyQuery = getFieldQty(pObjQuery, pBuffPtrQuery);
+  CHECK_MSG(fieldQtyQuery==1, string(__func__) + " can work only with a single field!");
+
+  getNextDocEntryPtr(pBuffPtrQuery, query);
+
+  res.clear();
+  for (size_t iQuery = 0; iQuery < query.mWordIdsQty; ++iQuery) {
+    WORD_ID_TYPE queryWordId = query.mpWordIds[iQuery];
+    QTY_TYPE     queryQty    = query.mpQtys[iQuery];
+
+    res.emplace_back(queryWordId, queryQty);
+  }
+}
+
+void SpaceQA1::extractBM25DocVector(vector<SparseVectElem<float>>& res, const Object* pObjDoc) const {
+  res.clear();
+  DocEntryPtr doc;
+
+
+  const char* pBuffPtrDoc = NULL;
+  const FIELD_QTY_TYPE fieldQtyDoc = getFieldQty(pObjDoc, pBuffPtrDoc);
+  CHECK_MSG(fieldQtyDoc==1, string(__func__) + " can work only with a single field!");
+
+  CHECK_MSG(mSpaceParams.get(), "Bug: Expecting a non-NULL parameter pointer in the distance function");
+  const SpaceParamQA1& params = *mSpaceParams.get();
+  float invAvgDocLen = params.mIndxReader.getInvAvgDocLen(0);
+
+  getNextDocEntryPtr(pBuffPtrDoc, doc);
+  float docLen = doc.mWordIdsTotalQty;
+
+  res.clear();
+  for (size_t iDoc = 0; iDoc < doc.mWordIdsQty; ++iDoc) {
+    WORD_ID_TYPE docWordId = doc.mpWordIds[iDoc];
+    float        tf        = doc.mpQtys[iDoc];
+    float        idf       = doc.mpBM25IDF[iDoc];
+
+    float normTF = (tf * (BM25_K1 + 1)) / (tf + BM25_K1 * (1 - BM25_B + BM25_B * docLen * invAvgDocLen));
+
+    res.emplace_back(docWordId, idf * normTF);
+  }
+}
+
 float SpaceQA1::ProxyDistance(const Object* pObjData, const Object* pObjQuery) const {
   CHECK_MSG(mSpaceParams.get(), "Bug: Expecting a non-NULL parameter pointer in the distance function");
   const SpaceParamQA1& params = *mSpaceParams.get();
