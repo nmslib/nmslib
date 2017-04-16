@@ -21,6 +21,7 @@
 #include "knnquery.h"
 #include "method/simple_inverted_index.h"
 #include "falconn_heap_mod.h"
+#include "ported_boost_progress.h"
 
 #define SANITY_CHECKS
 
@@ -157,10 +158,13 @@ void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
   vector<SparseVectElem<dist_t>>    tmp_vect;
   LOG(LIB_INFO) << "Collecting dictionary stat";
 
+  ProgressDisplay  pbar(data_.size(), cerr);
+
   for (const Object* o : data_) {
     tmp_vect.clear();
     UnpackSparseElements(o->data(), o->datalength(), tmp_vect);
     for (const auto& e : tmp_vect) dict_qty[e.id_] ++;
+    ++pbar;
   }
 
   LOG(LIB_INFO) << "Actually creating the index";
