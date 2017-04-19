@@ -76,7 +76,7 @@ class SpaceSparseCosineSimilarityFast : public SpaceSparseVectorInter<float> {
 public:
   explicit SpaceSparseCosineSimilarityFast(){}
   virtual std::string StrDesc() const {
-    return "CosineSimilarity (fast)";
+    return SPACE_SPARSE_COSINE_SIMILARITY_FAST;
   }
   virtual PivotIndex<float>* CreatePivotIndex(const ObjectVector& pivots, size_t hashTrickDim = 0) const override {
     return new PivotIndexLocal(*this, pivots, hashTrickDim);
@@ -103,7 +103,7 @@ class SpaceSparseAngularDistanceFast : public SpaceSparseVectorInter<float> {
 public:
   explicit SpaceSparseAngularDistanceFast(){}
   virtual std::string StrDesc() const {
-    return "AngularDistance (fast)";
+    return SPACE_SPARSE_ANGULAR_DISTANCE_FAST;
   }
 
   virtual PivotIndex<float>* CreatePivotIndex(const ObjectVector& pivots, size_t hashTrickDim = 0) const override {
@@ -132,7 +132,7 @@ class SpaceSparseNegativeScalarProductFast : public SpaceSparseVectorInter<float
 public:
   explicit SpaceSparseNegativeScalarProductFast(){}
   virtual std::string StrDesc() const {
-    return "NegativeScalarProduct (fast)";
+    return SPACE_SPARSE_NEGATIVE_SCALAR_FAST;
   }
 
   virtual PivotIndex<float>* CreatePivotIndex(const ObjectVector& pivots, size_t hashTrickDim = 0) const override {
@@ -160,7 +160,7 @@ class SpaceSparseQueryNormNegativeScalarProductFast : public SpaceSparseVectorIn
 public:
   explicit SpaceSparseQueryNormNegativeScalarProductFast(){}
   virtual std::string StrDesc() const {
-    return "QueryNormNegativeScalarProduct (fast)";
+    return SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST;
   }
 
   virtual PivotIndex<float>* CreatePivotIndex(const ObjectVector& pivots, size_t hashTrickDim = 0) const override {
