@@ -18,12 +18,14 @@
 
 #include <string>
 #include "object.h"
+#include "method/sym_seqsearch.h"
 
 namespace similarity {
 
 /*
  * This version of intrinsic dimensionality is defined in 
  * E. Chavez, G. Navarro, R. Baeza-Yates, and J. L. Marroquin, 2001, Searching in metric spaces.
+ * Can be computed for a symmetrized distance.
  *
  * Note that this measure may be irrelevant in non-metric spaces.
  */
@@ -33,6 +35,7 @@ void ComputeIntrinsicDimensionality(const Space<dist_t>& space,
                                double& IntrDim,
                                double& DistMean,
                                double& DistSigma,
+                               SymmType symType,
                                size_t SampleQty = 1000000) {
   std::vector<double> dist;
   DistMean = 0;
@@ -43,7 +46,8 @@ void ComputeIntrinsicDimensionality(const Space<dist_t>& space,
     CHECK(r2 < dataset.size());
     const Object* obj1 = dataset[r1];
     const Object* obj2 = dataset[r2];
-    dist_t d = space.IndexTimeDistance(obj1, obj2);
+    //dist_t d = space.IndexTimeDistance(obj1, obj2);
+    dist_t d = SymmDistance(space, obj1, obj2, symType);
     dist.push_back(d);
     if (ISNAN(d)) {
       /* 
@@ -70,6 +74,7 @@ template <typename dist_t>
 void ReportIntrinsicDimensionality(const string& reportName,
                                    const Space<dist_t>& space, 
                                    const ObjectVector& dataset,
+                                   SymmType stype,
                                    size_t SampleQty = 1000000) {
     double DistMean, DistSigma, IntrDim;
 
@@ -77,6 +82,7 @@ void ReportIntrinsicDimensionality(const string& reportName,
                                   IntrDim,
                                   DistMean,
                                   DistSigma,
+                                  stype,
                                   SampleQty);
 
     LOG(LIB_INFO) << "### " << reportName;

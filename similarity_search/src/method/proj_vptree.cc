@@ -23,6 +23,7 @@
 #include "knnquery.h"
 #include "knnqueue.h"
 #include "method/proj_vptree.h"
+#include "method/sym_seqsearch.h"
 #include "utils.h"
 #include "distcomp.h"
 #include "projection.h"
@@ -168,7 +169,7 @@ void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     projData_[id] = ProjectOneVect(id, NULL, data_[id]);
   }
 
-  ReportIntrinsicDimensionality("Set of projections" , *VPTreeSpace_, projData_);
+  ReportIntrinsicDimensionality("Set of projections" , *VPTreeSpace_, projData_, kSymmNone);
 
   VPTreeIndex_.reset(new VPTree<float, PolynomialPruner<float>>(
                                           PrintProgress_,

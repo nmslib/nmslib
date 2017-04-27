@@ -50,7 +50,8 @@ class SpaceRenyiDiverg : public VectorSpaceSimpleStorage<dist_t> {
   virtual std::string StrDesc() const;
 
   virtual dist_t ProxyDistance(const Object* obj1, const Object* obj2) const override {
-    return 0.5*(this->IndexTimeDistance(obj1,obj2)+this->IndexTimeDistance(obj2,obj1));
+    //return 0.5*(this->IndexTimeDistance(obj1,obj2)+this->IndexTimeDistance(obj2,obj1));
+    return min(this->IndexTimeDistance(obj1,obj2),this->IndexTimeDistance(obj2,obj1));
   }
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;

@@ -85,6 +85,7 @@ void TestSpace(
                 string dataFile,
                 bool compMuDeffect,
                 unsigned maxNumData,
+                SymmType stype,
                 unsigned sampleQty
                ) {
   string          spaceType;
@@ -102,7 +103,7 @@ void TestSpace(
   space->UpdateParamsFromFile(*inpState);
 
   // Prints the report
-  ReportIntrinsicDimensionality("********", *space, data, sampleQty);
+  ReportIntrinsicDimensionality("********", *space, data, stype, sampleQty);
   if (compMuDeffect) {
     double    dleft, dright;
     ComputeMuDeffect<dist_t>(
@@ -118,6 +119,7 @@ void TestSpace(
 int main(int argc, char* argv[]) {
   string    spaceDesc, distType;
   string    dataFile;
+  string    symmTypeStr;
   unsigned  maxNumData;
   unsigned  sampleQty;
   bool      compMuDeffect;
@@ -127,11 +129,16 @@ int main(int argc, char* argv[]) {
     ("help,h", "produce help message")
     ("spaceType,s",     po::value<string>(&spaceDesc)->required(),
                         "space type, e.g., l1, l2, lp:p=0.5")
+    (SYM_TYPE_PARAM,    po::value<string>(&symmTypeStr)->default_value(SYM_TYPE_NONE),
+                        (string("Symmetrization type: ") + SYM_TYPE_NONE + "," + 
+                                                          SYM_TYPE_AVG  + "," + 
+                                                          SYM_TYPE_MIN  + "," + 
+                                                          SYM_TYPE_REV).c_str())
     ("distType",        po::value<string>(&distType)->default_value(DIST_TYPE_FLOAT),
                         "distance value type: int, float, double")
     ("dataFile,i",      po::value<string>(&dataFile)->required(),
                         "input data file")
-    ("maxNumData",      po::value<unsigned>(&maxNumData)->default_value(0),
+    ("maxNumData,D",      po::value<unsigned>(&maxNumData)->default_value(0),
                         "if non-zero, only the first maxNumData elements are used")
     ("sampleQty",       po::value<unsigned>(&sampleQty)->default_value(defaultSampleQty),
                         "a number of samples (a sample is a pair of data points)")
@@ -145,6 +152,11 @@ int main(int argc, char* argv[]) {
     po::store(po::parse_command_line(argc, argv, ProgOptDesc), vm);
     po::notify(vm);
 
+    if (vm.count("help")  ) {
+      Usage(argv[0], ProgOptDesc);
+      exit(0);
+    }
+
     if (!DoesFileExist(dataFile)) {
       PREPARE_RUNTIME_ERR(err) << "data file " << dataFile << " doesn't exist";
       THROW_RUNTIME_ERR(err);
@@ -152,12 +164,15 @@ int main(int argc, char* argv[]) {
 
     initLibrary(LIB_LOGSTDERR);
 
+    SymmType stype = getSymmType(symmTypeStr);
+
     if (DIST_TYPE_INT == distType) {
       TestSpace<int>(
                   spaceDesc,
                   dataFile,
                   compMuDeffect,
                   maxNumData,
+                  stype,
                   sampleQty
                 );
     } else if (DIST_TYPE_FLOAT == distType) {
@@ -166,6 +181,7 @@ int main(int argc, char* argv[]) {
                   dataFile,
                   compMuDeffect,
                   maxNumData,
+                  stype,
                   sampleQty
                  );
     } else if (DIST_TYPE_DOUBLE == distType) {
@@ -174,6 +190,7 @@ int main(int argc, char* argv[]) {
                   dataFile,
                   compMuDeffect,
                   maxNumData,
+                  stype,
                   sampleQty
                  );
     }

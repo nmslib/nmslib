@@ -40,18 +40,12 @@ void SymSeqSearch<dist_t>::SetQueryTimeParams(const AnyParams& params) {
   AnyParamManager pmgr(params);
 
   string s;
-  pmgr.GetParamOptional("filterType", s, "min");
-  ToLower(s);
-  if (s == "none") filterType_ = kNone;
-  else if (s == "reverse") filterType_ = kReverse;
-  else if (s == "min") filterType_ = kMin;
-  else if (s == "avg") filterType_ = kAvg;
-  else {
-    PREPARE_RUNTIME_ERR(err) << "Invalid filterType param value: " << s;
-    THROW_RUNTIME_ERR(err);
-  }
+  pmgr.GetParamOptional(SYM_TYPE_PARAM, s, SYM_TYPE_MIN);
+  symmType_ = getSymmType(s);
   
-  pmgr.GetParamOptional("filterK", filterK_, 1000);
+  pmgr.GetParamOptional(SYM_K_PARAM, symmCandK_, 1000);
+
+  pmgr.CheckUnused();
 }
 
 template <typename dist_t>
@@ -65,9 +59,9 @@ void SymSeqSearch<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   priority_queue<pair<dist_t,IdType>> symRes;
 
   for (size_t i = 0; i < data_.size(); ++i) {
-    dist_t d = SymDistance(query, data_[i]);
+    dist_t d = SymmDistance(query, data_[i]);
     symRes.push(make_pair(d, i));
-    if (symRes.size() > filterK_) symRes.pop();
+    if (symRes.size() > symmCandK_) symRes.pop();
   }
 
   while (!symRes.empty()) {

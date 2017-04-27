@@ -159,13 +159,15 @@ void SimplInvIndexQA1<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
   vector<SparseVectElem<dist_t>>    tmp_vect;
   LOG(LIB_INFO) << "Collecting dictionary stat";
 
-  ProgressDisplay  pbar(data_.size(), cerr);
 
-  for (const Object* o : data_) {
-    tmp_vect.clear();
-    pSpace_->extractBM25DocVector(tmp_vect, o);
-    for (const auto& e : tmp_vect) dict_qty[e.id_] ++;
-    ++pbar;
+  {
+    ProgressDisplay  pbar(data_.size(), cerr);
+    for (const Object* o : data_) {
+      tmp_vect.clear();
+      pSpace_->extractBM25DocVector(tmp_vect, o);
+      for (const auto& e : tmp_vect) dict_qty[e.id_] ++;
+      ++pbar;
+    }
   }
 
   LOG(LIB_INFO) << "Actually creating the index";
@@ -180,28 +182,33 @@ void SimplInvIndexQA1<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
     index_.insert(make_pair(wordId, unique_ptr<PostList>(new PostList(qty))));
   }
 
-  // Fill posting lists
-  for (size_t did = 0; did < data_.size(); ++did) {
-    tmp_vect.clear();
-    pSpace_->extractBM25DocVector(tmp_vect, data_[did]);
-    // iterate over all terms in the document (non-zero values in the sparse vector)
-    for (const auto& e : tmp_vect) {
-      const auto wordId = e.id_;
-      // posting list for given term (the value is probably a pair [position/key, value] ?)
-      auto itPost     = index_.find(wordId);
-      // actual position in the posting list
-      auto itPostPos  = post_pos.find(wordId);
-#ifdef SANITY_CHECKS
-      CHECK(itPost != index_.end());
-      CHECK(itPostPos != post_pos.end());
-      CHECK(itPost->second.get() != nullptr);
-#endif
-      // the actual posting list
-      PostList& pl = *itPost->second;
-      // get actual position in the list (and shift it by +1)
-      size_t curr_pos = itPostPos->second++;;
-      CHECK(curr_pos < pl.qty_);
-      pl.entries_[curr_pos] = PostEntry(did, e.val_);
+  {
+    ProgressDisplay  pbar(data_.size(), cerr);
+
+    // Fill posting lists
+    for (size_t did = 0; did < data_.size(); ++did) {
+      tmp_vect.clear();
+      pSpace_->extractBM25DocVector(tmp_vect, data_[did]);
+      // iterate over all terms in the document (non-zero values in the sparse vector)
+      for (const auto& e : tmp_vect) {
+        const auto wordId = e.id_;
+        // posting list for given term (the value is probably a pair [position/key, value] ?)
+        auto itPost     = index_.find(wordId);
+        // actual position in the posting list
+        auto itPostPos  = post_pos.find(wordId);
+  #ifdef SANITY_CHECKS
+        CHECK(itPost != index_.end());
+        CHECK(itPostPos != post_pos.end());
+        CHECK(itPost->second.get() != nullptr);
+  #endif
+        // the actual posting list
+        PostList& pl = *itPost->second;
+        // get actual position in the list (and shift it by +1)
+        size_t curr_pos = itPostPos->second++;;
+        CHECK(curr_pos < pl.qty_);
+        pl.entries_[curr_pos] = PostEntry(did, e.val_);
+      }
+      ++pbar;
     }
   }
 #ifdef SANITY_CHECKS

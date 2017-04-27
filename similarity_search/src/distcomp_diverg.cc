@@ -54,7 +54,7 @@ template  double alpha_beta_divergence_proxy(const double* x, const double* y, c
 
 template <typename T> T renyi_divergence(const T* x, const T* y, const int length, float alpha) {
   T sum = 0;
-  T eps = -1e-6;
+  T eps = -1e-4;
   float t = alpha-1; 
   for (int i = 0; i < length; ++i) {
     sum += x[i]*pow(x[i]/y[i], t);

@@ -24,6 +24,7 @@
 #include "knnquery.h"
 #include "knnqueue.h"
 #include "method/perm_bin_vptree.h"
+#include "method/sym_seqsearch.h"
 #include "utils.h"
 #include "distcomp.h"
 #include "logging.h"
@@ -74,7 +75,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& Ind
     BinPermData_[i] = VPTreeSpace_->CreateObjFromVect(i, -1, binPivot);
   }
 
-  ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, BinPermData_);
+  ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, BinPermData_, kSymmNone);
   VPTreeIndex_.reset(new VPTree<int, PolynomialPruner<int>>(
                                           PrintProgress_,
                                           *VPTreeSpace_,
