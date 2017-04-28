@@ -1,4 +1,3 @@
-=================
 A special version of the Non-Metric Space Library (NMSLIB)
 =================
 This modification of NMSLIB is based on release is [1.5.3](https://github.com/searchivarius/nmslib/releases/tag/v1.5.3).
