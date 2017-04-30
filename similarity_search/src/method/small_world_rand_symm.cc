@@ -282,7 +282,7 @@ SmallWorldRandSymm<dist_t>::searchForIndexing(const Object *queryObj,
     dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(queryObj, provider->getData()) : 
                                   space_.IndexTimeDistance(queryObj, provider->getData());
 */
-    dist_t d = IndexTimeSymmDistance(queryObj, provider->getData());
+    dist_t d = IndexTimeSymmDistance(provider->getData(), queryObj);
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
 
     candidateSet.push(ev);
@@ -362,7 +362,7 @@ SmallWorldRandSymm<dist_t>::searchForIndexing(const Object *queryObj,
           d = use_proxy_dist_ ? space_.ProxyDistance(queryObj, pNeighbor->getData()) : 
                                 space_.IndexTimeDistance(queryObj, pNeighbor->getData());
 */
-          dist_t d = IndexTimeSymmDistance(queryObj, pNeighbor->getData());
+          dist_t d = IndexTimeSymmDistance(pNeighbor->getData(), queryObj);
 
           if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
             closestDistQueue.push(d);
