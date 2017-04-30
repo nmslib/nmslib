@@ -140,6 +140,11 @@ class KLDivGenFast : public KLDivAbstract<dist_t> {
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
   virtual Object* Mean(const ObjectVector& data) const;
+
+  virtual dist_t ProxyDistance(const Object* obj1, const Object* obj2) const override {
+    return 0.5*(this->IndexTimeDistance(obj1,obj2)+this->IndexTimeDistance(obj2,obj1));
+    //return min(this->IndexTimeDistance(obj1,obj2),this->IndexTimeDistance(obj2,obj1));
+  }
  protected:
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;
@@ -160,6 +165,11 @@ class ItakuraSaitoFast : public BregmanDiv<dist_t> {
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const std::vector<dist_t>& InpVect) const;
   virtual size_t GetElemQty(const Object* object) const { return object->datalength()/ sizeof(dist_t)/ 2; }
   virtual Object* Mean(const ObjectVector& data) const;
+
+  virtual dist_t ProxyDistance(const Object* obj1, const Object* obj2) const override {
+    return 0.5*(this->IndexTimeDistance(obj1,obj2)+this->IndexTimeDistance(obj2,obj1));
+    //return min(this->IndexTimeDistance(obj1,obj2),this->IndexTimeDistance(obj2,obj1));
+  }
  protected:
   // Should not be directly accessible
   virtual dist_t HiddenDistance(const Object* object1, const Object* object2) const;

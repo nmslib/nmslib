@@ -19,6 +19,7 @@
 
 #include <method/small_world_rand.h>
 #include <method/small_world_rand_split.h>
+#include <method/small_world_rand_symm.h>
 
 namespace similarity {
 
@@ -40,6 +41,14 @@ Index<dist_t>* CreateSmallWorldRandSplit(bool PrintProgress,
                                         Space<dist_t>& space,
                                         const ObjectVector& DataObjects) {
     return new SmallWorldRandSplit<dist_t>(PrintProgress, space, DataObjects);
+}
+
+template <typename dist_t>
+Index<dist_t>* CreateSmallWorldRandSymm(bool PrintProgress,
+                                        const string& SpaceType,
+                                        Space<dist_t>& space,
+                                        const ObjectVector& DataObjects) {
+    return new SmallWorldRandSymm<dist_t>(PrintProgress, space, DataObjects);
 }
 
 /*

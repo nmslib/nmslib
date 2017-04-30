@@ -24,7 +24,7 @@
 #include "knnqueue.h"
 #include "rangequery.h"
 #include "ported_boost_progress.h"
-#include "method/small_world_rand.h"
+#include "method/small_world_rand_symm.h"
 #include "sort_arr_bi.h"
 
 #include <vector>
@@ -45,9 +45,9 @@ namespace similarity {
 using namespace std;
 
 template <typename dist_t>
-struct IndexThreadParamsSW {
+struct IndexThreadParamsSWSymm {
   const Space<dist_t>&                        space_;
-  SmallWorldRand<dist_t>&                     index_;
+  SmallWorldRandSymm<dist_t>&                 index_;
   const ObjectVector&                         data_;
   size_t                                      index_every_;
   size_t                                      out_of_;
@@ -55,9 +55,9 @@ struct IndexThreadParamsSW {
   mutex&                                      display_mutex_;
   size_t                                      progress_update_qty_;
   
-  IndexThreadParamsSW(
+  IndexThreadParamsSWSymm(
                      const Space<dist_t>&             space,
-                     SmallWorldRand<dist_t>&          index, 
+                     SmallWorldRandSymm<dist_t>&          index, 
                      const ObjectVector&              data,
                      size_t                           index_every,
                      size_t                           out_of,
@@ -77,8 +77,8 @@ struct IndexThreadParamsSW {
 };
 
 template <typename dist_t>
-struct IndexThreadSW {
-  void operator()(IndexThreadParamsSW<dist_t>& prm) {
+struct IndexThreadSWSymm {
+  void operator()(IndexThreadParamsSWSymm<dist_t>& prm) {
     ProgressDisplay*  progress_bar = prm.progress_bar_;
     mutex&            display_mutex(prm.display_mutex_); 
     /* 
@@ -105,13 +105,13 @@ struct IndexThreadSW {
 };
 
 template <typename dist_t>
-SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
+SmallWorldRandSymm<dist_t>::SmallWorldRandSymm(bool PrintProgress,
                                        const Space<dist_t>& space,
                                        const ObjectVector& data) : 
                                        space_(space), data_(data), PrintProgress_(PrintProgress), use_proxy_dist_(false) {}
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams) 
+void SmallWorldRandSymm<dist_t>::CreateIndex(const AnyParams& IndexParams) 
 {
   AnyParamManager pmgr(IndexParams);
 
@@ -122,11 +122,18 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
   pmgr.GetParamOptional("useProxyDist",       use_proxy_dist_,      false);
 
-  LOG(LIB_INFO) << "NN                  = " << NN_;
-  LOG(LIB_INFO) << "efConstruction_     = " << efConstruction_;
-  LOG(LIB_INFO) << "initIndexAttempts   = " << initIndexAttempts_;
-  LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
-  LOG(LIB_INFO) << "useProxyDist        = " << use_proxy_dist_;
+  string s;
+  pmgr.GetParamOptional(SYM_TYPE_PARAM, s, SYM_TYPE_NONE);
+  indexSymm_ = getSymmType(s);
+
+ 
+
+  LOG(LIB_INFO) << "NN                   = " << NN_;
+  LOG(LIB_INFO) << "efConstruction_      = " << efConstruction_;
+  LOG(LIB_INFO) << "initIndexAttempts    = " << initIndexAttempts_;
+  LOG(LIB_INFO) << "indexThreadQty       = " << indexThreadQty_;
+  LOG(LIB_INFO) << "useProxyDist         = " << use_proxy_dist_;
+  LOG(LIB_INFO) << "symmType (index-time)="  << indexSymm_;
 
   pmgr.CheckUnused();
 
@@ -151,16 +158,16 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
     }
   } else {
     vector<thread>                                    threads(indexThreadQty_);
-    vector<shared_ptr<IndexThreadParamsSW<dist_t>>>   threadParams; 
+    vector<shared_ptr<IndexThreadParamsSWSymm<dist_t>>>   threadParams; 
     mutex                                             progressBarMutex;
 
     for (size_t i = 0; i < indexThreadQty_; ++i) {
-      threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
-                              new IndexThreadParamsSW<dist_t>(space_, *this, data_, i, indexThreadQty_,
+      threadParams.push_back(shared_ptr<IndexThreadParamsSWSymm<dist_t>>(
+                              new IndexThreadParamsSWSymm<dist_t>(space_, *this, data_, i, indexThreadQty_,
                                                               progress_bar.get(), progressBarMutex, 200)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
-      threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));
+      threads[i] = thread(IndexThreadSWSymm<dist_t>(), ref(*threadParams[i]));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threads[i].join();
@@ -177,37 +184,38 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
 template <typename dist_t>
 void 
-SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
+SmallWorldRandSymm<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   AnyParamManager pmgr(QueryTimeParams);
   pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  1);
   pmgr.GetParamOptional("efSearch", efSearch_, NN_);
-  string tmp;
-  //pmgr.GetParamOptional("algoType", tmp, "v1merge");
-  pmgr.GetParamOptional("algoType", tmp, "old");
-  ToLower(tmp);
-  if (tmp == "v1merge") searchAlgoType_ = kV1Merge;
-  else if (tmp == "old") searchAlgoType_ = kOld;
-  else {
-    throw runtime_error("algoType should be one of the following: old, v1merge");
+
+  string s;
+  pmgr.GetParamOptional(SYM_TYPE_PARAM, s, SYM_TYPE_NONE);
+  querySymm_ = getSymmType(s);
+  
+  if (querySymm_ != kSymmNone) {
+    pmgr.GetParamRequired(SYM_K_PARAM, symmCandK_);
   }
+
   pmgr.CheckUnused();
-  LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
-  LOG(LIB_INFO) << "initSearchAttempts =" << initSearchAttempts_;
-  LOG(LIB_INFO) << "efSearch           =" << efSearch_;
-  LOG(LIB_INFO) << "algoType           =" << searchAlgoType_;
+  LOG(LIB_INFO) << "Set SmallWorldRandSymm query-time parameters:";
+  LOG(LIB_INFO) << "initSearchAttempts   =" << initSearchAttempts_;
+  LOG(LIB_INFO) << "efSearch             =" << efSearch_;
+  LOG(LIB_INFO) << "symmType (query-time)=" << querySymm_;
+  LOG(LIB_INFO) << "symmCandK            =" << symmCandK_;
 }
 
 template <typename dist_t>
-const std::string SmallWorldRand<dist_t>::StrDesc() const {
+const std::string SmallWorldRandSymm<dist_t>::StrDesc() const {
   return METH_SMALL_WORLD_RAND;
 }
 
 template <typename dist_t>
-SmallWorldRand<dist_t>::~SmallWorldRand() {
+SmallWorldRandSymm<dist_t>::~SmallWorldRandSymm() {
 }
 
 template <typename dist_t>
-MSWNode* SmallWorldRand<dist_t>::getRandomEntryPointLocked() const
+MSWNode* SmallWorldRandSymm<dist_t>::getRandomEntryPointLocked() const
 {
   unique_lock<mutex> lock(ElListGuard_);
   MSWNode* res = getRandomEntryPoint();
@@ -215,7 +223,7 @@ MSWNode* SmallWorldRand<dist_t>::getRandomEntryPointLocked() const
 }
 
 template <typename dist_t>
-size_t SmallWorldRand<dist_t>::getEntryQtyLocked() const
+size_t SmallWorldRandSymm<dist_t>::getEntryQtyLocked() const
 {
   unique_lock<mutex> lock(ElListGuard_);
   size_t res = ElList_.size();
@@ -223,7 +231,7 @@ size_t SmallWorldRand<dist_t>::getEntryQtyLocked() const
 }
 
 template <typename dist_t>
-MSWNode* SmallWorldRand<dist_t>::getRandomEntryPoint() const {
+MSWNode* SmallWorldRandSymm<dist_t>::getRandomEntryPoint() const {
   size_t size = ElList_.size();
 
   if(!ElList_.size()) {
@@ -236,7 +244,7 @@ MSWNode* SmallWorldRand<dist_t>::getRandomEntryPoint() const {
 
 template <typename dist_t>
 void 
-SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
+SmallWorldRandSymm<dist_t>::searchForIndexing(const Object *queryObj,
                                           priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet) const
 {
 #if USE_BITSET_FOR_INDEXING
@@ -270,8 +278,11 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
     priority_queue <dist_t>                     closestDistQueue;                      
     priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
 
-    dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(provider->getData(), queryObj):
-                                  space_.IndexTimeDistance(provider->getData(), queryObj);
+/*
+    dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(queryObj, provider->getData()) : 
+                                  space_.IndexTimeDistance(queryObj, provider->getData());
+*/
+    dist_t d = IndexTimeSymmDistance(queryObj, provider->getData());
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
 
     candidateSet.push(ev);
@@ -347,8 +358,11 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
         if (visited.find(pNeighbor) == visited.end()) {
           visited.insert(pNeighbor);
 #endif
-          d = use_proxy_dist_ ? space_.ProxyDistance(pNeighbor->getData(), queryObj):
-                                space_.IndexTimeDistance(pNeighbor->getData(), queryObj);
+/*
+          d = use_proxy_dist_ ? space_.ProxyDistance(queryObj, pNeighbor->getData()) : 
+                                space_.IndexTimeDistance(queryObj, pNeighbor->getData());
+*/
+          dist_t d = IndexTimeSymmDistance(queryObj, pNeighbor->getData());
 
           if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
             closestDistQueue.push(d);
@@ -372,7 +386,7 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
 
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::add(MSWNode *newElement){
+void SmallWorldRandSymm<dist_t>::add(MSWNode *newElement){
   newElement->removeAllFriends(); 
 
   bool isEmpty = false;
@@ -405,143 +419,47 @@ void SmallWorldRand<dist_t>::add(MSWNode *newElement){
 }
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::addCriticalSection(MSWNode *newElement){
+void SmallWorldRandSymm<dist_t>::addCriticalSection(MSWNode *newElement){
   unique_lock<mutex> lock(ElListGuard_);
 
   ElList_.push_back(newElement);
 }
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
+void SmallWorldRandSymm<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   throw runtime_error("Range search is not supported!");
 }
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
-  if (searchAlgoType_ == kV1Merge) SearchV1Merge(query);
-  else SearchOld(query);
-}
+void SmallWorldRandSymm<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
+  if (querySymm_ == kSymmNone) {
+  // Straightforward mode, no symmetrization, no pre-filtering
+    KNNQueue<dist_t>   resQueue(query->GetK());
+    SearchInternal(*query, resQueue); 
 
-template <typename dist_t>
-void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
-  if (ElList_.empty()) return;
-  CHECK_MSG(efSearch_ > 0, "efSearch should be > 0");
-/*
- * The trick of using large dense bitsets instead of unordered_set was
- * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
- *
- * This trick works really well even in a multi-threaded mode. Indeed, the amount
- * of allocated memory is small. For example, if one has 8M entries, the size of
- * the bitmap is merely 1 MB. Furthermore, setting 1MB of entries to zero via memset would take only
- * a fraction of millisecond.
- */
-  vector<bool>                        visitedBitset(ElList_.size());
-
-  for (size_t i=0; i < initSearchAttempts_; i++) {
-    /**
-     * Search of most k-closest elements to the query.
-     */
-#ifdef START_WITH_E0_AT_QUERY_TIME
-    MSWNode* currNode = i ? getRandomEntryPoint(): ElList_[0];
-#else
-    MSWNode* currNode = getRandomEntryPoint();
-#endif
-    SortArrBI<dist_t,MSWNode*> sortedArr(max<size_t>(efSearch_, query->GetK()));
-
-    const Object* currObj = currNode->getData();
-    dist_t d = query->DistanceObjLeft(currObj);
-    sortedArr.push_unsorted_grow(d, currNode); // It won't grow
-
-    size_t nodeId = currNode->getId();
-    // data_.size() is guaranteed to be equal to ElList_.size()
-    CHECK(nodeId < data_.size());
-
-    visitedBitset[nodeId] = true;
-
-    int_fast32_t  currElem = 0;
-
-    typedef typename SortArrBI<dist_t,MSWNode*>::Item  QueueItem;
-
-    vector<QueueItem>& queueData = sortedArr.get_data();
-    vector<QueueItem>  itemBuff(8*NN_);
-
-    // efSearch_ is always <= # of elements in the queueData.size() (the size of the BUFFER), but it can be
-    // larger than sortedArr.size(), which returns the number of actual elements in the buffer
-    while(currElem < min(sortedArr.size(),efSearch_)){
-      auto& e = queueData[currElem];
-      CHECK(!e.used);
-      e.used = true;
-      currNode = e.data;
-      ++currElem;
-
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
-      }
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
-      }
-
-      if (currNode->getAllFriends().size() > itemBuff.size())
-        itemBuff.resize(currNode->getAllFriends().size());
-
-      size_t itemQty = 0;
-
-      dist_t topKey = sortedArr.top_key();
-      //calculate distance to each neighbor
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        nodeId = neighbor->getId();
-        // data_.size() is guaranteed to be equal to ElList_.size()
-        CHECK(nodeId < data_.size());
-
-        if (!visitedBitset[nodeId]) {
-          currObj = neighbor->getData();
-          d = query->DistanceObjLeft(currObj);
-          visitedBitset[nodeId] = true;
-          if (sortedArr.size() < efSearch_ || d < topKey) {
-            itemBuff[itemQty++]=QueueItem(d, neighbor);
-          }
-        }
-      }
-
-      if (itemQty) {
-        _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
-        std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
-
-        size_t insIndex=0;
-        if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
-          insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
-
-          if (insIndex < currElem) {
-            currElem = insIndex;
-          }
-        } else {
-          for (size_t ii = 0; ii < itemQty; ++ii) {
-            size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
-
-            if (insIndex < currElem) {
-              currElem = insIndex;
-            }
-          }
-        }
-      }
-
-      // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
-      while (currElem < sortedArr.size() && queueData[currElem].used == true)
-        ++currElem;
+    while (!resQueue.Empty()) {
+      // No need to recompute distances, they have not been previously symmterized
+      query->CheckAndAddToResult(resQueue.TopDistance(), resQueue.TopObject());
+      resQueue.Pop();
     }
+  } else {
+   // Filtering mode, using larger queue
+    KNNQueue<dist_t>   resQueue(symmCandK_);
+    SearchInternal(*query, resQueue); 
 
-    for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
-      query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
+    while (!resQueue.Empty()) {
+      // In the filtering mode, we need to recompute the distance to every candidate
+      query->CheckAndAddToResult(resQueue.TopObject());
+      resQueue.Pop();
     }
   }
 }
 
-
 template <typename dist_t>
-void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
-
+void SmallWorldRandSymm<dist_t>::SearchInternal(const KNNQuery<dist_t>& query, KNNQueue<dist_t>& resQueue) const {
   if (ElList_.empty()) return;
   CHECK_MSG(efSearch_ > 0, "efSearch should be > 0");
+
 /*
  * The trick of using large dense bitsets instead of unordered_set was
  * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
@@ -568,8 +486,12 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
     priority_queue <EvaluatedMSWNodeReverse<dist_t>> candidateQueue; //the set of elements which we can use to evaluate
 
     const Object* currObj = provider->getData();
-    dist_t d = query->DistanceObjLeft(currObj);
-    query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
+    //dist_t d = query.DistanceObjLeft(currObj);
+    dist_t d = QueryTimeSymmDistance(query, currObj);
+    // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
+    //query->CheckAndAddToResult(d, currObj); 
+    resQueue.Push(d, currObj);
+  
 
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
     candidateQueue.push(ev);
@@ -619,7 +541,8 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
         }
         if (!visitedBitset[nodeId]) {
           currObj = (*iter)->getData();
-          d = query->DistanceObjLeft(currObj);
+          //d = query.DistanceObjLeft(currObj);
+          d = QueryTimeSymmDistance(query, currObj);
           visitedBitset[nodeId] = true;
 
           if (closestDistQueue.size() < efSearch_ || d < closestDistQueue.top()) {
@@ -631,7 +554,8 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
             candidateQueue.emplace(d, *iter);
           }
 
-          query->CheckAndAddToResult(d, currObj);
+          //query->CheckAndAddToResult(d, currObj);
+          resQueue.Push(d, currObj);
         }
       }
     }
@@ -639,7 +563,7 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
 }
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
+void SmallWorldRandSymm<dist_t>::SaveIndex(const string &location) {
   ofstream outFile(location);
   CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
   outFile.exceptions(std::ios::badbit);
@@ -671,7 +595,7 @@ void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
 }
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
+void SmallWorldRandSymm<dist_t>::LoadIndex(const string &location) {
   vector<MSWNode *> ptrMapper(data_.size());
 
   for (unsigned pass = 0; pass < 2; ++ pass) {
@@ -747,8 +671,8 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
   }
 }
 
-template class SmallWorldRand<float>;
-template class SmallWorldRand<double>;
-template class SmallWorldRand<int>;
+template class SmallWorldRandSymm<float>;
+template class SmallWorldRandSymm<double>;
+template class SmallWorldRandSymm<int>;
 
 }

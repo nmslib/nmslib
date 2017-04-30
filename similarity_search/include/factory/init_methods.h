@@ -180,6 +180,10 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SPLIT, CreateSmallWorldRandSplit)
 
+  REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_SYMM, CreateSmallWorldRandSymm)
+  REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SYMM, CreateSmallWorldRandSymm)
+  REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SYMM, CreateSmallWorldRandSymm)
+
 #if !defined(_MSC_VER)
   // Another KNN-graph, which is computed via NN-descent
   REGISTER_METHOD_CREATOR(float,  METH_NNDES, CreateNNDescent)

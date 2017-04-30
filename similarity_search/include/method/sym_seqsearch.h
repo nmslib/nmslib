@@ -62,6 +62,15 @@ inline dist_t SymmDistance(const Space<dist_t>&  s, const Object* o1, const Obje
 }
 
 template <typename dist_t>
+inline dist_t SymmDistance(const Query<dist_t>&  q, const Object* obj, SymmType stype) {
+  if (stype == kSymmNone) return q.DistanceObjLeft(obj);
+  if (stype == kSymmReverse) return q.DistanceObjRight(obj);
+  dist_t d1 = q.DistanceObjLeft(obj);
+  dist_t d2 = q.DistanceObjRight(obj);
+  return stype == kSymmMin ? min(d1, d2) : (d1+d2)*0.5;
+}
+
+template <typename dist_t>
 class SymSeqSearch : public Index<dist_t> {
  public:
   SymSeqSearch(Space<dist_t>& space, const ObjectVector& data);
