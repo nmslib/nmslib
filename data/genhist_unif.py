@@ -11,23 +11,28 @@ import random
 import argparse
 import sys
 import numpy
+import math
 
 parser = argparse.ArgumentParser(description='vector generator (uniform)')
 
 parser.add_argument('-d','--dim',   required=True, type=int, help='dimensionality (# of vector elements)')
 parser.add_argument('-n','--ndata', required=True, type=int, help='# of data points')
 parser.add_argument('-o','--outf',  required=True, help='output file')
+parser.add_argument('--min_val', default=1e-5, help='the minimum possible vector element')
 
 args = vars(parser.parse_args())
 
 nd   = args['ndata']
 outf = args['outf']
 dim  = args['dim']
+minVal=args['min_val']
 
 f=open(outf, 'w')
 for i in xrange(nd):
-  arr = numpy.array([random.random() for _ in xrange(dim)])
+  # See an explanation from this blog post
+  # /home/leo/SourceTreeGit/nmslib.master/data/
+  arr = numpy.array([-math.log(random.random()) for _ in xrange(dim)])
   arr /= sum(arr)
-  f.write("\t".join([("%.5f" % v) for v in arr]) + "\n")
+  f.write("\t".join([("%g" % max(v,minVal)) for v in arr]) + "\n")
 f.close()
 
