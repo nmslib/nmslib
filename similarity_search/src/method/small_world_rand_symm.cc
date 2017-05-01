@@ -193,9 +193,7 @@ SmallWorldRandSymm<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams)
   pmgr.GetParamOptional(SYM_TYPE_PARAM, s, SYM_TYPE_NONE);
   querySymm_ = getSymmType(s);
   
-  if (querySymm_ != kSymmNone) {
-    pmgr.GetParamRequired(SYM_K_PARAM, symmCandK_);
-  }
+  pmgr.GetParamOptional(SYM_K_PARAM, symmCandK_, 0);
 
   pmgr.CheckUnused();
   LOG(LIB_INFO) << "Set SmallWorldRandSymm query-time parameters:";
@@ -432,7 +430,7 @@ void SmallWorldRandSymm<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const
 
 template <typename dist_t>
 void SmallWorldRandSymm<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
-  if (querySymm_ == kSymmNone) {
+  if (symmCandK_ == 0) {
   // Straightforward mode, no symmetrization, no pre-filtering
     KNNQueue<dist_t>   resQueue(query->GetK());
     SearchInternal(*query, resQueue); 

@@ -123,7 +123,7 @@ private:
   }
 
   dist_t QueryTimeSymmDistance(const KNNQuery<dist_t>& query, const Object* dataObj) const {
-    return SymmDistance(query, dataObj, indexSymm_);
+    return SymmDistance(query, dataObj, querySymm_);
   }
 
 protected:
