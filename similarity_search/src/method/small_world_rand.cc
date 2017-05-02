@@ -89,7 +89,7 @@ struct IndexThreadSW {
     for (size_t id = 1; id < prm.data_.size(); ++id) {
       if (prm.index_every_ == id % prm.out_of_) {
         MSWNode* node = new MSWNode(prm.data_[id], id);
-        prm.index_.add(node);
+        prm.index_.add(node, prm.data_.size());
       
         if ((id + 1 >= min(prm.data_.size(), nextQty)) && progress_bar) {
           unique_lock<mutex> lock(display_mutex);
@@ -147,7 +147,7 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
     if (progress_bar) ++(*progress_bar);
     for (size_t id = 1; id < data_.size(); ++id) {
       MSWNode* node = new MSWNode(data_[id], id);
-      add(node);
+      add(node, data_.size());
       if (progress_bar) ++(*progress_bar);
     }
   } else {
@@ -238,7 +238,8 @@ MSWNode* SmallWorldRand<dist_t>::getRandomEntryPoint() const {
 template <typename dist_t>
 void 
 SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
-                                          priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet) const
+                                          priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet,
+                                          IdType maxInternalId) const
 {
 #if USE_BITSET_FOR_INDEXING
 /*
@@ -250,7 +251,7 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
  * the bitmap is merely 1 MB. Furthermore, setting 1MB of entries to zero via memset would take only
  * a fraction of millisecond.
  */
-  vector<bool>                        visitedBitset(data_.size()); // seems to be working fine even in a multi-threaded mode.
+  vector<bool>                        visitedBitset(maxInternalId + 1); // seems to be working efficiently even in a multi-threaded mode.
 #else
   unordered_set<MSWNode*>             visited;
 #endif
@@ -284,9 +285,9 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
  
 #if USE_BITSET_FOR_INDEXING
     size_t nodeId = provider->getId();
-    if (nodeId >= data_.size()) {
+    if (nodeId > maxInternalId) {
       stringstream err;
-      err << "Bug: nodeId > data_size()";
+      err << "Bug: nodeId > maxInternalId";
       LOG(LIB_INFO) << err.str();
       throw runtime_error(err.str());
     }
@@ -336,9 +337,9 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
         MSWNode* pNeighbor = neighborCopy[neighborId];
 #if USE_BITSET_FOR_INDEXING
         size_t nodeId = pNeighbor->getId();
-        if (nodeId >= data_.size()) {
+        if (nodeId > maxInternalId) {
           stringstream err;
-          err << "Bug: nodeId > data_size()";
+          err << "Bug: nodeId >  maxInternalId";
           LOG(LIB_INFO) << err.str();
           throw runtime_error(err.str());
         }
@@ -373,7 +374,7 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
 
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::add(MSWNode *newElement){
+void SmallWorldRand<dist_t>::add(MSWNode *newElement, IdType maxInternalId){
   newElement->removeAllFriends(); 
 
   bool isEmpty = false;
@@ -392,7 +393,7 @@ void SmallWorldRand<dist_t>::add(MSWNode *newElement){
   {
     priority_queue<EvaluatedMSWNodeDirect<dist_t>> resultSet;
 
-    searchForIndexing(newElement->getData(), resultSet);
+    searchForIndexing(newElement->getData(), resultSet, maxInternalId);
 
     // TODO actually we might need to add elements in the reverse order in the future.
     // For the current implementation, however, the order doesn't seem to matter
@@ -454,8 +455,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
     sortedArr.push_unsorted_grow(d, currNode); // It won't grow
 
     size_t nodeId = currNode->getId();
-    // data_.size() is guaranteed to be equal to ElList_.size()
-    CHECK(nodeId < data_.size());
+    CHECK(nodeId < ElList_.size());
 
     visitedBitset[nodeId] = true;
 
@@ -491,8 +491,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
       //calculate distance to each neighbor
       for (MSWNode* neighbor : currNode->getAllFriends()) {
         nodeId = neighbor->getId();
-        // data_.size() is guaranteed to be equal to ElList_.size()
-        CHECK(nodeId < data_.size());
+        CHECK(nodeId < ElList_.size());
 
         if (!visitedBitset[nodeId]) {
           currObj = neighbor->getData();
@@ -577,10 +576,9 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
     closestDistQueue.emplace(d);
 
     size_t nodeId = provider->getId();
-    // data_.size() is guaranteed to be equal to ElList_.size()
-    if (nodeId >= data_.size()) {
+    if (nodeId >= ElList_.size()) {
       stringstream err;
-      err << "Bug: nodeId > data_size()";
+      err << "Bug: nodeId > ElList_.size()";
       LOG(LIB_INFO) << err.str();
       throw runtime_error(err.str());
     }
@@ -611,10 +609,9 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
       //calculate distance to each neighbor
       for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
         nodeId = (*iter)->getId();
-        // data_.size() is guaranteed to be equal to ElList_.size()
-        if (nodeId >= data_.size()) {
+        if (nodeId >= ElList_.size()) {
           stringstream err;
-          err << "Bug: nodeId > data_size()";
+          err << "Bug: nodeId > ElList_.size()";
           LOG(LIB_INFO) << err.str();
           throw runtime_error(err.str());
         }

@@ -62,7 +62,7 @@ class Space;
 class MSWNode{
 public:
   MSWNode(const Object *Obj, size_t id) {
-    data_ = Obj;
+    nodeObj_ = Obj;
     id_ = id;
   }
   ~MSWNode(){};
@@ -87,7 +87,7 @@ public:
     }
   }
   const Object* getData() const {
-    return data_;
+    return nodeObj_;
   }
   size_t getId() const { return id_; }
   /* 
@@ -106,7 +106,7 @@ public:
   mutex accessGuard_;
 
 private:
-  const Object*       data_;
+  const Object*       nodeObj_;
   size_t              id_;
   vector<MSWNode*>    friends;
 };
@@ -182,8 +182,9 @@ public:
   size_t getEntryQtyLocked() const;
    
   void searchForIndexing(const Object *queryObj,
-                         std::priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet) const;
-  void add(MSWNode *newElement);
+                         std::priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet,
+                         IdType maxInternalId) const;
+  void add(MSWNode *newElement, IdType maxInternalId);
   void addCriticalSection(MSWNode *newElement);
   void link(MSWNode* first, MSWNode* second){
     // addFriend checks for duplicates if the second argument is true
@@ -204,7 +205,7 @@ private:
   ObjectVector          pivots_;
 
   const Space<dist_t>&  space_;
-  ObjectVector          data_; // We copy all the data
+  const ObjectVector&   data_; // We don't copy data
   bool                  PrintProgress_;
   bool                  use_proxy_dist_;
 
