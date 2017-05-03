@@ -272,8 +272,8 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
     priority_queue <dist_t>                     closestDistQueue;                      
     priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
 
-    dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(queryObj, provider->getData()) : 
-                                  space_.IndexTimeDistance(queryObj, provider->getData());
+    dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(provider->getData(), queryObj) : 
+                                  space_.IndexTimeDistance(provider->getData(), queryObj);
     EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
 
     candidateSet.push(ev);
@@ -349,8 +349,8 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
         if (visited.find(pNeighbor) == visited.end()) {
           visited.insert(pNeighbor);
 #endif
-          d = use_proxy_dist_ ? space_.ProxyDistance(queryObj, pNeighbor->getData()) : 
-                                space_.IndexTimeDistance(queryObj, pNeighbor->getData());
+          d = use_proxy_dist_ ? space_.ProxyDistance(pNeighbor->getData(), queryObj) : 
+                                space_.IndexTimeDistance(pNeighbor->getData(), queryObj);
 
           if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
             closestDistQueue.push(d);
