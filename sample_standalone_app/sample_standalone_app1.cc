@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
   // No logging 
   if (LOG_OPTION == 2)
     initLibrary(LIB_LOGNONE, NULL);
-  // Use STDOUT
+  // Use STDERR
   if (LOG_OPTION == 3)
     initLibrary(LIB_LOGSTDERR, NULL);
 

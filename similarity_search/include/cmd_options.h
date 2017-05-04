@@ -235,14 +235,14 @@ class CmdParam {
   std::string ParamDesc(const string& addPadd) {
     std::stringstream ss;
     ss << descr_ << " " 
-       << endl << addPadd << (required_ ? "" : ptr_->ToString());
+       << std::endl << addPadd << (required_ ? "" : ptr_->ToString());
     return ss.str();
   }
 
   std::string ToString() {
     std::stringstream ss;
     std::cout 
-        << "\t" << ParamOptStr() << " : " << endl
+        << "\t" << ParamOptStr() << " : " << std::endl
         << "\t\t" << ParamDesc("\t\t"); 
     return ss.str();
   }

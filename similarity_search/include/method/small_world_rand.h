@@ -171,6 +171,7 @@ public:
                  const Space<dist_t>& space,
                  const ObjectVector& data);
   void CreateIndex(const AnyParams& IndexParams) override;
+  virtual void AddBatch(const ObjectVector& batchData, bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) override;
 
   ~SmallWorldRand();
 
@@ -213,6 +214,8 @@ private:
 
   void SearchOld(KNNQuery<dist_t>* query) const;
   void SearchV1Merge(KNNQuery<dist_t>* query) const;
+
+  void CheckIDs() const;
   
   enum AlgoType { kOld, kV1Merge };
 

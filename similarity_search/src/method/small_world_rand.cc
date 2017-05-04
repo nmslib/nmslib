@@ -44,7 +44,8 @@ template <typename dist_t>
 struct IndexThreadParamsSW {
   const Space<dist_t>&                        space_;
   SmallWorldRand<dist_t>&                     index_;
-  const ObjectVector&                         data_;
+  IdType                                      startMaxNodeId_;
+  const ObjectVector&                         batchData_;
   size_t                                      index_every_;
   size_t                                      out_of_;
   ProgressDisplay*                            progress_bar_;
@@ -54,7 +55,8 @@ struct IndexThreadParamsSW {
   IndexThreadParamsSW(
                      const Space<dist_t>&             space,
                      SmallWorldRand<dist_t>&          index, 
-                     const ObjectVector&              data,
+                     IdType                           startMaxNodeId,
+                     const ObjectVector&              batchData,
                      size_t                           index_every,
                      size_t                           out_of,
                      ProgressDisplay*                 progress_bar,
@@ -63,7 +65,8 @@ struct IndexThreadParamsSW {
                       ) : 
                      space_(space),
                      index_(index), 
-                     data_(data),
+                     startMaxNodeId_(startMaxNodeId),
+                     batchData_(batchData),
                      index_every_(index_every),
                      out_of_(out_of),
                      progress_bar_(progress_bar),
@@ -78,15 +81,17 @@ struct IndexThreadSW {
     ProgressDisplay*  progress_bar = prm.progress_bar_;
     mutex&            display_mutex(prm.display_mutex_); 
     /* 
-     * Skip the first element, it was added already
+     * Skip the first element, it was added already in the AddBatch
      */
+    size_t futureMaxNodeId = prm.startMaxNodeId_ + prm.batchData_.size();
+
     size_t nextQty = prm.progress_update_qty_;
-    for (size_t id = 1; id < prm.data_.size(); ++id) {
+    for (size_t id = 1; id < prm.batchData_.size(); ++id) {
       if (prm.index_every_ == id % prm.out_of_) {
-        MSWNode* node = new MSWNode(prm.data_[id], id);
-        prm.index_.add(node, prm.data_.size());
+        MSWNode* node = new MSWNode(prm.batchData_[id], id + prm.startMaxNodeId_);
+        prm.index_.add(node, futureMaxNodeId);
       
-        if ((id + 1 >= min(prm.data_.size(), nextQty)) && progress_bar) {
+        if ((id + 1 >= min(prm.batchData_.size(), nextQty)) && progress_bar) {
           unique_lock<mutex> lock(display_mutex);
           (*progress_bar) += (nextQty - progress_bar->count());
           nextQty += prm.progress_update_qty_;
@@ -105,6 +110,87 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
                                        const Space<dist_t>& space,
                                        const ObjectVector& data) : 
                                        space_(space), data_(data), PrintProgress_(PrintProgress), use_proxy_dist_(false) {}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::AddBatch(const ObjectVector& batchData, 
+                                      bool bCheckIDs /* this is a debug flag only, turning it on may affect performance */)
+{
+  if (batchData.empty()) return;
+
+  IdType startMaxNodeId = ElList_.size();
+
+  IdType futureMaxNodeId = startMaxNodeId + batchData.size();
+
+  LOG(LIB_INFO) << "Current maxNodeId: " << startMaxNodeId 
+                << " futureMaxNodeId + 1 after batch addition: " << futureMaxNodeId;
+
+  // 2) One entry should be added before all the threads are started, or else add() will not work properly
+  addCriticalSection(new MSWNode(batchData[0], startMaxNodeId));
+
+  unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
+                                new ProgressDisplay(batchData.size(), cerr)
+                                :NULL);
+
+  if (indexThreadQty_ <= 1) {
+    // Skip the first element, one element is already added
+    if (progress_bar) ++(*progress_bar);
+    for (size_t id = 1; id < batchData.size(); ++id) {
+      MSWNode* node = new MSWNode(batchData[id], id + startMaxNodeId);
+      add(node, futureMaxNodeId);
+      if (progress_bar) ++(*progress_bar);
+    }
+  } else {
+    vector<thread>                                    threads(indexThreadQty_);
+    vector<shared_ptr<IndexThreadParamsSW<dist_t>>>   threadParams; 
+    mutex                                             progressBarMutex;
+
+    for (size_t i = 0; i < indexThreadQty_; ++i) {
+      threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
+                              new IndexThreadParamsSW<dist_t>(space_, *this, startMaxNodeId, 
+                                                              batchData, 
+                                                              i, indexThreadQty_,
+                                                              progress_bar.get(), progressBarMutex, 200)));
+    }
+    for (size_t i = 0; i < indexThreadQty_; ++i) {
+      threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));
+    }
+    for (size_t i = 0; i < indexThreadQty_; ++i) {
+      threads[i].join();
+    }
+    LOG(LIB_INFO) << indexThreadQty_ << " indexing threads have finished";
+  }
+  if (ElList_.size() != futureMaxNodeId) {
+    stringstream err;
+    err << "Bug after batch update: ElList_.size() (" << ElList_.size() << ") isn't equal to expected size (" << futureMaxNodeId << ")";
+    LOG(LIB_INFO) << err.str();
+    throw runtime_error(err.str());
+  }
+  if (bCheckIDs) CheckIDs();
+}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::CheckIDs() const
+{
+  LOG(LIB_INFO) << "Checking if node IDs fully fill the range [0, " << ElList_.size() << ")";
+  vector<bool>                        visitedBitset(ElList_.size());
+  
+  /*
+   * We check that each ID is unique and is within the range [0, ElList_.size())
+   * When this is true, there is an ID for every integer in the range.
+   */
+  for(ElementMap::const_iterator it = ElList_.begin(); it != ElList_.end(); ++it) {
+    MSWNode* pNode = it->second;
+    IdType nodeID = pNode->getId();
+    CHECK_MSG(nodeID >= 0 && nodeID < ElList_.size(),
+            "Bug: unexpected node ID " + ConvertToString(nodeID) +
+            " for object ID " + ConvertToString(pNode->getData()->id()) +
+            "ElList_.size() = " + ConvertToString(ElList_.size()));
+    CHECK_MSG(visitedBitset[nodeID]==false,
+            "Bug: duplicating node ID " + ConvertToString(nodeID) +
+            " encountered which check object ID " + ConvertToString(pNode->getData()->id()));
+    visitedBitset[nodeID]=true;
+  }
+}
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams) 
@@ -126,48 +212,7 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   SetQueryTimeParams(getEmptyParams());
 
-  if (data_.empty()) return;
-
-  // 2) One entry should be added before all the threads are started, or else add() will not work properly
-  addCriticalSection(new MSWNode(data_[0], 0 /* id == 0 */));
-  pEntryPoint_ = ElList_.begin()->second;
-
-  unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data_.size(), cerr)
-                                :NULL);
-
-  if (indexThreadQty_ <= 1) {
-    // Skip the first element, one element is already added
-    if (progress_bar) ++(*progress_bar);
-    for (size_t id = 1; id < data_.size(); ++id) {
-      MSWNode* node = new MSWNode(data_[id], id);
-      add(node, data_.size());
-      if (progress_bar) ++(*progress_bar);
-    }
-  } else {
-    vector<thread>                                    threads(indexThreadQty_);
-    vector<shared_ptr<IndexThreadParamsSW<dist_t>>>   threadParams; 
-    mutex                                             progressBarMutex;
-
-    for (size_t i = 0; i < indexThreadQty_; ++i) {
-      threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
-                              new IndexThreadParamsSW<dist_t>(space_, *this, data_, i, indexThreadQty_,
-                                                              progress_bar.get(), progressBarMutex, 200)));
-    }
-    for (size_t i = 0; i < indexThreadQty_; ++i) {
-      threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));
-    }
-    for (size_t i = 0; i < indexThreadQty_; ++i) {
-      threads[i].join();
-    }
-    if (ElList_.size() != data_.size()) {
-      stringstream err;
-      err << "Bug: ElList_.size() (" << ElList_.size() << ") isn't equal to data_.size() (" << data_.size() << ")";
-      LOG(LIB_INFO) << err.str();
-      throw runtime_error(err.str());
-    }
-    LOG(LIB_INFO) << indexThreadQty_ << " indexing threads have finished";
-  }
+  AddBatch(data_);
 }
 
 template <typename dist_t>
@@ -320,7 +365,7 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
 
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::add(MSWNode *newElement, IdType maxInternalId){
+void SmallWorldRand<dist_t>::add(MSWNode *newElement, IdType maxNodeId){
   newElement->removeAllFriends(); 
 
   bool isEmpty = false;
@@ -339,7 +384,7 @@ void SmallWorldRand<dist_t>::add(MSWNode *newElement, IdType maxInternalId){
   {
     priority_queue<EvaluatedMSWNodeDirect<dist_t>> resultSet;
 
-    searchForIndexing(newElement->getData(), resultSet, maxInternalId);
+    searchForIndexing(newElement->getData(), resultSet, maxNodeId);
 
     // TODO actually we might need to add elements in the reverse order in the future.
     // For the current implementation, however, the order doesn't seem to matter
@@ -356,6 +401,11 @@ template <typename dist_t>
 void SmallWorldRand<dist_t>::addCriticalSection(MSWNode *newElement){
   unique_lock<mutex> lock(ElListGuard_);
 
+  if (nullptr == pEntryPoint_) {
+    // When adding the very first element, assign the value of the entry point!
+    pEntryPoint_ = newElement;
+    CHECK(ElList_.empty()); 
+  }
   ElList_.insert(make_pair(newElement->getData()->id(), newElement));
 }
 
@@ -571,6 +621,9 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
+  CHECK_MSG(data_.size() == ElList_.size(),
+            "It seems that data was added/deleted after calling CreateIndex, in this case saving indices isn't possible");
+  
   ofstream outFile(location);
   CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
   outFile.exceptions(std::ios::badbit);
