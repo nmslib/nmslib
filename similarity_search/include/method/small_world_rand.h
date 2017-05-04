@@ -24,6 +24,7 @@
 #include <iostream>
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 #include <thread>
 #include <memory>
 #include <mutex>
@@ -38,6 +39,7 @@ namespace similarity {
 
 using std::string;
 using std::vector;
+using std::unordered_map;
 using std::thread;
 using std::mutex;
 using std::unique_lock;
@@ -172,14 +174,11 @@ public:
 
   ~SmallWorldRand();
 
-  typedef std::vector<MSWNode*> ElementList;
+  typedef unordered_map<IdType,MSWNode*> ElementMap;
 
   const std::string StrDesc() const override;
   void Search(RangeQuery<dist_t>* query, IdType) const override;
   void Search(KNNQuery<dist_t>* query, IdType) const override;
-  MSWNode* getRandomEntryPoint() const;
-  MSWNode* getRandomEntryPointLocked() const;
-  size_t getEntryQtyLocked() const;
    
   void searchForIndexing(const Object *queryObj,
                          std::priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet,
@@ -198,8 +197,6 @@ private:
   size_t                NN_;
   size_t                efConstruction_;
   size_t                efSearch_;
-  size_t                initIndexAttempts_;
-  size_t                initSearchAttempts_;
   size_t                indexThreadQty_;
   string                pivotFile_;
   ObjectVector          pivots_;
@@ -210,7 +207,8 @@ private:
   bool                  use_proxy_dist_;
 
   mutable mutex   ElListGuard_;
-  ElementList     ElList_;
+  ElementMap      ElList_;
+  MSWNode*        pEntryPoint_ = nullptr;
 
 
   void SearchOld(KNNQuery<dist_t>* query) const;

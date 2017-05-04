@@ -36,11 +36,6 @@
 
 #define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 100
 
-//#define START_WITH_E0
-#define START_WITH_E0_AT_QUERY_TIME
-
-#define USE_BITSET_FOR_INDEXING 1
-
 namespace similarity {
 
 using namespace std;
@@ -119,13 +114,11 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
   pmgr.GetParamOptional("NN",                 NN_,                  10);
   pmgr.GetParamOptional("efConstruction",     efConstruction_,      NN_);
   efSearch_ = NN_;
-  pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   1);
   pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
   pmgr.GetParamOptional("useProxyDist",       use_proxy_dist_,      false);
 
   LOG(LIB_INFO) << "NN                  = " << NN_;
   LOG(LIB_INFO) << "efConstruction_     = " << efConstruction_;
-  LOG(LIB_INFO) << "initIndexAttempts   = " << initIndexAttempts_;
   LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
   LOG(LIB_INFO) << "useProxyDist        = " << use_proxy_dist_;
 
@@ -137,6 +130,7 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   // 2) One entry should be added before all the threads are started, or else add() will not work properly
   addCriticalSection(new MSWNode(data_[0], 0 /* id == 0 */));
+  pEntryPoint_ = ElList_.begin()->second;
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
                                 new ProgressDisplay(data_.size(), cerr)
@@ -180,7 +174,6 @@ template <typename dist_t>
 void 
 SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   AnyParamManager pmgr(QueryTimeParams);
-  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  1);
   pmgr.GetParamOptional("efSearch", efSearch_, NN_);
   string tmp;
   //pmgr.GetParamOptional("algoType", tmp, "v1merge");
@@ -193,7 +186,6 @@ SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   }
   pmgr.CheckUnused();
   LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
-  LOG(LIB_INFO) << "initSearchAttempts =" << initSearchAttempts_;
   LOG(LIB_INFO) << "efSearch           =" << efSearch_;
   LOG(LIB_INFO) << "algoType           =" << searchAlgoType_;
 }
@@ -208,40 +200,11 @@ SmallWorldRand<dist_t>::~SmallWorldRand() {
 }
 
 template <typename dist_t>
-MSWNode* SmallWorldRand<dist_t>::getRandomEntryPointLocked() const
-{
-  unique_lock<mutex> lock(ElListGuard_);
-  MSWNode* res = getRandomEntryPoint();
-  return res;
-}
-
-template <typename dist_t>
-size_t SmallWorldRand<dist_t>::getEntryQtyLocked() const
-{
-  unique_lock<mutex> lock(ElListGuard_);
-  size_t res = ElList_.size();
-  return res;
-}
-
-template <typename dist_t>
-MSWNode* SmallWorldRand<dist_t>::getRandomEntryPoint() const {
-  size_t size = ElList_.size();
-
-  if(!ElList_.size()) {
-    return NULL;
-  } else {
-    size_t num = RandomInt()%size;
-    return ElList_[num];
-  }
-}
-
-template <typename dist_t>
 void 
 SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
                                           priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet,
                                           IdType maxInternalId) const
 {
-#if USE_BITSET_FOR_INDEXING
 /*
  * The trick of using large dense bitsets instead of unordered_set was 
  * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
@@ -252,119 +215,102 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
  * a fraction of millisecond.
  */
   vector<bool>                        visitedBitset(maxInternalId + 1); // seems to be working efficiently even in a multi-threaded mode.
-#else
-  unordered_set<MSWNode*>             visited;
-#endif
 
   vector<MSWNode*> neighborCopy;
 
-  for (size_t i=0; i < initIndexAttempts_; i++){
+  /**
+   * Search for the k most closest elements to the query.
+   */
+  MSWNode* provider = pEntryPoint_;
+  CHECK_MSG(provider != nullptr, "Bug: there is not entry point set!")
 
-    /**
-     * Search for the k most closest elements to the query.
+  priority_queue <dist_t>                     closestDistQueue;                      
+  priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
+
+  dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(provider->getData(), queryObj) : 
+                                space_.IndexTimeDistance(provider->getData(), queryObj);
+  EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
+
+  candidateSet.push(ev);
+  closestDistQueue.push(d);
+
+  if (closestDistQueue.size() > efConstruction_) {
+    closestDistQueue.pop();
+  }
+
+  size_t nodeId = provider->getId();
+  if (nodeId > maxInternalId) {
+    stringstream err;
+    err << "Bug: nodeId > maxInternalId";
+    LOG(LIB_INFO) << err.str();
+    throw runtime_error(err.str());
+  }
+  visitedBitset[nodeId] = true;
+  resultSet.emplace(d, provider);
+      
+  if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
+    resultSet.pop();
+  }        
+
+  while (!candidateSet.empty()) {
+    const EvaluatedMSWNodeReverse<dist_t>& currEv = candidateSet.top();
+    dist_t lowerBound = closestDistQueue.top();
+
+    /*
+     * Check if we reached a local minimum.
      */
-#ifdef START_WITH_E0
-    MSWNode* provider = i ? getRandomEntryPointLocked() : ElList_[0];
-#else
-    MSWNode* provider = getRandomEntryPointLocked();
-#endif
-
-    priority_queue <dist_t>                     closestDistQueue;                      
-    priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
-
-    dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(provider->getData(), queryObj) : 
-                                  space_.IndexTimeDistance(provider->getData(), queryObj);
-    EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
-
-    candidateSet.push(ev);
-    closestDistQueue.push(d);
-
-    if (closestDistQueue.size() > efConstruction_) {
-      closestDistQueue.pop();
+    if (currEv.getDistance() > lowerBound) {
+      break;
     }
- 
-#if USE_BITSET_FOR_INDEXING
-    size_t nodeId = provider->getId();
-    if (nodeId > maxInternalId) {
-      stringstream err;
-      err << "Bug: nodeId > maxInternalId";
-      LOG(LIB_INFO) << err.str();
-      throw runtime_error(err.str());
+    MSWNode* currNode = currEv.getMSWNode();
+
+    /*
+     * This lock protects currNode from being modified
+     * while we are accessing elements of currNode.
+     */
+    size_t neighborQty = 0;
+    {
+      unique_lock<mutex> lock(currNode->accessGuard_);
+
+      //const vector<MSWNode*>& neighbor = currNode->getAllFriends();
+      const vector<MSWNode*>& neighbor = currNode->getAllFriends();
+      neighborQty = neighbor.size();
+      if (neighborQty > neighborCopy.size()) neighborCopy.resize(neighborQty);
+      for (size_t k = 0; k < neighborQty; ++k)
+        neighborCopy[k]=neighbor[k];
     }
-    visitedBitset[nodeId] = true;
-#else
-    visited.insert(provider);
-#endif
-    resultSet.emplace(d, provider);
-        
-    if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
-      resultSet.pop();
-    }        
 
-    while (!candidateSet.empty()) {
-      const EvaluatedMSWNodeReverse<dist_t>& currEv = candidateSet.top();
-      dist_t lowerBound = closestDistQueue.top();
+    // Can't access curEv anymore! The reference would become invalid
+    candidateSet.pop();
 
-      /*
-       * Check if we reached a local minimum.
-       */
-      if (currEv.getDistance() > lowerBound) {
-        break;
+    // calculate distance to each neighbor
+    for (size_t neighborId = 0; neighborId < neighborQty; ++neighborId) {
+      MSWNode* pNeighbor = neighborCopy[neighborId];
+
+      size_t nodeId = pNeighbor->getId();
+      if (nodeId > maxInternalId) {
+        stringstream err;
+        err << "Bug: nodeId >  maxInternalId";
+        LOG(LIB_INFO) << err.str();
+        throw runtime_error(err.str());
       }
-      MSWNode* currNode = currEv.getMSWNode();
+      if (!visitedBitset[nodeId]) {
+        visitedBitset[nodeId] = true;
+        d = use_proxy_dist_ ? space_.ProxyDistance(pNeighbor->getData(), queryObj) : 
+                              space_.IndexTimeDistance(pNeighbor->getData(), queryObj);
 
-      /*
-       * This lock protects currNode from being modified
-       * while we are accessing elements of currNode.
-       */
-      size_t neighborQty = 0;
-      {
-        unique_lock<mutex> lock(currNode->accessGuard_);
-
-        //const vector<MSWNode*>& neighbor = currNode->getAllFriends();
-        const vector<MSWNode*>& neighbor = currNode->getAllFriends();
-        neighborQty = neighbor.size();
-        if (neighborQty > neighborCopy.size()) neighborCopy.resize(neighborQty);
-        for (size_t k = 0; k < neighborQty; ++k)
-          neighborCopy[k]=neighbor[k];
-      }
-
-      // Can't access curEv anymore! The reference would become invalid
-      candidateSet.pop();
-
-      // calculate distance to each neighbor
-      for (size_t neighborId = 0; neighborId < neighborQty; ++neighborId) {
-        MSWNode* pNeighbor = neighborCopy[neighborId];
-#if USE_BITSET_FOR_INDEXING
-        size_t nodeId = pNeighbor->getId();
-        if (nodeId > maxInternalId) {
-          stringstream err;
-          err << "Bug: nodeId >  maxInternalId";
-          LOG(LIB_INFO) << err.str();
-          throw runtime_error(err.str());
-        }
-        if (!visitedBitset[nodeId]) {
-          visitedBitset[nodeId] = true;
-#else
-        if (visited.find(pNeighbor) == visited.end()) {
-          visited.insert(pNeighbor);
-#endif
-          d = use_proxy_dist_ ? space_.ProxyDistance(pNeighbor->getData(), queryObj) : 
-                                space_.IndexTimeDistance(pNeighbor->getData(), queryObj);
-
-          if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
-            closestDistQueue.push(d);
-            if (closestDistQueue.size() > efConstruction_) {
-              closestDistQueue.pop();
-            }
-            candidateSet.emplace(d, pNeighbor);
+        if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
+          closestDistQueue.push(d);
+          if (closestDistQueue.size() > efConstruction_) {
+            closestDistQueue.pop();
           }
+          candidateSet.emplace(d, pNeighbor);
+        }
 
-          if (resultSet.size() < NN_ || resultSet.top().getDistance() > d) {
-            resultSet.emplace(d, pNeighbor);
-            if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
-              resultSet.pop();
-            }
+        if (resultSet.size() < NN_ || resultSet.top().getDistance() > d) {
+          resultSet.emplace(d, pNeighbor);
+          if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
+            resultSet.pop();
           }
         }
       }
@@ -410,7 +356,7 @@ template <typename dist_t>
 void SmallWorldRand<dist_t>::addCriticalSection(MSWNode *newElement){
   unique_lock<mutex> lock(ElListGuard_);
 
-  ElList_.push_back(newElement);
+  ElList_.insert(make_pair(newElement->getData()->id(), newElement));
 }
 
 template <typename dist_t>
@@ -439,100 +385,96 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
  */
   vector<bool>                        visitedBitset(ElList_.size());
 
-  for (size_t i=0; i < initSearchAttempts_; i++) {
-    /**
-     * Search of most k-closest elements to the query.
-     */
-#ifdef START_WITH_E0_AT_QUERY_TIME
-    MSWNode* currNode = i ? getRandomEntryPoint(): ElList_[0];
-#else
-    MSWNode* currNode = getRandomEntryPoint();
-#endif
-    SortArrBI<dist_t,MSWNode*> sortedArr(max<size_t>(efSearch_, query->GetK()));
+  /**
+   * Search of most k-closest elements to the query.
+   */
+  MSWNode* currNode = pEntryPoint_;
+  CHECK_MSG(currNode != nullptr, "Bug: there is not entry point set!")
 
-    const Object* currObj = currNode->getData();
-    dist_t d = query->DistanceObjLeft(currObj);
-    sortedArr.push_unsorted_grow(d, currNode); // It won't grow
+  SortArrBI<dist_t,MSWNode*> sortedArr(max<size_t>(efSearch_, query->GetK()));
 
-    size_t nodeId = currNode->getId();
-    CHECK(nodeId < ElList_.size());
+  const Object* currObj = currNode->getData();
+  dist_t d = query->DistanceObjLeft(currObj);
+  sortedArr.push_unsorted_grow(d, currNode); // It won't grow
 
-    visitedBitset[nodeId] = true;
+  size_t nodeId = currNode->getId();
+  CHECK(nodeId < ElList_.size());
 
-    int_fast32_t  currElem = 0;
+  visitedBitset[nodeId] = true;
 
-    typedef typename SortArrBI<dist_t,MSWNode*>::Item  QueueItem;
+  int_fast32_t  currElem = 0;
 
-    vector<QueueItem>& queueData = sortedArr.get_data();
-    vector<QueueItem>  itemBuff(8*NN_);
+  typedef typename SortArrBI<dist_t,MSWNode*>::Item  QueueItem;
 
-    // efSearch_ is always <= # of elements in the queueData.size() (the size of the BUFFER), but it can be
-    // larger than sortedArr.size(), which returns the number of actual elements in the buffer
-    while(currElem < min(sortedArr.size(),efSearch_)){
-      auto& e = queueData[currElem];
-      CHECK(!e.used);
-      e.used = true;
-      currNode = e.data;
-      ++currElem;
+  vector<QueueItem>& queueData = sortedArr.get_data();
+  vector<QueueItem>  itemBuff(8*NN_);
 
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
-      }
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
-      }
+  // efSearch_ is always <= # of elements in the queueData.size() (the size of the BUFFER), but it can be
+  // larger than sortedArr.size(), which returns the number of actual elements in the buffer
+  while(currElem < min(sortedArr.size(),efSearch_)){
+    auto& e = queueData[currElem];
+    CHECK(!e.used);
+    e.used = true;
+    currNode = e.data;
+    ++currElem;
 
-      if (currNode->getAllFriends().size() > itemBuff.size())
-        itemBuff.resize(currNode->getAllFriends().size());
+    for (MSWNode* neighbor : currNode->getAllFriends()) {
+      _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
+    }
+    for (MSWNode* neighbor : currNode->getAllFriends()) {
+      _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
+    }
 
-      size_t itemQty = 0;
+    if (currNode->getAllFriends().size() > itemBuff.size())
+      itemBuff.resize(currNode->getAllFriends().size());
 
-      dist_t topKey = sortedArr.top_key();
-      //calculate distance to each neighbor
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        nodeId = neighbor->getId();
-        CHECK(nodeId < ElList_.size());
+    size_t itemQty = 0;
 
-        if (!visitedBitset[nodeId]) {
-          currObj = neighbor->getData();
-          d = query->DistanceObjLeft(currObj);
-          visitedBitset[nodeId] = true;
-          if (sortedArr.size() < efSearch_ || d < topKey) {
-            itemBuff[itemQty++]=QueueItem(d, neighbor);
-          }
+    dist_t topKey = sortedArr.top_key();
+    //calculate distance to each neighbor
+    for (MSWNode* neighbor : currNode->getAllFriends()) {
+      nodeId = neighbor->getId();
+      CHECK(nodeId < ElList_.size());
+
+      if (!visitedBitset[nodeId]) {
+        currObj = neighbor->getData();
+        d = query->DistanceObjLeft(currObj);
+        visitedBitset[nodeId] = true;
+        if (sortedArr.size() < efSearch_ || d < topKey) {
+          itemBuff[itemQty++]=QueueItem(d, neighbor);
         }
       }
+    }
 
-      if (itemQty) {
-        _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
-        std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+    if (itemQty) {
+      _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
+      std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 
-        size_t insIndex=0;
-        if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
-          insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+      size_t insIndex=0;
+      if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+        insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+        if (insIndex < currElem) {
+          currElem = insIndex;
+        }
+      } else {
+        for (size_t ii = 0; ii < itemQty; ++ii) {
+          size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
 
           if (insIndex < currElem) {
             currElem = insIndex;
           }
-        } else {
-          for (size_t ii = 0; ii < itemQty; ++ii) {
-            size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
-
-            if (insIndex < currElem) {
-              currElem = insIndex;
-            }
-          }
         }
       }
-
-      // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
-      while (currElem < sortedArr.size() && queueData[currElem].used == true)
-        ++currElem;
     }
 
-    for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
-      query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
-    }
+    // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+    while (currElem < sortedArr.size() && queueData[currElem].used == true)
+      ++currElem;
+  }
+
+  for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+    query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
   }
 }
 
@@ -553,84 +495,75 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
  */
   vector<bool>                        visitedBitset(ElList_.size());
 
-  for (size_t i=0; i < initSearchAttempts_; i++) {
-    /**
-     * Search of most k-closest elements to the query.
-     */
-#ifdef START_WITH_E0_AT_QUERY_TIME
-    MSWNode* provider = i ? getRandomEntryPoint(): ElList_[0];
-#else
-    MSWNode* provider = getRandomEntryPoint();
-#endif
-    //MSWNode* provider = getRandomEntryPoint();
+  MSWNode* provider = pEntryPoint_;
+  CHECK_MSG(provider != nullptr, "Bug: there is not entry point set!")
 
-    priority_queue <dist_t>                          closestDistQueue; //The set of all elements which distance was calculated
-    priority_queue <EvaluatedMSWNodeReverse<dist_t>> candidateQueue; //the set of elements which we can use to evaluate
+  priority_queue <dist_t>                          closestDistQueue; //The set of all elements which distance was calculated
+  priority_queue <EvaluatedMSWNodeReverse<dist_t>> candidateQueue; //the set of elements which we can use to evaluate
 
-    const Object* currObj = provider->getData();
-    dist_t d = query->DistanceObjLeft(currObj);
-    query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
+  const Object* currObj = provider->getData();
+  dist_t d = query->DistanceObjLeft(currObj);
+  query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
 
-    EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
-    candidateQueue.push(ev);
-    closestDistQueue.emplace(d);
+  EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
+  candidateQueue.push(ev);
+  closestDistQueue.emplace(d);
 
-    size_t nodeId = provider->getId();
-    if (nodeId >= ElList_.size()) {
-      stringstream err;
-      err << "Bug: nodeId > ElList_.size()";
-      LOG(LIB_INFO) << err.str();
-      throw runtime_error(err.str());
+  size_t nodeId = provider->getId();
+  if (nodeId >= ElList_.size()) {
+    stringstream err;
+    err << "Bug: nodeId > ElList_.size()";
+    LOG(LIB_INFO) << err.str();
+    throw runtime_error(err.str());
+  }
+  visitedBitset[nodeId] = true;
+
+  while(!candidateQueue.empty()){
+
+    auto iter = candidateQueue.top(); // This one was already compared to the query
+    const EvaluatedMSWNodeReverse<dist_t>& currEv = iter;
+
+    // Did we reach a local minimum?
+    if (currEv.getDistance() > closestDistQueue.top()) {
+      break;
     }
-    visitedBitset[nodeId] = true;
 
-    while(!candidateQueue.empty()){
+    for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
+      _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
+    }
+    for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
+      _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
+    }
 
-      auto iter = candidateQueue.top(); // This one was already compared to the query
-      const EvaluatedMSWNodeReverse<dist_t>& currEv = iter;
+    const vector<MSWNode*>& neighbor = (currEv.getMSWNode())->getAllFriends();
 
-      // Did we reach a local minimum?
-      if (currEv.getDistance() > closestDistQueue.top()) {
-        break;
+    // Can't access curEv anymore! The reference would become invalid
+    candidateQueue.pop();
+
+    //calculate distance to each neighbor
+    for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
+      nodeId = (*iter)->getId();
+      if (nodeId >= ElList_.size()) {
+        stringstream err;
+        err << "Bug: nodeId > ElList_.size()";
+        LOG(LIB_INFO) << err.str();
+        throw runtime_error(err.str());
       }
+      if (!visitedBitset[nodeId]) {
+        currObj = (*iter)->getData();
+        d = query->DistanceObjLeft(currObj);
+        visitedBitset[nodeId] = true;
 
-      for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
-        _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
-      }
-      for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
-        _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
-      }
-
-      const vector<MSWNode*>& neighbor = (currEv.getMSWNode())->getAllFriends();
-
-      // Can't access curEv anymore! The reference would become invalid
-      candidateQueue.pop();
-
-      //calculate distance to each neighbor
-      for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
-        nodeId = (*iter)->getId();
-        if (nodeId >= ElList_.size()) {
-          stringstream err;
-          err << "Bug: nodeId > ElList_.size()";
-          LOG(LIB_INFO) << err.str();
-          throw runtime_error(err.str());
-        }
-        if (!visitedBitset[nodeId]) {
-          currObj = (*iter)->getData();
-          d = query->DistanceObjLeft(currObj);
-          visitedBitset[nodeId] = true;
-
-          if (closestDistQueue.size() < efSearch_ || d < closestDistQueue.top()) {
-            closestDistQueue.emplace(d);
-            if (closestDistQueue.size() > efSearch_) {
-              closestDistQueue.pop();
-            }
-
-            candidateQueue.emplace(d, *iter);
+        if (closestDistQueue.size() < efSearch_ || d < closestDistQueue.top()) {
+          closestDistQueue.emplace(d);
+          if (closestDistQueue.size() > efSearch_) {
+            closestDistQueue.pop();
           }
 
-          query->CheckAndAddToResult(d, currObj);
+          candidateQueue.emplace(d, *iter);
         }
+
+        query->CheckAndAddToResult(d, currObj);
       }
     }
   }
@@ -646,7 +579,8 @@ void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
   WriteField(outFile, METHOD_DESC, StrDesc()); lineNum++;
   WriteField(outFile, "NN", NN_); lineNum++;
 
-  for (const MSWNode* pNode: ElList_) {
+  for(ElementMap::iterator it = ElList_.begin(); it != ElList_.end(); ++it) {
+    MSWNode* pNode = it->second;
     IdType nodeID = pNode->getId();
     CHECK_MSG(nodeID >= 0 && nodeID < data_.size(),
               "Bug: unexpected node ID " + ConvertToString(nodeID) +
@@ -714,7 +648,7 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
       if (pass == 0) {
         unique_ptr<MSWNode> node(new MSWNode(data_[nodeID], nodeID));
         ptrMapper[nodeID] = node.get();
-        ElList_.push_back(node.release());
+        ElList_.insert(make_pair(node->getData()->id(), node.release()));
       } else {
         MSWNode *pNode = ptrMapper[nodeID];
         CHECK_MSG(pNode != NULL,
