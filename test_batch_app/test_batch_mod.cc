@@ -33,7 +33,7 @@
 #include "method/small_world_rand.h"
 
 // This check only makes sense when we don't delete data
-#define CHECK_IDS true
+#define CHECK_IDS false
 
 using namespace similarity;
 using namespace std;
@@ -245,7 +245,7 @@ void doWork(int argc, char* argv[]) {
     LOG(LIB_INFO) << "IndexedData.size() (after addition): " << IndexedData.size();
 
     timerBatchAdd.reset();
-    index->AddBatch(BatchData, CHECK_IDS);
+    index->AddBatch(BatchData, false /* no print progress here */, CHECK_IDS);
     timerBatchAdd.split();
     totalBatchAddTime += timerBatchAdd.elapsed();
 

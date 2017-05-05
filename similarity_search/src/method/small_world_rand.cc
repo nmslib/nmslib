@@ -188,8 +188,51 @@ template <typename dist_t>
 void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int delStrategy, bool checkIDs) {
   if (batchData.empty()) return;
   changedAfterCreateIndex_ = true;
-  // TODO implement
+  /* 
+   * Four stages.
+   * 1) Identifying entries to be deleted.
+   * 2) Removing neighbors
+   * 3) Patching
+   * 4) Actually removing nodes from ElList_ and freeing memory.
+   */
+  // Stage 1. Identifying entries to be deleted.
+  unordered_set<MSWNode*> toDelNodes;
+  vector<MSWNode*>        toPatchNodes;
+
+  for (IdType objId : batchData) {
+    const auto it = ElList_.find(objId);
+    CHECK_MSG(it != ElList_.end(), "An attempt to delete a non-existing object with id=" + ConvertToString(objId));
+    toDelNodes.insert(it->second);
+  }
+  for (MSWNode* node: toDelNodes) {
+    for (MSWNode* pNeighbor : node->getAllFriends()) {
+      // We ignore neighbors that are in the to-be-deleted list
+      if (toDelNodes.find(pNeighbor) == toDelNodes.end())
+        toPatchNodes.push_back(pNeighbor);
+    }
+  }
+  // Stage 2. Removing neighbors
+  for (MSWNode* node: toPatchNodes)
+    node->removeGivenFriends(toDelNodes);
+
+  // Stage 3. Patching. TODO implementation
+
+  // Stage 4. Actually removing nodes from ElList_ and freeing memory.
+
+  for (IdType objId : batchData) {
+    const auto it = ElList_.find(objId);
+    CHECK_MSG(it != ElList_.end(), "An attempt to delete a non-existing object with id=" + ConvertToString(objId));
+    MSWNode* node = it->second;
+    CHECK(node->getData()->id() == objId);
+    ElList_.erase(it);
+    delete node;
+  }
+
+  pEntryPoint_ = ElList_.begin()->second; 
+  CHECK(pEntryPoint_ != nullptr);
+  
   CompactIdsIfNeeded();
+  if (checkIDs) CheckIDs();
 }
 
 template <typename dist_t>

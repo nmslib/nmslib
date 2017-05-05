@@ -73,7 +73,7 @@ public:
   }
 
   // Removes only friends from a given set
-  void removeSomeFriends(const unordered_set<MSWNode*> delNodes) {
+  void removeGivenFriends(const unordered_set<MSWNode*> delNodes) {
 
     size_t newQty = 0;
     /*
