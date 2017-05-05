@@ -73,7 +73,7 @@ public:
   }
 
   // Removes only friends from a given set
-  void removeGivenFriends(const unordered_set<MSWNode*> delNodes) {
+  void removeGivenFriends(const vector<bool>& delNodes) {
 
     size_t newQty = 0;
     /*
@@ -84,7 +84,8 @@ public:
      * i - newQty == the number of entries deleted in previous iterations
      */
     for (size_t i = 0; i < friends_.size(); ++i) {
-      if (delNodes.find(friends_[i]) == delNodes.end()) {
+      IdType id = friends_[i]->getId();
+      if (!delNodes[id]) {
         friends_[newQty] = friends_[i];
         ++newQty;
       }

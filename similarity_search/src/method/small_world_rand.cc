@@ -27,6 +27,7 @@
 #include "ported_boost_progress.h"
 #include "method/small_world_rand.h"
 #include "sort_arr_bi.h"
+#include "thread_pool.h"
 
 #include <vector>
 #include <set>
@@ -190,46 +191,73 @@ void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int de
   changedAfterCreateIndex_ = true;
   /* 
    * Four stages.
-   * 1) Identifying entries to be deleted.
+   * 1) Identifying entries to be deleted & deleting nodes from ElList_.
    * 2) Removing neighbors
    * 3) Patching
    * 4) Actually removing nodes from ElList_ and freeing memory.
    */
   // Stage 1. Identifying entries to be deleted.
-  unordered_set<MSWNode*> toDelNodes;
   vector<MSWNode*>        toPatchNodes;
+  vector<MSWNode*>        vToDelNodes;
+  vector<bool>            delNodesBitset(NextNodeId_);
 
   for (IdType objId : batchData) {
     const auto it = ElList_.find(objId);
     CHECK_MSG(it != ElList_.end(), "An attempt to delete a non-existing object with id=" + ConvertToString(objId));
-    toDelNodes.insert(it->second);
+    delNodesBitset[it->second->getId()]=true;
+    vToDelNodes.push_back(it->second);
+    ElList_.erase(it);
   }
-  for (MSWNode* node: toDelNodes) {
+  for (MSWNode* node: vToDelNodes) {
     for (MSWNode* pNeighbor : node->getAllFriends()) {
-      // We ignore neighbors that are in the to-be-deleted list
-      if (toDelNodes.find(pNeighbor) == toDelNodes.end())
+      if (!delNodesBitset.at(pNeighbor->getId()))
         toPatchNodes.push_back(pNeighbor);
     }
   }
+
+  LOG(LIB_INFO) << "The number of nodes that need patching: " << toPatchNodes.size();
   // Stage 2. Removing neighbors
-  for (MSWNode* node: toPatchNodes)
-    node->removeGivenFriends(toDelNodes);
+  // ideally this needs to be a multi-threaded code!
+
+  if (true) {
+    queue<MSWNode*> toPatchQueue;
+    for (MSWNode* node : toPatchNodes) toPatchQueue.push(node);
+    mutex mtx;
+    vector<thread> threads;
+    for (int i = 0; i < indexThreadQty_; ++i) {
+      threads.push_back(thread(
+          [&]() {
+            MSWNode* node = nullptr;
+            while(GetNextQueueObj(mtx, toPatchQueue, node)) {
+              node->removeGivenFriends(delNodesBitset);
+            }
+          }
+      ));
+    }
+    for (auto& thread : threads) thread.join();
+  } else {
+    for (MSWNode* node: toPatchNodes) node->removeGivenFriends(delNodesBitset);
+  }
+
 
   // Stage 3. Patching. TODO implementation
 
-  // Stage 4. Actually removing nodes from ElList_ and freeing memory.
+  if (checkIDs) {
+    for (auto it : ElList_) {
+      MSWNode* node = it.second;
+      CHECK(!delNodesBitset[node->getId()]);
+      for (MSWNode* neighb : node->getAllFriends())
+        CHECK(!delNodesBitset[neighb->getId()]);
+    }
+  }
 
-  for (IdType objId : batchData) {
-    const auto it = ElList_.find(objId);
-    CHECK_MSG(it != ElList_.end(), "An attempt to delete a non-existing object with id=" + ConvertToString(objId));
-    MSWNode* node = it->second;
-    CHECK(node->getData()->id() == objId);
-    ElList_.erase(it);
+  // Stage 4. freeing memory
+  for (MSWNode* node : vToDelNodes) {
     delete node;
   }
 
-  pEntryPoint_ = ElList_.begin()->second; 
-  CHECK(pEntryPoint_ != nullptr);
+  pEntryPoint_ = ElList_.empty() ? nullptr : ElList_.begin()->second; 
+  CHECK(pEntryPoint_ != nullptr || ElList_.empty());
   
   CompactIdsIfNeeded();
   if (checkIDs) CheckIDs();
@@ -510,7 +538,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
   sortedArr.push_unsorted_grow(d, currNode); // It won't grow
 
   size_t nodeId = currNode->getId();
-  CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId > NextNodeId_");
+  CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_) +")");
 
   visitedBitset[nodeId] = true;
 
@@ -546,7 +574,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
     //calculate distance to each neighbor
     for (MSWNode* neighbor : currNode->getAllFriends()) {
       nodeId = neighbor->getId();
-      CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId > NextNodeId_");
+      CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_));
 
       if (!visitedBitset[nodeId]) {
         currObj = neighbor->getData();
@@ -622,7 +650,7 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
   closestDistQueue.emplace(d);
 
   size_t nodeId = provider->getId();
-  CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId > NextNodeId_");
+  CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_));
   visitedBitset[nodeId] = true;
 
   while(!candidateQueue.empty()){
@@ -650,7 +678,7 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
     //calculate distance to each neighbor
     for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
       nodeId = (*iter)->getId();
-      CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId > NextNodeId_");
+      CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_));
       if (!visitedBitset[nodeId]) {
         currObj = (*iter)->getData();
         d = query->DistanceObjLeft(currObj);
