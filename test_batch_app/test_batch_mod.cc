@@ -30,7 +30,9 @@
 #include "ztimer.h"
 #include "knnquery.h"
 #include "knnqueue.h"
+#include "method/small_world_rand.h"
 
+// This check only makes sense when we don't delete data
 #define CHECK_IDS true
 
 using namespace similarity;
@@ -42,6 +44,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                       shared_ptr<AnyParams>&  SpaceParams,
                       string&                 DataFile,
                       string&                 QueryFile,
+                      unsigned&               MaxIterQty,
                       unsigned&               FirstBatchQty,
                       unsigned&               k,
                       string&                 MethodName,
@@ -64,6 +67,8 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                                &spaceParamStr, true));
   cmd_options.Add(new CmdParam(DATA_FILE_PARAM_OPT, DATA_FILE_PARAM_MSG,
                                &DataFile, true));
+  cmd_options.Add(new CmdParam("max_iter_qty", "The maximum # of iterations",
+                               &MaxIterQty, true));
   cmd_options.Add(new CmdParam("first_batch_qty", "The number of data points in the first batch",
                                &FirstBatchQty, true));
   cmd_options.Add(new CmdParam(QUERY_FILE_PARAM_OPT, QUERY_FILE_PARAM_MSG,
@@ -152,10 +157,11 @@ void doWork(int argc, char* argv[]) {
   string                  DataFile;
   string                  QueryFile;
   unsigned                FirstBatchQty;
-  unsigned                k;
+  unsigned                knnK;
   string                  MethodName;
   shared_ptr<AnyParams>   IndexTimeParams;
   shared_ptr<AnyParams>   QueryTimeParams;
+  unsigned                MaxIterQty;
   unsigned                BatchAddQty;
   unsigned                BatchDelQty;
   bool                    bPrintProgress;
@@ -167,13 +173,16 @@ void doWork(int argc, char* argv[]) {
                   SpaceParams,
                   DataFile,
                   QueryFile,
+                  MaxIterQty,
                   FirstBatchQty,
-                  k,
+                  knnK,
                   MethodName,
                   IndexTimeParams,
                   QueryTimeParams,
                   BatchAddQty,
                   BatchDelQty);
+
+  CHECK_MSG(knnK > 0, "k-NN k should be > 0!");
 
   if (LogFile != "") 
     initLibrary(LIB_LOGFILE, LogFile.c_str());
@@ -215,13 +224,14 @@ void doWork(int argc, char* argv[]) {
   // This method MUST be called for proper initialization
   index->CreateIndex(*IndexTimeParams);
 
-  WallClockTimer timerBatchAdd, timerQuery;
+  WallClockTimer timerBatchAdd, timerBatchDel, timerQuery;
 
   double totalBatchAddTime = 0;
+  double totalBatchDelTime = 0;
 
   unsigned iterId = 0;
   for (; !unused.empty(); ++iterId) {
-    LOG(LIB_INFO) << "Batch id: " << iterId;
+    LOG(LIB_INFO) << "Batch id: " << iterId << " IndexedData.size() " << IndexedData.size();
     ObjectVector BatchData;
     // unused is filled from the back and emptied from the front
     for (size_t i = 0; i < BatchAddQty && !unused.empty(); ++i) {
@@ -231,15 +241,84 @@ void doWork(int argc, char* argv[]) {
     for (auto const v : BatchData)
       IndexedData.push_back(v);
 
+    LOG(LIB_INFO) << "BatchData.size(): "      << BatchData.size();
+    LOG(LIB_INFO) << "IndexedData.size() (after addition): " << IndexedData.size();
+
     timerBatchAdd.reset();
     index->AddBatch(BatchData, CHECK_IDS);
     timerBatchAdd.split();
     totalBatchAddTime += timerBatchAdd.elapsed();
 
+
+    CHECK_MSG(BatchDelQty <= IndexedData.size(), 
+              "Data is too small to accommodate deletion of batches of size: " + ConvertToString(BatchDelQty))
+
+    vector<IdType> NodeToDelIndx(BatchDelQty);
+
+    // Reservoir sampling to select nodes to be deleted
+    for (size_t indx = 0; indx < BatchDelQty; ++indx)
+      NodeToDelIndx[indx] = indx;
+    for (size_t indx = BatchDelQty; indx < IndexedData.size(); ++indx) {
+      size_t newDelIndx = RandomInt() % IndexedData.size();
+      if (newDelIndx < BatchDelQty)
+        NodeToDelIndx[newDelIndx] = indx;
+    }
+
+    sort(NodeToDelIndx.begin(), NodeToDelIndx.end());
+    // Now let's 
+    // 1) retrieve and store to-be-deleted nodes 
+    // 2) delete them from IndexedData array 
+    // 3) return them to the dequeue of available nodes.
+
+    ObjectVector NodesToDel;
+
+    size_t indx1 = 0, pos2 = 0;
+
+    ObjectVector NewIndexedData;
+
+    while (indx1 < IndexedData.size() && pos2 < NodeToDelIndx.size()) {
+      size_t indx2 = NodeToDelIndx[pos2];
+      /* 
+       * Invariant, it is true because 
+       * NodeToDelIndx contains indices in the range [0, IndexedData.size() )
+       */
+      CHECK(indx1 <= indx2); 
+      if (indx1 < indx2) {
+        // Node is not to be deleted, keep it in the data array
+        NewIndexedData.push_back(IndexedData[indx1]);
+        ++indx1;
+      } else if (indx1 == indx2) {
+        // If the node is to be deleted, move the pointer to the 
+        // dequeue
+        NodesToDel.push_back(IndexedData[indx1]);
+        unused.push_back(IndexedData[indx1]);
+        ++indx1;
+        ++pos2; // this will lead to change in indx2 (in the beginning of the loop body)
+      }
+    }
+
+    while (indx1 < IndexedData.size()) {
+      // Node is not to be deleted, keep it in the data array
+      NewIndexedData.push_back(IndexedData[indx1]);
+      ++indx1;
+    }
+
+    IndexedData = NewIndexedData;
+
+    LOG(LIB_INFO) << "NewIndexedData.size(): " << NewIndexedData.size();
+    LOG(LIB_INFO) << "unused.size(): "         << unused.size();
+    LOG(LIB_INFO) << "NodesToDel.size(): "     << NodesToDel.size();
+
+    timerBatchDel.reset();
+    index->DeleteBatch(NodesToDel, SmallWorldRand<float>::kNeighborsOnly, CHECK_IDS);
+    timerBatchDel.split();
+    totalBatchDelTime += timerBatchDel.elapsed();
+    
+
     float recall = 0;
     double queryTime = 0;
     for (const auto qo : QuerySet) {
-      KNNQuery<float>        knnSeqQuery(*space, qo, k);
+      KNNQuery<float>        knnSeqQuery(*space, qo, knnK);
       unordered_set<IdType>  trueNN;
       for (const auto v : IndexedData)
         knnSeqQuery.CheckAndAddToResult(v);
@@ -252,7 +331,7 @@ void doWork(int argc, char* argv[]) {
         }
       }
       timerQuery.reset();
-      KNNQuery<float>        knnRegQuery(*space, qo, k);
+      KNNQuery<float>        knnRegQuery(*space, qo, knnK);
 
       index->Search(&knnRegQuery);
 
@@ -267,11 +346,16 @@ void doWork(int argc, char* argv[]) {
         }
       }
     }
-    recall /= (k*QuerySet.size());
-    LOG(LIB_INFO) << "Batch id: " << iterId << " recall: " << recall << " time (whole batch): " << queryTime/1000.0 << " ms";
+    recall /= (knnK*QuerySet.size());
+    LOG(LIB_INFO) << "Batch id: " << iterId << " recall: " << recall << " SINGLE-thread time (complete query set): " << queryTime/1000.0 << " ms";
+    if (iterId >= MaxIterQty) {
+      LOG(LIB_INFO) << "Stopping b/c we reach the maximum # of iterations";
+      break;
+    }
   }
   LOG(LIB_INFO) << "All input data is indexed, exiting!";
-  LOG(LIB_INFO) << "batch indexing average time per batch: " << totalBatchAddTime/1000.0/iterId << " ms";
+  LOG(LIB_INFO) << "Batch indexing average time per batch: " << totalBatchAddTime/1000.0/iterId << " ms";
+  LOG(LIB_INFO) << "Batch deletion average time per batch: " << totalBatchDelTime/1000.0/iterId << " ms";
 
 }
 

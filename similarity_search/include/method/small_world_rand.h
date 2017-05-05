@@ -69,7 +69,27 @@ public:
   }
   ~MSWNode(){};
   void removeAllFriends(){
-    friends.clear();
+    friends_.clear();
+  }
+
+  // Removes only friends from a given set
+  void removeSomeFriends(const unordered_set<MSWNode*> delNodes) {
+
+    size_t newQty = 0;
+    /*
+     * This in-place one-iteration deletion of elements in delNodes
+     * Invariant in the beginning of each loop iteration:
+     * i >= newQty
+     * Furthermore:
+     * i - newQty == the number of entries deleted in previous iterations
+     */
+    for (size_t i = 0; i < friends_.size(); ++i) {
+      if (delNodes.find(friends_[i]) == delNodes.end()) {
+        friends_[newQty] = friends_[i];
+        ++newQty;
+      }
+    }
+    friends_.resize(newQty);
   }
   /* 
    * 1. The list of friend pointers is sorted.
@@ -80,18 +100,19 @@ public:
     unique_lock<mutex> lock(accessGuard_);
 
     if (bCheckForDup) {
-      auto it = lower_bound(friends.begin(), friends.end(), element);
-      if (it == friends.end() || (*it) != element) {
-        friends.insert(it, element);
+      auto it = lower_bound(friends_.begin(), friends_.end(), element);
+      if (it == friends_.end() || (*it) != element) {
+        friends_.insert(it, element);
       }
     } else {
-      friends.push_back(element);
+      friends_.push_back(element);
     }
   }
   const Object* getData() const {
     return nodeObj_;
   }
   size_t getId() const { return id_; }
+  void setId(IdType id) { id_ = id; }
   /* 
    * THIS NOTE APPLIES ONLY TO THE INDEXING PHASE:
    *
@@ -102,7 +123,7 @@ public:
    * the reference returned by getAllFriends()
    */
   const vector<MSWNode*>& getAllFriends() const {
-    return friends;
+    return friends_;
   }
 
   mutex accessGuard_;
@@ -110,7 +131,7 @@ public:
 private:
   const Object*       nodeObj_;
   size_t              id_;
-  vector<MSWNode*>    friends;
+  vector<MSWNode*>    friends_;
 };
 //----------------------------------
 template <typename dist_t>
@@ -171,8 +192,12 @@ public:
                  const Space<dist_t>& space,
                  const ObjectVector& data);
   void CreateIndex(const AnyParams& IndexParams) override;
-  virtual void AddBatch(const ObjectVector& batchData, bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) override;
+  virtual void AddBatch(const ObjectVector& batchData, bool bPrintProgress, bool bCheckIDs = false);
+  virtual void DeleteBatch(const ObjectVector& batchData, int delStrategy,
+                           bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) override;
 
+  virtual void DeleteBatch(const vector<IdType>& batchData, int delStrategy,
+                           bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) override;
   ~SmallWorldRand();
 
   typedef unordered_map<IdType,MSWNode*> ElementMap;
@@ -193,6 +218,8 @@ public:
   }
 
   void SetQueryTimeParams(const AnyParams& ) override;
+
+  enum PatchingStrategy { kNeighborsOnly };
 private:
 
   size_t                NN_;
@@ -209,11 +236,16 @@ private:
 
   mutable mutex   ElListGuard_;
   ElementMap      ElList_;
+  size_t          NextNodeId_ = 0; // This is internal node id
+  bool            changedAfterCreateIndex_ = false;
   MSWNode*        pEntryPoint_ = nullptr;
 
 
   void SearchOld(KNNQuery<dist_t>* query) const;
   void SearchV1Merge(KNNQuery<dist_t>* query) const;
+
+  void UpdateNextNodeId(size_t newNextNodeId);
+  void CompactIdsIfNeeded();
 
   void CheckIDs() const;
   
