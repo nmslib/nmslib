@@ -72,6 +72,12 @@ public:
     friends_.clear();
   }
 
+  static void link(MSWNode* first, MSWNode* second){
+    // addFriend checks for duplicates if the second argument is true
+    first->addFriend(second, true);
+    second->addFriend(first, true);
+  }
+
   // Removes only friends from a given set
   void removeGivenFriends(const vector<bool>& delNodes) {
 
@@ -85,12 +91,62 @@ public:
      */
     for (size_t i = 0; i < friends_.size(); ++i) {
       IdType id = friends_[i]->getId();
-      if (!delNodes[id]) {
+      if (!delNodes.at(id)) {
         friends_[newQty] = friends_[i];
         ++newQty;
       }
     }
     friends_.resize(newQty);
+  }
+
+  // Removes friends from a given set and attempts to replace them with friends' closest neighbors
+  // cache should be thread-specific (or else calling this function isn't thread-safe)
+  template <class dist_t>
+  void removeGivenFriendsPatchWithClosestNeighbor(const Space<dist_t>& space, bool use_proxy_dist,
+                                                  const vector<bool>& delNodes, vector<MSWNode*>& cache) {
+    /*
+     * This in-place one-iteration deletion of elements in delNodes
+     * Invariant in the beginning of each loop iteration:
+     * i >= newQty
+     * Furthermore:
+     * i - newQty == the number of entries deleted in previous iterations
+     */
+    cache.clear();
+    size_t newQty = 0;
+    for (size_t i = 0; i < friends_.size(); ++i) {
+      MSWNode* toDelFriend = friends_[i];
+      IdType id = toDelFriend->getId();
+      if (!delNodes.at(id)) {
+        friends_[newQty] = friends_[i];
+        ++newQty;
+      } else {
+        cache.push_back(toDelFriend);
+      }
+    }
+    CHECK(cache.size() + newQty == friends_.size());
+    friends_.resize(newQty);
+    // When patching use the function link()
+    for (size_t i = 0; i < cache.size(); ++i) {
+      MSWNode *toDelFriend = cache[i];
+      MSWNode *friendReplacement = nullptr;
+      dist_t  dmin = numeric_limits<dist_t>::max();
+      const Object* queryObj = this->getData();
+      for (MSWNode* neighb : toDelFriend->getAllFriends()) {
+        IdType id = neighb->getId();
+        if (!delNodes.at(id)) {
+          const MSWNode* provider = neighb;
+          dist_t d = use_proxy_dist ?  space.ProxyDistance(provider->getData(), queryObj) : 
+                                        space.IndexTimeDistance(provider->getData(), queryObj); 
+          if (d < dmin) {
+            dmin = d;
+            friendReplacement = neighb;
+          }
+        }
+      }
+      if (friendReplacement != nullptr) {
+        link(this, friendReplacement);
+      }
+    }
   }
   /* 
    * 1. The list of friend pointers is sorted.
@@ -212,15 +268,10 @@ public:
                          IdType maxInternalId) const;
   void add(MSWNode *newElement, IdType maxInternalId);
   void addCriticalSection(MSWNode *newElement);
-  void link(MSWNode* first, MSWNode* second){
-    // addFriend checks for duplicates if the second argument is true
-    first->addFriend(second, true);
-    second->addFriend(first, true);
-  }
 
   void SetQueryTimeParams(const AnyParams& ) override;
 
-  enum PatchingStrategy { kNeighborsOnly };
+  enum PatchingStrategy { kNone = 0, kNeighborsOnly = 1 };
 private:
 
   size_t                NN_;

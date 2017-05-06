@@ -49,6 +49,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                       unsigned&               k,
                       string&                 MethodName,
                       shared_ptr<AnyParams>&  IndexTimeParams,
+                      bool&                   bPatchFlag,
                       shared_ptr<AnyParams>&  QueryTimeParams,
                       unsigned&               BatchAddQty,
                       unsigned&               BatchDelQty) {
@@ -58,6 +59,7 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
   string          queryTimeParamStr;
   string          spaceParamStr;
 
+  bPatchFlag = false;
   bPrintProgress  = true;
   bool bSuppressPrintProgress;
 
@@ -83,6 +85,8 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                                &MethodName, true));
   cmd_options.Add(new CmdParam(NO_PROGRESS_PARAM_OPT, NO_PROGRESS_PARAM_MSG,
                                &bSuppressPrintProgress, false));
+  cmd_options.Add(new CmdParam("patch_flag", "Do we \"patch\" the index graph after deletion?",
+                               &bPatchFlag, false, true));
   cmd_options.Add(new CmdParam(LOG_FILE_PARAM_OPT, LOG_FILE_PARAM_MSG,
                                &LogFile, false, LOG_FILE_PARAM_DEFAULT));
   cmd_options.Add(new CmdParam("batch_add_qty", "A number of data points added in a batch",
@@ -160,6 +164,7 @@ void doWork(int argc, char* argv[]) {
   unsigned                knnK;
   string                  MethodName;
   shared_ptr<AnyParams>   IndexTimeParams;
+  bool                    bPatchFlag;
   shared_ptr<AnyParams>   QueryTimeParams;
   unsigned                MaxIterQty;
   unsigned                BatchAddQty;
@@ -178,6 +183,7 @@ void doWork(int argc, char* argv[]) {
                   knnK,
                   MethodName,
                   IndexTimeParams,
+                  bPatchFlag,
                   QueryTimeParams,
                   BatchAddQty,
                   BatchDelQty);
@@ -202,6 +208,7 @@ void doWork(int argc, char* argv[]) {
 
   LOG(LIB_INFO) << "Total # of data points loaded: " << OrigDataSet.size();
   LOG(LIB_INFO) << "Total # of query points loaded: " << QuerySet.size();
+  LOG(LIB_INFO) << "Patch flag: " << bPatchFlag;
 
   deque<const Object*> unused;
   for(const auto v: OrigDataSet)
@@ -310,7 +317,9 @@ void doWork(int argc, char* argv[]) {
     LOG(LIB_INFO) << "NodesToDel.size(): "     << NodesToDel.size();
 
     timerBatchDel.reset();
-    index->DeleteBatch(NodesToDel, SmallWorldRand<float>::kNeighborsOnly, CHECK_IDS);
+    index->DeleteBatch(NodesToDel, bPatchFlag ? SmallWorldRand<float>::kNeighborsOnly : 
+                                                SmallWorldRand<float>::kNone, 
+                       CHECK_IDS);
     timerBatchDel.split();
     totalBatchDelTime += timerBatchDel.elapsed();
     

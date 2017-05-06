@@ -36,6 +36,7 @@
 #include <typeinfo>
 
 #define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 100
+#define MAX_ID_TO_SIZE_RATIO               1.5
 
 namespace similarity {
 
@@ -121,8 +122,16 @@ void SmallWorldRand<dist_t>::UpdateNextNodeId(size_t newNextNodeId)
 template <typename dist_t>
 void SmallWorldRand<dist_t>::CompactIdsIfNeeded()
 {
-  // not implemented yet, but basically if the gap between NextNodeId_ and ElList_.size() is large,
-  // we need to re-assign node IDs. This is an expensive operation, which we do not to do often
+  if (ElList_.size() * MAX_ID_TO_SIZE_RATIO < NextNodeId_) {
+    LOG(LIB_INFO) << "ID compactification started";
+    NextNodeId_ = 0;
+    for (auto it : ElList_) {
+      MSWNode* node = it.second;
+      node->setId(NextNodeId_);
+      ++NextNodeId_;
+    }
+    LOG(LIB_INFO) << "ID compactification ended";
+  }
 }
 
 template <typename dist_t>
@@ -176,6 +185,7 @@ void SmallWorldRand<dist_t>::AddBatch(const ObjectVector& batchData,
   UpdateNextNodeId(futureNextNodeId);
   CompactIdsIfNeeded();
   if (bCheckIDs) CheckIDs();
+  LOG(LIB_INFO) << "The number of data points: " << ElList_.size() << " NextNodeId_ = " << NextNodeId_;
 }
 
 template <typename dist_t>
@@ -186,15 +196,14 @@ void SmallWorldRand<dist_t>::DeleteBatch(const ObjectVector& batchData, int delS
 }
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int delStrategy, bool checkIDs) {
+void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int delStrategyCode, bool checkIDs) {
   if (batchData.empty()) return;
   changedAfterCreateIndex_ = true;
   /* 
-   * Four stages.
+   * Done in several stages.
    * 1) Identifying entries to be deleted & deleting nodes from ElList_.
-   * 2) Removing neighbors
-   * 3) Patching
-   * 4) Actually removing nodes from ElList_ and freeing memory.
+   * 2) Removing neighbors with subsequent patching
+   * 3) Actually removing nodes from ElList_ and freeing memory.
    */
   // Stage 1. Identifying entries to be deleted.
   vector<MSWNode*>        toPatchNodes;
@@ -216,31 +225,31 @@ void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int de
   }
 
   LOG(LIB_INFO) << "The number of nodes that need patching: " << toPatchNodes.size();
-  // Stage 2. Removing neighbors
-  // ideally this needs to be a multi-threaded code!
+  // Stage 2. Removing neighbors & possibly patching
+  PatchingStrategy patchStrat = static_cast<PatchingStrategy>(delStrategyCode);
+  CHECK_MSG(patchStrat == kNone || patchStrat == kNeighborsOnly,
+            "Unsupported patching strategy code: " + ConvertToString(delStrategyCode));
 
-  if (true) {
-    queue<MSWNode*> toPatchQueue;
-    for (MSWNode* node : toPatchNodes) toPatchQueue.push(node);
-    mutex mtx;
-    vector<thread> threads;
-    for (int i = 0; i < indexThreadQty_; ++i) {
-      threads.push_back(thread(
-          [&]() {
-            MSWNode* node = nullptr;
-            while(GetNextQueueObj(mtx, toPatchQueue, node)) {
-              node->removeGivenFriends(delNodesBitset);
-            }
-          }
-      ));
-    }
-    for (auto& thread : threads) thread.join();
-  } else {
-    for (MSWNode* node: toPatchNodes) node->removeGivenFriends(delNodesBitset);
+  queue<MSWNode*> toPatchQueue;
+  for (MSWNode* node : toPatchNodes) toPatchQueue.push(node);
+  mutex mtx;
+  vector<thread> threads;
+
+  for (int i = 0; i < indexThreadQty_; ++i) {
+    threads.push_back(thread(
+      [&]() {
+        MSWNode* node = nullptr;
+        vector<MSWNode*> cache;
+        while(GetNextQueueObj(mtx, toPatchQueue, node)) {
+          if (kNone == patchStrat) node->removeGivenFriends(delNodesBitset);
+          else node->removeGivenFriendsPatchWithClosestNeighbor<dist_t>(space_, use_proxy_dist_, 
+                                                                        delNodesBitset, cache);
+        }
+      }
+    ));
   }
+  for (auto& thread : threads) thread.join();
 
-
-  // Stage 3. Patching. TODO implementation
 
   if (checkIDs) {
     for (auto it : ElList_) {
@@ -251,7 +260,7 @@ void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int de
     }
   }
 
-  // Stage 4. freeing memory
+  // Stage 4. Clean-up and ID update
   for (MSWNode* node : vToDelNodes) {
     delete node;
   }
@@ -479,7 +488,7 @@ void SmallWorldRand<dist_t>::add(MSWNode *newElement, IdType nextNodeIdUpperBoun
     // TODO actually we might need to add elements in the reverse order in the future.
     // For the current implementation, however, the order doesn't seem to matter
     while (!resultSet.empty()) {
-      link(resultSet.top().getMSWNode(), newElement);
+      MSWNode::link(resultSet.top().getMSWNode(), newElement);
       resultSet.pop();
     }
   }
