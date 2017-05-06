@@ -18,6 +18,8 @@
 #include <vector>
 #include <deque>
 #include <unordered_set>
+#include <atomic>
+#include <queue>
 
 #include "init.h"
 #include "space.h"
@@ -30,6 +32,7 @@
 #include "ztimer.h"
 #include "knnquery.h"
 #include "knnqueue.h"
+#include "thread_pool.h"
 #include "method/small_world_rand.h"
 
 // This check only makes sense when we don't delete data
@@ -324,39 +327,75 @@ void doWork(int argc, char* argv[]) {
     totalBatchDelTime += timerBatchDel.elapsed();
     
 
-    float recall = 0;
-    double queryTime = 0;
-    for (const auto qo : QuerySet) {
-      KNNQuery<float>        knnSeqQuery(*space, qo, knnK);
-      unordered_set<IdType>  trueNN;
-      for (const auto v : IndexedData)
-        knnSeqQuery.CheckAndAddToResult(v);
 
-      {
-        unique_ptr<KNNQueue<float>> res(knnSeqQuery.Result()->Clone());
-        while (!res->Empty()) {
-          trueNN.insert(res->TopObject()->id());
-          res->Pop();
+    atomic<size_t> recallInt(0);
+    size_t         threadQty = thread::hardware_concurrency();
+
+    mutex mtxQueue, mtxTrueNN;
+    unordered_map<const Object*,unordered_set<IdType>>  hTrueNN;
+
+    {
+      queue<const Object*> queryObjQueue;
+      for (const auto qo : QuerySet) queryObjQueue.push(qo);
+
+      vector<thread> threads;
+      for (int i = 0; i < threadQty; ++i) {
+        threads.push_back(thread(
+        [&]() {
+          const Object* queryObj = nullptr;
+          while(GetNextQueueObj(mtxQueue, queryObjQueue, queryObj)) {
+            KNNQuery<float>        knnSeqQuery(*space, queryObj, knnK);
+            for (const auto v : IndexedData)
+              knnSeqQuery.CheckAndAddToResult(v);
+
+            unordered_set<IdType> trueNN;
+            unique_ptr<KNNQueue<float>> res(knnSeqQuery.Result()->Clone());
+            while (!res->Empty()) {
+              trueNN.insert(res->TopObject()->id());
+              res->Pop();
+            }
+            unique_lock<mutex> lock(mtxTrueNN);
+            hTrueNN[queryObj] = trueNN;
+          }
         }
+      ));
       }
-      timerQuery.reset();
-      KNNQuery<float>        knnRegQuery(*space, qo, knnK);
-
-      index->Search(&knnRegQuery);
-
-      timerQuery.split();
-      queryTime += timerQuery.elapsed();
-
-      {
-        unique_ptr<KNNQueue<float>> res(knnRegQuery.Result()->Clone());
-        while (!res->Empty()) {
-          recall += int(trueNN.find(res->TopObject()->id()) != trueNN.end());
-          res->Pop();
-        }
-      }
+      for (auto& thread : threads) thread.join();
     }
-    recall /= (knnK*QuerySet.size());
-    LOG(LIB_INFO) << "Batch id: " << iterId << " recall: " << recall << " SINGLE-thread time (complete query set): " << queryTime/1000.0 << " ms";
+
+    timerQuery.reset();
+    {
+      queue<const Object*> queryObjQueue;
+      for (const auto qo : QuerySet) queryObjQueue.push(qo);
+
+      vector<thread> threads;
+      for (int i = 0; i < threadQty; ++i) {
+        threads.push_back(thread(
+        [&]() {
+          const Object* queryObj = nullptr;
+          while(GetNextQueueObj(mtxQueue, queryObjQueue, queryObj)) {
+            KNNQuery<float>        knnRegQuery(*space, queryObj, knnK);
+            index->Search(&knnRegQuery);
+
+            const auto it = hTrueNN.find(queryObj);
+            CHECK(it != hTrueNN.end());
+            const unordered_set<IdType>& trueNN = it->second; 
+
+            unique_ptr<KNNQueue<float>> res(knnRegQuery.Result()->Clone());
+            while (!res->Empty()) {
+              recallInt += int(trueNN.find(res->TopObject()->id()) != trueNN.end());
+              res->Pop();
+            }
+          }
+        }
+        ));
+      }
+      for (auto& thread : threads) thread.join();
+    }
+    timerQuery.split();
+
+    float recall = float(recallInt)/(knnK*QuerySet.size());
+    LOG(LIB_INFO) << "Batch id: " << iterId << " recall: " << recall << " time (complete query set, " << threadQty << " threads): " << timerQuery.elapsed()/1000.0 << " ms";
     if (iterId >= MaxIterQty) {
       LOG(LIB_INFO) << "Stopping b/c we reach the maximum # of iterations";
       break;

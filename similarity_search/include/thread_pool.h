@@ -33,7 +33,7 @@ namespace similarity {
 /* 
    Sample usage of helper function GetNextQueueObj:
    
-    queue<MSWNode*> toPatchQueue;
+    queue<MSWNode*> toPatchQueue; // the job queue
     for (MSWNode* node : toPatchNodes) toPatchQueue.push(node);
     mutex mtx;
     vector<thread> threads;
@@ -41,11 +41,15 @@ namespace similarity {
       threads.push_back(thread(
           [&]() {
             MSWNode* node = nullptr;
+            // get the next job from the queue
             while(GetNextQueueObj(mtx, toPatchQueue, node)) {
               node->removeGivenFriends(delNodesBitset);
             }
           }
       ));
     }
+    // Don't forget to join!
+    for (auto& thread : threads) thread.join();
+
 */
 };
