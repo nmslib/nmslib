@@ -100,6 +100,8 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(double, SPACE_COSINE_SIMILARITY, CreateCosineSimilarity)
   REGISTER_SPACE_CREATOR(float,  SPACE_ANGULAR_DISTANCE, CreateAngularDistance)
   REGISTER_SPACE_CREATOR(double, SPACE_ANGULAR_DISTANCE, CreateAngularDistance)
+  REGISTER_SPACE_CREATOR(float,  SPACE_NEGATIVE_SCALAR, CreateNegativeScalarProduct)
+  REGISTER_SPACE_CREATOR(double, SPACE_NEGATIVE_SCALAR, CreateNegativeScalarProduct)
 
   // Sparse
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L, CreateSparseL)

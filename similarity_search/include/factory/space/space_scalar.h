@@ -34,8 +34,14 @@ Space<dist_t>* CreateCosineSimilarity(const AnyParams& /* ignoring params */) {
 
 template <typename dist_t>
 Space<dist_t>* CreateAngularDistance(const AnyParams& /* ignoring params */) {
-  // Cosine Similarity
+  // Angular distance
   return new SpaceAngularDistance<dist_t>();
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateNegativeScalarProduct(const AnyParams& /* ignoring params */) {
+  // Negative inner/scalar product
+  return new SpaceNegativeScalarProduct<dist_t>();
 }
 
 /*

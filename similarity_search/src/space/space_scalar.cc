@@ -59,4 +59,18 @@ dist_t SpaceAngularDistance<dist_t>::HiddenDistance(const Object* obj1, const Ob
 template class SpaceAngularDistance<float>;
 template class SpaceAngularDistance<double>;
 
+template <typename dist_t>
+dist_t SpaceNegativeScalarProduct<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
+  CHECK(obj1->datalength() > 0);
+  CHECK(obj1->datalength() == obj2->datalength());
+  const dist_t* x = reinterpret_cast<const dist_t*>(obj1->data());
+  const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
+  const size_t length = obj1->datalength() / sizeof(dist_t);
+
+  return ScalarProductSIMD(x, y, length);
+}
+
+template class SpaceNegativeScalarProduct<float>;
+template class SpaceNegativeScalarProduct<double>;
+
 }  // namespace similarity
