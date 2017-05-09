@@ -67,7 +67,7 @@ dist_t SpaceNegativeScalarProduct<dist_t>::HiddenDistance(const Object* obj1, co
   const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
   const size_t length = obj1->datalength() / sizeof(dist_t);
 
-  return ScalarProductSIMD(x, y, length);
+  return -ScalarProductSIMD(x, y, length);
 }
 
 template class SpaceNegativeScalarProduct<float>;
