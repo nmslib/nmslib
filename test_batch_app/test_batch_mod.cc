@@ -35,9 +35,6 @@
 #include "thread_pool.h"
 #include "method/small_world_rand.h"
 
-// This check only makes sense when we don't delete data
-#define CHECK_IDS false
-
 using namespace similarity;
 using namespace std;
 
@@ -55,7 +52,8 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                       bool&                   bPatchFlag,
                       shared_ptr<AnyParams>&  QueryTimeParams,
                       unsigned&               BatchAddQty,
-                      unsigned&               BatchDelQty) {
+                      unsigned&               BatchDelQty,
+                      bool&                   bCheckIDs) {
   k=0;
 
   string          indexTimeParamStr;
@@ -90,6 +88,8 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                                &bSuppressPrintProgress, false));
   cmd_options.Add(new CmdParam("patch_flag", "Do we \"patch\" the index graph after deletion?",
                                &bPatchFlag, false, true));
+  cmd_options.Add(new CmdParam("check_ids", "Set to 1 verify correctness of node ID assignment after each batch",
+                               &bCheckIDs, false, false));
   cmd_options.Add(new CmdParam(LOG_FILE_PARAM_OPT, LOG_FILE_PARAM_MSG,
                                &LogFile, false, LOG_FILE_PARAM_DEFAULT));
   cmd_options.Add(new CmdParam("batch_add_qty", "A number of data points added in a batch",
@@ -173,6 +173,7 @@ void doWork(int argc, char* argv[]) {
   unsigned                BatchAddQty;
   unsigned                BatchDelQty;
   bool                    bPrintProgress;
+  bool                    bCheckIDs;
 
   ParseCommandLine(argc, argv, 
                   bPrintProgress,
@@ -189,7 +190,8 @@ void doWork(int argc, char* argv[]) {
                   bPatchFlag,
                   QueryTimeParams,
                   BatchAddQty,
-                  BatchDelQty);
+                  BatchDelQty,
+                  bCheckIDs);
 
   CHECK_MSG(knnK > 0, "k-NN k should be > 0!");
 
@@ -212,6 +214,7 @@ void doWork(int argc, char* argv[]) {
   LOG(LIB_INFO) << "Total # of data points loaded: " << OrigDataSet.size();
   LOG(LIB_INFO) << "Total # of query points loaded: " << QuerySet.size();
   LOG(LIB_INFO) << "Patch flag: " << bPatchFlag;
+  LOG(LIB_INFO) << "Check IDs flag: " << bCheckIDs;
 
   deque<const Object*> unused;
   for(const auto v: OrigDataSet)
@@ -255,7 +258,7 @@ void doWork(int argc, char* argv[]) {
     LOG(LIB_INFO) << "IndexedData.size() (after addition): " << IndexedData.size();
 
     timerBatchAdd.reset();
-    index->AddBatch(BatchData, false /* no print progress here */, CHECK_IDS);
+    index->AddBatch(BatchData, false /* no print progress here */, bCheckIDs);
     timerBatchAdd.split();
     totalBatchAddTime += timerBatchAdd.elapsed();
 
@@ -322,7 +325,7 @@ void doWork(int argc, char* argv[]) {
     timerBatchDel.reset();
     index->DeleteBatch(NodesToDel, bPatchFlag ? SmallWorldRand<float>::kNeighborsOnly : 
                                                 SmallWorldRand<float>::kNone, 
-                       CHECK_IDS);
+                       bCheckIDs);
     timerBatchDel.split();
     totalBatchDelTime += timerBatchDel.elapsed();
     

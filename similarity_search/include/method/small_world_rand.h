@@ -80,7 +80,6 @@ public:
 
   // Removes only friends from a given set
   void removeGivenFriends(const vector<bool>& delNodes) {
-
     size_t newQty = 0;
     /*
      * This in-place one-iteration deletion of elements in delNodes
@@ -100,40 +99,45 @@ public:
   }
 
   // Removes friends from a given set and attempts to replace them with friends' closest neighbors
-  // cache should be thread-specific (or else calling this function isn't thread-safe)
+  // cacheDelNode should be thread-specific (or else calling this function isn't thread-safe)
   template <class dist_t>
   void removeGivenFriendsPatchWithClosestNeighbor(const Space<dist_t>& space, bool use_proxy_dist,
-                                                  const vector<bool>& delNodes, vector<MSWNode*>& cache) {
+                                                  const vector<bool>& delNodes, vector<MSWNode*>& cacheDelNode) {
     /*
      * This in-place one-iteration deletion of elements in delNodes
-     * Invariant in the beginning of each loop iteration:
-     * i >= newQty
-     * Furthermore:
-     * i - newQty == the number of entries deleted in previous iterations
+     * Loop invariants:
+     * 1) i >= newQty
+     * 2) i - newQty = delQty 
+     * Hence, when the loop terminates delQty + newQty == friends_.size()
      */
-    cache.clear();
-    size_t newQty = 0;
+    size_t newQty = 0, delQty = 0;
+
     for (size_t i = 0; i < friends_.size(); ++i) {
-      MSWNode* toDelFriend = friends_[i];
-      IdType id = toDelFriend->getId();
+      MSWNode* oneFriend = friends_[i];
+      IdType id = oneFriend->getId();
       if (!delNodes.at(id)) {
         friends_[newQty] = friends_[i];
         ++newQty;
       } else {
-        cache.push_back(toDelFriend);
+        if (cacheDelNode.size() <= delQty) cacheDelNode.resize(2*delQty + 1);
+        cacheDelNode[delQty] = oneFriend;
+        ++delQty;
       }
     }
-    CHECK(cache.size() + newQty == friends_.size());
+    CHECK_MSG((delQty + newQty) == friends_.size(), 
+              "Seems like a bug, delQty:" + ConvertToString(delQty) + 
+              " newQty: " + ConvertToString(newQty) + 
+              " friends_.size()=" + ConvertToString(friends_.size()));
     friends_.resize(newQty);
     // When patching use the function link()
-    for (size_t i = 0; i < cache.size(); ++i) {
-      MSWNode *toDelFriend = cache[i];
+    for (size_t i = 0; i < delQty; ++i) {
+      MSWNode *toDelFriend = cacheDelNode[i];
       MSWNode *friendReplacement = nullptr;
       dist_t  dmin = numeric_limits<dist_t>::max();
       const Object* queryObj = this->getData();
       for (MSWNode* neighb : toDelFriend->getAllFriends()) {
-        IdType id = neighb->getId();
-        if (!delNodes.at(id)) {
+        IdType neighbId = neighb->getId();
+        if (!delNodes.at(neighbId)) {
           const MSWNode* provider = neighb;
           dist_t d = use_proxy_dist ?  space.ProxyDistance(provider->getData(), queryObj) : 
                                         space.IndexTimeDistance(provider->getData(), queryObj); 

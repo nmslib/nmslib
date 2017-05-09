@@ -197,7 +197,9 @@ void SmallWorldRand<dist_t>::DeleteBatch(const ObjectVector& batchData, int delS
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int delStrategyCode, bool checkIDs) {
-  if (batchData.empty()) return;
+  if (batchData.empty() ||  // 1. batch is empty
+      0 == NextNodeId_      // 2. no data is indexed
+      ) return;
   changedAfterCreateIndex_ = true;
   /* 
    * Done in several stages.
@@ -206,32 +208,42 @@ void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int de
    * 3) Actually removing nodes from ElList_ and freeing memory.
    */
   // Stage 1. Identifying entries to be deleted.
-  vector<MSWNode*>        toPatchNodes;
+  vector<MSWNode*>        vToPatchNodes;
   vector<MSWNode*>        vToDelNodes;
   vector<bool>            delNodesBitset(NextNodeId_);
 
   for (IdType objId : batchData) {
     const auto it = ElList_.find(objId);
     CHECK_MSG(it != ElList_.end(), "An attempt to delete a non-existing object with id=" + ConvertToString(objId));
-    delNodesBitset[it->second->getId()]=true;
-    vToDelNodes.push_back(it->second);
+    MSWNode* delNode=it->second;
+    IdType   delNodeId = delNode->getId();
+    CHECK(delNodeId < delNodesBitset.size());
+    delNodesBitset[delNodeId]=true;
+    vToDelNodes.push_back(delNode);
     ElList_.erase(it);
   }
   for (MSWNode* node: vToDelNodes) {
     for (MSWNode* pNeighbor : node->getAllFriends()) {
-      if (!delNodesBitset.at(pNeighbor->getId()))
-        toPatchNodes.push_back(pNeighbor);
+      IdType neighbNodeId = pNeighbor->getId();
+      CHECK(neighbNodeId < delNodesBitset.size());
+      if (!delNodesBitset.at(neighbNodeId))
+        vToPatchNodes.push_back(pNeighbor);
     }
   }
 
-  LOG(LIB_INFO) << "The number of nodes that need patching: " << toPatchNodes.size();
+  // vToPatchNodes can have duplicates, but we must process one node exactly ones
+  sort(vToPatchNodes.begin(), vToPatchNodes.end());
+  auto it = unique(vToPatchNodes.begin(), vToPatchNodes.end()); 
+  vToPatchNodes.resize(distance(vToPatchNodes.begin(), it));
+
+  LOG(LIB_INFO) << "The number of nodes that need patching: " << vToPatchNodes.size();
   // Stage 2. Removing neighbors & possibly patching
   PatchingStrategy patchStrat = static_cast<PatchingStrategy>(delStrategyCode);
   CHECK_MSG(patchStrat == kNone || patchStrat == kNeighborsOnly,
             "Unsupported patching strategy code: " + ConvertToString(delStrategyCode));
 
   queue<MSWNode*> toPatchQueue;
-  for (MSWNode* node : toPatchNodes) toPatchQueue.push(node);
+  for (MSWNode* node : vToPatchNodes) toPatchQueue.push(node);
   mutex mtx;
   vector<thread> threads;
 
@@ -239,11 +251,11 @@ void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int de
     threads.push_back(thread(
       [&]() {
         MSWNode* node = nullptr;
-        vector<MSWNode*> cache;
+        vector<MSWNode*> cacheDelNode;
         while(GetNextQueueObj(mtx, toPatchQueue, node)) {
           if (kNone == patchStrat) node->removeGivenFriends(delNodesBitset);
           else node->removeGivenFriendsPatchWithClosestNeighbor<dist_t>(space_, use_proxy_dist_, 
-                                                                        delNodesBitset, cache);
+                                                                        delNodesBitset, cacheDelNode);
         }
       }
     ));
@@ -254,9 +266,33 @@ void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int de
   if (checkIDs) {
     for (auto it : ElList_) {
       MSWNode* node = it.second;
-      CHECK(!delNodesBitset[node->getId()]);
-      for (MSWNode* neighb : node->getAllFriends())
-        CHECK(!delNodesBitset[neighb->getId()]);
+      IdType   nodeId = node->getId();
+      CHECK(nodeId < delNodesBitset.size());
+      CHECK(!delNodesBitset.at(nodeId));
+      for (MSWNode* neighb : node->getAllFriends()) {
+        IdType   neighNodeId = neighb->getId();
+        CHECK(neighNodeId < delNodesBitset.size());
+        if (delNodesBitset.at(neighNodeId)) {
+        /* 
+         * Two things to check here:
+         *  1) Was the node with to-be-deleted neighbor in the list of nodes that need patching?
+         *  2) Was the deleted node in the list of to-be-deleted nodes?
+         *  3) Do we have a reciprocal neighbor situation here?
+         */
+          LOG(LIB_INFO) << "Bug: a to-be-deleted node is still found among neighbors!";
+          LOG(LIB_INFO) << "Is this neighbor in the list of to-be-deleted nodes (as expected)? " << (find(vToDelNodes.begin(),vToDelNodes.end(),neighb)!=vToDelNodes.end());
+          LOG(LIB_INFO) << "Is the connected node in the list of to-be-patched nodes (as expected)? " << (find(vToPatchNodes.begin(), vToPatchNodes.end(), node) != vToPatchNodes.end());
+          bool isRecipNeighb = false;
+          for (MSWNode* nn : neighb->getAllFriends()) {
+            if (nn == neighb) {
+              isRecipNeighb = true;
+              break;
+            }
+          }
+          LOG(LIB_INFO) << "Do we have a reciprocal neighbor situation here (as expected)? " << isRecipNeighb;
+        }
+        CHECK(!delNodesBitset.at(neighNodeId));
+      }
     }
   }
 
@@ -392,7 +428,8 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
   }
 
   size_t nodeId = provider->getId();
-  CHECK_MSG(nodeId < nextNodeIdUpperBound, "Bug: nodeId > nextNodeIdUpperBound");
+  CHECK_MSG(nodeId < nextNodeIdUpperBound, 
+            "Bug: nodeId (" + ConvertToString(nodeId) + ") > nextNodeIdUpperBound (" + ConvertToString(nextNodeIdUpperBound));
   
   visitedBitset[nodeId] = true;
   resultSet.emplace(d, provider);
@@ -437,7 +474,8 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
       MSWNode* pNeighbor = neighborCopy[neighborId];
 
       size_t nodeId = pNeighbor->getId();
-      CHECK_MSG(nodeId < nextNodeIdUpperBound, "Bug: nodeId > nextNodeIdUpperBound");
+      CHECK_MSG(nodeId < nextNodeIdUpperBound, 
+                "Bug: nodeId (" + ConvertToString(nodeId) + ") > nextNodeIdUpperBound (" + ConvertToString(nextNodeIdUpperBound));
       if (!visitedBitset[nodeId]) {
         visitedBitset[nodeId] = true;
         d = use_proxy_dist_ ? space_.ProxyDistance(pNeighbor->getData(), queryObj) : 
