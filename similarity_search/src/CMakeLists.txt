@@ -11,7 +11,7 @@
 file(GLOB PROJ_HDR_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/method/*.h ${PROJECT_SOURCE_DIR}/include/space/*.h ${PROJECT_SOURCE_DIR}/include/factory/*.h ${PROJ_HDR_FILES}/include/factory/*/*.h)
 file(GLOB OTH_HDR_FILES)
 set(HDR_FILES ${PROJ_HDR_FILES} ${OTH_HDR_FILES})
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/space/*.cc ${PROJECT_SOURCE_DIR}/src/method/*.cc ${PROJECT_SOURCE_DIR}/src/method/qa/*.cc ${PROJECT_SOURCE_DIR}/src/space/qa/*.cc)
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/space/*.cc ${PROJECT_SOURCE_DIR}/src/method/*.cc ${PROJECT_SOURCE_DIR}/src/method/qa/*.cc ${PROJECT_SOURCE_DIR}/src/space/qa/*.cc ${PROJECT_SOURCE_DIR}/src/trigen/*.cpp)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/main.cc)
 list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/tune_vptree.cc)
 # The dummy application file also needs to be removed from the list
