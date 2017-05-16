@@ -18,42 +18,6 @@ typedef double typeSPModifier(double distance);
 
 typedef unsigned int uint;
 typedef unsigned char byte;
-/*
-inline char* FIN(int number, char* buffer, int strLen)
-{
-	buffer[0] = 0;	
-	sprintf_s(buffer, 32, "%i", number);
-	memset(buffer + strlen(buffer), ' ', strLen - strlen(buffer));
-	buffer[strLen]=0;	
-	return buffer;
-};
-
-inline char* FDN(double number, char* buffer, int strLen)
-{
-	sprintf_s(buffer, 32, "%.4f", number);
-	int len = (int)strlen(buffer);
-	memset(buffer, ' ', strLen-len);
-	sprintf_s(buffer + strLen - len, 32, "%.4f", number);
-	buffer[strLen] = 0;	
-	return buffer;
-};
-
-inline void MyPrint(FILE* f, const char* formatString, ...)
-{
-	va_list marker;
-
-	va_start(marker, formatString);
-
-	if (f == NULL)
-	{
-		vprintf(formatString, marker);
-	} 
-	else
-	{
-		vfprintf(f, formatString, marker);
-	}
-};
-*/
 
 inline double Fact(unsigned int n)
 {

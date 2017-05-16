@@ -2,14 +2,25 @@
 #define __cTriGen_h__
 
 #include "trigen/utils.h"
-#include "trigen/cDistance.h"
-#include "trigen/cArray.h"
 #include "trigen/cSPModifier.h"
+
+#include "object.h"
+#include "space.h"
+
+#include <vector>
+
+using namespace std;
+using namespace similarity;
 
 enum eSamplingTriplets
 {
 	eRandom = 0,
 	eDivergent
+};
+
+struct cSpaceProxy
+{
+  virtual double Compute(const Object* o1, const Object *o2) const;
 };
 
 class cOrderedTriplet
@@ -55,10 +66,10 @@ public:
 class cTriGen
 {
 	double			*mDistanceMatrix;
-	cDataObject		**mItems;
+	ObjectVector mItems;
 	cSPModifier		*mCurrentModifier;
-	cArray<cSPModifier*> mModifierBases;
-	cDistance		*mDistance;
+	const cSpaceProxy&	 mDistance;
+	vector<cSPModifier*> mModifierBases;
 
 	unsigned int mCount;
 
@@ -77,7 +88,7 @@ class cTriGen
 		double& val = mDistanceMatrix[mCount * y + x];
 		if (val == -1)
 		{
-			val = mDistance->Compute(*mItems[x], *mItems[y]);
+			val = mDistance.Compute(mItems[x], mItems[y]);
 			mDistanceMatrix[mCount * y + x] = val;
 		}
 
@@ -120,21 +131,22 @@ class cTriGen
 				ClearCellModified(x,y);
 	}
 
-	void SampleItems(cArray<cDataObject> &source);
+	void SampleItems(const ObjectVector &source);
 	double ComputeTriangleError(unsigned int tripletSampleCount, double errorToleranceSkip = 1 /* 1 = do not use skipping*/, eSamplingTriplets samplingTriplets = eRandom);	
 
 	void ComputeDistribution(unsigned int distanceSampleCount, double& mean, double& variance, double& idim);
 
 public:
-	cTriGen(cDistance* distance, cArray<cDataObject> &source, unsigned int sampleSize, cArray<cSPModifier*> &modifBases);
+	cTriGen(const cSpaceProxy& distance, const ObjectVector &source, unsigned int sampleSize, const vector<cSPModifier*> &modifBases);
 	~cTriGen(void);
 
 	cSPModifier* Run(double& errorTolerance, unsigned int& funcOrder, double& resultIDim, unsigned int tripletSampleCount, bool echoOn = true, eSamplingTriplets samplingTriplets = eRandom);
 
-	void GetSampledItems(cArray<cDataObject>& output)
+	void GetSampledItems(ObjectVector& output)
 	{
+    output.resize(mCount);
 		for(unsigned int i=0; i<mCount; i++)
-			output.Add(mItems[i]);
+			output[i] = mItems.at(i);
 	}
 };
 

@@ -8,7 +8,7 @@
 
 const double DBL_MAX = numeric_limits<double>::max();
 
-cTriGen::cTriGen(cDistance* distance, cArray<cDataObject> &source, unsigned int sampleSize, cArray<cSPModifier*> &modifBases)
+cTriGen::cTriGen(const cSpaceProxy& distance, const ObjectVector &source, unsigned int sampleSize, const vector<cSPModifier*> &modifBases) : mDistance(distance), mModifierBases(modifBases)
 {
 	unsigned int len = sampleSize * sampleSize;
 
@@ -16,20 +16,15 @@ cTriGen::cTriGen(cDistance* distance, cArray<cDataObject> &source, unsigned int 
 	for(unsigned int i=0; i<len; i++)
 		mDistanceMatrix[i]=-1;
 
-	mItems = new cDataObject* [sampleSize];
+	mItems.resize(sampleSize);
 	mCount = sampleSize;
 
 	SampleItems(source);
-
-	mModifierBases = modifBases;
-
-	mDistance = distance;
 }
 
 cTriGen::~cTriGen(void)
 {	
 	delete [] mDistanceMatrix;	
-	delete [] mItems;
 }
 
 int cTriGen::compareOrderIndexPairs(const void* item1, const void* item2)
@@ -37,24 +32,23 @@ int cTriGen::compareOrderIndexPairs(const void* item1, const void* item2)
 	return ((order_index_pair*)item1)->order < ((order_index_pair*)item2)->order;
 }
 
-void cTriGen::SampleItems(cArray<cDataObject> &source)
+void cTriGen::SampleItems(const ObjectVector &source)
 {
 	cUniformRandomGenerator gen(17);
-	unsigned int datasetSize = source.Count();
 
-	order_index_pair* reordering_array = new order_index_pair [source.Count()];
+	order_index_pair* reordering_array = new order_index_pair [source.size()];
 
-	for(unsigned int i = 0; i < source.Count(); i++)
+	for(unsigned int i = 0; i < source.size(); i++)
 	{
-		reordering_array[i].order = (int)(gen.GetNext() * source.Count());
+		reordering_array[i].order = (int)(gen.GetNext() * source.size());
 		reordering_array[i].index = i;
 	}
 
-	qsort((void*)reordering_array, source.Count(), sizeof(order_index_pair), compareOrderIndexPairs);
+	qsort((void*)reordering_array, source.size(), sizeof(order_index_pair), compareOrderIndexPairs);
 
 	for(unsigned int i = 0; i < mCount; i++)
 	{
-		mItems[i] = &source[reordering_array[i].index];
+		mItems[i] = source[reordering_array[i].index];
 	}
 
 	delete [] reordering_array;
@@ -132,9 +126,9 @@ cSPModifier* cTriGen::Run(/* in/out */double& errorTolerance, /* out */unsigned 
 	//char infoBuffer[256];
 
 	if (echoOn)
-		LOG(LIB_INFO) << "TriGen started, " <<  mModifierBases.Count() << " bases are going to be tried, " << tripletSampleCount << " sampled triplets"; 
+		LOG(LIB_INFO) << "TriGen started, " <<  mModifierBases.size() << " bases are going to be tried, " << tripletSampleCount << " sampled triplets"; 
 
-	for(unsigned int i=0; i<mModifierBases.Count(); i++)
+	for(unsigned int i=0; i<mModifierBases.size(); i++)
 	{
 		w_LB = 0; w_UB = DBL_MAX; 		
 		w_best = -1;
