@@ -163,6 +163,7 @@ void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams)
       i->OptimizeBucket();
     }
   }
+  LOG(LIB_INFO) << "Indexing is finished, created: " << cluster_list_.size() << " clusters";
 }
 
 template <typename dist_t>

@@ -27,7 +27,7 @@ fin.close()
 
 fin = open(ifile, 'rb')
 
-rowQty = fsize / (dim + 1) / 4
+rowQty = fsize / (dim + 4)
 
 #print rowQty, dim
 

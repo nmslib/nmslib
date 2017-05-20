@@ -39,6 +39,19 @@ template <typename T> T alpha_beta_divergence(const T* x, const T* y, const int 
 template  float alpha_beta_divergence(const float* x, const float* y, const int length, float alpha, float beta);
 template  double alpha_beta_divergence(const double* x, const double* y, const int length, float alpha, float beta);
 
+template <typename T> T alpha_beta_divergence_proxy(const T* x, const T* y, const int length, float alpha, float beta) {
+  T res = 0;
+  float alpha1 = alpha + 1;
+  for (int i = 0; i < length; ++i) {
+    res += (pow(x[i], alpha1)*pow(y[i], beta) + 
+            pow(y[i], alpha1)*pow(x[i], beta)) * 0.5;
+  } 
+  return res;
+}
+
+template  float alpha_beta_divergence_proxy(const float* x, const float* y, const int length, float alpha, float beta);
+template  double alpha_beta_divergence_proxy(const double* x, const double* y, const int length, float alpha, float beta);
+
 template <typename T> T renyi_divergence(const T* x, const T* y, const int length, float alpha) {
   T sum = 0;
   T eps = -1e-6;

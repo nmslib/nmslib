@@ -83,6 +83,19 @@ public:
    */
   virtual bool DuplicateData() const { return false; }
 
+  virtual void AddBatch(const ObjectVector& batchData, bool printProgress, bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) {
+    throw runtime_error("AddBatch is not implemented!");
+  }
+
+  virtual void DeleteBatch(const ObjectVector& batchData, int delStrategy /* this flag is method-specific */,
+                           bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) {
+    throw runtime_error("DeleteBatch is not implemented!");
+  }
+
+  virtual void DeleteBatch(const vector<IdType>& batchData, int delStrategy /* this flag is method-specific */,
+                           bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) {
+    throw runtime_error("DeleteBatch is not implemented!");
+  }
 private:
   template <typename QueryType>
   void GenericSearch(QueryType* query, IdType) const;

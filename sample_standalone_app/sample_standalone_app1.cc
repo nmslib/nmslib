@@ -70,6 +70,7 @@ void printResults(KNNQuery<float>* qobj) {
     cout << res->TopObject()->id() << " : " << res->TopDistance() << endl;
     res->Pop();
   }
+  delete res;
 }
 
 void printResults(RangeQuery<float>* qobj) {
@@ -168,7 +169,7 @@ int main(int argc, char* argv[]) {
   // No logging 
   if (LOG_OPTION == 2)
     initLibrary(LIB_LOGNONE, NULL);
-  // Use STDOUT
+  // Use STDERR
   if (LOG_OPTION == 3)
     initLibrary(LIB_LOGSTDERR, NULL);
 

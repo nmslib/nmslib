@@ -1,17 +1,21 @@
 from distutils.core import setup, Extension
 import sys
+import os
 import numpy as np
 
 libdir='../similarity_search'
 release = '%s/release' % libdir
 
+libraries=[]
+extra_objects=['%s/libNonMetricSpaceLib.a' % release]
+
 if sys.platform.startswith('linux'):
-    libraries=['gsl', 'gslcblas', 'boost_program_options']
-    extra_objects=['%s/libNonMetricSpaceLib.a' % release, '%s/liblshkit.a' % release]
+    if os.path.isfile('%s/liblshkit.a' % release):
+        extra_objects.append('%s/liblshkit.a' % release)
+        for lib in ['gsl', 'gslcblas', 'boost_program_options']:
+            libraries.append(lib)
     extra_link_args=['-fopenmp', '-shared', '-pthread']
 else:
-    libraries=[]
-    extra_objects=['%s/libNonMetricSpaceLib.a' % release]
     extra_link_args=[]
 
 nmslib = Extension('nmslib', ['nmslib.cc'],

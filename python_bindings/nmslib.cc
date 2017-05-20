@@ -68,6 +68,7 @@ static PyMethodDef nmslibMethods[] = {
   {"getDataPoint", getDataPoint, METH_VARARGS},
   {"getDataPointQty", getDataPointQty, METH_VARARGS},
   {"freeIndex", freeIndex, METH_VARARGS},
+  {"getDistance", getDistance, METH_VARARGS},
   {NULL, NULL}
 };
 
@@ -696,7 +697,7 @@ class IndexWrapperBase {
   virtual PyObject* KnnQueryBatch(const int num_threads,
                                   const int k,
                                   PyObject* data) = 0;
-
+  virtual PyObject* GetDistance(int pos1, int pos2) = 0;
  protected:
   const int dist_type_;
   const int data_type_;
@@ -829,6 +830,30 @@ Py_END_ALLOW_THREADS
       thread.join();
     }
     return query_res;
+  }
+
+  virtual PyObject* GetDistance(int pos1, int pos2) override {
+    if (pos1 < 0 || pos1 >= data_.size()) {
+      raise << "Illegal object position/index (< 0 or >= the size of the data) for the first argument of GetDistance";
+      return nullptr;
+    }
+    if (pos2 < 0 || pos2 >= data_.size()) {
+      raise << "Illegal object position/index (< 0 or >= the size of the data) for the second argument of GetDistance";
+      return nullptr;
+    }
+    dist_t res = 0;
+Py_BEGIN_ALLOW_THREADS
+    res = space_->IndexTimeDistance(data_[pos1], data_[pos2]);
+Py_END_ALLOW_THREADS
+
+    if (dist_type_ == kDistInt) {
+      return PyInt_FromLong(res);
+    } else if (dist_type_ == kDistFloat) {
+      return PyFloat_FromDouble(res);
+    } else {
+      raise << "Perhaps a bug: unsupported distance type code: " << dist_type_;
+      return nullptr;
+    }
   }
 
   PyObject* AddDataPointBatch(PyArrayObject* ids,
@@ -1215,6 +1240,26 @@ PyObject* getDataPointQty(PyObject* self, PyObject* args) {
     return NULL;
   }
   return tmp;
+}
+
+PyObject* getDistance(PyObject* self, PyObject* args) {
+  PyObject* ptr;
+  int       pos1, pos2;
+  if (!PyArg_ParseTuple(args, "Oii", &ptr, &pos1, &pos2)) {
+    raise << "Error reading parameters (expecting: index ref, object index/position, object index/position)";
+    return NULL;
+  }
+  IndexWrapperBase* index = reinterpret_cast<IndexWrapperBase*>(
+      PyLong_AsVoidPtr(ptr));
+  if (pos1 < 0 || static_cast<size_t>(pos1) >= index->GetDataPointQty()) {
+    raise << "The data point index/position of the first arg should be >= 0 & < " << index->GetDataPointQty();
+    return NULL;
+  }
+  if (pos2 < 0 || static_cast<size_t>(pos2) >= index->GetDataPointQty()) {
+    raise << "The data point index/position of the second arg should be >= 0 & < " << index->GetDataPointQty();
+    return NULL;
+  }
+  return index->GetDistance(pos1, pos2);
 }
 
 PyObject* freeIndex(PyObject* self, PyObject* args) {

@@ -30,6 +30,7 @@ PyObject* knnQuery(PyObject* self, PyObject* args);
 PyObject* knnQueryBatch(PyObject* self, PyObject* args);
 PyObject* getDataPoint(PyObject* self, PyObject* args);
 PyObject* getDataPointQty(PyObject* self, PyObject* args);
+PyObject* getDistance(PyObject* self, PyObject* args);
 PyObject* freeIndex(PyObject* self, PyObject* args);
 
 #endif

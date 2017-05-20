@@ -124,6 +124,11 @@ def test_vector_fresh(fast=True):
     print 'Let\'s print a few data entries'
     print 'We have added %d data points' % nmslib.getDataPointQty(index)
 
+    print "Distance between points (0,0) " + str(nmslib.getDistance(index, 0, 0));
+    print "Distance between points (1,1) " + str(nmslib.getDistance(index, 1, 1));
+    print "Distance between points (0,1) " + str(nmslib.getDistance(index, 0, 1));
+    print "Distance between points (1,0) " + str(nmslib.getDistance(index, 1, 0));
+
     for i in range(0,min(MAX_PRINT_QTY,nmslib.getDataPointQty(index))):
        print nmslib.getDataPoint(index, i)
 
@@ -298,6 +303,11 @@ def test_string_fresh(batch=True):
 
     print 'Let\'s print a few data entries'
     print 'We have added %d data points' % nmslib.getDataPointQty(index)
+
+    print "Distance between points (0,0) " + str(nmslib.getDistance(index, 0, 0));
+    print "Distance between points (1,1) " + str(nmslib.getDistance(index, 1, 1));
+    print "Distance between points (0,1) " + str(nmslib.getDistance(index, 0, 1));
+    print "Distance between points (1,0) " + str(nmslib.getDistance(index, 1, 0));
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib.getDataPointQty(index))):
         print nmslib.getDataPoint(index,i)

@@ -199,6 +199,8 @@ template <typename T> T LPGenericDistanceOptim(const T* x, const T* y, const int
  * Conference on, pages 2989–2996
  */
 template <typename T> T alpha_beta_divergence(const T* x, const T* y, const int length, float alpha, float beta);
+// A proxy function for alpha-beta divergence that may be used during indexing
+template <typename T> T alpha_beta_divergence_proxy(const T* x, const T* y, const int length, float alpha, float beta);
 /*
  * Renyi divergence.
  * Rényi, Alfréd (1961). "On measures of information and entropy". 

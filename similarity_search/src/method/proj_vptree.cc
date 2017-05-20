@@ -28,6 +28,7 @@
 #include "projection.h"
 #include "spacefactory.h"
 #include "report_intr_dim.h"
+#include "portable_simd.h"
 
 namespace similarity {
 

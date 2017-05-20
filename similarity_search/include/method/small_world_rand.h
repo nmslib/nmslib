@@ -24,6 +24,7 @@
 #include <iostream>
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 #include <thread>
 #include <memory>
 #include <mutex>
@@ -38,6 +39,7 @@ namespace similarity {
 
 using std::string;
 using std::vector;
+using std::unordered_map;
 using std::thread;
 using std::mutex;
 using std::unique_lock;
@@ -62,12 +64,93 @@ class Space;
 class MSWNode{
 public:
   MSWNode(const Object *Obj, size_t id) {
-    data_ = Obj;
+    nodeObj_ = Obj;
     id_ = id;
   }
   ~MSWNode(){};
   void removeAllFriends(){
-    friends.clear();
+    friends_.clear();
+  }
+
+  static void link(MSWNode* first, MSWNode* second){
+    // addFriend checks for duplicates if the second argument is true
+    first->addFriend(second, true);
+    second->addFriend(first, true);
+  }
+
+  // Removes only friends from a given set
+  void removeGivenFriends(const vector<bool>& delNodes) {
+    size_t newQty = 0;
+    /*
+     * This in-place one-iteration deletion of elements in delNodes
+     * Invariant in the beginning of each loop iteration:
+     * i >= newQty
+     * Furthermore:
+     * i - newQty == the number of entries deleted in previous iterations
+     */
+    for (size_t i = 0; i < friends_.size(); ++i) {
+      IdType id = friends_[i]->getId();
+      if (!delNodes.at(id)) {
+        friends_[newQty] = friends_[i];
+        ++newQty;
+      }
+    }
+    friends_.resize(newQty);
+  }
+
+  // Removes friends from a given set and attempts to replace them with friends' closest neighbors
+  // cacheDelNode should be thread-specific (or else calling this function isn't thread-safe)
+  template <class dist_t>
+  void removeGivenFriendsPatchWithClosestNeighbor(const Space<dist_t>& space, bool use_proxy_dist,
+                                                  const vector<bool>& delNodes, vector<MSWNode*>& cacheDelNode) {
+    /*
+     * This in-place one-iteration deletion of elements in delNodes
+     * Loop invariants:
+     * 1) i >= newQty
+     * 2) i - newQty = delQty 
+     * Hence, when the loop terminates delQty + newQty == friends_.size()
+     */
+    size_t newQty = 0, delQty = 0;
+
+    for (size_t i = 0; i < friends_.size(); ++i) {
+      MSWNode* oneFriend = friends_[i];
+      IdType id = oneFriend->getId();
+      if (!delNodes.at(id)) {
+        friends_[newQty] = friends_[i];
+        ++newQty;
+      } else {
+        if (cacheDelNode.size() <= delQty) cacheDelNode.resize(2*delQty + 1);
+        cacheDelNode[delQty] = oneFriend;
+        ++delQty;
+      }
+    }
+    CHECK_MSG((delQty + newQty) == friends_.size(), 
+              "Seems like a bug, delQty:" + ConvertToString(delQty) + 
+              " newQty: " + ConvertToString(newQty) + 
+              " friends_.size()=" + ConvertToString(friends_.size()));
+    friends_.resize(newQty);
+    // When patching use the function link()
+    for (size_t i = 0; i < delQty; ++i) {
+      MSWNode *toDelFriend = cacheDelNode[i];
+      MSWNode *friendReplacement = nullptr;
+      dist_t  dmin = numeric_limits<dist_t>::max();
+      const Object* queryObj = this->getData();
+      for (MSWNode* neighb : toDelFriend->getAllFriends()) {
+        IdType neighbId = neighb->getId();
+        if (!delNodes.at(neighbId)) {
+          const MSWNode* provider = neighb;
+          dist_t d = use_proxy_dist ?  space.ProxyDistance(provider->getData(), queryObj) : 
+                                        space.IndexTimeDistance(provider->getData(), queryObj); 
+          if (d < dmin) {
+            dmin = d;
+            friendReplacement = neighb;
+          }
+        }
+      }
+      if (friendReplacement != nullptr) {
+        link(this, friendReplacement);
+      }
+    }
   }
   /* 
    * 1. The list of friend pointers is sorted.
@@ -78,18 +161,19 @@ public:
     unique_lock<mutex> lock(accessGuard_);
 
     if (bCheckForDup) {
-      auto it = lower_bound(friends.begin(), friends.end(), element);
-      if (it == friends.end() || (*it) != element) {
-        friends.insert(it, element);
+      auto it = lower_bound(friends_.begin(), friends_.end(), element);
+      if (it == friends_.end() || (*it) != element) {
+        friends_.insert(it, element);
       }
     } else {
-      friends.push_back(element);
+      friends_.push_back(element);
     }
   }
   const Object* getData() const {
-    return data_;
+    return nodeObj_;
   }
   size_t getId() const { return id_; }
+  void setId(IdType id) { id_ = id; }
   /* 
    * THIS NOTE APPLIES ONLY TO THE INDEXING PHASE:
    *
@@ -100,15 +184,15 @@ public:
    * the reference returned by getAllFriends()
    */
   const vector<MSWNode*>& getAllFriends() const {
-    return friends;
+    return friends_;
   }
 
   mutex accessGuard_;
 
 private:
-  const Object*       data_;
+  const Object*       nodeObj_;
   size_t              id_;
-  vector<MSWNode*>    friends;
+  vector<MSWNode*>    friends_;
 };
 //----------------------------------
 template <typename dist_t>
@@ -169,50 +253,57 @@ public:
                  const Space<dist_t>& space,
                  const ObjectVector& data);
   void CreateIndex(const AnyParams& IndexParams) override;
+  virtual void AddBatch(const ObjectVector& batchData, bool bPrintProgress, bool bCheckIDs = false);
+  virtual void DeleteBatch(const ObjectVector& batchData, int delStrategy,
+                           bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) override;
 
+  virtual void DeleteBatch(const vector<IdType>& batchData, int delStrategy,
+                           bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) override;
   ~SmallWorldRand();
 
-  typedef std::vector<MSWNode*> ElementList;
+  typedef unordered_map<IdType,MSWNode*> ElementMap;
 
   const std::string StrDesc() const override;
   void Search(RangeQuery<dist_t>* query, IdType) const override;
   void Search(KNNQuery<dist_t>* query, IdType) const override;
-  MSWNode* getRandomEntryPoint() const;
-  MSWNode* getRandomEntryPointLocked() const;
-  size_t getEntryQtyLocked() const;
    
   void searchForIndexing(const Object *queryObj,
-                         std::priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet) const;
-  void add(MSWNode *newElement);
+                         std::priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet,
+                         IdType maxInternalId) const;
+  void add(MSWNode *newElement, IdType maxInternalId);
   void addCriticalSection(MSWNode *newElement);
-  void link(MSWNode* first, MSWNode* second){
-    // addFriend checks for duplicates if the second argument is true
-    first->addFriend(second, true);
-    second->addFriend(first, true);
-  }
 
   void SetQueryTimeParams(const AnyParams& ) override;
+
+  enum PatchingStrategy { kNone = 0, kNeighborsOnly = 1 };
 private:
 
   size_t                NN_;
   size_t                efConstruction_;
   size_t                efSearch_;
-  size_t                initIndexAttempts_;
-  size_t                initSearchAttempts_;
   size_t                indexThreadQty_;
   string                pivotFile_;
   ObjectVector          pivots_;
 
   const Space<dist_t>&  space_;
-  ObjectVector          data_; // We copy all the data
+  const ObjectVector&   data_; // We don't copy data
   bool                  PrintProgress_;
+  bool                  use_proxy_dist_;
 
   mutable mutex   ElListGuard_;
-  ElementList     ElList_;
+  ElementMap      ElList_;
+  size_t          NextNodeId_ = 0; // This is internal node id
+  bool            changedAfterCreateIndex_ = false;
+  MSWNode*        pEntryPoint_ = nullptr;
 
 
   void SearchOld(KNNQuery<dist_t>* query) const;
   void SearchV1Merge(KNNQuery<dist_t>* query) const;
+
+  void UpdateNextNodeId(size_t newNextNodeId);
+  void CompactIdsIfNeeded();
+
+  void CheckIDs() const;
   
   enum AlgoType { kOld, kV1Merge };
 
