@@ -259,10 +259,10 @@ SmallWorldRandSplit<dist_t>::searchForIndexing(const Object *queryObj,
     priority_queue <EvaluatedMSWNodeReverse>   candidateSet;
 
 #ifdef USE_ALTERNATIVE_FOR_INDEXING
-    dist_t d = space_.ProxyDistance(queryObj, provider->getData());
+    dist_t d = space_.ProxyDistance(provider->getData(), queryObj);
     #pragma message "Using an alternative/proxy function for indexing, not the original one!"          
 #else
-    dist_t d = space_.IndexTimeDistance(queryObj, provider->getData());
+    dist_t d = space_.IndexTimeDistance(provider->getData(), queryObj);
 #endif
     EvaluatedMSWNodeReverse ev(d, provider);
 
@@ -328,10 +328,10 @@ SmallWorldRandSplit<dist_t>::searchForIndexing(const Object *queryObj,
           visitedBitset[nodeId - chunkStart] = true;
 
 #ifdef USE_ALTERNATIVE_FOR_INDEXING
-          d = space_.ProxyDistance(queryObj, pNeighbor->getData());
+          d = space_.ProxyDistance(pNeighbor->getData(), queryObj);
           #pragma message "Using an alternative/proxy function for indexing, not the original one!"          
 #else
-          d = space_.IndexTimeDistance(queryObj, pNeighbor->getData());
+          d = space_.IndexTimeDistance(pNeighbor->getData(), queryObj);
 #endif
 
           if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {

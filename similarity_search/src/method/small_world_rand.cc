@@ -27,6 +27,7 @@
 #include "ported_boost_progress.h"
 #include "method/small_world_rand.h"
 #include "sort_arr_bi.h"
+#include "thread_pool.h"
 
 #include <vector>
 #include <set>
@@ -35,11 +36,7 @@
 #include <typeinfo>
 
 #define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 100
-
-//#define START_WITH_E0
-#define START_WITH_E0_AT_QUERY_TIME
-
-#define USE_BITSET_FOR_INDEXING 1
+#define MAX_ID_TO_SIZE_RATIO               1.5
 
 namespace similarity {
 
@@ -49,7 +46,8 @@ template <typename dist_t>
 struct IndexThreadParamsSW {
   const Space<dist_t>&                        space_;
   SmallWorldRand<dist_t>&                     index_;
-  const ObjectVector&                         data_;
+  IdType                                      startNodeId_;
+  const ObjectVector&                         batchData_;
   size_t                                      index_every_;
   size_t                                      out_of_;
   ProgressDisplay*                            progress_bar_;
@@ -59,7 +57,8 @@ struct IndexThreadParamsSW {
   IndexThreadParamsSW(
                      const Space<dist_t>&             space,
                      SmallWorldRand<dist_t>&          index, 
-                     const ObjectVector&              data,
+                     IdType                           startNodeId,
+                     const ObjectVector&              batchData,
                      size_t                           index_every,
                      size_t                           out_of,
                      ProgressDisplay*                 progress_bar,
@@ -68,7 +67,8 @@ struct IndexThreadParamsSW {
                       ) : 
                      space_(space),
                      index_(index), 
-                     data_(data),
+                     startNodeId_(startNodeId),
+                     batchData_(batchData),
                      index_every_(index_every),
                      out_of_(out_of),
                      progress_bar_(progress_bar),
@@ -83,15 +83,17 @@ struct IndexThreadSW {
     ProgressDisplay*  progress_bar = prm.progress_bar_;
     mutex&            display_mutex(prm.display_mutex_); 
     /* 
-     * Skip the first element, it was added already
+     * Skip the first element, it was added already in the AddBatch
      */
+    size_t futureNextNodeId = prm.startNodeId_ + prm.batchData_.size();
+
     size_t nextQty = prm.progress_update_qty_;
-    for (size_t id = 1; id < prm.data_.size(); ++id) {
+    for (size_t id = 1; id < prm.batchData_.size(); ++id) {
       if (prm.index_every_ == id % prm.out_of_) {
-        MSWNode* node = new MSWNode(prm.data_[id], id);
-        prm.index_.add(node);
+        MSWNode* node = new MSWNode(prm.batchData_[id], id + prm.startNodeId_);
+        prm.index_.add(node, futureNextNodeId);
       
-        if ((id + 1 >= min(prm.data_.size(), nextQty)) && progress_bar) {
+        if ((id + 1 >= min(prm.batchData_.size(), nextQty)) && progress_bar) {
           unique_lock<mutex> lock(display_mutex);
           (*progress_bar) += (nextQty - progress_bar->count());
           nextQty += prm.progress_update_qty_;
@@ -112,42 +114,52 @@ SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
                                        space_(space), data_(data), PrintProgress_(PrintProgress), use_proxy_dist_(false) {}
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams) 
+void SmallWorldRand<dist_t>::UpdateNextNodeId(size_t newNextNodeId)
 {
-  AnyParamManager pmgr(IndexParams);
+  NextNodeId_ = newNextNodeId;
+}
 
-  pmgr.GetParamOptional("NN",                 NN_,                  10);
-  pmgr.GetParamOptional("efConstruction",     efConstruction_,      NN_);
-  efSearch_ = NN_;
-  pmgr.GetParamOptional("initIndexAttempts",  initIndexAttempts_,   1);
-  pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
-  pmgr.GetParamOptional("useProxyDist",       use_proxy_dist_,      false);
+template <typename dist_t>
+void SmallWorldRand<dist_t>::CompactIdsIfNeeded()
+{
+  if (ElList_.size() * MAX_ID_TO_SIZE_RATIO < NextNodeId_) {
+    LOG(LIB_INFO) << "ID compactification started";
+    NextNodeId_ = 0;
+    for (auto it : ElList_) {
+      MSWNode* node = it.second;
+      node->setId(NextNodeId_);
+      ++NextNodeId_;
+    }
+    LOG(LIB_INFO) << "ID compactification ended";
+  }
+}
 
-  LOG(LIB_INFO) << "NN                  = " << NN_;
-  LOG(LIB_INFO) << "efConstruction_     = " << efConstruction_;
-  LOG(LIB_INFO) << "initIndexAttempts   = " << initIndexAttempts_;
-  LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
-  LOG(LIB_INFO) << "useProxyDist        = " << use_proxy_dist_;
+template <typename dist_t>
+void SmallWorldRand<dist_t>::AddBatch(const ObjectVector& batchData, 
+                                      bool bPrintProgress,
+                                      bool bCheckIDs /* this is a debug flag only, turning it on may affect performance */)
+{
+  if (batchData.empty()) return;
+  changedAfterCreateIndex_ = true;
 
-  pmgr.CheckUnused();
+  size_t futureNextNodeId = NextNodeId_ + batchData.size();
 
-  SetQueryTimeParams(getEmptyParams());
+  LOG(LIB_INFO) << "Current nextNodeId: " << NextNodeId_ 
+                << " futureNextNodeId + 1 after batch addition: " << futureNextNodeId;
 
-  if (data_.empty()) return;
+  // 2) One entry should be added before all the threads are started, or else add() will not work properly  
+  addCriticalSection(new MSWNode(batchData[0], NextNodeId_));
 
-  // 2) One entry should be added before all the threads are started, or else add() will not work properly
-  addCriticalSection(new MSWNode(data_[0], 0 /* id == 0 */));
-
-  unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data_.size(), cerr)
+  unique_ptr<ProgressDisplay> progress_bar(bPrintProgress ?
+                                new ProgressDisplay(batchData.size(), cerr)
                                 :NULL);
 
   if (indexThreadQty_ <= 1) {
     // Skip the first element, one element is already added
     if (progress_bar) ++(*progress_bar);
-    for (size_t id = 1; id < data_.size(); ++id) {
-      MSWNode* node = new MSWNode(data_[id], id);
-      add(node);
+    for (size_t id = 1; id < batchData.size(); ++id) {
+      MSWNode* node = new MSWNode(batchData[id], id + NextNodeId_);
+      add(node, futureNextNodeId);
       if (progress_bar) ++(*progress_bar);
     }
   } else {
@@ -157,7 +169,9 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
-                              new IndexThreadParamsSW<dist_t>(space_, *this, data_, i, indexThreadQty_,
+                              new IndexThreadParamsSW<dist_t>(space_, *this, NextNodeId_, 
+                                                              batchData, 
+                                                              i, indexThreadQty_,
                                                               progress_bar.get(), progressBarMutex, 200)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
@@ -166,21 +180,189 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threads[i].join();
     }
-    if (ElList_.size() != data_.size()) {
-      stringstream err;
-      err << "Bug: ElList_.size() (" << ElList_.size() << ") isn't equal to data_.size() (" << data_.size() << ")";
-      LOG(LIB_INFO) << err.str();
-      throw runtime_error(err.str());
-    }
     LOG(LIB_INFO) << indexThreadQty_ << " indexing threads have finished";
   }
+  UpdateNextNodeId(futureNextNodeId);
+  CompactIdsIfNeeded();
+  if (bCheckIDs) CheckIDs();
+  LOG(LIB_INFO) << "The number of data points: " << ElList_.size() << " NextNodeId_ = " << NextNodeId_;
+}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::DeleteBatch(const ObjectVector& batchData, int delStrategy, bool checkIDs) {
+  vector<IdType> batchIds;
+  for (auto o : batchData) batchIds.push_back(o->id()); 
+  DeleteBatch(batchIds, delStrategy, checkIDs);
+}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int delStrategyCode, bool checkIDs) {
+  if (batchData.empty() ||  // 1. batch is empty
+      0 == NextNodeId_      // 2. no data is indexed
+      ) return;
+  changedAfterCreateIndex_ = true;
+  /* 
+   * Done in several stages.
+   * 1) Identifying entries to be deleted & deleting nodes from ElList_.
+   * 2) Removing neighbors with subsequent patching
+   * 3) Actually removing nodes from ElList_ and freeing memory.
+   */
+  // Stage 1. Identifying entries to be deleted.
+  vector<MSWNode*>        vToPatchNodes;
+  vector<MSWNode*>        vToDelNodes;
+  vector<bool>            delNodesBitset(NextNodeId_);
+
+  for (IdType objId : batchData) {
+    const auto it = ElList_.find(objId);
+    CHECK_MSG(it != ElList_.end(), "An attempt to delete a non-existing object with id=" + ConvertToString(objId));
+    MSWNode* delNode=it->second;
+    IdType   delNodeId = delNode->getId();
+    CHECK(delNodeId < delNodesBitset.size());
+    delNodesBitset[delNodeId]=true;
+    vToDelNodes.push_back(delNode);
+    ElList_.erase(it);
+  }
+  for (MSWNode* node: vToDelNodes) {
+    for (MSWNode* pNeighbor : node->getAllFriends()) {
+      IdType neighbNodeId = pNeighbor->getId();
+      CHECK(neighbNodeId < delNodesBitset.size());
+      if (!delNodesBitset.at(neighbNodeId))
+        vToPatchNodes.push_back(pNeighbor);
+    }
+  }
+
+  // vToPatchNodes can have duplicates, but we must process one node exactly ones
+  sort(vToPatchNodes.begin(), vToPatchNodes.end());
+  auto it = unique(vToPatchNodes.begin(), vToPatchNodes.end()); 
+  vToPatchNodes.resize(distance(vToPatchNodes.begin(), it));
+
+  LOG(LIB_INFO) << "The number of nodes that need patching: " << vToPatchNodes.size();
+  // Stage 2. Removing neighbors & possibly patching
+  PatchingStrategy patchStrat = static_cast<PatchingStrategy>(delStrategyCode);
+  CHECK_MSG(patchStrat == kNone || patchStrat == kNeighborsOnly,
+            "Unsupported patching strategy code: " + ConvertToString(delStrategyCode));
+
+  queue<MSWNode*> toPatchQueue;
+  for (MSWNode* node : vToPatchNodes) toPatchQueue.push(node);
+  mutex mtx;
+  vector<thread> threads;
+
+  for (int i = 0; i < indexThreadQty_; ++i) {
+    threads.push_back(thread(
+      [&]() {
+        MSWNode* node = nullptr;
+        vector<MSWNode*> cacheDelNode;
+        while(GetNextQueueObj(mtx, toPatchQueue, node)) {
+          if (kNone == patchStrat) node->removeGivenFriends(delNodesBitset);
+          else node->removeGivenFriendsPatchWithClosestNeighbor<dist_t>(space_, use_proxy_dist_, 
+                                                                        delNodesBitset, cacheDelNode);
+        }
+      }
+    ));
+  }
+  for (auto& thread : threads) thread.join();
+
+
+  if (checkIDs) {
+    for (auto it : ElList_) {
+      MSWNode* node = it.second;
+      IdType   nodeId = node->getId();
+      CHECK(nodeId < delNodesBitset.size());
+      CHECK(!delNodesBitset.at(nodeId));
+      for (MSWNode* neighb : node->getAllFriends()) {
+        IdType   neighNodeId = neighb->getId();
+        CHECK(neighNodeId < delNodesBitset.size());
+        if (delNodesBitset.at(neighNodeId)) {
+        /* 
+         * Two things to check here:
+         *  1) Was the node with to-be-deleted neighbor in the list of nodes that need patching?
+         *  2) Was the deleted node in the list of to-be-deleted nodes?
+         *  3) Do we have a reciprocal neighbor situation here?
+         */
+          LOG(LIB_INFO) << "Bug: a to-be-deleted node is still found among neighbors!";
+          LOG(LIB_INFO) << "Is this neighbor in the list of to-be-deleted nodes (as expected)? " << (find(vToDelNodes.begin(),vToDelNodes.end(),neighb)!=vToDelNodes.end());
+          LOG(LIB_INFO) << "Is the connected node in the list of to-be-patched nodes (as expected)? " << (find(vToPatchNodes.begin(), vToPatchNodes.end(), node) != vToPatchNodes.end());
+          bool isRecipNeighb = false;
+          for (MSWNode* nn : neighb->getAllFriends()) {
+            if (nn == neighb) {
+              isRecipNeighb = true;
+              break;
+            }
+          }
+          LOG(LIB_INFO) << "Do we have a reciprocal neighbor situation here (as expected)? " << isRecipNeighb;
+        }
+        CHECK(!delNodesBitset.at(neighNodeId));
+      }
+    }
+  }
+
+  // Stage 4. Clean-up and ID update
+  for (MSWNode* node : vToDelNodes) {
+    delete node;
+  }
+
+  pEntryPoint_ = ElList_.empty() ? nullptr : ElList_.begin()->second; 
+  CHECK(pEntryPoint_ != nullptr || ElList_.empty());
+  
+  CompactIdsIfNeeded();
+  if (checkIDs) CheckIDs();
+}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::CheckIDs() const
+{
+  // ElList_.size() can be smaller though
+  CHECK_MSG(NextNodeId_ >= ElList_.size(), 
+            "Bug NextNodeId_ = " + ConvertToString(NextNodeId_) + 
+            " is < ElList_.size() = " + ConvertToString(ElList_.size()));
+  vector<bool>  visitedBitset(NextNodeId_);
+
+  LOG(LIB_INFO) << "Checking validity of node IDs asslignment";
+  
+  //We check that each ID is unique and is within the range [0, NextNodeId_)
+  for(ElementMap::const_iterator it = ElList_.begin(); it != ElList_.end(); ++it) {
+    MSWNode* pNode = it->second;
+    IdType nodeID = pNode->getId();
+    CHECK_MSG(nodeID >= 0 && nodeID < NextNodeId_,
+            "Bug: unexpected node ID " + ConvertToString(nodeID) +
+            " for object ID " + ConvertToString(pNode->getData()->id()) +
+            "NextNodeId_ = " + ConvertToString(NextNodeId_));
+    CHECK_MSG(visitedBitset[nodeID]==false,
+            "Bug: duplicating node ID " + ConvertToString(nodeID) +
+            " encountered which check object ID " + ConvertToString(pNode->getData()->id()));
+    visitedBitset[nodeID]=true;
+  }
+}
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams) 
+{
+  AnyParamManager pmgr(IndexParams);
+
+  pmgr.GetParamOptional("NN",                 NN_,                  10);
+  pmgr.GetParamOptional("efConstruction",     efConstruction_,      NN_);
+  efSearch_ = NN_;
+  pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
+  pmgr.GetParamOptional("useProxyDist",       use_proxy_dist_,      false);
+
+  LOG(LIB_INFO) << "NN                  = " << NN_;
+  LOG(LIB_INFO) << "efConstruction_     = " << efConstruction_;
+  LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
+  LOG(LIB_INFO) << "useProxyDist        = " << use_proxy_dist_;
+
+  pmgr.CheckUnused();
+
+  SetQueryTimeParams(getEmptyParams());
+
+  AddBatch(data_, PrintProgress_);
+
+  changedAfterCreateIndex_ = false;
 }
 
 template <typename dist_t>
 void 
 SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   AnyParamManager pmgr(QueryTimeParams);
-  pmgr.GetParamOptional("initSearchAttempts", initSearchAttempts_,  1);
   pmgr.GetParamOptional("efSearch", efSearch_, NN_);
   string tmp;
   //pmgr.GetParamOptional("algoType", tmp, "v1merge");
@@ -193,7 +375,6 @@ SmallWorldRand<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   }
   pmgr.CheckUnused();
   LOG(LIB_INFO) << "Set SmallWorldRand query-time parameters:";
-  LOG(LIB_INFO) << "initSearchAttempts =" << initSearchAttempts_;
   LOG(LIB_INFO) << "efSearch           =" << efSearch_;
   LOG(LIB_INFO) << "algoType           =" << searchAlgoType_;
 }
@@ -208,39 +389,11 @@ SmallWorldRand<dist_t>::~SmallWorldRand() {
 }
 
 template <typename dist_t>
-MSWNode* SmallWorldRand<dist_t>::getRandomEntryPointLocked() const
-{
-  unique_lock<mutex> lock(ElListGuard_);
-  MSWNode* res = getRandomEntryPoint();
-  return res;
-}
-
-template <typename dist_t>
-size_t SmallWorldRand<dist_t>::getEntryQtyLocked() const
-{
-  unique_lock<mutex> lock(ElListGuard_);
-  size_t res = ElList_.size();
-  return res;
-}
-
-template <typename dist_t>
-MSWNode* SmallWorldRand<dist_t>::getRandomEntryPoint() const {
-  size_t size = ElList_.size();
-
-  if(!ElList_.size()) {
-    return NULL;
-  } else {
-    size_t num = RandomInt()%size;
-    return ElList_[num];
-  }
-}
-
-template <typename dist_t>
 void 
 SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
-                                          priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet) const
+                                          priority_queue<EvaluatedMSWNodeDirect<dist_t>> &resultSet,
+                                          IdType nextNodeIdUpperBound) const
 {
-#if USE_BITSET_FOR_INDEXING
 /*
  * The trick of using large dense bitsets instead of unordered_set was 
  * borrowed from Wei Dong's kgraph: https://github.com/aaalgo/kgraph
@@ -250,120 +403,96 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
  * the bitmap is merely 1 MB. Furthermore, setting 1MB of entries to zero via memset would take only
  * a fraction of millisecond.
  */
-  vector<bool>                        visitedBitset(data_.size()); // seems to be working fine even in a multi-threaded mode.
-#else
-  unordered_set<MSWNode*>             visited;
-#endif
+  vector<bool>                        visitedBitset(nextNodeIdUpperBound); // seems to be working efficiently even in a multi-threaded mode.
 
   vector<MSWNode*> neighborCopy;
 
-  for (size_t i=0; i < initIndexAttempts_; i++){
+  /**
+   * Search for the k most closest elements to the query.
+   */
+  MSWNode* provider = pEntryPoint_;
+  CHECK_MSG(provider != nullptr, "Bug: there is not entry point set!")
 
-    /**
-     * Search for the k most closest elements to the query.
+  priority_queue <dist_t>                     closestDistQueue;                      
+  priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
+
+  dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(provider->getData(), queryObj) : 
+                                space_.IndexTimeDistance(provider->getData(), queryObj);
+  EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
+
+  candidateSet.push(ev);
+  closestDistQueue.push(d);
+
+  if (closestDistQueue.size() > efConstruction_) {
+    closestDistQueue.pop();
+  }
+
+  size_t nodeId = provider->getId();
+  CHECK_MSG(nodeId < nextNodeIdUpperBound, 
+            "Bug: nodeId (" + ConvertToString(nodeId) + ") > nextNodeIdUpperBound (" + ConvertToString(nextNodeIdUpperBound));
+  
+  visitedBitset[nodeId] = true;
+  resultSet.emplace(d, provider);
+      
+  if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
+    resultSet.pop();
+  }        
+
+  while (!candidateSet.empty()) {
+    const EvaluatedMSWNodeReverse<dist_t>& currEv = candidateSet.top();
+    dist_t lowerBound = closestDistQueue.top();
+
+    /*
+     * Check if we reached a local minimum.
      */
-#ifdef START_WITH_E0
-    MSWNode* provider = i ? getRandomEntryPointLocked() : ElList_[0];
-#else
-    MSWNode* provider = getRandomEntryPointLocked();
-#endif
-
-    priority_queue <dist_t>                     closestDistQueue;                      
-    priority_queue <EvaluatedMSWNodeReverse<dist_t>>   candidateSet; 
-
-    dist_t d = use_proxy_dist_ ?  space_.ProxyDistance(queryObj, provider->getData()) : 
-                                  space_.IndexTimeDistance(queryObj, provider->getData());
-    EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
-
-    candidateSet.push(ev);
-    closestDistQueue.push(d);
-
-    if (closestDistQueue.size() > efConstruction_) {
-      closestDistQueue.pop();
+    if (currEv.getDistance() > lowerBound) {
+      break;
     }
- 
-#if USE_BITSET_FOR_INDEXING
-    size_t nodeId = provider->getId();
-    if (nodeId >= data_.size()) {
-      stringstream err;
-      err << "Bug: nodeId > data_size()";
-      LOG(LIB_INFO) << err.str();
-      throw runtime_error(err.str());
+    MSWNode* currNode = currEv.getMSWNode();
+
+    /*
+     * This lock protects currNode from being modified
+     * while we are accessing elements of currNode.
+     */
+    size_t neighborQty = 0;
+    {
+      unique_lock<mutex> lock(currNode->accessGuard_);
+
+      //const vector<MSWNode*>& neighbor = currNode->getAllFriends();
+      const vector<MSWNode*>& neighbor = currNode->getAllFriends();
+      neighborQty = neighbor.size();
+      if (neighborQty > neighborCopy.size()) neighborCopy.resize(neighborQty);
+      for (size_t k = 0; k < neighborQty; ++k)
+        neighborCopy[k]=neighbor[k];
     }
-    visitedBitset[nodeId] = true;
-#else
-    visited.insert(provider);
-#endif
-    resultSet.emplace(d, provider);
-        
-    if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
-      resultSet.pop();
-    }        
 
-    while (!candidateSet.empty()) {
-      const EvaluatedMSWNodeReverse<dist_t>& currEv = candidateSet.top();
-      dist_t lowerBound = closestDistQueue.top();
+    // Can't access curEv anymore! The reference would become invalid
+    candidateSet.pop();
 
-      /*
-       * Check if we reached a local minimum.
-       */
-      if (currEv.getDistance() > lowerBound) {
-        break;
-      }
-      MSWNode* currNode = currEv.getMSWNode();
+    // calculate distance to each neighbor
+    for (size_t neighborId = 0; neighborId < neighborQty; ++neighborId) {
+      MSWNode* pNeighbor = neighborCopy[neighborId];
 
-      /*
-       * This lock protects currNode from being modified
-       * while we are accessing elements of currNode.
-       */
-      size_t neighborQty = 0;
-      {
-        unique_lock<mutex> lock(currNode->accessGuard_);
+      size_t nodeId = pNeighbor->getId();
+      CHECK_MSG(nodeId < nextNodeIdUpperBound, 
+                "Bug: nodeId (" + ConvertToString(nodeId) + ") > nextNodeIdUpperBound (" + ConvertToString(nextNodeIdUpperBound));
+      if (!visitedBitset[nodeId]) {
+        visitedBitset[nodeId] = true;
+        d = use_proxy_dist_ ? space_.ProxyDistance(pNeighbor->getData(), queryObj) : 
+                              space_.IndexTimeDistance(pNeighbor->getData(), queryObj);
 
-        //const vector<MSWNode*>& neighbor = currNode->getAllFriends();
-        const vector<MSWNode*>& neighbor = currNode->getAllFriends();
-        neighborQty = neighbor.size();
-        if (neighborQty > neighborCopy.size()) neighborCopy.resize(neighborQty);
-        for (size_t k = 0; k < neighborQty; ++k)
-          neighborCopy[k]=neighbor[k];
-      }
-
-      // Can't access curEv anymore! The reference would become invalid
-      candidateSet.pop();
-
-      // calculate distance to each neighbor
-      for (size_t neighborId = 0; neighborId < neighborQty; ++neighborId) {
-        MSWNode* pNeighbor = neighborCopy[neighborId];
-#if USE_BITSET_FOR_INDEXING
-        size_t nodeId = pNeighbor->getId();
-        if (nodeId >= data_.size()) {
-          stringstream err;
-          err << "Bug: nodeId > data_size()";
-          LOG(LIB_INFO) << err.str();
-          throw runtime_error(err.str());
-        }
-        if (!visitedBitset[nodeId]) {
-          visitedBitset[nodeId] = true;
-#else
-        if (visited.find(pNeighbor) == visited.end()) {
-          visited.insert(pNeighbor);
-#endif
-          d = use_proxy_dist_ ? space_.ProxyDistance(queryObj, pNeighbor->getData()) : 
-                                space_.IndexTimeDistance(queryObj, pNeighbor->getData());
-
-          if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
-            closestDistQueue.push(d);
-            if (closestDistQueue.size() > efConstruction_) {
-              closestDistQueue.pop();
-            }
-            candidateSet.emplace(d, pNeighbor);
+        if (closestDistQueue.size() < efConstruction_ || d < closestDistQueue.top()) {
+          closestDistQueue.push(d);
+          if (closestDistQueue.size() > efConstruction_) {
+            closestDistQueue.pop();
           }
+          candidateSet.emplace(d, pNeighbor);
+        }
 
-          if (resultSet.size() < NN_ || resultSet.top().getDistance() > d) {
-            resultSet.emplace(d, pNeighbor);
-            if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
-              resultSet.pop();
-            }
+        if (resultSet.size() < NN_ || resultSet.top().getDistance() > d) {
+          resultSet.emplace(d, pNeighbor);
+          if (resultSet.size() > NN_) { // TODO check somewhere that NN > 0
+            resultSet.pop();
           }
         }
       }
@@ -373,7 +502,7 @@ SmallWorldRand<dist_t>::searchForIndexing(const Object *queryObj,
 
 
 template <typename dist_t>
-void SmallWorldRand<dist_t>::add(MSWNode *newElement){
+void SmallWorldRand<dist_t>::add(MSWNode *newElement, IdType nextNodeIdUpperBound){
   newElement->removeAllFriends(); 
 
   bool isEmpty = false;
@@ -392,12 +521,12 @@ void SmallWorldRand<dist_t>::add(MSWNode *newElement){
   {
     priority_queue<EvaluatedMSWNodeDirect<dist_t>> resultSet;
 
-    searchForIndexing(newElement->getData(), resultSet);
+    searchForIndexing(newElement->getData(), resultSet, nextNodeIdUpperBound);
 
     // TODO actually we might need to add elements in the reverse order in the future.
     // For the current implementation, however, the order doesn't seem to matter
     while (!resultSet.empty()) {
-      link(resultSet.top().getMSWNode(), newElement);
+      MSWNode::link(resultSet.top().getMSWNode(), newElement);
       resultSet.pop();
     }
   }
@@ -409,7 +538,12 @@ template <typename dist_t>
 void SmallWorldRand<dist_t>::addCriticalSection(MSWNode *newElement){
   unique_lock<mutex> lock(ElListGuard_);
 
-  ElList_.push_back(newElement);
+  if (nullptr == pEntryPoint_) {
+    // When adding the very first element, assign the value of the entry point!
+    pEntryPoint_ = newElement;
+    CHECK(ElList_.empty()); 
+  }
+  ElList_.insert(make_pair(newElement->getData()->id(), newElement));
 }
 
 template <typename dist_t>
@@ -436,104 +570,98 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
  * the bitmap is merely 1 MB. Furthermore, setting 1MB of entries to zero via memset would take only
  * a fraction of millisecond.
  */
-  vector<bool>                        visitedBitset(ElList_.size());
+  vector<bool>                        visitedBitset(NextNodeId_);
 
-  for (size_t i=0; i < initSearchAttempts_; i++) {
-    /**
-     * Search of most k-closest elements to the query.
-     */
-#ifdef START_WITH_E0_AT_QUERY_TIME
-    MSWNode* currNode = i ? getRandomEntryPoint(): ElList_[0];
-#else
-    MSWNode* currNode = getRandomEntryPoint();
-#endif
-    SortArrBI<dist_t,MSWNode*> sortedArr(max<size_t>(efSearch_, query->GetK()));
+  /**
+   * Search of most k-closest elements to the query.
+   */
+  MSWNode* currNode = pEntryPoint_;
+  CHECK_MSG(currNode != nullptr, "Bug: there is not entry point set!")
 
-    const Object* currObj = currNode->getData();
-    dist_t d = query->DistanceObjLeft(currObj);
-    sortedArr.push_unsorted_grow(d, currNode); // It won't grow
+  SortArrBI<dist_t,MSWNode*> sortedArr(max<size_t>(efSearch_, query->GetK()));
 
-    size_t nodeId = currNode->getId();
-    // data_.size() is guaranteed to be equal to ElList_.size()
-    CHECK(nodeId < data_.size());
+  const Object* currObj = currNode->getData();
+  dist_t d = query->DistanceObjLeft(currObj);
+  sortedArr.push_unsorted_grow(d, currNode); // It won't grow
 
-    visitedBitset[nodeId] = true;
+  size_t nodeId = currNode->getId();
+  CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_) +")");
 
-    int_fast32_t  currElem = 0;
+  visitedBitset[nodeId] = true;
 
-    typedef typename SortArrBI<dist_t,MSWNode*>::Item  QueueItem;
+  int_fast32_t  currElem = 0;
 
-    vector<QueueItem>& queueData = sortedArr.get_data();
-    vector<QueueItem>  itemBuff(8*NN_);
+  typedef typename SortArrBI<dist_t,MSWNode*>::Item  QueueItem;
 
-    // efSearch_ is always <= # of elements in the queueData.size() (the size of the BUFFER), but it can be
-    // larger than sortedArr.size(), which returns the number of actual elements in the buffer
-    while(currElem < min(sortedArr.size(),efSearch_)){
-      auto& e = queueData[currElem];
-      CHECK(!e.used);
-      e.used = true;
-      currNode = e.data;
-      ++currElem;
+  vector<QueueItem>& queueData = sortedArr.get_data();
+  vector<QueueItem>  itemBuff(8*NN_);
 
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
-      }
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
-      }
+  // efSearch_ is always <= # of elements in the queueData.size() (the size of the BUFFER), but it can be
+  // larger than sortedArr.size(), which returns the number of actual elements in the buffer
+  while(currElem < min(sortedArr.size(),efSearch_)){
+    auto& e = queueData[currElem];
+    CHECK(!e.used);
+    e.used = true;
+    currNode = e.data;
+    ++currElem;
 
-      if (currNode->getAllFriends().size() > itemBuff.size())
-        itemBuff.resize(currNode->getAllFriends().size());
+    for (MSWNode* neighbor : currNode->getAllFriends()) {
+      _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
+    }
+    for (MSWNode* neighbor : currNode->getAllFriends()) {
+      _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
+    }
 
-      size_t itemQty = 0;
+    if (currNode->getAllFriends().size() > itemBuff.size())
+      itemBuff.resize(currNode->getAllFriends().size());
 
-      dist_t topKey = sortedArr.top_key();
-      //calculate distance to each neighbor
-      for (MSWNode* neighbor : currNode->getAllFriends()) {
-        nodeId = neighbor->getId();
-        // data_.size() is guaranteed to be equal to ElList_.size()
-        CHECK(nodeId < data_.size());
+    size_t itemQty = 0;
 
-        if (!visitedBitset[nodeId]) {
-          currObj = neighbor->getData();
-          d = query->DistanceObjLeft(currObj);
-          visitedBitset[nodeId] = true;
-          if (sortedArr.size() < efSearch_ || d < topKey) {
-            itemBuff[itemQty++]=QueueItem(d, neighbor);
-          }
+    dist_t topKey = sortedArr.top_key();
+    //calculate distance to each neighbor
+    for (MSWNode* neighbor : currNode->getAllFriends()) {
+      nodeId = neighbor->getId();
+      CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_));
+
+      if (!visitedBitset[nodeId]) {
+        currObj = neighbor->getData();
+        d = query->DistanceObjLeft(currObj);
+        visitedBitset[nodeId] = true;
+        if (sortedArr.size() < efSearch_ || d < topKey) {
+          itemBuff[itemQty++]=QueueItem(d, neighbor);
         }
       }
+    }
 
-      if (itemQty) {
-        _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
-        std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+    if (itemQty) {
+      _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
+      std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 
-        size_t insIndex=0;
-        if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
-          insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+      size_t insIndex=0;
+      if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
+        insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
+
+        if (insIndex < currElem) {
+          currElem = insIndex;
+        }
+      } else {
+        for (size_t ii = 0; ii < itemQty; ++ii) {
+          size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
 
           if (insIndex < currElem) {
             currElem = insIndex;
           }
-        } else {
-          for (size_t ii = 0; ii < itemQty; ++ii) {
-            size_t insIndex = sortedArr.push_or_replace_non_empty_exp(itemBuff[ii].key, itemBuff[ii].data);
-
-            if (insIndex < currElem) {
-              currElem = insIndex;
-            }
-          }
         }
       }
-
-      // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
-      while (currElem < sortedArr.size() && queueData[currElem].used == true)
-        ++currElem;
     }
 
-    for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
-      query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
-    }
+    // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
+    while (currElem < sortedArr.size() && queueData[currElem].used == true)
+      ++currElem;
+  }
+
+  for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+    query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
   }
 }
 
@@ -552,88 +680,67 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
  * the bitmap is merely 1 MB. Furthermore, setting 1MB of entries to zero via memset would take only
  * a fraction of millisecond.
  */
-  vector<bool>                        visitedBitset(ElList_.size());
+  vector<bool>                        visitedBitset(NextNodeId_);
 
-  for (size_t i=0; i < initSearchAttempts_; i++) {
-    /**
-     * Search of most k-closest elements to the query.
-     */
-#ifdef START_WITH_E0_AT_QUERY_TIME
-    MSWNode* provider = i ? getRandomEntryPoint(): ElList_[0];
-#else
-    MSWNode* provider = getRandomEntryPoint();
-#endif
-    //MSWNode* provider = getRandomEntryPoint();
+  MSWNode* provider = pEntryPoint_;
+  CHECK_MSG(provider != nullptr, "Bug: there is not entry point set!")
 
-    priority_queue <dist_t>                          closestDistQueue; //The set of all elements which distance was calculated
-    priority_queue <EvaluatedMSWNodeReverse<dist_t>> candidateQueue; //the set of elements which we can use to evaluate
+  priority_queue <dist_t>                          closestDistQueue; //The set of all elements which distance was calculated
+  priority_queue <EvaluatedMSWNodeReverse<dist_t>> candidateQueue; //the set of elements which we can use to evaluate
 
-    const Object* currObj = provider->getData();
-    dist_t d = query->DistanceObjLeft(currObj);
-    query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
+  const Object* currObj = provider->getData();
+  dist_t d = query->DistanceObjLeft(currObj);
+  query->CheckAndAddToResult(d, currObj); // This should be done before the object goes to the queue: otherwise it will not be compared to the query at all!
 
-    EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
-    candidateQueue.push(ev);
-    closestDistQueue.emplace(d);
+  EvaluatedMSWNodeReverse<dist_t> ev(d, provider);
+  candidateQueue.push(ev);
+  closestDistQueue.emplace(d);
 
-    size_t nodeId = provider->getId();
-    // data_.size() is guaranteed to be equal to ElList_.size()
-    if (nodeId >= data_.size()) {
-      stringstream err;
-      err << "Bug: nodeId > data_size()";
-      LOG(LIB_INFO) << err.str();
-      throw runtime_error(err.str());
+  size_t nodeId = provider->getId();
+  CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_));
+  visitedBitset[nodeId] = true;
+
+  while(!candidateQueue.empty()){
+
+    auto iter = candidateQueue.top(); // This one was already compared to the query
+    const EvaluatedMSWNodeReverse<dist_t>& currEv = iter;
+
+    // Did we reach a local minimum?
+    if (currEv.getDistance() > closestDistQueue.top()) {
+      break;
     }
-    visitedBitset[nodeId] = true;
 
-    while(!candidateQueue.empty()){
+    for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
+      _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
+    }
+    for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
+      _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
+    }
 
-      auto iter = candidateQueue.top(); // This one was already compared to the query
-      const EvaluatedMSWNodeReverse<dist_t>& currEv = iter;
+    const vector<MSWNode*>& neighbor = (currEv.getMSWNode())->getAllFriends();
 
-      // Did we reach a local minimum?
-      if (currEv.getDistance() > closestDistQueue.top()) {
-        break;
-      }
+    // Can't access curEv anymore! The reference would become invalid
+    candidateQueue.pop();
 
-      for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
-        _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
-      }
-      for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
-        _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
-      }
+    //calculate distance to each neighbor
+    for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
+      nodeId = (*iter)->getId();
+      CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_));
+      if (!visitedBitset[nodeId]) {
+        currObj = (*iter)->getData();
+        d = query->DistanceObjLeft(currObj);
+        visitedBitset[nodeId] = true;
 
-      const vector<MSWNode*>& neighbor = (currEv.getMSWNode())->getAllFriends();
-
-      // Can't access curEv anymore! The reference would become invalid
-      candidateQueue.pop();
-
-      //calculate distance to each neighbor
-      for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter){
-        nodeId = (*iter)->getId();
-        // data_.size() is guaranteed to be equal to ElList_.size()
-        if (nodeId >= data_.size()) {
-          stringstream err;
-          err << "Bug: nodeId > data_size()";
-          LOG(LIB_INFO) << err.str();
-          throw runtime_error(err.str());
-        }
-        if (!visitedBitset[nodeId]) {
-          currObj = (*iter)->getData();
-          d = query->DistanceObjLeft(currObj);
-          visitedBitset[nodeId] = true;
-
-          if (closestDistQueue.size() < efSearch_ || d < closestDistQueue.top()) {
-            closestDistQueue.emplace(d);
-            if (closestDistQueue.size() > efSearch_) {
-              closestDistQueue.pop();
-            }
-
-            candidateQueue.emplace(d, *iter);
+        if (closestDistQueue.size() < efSearch_ || d < closestDistQueue.top()) {
+          closestDistQueue.emplace(d);
+          if (closestDistQueue.size() > efSearch_) {
+            closestDistQueue.pop();
           }
 
-          query->CheckAndAddToResult(d, currObj);
+          candidateQueue.emplace(d, *iter);
         }
+
+        query->CheckAndAddToResult(d, currObj);
       }
     }
   }
@@ -641,6 +748,9 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
+  CHECK_MSG(changedAfterCreateIndex_,
+            "It seems that data was added/deleted after calling CreateIndex, in this case saving indices isn't possible");
+  
   ofstream outFile(location);
   CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
   outFile.exceptions(std::ios::badbit);
@@ -649,7 +759,8 @@ void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
   WriteField(outFile, METHOD_DESC, StrDesc()); lineNum++;
   WriteField(outFile, "NN", NN_); lineNum++;
 
-  for (const MSWNode* pNode: ElList_) {
+  for(ElementMap::iterator it = ElList_.begin(); it != ElList_.end(); ++it) {
+    MSWNode* pNode = it->second;
     IdType nodeID = pNode->getId();
     CHECK_MSG(nodeID >= 0 && nodeID < data_.size(),
               "Bug: unexpected node ID " + ConvertToString(nodeID) +
@@ -717,7 +828,7 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
       if (pass == 0) {
         unique_ptr<MSWNode> node(new MSWNode(data_[nodeID], nodeID));
         ptrMapper[nodeID] = node.get();
-        ElList_.push_back(node.release());
+        ElList_.insert(make_pair(node->getData()->id(), node.release()));
       } else {
         MSWNode *pNode = ptrMapper[nodeID];
         CHECK_MSG(pNode != NULL,
