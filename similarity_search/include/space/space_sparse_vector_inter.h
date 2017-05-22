@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <limits>
+#include <vector>
 
 #include <string.h>
 #include "global.h"
@@ -36,6 +37,35 @@
 namespace similarity {
 
 using std::vector;
+
+struct OverlapInfo {
+  uint32_t  overlap_qty_ = 0; // The number of shared dimension, i.e., a vectors' overlap
+  // The dot product of elements from the overlap, normalized by vector norms,
+  // it is also equal to 1 - cosine distance
+  float     overlap_dotprod_norm_ = 0;
+
+  // Overlap statistics for the left vector (left argument of the cosine distance)
+  float     overlap_sum_left_ = 0;  // The sum of elements from the overlap 
+  float     overlap_mean_left_ = 0; // The sample mean of elements from the overlap
+  float     overlap_std_left_ = 0;  // The sample standard deviation of elements from the overlap
+
+  // Difference statistics for the left vector (left argument of the cosine)
+  float     diff_sum_left_ = 0;    // The sum of elements for the left vector dimensions NOT in the overlap 
+  float     diff_mean_left_ = 0;   // The sample mean of ...
+  float     diff_std_left_ = 0;    // The sample standard deviation of ...
+
+  // Overlap statistics for the right vector (right argument of the cosine distance)
+  // Naming conventions are identical to those for the left vector
+  float     overlap_sum_right_ = 0;
+  float     overlap_mean_right_ = 0;
+  float     overlap_std_right_ = 0;
+
+  // Difference statistics for the right vector (right argument of the cosine)
+  // Naming conventions are identical to those for the left vector
+  float     diff_sum_right_ = 0;
+  float     diff_mean_right_ = 0;
+  float     diff_std_right_ = 0;
+};
 
 /*
  *
@@ -58,6 +88,15 @@ class SpaceSparseVectorInter : public SpaceSparseVector<dist_t> {
                                      size_t nElem) const;
   virtual Object* CreateObjFromVect(IdType id, LabelType label, const vector<ElemType>& InpVect) const;
   virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const ;
+
+  virtual size_t GetElemQty(const Object* object) const;
+
+  size_t ComputeOverlap(const Object* pObj1, const Object* pObj2) const;
+  size_t ComputeOverlap(const Object* pObj1, const Object* pObj2, const Object* pObj3) const;
+
+  static OverlapInfo ComputeOverlapInfo(const Object* pObj1, const Object* pObj2);
+  static OverlapInfo ComputeOverlapInfo(const vector<SparseVectElem<dist_t>>& elemsA, 
+                                 const vector<SparseVectElem<dist_t>>& elemsB);
  protected:
   DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorInter);
 
@@ -135,6 +174,8 @@ inline  void UnpackSparseElements(const char* pBuff, size_t dataLen,
                                   vector<SparseVectElem<dist_t>>& OutVect)
 {
   typedef SparseVectElem<dist_t> ElemType;
+
+  OutVect.clear(); // just in case
 
   size_t            blockQty = 0;
   dist_t            SqSum = 0;

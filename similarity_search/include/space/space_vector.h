@@ -96,6 +96,7 @@ class VectorSpaceSimpleStorage : public VectorSpace<dist_t> {
   virtual ~VectorSpaceSimpleStorage() {}
   explicit VectorSpaceSimpleStorage() {}
   virtual size_t GetElemQty(const Object* object) const {
+    // We expect division by 2^n to be implemented efficiently by the compiler
     return object->datalength()/ sizeof(dist_t);
   }
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pDstVect,

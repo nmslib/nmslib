@@ -142,6 +142,7 @@ if (WITH_EXTRAS)
 endif()
 
 add_subdirectory (src)
+add_subdirectory (apps)
 if (NOT WITHOUT_TESTS)
     add_subdirectory (test)
 endif()

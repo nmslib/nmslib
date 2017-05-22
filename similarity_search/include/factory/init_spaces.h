@@ -27,10 +27,10 @@
 #include "factory/space/space_scalar.h"
 #include "factory/space/space_sparse_lp.h"
 #include "factory/space/space_sparse_scalar.h"
-#include "factory/space/space_savch.h"
 #include "factory/space/space_word_embed.h"
 #include "factory/space/space_ab_diverg.h"
 #include "factory/space/space_renyi_diverg.h"
+#include "factory/space/space_sparse_jaccard.h"
 #if defined(WITH_EXTRAS)
 #include "factory/space/space_sqfd.h"
 #endif
@@ -123,7 +123,8 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_NEGATIVE_SCALAR_FAST, CreateSparseNegativeScalarProductFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST, CreateSparseQueryNormNegativeScalarProductFast)
 
-  REGISTER_SPACE_CREATOR(float,  "savch",  CreateSavch)
+  REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_JACCARD,  CreateSpaceSparseJaccard)
+  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_JACCARD,  CreateSpaceSparseJaccard)
 
 #if defined(WITH_EXTRAS)
   // Signature Quadratic Form Distance
@@ -140,6 +141,7 @@ inline void initSpaces() {
 
   REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG,  CreateRenyiDiverg)
   REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG,  CreateRenyiDiverg)
+
 }
 
 }

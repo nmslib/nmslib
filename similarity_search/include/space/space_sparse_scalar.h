@@ -44,7 +44,7 @@ class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t>
   virtual ~SpaceSparseAngularDistance() {}
 
   virtual std::string StrDesc() const {
-    return "AngularDistance";
+    return SPACE_SPARSE_ANGULAR_DISTANCE;
   }
 
  protected:
@@ -72,7 +72,7 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t
   virtual ~SpaceSparseCosineSimilarity() {}
 
   virtual std::string StrDesc() const {
-    return "CosineSimilarity";
+    return SPACE_SPARSE_COSINE_SIMILARITY;
   }
 
  protected:
@@ -100,7 +100,7 @@ public:
   virtual ~SpaceSparseNegativeScalarProduct() {}
 
   virtual std::string StrDesc() const {
-    return "NegativeScalarProduct";
+    return SPACE_SPARSE_NEGATIVE_SCALAR;
   }
 
 protected:
@@ -125,7 +125,7 @@ public:
   virtual ~SpaceSparseQueryNormNegativeScalarProduct() {}
 
   virtual std::string StrDesc() const {
-    return "QueryNormNegativeScalarProduct";
+    return SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR;
   }
 
 protected:

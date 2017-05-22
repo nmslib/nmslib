@@ -14,7 +14,8 @@
  *
  */
 
-#include "space.h"
+#include <space.h>
+#include <query.h>
 
 namespace similarity {
 
@@ -61,5 +62,21 @@ template class Space<int>;
 template class Space<float>;
 template class Space<double>;
 
+template <class dist_t>
+ void DummyPivotIndex<dist_t>::ComputePivotDistancesIndexTime(const Object* pObj, vector<dist_t>& vResDist) const  {
+  vResDist.resize(pivots_.size());
+// Pivot is a left argument
+  for (size_t i = 0; i < pivots_.size(); ++i) vResDist[i] = space_.IndexTimeDistance(pivots_[i], pObj);
+}
+
+template <class dist_t>
+void DummyPivotIndex<dist_t>::ComputePivotDistancesQueryTime(const Query<dist_t>* pQuery, vector<dist_t>& vResDist) const  {
+  vResDist.resize(pivots_.size());
+  for (size_t i = 0; i < pivots_.size(); ++i) vResDist[i] = pQuery->DistanceObjLeft(pivots_[i]);
+}
+
+template class DummyPivotIndex<int>;
+template class DummyPivotIndex<float>;
+template class DummyPivotIndex<double>;
 
 }

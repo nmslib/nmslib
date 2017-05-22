@@ -102,6 +102,10 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   size_t  index_thread_qty_;
   size_t  num_pivot_;
   string  pivot_file_;
+  bool    disable_pivot_index_;
+  size_t hash_trick_dim_;
+
+  unique_ptr<PivotIndex<dist_t>> pivot_index_;
 
   enum eAlgProctype {
     kScan,
@@ -134,6 +138,16 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
     CHECK_MSG(chunkQty, "Bug or inconsistent parameters: the number of index chunks cannot be zero!");
     return (totalDbScan + chunkQty - 1) / chunkQty;
   }
+
+  void initPivotIndex() {
+    if (disable_pivot_index_) {
+      pivot_index_.reset(new DummyPivotIndex<dist_t>(space_, pivot_));
+      LOG(LIB_INFO) << "Created a dummy pivot index";
+    } else {
+      pivot_index_.reset(space_.CreatePivotIndex(pivot_, hash_trick_dim_));
+      LOG(LIB_INFO) << "Attempted to create an efficient pivot index (however only few spaces support such index)";
+    }
+  }
   
   vector<shared_ptr<vector<PostingListInt>>> posting_lists_;
 
@@ -146,8 +160,14 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
 
   template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
+  void GetPermutationPPIndexEfficiently(const Object* object, Permutation& p) const;
+  void GetPermutationPPIndexEfficiently(const Query<dist_t>* query, Permutation& p) const;
+  void GetPermutationPPIndexEfficiently(Permutation &p, const vector <dist_t> &vDst) const;
+
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PivotNeighbInvertedIndex);
+
+  void GetPermutationPPIndexEfficiently(Permutation &p, const vector<bool> &vDst) const;
 };
 
 }  // namespace similarity

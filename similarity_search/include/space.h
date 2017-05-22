@@ -110,6 +110,26 @@ struct DataFileOutputState {
 };
 
 template <typename dist_t>
+class PivotIndex {
+public:
+  virtual void ComputePivotDistancesIndexTime(const Object* pObj, vector<dist_t>& vResDist) const = 0;
+  virtual void ComputePivotDistancesQueryTime(const Query<dist_t>* pQuery, vector<dist_t>& vResDist) const = 0;
+};
+
+template <typename dist_t> class Space;
+template <typename dist_t> class Query;
+
+template <typename dist_t>
+class DummyPivotIndex : public PivotIndex<dist_t> {
+  const Space<dist_t>&  space_;
+  ObjectVector          pivots_;
+public:
+  DummyPivotIndex(const Space<dist_t>& space, const ObjectVector pivots) : space_(space), pivots_(pivots) {}
+  virtual void ComputePivotDistancesIndexTime(const Object* pObj, vector<dist_t>& vResDist) const override;
+  virtual void ComputePivotDistancesQueryTime(const Query<dist_t>* pQuery, vector<dist_t>& vResDist) const override;
+};
+
+template <typename dist_t>
 class Space {
  public:
   explicit Space() {}
@@ -128,6 +148,19 @@ class Space {
   }
 
   virtual string StrDesc() const = 0;
+
+  /*
+   * This virtual function can be overridden to create an index that
+   * efficiently computes distance to all pivots. Contract: this
+   * function may assume that objects (instances of Object) in the 
+   * array passed as this function argument exist at a later time,
+   * i.e., when we call functions ComputePivotDistancesIndexTime and
+   * ComputePivotDistancesQueryTime.
+   */
+  virtual PivotIndex<dist_t>* CreatePivotIndex(const ObjectVector& pivots,
+                                               size_t hashTrickDim = 0) const {
+    return new DummyPivotIndex<dist_t>(*this, pivots);
+  }
 
   /** Standard functions to read/write/create objects */ 
   /*
