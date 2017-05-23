@@ -19,6 +19,7 @@
 
 #include "searchoracle.h"
 #include <method/vptree.h>
+#include <method/vptree_trigen.h>
 
 namespace similarity {
 
@@ -34,6 +35,13 @@ Index<dist_t>* CreateVPTree(bool PrintProgress,
     return new VPTree<dist_t,PolynomialPruner<dist_t>>(PrintProgress, space, DataObjects);
 }
 
+template <typename dist_t>
+Index<dist_t>* CreateVPTreeTrigen(bool PrintProgress,
+                           const string& SpaceType,
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+    return new VPTreeTrigen<dist_t,PolynomialPruner<dist_t>>(PrintProgress, space, DataObjects);
+}
 /*
  * End of creating functions.
  */

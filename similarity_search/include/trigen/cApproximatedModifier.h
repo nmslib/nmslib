@@ -26,7 +26,7 @@ public:
 		mValues = new double [mStepCount+1];
 	}
 
-	~cApproximatedModifier()
+	virtual ~cApproximatedModifier() override
 	{
 		if (mValues	!= NULL)
 			delete [] mValues;		

@@ -19,6 +19,7 @@
 #include <string>
 
 #include "index.h"
+#include "space/space_vector.h"
 
 #define METH_SYM_SEQ_SEARCH                 "sym_brute_force"
 
@@ -28,6 +29,7 @@
 #define SYM_TYPE_MIN    "min"
 #define SYM_TYPE_AVG    "avg"
 #define SYM_TYPE_REV    "reverse"
+#define SYM_TYPE_L2     "l2"
 #define SYM_TYPE_NONE   "none"
 
 namespace similarity {
@@ -35,7 +37,7 @@ namespace similarity {
 using std::string;
 using std::vector;
 
-enum SymmType { kSymmNone, kSymmReverse, kSymmMin, kSymmAvg };
+enum SymmType { kSymmNone, kSymmReverse, kSymmMin, kSymmAvg, kSymmL2 };
 
 // Sequential search
 
@@ -45,6 +47,7 @@ SymmType getSymmType(string s) {
   if (s == SYM_TYPE_NONE) return kSymmNone;
   else if (s == SYM_TYPE_REV) return kSymmReverse;
   else if (s == SYM_TYPE_MIN) return kSymmMin;
+  else if (s == SYM_TYPE_L2)  return kSymmL2;
   else if (s == SYM_TYPE_AVG) return kSymmAvg;
   else {
     PREPARE_RUNTIME_ERR(err) << "Invalid " << SYM_TYPE_PARAM << " param value: " << s;
@@ -54,6 +57,11 @@ SymmType getSymmType(string s) {
 
 template <typename dist_t>
 inline dist_t SymmDistance(const Space<dist_t>&  s, const Object* o1, const Object* o2, SymmType stype) {
+  if (stype == kSymmL2) {
+    const VectorSpace<dist_t>* pVectSpace=dynamic_cast<const VectorSpace<dist_t>*>(&s);
+    CHECK_MSG(pVectSpace != nullptr, "Symmetrization " + string(SYM_TYPE_L2) + " can be used only with simple vector spaces");
+    return pVectSpace->ComputeL2(o1, o2);
+  }
   if (stype == kSymmNone) return s.IndexTimeDistance(o1, o2);
   if (stype == kSymmReverse) return s.IndexTimeDistance(o2, o1);
   dist_t d1 = s.IndexTimeDistance(o1, o2);

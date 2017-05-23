@@ -366,6 +366,7 @@ T L2NormStandard(const T *p1, const T *p2, size_t qty)
     return sqrt(sum);
 }
 
+template  int L2NormStandard<int>(const int *p1, const int *p2, size_t qty);
 template  float L2NormStandard<float>(const float *p1, const float *p2, size_t qty);
 template  double L2NormStandard<double>(const double *p1, const double *p2, size_t qty);
 
@@ -392,6 +393,7 @@ T L2Norm(const T* pVect1, const T* pVect2, size_t qty) {
     return sqrt(res);
 }
 
+template int    L2Norm<int>(const int* pVect1, const int* pVect2, size_t qty);
 template float  L2Norm<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double L2Norm<double>(const double* pVect1, const double* pVect2, size_t qty);
 
@@ -463,6 +465,12 @@ float L2SqrSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 #endif
 }
 
+// No we don't really have a SIMD L2 implementation
+template <> 
+int L2NormSIMD(const int* pVect1, const int* pVect2, size_t qty) {
+    return L2NormStandard(pVect1, pVect2, qty);
+}
+
 template <> 
 float L2NormSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     float res = L2SqrSIMD(pVect1, pVect2, qty);
@@ -509,6 +517,7 @@ double L2NormSIMD(const double* pVect1, const double* pVect2, size_t qty) {
 #endif
 }
 
+template int    L2NormSIMD<int>(const int* pVect1, const int* pVect2, size_t qty);
 template float  L2NormSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
 template double L2NormSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
 

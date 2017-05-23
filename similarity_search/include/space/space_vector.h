@@ -28,6 +28,7 @@
 #include "object.h"
 #include "utils.h"
 #include "space.h"
+#include "distcomp.h"
 
 namespace similarity {
 
@@ -68,6 +69,13 @@ class VectorSpace : public Space<dist_t> {
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
                                  size_t nElem) const = 0;
 
+  virtual dist_t ComputeL2(const Object* obj1, const Object* obj2) const {
+    const dist_t* pVec1 = reinterpret_cast<const dist_t*>(obj1->data());
+    const dist_t* pVec2 = reinterpret_cast<const dist_t*>(obj2->data());
+    const size_t qty = GetElemQty(obj2);
+    CHECK(qty == GetElemQty(obj2));
+    return L2Norm(pVec1, pVec2, qty); 
+  }
   static void ReadVec(std::string line, LabelType& label, std::vector<dist_t>& v);
 
 protected:

@@ -20,7 +20,7 @@ enum eSamplingTriplets
 
 struct cSpaceProxy
 {
-  virtual double Compute(const Object* o1, const Object *o2) const;
+  virtual double Compute(const Object* o1, const Object *o2) const = 0;
 };
 
 class cOrderedTriplet
@@ -95,8 +95,10 @@ class cTriGen
 		return val;
 	}
 
-	double GetModifiedDistance(unsigned int x, unsigned int y)
+	double GetModifiedDistance(unsigned int x, unsigned int y, bool bForceRecompute=false)
 	{
+    CHECK(x < mCount);
+    CHECK(y < mCount);
 		if (x < y)
 		{
 			unsigned int c = x;
@@ -104,7 +106,7 @@ class cTriGen
 		}
 
 		double& val = mDistanceMatrix[mCount * y + x];
-		if (val == -1)
+		if (bForceRecompute || val == -1)
 		{
 			val = mCurrentModifier->ComputeModification(GetDistance(x,y));
 			mDistanceMatrix[mCount * y + x] = val;
@@ -115,6 +117,8 @@ class cTriGen
 
 	void ClearCellModified(unsigned int x, unsigned int y)
 	{
+    CHECK(x < mCount);
+    CHECK(y < mCount);
 		if (x < y)
 		{
 			unsigned int c = x;

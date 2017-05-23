@@ -16,10 +16,7 @@ public:
 		m_ConcavityWeight = 0;		
 	}
 
-	~cSPModifier(void)
-	{
-
-	}
+	virtual ~cSPModifier(void) {};
 	
 	virtual void SetConcavityWeight(double cw)
 	{

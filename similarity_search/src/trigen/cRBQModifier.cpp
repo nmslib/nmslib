@@ -1,6 +1,10 @@
 #include "trigen/cRBQModifier.h"
 #include "trigen/utils.h"
+
 #include "logging.h"
+#include "utils.h"
+
+using namespace similarity;
 
 double cApproximatedRBQModifier::ComputeNonApproximatedValue(double x)
 {
@@ -9,6 +13,13 @@ double cApproximatedRBQModifier::ComputeNonApproximatedValue(double x)
 
 double cRBQModifier::RBQ(double x, double a, double b, double w)
 {
+  CHECK_MSG(w >= 0, "w should be >= 0, but w=" +ConvertToString(w));
+  CHECK_MSG(x >= 0, "x should be >= 0, but x=" +ConvertToString(x));
+  CHECK_MSG(x <= 1, "x should be <= 1, but x=" +ConvertToString(x));
+  CHECK_MSG(a >= 0, "a should be >= 0, but a=" +ConvertToString(a));
+  CHECK_MSG(b >= 0, "b should be <= 1, but b=" +ConvertToString(b));
+  CHECK_MSG(a < b, "a should be < b, but a=" +ConvertToString(a) + " b=" +ConvertToString(b));
+
 	double nominator1, nominator2;
 	double denominator;
 
@@ -30,7 +41,7 @@ double cRBQModifier::RBQ(double x, double a, double b, double w)
 
 	double square_root_base = __SQR(x)*(__SQR(w)-1.0) + __SQR(w)*a*(a-2*x)+x;
 
-	CHECK(square_root_base >= 0);
+	CHECK_MSG(square_root_base >= 0, "square_root_base is suppposed to be >= 0, but it is: " + ConvertToString(square_root_base) + " for x=" +ConvertToString(x) +" w=" + ConvertToString(w) + " a=" + ConvertToString(a));
 
 	double square_root = sqrt(square_root_base);
 	nominator1 = x + w*(a - x) - square_root;

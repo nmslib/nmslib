@@ -201,6 +201,11 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(float,  METH_VPTREE, CreateVPTree)
   REGISTER_METHOD_CREATOR(double, METH_VPTREE, CreateVPTree)
 
+  // VP-tree with Trigen
+  REGISTER_METHOD_CREATOR(int,    METH_VPTREE_TRIGEN, CreateVPTreeTrigen)
+  REGISTER_METHOD_CREATOR(float,  METH_VPTREE_TRIGEN, CreateVPTreeTrigen)
+  REGISTER_METHOD_CREATOR(double, METH_VPTREE_TRIGEN, CreateVPTreeTrigen)
+
   // A multi-index combination
   REGISTER_METHOD_CREATOR(float,  METH_MULT_INDEX, CreateMultiIndex)
   REGISTER_METHOD_CREATOR(double, METH_MULT_INDEX, CreateMultiIndex)

@@ -40,15 +40,22 @@ void cTriGen::SampleItems(const ObjectVector &source)
 
 	for(unsigned int i = 0; i < source.size(); i++)
 	{
+    // Leo's comment, order can be large or negative but this is fine b/c this value 
+    // is used for comparison/sorting purposes only (i.e, it is never used as 
+    // an index)
 		reordering_array[i].order = (int)(gen.GetNext() * source.size());
 		reordering_array[i].index = i;
 	}
 
 	qsort((void*)reordering_array, source.size(), sizeof(order_index_pair), compareOrderIndexPairs);
 
+  CHECK(mItems.size() == mCount);
 	for(unsigned int i = 0; i < mCount; i++)
 	{
-		mItems[i] = source[reordering_array[i].index];
+    int reordIndex = reordering_array[i].index;
+    CHECK_MSG(reordIndex >= 0 && reordIndex < source.size(), 
+              "Unexpected index: " + ConvertToString(reordIndex)); 
+		mItems[i] = source[reordIndex];
 	}
 
 	delete [] reordering_array;
@@ -100,7 +107,11 @@ void cTriGen::ComputeDistribution(unsigned int distanceSampleCount, double& mean
 
 	for(unsigned int i=0; i<distanceSampleCount; i++)
 	{		
-		dist = GetModifiedDistance((unsigned int)((mCount-1) * gen1.GetNext()),  (unsigned int)((mCount-1) * gen1.GetNext()));
+    unsigned id1 = (unsigned int)((mCount-1) * gen1.GetNext());
+    unsigned id2 = (unsigned int)((mCount-1) * gen1.GetNext());
+
+		dist = GetModifiedDistance(id1, id2);
+    CHECK_MSG(!isnan(dist), "The modified distance is mistakingly NAN!");
 		mean += dist;
 	}		
 	mean /= distanceSampleCount;

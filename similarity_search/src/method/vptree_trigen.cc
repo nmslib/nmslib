@@ -24,14 +24,19 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "searchoracle.h"
-#include "method/vptree.h"
+#include "method/vptree_trigen.h"
 #include "method/vptree_utils.h"
 #include "methodfactory.h"
 
 #include "simdutils.h"
 
+#include "trigen/cTriGen.h"
+#include "trigen/cRBQModifier.h"
+#include "trigen/cApproximatedModifier.h"
+
 #define MIN_PIVOT_SELECT_DATA_QTY 10
 #define MAX_PIVOT_SELECT_ATTEMPTS 5
+
 
 namespace similarity {
 
@@ -40,9 +45,31 @@ using std::stringstream;
 using std::endl;
 using std::cout;
 using std::cerr;
+
+template <class dist_t>
+struct DistWrapper : public cSpaceProxy {
+  virtual double Compute(const Object* o1, const Object *o2) const override {
+      dist_t d = max((dist_t)0, min(space_.IndexTimeDistance(o1,o2), space_.IndexTimeDistance(o2,o1)));
+      return min<dist_t>(1, d*maxInvCoeff_);
+      //return d/(1+d); // To make it bounded
+  }
+  DistWrapper(const Space<dist_t>& space, const ObjectVector& data, size_t sampleQty = 100000) : space_(space) {
+    dist_t maxDist = numeric_limits<dist_t>::lowest();
+    for (size_t i = 0; i < sampleQty; ++i) {
+      dist_t d = space.IndexTimeDistance(data[RandomInt() % data.size()], data[RandomInt() % data.size()]);
+      maxDist = max(d, maxDist);
+    }
+    CHECK(maxDist > numeric_limits<dist_t>::min());
+    maxInvCoeff_ = double(1)/maxDist;
+    LOG(LIB_INFO) << "maxInvCoeff_=" << maxInvCoeff_;
+  }
+private:
+  const Space<dist_t>& space_;
+  double maxInvCoeff_;
+};
     
 template <typename dist_t, typename SearchOracle>
-VPTree<dist_t, SearchOracle>::VPTree(
+VPTreeTrigen<dist_t, SearchOracle>::VPTreeTrigen(
                        bool  PrintProgress,
                        Space<dist_t>& space,
                        const ObjectVector& data,
@@ -58,26 +85,36 @@ VPTree<dist_t, SearchOracle>::VPTree(
                               }
 
 template <typename dist_t, typename SearchOracle>
-void VPTree<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParams) {
+void VPTreeTrigen<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParams) {
   AnyParamManager pmgr(IndexParams);
 
   pmgr.GetParamOptional("bucketSize", BucketSize_, 50);
   pmgr.GetParamOptional("chunkBucket", ChunkBucket_, true);
   pmgr.GetParamOptional("selectPivotAttempts", max_pivot_select_attempts_, MAX_PIVOT_SELECT_ATTEMPTS);
+  pmgr.GetParamRequired("trigenAcc", TrigenAcc_);
+  pmgr.GetParamOptional("trigenSampleQty", TrigenSampleQty_, 5000);
+  pmgr.GetParamOptional("trigenSampleTripletQty", TrigenSampleTripletQty_, 1000000);
 
   CHECK_MSG(max_pivot_select_attempts_ >= 1, "selectPivotAttempts should be >=1");
 
   LOG(LIB_INFO) << "bucketSize          = " << BucketSize_;
   LOG(LIB_INFO) << "chunkBucket         = " << ChunkBucket_;
   LOG(LIB_INFO) << "selectPivotAttempts = " << max_pivot_select_attempts_;
+  LOG(LIB_INFO) << "trigenAcc           = " << TrigenAcc_;
+  LOG(LIB_INFO) << "trigenSampleQty     = " << TrigenSampleQty_;
+  LOG(LIB_INFO) << "trigenSampleTripletQty= " << TrigenSampleTripletQty_;
 
+  // Trigen must use the standard metric oracle, so we don't pass any
+  // parameters to the oracle (it will use default, i.e., metric ones).
   // Call this function *ONLY AFTER* the bucket size is obtained!
-  oracle_.SetIndexTimeParams(pmgr);
-  oracle_.LogParams();
+  //oracle_.SetIndexTimeParams(pmgr);
+  //oracle_.LogParams();
 
   pmgr.CheckUnused();
 
   this->ResetQueryTimeParams(); // reset query-time parameters
+
+  BuildTrigen();
 
   unique_ptr<ProgressDisplay>   progress_bar(PrintProgress_ ? 
                                               new ProgressDisplay(data_.size(), cerr):
@@ -97,28 +134,69 @@ void VPTree<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParams) {
 }
 
 template <typename dist_t,typename SearchOracle>
-VPTree<dist_t, SearchOracle>::~VPTree() {
+void VPTreeTrigen<dist_t, SearchOracle>::BuildTrigen() {
+  // This code is modelled after makeTrigen.h from Tomas Skopal TriGenLite
+	AllModifiers_.push_back(new cFractionalPowerModifier(0));	
+	double stepA = 0.0025;
+	double stepB = 0.05;
+	double stepError = 0.002;
+
+  // Create a list of modifiers
+	for(double a = 0; a < 1; a += stepA) {
+		for(double b = a + stepB; b < 1; b += stepB) {
+			AllModifiers_.push_back(new cRBQModifier(a,b));
+		}
+  }
+
+  DistWrapper<dist_t> dist(space_, data_);
+
+  trigen_.reset(new cTriGen(dist, data_, TrigenSampleQty_, AllModifiers_));
+
+	ObjectVector trigenSampledObjects;
+	trigen_->GetSampledItems(trigenSampledObjects);
+
+  double idim;
+  unsigned int funcOrder;
+  double error = 1-TrigenAcc_;
+  resultModifier_ = trigen_->Run(error, funcOrder, idim, TrigenSampleTripletQty_);
+
+  CHECK_MSG(resultModifier_ != nullptr, "Failed to find a trigen modifier with the given accuracy!");
+
+  if (funcOrder==0)
+    LOG(LIB_INFO) << "Result: fractional Power Modifier";
+  else
+    LOG(LIB_INFO) << "Result: RBQ Modifier, a = " <<  ((cRBQModifier*)resultModifier_)->GetA() << 
+                     ", b = ", ((cRBQModifier*)resultModifier_)->GetB();
+  LOG(LIB_INFO) << "Triangular Error: " << error << 
+                    "  CW: " <<  resultModifier_->GetConcavityWeight() << 
+                    " IDim: " << idim;
+
 }
 
 template <typename dist_t,typename SearchOracle>
-const std::string VPTree<dist_t, SearchOracle>::StrDesc() const {
+VPTreeTrigen<dist_t, SearchOracle>::~VPTreeTrigen() {
+  for (auto e : AllModifiers_) delete e;
+}
+
+template <typename dist_t,typename SearchOracle>
+const std::string VPTreeTrigen<dist_t, SearchOracle>::StrDesc() const {
   return "vptree: " + SearchOracle::GetName();
 }
 
 template <typename dist_t, typename SearchOracle>
-void VPTree<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query, IdType) const {
+void VPTreeTrigen<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
-void VPTree<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query, IdType) const {
+void VPTreeTrigen<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
   root_->GenericSearch(query, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
-void VPTree<dist_t, SearchOracle>::VPNode::CreateBucket(bool ChunkBucket, 
+void VPTreeTrigen<dist_t, SearchOracle>::VPNode::CreateBucket(bool ChunkBucket, 
                                                         const ObjectVector& data, 
                                                         ProgressDisplay* progress_bar) {
     if (ChunkBucket) {
@@ -130,7 +208,7 @@ void VPTree<dist_t, SearchOracle>::VPNode::CreateBucket(bool ChunkBucket,
 }
 
 template <typename dist_t, typename SearchOracle>
-VPTree<dist_t, SearchOracle>::VPNode::VPNode(
+VPTreeTrigen<dist_t, SearchOracle>::VPNode::VPNode(
                                unsigned level,
                                ProgressDisplay* progress_bar,
                                const SearchOracle& oracle,
@@ -234,7 +312,7 @@ VPTree<dist_t, SearchOracle>::VPNode::VPNode(
 }
 
 template <typename dist_t, typename SearchOracle>
-VPTree<dist_t, SearchOracle>::VPNode::~VPNode() {
+VPTreeTrigen<dist_t, SearchOracle>::VPNode::~VPNode() {
   delete left_child_;
   delete right_child_;
   ClearBucket(CacheOptimizedBucket_, bucket_);
@@ -242,7 +320,7 @@ VPTree<dist_t, SearchOracle>::VPNode::~VPNode() {
 
 template <typename dist_t, typename SearchOracle>
 template <typename QueryType>
-void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
+void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
                                                          int& MaxLeavesToVisit) const {
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (bucket_) {
@@ -294,9 +372,13 @@ void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
   }
 }
 
-template class VPTree<float, PolynomialPruner<float> >;
-template class VPTree<double, PolynomialPruner<double> >;
-template class VPTree<int, PolynomialPruner<int> >;
+template class VPTreeTrigen<float, PolynomialPruner<float> >;
+template class VPTreeTrigen<double, PolynomialPruner<double> >;
+template class VPTreeTrigen<int, PolynomialPruner<int> >;
+
+template class DistWrapper<float >;
+template class DistWrapper<double >;
+template class DistWrapper<int >;
 
 }   // namespace similarity
 
