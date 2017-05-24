@@ -45,28 +45,6 @@ using std::stringstream;
 using std::endl;
 using std::cout;
 using std::cerr;
-
-template <class dist_t>
-struct DistWrapper : public cSpaceProxy {
-  virtual double Compute(const Object* o1, const Object *o2) const override {
-      dist_t d = max((dist_t)0, min(space_.IndexTimeDistance(o1,o2), space_.IndexTimeDistance(o2,o1)));
-      return min<dist_t>(1, d*maxInvCoeff_);
-      //return d/(1+d); // To make it bounded
-  }
-  DistWrapper(const Space<dist_t>& space, const ObjectVector& data, size_t sampleQty = 100000) : space_(space) {
-    dist_t maxDist = numeric_limits<dist_t>::lowest();
-    for (size_t i = 0; i < sampleQty; ++i) {
-      dist_t d = space.IndexTimeDistance(data[RandomInt() % data.size()], data[RandomInt() % data.size()]);
-      maxDist = max(d, maxDist);
-    }
-    CHECK(maxDist > numeric_limits<dist_t>::min());
-    maxInvCoeff_ = double(1)/maxDist;
-    LOG(LIB_INFO) << "maxInvCoeff_=" << maxInvCoeff_;
-  }
-private:
-  const Space<dist_t>& space_;
-  double maxInvCoeff_;
-};
     
 template <typename dist_t, typename SearchOracle>
 VPTreeTrigen<dist_t, SearchOracle>::VPTreeTrigen(
@@ -124,6 +102,7 @@ void VPTreeTrigen<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParam
                      progress_bar.get(), 
                      oracle_, 
                      space_, data_,
+                     *resultModifier_, *distWrapper_,
                      max_pivot_select_attempts_,
                      BucketSize_, ChunkBucket_,
                      use_random_center_ /* use random center */));
@@ -139,7 +118,6 @@ void VPTreeTrigen<dist_t, SearchOracle>::BuildTrigen() {
 	AllModifiers_.push_back(new cFractionalPowerModifier(0));	
 	double stepA = 0.0025;
 	double stepB = 0.05;
-	double stepError = 0.002;
 
   // Create a list of modifiers
 	for(double a = 0; a < 1; a += stepA) {
@@ -148,9 +126,9 @@ void VPTreeTrigen<dist_t, SearchOracle>::BuildTrigen() {
 		}
   }
 
-  DistWrapper<dist_t> dist(space_, data_);
+  distWrapper_.reset(new DistWrapper<dist_t>(space_, data_));
 
-  trigen_.reset(new cTriGen(dist, data_, TrigenSampleQty_, AllModifiers_));
+  trigen_.reset(new cTriGen(*distWrapper_, data_, TrigenSampleQty_, AllModifiers_));
 
 	ObjectVector trigenSampledObjects;
 	trigen_->GetSampledItems(trigenSampledObjects);
@@ -186,13 +164,13 @@ const std::string VPTreeTrigen<dist_t, SearchOracle>::StrDesc() const {
 template <typename dist_t, typename SearchOracle>
 void VPTreeTrigen<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
-  root_->GenericSearch(query, mx);
+  root_->GenericSearch(query, *resultModifier_, *distWrapper_, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
 void VPTreeTrigen<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
-  root_->GenericSearch(query, mx);
+  root_->GenericSearch(query, *resultModifier_, *distWrapper_, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
@@ -213,6 +191,7 @@ VPTreeTrigen<dist_t, SearchOracle>::VPNode::VPNode(
                                ProgressDisplay* progress_bar,
                                const SearchOracle& oracle,
                                const Space<dist_t>& space, const ObjectVector& data,
+                               cSPModifier& resultModifier, DistWrapper<dist_t>& distWrapper,
                                size_t max_pivot_select_attempts,
                                size_t BucketSize, bool ChunkBucket,
                                bool use_random_center)
@@ -247,7 +226,7 @@ VPTreeTrigen<dist_t, SearchOracle>::VPNode::VPNode(
           continue;
         }
         // Distance can be asymmetric, the pivot is always on the left side!
-        dist_t d = space.IndexTimeDistance(pCurrPivot, data[i]);
+        dist_t d = resultModifier.ComputeModification(distWrapper.Compute(pCurrPivot, data[i]));
         dists[i] = d;
         dpARR[att].emplace_back(d, data[i]);
       }
@@ -299,11 +278,15 @@ VPTreeTrigen<dist_t, SearchOracle>::VPNode::VPNode(
     }
 
     if (!left.empty()) {
-      left_child_ = new VPNode(level + 1, progress_bar, oracle_, space, left, max_pivot_select_attempts, BucketSize, ChunkBucket, use_random_center);
+      left_child_ = new VPNode(level + 1, progress_bar, oracle_, space, left, 
+                               resultModifier, distWrapper, 
+                               max_pivot_select_attempts, BucketSize, ChunkBucket, use_random_center);
     }
 
     if (!right.empty()) {
-      right_child_ = new VPNode(level + 1, progress_bar, oracle_, space, right, max_pivot_select_attempts, BucketSize, ChunkBucket, use_random_center);
+      right_child_ = new VPNode(level + 1, progress_bar, oracle_, space, right, 
+                               resultModifier, distWrapper, 
+                               max_pivot_select_attempts, BucketSize, ChunkBucket, use_random_center);
     }
   } else {
     CHECK_MSG(data.size() == 1, "Bug: expect the subset to contain exactly one element!");
@@ -321,6 +304,8 @@ VPTreeTrigen<dist_t, SearchOracle>::VPNode::~VPNode() {
 template <typename dist_t, typename SearchOracle>
 template <typename QueryType>
 void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
+                                                         cSPModifier& resultModifier, 
+                                                         DistWrapper<dist_t>& distWrapper,
                                                          int& MaxLeavesToVisit) const {
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (bucket_) {
@@ -338,14 +323,19 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
     return;
   }
 
+#if 0
   // Distance can be asymmetric, the pivot is always the left argument (see the function that creates the node)!
   dist_t distQC = query->DistanceObjLeft(pivot_);
   query->CheckAndAddToResult(distQC, pivot_);
+#else
+  dist_t distQC = resultModifier.ComputeModification(distWrapper.ComputeWithQuery(query, pivot_));
+  query->CheckAndAddToResult(pivot_);
+#endif
 
   if (distQC < mediandist_) {      // the query is inside
     // then first check inside
     if (left_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
-       left_child_->GenericSearch(query, MaxLeavesToVisit);
+       left_child_->GenericSearch(query, resultModifier, distWrapper, MaxLeavesToVisit);
 
     /* 
      * After potentially visiting the left child, we need to reclassify the node,
@@ -355,11 +345,11 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
 
     // after that outside
     if (right_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
-       right_child_->GenericSearch(query, MaxLeavesToVisit);
+       right_child_->GenericSearch(query, resultModifier, distWrapper, MaxLeavesToVisit);
   } else {                         // the query is outside
     // then first check outside
     if (right_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
-       right_child_->GenericSearch(query, MaxLeavesToVisit);
+       right_child_->GenericSearch(query, resultModifier, distWrapper, MaxLeavesToVisit);
 
     /* 
      * After potentially visiting the left child, we need to reclassify the node,
@@ -368,7 +358,7 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
 
     // after that inside
     if (left_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
-      left_child_->GenericSearch(query, MaxLeavesToVisit);
+      left_child_->GenericSearch(query, resultModifier, distWrapper, MaxLeavesToVisit);
   }
 }
 

@@ -36,6 +36,33 @@ using std::unique_ptr;
 
 // Vantage point tree
 
+template <class dist_t>
+struct DistWrapper : public cSpaceProxy {
+  virtual double Compute(const Object* o1, const Object *o2) const override {
+      dist_t d = max((dist_t)0, min(space_.IndexTimeDistance(o1,o2), space_.IndexTimeDistance(o2,o1)));
+      return min<dist_t>(1, d*maxInvCoeff_);
+      //return d/(1+d); // To make it bounded
+  }
+  dist_t ComputeWithQuery(const Query<dist_t>* q, const Object *o) const {
+      dist_t d = max((dist_t)0, min(q->DistanceObjLeft(o), q->DistanceObjRight(o)));
+      return min<dist_t>(1, d*maxInvCoeff_);
+      //return d/(1+d); // To make it bounded
+  }
+  DistWrapper(const Space<dist_t>& space, const ObjectVector& data, size_t sampleQty = 100000) : space_(space) {
+    dist_t maxDist = numeric_limits<dist_t>::lowest();
+    for (size_t i = 0; i < sampleQty; ++i) {
+      dist_t d = space.IndexTimeDistance(data[RandomInt() % data.size()], data[RandomInt() % data.size()]);
+      maxDist = max(d, maxDist);
+    }
+    CHECK(maxDist > numeric_limits<dist_t>::min());
+    maxInvCoeff_ = double(1)/maxDist;
+    LOG(LIB_INFO) << "maxInvCoeff_=" << maxInvCoeff_;
+  }
+private:
+  const Space<dist_t>& space_;
+  double maxInvCoeff_;
+};
+
 template <typename dist_t> class Space;
 
 template <typename dist_t, typename SearchOracle>
@@ -82,13 +109,17 @@ class VPTreeTrigen : public Index<dist_t> {
            ProgressDisplay* progress_bar,
            const SearchOracle&  oracle,
            const Space<dist_t>& space, const ObjectVector& data,
+           cSPModifier& resultModifier, DistWrapper<dist_t>& distWrapper,
            size_t max_pivot_select_attempts,
            size_t BucketSize, bool ChunkBucket,
            bool use_random_center);
     ~VPNode();
 
     template <typename QueryType>
-    void GenericSearch(QueryType* query, int& MaxLeavesToVisit) const;
+    void GenericSearch(QueryType* query, 
+                       cSPModifier& resultModifier, 
+                       DistWrapper<dist_t>& distWrapper,
+                       int& MaxLeavesToVisit) const;
 
    private:
     void CreateBucket(bool ChunkBucket, const ObjectVector& data, 
@@ -129,6 +160,8 @@ class VPTreeTrigen : public Index<dist_t> {
 	vector<cSPModifier*>  AllModifiers_;
   unique_ptr<cTriGen>   trigen_;
   cSPModifier*          resultModifier_ = nullptr;
+
+  unique_ptr<DistWrapper<dist_t>> distWrapper_;
 
   vector<string>  QueryTimeParams_;
 

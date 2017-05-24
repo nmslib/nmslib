@@ -154,6 +154,9 @@ cSPModifier* cTriGen::Run(/* in/out */double& errorTolerance, /* out */unsigned 
 			ClearModifiedDistances();			
 
 			error = ComputeTriangleError(tripletSampleCount, inputTolerance, samplingTriplets);
+
+      if (echoOn)
+        LOG(LIB_INFO) << "iter=" << iter << " (out of " << iterLimit << ") concativity bounds [" << w_LB << "," << w_UB << "] error=" << error;
 			if (error <= inputTolerance)
 			{
 				w_UB = w_best = mCurrentModifier->GetConcavityWeight();
