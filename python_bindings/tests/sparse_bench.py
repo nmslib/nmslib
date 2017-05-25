@@ -8,6 +8,7 @@ import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.spatial import distance
 import nmslib
+from pysparnn.cluster_index import MultiClusterIndex
 import pysparnn as snn
 from common import *
 
@@ -32,8 +33,9 @@ def bench_sparse_vector(batch=True):
     query_matrix = csr_matrix(queryset, dtype=np.float32)
 
     data_to_return = range(dataset.shape[0])
+
     with TimeIt('building MultiClusterIndex'):
-        cp = snn.MultiClusterIndex(data_matrix, data_to_return)
+        cp = MultiClusterIndex(data_matrix, data_to_return)
 
     with TimeIt('knn search'):
         res = cp.search(query_matrix, k=k, return_distance=False)
