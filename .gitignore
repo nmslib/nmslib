@@ -4,5 +4,10 @@ cmake_install.cmake
 similarity_search/debug
 similarity_search/release
 similarity_search/src/Makefile
+similarity_search/Makefile
+similarity_search/apps/Makefile
+similarity_search/test/Makefile
 *.o
-
+*.so
+*.pyc
+*.egg-info/
