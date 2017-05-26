@@ -45,6 +45,13 @@ using std::stringstream;
 using std::endl;
 using std::cout;
 using std::cerr;
+using std::pow;
+
+#if 1
+#define MODIF_FUNC resultModifier.ComputeModification
+#else
+#define MODIF_FUNC(x) pow(x,0.125)
+#endif
     
 template <typename dist_t, typename SearchOracle>
 VPTreeTrigen<dist_t, SearchOracle>::VPTreeTrigen(
@@ -73,16 +80,20 @@ void VPTreeTrigen<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParam
   pmgr.GetParamOptional("trigenSampleQty", TrigenSampleQty_, 5000);
   pmgr.GetParamOptional("trigenSampleTripletQty", TrigenSampleTripletQty_, 1000000);
   pmgr.GetParamOptional("isSymmetrDist", isSymmetrDist_, true);
+  pmgr.GetParamOptional("useFPModif", useFPModif_, true);
+  pmgr.GetParamOptional("useRBQModif", useRBQModif_, true);
 
   CHECK_MSG(max_pivot_select_attempts_ >= 1, "selectPivotAttempts should be >=1");
 
-  LOG(LIB_INFO) << "bucketSize          = " << BucketSize_;
-  LOG(LIB_INFO) << "chunkBucket         = " << ChunkBucket_;
-  LOG(LIB_INFO) << "selectPivotAttempts = " << max_pivot_select_attempts_;
-  LOG(LIB_INFO) << "trigenAcc           = " << TrigenAcc_;
-  LOG(LIB_INFO) << "trigenSampleQty     = " << TrigenSampleQty_;
-  LOG(LIB_INFO) << "trigenSampleTripletQty= " << TrigenSampleTripletQty_;
-  LOG(LIB_INFO) << "isSymmetrDist=         " << isSymmetrDist_;
+  LOG(LIB_INFO) << "bucketSize             = " << BucketSize_;
+  LOG(LIB_INFO) << "chunkBucket            = " << ChunkBucket_;
+  LOG(LIB_INFO) << "selectPivotAttempts    = " << max_pivot_select_attempts_;
+  LOG(LIB_INFO) << "trigenAcc              = " << TrigenAcc_;
+  LOG(LIB_INFO) << "trigenSampleQty        = " << TrigenSampleQty_;
+  LOG(LIB_INFO) << "trigenSampleTripletQty = " << TrigenSampleTripletQty_;
+  LOG(LIB_INFO) << "isSymmetrDist          = " << isSymmetrDist_;
+  LOG(LIB_INFO) << "useFPModif             = " << useFPModif_;
+  LOG(LIB_INFO) << "useRBQModif            = " << useRBQModif_;
 
   // Trigen must use the standard metric oracle, so we don't pass any
   // parameters to the oracle (it will use default, i.e., metric ones).
@@ -117,18 +128,28 @@ void VPTreeTrigen<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParam
 template <typename dist_t,typename SearchOracle>
 void VPTreeTrigen<dist_t, SearchOracle>::BuildTrigen() {
   // This code is modelled after makeTrigen.h from Tomas Skopal TriGenLite
-	AllModifiers_.push_back(new cFractionalPowerModifier(0));	
-	double stepA = 0.0025;
-	double stepB = 0.05;
 
-/*
-  // Create a list of modifiers
-	for(double a = 0; a < 1; a += stepA) {
-		for(double b = a + stepB; b < 1; b += stepB) {
-			AllModifiers_.push_back(new cRBQModifier(a,b));
-		}
+  if (useFPModif_) {
+    LOG(LIB_INFO) << "Will use fractional power modifiers";
+	  AllModifiers_.push_back(new cFractionalPowerModifier(0));	
+  } else {
+    LOG(LIB_INFO) << "Told not to use fractional power modifiers";
   }
-*/
+
+  if (useRBQModif_) {
+    LOG(LIB_INFO) << "Will use RBQ modifiers";
+	  double stepA = 0.0025;
+	  double stepB = 0.05;
+
+    // Create a list of modifiers
+    for(double a = 0; a < 1; a += stepA) {
+      for(double b = a + stepB; b < 1; b += stepB) {
+        AllModifiers_.push_back(new cRBQModifier(a,b));
+      }
+    }
+  } else {
+    LOG(LIB_INFO) << "Told not to use RBQ modifiers";
+  }
 
   distWrapper_.reset(new DistWrapper<dist_t>(space_, data_, isSymmetrDist_));
 
@@ -162,7 +183,7 @@ VPTreeTrigen<dist_t, SearchOracle>::~VPTreeTrigen() {
 
 template <typename dist_t,typename SearchOracle>
 const std::string VPTreeTrigen<dist_t, SearchOracle>::StrDesc() const {
-  return "vptree: " + SearchOracle::GetName();
+  return METH_VPTREE_TRIGEN;
 }
 
 template <typename dist_t, typename SearchOracle>
@@ -232,7 +253,8 @@ VPTreeTrigen<dist_t, SearchOracle>::VPNode::VPNode(
           continue;
         }
         // Distance can be asymmetric, the pivot is always on the left side!
-        dist_t d = resultModifier.ComputeModification(distWrapper.Compute(pCurrPivot, data[i]));
+        //dist_t d = resultModifier.ComputeModification(distWrapper.Compute(pCurrPivot, data[i]));
+        dist_t d = MODIF_FUNC(distWrapper.Compute(pCurrPivot, data[i]));
         dists[i] = d;
         dpARR[att].emplace_back(d, data[i]);
       }
@@ -328,7 +350,7 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
       //query->CheckAndAddToResult(distQC, Obj);
       auto res = distWrapper.ComputeWithQuery(query, Obj);//dist_t distQC = query->DistanceObjLeft(Obj);
       query->CheckAndAddToResult(res.first, Obj);
-      queryRadius = min(queryRadius, resultModifier.ComputeModification(res.second));
+      queryRadius = min(queryRadius, MODIF_FUNC(res.second));
     }
     return;
   }
@@ -339,7 +361,7 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
   query->CheckAndAddToResult(distQC, pivot_);
 */
   auto res = distWrapper.ComputeWithQuery(query, pivot_);
-  dist_t distQC = resultModifier.ComputeModification(res.second);
+  dist_t distQC = MODIF_FUNC(res.second);
   query->CheckAndAddToResult(res.first, pivot_);
 
   if (distQC < mediandist_) {      // the query is inside

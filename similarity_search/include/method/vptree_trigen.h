@@ -38,7 +38,7 @@ using std::pair;
 
 // Vantage point tree
 
-#define USE_UNSCALED_PROXY_DIST (1)
+#define USE_UNSCALED_PROXY_DIST (0)
 
 template <class dist_t>
 struct DistWrapper : public cSpaceProxy {
@@ -177,6 +177,8 @@ class VPTreeTrigen : public Index<dist_t> {
   unsigned            TrigenSampleQty_;
   unsigned            TrigenSampleTripletQty_;
 
+  bool                useFPModif_;
+  bool                useRBQModif_;
   bool                isSymmetrDist_;
 
 	vector<cSPModifier*>  AllModifiers_;
