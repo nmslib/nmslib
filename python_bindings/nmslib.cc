@@ -127,6 +127,10 @@ struct IndexWrapper {
       std::vector<std::thread> threads;
       std::atomic<size_t> current(0);
 
+      if (num_threads <= 0) {
+        num_threads = std::thread::hardware_concurrency();
+      }
+
       for (int i = 0; i < num_threads; ++i) {
         threads.push_back(std::thread([&] {
           while (true) {
