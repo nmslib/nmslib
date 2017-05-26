@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
 
 #include "index.h"
 #include "params.h"
@@ -33,22 +34,39 @@ namespace similarity {
 using std::string;
 using std::vector;
 using std::unique_ptr;
+using std::pair;
 
 // Vantage point tree
+
+#define USE_UNSCALED_PROXY_DIST (1)
 
 template <class dist_t>
 struct DistWrapper : public cSpaceProxy {
   virtual double Compute(const Object* o1, const Object *o2) const override {
-      dist_t d = max((dist_t)0, min(space_.IndexTimeDistance(o1,o2), space_.IndexTimeDistance(o2,o1)));
+      dist_t distOrig = space_.IndexTimeDistance(o1,o2); 
+      dist_t d = distOrig;
+      if (!isSymmetrDist_) d = min(distOrig, space_.IndexTimeDistance(o2,o1));
+      d = max((dist_t)0, d);
+#if USE_UNSCALED_PROXY_DIST
+      return d;
+#else
       return min<dist_t>(1, d*maxInvCoeff_);
+#endif
       //return d/(1+d); // To make it bounded
   }
-  dist_t ComputeWithQuery(const Query<dist_t>* q, const Object *o) const {
-      dist_t d = max((dist_t)0, min(q->DistanceObjLeft(o), q->DistanceObjRight(o)));
-      return min<dist_t>(1, d*maxInvCoeff_);
+  pair<dist_t,dist_t> ComputeWithQuery(const Query<dist_t>* q, const Object *o) const {
+      dist_t distOrig = q->DistanceObjLeft(o);
+      dist_t d = distOrig;
+      if (!isSymmetrDist_) d = min(distOrig, q->DistanceObjRight(o));
+      d = max((dist_t)0, d);
+#if USE_UNSCALED_PROXY_DIST
+      return make_pair(distOrig, d);
+#else
+      return make_pair(distOrig, min<dist_t>(1, d*maxInvCoeff_));
+#endif
       //return d/(1+d); // To make it bounded
   }
-  DistWrapper(const Space<dist_t>& space, const ObjectVector& data, size_t sampleQty = 100000) : space_(space) {
+  DistWrapper(const Space<dist_t>& space, const ObjectVector& data, bool isSymmetrDist, size_t sampleQty = 100000) : space_(space), isSymmetrDist_(isSymmetrDist) {
     dist_t maxDist = numeric_limits<dist_t>::lowest();
     for (size_t i = 0; i < sampleQty; ++i) {
       dist_t d = space.IndexTimeDistance(data[RandomInt() % data.size()], data[RandomInt() % data.size()]);
@@ -60,7 +78,8 @@ struct DistWrapper : public cSpaceProxy {
   }
 private:
   const Space<dist_t>& space_;
-  double maxInvCoeff_;
+  bool  isSymmetrDist_ = true;
+  double maxInvCoeff_ = 0;
 };
 
 template <typename dist_t> class Space;
@@ -117,6 +136,7 @@ class VPTreeTrigen : public Index<dist_t> {
 
     template <typename QueryType>
     void GenericSearch(QueryType* query, 
+                       double&    queryRadius,
                        cSPModifier& resultModifier, 
                        DistWrapper<dist_t>& distWrapper,
                        int& MaxLeavesToVisit) const;
@@ -156,6 +176,8 @@ class VPTreeTrigen : public Index<dist_t> {
   float               TrigenAcc_;
   unsigned            TrigenSampleQty_;
   unsigned            TrigenSampleTripletQty_;
+
+  bool                isSymmetrDist_;
 
 	vector<cSPModifier*>  AllModifiers_;
   unique_ptr<cTriGen>   trigen_;

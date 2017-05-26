@@ -72,6 +72,7 @@ void VPTreeTrigen<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParam
   pmgr.GetParamRequired("trigenAcc", TrigenAcc_);
   pmgr.GetParamOptional("trigenSampleQty", TrigenSampleQty_, 5000);
   pmgr.GetParamOptional("trigenSampleTripletQty", TrigenSampleTripletQty_, 1000000);
+  pmgr.GetParamOptional("isSymmetrDist", isSymmetrDist_, true);
 
   CHECK_MSG(max_pivot_select_attempts_ >= 1, "selectPivotAttempts should be >=1");
 
@@ -81,6 +82,7 @@ void VPTreeTrigen<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParam
   LOG(LIB_INFO) << "trigenAcc           = " << TrigenAcc_;
   LOG(LIB_INFO) << "trigenSampleQty     = " << TrigenSampleQty_;
   LOG(LIB_INFO) << "trigenSampleTripletQty= " << TrigenSampleTripletQty_;
+  LOG(LIB_INFO) << "isSymmetrDist=         " << isSymmetrDist_;
 
   // Trigen must use the standard metric oracle, so we don't pass any
   // parameters to the oracle (it will use default, i.e., metric ones).
@@ -119,14 +121,16 @@ void VPTreeTrigen<dist_t, SearchOracle>::BuildTrigen() {
 	double stepA = 0.0025;
 	double stepB = 0.05;
 
+/*
   // Create a list of modifiers
 	for(double a = 0; a < 1; a += stepA) {
 		for(double b = a + stepB; b < 1; b += stepB) {
 			AllModifiers_.push_back(new cRBQModifier(a,b));
 		}
   }
+*/
 
-  distWrapper_.reset(new DistWrapper<dist_t>(space_, data_));
+  distWrapper_.reset(new DistWrapper<dist_t>(space_, data_, isSymmetrDist_));
 
   trigen_.reset(new cTriGen(*distWrapper_, data_, TrigenSampleQty_, AllModifiers_));
 
@@ -164,13 +168,15 @@ const std::string VPTreeTrigen<dist_t, SearchOracle>::StrDesc() const {
 template <typename dist_t, typename SearchOracle>
 void VPTreeTrigen<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
-  root_->GenericSearch(query, *resultModifier_, *distWrapper_, mx);
+  double queryRadius=numeric_limits<dist_t>::max();
+  root_->GenericSearch(query, queryRadius, *resultModifier_, *distWrapper_, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
 void VPTreeTrigen<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
-  root_->GenericSearch(query, *resultModifier_, *distWrapper_, mx);
+  double queryRadius=numeric_limits<dist_t>::max();
+  root_->GenericSearch(query, queryRadius, *resultModifier_, *distWrapper_, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
@@ -304,6 +310,7 @@ VPTreeTrigen<dist_t, SearchOracle>::VPNode::~VPNode() {
 template <typename dist_t, typename SearchOracle>
 template <typename QueryType>
 void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
+                                                         double&    queryRadius,
                                                          cSPModifier& resultModifier, 
                                                          DistWrapper<dist_t>& distWrapper,
                                                          int& MaxLeavesToVisit) const {
@@ -317,25 +324,29 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
 
     for (unsigned i = 0; i < bucket_->size(); ++i) {
       const Object* Obj = (*bucket_)[i];
-      dist_t distQC = query->DistanceObjLeft(Obj);
-      query->CheckAndAddToResult(distQC, Obj);
+      //dist_t distQC = query->DistanceObjLeft(Obj);
+      //query->CheckAndAddToResult(distQC, Obj);
+      auto res = distWrapper.ComputeWithQuery(query, Obj);//dist_t distQC = query->DistanceObjLeft(Obj);
+      query->CheckAndAddToResult(res.first, Obj);
+      queryRadius = min(queryRadius, resultModifier.ComputeModification(res.second));
     }
     return;
   }
 
-#if 0
+/*
   // Distance can be asymmetric, the pivot is always the left argument (see the function that creates the node)!
   dist_t distQC = query->DistanceObjLeft(pivot_);
   query->CheckAndAddToResult(distQC, pivot_);
-#else
-  dist_t distQC = resultModifier.ComputeModification(distWrapper.ComputeWithQuery(query, pivot_));
-  query->CheckAndAddToResult(pivot_);
-#endif
+*/
+  auto res = distWrapper.ComputeWithQuery(query, pivot_);
+  dist_t distQC = resultModifier.ComputeModification(res.second);
+  query->CheckAndAddToResult(res.first, pivot_);
 
   if (distQC < mediandist_) {      // the query is inside
     // then first check inside
-    if (left_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
-       left_child_->GenericSearch(query, resultModifier, distWrapper, MaxLeavesToVisit);
+    if (left_child_ != NULL && 
+        oracle_.Classify(distQC, static_cast<dist_t>(queryRadius), mediandist_) != kVisitRight)
+       left_child_->GenericSearch(query, queryRadius, resultModifier, distWrapper, MaxLeavesToVisit);
 
     /* 
      * After potentially visiting the left child, we need to reclassify the node,
@@ -344,12 +355,14 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
 
 
     // after that outside
-    if (right_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
-       right_child_->GenericSearch(query, resultModifier, distWrapper, MaxLeavesToVisit);
+    if (right_child_ != NULL && 
+        oracle_.Classify(distQC, static_cast<dist_t>(queryRadius), mediandist_) != kVisitLeft)
+       right_child_->GenericSearch(query, queryRadius, resultModifier, distWrapper, MaxLeavesToVisit);
   } else {                         // the query is outside
     // then first check outside
-    if (right_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
-       right_child_->GenericSearch(query, resultModifier, distWrapper, MaxLeavesToVisit);
+    if (right_child_ != NULL && 
+        oracle_.Classify(distQC, static_cast<dist_t>(queryRadius), mediandist_) != kVisitLeft)
+       right_child_->GenericSearch(query, queryRadius, resultModifier, distWrapper, MaxLeavesToVisit);
 
     /* 
      * After potentially visiting the left child, we need to reclassify the node,
@@ -357,8 +370,9 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
      */
 
     // after that inside
-    if (left_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
-      left_child_->GenericSearch(query, resultModifier, distWrapper, MaxLeavesToVisit);
+    if (left_child_ != NULL && 
+        oracle_.Classify(distQC, static_cast<dist_t>(queryRadius), mediandist_) != kVisitRight)
+      left_child_->GenericSearch(query, queryRadius, resultModifier, distWrapper, MaxLeavesToVisit);
   }
 }
 
