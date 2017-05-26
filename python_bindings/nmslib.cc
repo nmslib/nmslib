@@ -19,9 +19,9 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+#include <atomic>
 #include <algorithm>
 #include <memory>
-#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -125,17 +125,12 @@ struct IndexWrapper {
       py::gil_scoped_release l;
 
       std::vector<std::thread> threads;
-      std::mutex m;
-      size_t current = 0;
+      std::atomic<size_t> current(0);
 
       for (int i = 0; i < num_threads; ++i) {
         threads.push_back(std::thread([&] {
           while (true) {
-            size_t query_index;
-            {
-              std::unique_lock<std::mutex> lock(m);
-              query_index = current++;
-            }
+            size_t query_index = current.fetch_add(1);
             if (query_index >= queries.size()) {
               break;
             }
