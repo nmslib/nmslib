@@ -12,6 +12,10 @@ and then run these commands from this directory:
 pip install -r requirements.txt
 python setup.py install
 ```
+You may to install Python dev-files. On Ubuntu, you can do it as follows:
+```
+sudo apt-get install python3-dev
+```
 
 Building on Windows requires Visual Studio 2015, see this [project for more
 information](https://github.com/pybind/python_example#installation).
