@@ -76,6 +76,7 @@ class VPTree : public Index<dist_t> {
     VPNode(unsigned level,
            ProgressDisplay* progress_bar,
            const SearchOracle&  oracle,
+           bool squareRootTransf,
            const Space<dist_t>& space, const ObjectVector& data,
            size_t max_pivot_select_attempts,
            size_t BucketSize, bool ChunkBucket,
@@ -83,7 +84,7 @@ class VPTree : public Index<dist_t> {
     ~VPNode();
 
     template <typename QueryType>
-    void GenericSearch(QueryType* query, int& MaxLeavesToVisit) const;
+    void GenericSearch(QueryType* query, bool squareRootTransf, int& MaxLeavesToVisit) const;
 
    private:
     void CreateBucket(bool ChunkBucket, const ObjectVector& data, 
@@ -116,6 +117,7 @@ class VPTree : public Index<dist_t> {
   size_t              BucketSize_;
   int                 MaxLeavesToVisit_;
   bool                ChunkBucket_;
+  bool                squareRootTransf_;
 
   vector<string>  QueryTimeParams_;
 

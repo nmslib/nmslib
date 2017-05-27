@@ -33,6 +33,9 @@
 #define MIN_PIVOT_SELECT_DATA_QTY 10
 #define MAX_PIVOT_SELECT_ATTEMPTS 5
 
+//#define MODIF_FUNC(x) sqrt(x)
+#define MODIF_FUNC(x,flag) ((flag) ? sqrt(x):(x))
+
 namespace similarity {
 
 using std::string;
@@ -64,12 +67,14 @@ void VPTree<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParams) {
   pmgr.GetParamOptional("bucketSize", BucketSize_, 50);
   pmgr.GetParamOptional("chunkBucket", ChunkBucket_, true);
   pmgr.GetParamOptional("selectPivotAttempts", max_pivot_select_attempts_, MAX_PIVOT_SELECT_ATTEMPTS);
+  pmgr.GetParamOptional("squareRootTransf", squareRootTransf_, false);
 
   CHECK_MSG(max_pivot_select_attempts_ >= 1, "selectPivotAttempts should be >=1");
 
   LOG(LIB_INFO) << "bucketSize          = " << BucketSize_;
   LOG(LIB_INFO) << "chunkBucket         = " << ChunkBucket_;
   LOG(LIB_INFO) << "selectPivotAttempts = " << max_pivot_select_attempts_;
+  LOG(LIB_INFO) << "squareRootTransf    = " << squareRootTransf_;
 
   // Call this function *ONLY AFTER* the bucket size is obtained!
   oracle_.SetIndexTimeParams(pmgr);
@@ -85,7 +90,7 @@ void VPTree<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParams) {
 
   root_.reset(new VPNode(0,
                      progress_bar.get(), 
-                     oracle_, 
+                     oracle_, squareRootTransf_,
                      space_, data_,
                      max_pivot_select_attempts_,
                      BucketSize_, ChunkBucket_,
@@ -108,13 +113,13 @@ const std::string VPTree<dist_t, SearchOracle>::StrDesc() const {
 template <typename dist_t, typename SearchOracle>
 void VPTree<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
-  root_->GenericSearch(query, mx);
+  root_->GenericSearch(query, squareRootTransf_, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
 void VPTree<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
-  root_->GenericSearch(query, mx);
+  root_->GenericSearch(query, squareRootTransf_, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
@@ -134,6 +139,7 @@ VPTree<dist_t, SearchOracle>::VPNode::VPNode(
                                unsigned level,
                                ProgressDisplay* progress_bar,
                                const SearchOracle& oracle,
+                               bool squareRootTransf,
                                const Space<dist_t>& space, const ObjectVector& data,
                                size_t max_pivot_select_attempts,
                                size_t BucketSize, bool ChunkBucket,
@@ -169,7 +175,7 @@ VPTree<dist_t, SearchOracle>::VPNode::VPNode(
           continue;
         }
         // Distance can be asymmetric, the pivot is always on the left side!
-        dist_t d = space.IndexTimeDistance(pCurrPivot, data[i]);
+        dist_t d = MODIF_FUNC(space.IndexTimeDistance(pCurrPivot, data[i]), squareRootTransf);
         dists[i] = d;
         dpARR[att].emplace_back(d, data[i]);
       }
@@ -221,11 +227,11 @@ VPTree<dist_t, SearchOracle>::VPNode::VPNode(
     }
 
     if (!left.empty()) {
-      left_child_ = new VPNode(level + 1, progress_bar, oracle_, space, left, max_pivot_select_attempts, BucketSize, ChunkBucket, use_random_center);
+      left_child_ = new VPNode(level + 1, progress_bar, oracle_, squareRootTransf, space, left, max_pivot_select_attempts, BucketSize, ChunkBucket, use_random_center);
     }
 
     if (!right.empty()) {
-      right_child_ = new VPNode(level + 1, progress_bar, oracle_, space, right, max_pivot_select_attempts, BucketSize, ChunkBucket, use_random_center);
+      right_child_ = new VPNode(level + 1, progress_bar, oracle_, squareRootTransf, space, right, max_pivot_select_attempts, BucketSize, ChunkBucket, use_random_center);
     }
   } else {
     CHECK_MSG(data.size() == 1, "Bug: expect the subset to contain exactly one element!");
@@ -243,6 +249,7 @@ VPTree<dist_t, SearchOracle>::VPNode::~VPNode() {
 template <typename dist_t, typename SearchOracle>
 template <typename QueryType>
 void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
+                                                         bool squareRootTransf,
                                                          int& MaxLeavesToVisit) const {
   if (MaxLeavesToVisit <= 0) return; // early termination
   if (bucket_) {
@@ -263,11 +270,12 @@ void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
   // Distance can be asymmetric, the pivot is always the left argument (see the function that creates the node)!
   dist_t distQC = query->DistanceObjLeft(pivot_);
   query->CheckAndAddToResult(distQC, pivot_);
+  dist_t distQCModif = MODIF_FUNC(distQC, squareRootTransf);
 
-  if (distQC < mediandist_) {      // the query is inside
+  if (distQCModif < mediandist_) {      // the query is inside
     // then first check inside
-    if (left_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
-       left_child_->GenericSearch(query, MaxLeavesToVisit);
+    if (left_child_ != NULL && oracle_.Classify(distQCModif, MODIF_FUNC(query->Radius(), squareRootTransf), mediandist_) != kVisitRight)
+       left_child_->GenericSearch(query, squareRootTransf, MaxLeavesToVisit);
 
     /* 
      * After potentially visiting the left child, we need to reclassify the node,
@@ -276,12 +284,12 @@ void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
 
 
     // after that outside
-    if (right_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
-       right_child_->GenericSearch(query, MaxLeavesToVisit);
+    if (right_child_ != NULL && oracle_.Classify(distQCModif, MODIF_FUNC(query->Radius(), squareRootTransf), mediandist_) != kVisitLeft)
+       right_child_->GenericSearch(query, squareRootTransf, MaxLeavesToVisit);
   } else {                         // the query is outside
     // then first check outside
-    if (right_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitLeft)
-       right_child_->GenericSearch(query, MaxLeavesToVisit);
+    if (right_child_ != NULL && oracle_.Classify(distQCModif, MODIF_FUNC(query->Radius(), squareRootTransf), mediandist_) != kVisitLeft)
+       right_child_->GenericSearch(query, squareRootTransf, MaxLeavesToVisit);
 
     /* 
      * After potentially visiting the left child, we need to reclassify the node,
@@ -289,8 +297,8 @@ void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
      */
 
     // after that inside
-    if (left_child_ != NULL && oracle_.Classify(distQC, query->Radius(), mediandist_) != kVisitRight)
-      left_child_->GenericSearch(query, MaxLeavesToVisit);
+    if (left_child_ != NULL && oracle_.Classify(distQCModif, MODIF_FUNC(query->Radius(), squareRootTransf), mediandist_) != kVisitRight)
+      left_child_->GenericSearch(query, squareRootTransf, MaxLeavesToVisit);
   }
 }
 
