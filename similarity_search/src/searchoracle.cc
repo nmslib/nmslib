@@ -73,6 +73,8 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
   // Obtain optimal parameters automatically
     size_t fullBucketSize;
     pmgr.GetParamRequired("bucketSize", fullBucketSize);
+    bool squareRootTransf = false;
+    pmgr.GetParamOptional("squareRootTransf", squareRootTransf, squareRootTransf);
 
     if (data_.size() < TOTAL_QUERY_QTY) {
       stringstream err;
@@ -122,7 +124,7 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
     stringstream                  methParamDesc;
     string                        methName;
 
-    methParamDesc << "bucketSize=" << bucketSizeAdjusted;
+    methParamDesc << "bucketSize=" << bucketSizeAdjusted << ",squareRootTransf=" << squareRootTransf;
 
     ParseArg(methParamDesc.str(), paramDesc);
 
