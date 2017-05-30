@@ -34,7 +34,7 @@
 #include "trigen/cRBQModifier.h"
 #include "trigen/cApproximatedModifier.h"
 
-#define FASTER_STEPS (0)
+#define FASTER_STEPS (1)
 
 #define MIN_PIVOT_SELECT_DATA_QTY 10
 #define MAX_PIVOT_SELECT_ATTEMPTS 5
