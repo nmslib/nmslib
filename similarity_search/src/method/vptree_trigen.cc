@@ -34,6 +34,8 @@
 #include "trigen/cRBQModifier.h"
 #include "trigen/cApproximatedModifier.h"
 
+#define FASTER_STEPS (0)
+
 #define MIN_PIVOT_SELECT_DATA_QTY 10
 #define MAX_PIVOT_SELECT_ATTEMPTS 5
 
@@ -138,8 +140,13 @@ void VPTreeTrigen<dist_t, SearchOracle>::BuildTrigen() {
 
   if (useRBQModif_) {
     LOG(LIB_INFO) << "Will use RBQ modifiers";
+#if FASTER_STEPS
+	  double stepA = 0.005;
+	  double stepB = 0.1;
+#else
 	  double stepA = 0.0025;
 	  double stepB = 0.05;
+#endif
 
     // Create a list of modifiers
     for(double a = 0; a < 1; a += stepA) {
