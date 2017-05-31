@@ -176,7 +176,7 @@ void VPTreeTrigen<dist_t, SearchOracle>::BuildTrigen() {
     LOG(LIB_INFO) << "Result: fractional Power Modifier";
   else
     LOG(LIB_INFO) << "Result: RBQ Modifier, a = " <<  ((cRBQModifier*)resultModifier_)->GetA() << 
-                     ", b = ", ((cRBQModifier*)resultModifier_)->GetB();
+                     ", b = " << ((cRBQModifier*)resultModifier_)->GetB();
   LOG(LIB_INFO) << "Triangular Error: " << error << 
                     "  CW: " <<  resultModifier_->GetConcavityWeight() << 
                     " IDim: " << idim;

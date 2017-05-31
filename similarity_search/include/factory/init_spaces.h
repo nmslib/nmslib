@@ -34,6 +34,7 @@
 #include "factory/space/space_sqfd.h"
 #endif
 #include "factory/space/space_qa1.h"
+#include "factory/space/space_l2sqr.h"
 
 namespace similarity {
 
@@ -140,6 +141,8 @@ inline void initSpaces() {
 
   REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG,  CreateRenyiDiverg)
   REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG,  CreateRenyiDiverg)
+
+  REGISTER_SPACE_CREATOR(float,  SPACE_L2_SQR,  CreateL2SQR)
 }
 
 }
