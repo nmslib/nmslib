@@ -5,15 +5,16 @@ import sys
 import os
 import time
 import numpy as np
-from scipy.sparse import csr_matrix
-from scipy.spatial import distance
 import nmslib
-from pysparnn.cluster_index import MultiClusterIndex
-import pysparnn as snn
 from common import *
 
 
 def bench_sparse_vector(batch=True):
+    # delay importing these so CI can import module
+    from scipy.sparse import csr_matrix
+    from scipy.spatial import distance
+    from pysparnn.cluster_index import MultiClusterIndex
+
     dim = 20000
     dataset = np.random.binomial(1, 0.01, size=(40000, dim))
     queryset = np.random.binomial(1, 0.009, size=(1000, dim))

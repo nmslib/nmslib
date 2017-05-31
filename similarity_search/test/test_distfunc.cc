@@ -785,8 +785,8 @@ bool TestSparseCosineSimilarityAgree(const string& dataFile, size_t N, size_t Re
 
     bool bug = false;
 
-    float maxRelDiff = 1e-6f;
-    float maxAbsDiff = 1e-6f;
+    float maxRelDiff = 1e-5f;
+    float maxAbsDiff = 1e-5f;
 
     for (size_t j = Rep; j < N; ++j) 
     for (size_t k = j - Rep; k < j; ++k) {
