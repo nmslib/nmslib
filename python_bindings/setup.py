@@ -37,7 +37,7 @@ ext_modules = [
     Extension(
         'nmslib',
         source_files,
-        include_dirs=['%s/include' % libdir],
+        include_dirs=[os.path.join(libdir, "include")],
         libraries=libraries,
         language='c++',
         extra_objects=extra_objects,
