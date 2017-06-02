@@ -1,5 +1,6 @@
-[![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-Non-Metric Space Library (NMSLIB)
+[![Build Status](https://travis-ci.org/searchivarius/nmslib.svg?branch=master)](https://travis-ci.org/searchivarius/nmslib) [![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Non-Metric Space Library (NMSLIB) 
 =================
 The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes.
 -----------------
