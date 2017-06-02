@@ -143,12 +143,13 @@ bool SpaceSparseVector<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase,
   DataFileInputStateOneFile* pInpState = dynamic_cast<DataFileInputStateOneFile*>(&inpStateBase);
   CHECK_MSG(pInpState != NULL, "Bug: unexpected reference type");
   if (!pInpState->inp_file_) return false;
-  if (!getline(pInpState->inp_file_, strObj)) return false;
-  if (strObj.empty()) {
-    PREPARE_RUNTIME_ERR(err) << "Encountered an empty line (not allowed), line # " << pInpState->line_num_; 
-    THROW_RUNTIME_ERR(err);
-  }
-  pInpState->line_num_++;
+  do {
+    if (!getline(pInpState->inp_file_, strObj)) return false;
+    if (strObj.empty()) {
+      LOG(LIB_INFO) << "Encountered an empty line (IGNORING), line # " << pInpState->line_num_; 
+    }
+    pInpState->line_num_++;
+  } while (strObj.empty());
   return true;
 }
 
