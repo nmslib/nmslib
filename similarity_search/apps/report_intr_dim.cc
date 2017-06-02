@@ -23,6 +23,7 @@
 #include "report_intr_dim.h"
 #include "spacefactory.h"
 #include "cmd_options.h"
+#include "my_isnan_isinf.h"
 
 using namespace similarity;
 using namespace std;
@@ -49,7 +50,7 @@ void ComputeMuDeffect(const Space<dist_t>& space,
       dist_t d1 = space.IndexTimeDistance(q, a);
       dist_t d2 = space.IndexTimeDistance(q, b);
       dist_t d3 = space.IndexTimeDistance(a, b);
-      if (ISNAN(d1) || ISNAN(d2) || ISNAN(d3)) {
+      if (my_isnan(d1) || my_isnan(d2) || my_isnan(d3)) {
         throw runtime_error("!!! Bug: a distance returned NAN!");
       }
       if (d3 != 0) {
@@ -60,7 +61,7 @@ void ComputeMuDeffect(const Space<dist_t>& space,
       dist_t d1 = space.IndexTimeDistance(a, q);
       dist_t d2 = space.IndexTimeDistance(b, q);
       dist_t d3 = space.IndexTimeDistance(b, a);
-      if (ISNAN(d1) || ISNAN(d2) || ISNAN(d3)) {
+      if (my_isnan(d1) || my_isnan(d2) || my_isnan(d3)) {
         throw runtime_error("!!! Bug: a distance returned NAN!");
       }
       if (d3 != 0) {
