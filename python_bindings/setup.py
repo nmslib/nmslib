@@ -37,7 +37,7 @@ ext_modules = [
     Extension(
         'nmslib',
         source_files,
-        include_dirs=['%s/include' % libdir],
+        include_dirs=[os.path.join(libdir, "include")],
         libraries=libraries,
         language='c++',
         extra_objects=extra_objects,
@@ -79,18 +79,19 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
     c_opts = {
         'msvc': ['/EHsc', '/openmp', '/O2'],
-        'unix': ['-O3'],
+        'unix': ['-O3', '-march=native'],
     }
     link_opts = {
-        'unix': ['-pthread'],
+        'unix': [],
         'msvc': [],
     }
 
     if sys.platform == 'darwin':
         c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
+        link_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
     else:
         c_opts['unix'].append("-fopenmp")
-        link_opts['unix'].append('-fopenmp')
+        link_opts['unix'].extend(['-fopenmp', '-pthread'])
 
     def build_extensions(self):
         ct = self.compiler.compiler_type

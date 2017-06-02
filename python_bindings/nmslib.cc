@@ -88,6 +88,10 @@ struct IndexWrapper {
     auto factory = MethodFactoryRegistry<dist_t>::Instance();
     index.reset(factory.CreateMethod(print_progress, method, space_type, *space, data));
     index->LoadIndex(filename);
+
+    // querying reloaded indices don't seem to work correctly (at least hnsw ones) until
+    // SetQueryTimeParams is called
+    index->ResetQueryTimeParams();
   }
 
   void saveIndex(const std::string & filename) {

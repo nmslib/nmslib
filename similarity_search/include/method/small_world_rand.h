@@ -253,7 +253,7 @@ public:
                  const Space<dist_t>& space,
                  const ObjectVector& data);
   void CreateIndex(const AnyParams& IndexParams) override;
-  virtual void AddBatch(const ObjectVector& batchData, bool bPrintProgress, bool bCheckIDs = false);
+  virtual void AddBatch(const ObjectVector& batchData, bool bPrintProgress, bool bCheckIDs = false) override;
   virtual void DeleteBatch(const ObjectVector& batchData, int delStrategy,
                            bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) override;
 

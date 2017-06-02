@@ -1,7 +1,9 @@
 import itertools
+import tempfile
 import unittest
 
 import numpy as np
+import numpy.testing as npt
 
 import nmslib
 
@@ -21,7 +23,7 @@ class NMSLIBTest(unittest.TestCase):
         np.random.seed(23)
         data = np.random.randn(1000, 10).astype(np.float32)
 
-        index = nmslib.init(method='sw-graph', space='cosinesimil')
+        index = nmslib.init(method='hnsw', space='cosinesimil')
         index.addDataPointBatch(data)
         index.createIndex()
 
@@ -31,6 +33,14 @@ class NMSLIBTest(unittest.TestCase):
 
         results = index.knnQueryBatch([row, row], k=10)
         self.assertTrue(get_hitrate(get_exact_cosine(row, data), results[0][0]) >= 8)
+
+        # test out saving/reloading index
+        with tempfile.NamedTemporaryFile() as tmp:
+            index.saveIndex(tmp.name)
+
+            index2 = nmslib.init(method='hnsw', space='cosinesimil')
+            index2.loadIndex(tmp.name)
+            npt.assert_allclose(index.knnQuery(data[0]), index2.knnQuery(data[0]))
 
 
     def testStringLeven(self):
