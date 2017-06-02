@@ -1,8 +1,6 @@
-# Set these variables if you installed the library to a non-standard location
-#NON_METRIC_SPACE_LIBRARY=/home/leo/NonMetrLibDebug
-NON_METRIC_SPACE_LIBRARY=$(HOME)/NonMetrLibRelease
+NON_METRIC_SPACE_LIBRARY=../similarity_search
 NON_METRIC_SPACE_LIBRARY_INC=$(NON_METRIC_SPACE_LIBRARY)/include
-NON_METRIC_SPACE_LIBRARY_LIB=$(NON_METRIC_SPACE_LIBRARY)/lib
+NON_METRIC_SPACE_LIBRARY_LIB=$(NON_METRIC_SPACE_LIBRARY)/release
 
 LIB_GSL=-lgsl -lgslcblas -llshkit
 
