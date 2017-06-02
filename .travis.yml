@@ -32,7 +32,7 @@ install:
 
 script:
 - |
-  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+  if [ "$TRAVIS_OS_NAME" = "linux" -o "$TRAVIS_OS_NAME" = "osx" ] ; then
       cd similarity_search;
       ./release/bunit
       cd ..
