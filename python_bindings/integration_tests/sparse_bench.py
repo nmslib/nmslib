@@ -5,19 +5,21 @@ import sys
 import os
 import time
 import numpy as np
-from scipy.sparse import csr_matrix
-from scipy.spatial import distance
 import nmslib
-import pysparnn as snn
 from common import *
 
 
 def bench_sparse_vector(batch=True):
+    # delay importing these so CI can import module
+    from scipy.sparse import csr_matrix
+    from scipy.spatial import distance
+    from pysparnn.cluster_index import MultiClusterIndex
+
     dim = 20000
     dataset = np.random.binomial(1, 0.01, size=(40000, dim))
     queryset = np.random.binomial(1, 0.009, size=(1000, dim))
 
-    print 'dataset[0]:', [[i, v] for i, v in enumerate(dataset[0]) if v > 0]
+    print('dataset[0]:', [[i, v] for i, v in enumerate(dataset[0]) if v > 0])
 
     k = 3
 
@@ -26,21 +28,22 @@ def bench_sparse_vector(batch=True):
     for i in range(dataset.shape[0]):
         res.append([i, distance.cosine(q0, dataset[i,:])])
     res.sort(key=lambda x: x[1])
-    print 'q0 res', res[:k]
+    print('q0 res', res[:k])
 
     data_matrix = csr_matrix(dataset, dtype=np.float32)
     query_matrix = csr_matrix(queryset, dtype=np.float32)
 
     data_to_return = range(dataset.shape[0])
+
     with TimeIt('building MultiClusterIndex'):
-        cp = snn.MultiClusterIndex(data_matrix, data_to_return)
+        cp = MultiClusterIndex(data_matrix, data_to_return)
 
     with TimeIt('knn search'):
         res = cp.search(query_matrix, k=k, return_distance=False)
 
-    print res[:5]
+    print(res[:5])
     for i in res[0]:
-        print int(i), distance.cosine(q0, dataset[int(i),:])
+        print(int(i), distance.cosine(q0, dataset[int(i),:]))
 
     #space_type = 'cosinesimil_sparse'
     space_type = 'cosinesimil_sparse_fast'
@@ -58,7 +61,7 @@ def bench_sparse_vector(batch=True):
     if batch:
         with TimeIt('batch add'):
             positions = nmslib.addDataPointBatch(index, np.arange(len(dataset), dtype=np.int32), data_matrix)
-        print 'positions', positions
+        print('positions', positions)
     else:
         d = []
         q = []
@@ -71,7 +74,7 @@ def bench_sparse_vector(batch=True):
             for id, data in enumerate(d):
                 nmslib.addDataPoint(index, id, data)
 
-    print 'Let\'s invoke the index-build process'
+    print('Let\'s invoke the index-build process')
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
@@ -79,13 +82,13 @@ def bench_sparse_vector(batch=True):
     with TimeIt('building index'):
         nmslib.createIndex(index, index_param)
 
-    print 'The index is created'
+    print('The index is created')
 
     nmslib.setQueryTimeParams(index,query_time_param)
 
-    print 'Query time parameters are set'
+    print('Query time parameters are set')
 
-    print "Results for the freshly created index:"
+    print("Results for the freshly created index:")
 
     with TimeIt('knn query'):
         if batch:
@@ -93,19 +96,19 @@ def bench_sparse_vector(batch=True):
             res = nmslib.knnQueryBatch(index, num_threads, k, query_matrix)
             for idx, v in enumerate(res):
                 if idx < 5:
-                    print idx, v
+                    print(idx, v)
                 if idx == 0:
                     for i in v:
-                        print 'q0', i, distance.cosine(q0, dataset[i,:])
+                        print('q0', i, distance.cosine(q0, dataset[i,:]))
         else:
             for idx, data in enumerate(q):
                 res = nmslib.knnQuery(index, k, data)
                 if idx < 5:
-                    print idx, res
+                    print(idx, res)
 
     nmslib.saveIndex(index, index_name)
 
-    print "The index %s is saved" % index_name
+    print("The index %s is saved" % index_name)
 
     nmslib.freeIndex(index)
 

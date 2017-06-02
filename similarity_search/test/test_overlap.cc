@@ -19,12 +19,14 @@
 #include <logging.h>
 #include <idtype.h>
 #include <distcomp.h>
-#include "bunit.h"
+
 
 #include <vector>
 #include <cmath>
 
 #include <space/space_sparse_vector_inter.h>
+#include "bunit.h"
+#include "my_isnan_isinf.h"
 
 using namespace std;
 
@@ -101,12 +103,6 @@ TEST(TestIntersect2Way) {
   EXPECT_EQ(vvIds1.size(), vvIds2.size());
   EXPECT_EQ(vvIds1.size(), vInterQty.size());
 
-  /*
-   * Note for tests below: 
-   * isnan() doesn't work in the fast-math mode.
-   * Perhaps, I need to use some custom implementation.
-   */
-  
   for (size_t i = 0; i < vvIds1.size(); ++i) {
     size_t qty1 = IntersectSizeScalarFast(&vvIds1[i][0], vvIds1[i].size(), 
                                           &vvIds2[i][0], vvIds2[i].size());
@@ -143,30 +139,30 @@ TEST(TestIntersect2Way) {
 
     float overlap_qty = oinfo.overlap_qty_;
     float overlap_dotprod_norm = std::min(norm1, norm2) >0 ? overlap_qty * oneElemVal1 * oneElemVal2 / (norm1 * norm2) : 0; 
-    CHECK(!isnan(overlap_dotprod_norm));
+    CHECK(!my_isnan(overlap_dotprod_norm));
   
     const float eps = 0.0001f; // somewhat adhoc
 
     EXPECT_EQ_EPS(overlap_dotprod_norm, oinfo.overlap_dotprod_norm_, eps);
-    //cerr << overlap_dotprod_norm << " # " << isnan(overlap_dotprod_norm) << " -> " << oinfo.overlap_dotprod_norm_ << endl;
+    //cerr << overlap_dotprod_norm << " # " << my_isnan(overlap_dotprod_norm) << " -> " << oinfo.overlap_dotprod_norm_ << endl;
 
     float diff_sum_left    = oneElemVal1*(vectQty1 - overlap_qty);
-    CHECK(!isnan(diff_sum_left));
+    CHECK(!my_isnan(diff_sum_left));
     EXPECT_EQ_EPS(diff_sum_left, oinfo.diff_sum_left_, eps);
     EXPECT_EQ_EPS(vectQty1 > overlap_qty ? oneElemVal1 : 0, oinfo.diff_mean_left_, eps);
 
     float overlap_sum_left = oneElemVal1*overlap_qty;
-    CHECK(!isnan(overlap_sum_left));
+    CHECK(!my_isnan(overlap_sum_left));
     EXPECT_EQ_EPS(overlap_sum_left, oinfo.overlap_sum_left_, eps);
     EXPECT_EQ_EPS(overlap_qty > 0 ? oneElemVal1 : 0, oinfo.overlap_mean_left_, eps);
 
     float diff_sum_right = oneElemVal2*(vectQty2 - overlap_qty);
-    CHECK(!isnan(diff_sum_right));
+    CHECK(!my_isnan(diff_sum_right));
     EXPECT_EQ_EPS(diff_sum_right, oinfo.diff_sum_right_, eps);
     EXPECT_EQ_EPS(vectQty2 > overlap_qty ? oneElemVal2 : 0, oinfo.diff_mean_right_, eps);
 
     float overlap_sum_right = oneElemVal2*overlap_qty;
-    CHECK(!isnan(overlap_sum_left));
+    CHECK(!my_isnan(overlap_sum_left));
     EXPECT_EQ_EPS(overlap_sum_right, oinfo.overlap_sum_right_, eps);
     EXPECT_EQ_EPS(overlap_qty > 0 ? oneElemVal2 : 0, oinfo.overlap_mean_right_, eps);
   }

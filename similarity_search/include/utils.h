@@ -58,14 +58,6 @@
 #define PATH_SEPARATOR "/"
 #endif
 
-
-#ifdef _MSC_VER
-#define ISNAN _isnan
-#define __func__ __FUNCTION__ 
-#else
-#define ISNAN std::isnan
-#endif
-
 #if defined(_MSC_VER)
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
@@ -115,6 +107,7 @@ void RStrip(char* str);
 
 template <typename dist_t>
 dist_t Mean(const dist_t* array, const unsigned size) {
+  if (!size) return 0;
   dist_t result = 0.0;
   for (unsigned i = 0; i < size; ++i)
     result += array[i];
