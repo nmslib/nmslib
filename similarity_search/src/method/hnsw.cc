@@ -160,6 +160,8 @@ namespace similarity {
 
 #ifdef _OPENMP
         indexThreadQty_ = omp_get_max_threads();
+#else
+        indexThreadQty_ = 1;
 #endif
         pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, indexThreadQty_);
         // indexThreadQty_ = 1;

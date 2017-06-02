@@ -157,10 +157,10 @@ ScalarProductFastRes SparseScalarProductFastIntern(const char* pData1, size_t le
       float *pVal2 = val2;
 
       size_t i1 = 0, i2 = 0;
-      size_t iEnd1 = qty1 / 8 * 8;
-      size_t iEnd2 = qty2 / 8 * 8;
 
 #ifdef PORTABLE_SSE4
+      size_t iEnd1 = qty1 / 8 * 8;
+      size_t iEnd2 = qty2 / 8 * 8;
       if (i1 < iEnd1 && i2 < iEnd2) {
         while (pBlockIds1[i1 + 7] < pBlockIds2[i2]) {
           i1 += 8;
