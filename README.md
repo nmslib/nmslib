@@ -1,5 +1,6 @@
-[![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-Non-Metric Space Library (NMSLIB)
+[![Build Status](https://travis-ci.org/searchivarius/nmslib.svg?branch=master)](https://travis-ci.org/searchivarius/nmslib) [![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Non-Metric Space Library (NMSLIB) 
 =================
 The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes.
 -----------------
@@ -9,7 +10,7 @@ The goal of the project is to create an effective and **comprehensive** toolkit 
 
 NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
-**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from  David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
+**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from  David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
 To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13). Some other related papers are listed in the end.
 

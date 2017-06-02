@@ -28,7 +28,9 @@ class MemUsage {
   double get_vmsize();
 
  private:
+#ifdef __linux
   char status_file_[50];
+#endif
 };
 
 }   // namespace similarity

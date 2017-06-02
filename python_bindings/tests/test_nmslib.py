@@ -49,9 +49,9 @@ def test_vector_load(fast=True, fast_batch=True, seq=True):
         os.remove(index_name)
     f = '/tmp/foo.txt'
     if not os.path.isfile(f):
-        print 'creating %s' % f
+        print('creating %s' % f)
         np.savetxt(f, np.random.rand(100000,1000), delimiter="\t")
-        print 'done'
+        print('done')
 
     if fast:
         index = nmslib.init(
@@ -77,7 +77,7 @@ def test_vector_load(fast=True, fast_batch=True, seq=True):
             for data in read_data_fast_batch(f, 10000):
                 nmslib.addDataPointBatch(index, np.arange(len(data), dtype=np.int32) + offset, data)
                 offset += data.shape[0]
-        print 'offset', offset
+        print('offset', offset)
         nmslib.freeIndex(index)
 
     if seq:
@@ -110,42 +110,42 @@ def test_vector_fresh(fast=True):
     start = time.time()
     if fast:
         data = read_data_fast('sample_dataset.txt')
-        print 'data.shape', data.shape
+        print('data.shape', data.shape)
         positions = nmslib.addDataPointBatch(index, np.arange(len(data), dtype=np.int32), data)
     else:
         for id, data in enumerate(read_data('sample_dataset.txt')):
             pos = nmslib.addDataPoint(index, id, data)
-	    if id != pos:
-                print 'id %s != pos %s' % (id, pos)
-		sys.exit(1)
+            if id != pos:
+                print('id %s != pos %s' % (id, pos))
+                sys.exit(1)
     end = time.time()
-    print 'added data in %s secs' % (end - start)
+    print('added data in %s secs' % (end - start))
 
-    print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib.getDataPointQty(index)
+    print('Let\'s print a few data entries')
+    print('We have added %d data points' % nmslib.getDataPointQty(index))
 
-    print "Distance between points (0,0) " + str(nmslib.getDistance(index, 0, 0));
-    print "Distance between points (1,1) " + str(nmslib.getDistance(index, 1, 1));
-    print "Distance between points (0,1) " + str(nmslib.getDistance(index, 0, 1));
-    print "Distance between points (1,0) " + str(nmslib.getDistance(index, 1, 0));
+    print("Distance between points (0,0) " + str(nmslib.getDistance(index, 0, 0)));
+    print("Distance between points (1,1) " + str(nmslib.getDistance(index, 1, 1)));
+    print("Distance between points (0,1) " + str(nmslib.getDistance(index, 0, 1)));
+    print("Distance between points (1,0) " + str(nmslib.getDistance(index, 1, 0)));
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib.getDataPointQty(index))):
-       print nmslib.getDataPoint(index, i)
+       print(nmslib.getDataPoint(index, i))
 
-    print 'Let\'s invoke the index-build process'
+    print('Let\'s invoke the index-build process')
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
 
     nmslib.createIndex(index, index_param)
 
-    print 'The index is created'
+    print('The index is created')
 
     nmslib.setQueryTimeParams(index,query_time_param)
 
-    print 'Query time parameters are set'
+    print('Query time parameters are set')
 
-    print "Results for the freshly created index:"
+    print("Results for the freshly created index:")
 
     k = 3
 
@@ -155,16 +155,16 @@ def test_vector_fresh(fast=True):
         query = read_data_fast('sample_queryset.txt')
         res = nmslib.knnQueryBatch(index, num_threads, k, query)
         for idx, v in enumerate(res):
-            print idx, v
+            print(idx, v)
     else:
         for idx, data in enumerate(read_data('sample_queryset.txt')):
-            print idx, nmslib.knnQuery(index, k, data)
+            print(idx, nmslib.knnQuery(index, k, data))
     end = time.time()
-    print 'querying done in %s secs' % (end - start)
+    print('querying done in %s secs' % (end - start))
 
     nmslib.saveIndex(index, index_name)
 
-    print "The index %s is saved" % index_name
+    print("The index %s is saved" % index_name)
 
     nmslib.freeIndex(index)
 
@@ -182,34 +182,34 @@ def test_vector_loaded():
 
     for id, data in enumerate(read_data('sample_dataset.txt')):
         pos = nmslib.addDataPoint(index, id, data)
-	if id != pos:
-            print 'id %s != pos %s' % (id, pos)
-	    sys.exit(1)
+        if id != pos:
+            print('id %s != pos %s' % (id, pos))
+            sys.exit(1)
 
-    print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib.getDataPointQty(index)
+    print('Let\'s print a few data entries')
+    print('We have added %d data points' % nmslib.getDataPointQty(index))
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib.getDataPointQty(index))):
-       print nmslib.getDataPoint(index,i)
+       print(nmslib.getDataPoint(index,i))
 
-    print 'Let\'s invoke the index-build process'
+    print('Let\'s invoke the index-build process')
 
 
     query_time_param = ['initSearchAttempts=3']
 
     nmslib.loadIndex(index, index_name)
 
-    print "The index %s is loaded" % index_name
+    print("The index %s is loaded" % index_name)
 
     nmslib.setQueryTimeParams(index,query_time_param)
 
-    print 'Query time parameters are set'
+    print('Query time parameters are set')
 
-    print "Results for the loaded index"
+    print("Results for the loaded index")
 
     k = 2
     for idx, data in enumerate(read_data('sample_queryset.txt')):
-        print idx, nmslib.knnQuery(index, k, data)
+        print(idx, nmslib.knnQuery(index, k, data))
 
     nmslib.freeIndex(index)
 
@@ -219,11 +219,11 @@ def gen_sparse_data():
     dim = 5000
 
     data = np.random.binomial(1, 0.01, size=(n, dim))
-    print data.shape
+    print(data.shape)
     np.savetxt('sample_sparse_dataset.txt', data, delimiter='\t')
 
     query = np.random.binomial(1, 0.01, size=(q, dim))
-    print query.shape
+    print(query.shape)
     np.savetxt('sample_sparse_queryset.txt', query, delimiter='\t')
 
 def test_sparse_vector_fresh():
@@ -243,34 +243,34 @@ def test_sparse_vector_fresh():
     for id, data in enumerate(read_sparse_data('sample_sparse_dataset.txt')):
         nmslib.addDataPoint(index, id, data)
 
-    print 'We have added %d data points' % nmslib.getDataPointQty(index)
+    print('We have added %d data points' % nmslib.getDataPointQty(index))
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib.getDataPointQty(index))):
-       print nmslib.getDataPoint(index,i)
+       print(nmslib.getDataPoint(index,i))
 
-    print 'Let\'s invoke the index-build process'
+    print('Let\'s invoke the index-build process')
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
 
     nmslib.createIndex(index, index_param)
 
-    print 'The index is created'
+    print('The index is created')
 
     nmslib.setQueryTimeParams(index,query_time_param)
 
-    print 'Query time parameters are set'
+    print('Query time parameters are set')
 
-    print "Results for the freshly created index:"
+    print("Results for the freshly created index:")
 
     k = 3
 
     for idx, data in enumerate(read_sparse_data('sample_sparse_queryset.txt')):
-        print idx, nmslib.knnQuery(index, k, data)
+        print(idx, nmslib.knnQuery(index, k, data))
 
     nmslib.saveIndex(index, index_name)
 
-    print "The index %s is saved" % index_name
+    print("The index %s is saved" % index_name)
 
     nmslib.freeIndex(index)
 
@@ -295,24 +295,24 @@ def test_string_fresh(batch=True):
                              nmslib.DistType.INT)
 
     if batch:
-        print 'DATA_STRS', DATA_STRS
+        print('DATA_STRS', DATA_STRS)
         positions = nmslib.addDataPointBatch(index, np.arange(len(DATA_STRS), dtype=np.int32), DATA_STRS)
     else:
         for id, data in enumerate(DATA_STRS):
             nmslib.addDataPoint(index, id, data)
 
-    print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib.getDataPointQty(index)
+    print('Let\'s print a few data entries')
+    print('We have added %d data points' % nmslib.getDataPointQty(index))
 
-    print "Distance between points (0,0) " + str(nmslib.getDistance(index, 0, 0));
-    print "Distance between points (1,1) " + str(nmslib.getDistance(index, 1, 1));
-    print "Distance between points (0,1) " + str(nmslib.getDistance(index, 0, 1));
-    print "Distance between points (1,0) " + str(nmslib.getDistance(index, 1, 0));
+    print("Distance between points (0,0) " + str(nmslib.getDistance(index, 0, 0)));
+    print("Distance between points (1,1) " + str(nmslib.getDistance(index, 1, 1)));
+    print("Distance between points (0,1) " + str(nmslib.getDistance(index, 0, 1)));
+    print("Distance between points (1,0) " + str(nmslib.getDistance(index, 1, 0)));
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib.getDataPointQty(index))):
-        print nmslib.getDataPoint(index,i)
+        print(nmslib.getDataPoint(index,i))
 
-    print 'Let\'s invoke the index-build process'
+    print('Let\'s invoke the index-build process')
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
@@ -320,9 +320,9 @@ def test_string_fresh(batch=True):
     nmslib.createIndex(index, index_param)
     nmslib.setQueryTimeParams(index, query_time_param)
 
-    print 'Query time parameters are set'
+    print('Query time parameters are set')
 
-    print "Results for the freshly created index:"
+    print("Results for the freshly created index:")
 
     k = 2
     if batch:
@@ -330,11 +330,11 @@ def test_string_fresh(batch=True):
         res = nmslib.knnQueryBatch(index, num_threads, k, QUERY_STRS)
     for idx, data in enumerate(QUERY_STRS):
         res = nmslib.knnQuery(index, k, data)
-        print idx, data, res, [DATA_STRS[i] for i in res]
+        print(idx, data, res, [DATA_STRS[i] for i in res])
 
     nmslib.saveIndex(index, index_name)
 
-    print "The index %s is saved" % index_name
+    print("The index %s is saved" % index_name)
 
     nmslib.freeIndex(index)
 
@@ -361,13 +361,13 @@ def test_string_loaded():
     for id, data in enumerate(DATA_STRS):
         nmslib.addDataPoint(index, id, data)
 
-    print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib.getDataPointQty(index)
+    print('Let\'s print a few data entries')
+    print('We have added %d data points' % nmslib.getDataPointQty(index))
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib.getDataPointQty(index))):
-        print nmslib.getDataPoint(index,i)
+        print(nmslib.getDataPoint(index,i))
 
-    print 'Let\'s invoke the index-build process'
+    print('Let\'s invoke the index-build process')
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
@@ -375,17 +375,17 @@ def test_string_loaded():
 
     nmslib.loadIndex(index, index_name)
 
-    print "The index %s is loaded" % index_name
+    print("The index %s is loaded" % index_name)
 
     nmslib.setQueryTimeParams(index, query_time_param)
 
-    print 'Query time parameters are set'
+    print('Query time parameters are set')
 
-    print "Results for the loaded index:"
+    print("Results for the loaded index:")
 
     k = 2
     for idx, data in enumerate(QUERY_STRS):
-        print idx, nmslib.knnQuery(index, k, data)
+        print(idx, nmslib.knnQuery(index, k, data))
 
     nmslib.freeIndex(index)
 
@@ -411,47 +411,47 @@ def test_object_as_string_fresh(batch=True):
         for id, data in enumerate(read_data_as_string('sample_dataset.txt')):
             nmslib.addDataPoint(index, id, data)
 
-    print 'Let\'s print a few data entries'
-    print 'We have added %d data points' % nmslib.getDataPointQty(index)
+    print('Let\'s print a few data entries')
+    print('We have added %d data points' % nmslib.getDataPointQty(index))
 
     for i in range(0,min(MAX_PRINT_QTY,nmslib.getDataPointQty(index))):
-       print nmslib.getDataPoint(index, i)
+       print(nmslib.getDataPoint(index, i))
 
-    print 'Let\'s invoke the index-build process'
+    print('Let\'s invoke the index-build process')
 
     index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
     query_time_param = ['initSearchAttempts=3']
 
     nmslib.createIndex(index, index_param)
 
-    print 'The index is created'
+    print('The index is created')
 
     nmslib.setQueryTimeParams(index,query_time_param)
 
-    print 'Query time parameters are set'
+    print('Query time parameters are set')
 
-    print "Results for the freshly created index:"
+    print("Results for the freshly created index:")
 
     k = 3
 
     for idx, data in enumerate(read_data_as_string('sample_queryset.txt')):
-        print idx, nmslib.knnQuery(index, k, data)
+        print(idx, nmslib.knnQuery(index, k, data))
 
     nmslib.saveIndex(index, index_name)
 
-    print "The index %s is saved" % index_name
+    print("The index %s is saved" % index_name)
 
     nmslib.freeIndex(index)
 
 
 if __name__ == '__main__':
 
-    print 'DENSE_VECTOR', nmslib.DataType.DENSE_VECTOR
-    print 'SPARSE_VECTOR', nmslib.DataType.SPARSE_VECTOR
-    print 'OBJECT_AS_STRING', nmslib.DataType.OBJECT_AS_STRING
+    print('DENSE_VECTOR', nmslib.DataType.DENSE_VECTOR)
+    print('SPARSE_VECTOR', nmslib.DataType.SPARSE_VECTOR)
+    print('OBJECT_AS_STRING', nmslib.DataType.OBJECT_AS_STRING)
 
-    print 'DistType.INT', nmslib.DistType.INT
-    print 'DistType.FLOAT', nmslib.DistType.FLOAT
+    print('DistType.INT', nmslib.DistType.INT)
+    print('DistType.FLOAT', nmslib.DistType.FLOAT)
 
 
     test_vector_load()

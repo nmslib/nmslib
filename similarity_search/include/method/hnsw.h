@@ -568,7 +568,7 @@ namespace similarity {
                 curV++;
             }
         };
-        ~VisitedList() { delete mass; }
+        ~VisitedList() { delete [] mass; }
     };
     ///////////////////////////////////////////////////////////
     //
@@ -579,7 +579,6 @@ namespace similarity {
     class VisitedListPool {
         deque<VisitedList *> pool;
         mutex poolguard;
-        int maxpools;
         int numelements;
 
     public:

@@ -191,7 +191,7 @@ TEST(FP_NANFloat) {
 };
 
 TEST(FP_NANDouble) {
-    static double __nan = numeric_limits<double>::quiet_NaN();
+  static double __nan = numeric_limits<double>::quiet_NaN();
   testNotEqualFP<double>(__nan, __nan);
   testNotEqualFP<double>(__nan, -__nan);
 };

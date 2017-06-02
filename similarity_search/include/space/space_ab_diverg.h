@@ -50,7 +50,7 @@ class SpaceAlphaBetaDiverg : public VectorSpaceSimpleStorage<dist_t> {
   explicit SpaceAlphaBetaDiverg(float alpha, float beta) : alpha_(alpha), beta_(beta) {}
   virtual ~SpaceAlphaBetaDiverg() {}
 
-  virtual std::string StrDesc() const;
+  virtual std::string StrDesc() const override;
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const override;
   virtual dist_t ProxyDistance(const Object* obj1, const Object* obj2) const override;

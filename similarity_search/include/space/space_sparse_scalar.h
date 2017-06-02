@@ -29,6 +29,7 @@
 #include "space.h"
 #include "space_sparse_vector.h"
 #include "distcomp.h"
+#include "my_isnan_isinf.h"
 
 #define SPACE_SPARSE_COSINE_SIMILARITY          "cosinesimil_sparse"
 #define SPACE_SPARSE_ANGULAR_DISTANCE           "angulardist_sparse"
@@ -57,7 +58,7 @@ class SpaceSparseAngularDistance : public SpaceSparseVectorSimpleStorage<dist_t>
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = AngularDistance(x, y, length);
       // This shouldn't normally happen, but let's keep this check
-      if (std::isnan(val)) throw runtime_error("SpaceAngularDist Bug: NAN dist!!!!");
+      if (my_isnan(val)) throw runtime_error("SpaceAngularDist Bug: NAN dist!!!!");
       return val;
     }
   };
@@ -85,7 +86,7 @@ class SpaceSparseCosineSimilarity : public SpaceSparseVectorSimpleStorage<dist_t
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       dist_t val = CosineSimilarity(x, y, length);
       // This shouldn't normally happen, but let's keep this check
-      if (std::isnan(val)) throw runtime_error("SpaceCosineSimilarityDist Bug: NAN dist!!!!");
+      if (my_isnan(val)) throw runtime_error("SpaceCosineSimilarityDist Bug: NAN dist!!!!");
       return val;
     }
   };
@@ -138,7 +139,7 @@ private:
     dist_t operator()(const dist_t* x, const dist_t* y, size_t length) const {
       // This shouldn't normally happen, but let's keep this check
       dist_t val = QueryNormScalarProduct(x, y, length);
-      if (std::isnan(val)) throw runtime_error("SpaceNegativeQueryNormScalarDist Bug: NAN dist!!!!");
+      if (my_isnan(val)) throw runtime_error("SpaceNegativeQueryNormScalarDist Bug: NAN dist!!!!");
       return -val;
     }
   };

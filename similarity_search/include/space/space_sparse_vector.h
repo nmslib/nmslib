@@ -123,7 +123,7 @@ public:
   explicit SpaceSparseVectorSimpleStorage() {}
 
   virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
-                                 size_t nElem) const {
+                                 size_t nElem) const override {
     static std::hash<size_t>   indexHash;
     fill(pVect, pVect + nElem, static_cast<dist_t>(0));
     const ElemType* beg = reinterpret_cast<const ElemType*>(obj->data());
@@ -142,7 +142,7 @@ public:
 protected:
   DISABLE_COPY_AND_ASSIGN(SpaceSparseVectorSimpleStorage);
 
-  virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const {
+  virtual void CreateVectFromObj(const Object* obj, vector<ElemType>& v) const override {
     const ElemType* beg = reinterpret_cast<const ElemType*>(obj->data());
     const ElemType* const end =
         reinterpret_cast<const ElemType*>(obj->data() + obj->datalength());
@@ -150,8 +150,6 @@ protected:
     v.resize(qty);
     for (size_t i = 0; i < qty; ++i) v[i] = beg[i];
   }
-
-  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const = 0;
 
   /* 
    * This helper function converts a dense vector to a sparse one and then calls a generic distance function.
