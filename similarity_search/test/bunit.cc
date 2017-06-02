@@ -84,7 +84,7 @@ int TestRunner::RunAllTests() {
   }
   std::cout << "======================================" << std::endl;
 
-  return num_failed;
+  return num_failed != 0;
 }
 
 }     // namespace similarity

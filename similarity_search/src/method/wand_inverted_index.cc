@@ -79,7 +79,7 @@ void WandInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   // accumulation of the PostListQueryStateWAND.max_term_contr_
   dist_t   max_contrib_accum = 0;
 
-  unsigned lowest_doc_indexes[wordQty];
+  vector<unsigned> lowest_doc_indexes(wordQty);
   int lowest_doc_count = 0;
 
   while (!postListQueue.empty()) {

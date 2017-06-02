@@ -59,6 +59,13 @@ using std::stringstream;
 #define MAX_NUM_QUERY  100
 
 vector<MethodTestCase>    vTestCaseDesc = {
+  MethodTestCase(DIST_TYPE_FLOAT, "negdotprod_sparse_fast", "sparse_5K.txt", "simple_invindx", "", "", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 450, 510),  
+  MethodTestCase(DIST_TYPE_FLOAT, "negdotprod_sparse_fast", "sparse_5K.txt", "wand_invindx", "", "", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 450, 510),  
+  MethodTestCase(DIST_TYPE_FLOAT, "negdotprod_sparse_fast", "sparse_5K.txt", "blkmax_invindx", "", "", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 450, 510),  
+#if 1
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "sw-graph", "efConstruction=50,NN=10", "efSearch=50", 
@@ -67,7 +74,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
   MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse_fast", "sparse_5K.txt", "sw-graph", "efConstruction=50,NN=10", "efSearch=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 5, 10),  
-#if 1
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", "clusterType=clarans,centerQty=10", "dbScanFrac=0.1", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
   // ************** Tests for non-metric clustering *********** //
