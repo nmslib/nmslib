@@ -712,6 +712,7 @@ namespace similarity {
             throw runtime_error("Storing non-optimized index is not supported yet!");
 
         std::ofstream output(location, std::ios::binary);
+        CHECK_MSG(output, "Cannot open file '" + location + "' for writing");
         streampos position;
         totalElementsStored_ = ElList_.size();
 
@@ -750,6 +751,7 @@ namespace similarity {
     {
         LOG(LIB_INFO) << "Loading index from " << location;
         std::ifstream input(location, std::ios::binary);
+        CHECK_MSG(input, "Cannot open file '" + location + "' for reading");
         streampos position;
 
         // input.seekg(0, std::ios::beg);
