@@ -13,7 +13,7 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__APPLE__)
 
 #include <sys/time.h>
 
@@ -23,7 +23,7 @@
 
 namespace similarity {
 
-const unsigned TIMER_ERR_TOL = 2000;
+const unsigned TIMER_ERR_TOL = 200;
 
 /*
  * These test is intended to run only on Unix-like systems.
