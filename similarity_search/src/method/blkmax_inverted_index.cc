@@ -90,7 +90,7 @@ void BlockMaxInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   dist_t   max_block_contrib_accum = 0;
 
   // list of indexes into index_into_queryStates of the lowest doc_ids up to the pivot (inclusive)
-  unsigned lowest_doc_indexes[wordQty];
+  std::vector<unsigned> lowest_doc_indexes(wordQty);
   int pivotIdx = 0;
   IdType pivot_doc_id_neg = 1;
 

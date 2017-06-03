@@ -748,7 +748,7 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
-  CHECK_MSG(changedAfterCreateIndex_,
+  CHECK_MSG(!changedAfterCreateIndex_,
             "It seems that data was added/deleted after calling CreateIndex, in this case saving indices isn't possible");
   
   ofstream outFile(location);
