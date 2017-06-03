@@ -1,3 +1,4 @@
+![Pypi version](https://img.shields.io/pypi/v/nmslib.svg)
 [![Build Status](https://travis-ci.org/searchivarius/nmslib.svg?branch=master)](https://travis-ci.org/searchivarius/nmslib)
 ![Windows Build Status](https://ci.appveyor.com/api/projects/status/wd63b9doe7xco81t/branch/master?svg=true)
 [![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
