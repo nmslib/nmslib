@@ -5,14 +5,14 @@ Python bindings for NMSLIB
 #### Installation
 
 This project works with Python on version 2.7+ and 3.5+, and on
-Linux/ OSX and Windows operating systems. To install first clone this repo,
-and then run these commands from this directory:
+Linux, OSX and the Windows operating systems. To install:
 
 ```
-pip install -r requirements.txt
-python setup.py install
+pip install nmslib
 ```
-You may to install Python dev-files. On Ubuntu, you can do it as follows:
+
+You may need to install Python dev-files. On Ubuntu, you can do it as follows:
+
 ```
 sudo apt-get install python3-dev
 ```

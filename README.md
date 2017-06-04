@@ -1,6 +1,6 @@
-![Pypi version](https://img.shields.io/pypi/v/nmslib.svg)
+[![Pypi version](https://img.shields.io/pypi/v/nmslib.svg)](http://pypi.python.org/pypi/nmslib)
 [![Build Status](https://travis-ci.org/searchivarius/nmslib.svg?branch=master)](https://travis-ci.org/searchivarius/nmslib)
-![Windows Build Status](https://ci.appveyor.com/api/projects/status/wd63b9doe7xco81t/branch/master?svg=true)
+[![Windows Build Status](https://ci.appveyor.com/api/projects/status/wd63b9doe7xco81t/branch/master?svg=true)](https://ci.appveyor.com/project/searchivarius/nmslib)
 [![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Non-Metric Space Library (NMSLIB) 
@@ -91,8 +91,7 @@ Limitations
 2. HNSW does not work with Clang
 3. HNSW currently duplicates memory to create optimized indices
 4. Non-optimized HNSW indices cannot be saved
-5. Python 3 is not yet supported
-6. Range/threshold search is not supported by many methods including SW-graph/HNSW
+5. Range/threshold search is not supported by many methods including SW-graph/HNSW
 
 We plan to resolve these issues in the future.
 
@@ -148,16 +147,16 @@ thrift --gen csharp  protocol.thrift
 ```
 For instructions on using generated code, please consult the [Apache Thrift tutorial](https://thrift.apache.org/tutorial/).
 
-Python bindings (Linux-only)
+Python bindings
 -----------------------
 
-We provide basic Python bindings (for Linux and Python 2.7). To build bindings for dense vector spaces, build the library first. Then, change the directory to
-[python_bindings](python_bindings) and type (requires Python distutils):
+We provide Python bindings for Python 2.7+ and Python 3.5+, which have been tested under Linux, OSX and Windows. To install:
+
 ```
-python setup.py build
-sudo python setup.py install
+pip install nmslib
 ```
-For examples of using Python API, please, see *.py files in the folder [python_bindings](python_bindings).
+
+For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder.
 
 Quick start on Windows
 -----------------------
