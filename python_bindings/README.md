@@ -42,3 +42,31 @@ ids, distances = index.knnQuery(data[0], k=10)
 # using a pool of 4 threads to compute
 neighbours = index.knnQueryBatch(data, k=10, num_threads=4)
 ```
+
+#### Installing with Extras
+
+To enable extra methods like those provided by FALCONN and LSHKIT you need to follow an extra couple steps.
+
+These methods require a development version of the
+following libraries: Boost, GNU scientific library, and Eigen3. To install on Ubuntu:
+
+```
+sudo apt-get install libboost-all-dev libgsl0-dev libeigen3-dev
+```
+
+Next clone the repository and build with the C++ files using CMake:
+
+```
+cd similarity_search
+cmake . -DWITH_EXTRAS=1
+make
+cd ..
+```
+
+Finally build and install the python extension:
+
+```
+cd python_bindings
+pip install -r requirements.txt
+python setup.py install
+```
