@@ -13,6 +13,7 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
+#include <atomic>
 #include <thread>
 #include <queue>
 #include <mutex>
@@ -52,4 +53,43 @@ namespace similarity {
     for (auto& thread : threads) thread.join();
 
 */
+
+  // replacement for the openmp '#pragma omp parallel for' directive
+  // only handles a subset of functionality (no reductions etc)
+  template <class Function>
+  inline void ParallelFor(int initial, int final, int numThreads, Function fn) {
+    if (numThreads <= 0) {
+      numThreads = std::thread::hardware_concurrency();
+    }
+
+    std::vector<std::thread> threads;
+    std::atomic<int> current(initial);
+
+    // keep track of exceptions in threads
+    // https://stackoverflow.com/a/32428427/1713196
+    std::exception_ptr lastException = nullptr;
+
+    for (int i = 0; i < numThreads; ++i) {
+      threads.push_back(std::thread([&] {
+        while (true) {
+          int id = current.fetch_add(1);
+          if ((id >= final) || lastException) {
+            break;
+          }
+
+          try {
+            fn(id);
+          } catch (...) {
+            lastException = std::current_exception();
+          }
+        }
+      }));
+    }
+    for (auto & thread : threads) {
+      thread.join();
+    }
+    if (lastException) {
+      std::rethrow_exception(lastException);
+    }
+  }
 };
