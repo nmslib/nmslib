@@ -111,7 +111,7 @@ void cTriGen::ComputeDistribution(unsigned int distanceSampleCount, double& mean
     unsigned id2 = (unsigned int)((mCount-1) * gen1.GetNext());
 
 		dist = GetModifiedDistance(id1, id2);
-    CHECK_MSG(!isnan(dist), "The modified distance is mistakingly NAN!");
+    CHECK_MSG(!std::isnan(dist), "The modified distance is mistakingly NAN!");
 		mean += dist;
 	}		
 	mean /= distanceSampleCount;
