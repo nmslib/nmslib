@@ -5,7 +5,7 @@
 
 Non-Metric Space Library (NMSLIB) 
 =================
-The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes.
+The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes. In particular, we changed the build procedure for Windows.
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
 
