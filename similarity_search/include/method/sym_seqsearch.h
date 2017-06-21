@@ -71,6 +71,7 @@ inline dist_t SymmDistance(const Space<dist_t>&  s, const Object* o1, const Obje
 
 template <typename dist_t>
 inline dist_t SymmDistance(const Query<dist_t>&  q, const Object* obj, SymmType stype) {
+  CHECK_MSG(stype != kSymmL2, "L2 symmetrization isn't supported here");
   if (stype == kSymmNone) return q.DistanceObjLeft(obj);
   if (stype == kSymmReverse) return q.DistanceObjRight(obj);
   dist_t d1 = q.DistanceObjLeft(obj);
@@ -100,6 +101,11 @@ class SymSeqSearch : public Index<dist_t> {
   size_t                  symmCandK_ = 0;
 
   dist_t SymmDistance(const Query<dist_t>*  q, const Object* o) const {
+    if (symmType_ == kSymmL2) {
+      const VectorSpace<dist_t>* pVectSpace=dynamic_cast<const VectorSpace<dist_t>*>(&space_);
+      CHECK_MSG(pVectSpace != nullptr, "Symmetrization " + string(SYM_TYPE_L2) + " can be used only with simple vector spaces");
+      return pVectSpace->ComputeL2(q->QueryObject(), o);
+    }
     if (symmType_ == kSymmNone) return q->Distance(o, q->QueryObject());
     if (symmType_ == kSymmReverse) return q->Distance(q->QueryObject(), o);
     dist_t d1 = q->Distance(q->QueryObject(), o);

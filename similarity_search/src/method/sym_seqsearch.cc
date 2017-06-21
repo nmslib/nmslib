@@ -59,7 +59,7 @@ void SymSeqSearch<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   priority_queue<pair<dist_t,IdType>> symRes;
 
   for (size_t i = 0; i < data_.size(); ++i) {
-    dist_t d = SymmDistance(query, data_[i]);
+    dist_t d = this->SymmDistance(query, data_[i]);
     symRes.push(make_pair(d, i));
     if (symRes.size() > symmCandK_) symRes.pop();
   }
