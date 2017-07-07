@@ -54,10 +54,10 @@ struct DistWrapper : public cSpaceProxy {
 #endif
       //return d/(1+d); // To make it bounded
   }
-  pair<dist_t,dist_t> ComputeWithQuery(const Query<dist_t>* q, const Object *o) const {
+  pair<dist_t,dist_t> ComputeWithQuery(const Query<dist_t>* q, const Object *o, bool computeReverse) const {
       dist_t distOrig = q->DistanceObjLeft(o);
       dist_t d = distOrig;
-      if (!isSymmetrDist_) d = min(distOrig, q->DistanceObjRight(o));
+      if (computeReverse && !isSymmetrDist_) d = min(distOrig, q->DistanceObjRight(o));
       d = max((dist_t)0, d);
 #if USE_UNSCALED_PROXY_DIST
       return make_pair(distOrig, d);
@@ -136,7 +136,8 @@ class VPTreeTrigen : public Index<dist_t> {
 
     template <typename QueryType>
     void GenericSearch(QueryType* query, 
-                       double&    queryRadius,
+                       bool compReverseBucket,
+                       KNNQueue<double>&    symmQueue,
                        cSPModifier& resultModifier, 
                        DistWrapper<dist_t>& distWrapper,
                        int& MaxLeavesToVisit) const;
@@ -180,6 +181,7 @@ class VPTreeTrigen : public Index<dist_t> {
   bool                useFPModif_;
   bool                useRBQModif_;
   bool                isSymmetrDist_;
+  bool                compReverseBucket_;
 
 	vector<cSPModifier*>  AllModifiers_;
   unique_ptr<cTriGen>   trigen_;

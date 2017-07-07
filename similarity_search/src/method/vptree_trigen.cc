@@ -23,6 +23,7 @@
 #include "space.h"
 #include "rangequery.h"
 #include "knnquery.h"
+#include "knnqueue.h"
 #include "searchoracle.h"
 #include "method/vptree_trigen.h"
 #include "method/vptree_utils.h"
@@ -82,6 +83,7 @@ void VPTreeTrigen<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParam
   pmgr.GetParamOptional("trigenSampleQty", TrigenSampleQty_, 5000);
   pmgr.GetParamOptional("trigenSampleTripletQty", TrigenSampleTripletQty_, 1000000);
   pmgr.GetParamOptional("isSymmetrDist", isSymmetrDist_, true);
+  pmgr.GetParamOptional("compReverseBucket", compReverseBucket_, false);
   pmgr.GetParamOptional("useFPModif", useFPModif_, true);
   pmgr.GetParamOptional("useRBQModif", useRBQModif_, true);
 
@@ -195,16 +197,15 @@ const std::string VPTreeTrigen<dist_t, SearchOracle>::StrDesc() const {
 
 template <typename dist_t, typename SearchOracle>
 void VPTreeTrigen<dist_t, SearchOracle>::Search(RangeQuery<dist_t>* query, IdType) const {
-  int mx = MaxLeavesToVisit_;
-  double queryRadius=numeric_limits<dist_t>::max();
-  root_->GenericSearch(query, queryRadius, *resultModifier_, *distWrapper_, mx);
+  throw runtime_error("Not supported!");
 }
 
 template <typename dist_t, typename SearchOracle>
 void VPTreeTrigen<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query, IdType) const {
   int mx = MaxLeavesToVisit_;
-  double queryRadius=numeric_limits<dist_t>::max();
-  root_->GenericSearch(query, queryRadius, *resultModifier_, *distWrapper_, mx);
+  KNNQueue<double>    symmQueue(query->GetK());
+  symmQueue.Push(numeric_limits<dist_t>::max(), nullptr);
+  root_->GenericSearch(query, compReverseBucket_, symmQueue, *resultModifier_, *distWrapper_, mx);
 }
 
 template <typename dist_t, typename SearchOracle>
@@ -339,7 +340,8 @@ VPTreeTrigen<dist_t, SearchOracle>::VPNode::~VPNode() {
 template <typename dist_t, typename SearchOracle>
 template <typename QueryType>
 void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
-                                                         double&    queryRadius,
+                                                         bool compReverseBucket,
+                                                         KNNQueue<double>&  symmQueue,
                                                          cSPModifier& resultModifier, 
                                                          DistWrapper<dist_t>& distWrapper,
                                                          int& MaxLeavesToVisit) const {
@@ -355,9 +357,9 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
       const Object* Obj = (*bucket_)[i];
       //dist_t distQC = query->DistanceObjLeft(Obj);
       //query->CheckAndAddToResult(distQC, Obj);
-      auto res = distWrapper.ComputeWithQuery(query, Obj);//dist_t distQC = query->DistanceObjLeft(Obj);
+      auto res = distWrapper.ComputeWithQuery(query, Obj, compReverseBucket);//dist_t distQC = query->DistanceObjLeft(Obj);
       query->CheckAndAddToResult(res.first, Obj);
-      queryRadius = min(queryRadius, MODIF_FUNC(res.second));
+      symmQueue.Push(MODIF_FUNC(res.second), nullptr);
     }
     return;
   }
@@ -367,15 +369,17 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
   dist_t distQC = query->DistanceObjLeft(pivot_);
   query->CheckAndAddToResult(distQC, pivot_);
 */
-  auto res = distWrapper.ComputeWithQuery(query, pivot_);
+  auto res = distWrapper.ComputeWithQuery(query, pivot_, true);
   dist_t distQC = MODIF_FUNC(res.second);
   query->CheckAndAddToResult(res.first, pivot_);
+
+  symmQueue.Push(distQC, nullptr);
 
   if (distQC < mediandist_) {      // the query is inside
     // then first check inside
     if (left_child_ != NULL && 
-        oracle_.Classify(distQC, static_cast<dist_t>(queryRadius), mediandist_) != kVisitRight)
-       left_child_->GenericSearch(query, queryRadius, resultModifier, distWrapper, MaxLeavesToVisit);
+        oracle_.Classify(distQC, static_cast<dist_t>(symmQueue.TopDistance()), mediandist_) != kVisitRight)
+       left_child_->GenericSearch(query, compReverseBucket, symmQueue, resultModifier, distWrapper, MaxLeavesToVisit);
 
     /* 
      * After potentially visiting the left child, we need to reclassify the node,
@@ -385,13 +389,13 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
 
     // after that outside
     if (right_child_ != NULL && 
-        oracle_.Classify(distQC, static_cast<dist_t>(queryRadius), mediandist_) != kVisitLeft)
-       right_child_->GenericSearch(query, queryRadius, resultModifier, distWrapper, MaxLeavesToVisit);
+        oracle_.Classify(distQC, static_cast<dist_t>(symmQueue.TopDistance()), mediandist_) != kVisitLeft)
+       right_child_->GenericSearch(query, compReverseBucket, symmQueue, resultModifier, distWrapper, MaxLeavesToVisit);
   } else {                         // the query is outside
     // then first check outside
     if (right_child_ != NULL && 
-        oracle_.Classify(distQC, static_cast<dist_t>(queryRadius), mediandist_) != kVisitLeft)
-       right_child_->GenericSearch(query, queryRadius, resultModifier, distWrapper, MaxLeavesToVisit);
+        oracle_.Classify(distQC, static_cast<dist_t>(symmQueue.TopDistance()), mediandist_) != kVisitLeft)
+       right_child_->GenericSearch(query, compReverseBucket, symmQueue, resultModifier, distWrapper, MaxLeavesToVisit);
 
     /* 
      * After potentially visiting the left child, we need to reclassify the node,
@@ -400,8 +404,8 @@ void VPTreeTrigen<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
 
     // after that inside
     if (left_child_ != NULL && 
-        oracle_.Classify(distQC, static_cast<dist_t>(queryRadius), mediandist_) != kVisitRight)
-      left_child_->GenericSearch(query, queryRadius, resultModifier, distWrapper, MaxLeavesToVisit);
+        oracle_.Classify(distQC, static_cast<dist_t>(symmQueue.TopDistance()), mediandist_) != kVisitRight)
+      left_child_->GenericSearch(query, compReverseBucket, symmQueue, resultModifier, distWrapper, MaxLeavesToVisit);
   }
 }
 
