@@ -143,8 +143,8 @@ void VPTreeTrigen<dist_t, SearchOracle>::BuildTrigen() {
   if (useRBQModif_) {
     LOG(LIB_INFO) << "Will use RBQ modifiers";
 #if FASTER_STEPS
-	  double stepA = 0.005;
-	  double stepB = 0.1;
+	  double stepA = 0.01;
+	  double stepB = 0.05;
 #else
 	  double stepA = 0.0025;
 	  double stepB = 0.05;
