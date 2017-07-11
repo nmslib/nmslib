@@ -1,3 +1,7 @@
+/*
+ * Part of TriGen (Tomas Skopal, Jiry Novak)
+ * Downloaded from http://siret.ms.mff.cuni.cz/skopal/download.htm
+ */
 /**************************************************************************}
 {                                                                          }
 {    cUniformRandomGenerator.h                           		      		}

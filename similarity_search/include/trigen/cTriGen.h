@@ -1,3 +1,7 @@
+/*
+ * Part of TriGen (Tomas Skopal, Jiry Novak)
+ * Downloaded from http://siret.ms.mff.cuni.cz/skopal/download.htm
+ */
 #ifndef __cTriGen_h__
 #define __cTriGen_h__
 
