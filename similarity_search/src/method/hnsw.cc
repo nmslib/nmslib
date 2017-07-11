@@ -38,6 +38,7 @@
 #include "rangequery.h"
 #include "space.h"
 #include "space/space_lp.h"
+#include "thread_pool.h"
 
 #include <map>
 #include <set>
@@ -47,10 +48,6 @@
 
 #include "sort_arr_bi.h"
 #define MERGE_BUFFER_ALGO_SWITCH_THRESHOLD 100
-
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 #define USE_BITSET_FOR_INDEXING 1
 #define EXTEND_USE_EXTENDED_NEIGHB_AT_CONSTR (0) // 0 is faster build, 1 is faster search on clustered data
@@ -158,11 +155,8 @@ namespace similarity {
             "searchMethod", searchMethod_, 0); // this is just to prevent terminating the program when searchMethod is specified
         searchMethod_ = 0;
 
-#ifdef _OPENMP
-        indexThreadQty_ = omp_get_max_threads();
-#else
-        indexThreadQty_ = 1;
-#endif
+        indexThreadQty_ = std::thread::hardware_concurrency();
+
         pmgr.GetParamOptional("indexThreadQty", indexThreadQty_, indexThreadQty_);
         // indexThreadQty_ = 1;
         pmgr.GetParamOptional("efConstruction", efConstruction_, 200);
@@ -203,14 +197,13 @@ namespace similarity {
 
         unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
 
-#pragma omp parallel for schedule(dynamic, 128) num_threads(indexThreadQty_)
-        for (int id = 1; id < data_.size(); ++id) {
+        ParallelFor(1, data_.size(), indexThreadQty_, [&](int id) {
             HnswNode *node = new HnswNode(data_[id], id);
             add(&space_, node);
             ElList_[id] = node;
             if (progress_bar)
                 ++(*progress_bar);
-        }
+        });
 
         if (post_ == 1 || post_ == 2) {
             vector<HnswNode *> temp;
@@ -223,19 +216,21 @@ namespace similarity {
             ElList_[0] = first;
             /// Making the same index in reverse order
             unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
-#pragma omp parallel for schedule(dynamic, 128) num_threads(indexThreadQty_)
-            for (int id = data_.size() - 1; id >= 1; id--) {
+
+            ParallelFor(1, data_.size(), indexThreadQty_, [&](int pos_id) {
+                // reverse ordering (so we iterate decreasing). given
+                // parallelfor, this might not make a difference
+                int id = data_.size() - pos_id;
                 HnswNode *node = new HnswNode(data_[id], id);
                 add(&space_, node);
                 ElList_[id] = node;
                 if (progress_bar1)
                     ++(*progress_bar1);
-            }
+            });
             int maxF = 0;
 
 // int degrees[100] = {0};
-#pragma omp parallel for schedule(dynamic, 128) num_threads(indexThreadQty_)
-            for (int id = 1; id < data_.size(); ++id) {
+            ParallelFor(1, data_.size(), indexThreadQty_, [&](int id) {
                 HnswNode *node1 = ElList_[id];
                 HnswNode *node2 = temp[id];
                 vector<HnswNode *> f1 = node1->getAllFriends(0);
@@ -285,7 +280,7 @@ namespace similarity {
 
                 ElList_[id]->allFriends[0].swap(rez);
                 // degrees[ElList_[id]->allFriends[0].size()]++;
-            }
+            });
             for (int i = 0; i < temp.size(); i++)
                 delete temp[i];
             temp.clear();

@@ -19,13 +19,11 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-#include <atomic>
 #include <algorithm>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <vector>
 
 #include "init.h"
@@ -36,6 +34,7 @@
 #include "space.h"
 #include "spacefactory.h"
 #include "space/space_sparse_vector.h"
+#include "thread_pool.h"
 
 namespace py = pybind11;
 
@@ -128,31 +127,11 @@ struct IndexWrapper {
     {
       py::gil_scoped_release l;
 
-      std::vector<std::thread> threads;
-      std::atomic<size_t> current(0);
-
-      if (num_threads <= 0) {
-        num_threads = std::thread::hardware_concurrency();
-      }
-
-      for (int i = 0; i < num_threads; ++i) {
-        threads.push_back(std::thread([&] {
-          while (true) {
-            size_t query_index = current.fetch_add(1);
-            if (query_index >= queries.size()) {
-              break;
-            }
-
-            KNNQuery<dist_t> knn(*space, queries[query_index], k);
-            index->Search(&knn, -1);
-            results[query_index].reset(knn.Result()->Clone());
-          }
-        }));
-      }
-
-      for (auto & thread : threads) {
-        thread.join();
-      }
+      ParallelFor(0, queries.size(), num_threads, [&](size_t query_index) {
+        KNNQuery<dist_t> knn(*space, queries[query_index], k);
+        index->Search(&knn, -1);
+        results[query_index].reset(knn.Result()->Clone());
+      });
 
       // TODO(@benfred): some sort of RAII auto-destroy for this
       freeObjectVector(&queries);
