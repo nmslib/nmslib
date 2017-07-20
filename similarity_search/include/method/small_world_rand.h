@@ -292,7 +292,7 @@ private:
 
   mutable mutex   ElListGuard_;
   ElementMap      ElList_;
-  size_t          NextNodeId_ = 0; // This is internal node id
+  IdType          NextNodeId_ = 0; // This is internal node id
   bool            changedAfterCreateIndex_ = false;
   MSWNode*        pEntryPoint_ = nullptr;
 
