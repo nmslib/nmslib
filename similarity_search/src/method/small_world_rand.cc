@@ -828,7 +828,8 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
       if (pass == 0) {
         unique_ptr<MSWNode> node(new MSWNode(data_[nodeID], nodeID));
         ptrMapper[nodeID] = node.get();
-        ElList_.insert(make_pair(node->getData()->id(), node.release()));
+        IdType dataId = node->getData()->id();
+        ElList_.insert(make_pair(dataId, node.release()));
       } else {
         MSWNode *pNode = ptrMapper[nodeID];
         CHECK_MSG(pNode != NULL,
