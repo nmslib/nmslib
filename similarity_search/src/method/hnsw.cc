@@ -421,7 +421,7 @@ namespace similarity {
         AnyParamManager pmgr(QueryTimeParams);
 
         if (pmgr.hasParam("ef") && pmgr.hasParam("efSearch")) {
-            throw new runtime_error("The user shouldn't specify parameters ef and efSearch at the same time (they are synonyms)");
+            throw runtime_error("The user shouldn't specify parameters ef and efSearch at the same time (they are synonyms)");
         }
 
         // ef and efSearch are going to be parameter-synonyms with the default value 20
