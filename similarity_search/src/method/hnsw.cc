@@ -464,7 +464,7 @@ namespace similarity {
         if (data_level0_memory_)
             free(data_level0_memory_);
         if (linkLists_) {
-            for (int i = 0; i < ElList_.size(); i++) {
+            for (int i = 0; i < data_rearranged_.size(); i++) {
                 if (linkLists_[i])
                     free(linkLists_[i]);
             }
