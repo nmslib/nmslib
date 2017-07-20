@@ -149,7 +149,7 @@ namespace similarity {
     {
         AnyParamManager pmgr(IndexParams);
 
-        generator = new std::default_random_engine(100);
+        generator.reset(new std::default_random_engine(100));
 
         pmgr.GetParamOptional("M", M_, 16);
 
@@ -421,7 +421,7 @@ namespace similarity {
         AnyParamManager pmgr(QueryTimeParams);
 
         if (pmgr.hasParam("ef") && pmgr.hasParam("efSearch")) {
-            throw new runtime_error("The user shouldn't specify parameters ef and efSearch at the same time (they are synonyms)");
+            throw runtime_error("The user shouldn't specify parameters ef and efSearch at the same time (they are synonyms)");
         }
 
         // ef and efSearch are going to be parameter-synonyms with the default value 20
@@ -464,7 +464,7 @@ namespace similarity {
         if (data_level0_memory_)
             free(data_level0_memory_);
         if (linkLists_) {
-            for (int i = 0; i < ElList_.size(); i++) {
+            for (int i = 0; i < data_rearranged_.size(); i++) {
                 if (linkLists_[i])
                     free(linkLists_[i]);
             }
