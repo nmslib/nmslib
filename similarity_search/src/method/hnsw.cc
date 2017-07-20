@@ -149,7 +149,7 @@ namespace similarity {
     {
         AnyParamManager pmgr(IndexParams);
 
-        generator = new std::default_random_engine(100);
+        generator.reset(new std::default_random_engine(100));
 
         pmgr.GetParamOptional("M", M_, 16);
 
