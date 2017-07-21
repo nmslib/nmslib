@@ -89,7 +89,7 @@ namespace similarity {
             lastException = std::current_exception();
             /* 
              * This will work even when current is the largest value that
-             * size_t can fit, because feat_add returns the previous value
+             * size_t can fit, because fetch_add returns the previous value
              * before the increment (what will result in overflow 
              * and produce 0 instead of current + 1).
              */
