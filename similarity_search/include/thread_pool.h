@@ -57,29 +57,26 @@ namespace similarity {
   // replacement for the openmp '#pragma omp parallel for' directive
   // only handles a subset of functionality (no reductions etc)
   template <class Function>
-  inline void ParallelFor(int initial, int final, int numThreads, Function fn) {
+  inline void ParallelFor(size_t initial, size_t finalId, size_t numThreads, Function fn) {
     if (numThreads <= 0) {
       numThreads = std::thread::hardware_concurrency();
     }
 
-    std::vector<std::thread> threads;
-    std::atomic<int> current(initial);
+    std::vector<std::thread>  threads;
+    std::atomic<size_t>       current(initial);
 
     // keep track of exceptions in threads
     // https://stackoverflow.com/a/32428427/1713196
     std::exception_ptr lastException = nullptr;
     std::mutex         lastExceptMutex;
 
-    for (int i = 0; i < numThreads; ++i) {
+    for (size_t i = 0; i < numThreads; ++i) {
       threads.push_back(std::thread([&] {
         while (true) {
           int id = current.fetch_add(1);
 
-          {
-            std::unique_lock<std::mutex> lastExcepLock(lastExceptMutex);
-            if ((id >= final) || lastException) {
-              break;
-            }
+          if ((id >= finalId)) {
+            break;
           }
 
           try {
@@ -87,6 +84,7 @@ namespace similarity {
           } catch (...) {
             std::unique_lock<std::mutex> lastExcepLock(lastExceptMutex);
             lastException = std::current_exception();
+            break;
           }
         }
       }));
