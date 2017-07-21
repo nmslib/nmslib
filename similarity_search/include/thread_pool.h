@@ -68,6 +68,7 @@ namespace similarity {
     // keep track of exceptions in threads
     // https://stackoverflow.com/a/32428427/1713196
     std::exception_ptr lastException = nullptr;
+    std::mutex         lastExceptMutex;
 
     for (int i = 0; i < numThreads; ++i) {
       threads.push_back(std::thread([&] {
@@ -80,6 +81,7 @@ namespace similarity {
           try {
             fn(id);
           } catch (...) {
+            std::unique_lock<std::mutex> lastExcepLock(lastExceptMutex);
             lastException = std::current_exception();
           }
         }
