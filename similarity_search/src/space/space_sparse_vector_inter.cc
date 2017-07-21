@@ -55,13 +55,10 @@ Object* SpaceSparseVectorInter<dist_t>::CreateObjFromVect(IdType id, LabelType l
   char    *pData = NULL;
   size_t  dataLen = 0;
 
-  try {
-    PackSparseElements(InpVect, pData, dataLen);
-    return new Object(id, label, dataLen, pData);
-  } catch (...) {
-    delete [] pData;
-    throw;
-  }
+  PackSparseElements(InpVect, pData, dataLen);
+  unique_ptr<char[]>  data(pData);
+  unique_ptr<Object> obj(new Object(id, label, dataLen, data.get()));
+  return obj.release();
 }
 
 template <typename dist_t>

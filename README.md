@@ -5,7 +5,7 @@
 
 Non-Metric Space Library (NMSLIB) 
 =================
-The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes.
+The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes. In particular, we changed the build procedure for Windows.
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
 
@@ -160,14 +160,7 @@ For examples of using the Python API, please, see the README in the [python_bind
 
 Quick start on Windows
 -----------------------
-Building on Windows is straightforward.
-Download [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). 
-
-Afterwards, you can simply use the provided  [Visual Studio solution file](similarity_search/NonMetricSpaceLib.sln).
-The solution file references several project (\*.vcxproj) files: 
-[NonMetricSpaceLib.vcxproj](similarity_search/src/NonMetricSpaceLib.vcxproj)
-is the main project file that is used to build the library itself.
-The output is stored in the folder **similarity_search\x64**.
+Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) and [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for 64 bit architecture using CMake **GUI**. You have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio. **Attention**: this way of building on Windows is not well tested yet. We suspect that there might be some issues related to building truly 64-bit binaries.
 
 Data sets
 -----------------------

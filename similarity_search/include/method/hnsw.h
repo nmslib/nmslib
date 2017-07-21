@@ -504,7 +504,7 @@ namespace similarity {
 
         //
     private:
-        std::default_random_engine *generator;
+        std::unique_ptr<std::default_random_engine> generator;
         size_t M_;
         size_t maxM_;
         size_t maxM0_;

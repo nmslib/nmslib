@@ -29,8 +29,8 @@ minVal=args['min_val']
 
 f=open(outf, 'w')
 for i in xrange(nd):
-  # See an explanation from this blog post
-  # /home/leo/SourceTreeGit/nmslib.master/data/
+  # See an explanation from this blog post http://blog.geomblog.org/2005/10/sampling-from-simplex.html
+  # There's more on sampling from the simplex:  Luc Devroye's book, 'Non-Uniform Random Variate Generation'.
   arr = numpy.array([-math.log(random.random()) for _ in xrange(dim)])
   arr /= sum(arr)
   f.write("\t".join([("%g" % max(v,minVal)) for v in arr]) + "\n")

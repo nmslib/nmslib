@@ -74,11 +74,6 @@ class HNSWTestCase(unittest.TestCase, DenseIndexTestMixin):
         return nmslib.init(method='hnsw', space=space)
 
 
-class SWGraphSplitTestCase(unittest.TestCase, DenseIndexTestMixin):
-    def _get_index(self, space='cosinesimil'):
-        return nmslib.init(method='sw-graph-split', space=space)
-
-
 class SWGraphTestCase(unittest.TestCase, DenseIndexTestMixin):
     def _get_index(self, space='cosinesimil'):
         return nmslib.init(method='sw-graph', space=space)
