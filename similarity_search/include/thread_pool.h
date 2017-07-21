@@ -54,16 +54,19 @@ namespace similarity {
 
 */
 
-  // replacement for the openmp '#pragma omp parallel for' directive
-  // only handles a subset of functionality (no reductions etc)
+  /* 
+   * replacement for the openmp '#pragma omp parallel for' directive
+   * only handles a subset of functionality (no reductions etc)
+   * Process ids from start (inclusive) to end (EXCLUSIVE)
+   */
   template <class Function>
-  inline void ParallelFor(size_t initial, size_t finalId, size_t numThreads, Function fn) {
+  inline void ParallelFor(size_t start, size_t end, size_t numThreads, Function fn) {
     if (numThreads <= 0) {
       numThreads = std::thread::hardware_concurrency();
     }
 
     std::vector<std::thread>  threads;
-    std::atomic<size_t>       current(initial);
+    std::atomic<size_t>       current(start);
 
     // keep track of exceptions in threads
     // https://stackoverflow.com/a/32428427/1713196
@@ -75,7 +78,7 @@ namespace similarity {
         while (true) {
           size_t id = current.fetch_add(1);
 
-          if ((id >= finalId)) {
+          if ((id >= end)) {
             break;
           }
 
@@ -84,6 +87,13 @@ namespace similarity {
           } catch (...) {
             std::unique_lock<std::mutex> lastExcepLock(lastExceptMutex);
             lastException = std::current_exception();
+            /* 
+             * This will work even when current is the largest value that
+             * size_t can fit, because feat_add returns the previous value
+             * before the increment (what will result in overflow 
+             * and produce 0 instead of current + 1).
+             */
+            current = end;
             break;
           }
         }
