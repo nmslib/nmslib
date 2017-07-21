@@ -74,8 +74,12 @@ namespace similarity {
       threads.push_back(std::thread([&] {
         while (true) {
           int id = current.fetch_add(1);
-          if ((id >= final) || lastException) {
-            break;
+
+          {
+            std::unique_lock<std::mutex> lastExcepLock(lastExceptMutex);
+            if ((id >= final) || lastException) {
+              break;
+            }
           }
 
           try {
