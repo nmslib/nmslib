@@ -73,7 +73,7 @@ namespace similarity {
     for (size_t i = 0; i < numThreads; ++i) {
       threads.push_back(std::thread([&] {
         while (true) {
-          int id = current.fetch_add(1);
+          size_t id = current.fetch_add(1);
 
           if ((id >= finalId)) {
             break;
