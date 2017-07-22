@@ -1012,7 +1012,7 @@ namespace similarity {
                 ++currElem;
         }
 
-        for (int_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
+        for (uint_fast32_t i = 0; i < query->GetK() && i < sortedArr.size(); ++i) {
             query->CheckAndAddToResult(queueData[i].key, queueData[i].data->getData());
         }
 
