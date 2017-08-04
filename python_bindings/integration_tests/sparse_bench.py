@@ -76,8 +76,8 @@ def bench_sparse_vector(batch=True):
 
     print('Let\'s invoke the index-build process')
 
-    index_param = ['NN=17', 'initIndexAttempts=3', 'indexThreadQty=4']
-    query_time_param = ['initSearchAttempts=3']
+    index_param = ['NN=17', 'efConstruction=50', 'indexThreadQty=4']
+    query_time_param = ['efSearch=50']
 
     with TimeIt('building index'):
         nmslib.createIndex(index, index_param)

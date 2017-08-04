@@ -701,7 +701,7 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
   closestDistQueue.emplace(d);
 
   IdType nodeId = provider->getId();
-  CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_));
+  CHECK_MSG(nodeId < NextNodeId_, "Bug: nodeId (" + ConvertToString(nodeId) +  ") > NextNodeId_ (" +ConvertToString(NextNodeId_) + ")");
   visitedBitset[nodeId] = true;
 
   while(!candidateQueue.empty()){
@@ -862,6 +862,12 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
               " read so far doesn't match the number of read lines: " + ConvertToString(lineNum) + ")");
     inFile.close();
   }
+
+  pEntryPoint_ = ElList_.empty() ? nullptr : ElList_.begin()->second; 
+  CHECK(pEntryPoint_ != nullptr || ElList_.empty());
+  NextNodeId_ = ElList_.size();
+
+  LOG(LIB_INFO) << "Next node id: " << NextNodeId_ << " ElList_.size(): " << ElList_.size(); 
 }
 
 template class SmallWorldRand<float>;
