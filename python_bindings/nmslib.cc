@@ -485,7 +485,7 @@ void exportIndex(py::module * m) {
     .def("addDataPoint", &IndexWrapper<dist_t>::addDataPoint,
       py::arg("id"),
       py::arg("data"),
-      "Saves the index to disk\n\n"
+      "Adds a single datapoint to the index\n\n"
       "Parameters\n"
       "----------\n"
       "id: int\n"
@@ -500,7 +500,7 @@ void exportIndex(py::module * m) {
     .def("addDataPointBatch", &IndexWrapper<dist_t>::addDataPointBatch,
       py::arg("data"),
       py::arg("ids") = py::none(),
-      "Saves the index to disk\n\n"
+      "Adds multiple datapoints to the index\n\n"
       "Parameters\n"
       "----------\n"
       "data: object\n"
