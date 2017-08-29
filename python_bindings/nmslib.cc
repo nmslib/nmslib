@@ -208,7 +208,7 @@ struct IndexWrapper {
 
     } else if (data_type == DATATYPE_DENSE_VECTOR) {
       // allow numpy arrays to be returned here too
-      py::array_t<dist_t> items(input);
+      py::array_t<dist_t, py::array::c_style | py::array::forcecast> items(input);
       auto buffer = items.request();
       if (buffer.ndim != 2) throw std::runtime_error("data must be a 2d array");
 
