@@ -70,3 +70,6 @@ cd python_bindings
 pip install -r requirements.txt
 python setup.py install
 ```
+#### Additional documentation
+
+[More detailed documentation is also available](https://searchivarius.github.io/nmslib/) (thanks to Ben Frederickson).
