@@ -111,8 +111,6 @@ cmake . -DWITH_EXTRAS=1
 make  
 ```
 
-Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in [in the manual](manual/manual.pdf), which also contains examples of using the software.  
-
 You can also download almost every data set used in our previous evaluations (see the section **Data sets** below). The downloaded data needs to be decompressed (you may need 7z, gzip, and bzip2). Old experimental scripts can be found in the directory [previous_releases_scripts](previous_releases_scripts). However, they will work only with previous releases.
 
 Note that the benchmarking utility **supports caching of ground truth data**, so that ground truth data is not recomputed every time this utility is re-run on the same data set.
@@ -158,7 +156,7 @@ We provide Python bindings for Python 2.7+ and Python 3.5+, which have been test
 pip install nmslib
 ```
 
-For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder. [More detailed documentation is also available](https://searchivarius.github.io/nmslib/).
+For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder. [More detailed documentation is also available](https://searchivarius.github.io/nmslib/) (thanks to Ben Frederickson).
 
 Quick start on Windows
 -----------------------
