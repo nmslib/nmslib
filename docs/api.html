@@ -1,0 +1,769 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API Reference &mdash; nmslib 1.6.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="nmslib 1.6.3 documentation" href="index.html"/>
+        <link rel="prev" title="Python bindings for NMSLIB" href="quickstart.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> nmslib
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.6
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html"> Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"> API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#nmslib-init">nmslib.init</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nmslib-floatindex">nmslib.FloatIndex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nmslib-doubleindex">nmslib.DoubleIndex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nmslib-intindex">nmslib.IntIndex</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">nmslib</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>API Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="nmslib-init">
+<h2>nmslib.init<a class="headerlink" href="#nmslib-init" title="Permalink to this headline">¶</a></h2>
+<p>This function acts act the main entry point into NMS lib. This
+function should be called first before calling any other method.</p>
+<dl class="function">
+<dt id="nmslib.init">
+<code class="descclassname">nmslib.</code><code class="descname">init</code><span class="sig-paren">(</span><em>space: str='cosinesimil'</em>, <em>space_params: object=None</em>, <em>method: str='hnsw'</em>, <em>data_type: nmslib.DataType=DataType.DENSE_VECTOR</em>, <em>dtype: nmslib.DistType=DistType.FLOAT</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function initializes a new NMSLIB index</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>space</strong> (<em>str optional</em>) – The metric space to create for this index</li>
+<li><strong>space_params</strong> (<em>dict optional</em>) – Parameters for configuring the space</li>
+<li><strong>method</strong> (<em>str optional</em>) – The index method to use</li>
+<li><strong>data_type</strong> (<em>nmslib.DataType optional</em>) – The type of data to index (dense/sparse/string vectors)</li>
+<li><strong>dist_type</strong> (<em>nmslib.DistType optional</em>) – The type of index to create (float/double/int)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">A new NMSLIB Index.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="nmslib-floatindex">
+<h2>nmslib.FloatIndex<a class="headerlink" href="#nmslib-floatindex" title="Permalink to this headline">¶</a></h2>
+<p>nmslib.dist.FloatIndex</p>
+<dl class="class">
+<dt id="nmslib.dist.FloatIndex">
+<em class="property">class </em><code class="descclassname">nmslib.dist.</code><code class="descname">FloatIndex</code><a class="headerlink" href="#nmslib.dist.FloatIndex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="nmslib.dist.FloatIndex.addDataPoint">
+<code class="descname">addDataPoint</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>id: int</em>, <em>data: object</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.FloatIndex.addDataPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>int</em>) – The id of the object to add</li>
+<li><strong>data</strong> (<em>object</em>) – The object to add to the index.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The position the item was added at</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.FloatIndex.addDataPointBatch">
+<code class="descname">addDataPointBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>data: object</em>, <em>ids: object=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.FloatIndex.addDataPointBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>object</em>) – The objects to add to the index.</li>
+<li><strong>ids</strong> (<em>array_like optional</em>) – The ids of the object being inserted. If not set will default to the
+row id of each object in the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The number of items added</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.FloatIndex.createIndex">
+<code class="descname">createIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>index_params: object=None</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.createIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the index, and makes it available for querying</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>index_params</strong> (<em>dict optional</em>) – Dictionary of optional parameters to use in indexing</li>
+<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.FloatIndex.getDistance">
+<code class="descname">getDistance</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>arg0: int</em>, <em>arg1: int</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#nmslib.dist.FloatIndex.getDistance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.FloatIndex.knnQuery">
+<code class="descname">knnQuery</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>vector: object</em>, <em>k: int=10</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.FloatIndex.knnQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the approximate K nearest neighbours of a vector in the index</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vector</strong> (<em>array_like</em>) – A 1D vector to query for.</li>
+<li><strong>k</strong> (<em>int optional</em>) – The number of neighbours to return</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>ids</strong> (<em>array_like.</em>) – A 1D vector of the ids of each nearest neighbour.</li>
+<li><strong>distances</strong> (<em>array_like.</em>) – A 1D vector of the distance to each nearest neigbhour.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.FloatIndex.knnQueryBatch">
+<code class="descname">knnQueryBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>queries: object</em>, <em>k: int=10</em>, <em>num_threads: int=0</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.FloatIndex.knnQueryBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs multiple queries on the index, distributing the work over
+a thread pool
+:param input: A list of queries to query for
+:type input: list
+:param k: The number of neighbours to return
+:type k: int optional
+:param num_threads: The number of threads to use
+:type num_threads: int optional</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples of (ids, distances)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.FloatIndex.loadIndex">
+<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>print_progress: bool optional</dt>
+<dd>Whether or not to display progress bar when creating index</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.FloatIndex.saveIndex">
+<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>filename: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – The filename to save to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.FloatIndex.setQueryTimeParams">
+<code class="descname">setQueryTimeParams</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>params: object=None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.setQueryTimeParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets parameters used in knnQuery.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> (<em>dict</em>) – A dictionary of params to use in querying. Setting params to None will reset</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="nmslib-doubleindex">
+<h2>nmslib.DoubleIndex<a class="headerlink" href="#nmslib-doubleindex" title="Permalink to this headline">¶</a></h2>
+<p>nmslib.dist.DoubleIndex</p>
+<dl class="class">
+<dt id="nmslib.dist.DoubleIndex">
+<em class="property">class </em><code class="descclassname">nmslib.dist.</code><code class="descname">DoubleIndex</code><a class="headerlink" href="#nmslib.dist.DoubleIndex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="nmslib.dist.DoubleIndex.addDataPoint">
+<code class="descname">addDataPoint</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>id: int</em>, <em>data: object</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.DoubleIndex.addDataPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>int</em>) – The id of the object to add</li>
+<li><strong>data</strong> (<em>object</em>) – The object to add to the index.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The position the item was added at</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.DoubleIndex.addDataPointBatch">
+<code class="descname">addDataPointBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>data: object</em>, <em>ids: object=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.DoubleIndex.addDataPointBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>object</em>) – The objects to add to the index.</li>
+<li><strong>ids</strong> (<em>array_like optional</em>) – The ids of the object being inserted. If not set will default to the
+row id of each object in the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The number of items added</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.DoubleIndex.createIndex">
+<code class="descname">createIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>index_params: object=None</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.createIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the index, and makes it available for querying</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>index_params</strong> (<em>dict optional</em>) – Dictionary of optional parameters to use in indexing</li>
+<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.DoubleIndex.getDistance">
+<code class="descname">getDistance</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>arg0: int</em>, <em>arg1: int</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#nmslib.dist.DoubleIndex.getDistance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.DoubleIndex.knnQuery">
+<code class="descname">knnQuery</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>vector: object</em>, <em>k: int=10</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.DoubleIndex.knnQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the approximate K nearest neighbours of a vector in the index</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vector</strong> (<em>array_like</em>) – A 1D vector to query for.</li>
+<li><strong>k</strong> (<em>int optional</em>) – The number of neighbours to return</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>ids</strong> (<em>array_like.</em>) – A 1D vector of the ids of each nearest neighbour.</li>
+<li><strong>distances</strong> (<em>array_like.</em>) – A 1D vector of the distance to each nearest neigbhour.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.DoubleIndex.knnQueryBatch">
+<code class="descname">knnQueryBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>queries: object</em>, <em>k: int=10</em>, <em>num_threads: int=0</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.DoubleIndex.knnQueryBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs multiple queries on the index, distributing the work over
+a thread pool
+:param input: A list of queries to query for
+:type input: list
+:param k: The number of neighbours to return
+:type k: int optional
+:param num_threads: The number of threads to use
+:type num_threads: int optional</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples of (ids, distances)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.DoubleIndex.loadIndex">
+<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>print_progress: bool optional</dt>
+<dd>Whether or not to display progress bar when creating index</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.DoubleIndex.saveIndex">
+<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>filename: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – The filename to save to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.DoubleIndex.setQueryTimeParams">
+<code class="descname">setQueryTimeParams</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>params: object=None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.setQueryTimeParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets parameters used in knnQuery.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> (<em>dict</em>) – A dictionary of params to use in querying. Setting params to None will reset</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="nmslib-intindex">
+<h2>nmslib.IntIndex<a class="headerlink" href="#nmslib-intindex" title="Permalink to this headline">¶</a></h2>
+<p>nmslib.dist.IntIndex</p>
+<dl class="class">
+<dt id="nmslib.dist.IntIndex">
+<em class="property">class </em><code class="descclassname">nmslib.dist.</code><code class="descname">IntIndex</code><a class="headerlink" href="#nmslib.dist.IntIndex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="nmslib.dist.IntIndex.addDataPoint">
+<code class="descname">addDataPoint</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>id: int</em>, <em>data: object</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.IntIndex.addDataPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>int</em>) – The id of the object to add</li>
+<li><strong>data</strong> (<em>object</em>) – The object to add to the index.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The position the item was added at</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.IntIndex.addDataPointBatch">
+<code class="descname">addDataPointBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>data: object</em>, <em>ids: object=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.IntIndex.addDataPointBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>object</em>) – The objects to add to the index.</li>
+<li><strong>ids</strong> (<em>array_like optional</em>) – The ids of the object being inserted. If not set will default to the
+row id of each object in the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The number of items added</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.IntIndex.createIndex">
+<code class="descname">createIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>index_params: object=None</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.createIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the index, and makes it available for querying</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>index_params</strong> (<em>dict optional</em>) – Dictionary of optional parameters to use in indexing</li>
+<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.IntIndex.getDistance">
+<code class="descname">getDistance</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>arg0: int</em>, <em>arg1: int</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.IntIndex.getDistance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.IntIndex.knnQuery">
+<code class="descname">knnQuery</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>vector: object</em>, <em>k: int=10</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.IntIndex.knnQuery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the approximate K nearest neighbours of a vector in the index</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vector</strong> (<em>array_like</em>) – A 1D vector to query for.</li>
+<li><strong>k</strong> (<em>int optional</em>) – The number of neighbours to return</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>ids</strong> (<em>array_like.</em>) – A 1D vector of the ids of each nearest neighbour.</li>
+<li><strong>distances</strong> (<em>array_like.</em>) – A 1D vector of the distance to each nearest neigbhour.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.IntIndex.knnQueryBatch">
+<code class="descname">knnQueryBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>queries: object</em>, <em>k: int=10</em>, <em>num_threads: int=0</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.IntIndex.knnQueryBatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs multiple queries on the index, distributing the work over
+a thread pool
+:param input: A list of queries to query for
+:type input: list
+:param k: The number of neighbours to return
+:type k: int optional
+:param num_threads: The number of threads to use
+:type num_threads: int optional</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples of (ids, distances)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.IntIndex.loadIndex">
+<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>print_progress: bool optional</dt>
+<dd>Whether or not to display progress bar when creating index</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.IntIndex.saveIndex">
+<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>filename: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index to disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – The filename to save to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nmslib.dist.IntIndex.setQueryTimeParams">
+<code class="descname">setQueryTimeParams</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>params: object=None</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.setQueryTimeParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets parameters used in knnQuery.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> (<em>dict</em>) – A dictionary of params to use in querying. Setting params to None will reset</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="quickstart.html" class="btn btn-neutral" title="Python bindings for NMSLIB" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.6.3',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

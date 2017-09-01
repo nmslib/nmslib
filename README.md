@@ -5,7 +5,7 @@
 
 Non-Metric Space Library (NMSLIB) 
 =================
-The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes. In particular, we changed the build procedure for Windows.
+The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not updated to reflect 1.6 changes. In particular, we changed the build procedure for Windows. Also note that the manual targets primiarily developers who will extend the library. For most other folks, [Python binding docs should be sufficient](https://searchivarius.github.io/nmslib/).
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
 
@@ -13,7 +13,9 @@ The goal of the project is to create an effective and **comprehensive** toolkit 
 
 NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
-**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from  David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
+**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, David Novak, Ben Frederickson.
+
+Other contributors:  Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
 To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13). Some other related papers are listed in the end.
 
@@ -40,11 +42,11 @@ As of **May 2016** results are:
 <tr width="100%" border="0" style="border:none">
 <td border="0" align="center" style="border:none">
 1.19M 100d GloVe, cosine similarity.
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/docs/figures/glove.png" width="400">
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/manual/figures/glove.png" width="400">
 </td>
 <td border="0"  align="center" style="border:none">
 1M 128d SIFT features, Euclidean distance:
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/docs/figures/sift.png" width="400">
+<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/manual/figures/sift.png" width="400">
 </td>
 </tr></table>
 
@@ -61,7 +63,7 @@ What's new in version 1.6 ([see this page for more details](https://github.com/s
 General information
 -----------------------
 
-A detailed description is given [in the manual](docs/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes.
+A detailed description is given [in the manual](manual/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes. Also note that the manual targets primiarily developers who will extend the library. **For most other folks**, [Python binding docs should be sufficient](https://searchivarius.github.io/nmslib/).
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -90,7 +92,7 @@ Limitations
 1. Currently only static data sets are supported
 2. HNSW does not work with Clang
 3. HNSW currently duplicates memory to create optimized indices
-4. Non-optimized HNSW indices cannot be saved
+4. Non-optimized HNSW indices cannot be saved (for spaces other than cosine and Euclidean)
 5. Range/threshold search is not supported by many methods including SW-graph/HNSW
 
 We plan to resolve these issues in the future.
@@ -109,8 +111,6 @@ cmake . -DWITH_EXTRAS=1
 make  
 ```
 
-Note that the directory **similarity_search** contains an Eclipse project that can be imported into [The Eclipse IDE for C/C++ Developers](http://www.eclipse.org/ide/).  A more detailed description is given in [in the manual](docs/manual.pdf), which also contains examples of using the software.  
-
 You can also download almost every data set used in our previous evaluations (see the section **Data sets** below). The downloaded data needs to be decompressed (you may need 7z, gzip, and bzip2). Old experimental scripts can be found in the directory [previous_releases_scripts](previous_releases_scripts). However, they will work only with previous releases.
 
 Note that the benchmarking utility **supports caching of ground truth data**, so that ground truth data is not recomputed every time this utility is re-run on the same data set.
@@ -118,7 +118,7 @@ Note that the benchmarking utility **supports caching of ground truth data**, so
 Query server (Linux-only)
 -----------------------
 The query server requires Apache Thrift. We used Apache Thrift 0.9.2, but, perhaps, newer versions will work as well.  
-To install Apache Thrift, you need to [build it from source](https://thrift.apache.org/docs/BuildingFromSource).
+To install Apache Thrift, you need to [build it from source](https://thrift.apache.org/manual/BuildingFromSource).
 This may require additional libraries. On Ubuntu they can be installed as follows:
 ```
 sudo apt-get install libboost-dev libboost-test-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev libevent-dev automake libtool flex bison pkg-config g++ libssl-dev libboost-thread-dev make
@@ -156,7 +156,7 @@ We provide Python bindings for Python 2.7+ and Python 3.5+, which have been test
 pip install nmslib
 ```
 
-For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder.
+For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder. [More detailed documentation is also available](https://searchivarius.github.io/nmslib/) (thanks to Ben Frederickson).
 
 Quick start on Windows
 -----------------------
@@ -168,7 +168,7 @@ Data sets
 We use several data sets, which were created either by other folks,
 or using 3d party software. If you use these data sets, please, consider
 giving proper credit. The download scripts prints respective BibTex entries.
-More information can be found [in the manual](docs/manual.pdf).
+More information can be found [in the manual](manual/manual.pdf).
 
 Here is the list of scripts to download major data sets:
 * Data sets for our NIPS'13 and SISAP'13 papers [data/get_data_nips2013.sh](data/get_data_nips2013.sh).  
