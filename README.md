@@ -5,7 +5,7 @@
 
 Non-Metric Space Library (NMSLIB) 
 =================
-The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not fully updated to reflect 1.6 changes. In particular, we changed the build procedure for Windows.
+The latest **pre**-release is [1.6](https://github.com/searchivarius/nmslib/releases/tag/v1.6). Note that the manual is not updated to reflect 1.6 changes. In particular, we changed the build procedure for Windows. Also note that the manual targets primiarily developers who will extend the library. For most other folks, [Python binding docs should be sufficient](https://searchivarius.github.io/nmslib/).
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
 
@@ -13,7 +13,9 @@ The goal of the project is to create an effective and **comprehensive** toolkit 
 
 NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
-**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from  David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
+**Main developers** : Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, David Novak, Ben Frederickson.
+
+Other contributors:  Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
 To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13). Some other related papers are listed in the end.
 
@@ -61,7 +63,7 @@ What's new in version 1.6 ([see this page for more details](https://github.com/s
 General information
 -----------------------
 
-A detailed description is given [in the manual](manual/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes.
+A detailed description is given [in the manual](manual/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes. Also note that the manual targets primiarily developers who will extend the library. **For most other folks**, [Python binding docs should be sufficient](https://searchivarius.github.io/nmslib/).
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
@@ -90,7 +92,7 @@ Limitations
 1. Currently only static data sets are supported
 2. HNSW does not work with Clang
 3. HNSW currently duplicates memory to create optimized indices
-4. Non-optimized HNSW indices cannot be saved
+4. Non-optimized HNSW indices cannot be saved (for spaces other than cosine and Euclidean)
 5. Range/threshold search is not supported by many methods including SW-graph/HNSW
 
 We plan to resolve these issues in the future.
@@ -156,7 +158,7 @@ We provide Python bindings for Python 2.7+ and Python 3.5+, which have been test
 pip install nmslib
 ```
 
-For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder.
+For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder. [More detailed documentation is also available](https://searchivarius.github.io/nmslib/).
 
 Quick start on Windows
 -----------------------
