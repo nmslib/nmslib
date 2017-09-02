@@ -24,6 +24,7 @@
 #include <assert.h>
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "logging.h"
