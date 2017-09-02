@@ -14,6 +14,7 @@ Contents:
 
     Quickstart <quickstart>
     API Reference <api>
+    Logging <logging>
 
 
 Indices and tables

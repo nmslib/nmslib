@@ -317,9 +317,47 @@ struct IndexWrapper {
   ObjectVector data;
 };
 
+class PythonLogger
+  : public Logger {
+ public:
+  py::object inner;
+  explicit PythonLogger(const py::object & inner)
+    : inner(inner) {
+  }
+
+  void log(LogSeverity severity,
+           const char * file,
+           int line,
+           const char * function,
+           const std::string & message) {
+    py::gil_scoped_acquire l;
+    switch(severity) {
+      case LIB_DEBUG:
+        inner.attr("debug")(message);
+        break;
+      case LIB_INFO:
+        inner.attr("info")(message);
+        break;
+      case LIB_WARNING:
+        inner.attr("warning")(message);
+        break;
+      case LIB_ERROR:
+        inner.attr("error")(message);
+        break;
+      case LIB_FATAL:
+        inner.attr("critical")(message);
+        break;
+    }
+  }
+};
+
 PYBIND11_PLUGIN(nmslib) {
-  // TODO(@benfred): configurable logging
-  initLibrary(LIB_LOGSTDERR, NULL);
+  // Log using the python logger, instead of defaults built in here
+  py::module logging = py::module::import("logging");
+  py::module nmslibLogger = logging.attr("getLogger")("nmslib");
+  setGlobalLogger(new PythonLogger(nmslibLogger));
+
+  initLibrary(LIB_LOGCUSTOM, NULL);
 
   py::module m(module_name, "Bindings for Non-Metric Space Library (NMSLIB)");
 
