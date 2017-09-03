@@ -438,7 +438,7 @@ void exportIndex(py::module * m) {
     .def("knnQueryBatch", &IndexWrapper<dist_t>::knnQueryBatch,
       py::arg("queries"), py::arg("k") = 10, py::arg("num_threads") = 0,
       "Performs multiple queries on the index, distributing the work over \n"
-      "a thread pool\n"
+      "a thread pool\n\n"
       "Parameters\n"
       "----------\n"
       "input: list\n"
