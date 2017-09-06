@@ -13,6 +13,7 @@ except ImportError:
 
 import nmslib
 
+
 class DenseTests(unittest.TestCase):
 
     def setUp(self):
