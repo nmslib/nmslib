@@ -53,7 +53,6 @@ class DenseIndexTestMixin(object):
         for query, (ids, distances) in zip(queries, results):
             self.assertTrue(get_hitrate(get_exact_cosine(query, data), ids) >= 5)
 
-
     def testReloadIndex(self):
         np.random.seed(23)
         data = np.random.randn(1000, 10).astype(np.float32)
