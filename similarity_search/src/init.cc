@@ -35,5 +35,4 @@ void initLibrary(LogChoice choice, const char* pLogFile) {
   initSpaces();
   initMethods();
 }
-
 }

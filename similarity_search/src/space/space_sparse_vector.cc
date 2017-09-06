@@ -70,9 +70,9 @@ void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, size_t line_num,
       }
     }
   } catch (const std::exception &e) {
-    LOG(LIB_ERROR) << "Exception: " << e.what() << std::endl;
+    LOG(LIB_ERROR) << "Exception: " << e.what();
     PREPARE_RUNTIME_ERR(err) << "Failed to parse the line # " << line_num << ": '" << line << "'" << std::endl;
-    LOG(LIB_ERROR) << err.stream().str() << std::endl;
+    LOG(LIB_ERROR) << err.stream().str();
     THROW_RUNTIME_ERR(err);
   }
 
