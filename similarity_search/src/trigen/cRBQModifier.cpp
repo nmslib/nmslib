@@ -2,8 +2,7 @@
  * Part of TriGen (Tomas Skopal, Jiry Novak)
  * Downloaded from http://siret.ms.mff.cuni.cz/skopal/download.htm
  *
- * Leo added a couple of tweaks/checks in particular to deal with the case 
- * when denominator is zero
+ * Leo added a couple of tweaks/checks.
  */
 #include "trigen/cRBQModifier.h"
 #include "trigen/utils.h"
@@ -59,8 +58,8 @@ double cRBQModifier::RBQ(double x, double a, double b, double w)
 	nominator2 = 2*w*b*(w*(x - a) - x + 1.0) + square_root*(1.0 - 2.0*w*b) - x + w*(x - a);
 	denominator = -1.0 + 2*w*a*(1.0 - 2*x + w*(1.0 - 2*a)) + 2*square_root*(1.0 - w) + 2*x*w*(1.0 - w + 2*w*a);
 
-	CHECK_MSG(denominator >= -MIN_VAL, "Denominator is too small: " + ConvertToString(denominator));
-  denominator = std::max(denominator, MIN_VAL); 
+	CHECK_MSG(fabs(denominator) >= MIN_VAL, 
+            "Absolute value of the denominator is too small: " + ConvertToString(fabs(denominator)));
 
 	// numeric optimization
 	double result;
