@@ -1,12 +1,19 @@
 /*
  * Part of TriGen (Tomas Skopal, Jiry Novak)
  * Downloaded from http://siret.ms.mff.cuni.cz/skopal/download.htm
+ *
+ * Leo added a couple of tweaks/checks in particular to deal with the case 
+ * when denominator is zero
  */
 #include "trigen/cRBQModifier.h"
 #include "trigen/utils.h"
 
 #include "logging.h"
 #include "utils.h"
+
+#include <limits>
+
+double MIN_VAL = std::numeric_limits<float>::min();
 
 using namespace similarity;
 
@@ -52,7 +59,8 @@ double cRBQModifier::RBQ(double x, double a, double b, double w)
 	nominator2 = 2*w*b*(w*(x - a) - x + 1.0) + square_root*(1.0 - 2.0*w*b) - x + w*(x - a);
 	denominator = -1.0 + 2*w*a*(1.0 - 2*x + w*(1.0 - 2*a)) + 2*square_root*(1.0 - w) + 2*x*w*(1.0 - w + 2*w*a);
 
-	CHECK(denominator != 0);
+	CHECK(denominator >= -MIN_VAL);
+  denominator = std::max(denominator, MIN_VAL); 
 
 	// numeric optimization
 	double result;
