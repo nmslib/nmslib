@@ -231,7 +231,7 @@ void RunExper(unsigned AddRestartQty,
     }
     LOG(LIB_INFO) << "Recall: " << recall;
     LOG(LIB_INFO) << "Best time: " << time_best;
-    LOG(LIB_INFO) << "Best impr. " << impr_best << " (" << getOptimMetricName(metric) << ")" << endl;
+    LOG(LIB_INFO) << "Best impr. " << impr_best << " (" << getOptimMetricName(metric) << ")";
     LOG(LIB_INFO) << "alpha_left: " << alpha_left;
     LOG(LIB_INFO) << "exp_left: " << exp_left;
     LOG(LIB_INFO) << "alpha_right: " << alpha_right;

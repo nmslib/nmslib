@@ -5,8 +5,8 @@
  * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
+ * https://github.com/searchivarius/NonMetricSpaceLib
+ *
  * Copyright (c) 2014
  *
  * This code is released under the
@@ -30,30 +30,82 @@ using std::stringstream;
 using std::runtime_error;
 using std::string;
 
-enum LogSeverity {LIB_INFO, LIB_WARNING, LIB_ERROR, LIB_FATAL};
-enum LogChoice  {LIB_LOGNONE, LIB_LOGFILE, LIB_LOGSTDERR};
+enum LogSeverity {LIB_DEBUG, LIB_INFO, LIB_WARNING, LIB_ERROR, LIB_FATAL};
+enum LogChoice  {LIB_LOGNONE, LIB_LOGFILE, LIB_LOGSTDERR, LIB_LOGCUSTOM};
 
 std::string LibGetCurrentTime();
 
 // write log to file
 void InitializeLogger(LogChoice choice = LIB_LOGNONE, const char* logfile = NULL);
 
+// Abstract base class that all loggers must override
 class Logger {
  public:
-  Logger(LogSeverity severity, const std::string& file, int line, const char* function);
-  ~Logger();
+  virtual ~Logger();
+  virtual void log(LogSeverity severity,
+                   const char * file,
+                   int line,
+                   const char * function,
+                   const std::string & message) = 0;
+};
 
-  static std::ostream& stream() { return *currstrm_ ; }
+void setGlobalLogger(Logger * logger);
+Logger * getGlobalLogger();
 
- private:
-  LogSeverity severity_;
+class StdErrLogger
+  : public Logger {
+ public:
+  void log(LogSeverity severity,
+           const char * file,
+           int line,
+           const char * function,
+           const std::string & message);
+};
 
-  static ofstream logfile_;
+class FileLogger
+  : public Logger {
+ public:
+  FileLogger(const char * logfile);
+  void log(LogSeverity severity,
+           const char * file,
+           int line,
+           const char * function,
+           const std::string & message);
+ protected:
+  std::ofstream logfile;
+};
 
-  static ostream* currstrm_;
+// A single entry in the log
+class LogItem {
+ public:
+  LogItem(LogSeverity severity, const char * file, int line, const char * function,
+          Logger * logger)
+    : severity(severity), file(file), line(line), function(function), logger(logger) {
+  }
 
-  // If choice != LIB_LOGFILE the second argument is ignored
-  friend void InitializeLogger(LogChoice choice, const char* logfile);
+  template <typename T>
+  LogItem & operator << (T t) {
+    message << t;
+    return *this;
+  }
+
+  ~LogItem() {
+    if (logger) {
+        logger->log(severity, file, line, function, message.str());
+    }
+    // TODO: probably better to throw an exception here rather than die outright
+    // but this matches previous behaviour
+    if (severity == LIB_FATAL) {
+      exit(1);
+    }
+  }
+
+  LogSeverity severity;
+  const char * file;
+  int line;
+  const char * function;
+  Logger * logger;
+  std::stringstream message;
 };
 
 class RuntimeErrorWrapper {
@@ -66,9 +118,9 @@ class RuntimeErrorWrapper {
   stringstream currstrm_;
 };
 
-
+// TODO: zero cost log abstraction
 #define LOG(severity) \
-  Logger(severity, __FILE__, __LINE__, __FUNCTION__).stream()
+  LogItem(severity, __FILE__, __LINE__, __FUNCTION__, getGlobalLogger())
 
 #define CHECK(condition) \
   if (!(condition)) {\

@@ -912,8 +912,8 @@ bool TestPivotIndex(const string& spaceName,
                     const string& dataFile, size_t dataQty,
                     const string& pivotFile, size_t pivotQty) {
 
-  LOG(LIB_INFO) << "space: " << spaceName << " real pivot index?: " << !useDummyIndex << endl <<
-                   " dataFile: " << dataFile << endl <<
+  LOG(LIB_INFO) << "space: " << spaceName << " real pivot index?: " << !useDummyIndex << " " <<
+                   " dataFile: " << dataFile << " " <<
                    " pivotFile: " << pivotFile;
   try {
     typedef float T;

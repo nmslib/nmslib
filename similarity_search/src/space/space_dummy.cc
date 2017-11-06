@@ -26,7 +26,7 @@ namespace similarity {
 
 template <typename dist_t>
 dist_t SpaceDummy<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
-  LOG(LIB_INFO) << "Calculating the distance between objects: " << obj1->id() << " and " << obj2->id() << endl;
+  LOG(LIB_INFO) << "Calculating the distance between objects: " << obj1->id() << " and " << obj2->id();
   CHECK(obj1->datalength() > 0);
   CHECK(obj1->datalength() == obj2->datalength());
   /* 
@@ -83,7 +83,7 @@ bool SpaceDummy<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase, string
 template <typename dist_t>
 void SpaceDummy<dist_t>::WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &outState) const {
   string s = CreateStrFromObj(&obj, externId);
-  outState.out_file_ << s << endl;
+  outState.out_file_ << s;
 }
 /** End of standard functions to read/write/create objects */ 
 

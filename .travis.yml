@@ -27,7 +27,7 @@ before_install:
   source venv/bin/activate
 install:
   - cmake similarity_search && make -j 4
-  - travis_wait travis_retry pip install -r python_bindings/requirements.txt scipy six
+  - travis_wait travis_retry pip install -r python_bindings/requirements.txt scipy six flake8
   - travis_retry cd python_bindings && python setup.py build install && cd ..
 
 script:
@@ -40,6 +40,7 @@ script:
   fi
   cd python_bindings
   python setup.py test
+  flake8
   cd ..
 cache:
   - apt

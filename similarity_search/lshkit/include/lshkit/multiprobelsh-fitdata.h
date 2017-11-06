@@ -71,7 +71,7 @@ std::string FitData(const FloatMatrix& data,
                     unsigned F             // divide the sample to F folds
                    )
 {
-    LOG(LIB_INFO) << "started running FitData" << std::endl;
+    LOG(LIB_INFO) << "started running FitData";
 
     std::vector<unsigned> idx(data.getSize());
     for (size_t i = 0; i < idx.size(); ++i) idx[i] = i;
