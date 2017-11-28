@@ -39,6 +39,7 @@
 #include "space.h"
 #include "space/space_lp.h"
 #include "thread_pool.h"
+#include "utils.h"
 
 #include <map>
 #include <set>
@@ -57,6 +58,17 @@
 #else
 #define PORTABLE_ALIGN16 __declspec(align(16))
 #endif
+
+// For debug purposes we also implemented saving an index to a text file
+#define USE_TEXT_REGULAR_INDEX (false)
+
+#define TOTAL_QTY       "TOTAL_QTY"
+#define MAX_LEVEL       "MAX_LEVEL"
+#define ENTER_POINT_ID  "ENTER_POINT_ID"
+#define FIELD_M         "M"
+#define FIELD_MAX_M     "MAX_M"
+#define FIELD_MAX_M0    "MAX_M0"
+#define CURR_LEVEL      "CURR_LEVEL"
 
 namespace similarity {
 
@@ -88,14 +100,14 @@ namespace similarity {
     {
         int ok = 1;
         for (size_t i = 0; i < list.size(); i++) {
-            for (size_t j = 0; j < list[i]->allFriends[0].size(); j++) {
-                for (size_t k = j + 1; k < list[i]->allFriends[0].size(); k++) {
-                    if (list[i]->allFriends[0][j] == list[i]->allFriends[0][k]) {
+            for (size_t j = 0; j < list[i]->allFriends_[0].size(); j++) {
+                for (size_t k = j + 1; k < list[i]->allFriends_[0].size(); k++) {
+                    if (list[i]->allFriends_[0][j] == list[i]->allFriends_[0][k]) {
                         cout << "\nDuplicate links\n\n\n\n\n!!!!!";
                         ok = 0;
                     }
                 }
-                if (list[i]->allFriends[0][j] == list[i]) {
+                if (list[i]->allFriends_[0][j] == list[i]) {
                     cout << "\nLink to the same element\n\n\n\n\n!!!!!";
                     ok = 0;
                 }
@@ -114,8 +126,8 @@ namespace similarity {
         ofstream out(filename);
         size_t maxdegree = 0;
         for (HnswNode *node : list) {
-            if (node->allFriends[0].size() > maxdegree)
-                maxdegree = node->allFriends[0].size();
+            if (node->allFriends_[0].size() > maxdegree)
+                maxdegree = node->allFriends_[0].size();
         }
 
         vector<int> distrin = vector<int>(1000);
@@ -123,7 +135,7 @@ namespace similarity {
         vector<int> inconnections = vector<int>(list.size());
         vector<int> outconnections = vector<int>(list.size());
         for (size_t i = 0; i < list.size(); i++) {
-            for (HnswNode *node : list[i]->allFriends[0]) {
+            for (HnswNode *node : list[i]->allFriends_[0]) {
                 outconnections[list[i]->getId()]++;
                 inconnections[node->getId()]++;
             }
@@ -200,7 +212,10 @@ namespace similarity {
         ParallelFor(1, data_.size(), indexThreadQty_, [&](int id) {
             HnswNode *node = new HnswNode(data_[id], id);
             add(&space_, node);
-            ElList_[id] = node;
+            {
+                unique_lock<mutex> lock(ElListGuard_);
+                ElList_[id] = node;
+            }
             if (progress_bar)
                 ++(*progress_bar);
         });
@@ -223,7 +238,10 @@ namespace similarity {
                 int id = data_.size() - pos_id;
                 HnswNode *node = new HnswNode(data_[id], id);
                 add(&space_, node);
-                ElList_[id] = node;
+                {
+                    unique_lock<mutex> lock(ElListGuard_);
+                    ElList_[id] = node;
+                }
                 if (progress_bar1)
                     ++(*progress_bar1);
             });
@@ -278,8 +296,11 @@ namespace similarity {
                     }
                 }
 
-                ElList_[id]->allFriends[0].swap(rez);
-                // degrees[ElList_[id]->allFriends[0].size()]++;
+                {
+                    unique_lock<mutex> lock(ElList_[id]->accessGuard_);
+                    ElList_[id]->allFriends_[0].swap(rez);
+                }
+                // degrees[ElList_[id]->allFriends_[0].size()]++;
             });
             for (int i = 0; i < temp.size(); i++)
                 delete temp[i];
@@ -290,6 +311,8 @@ namespace similarity {
 
         data_level0_memory_ = NULL;
         linkLists_ = NULL;
+
+        enterpointId_ = enterpoint_->getId();
 
         if (skip_optimized_index) {
             LOG(LIB_INFO) << "searchMethod			  = " << searchMethod_;
@@ -403,7 +426,7 @@ namespace similarity {
             linkLists_[i] = linkList;
             ElList_[i]->copyHigherLevelLinksToOptIndex(linkList, 0);
         };
-        enterpointId_ = enterpoint_->getId();
+
         LOG(LIB_INFO) << "Finished making optimized index";
         LOG(LIB_INFO) << "Maximum level = " << enterpoint_->level;
         LOG(LIB_INFO) << "Total memory allocated for optimized index+data: " << (total_memory_allocated >> 20) << " Mb";
@@ -648,13 +671,6 @@ namespace similarity {
 
     template <typename dist_t>
     void
-    Hnsw<dist_t>::addToElementListSynchronized(HnswNode *HierElement)
-    {
-        unique_lock<mutex> lock(ElListGuard_);
-        ElList_.push_back(HierElement);
-    }
-    template <typename dist_t>
-    void
     Hnsw<dist_t>::Search(RangeQuery<dist_t> *query, IdType) const
     {
         throw runtime_error("Range search is not supported!");
@@ -701,14 +717,33 @@ namespace similarity {
 
     template <typename dist_t>
     void
-    Hnsw<dist_t>::SaveIndex(const string &location)
-    {
-        if (!data_level0_memory_)
-            throw runtime_error("Storing non-optimized index is not supported yet!");
-
-        std::ofstream output(location, std::ios::binary);
+    Hnsw<dist_t>::SaveIndex(const string &location) {
+        std::ofstream output(location,
+                             std::ios::binary /* text files can be opened in binary mode as well */);
         CHECK_MSG(output, "Cannot open file '" + location + "' for writing");
-        streampos position;
+        output.exceptions(ios::badbit | ios::failbit);
+
+        unsigned int optimIndexFlag = data_level0_memory_ != nullptr;
+
+
+        if (!optimIndexFlag) {
+#if USE_TEXT_REGULAR_INDEX
+            SaveRegularIndexText(output);
+#else
+            writeBinaryPOD(output, optimIndexFlag);
+            SaveRegularIndexBin(output);
+#endif
+        } else {
+            writeBinaryPOD(output, optimIndexFlag);
+            SaveOptimizedIndex(output);
+        }
+
+        output.close();
+    }
+
+    template <typename dist_t>
+    void
+    Hnsw<dist_t>::SaveOptimizedIndex(std::ostream& output) {
         totalElementsStored_ = ElList_.size();
 
         writeBinaryPOD(output, totalElementsStored_);
@@ -737,19 +772,223 @@ namespace similarity {
             if ((sizemass))
                 output.write(linkLists_[i], sizemass);
         };
-        output.close();
+
     }
 
     template <typename dist_t>
     void
-    Hnsw<dist_t>::LoadIndex(const string &location)
-    {
-        LOG(LIB_INFO) << "Loading index from " << location;
-        std::ifstream input(location, std::ios::binary);
-        CHECK_MSG(input, "Cannot open file '" + location + "' for reading");
-        streampos position;
+    Hnsw<dist_t>::SaveRegularIndexBin(std::ostream& output) {
+        totalElementsStored_ = ElList_.size();
 
-        // input.seekg(0, std::ios::beg);
+        writeBinaryPOD(output, totalElementsStored_);
+        writeBinaryPOD(output, maxlevel_);
+        writeBinaryPOD(output, enterpointId_);
+        writeBinaryPOD(output, M_);
+        writeBinaryPOD(output, maxM_);
+        writeBinaryPOD(output, maxM0_);
+
+        for (unsigned i = 0; i < totalElementsStored_; ++i) {
+            const HnswNode& node = *ElList_[i];
+            unsigned currlevel = node.level;
+            CHECK(currlevel + 1 == node.allFriends_.size());
+            /*
+             * This check strangely fails ...
+            CHECK_MSG(maxlevel_ >= currlevel, ""
+                    "maxlevel_ (" + ConvertToString(maxlevel_) + ") < node.allFriends_.size() (" + ConvertToString(currlevel));
+                    */
+            writeBinaryPOD(output, currlevel);
+            for (unsigned level = 0; level <= currlevel; ++level) {
+                const auto& friends = node.allFriends_[level];
+                unsigned friendQty = friends.size();
+                writeBinaryPOD(output, friendQty);
+                for (unsigned k = 0; k < friendQty; ++k) {
+                    IdType friendId = friends[k]->id_;
+                    writeBinaryPOD(output, friendId);
+                }
+            }
+        }
+    }
+
+    template <typename dist_t>
+    void
+    Hnsw<dist_t>::SaveRegularIndexText(std::ostream& output) {
+
+        size_t lineNum = 0;
+
+        totalElementsStored_ = ElList_.size();
+
+        WriteField(output, TOTAL_QTY, totalElementsStored_); lineNum++;
+        WriteField(output, MAX_LEVEL, maxlevel_); lineNum++;
+        WriteField(output, ENTER_POINT_ID, enterpointId_); lineNum++;
+        WriteField(output, FIELD_M, M_); lineNum++;
+        WriteField(output, FIELD_MAX_M, maxM_); lineNum++;
+        WriteField(output, FIELD_MAX_M0, maxM0_); lineNum++;
+
+        vector<IdType> friendIds;
+
+        for (unsigned i = 0; i < totalElementsStored_; ++i) {
+            const HnswNode& node = *ElList_[i];
+            unsigned currlevel = node.level;
+            CHECK(currlevel + 1 == node.allFriends_.size());
+            /*
+             * This check strangely fails ...
+            CHECK_MSG(maxlevel_ >= currlevel, ""
+                    "maxlevel_ (" + ConvertToString(maxlevel_) + ") < node.allFriends_.size() (" + ConvertToString(currlevel));
+                    */
+            WriteField(output, CURR_LEVEL, currlevel); lineNum++;
+            for (unsigned level = 0; level <= currlevel; ++level) {
+                const auto& friends = node.allFriends_[level];
+                unsigned friendQty = friends.size();
+
+                friendIds.resize(friendQty);
+                for (unsigned k = 0; k < friendQty; ++k) {
+                    friendIds[k] = friends[k]->id_;
+                }
+                output << MergeIntoStr(friendIds, ' ') << endl; lineNum++;
+            }
+        }
+        WriteField(output, LINE_QTY, lineNum);
+    }
+
+
+    template <typename dist_t>
+    void
+    Hnsw<dist_t>::LoadRegularIndexText(std::istream& input) {
+        LOG(LIB_INFO) << "Loading regular index.";
+        size_t lineNum = 0;
+        ReadField(input, TOTAL_QTY, totalElementsStored_); lineNum++;
+        ReadField(input, MAX_LEVEL, maxlevel_); lineNum++;
+        ReadField(input, ENTER_POINT_ID, enterpointId_); lineNum++;
+        ReadField(input, FIELD_M, M_); lineNum++;
+        ReadField(input, FIELD_MAX_M, maxM_); lineNum++;
+        ReadField(input, FIELD_MAX_M0, maxM0_); lineNum++;
+
+        fstdistfunc_ = nullptr;
+        dist_func_type_ = 0;
+        searchMethod_ = 0;
+
+        ElList_.resize(totalElementsStored_);
+        for (unsigned id = 0; id < totalElementsStored_; ++id) {
+            ElList_[id] = new HnswNode(data_[id], id);
+        }
+
+        enterpoint_ = ElList_[enterpointId_];
+
+        string line;
+        vector<IdType> friendIds;
+        for (unsigned id = 0; id < totalElementsStored_; ++id) {
+            HnswNode& node = *ElList_[id];
+            unsigned currlevel;
+            ReadField(input, CURR_LEVEL, currlevel); lineNum++;
+            node.level = currlevel;
+            node.allFriends_.resize(currlevel + 1);
+            for (unsigned level = 0; level <= currlevel; ++level) {
+                CHECK_MSG(getline(input, line),
+                          "Failed to read line #" + ConvertToString(lineNum)); lineNum++;
+                CHECK_MSG(SplitStr(line, friendIds, ' '),
+                          "Failed to extract neighbor IDs from line #" + ConvertToString(lineNum));
+
+                unsigned friendQty = friendIds.size();
+
+                auto& friends = node.allFriends_[level];
+                friends.resize(friendQty);
+                for (unsigned k = 0; k < friendQty; ++k) {
+                    IdType friendId = friendIds[k];
+                    CHECK_MSG(friendId >= 0 && friendId < totalElementsStored_,
+                              "Invalid friendId = " + ConvertToString(friendId) + " for node id: " + ConvertToString(id));
+                    friends[k] = ElList_[friendId];
+                }
+            }
+        }
+        size_t ExpLineNum;
+        ReadField(input, LINE_QTY, ExpLineNum);
+        CHECK_MSG(lineNum == ExpLineNum,
+                  DATA_MUTATION_ERROR_MSG + " (expected number of lines " + ConvertToString(ExpLineNum) +
+                  " read so far doesn't match the number of read lines: " + ConvertToString(lineNum));
+    }
+
+
+    template <typename dist_t>
+    void
+    Hnsw<dist_t>::LoadRegularIndexBin(std::istream& input) {
+        LOG(LIB_INFO) << "Loading regular index.";
+        readBinaryPOD(input, totalElementsStored_);
+        readBinaryPOD(input, maxlevel_);
+        readBinaryPOD(input, enterpointId_);
+        readBinaryPOD(input, M_);
+        readBinaryPOD(input, maxM_);
+        readBinaryPOD(input, maxM0_);
+
+        fstdistfunc_ = nullptr;
+        dist_func_type_ = 0;
+        searchMethod_ = 0;
+
+
+        ElList_.resize(totalElementsStored_);
+        for (unsigned id = 0; id < totalElementsStored_; ++id) {
+            ElList_[id] = new HnswNode(data_[id], id);
+        }
+
+        enterpoint_ = ElList_[enterpointId_];
+
+        for (unsigned id = 0; id < totalElementsStored_; ++id) {
+            HnswNode& node = *ElList_[id];
+            unsigned currlevel;
+            readBinaryPOD(input, currlevel);
+            node.level = currlevel;
+            node.allFriends_.resize(currlevel + 1);
+            for (unsigned level = 0; level <= currlevel; ++level) {
+                auto& friends = node.allFriends_[level];
+                unsigned friendQty;
+                readBinaryPOD(input, friendQty);
+
+                friends.resize(friendQty);
+                for (unsigned k = 0; k < friendQty; ++k) {
+                    IdType friendId;
+                    readBinaryPOD(input, friendId);
+                    CHECK_MSG(friendId >= 0 && friendId < totalElementsStored_,
+                             "Invalid friendId = " + ConvertToString(friendId) + " for node id: " + ConvertToString(id));
+                    friends[k] = ElList_[friendId];
+                }
+            }
+        }
+    }
+
+    template <typename dist_t>
+    void
+    Hnsw<dist_t>::LoadIndex(const string &location) {
+        LOG(LIB_INFO) << "Loading index from " << location;
+        std::ifstream input(location);//, std::ios::binary);
+        CHECK_MSG(input, "Cannot open file '" + location + "' for reading");
+
+        input.exceptions(ios::badbit | ios::failbit);
+
+#if USE_TEXT_REGULAR_INDEX
+        LoadRegularIndexText(input);
+#else
+        unsigned int optimIndexFlag= 0;
+
+        readBinaryPOD(input, optimIndexFlag);
+
+        if (!optimIndexFlag) {
+            LoadRegularIndexBin(input);
+        } else {
+            LoadOptimizedIndex(input);
+        }
+#endif
+        input.close();
+
+        LOG(LIB_INFO) << "Finished loading index";
+        visitedlistpool = new VisitedListPool(1, totalElementsStored_);
+
+
+    }
+
+
+    template <typename dist_t>
+    void
+    Hnsw<dist_t>::LoadOptimizedIndex(std::istream& input) {
+        LOG(LIB_INFO) << "Loading optimized index.";
 
         readBinaryPOD(input, totalElementsStored_);
         readBinaryPOD(input, memoryPerObject_);
@@ -783,7 +1022,7 @@ namespace similarity {
         for (size_t i = 0; i < totalElementsStored_; i++) {
             SIZEMASS_TYPE linkListSize;
             readBinaryPOD(input, linkListSize);
-            position = input.tellg();
+
             if (linkListSize == 0) {
                 linkLists_[i] = nullptr;
             } else {
@@ -792,10 +1031,7 @@ namespace similarity {
             }
             data_rearranged_[i] = new Object(data_level0_memory_ + (i)*memoryPerObject_ + offsetData_);
         }
-        LOG(LIB_INFO) << "Finished loading index";
-        visitedlistpool = new VisitedListPool(1, totalElementsStored_);
 
-        input.close();
     }
 
     template <typename dist_t>
@@ -855,7 +1091,7 @@ namespace similarity {
         while (!candidateQueue.empty()) {
             auto iter = candidateQueue.top(); // This one was already compared to the query
             const HnswNodeDistFarther<dist_t> &currEv = iter;
-            // Check condtion to end the search
+            // Check condition to end the search
             dist_t lowerBound = closestDistQueue1.top().getDistance();
             if (currEv.getDistance() > lowerBound) {
                 break;

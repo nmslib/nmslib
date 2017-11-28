@@ -260,21 +260,21 @@ namespace similarity {
         void addFriendlevel(int level, HnswNode *element, const Space<dist_t> *space, int delaunay_type)
         {
             unique_lock<mutex> lock(accessGuard_);
-            for (int i = 0; i < allFriends[level].size(); i++)
-                if (allFriends[level][i] == element) {
+            for (unsigned i = 0; i < allFriends_[level].size(); i++)
+                if (allFriends_[level][i] == element) {
                     cerr << "This should not happen. For some reason the elements is "
                             "already added";
                     return;
                 }
-            allFriends[level].push_back(element);
+            allFriends_[level].push_back(element);
             bool shrink = false;
             if (level > 0) {
-                if (allFriends[level].size() > maxsize) {
+                if (allFriends_[level].size() > maxsize) {
                     shrink = true;
                 } else {
                     shrink = false;
                 }
-            } else if (allFriends[level].size() > maxsize0) {
+            } else if (allFriends_[level].size() > maxsize0) {
                 shrink = true;
             } else {
                 shrink = false;
@@ -282,10 +282,10 @@ namespace similarity {
             if (shrink) {
                 if (delaunay_type > 0) {
                     priority_queue<HnswNodeDistCloser<dist_t>> resultSet;
-                    // for (int i = 1; i < allFriends[level].size(); i++) {
-                    for (int i = 0; i < allFriends[level].size(); i++) {
-                        resultSet.emplace(space->IndexTimeDistance(this->getData(), allFriends[level][i]->getData()),
-                                          allFriends[level][i]);
+                    // for (int i = 1; i < allFriends_[level].size(); i++) {
+                    for (int i = 0; i < allFriends_[level].size(); i++) {
+                        resultSet.emplace(space->IndexTimeDistance(this->getData(), allFriends_[level][i]->getData()),
+                                          allFriends_[level][i]);
                     }
                     if (delaunay_type == 1)
                         this->getNeighborsByHeuristic1(resultSet, resultSet.size() - 1, space);
@@ -293,23 +293,23 @@ namespace similarity {
                         this->getNeighborsByHeuristic2(resultSet, resultSet.size() - 1, space, level);
                     else if (delaunay_type == 3)
                         this->getNeighborsByHeuristic3(resultSet, resultSet.size() - 1, space, level);
-                    allFriends[level].clear();
+                    allFriends_[level].clear();
 
                     while (resultSet.size()) {
-                        allFriends[level].push_back(resultSet.top().getMSWNodeHier());
+                        allFriends_[level].push_back(resultSet.top().getMSWNodeHier());
                         resultSet.pop();
                     }
                 } else {
-                    dist_t max = space->IndexTimeDistance(this->getData(), allFriends[level][0]->getData());
+                    dist_t max = space->IndexTimeDistance(this->getData(), allFriends_[level][0]->getData());
                     int maxi = 0;
-                    for (int i = 1; i < allFriends[level].size(); i++) {
-                        dist_t curd = space->IndexTimeDistance(this->getData(), allFriends[level][i]->getData());
+                    for (int i = 1; i < allFriends_[level].size(); i++) {
+                        dist_t curd = space->IndexTimeDistance(this->getData(), allFriends_[level][i]->getData());
                         if (curd > max) {
                             max = curd;
                             maxi = i;
                         }
                     }
-                    allFriends[level].erase(allFriends[level].begin() + maxi);
+                    allFriends_[level].erase(allFriends_[level].begin() + maxi);
                 }
             }
         }
@@ -319,11 +319,11 @@ namespace similarity {
             level = level1;
             maxsize = maxFriends;
             maxsize0 = maxfriendslevel0;
-            allFriends.resize(level + 1);
+            allFriends_.resize(level + 1);
             for (int i = 0; i <= level; i++) {
-                allFriends[i].reserve(maxsize + 1);
+                allFriends_[i].reserve(maxsize + 1);
             }
-            allFriends[0].reserve(maxsize0 + 1);
+            allFriends_[0].reserve(maxsize0 + 1);
         }
 
         void copyDataAndLevel0LinksToOptIndex(char *mem1, size_t offsetlevels, size_t offsetData)
@@ -336,10 +336,10 @@ namespace similarity {
             char *memlevels = mem1 + offsetlevels;
 
             char *memt = memlevels;
-            *((int *)(memt)) = (int)allFriends[0].size();
+            *((int *)(memt)) = (int)allFriends_[0].size();
             memt += sizeof(int);
-            for (size_t j = 0; j < allFriends[0].size(); j++) {
-                *((int *)(memt)) = (int)allFriends[0][j]->getId();
+            for (size_t j = 0; j < allFriends_[0].size(); j++) {
+                *((int *)(memt)) = (int)allFriends_[0][j]->getId();
                 memt += sizeof(int);
             }
             mem = mem1 + offsetData;
@@ -359,11 +359,11 @@ namespace similarity {
 
             for (int i = 1; i <= level; i++) {
                 char *memt = memlevels;
-                *((int *)(memt)) = (int)allFriends[i].size();
+                *((int *)(memt)) = (int)allFriends_[i].size();
 
                 memt += sizeof(int);
-                for (size_t j = 0; j < allFriends[i].size(); j++) {
-                    *((int *)(memt)) = (int)allFriends[i][j]->getId();
+                for (size_t j = 0; j < allFriends_[i].size(); j++) {
+                    *((int *)(memt)) = (int)allFriends_[i][j]->getId();
                     memt += sizeof(int);
                 }
                 memlevels += (1 + maxsize) * sizeof(int);
@@ -372,11 +372,11 @@ namespace similarity {
         }
         const Object *getData() const { return data_; }
         size_t getId() const { return id_; }
-        const vector<HnswNode *> &getAllFriends(int level) const { return allFriends[level]; }
+        const vector<HnswNode *> &getAllFriends(int level) const { return allFriends_[level]; }
         mutex accessGuard_;
 
         size_t id_;
-        vector<vector<HnswNode *>> allFriends;
+        vector<vector<HnswNode *>> allFriends_;
 
         int maxsize0;
         int maxsize;
@@ -485,6 +485,15 @@ namespace similarity {
             double r = -log(distribution(*generator)) * revSize;
             return (int)r;
         }
+
+        void SaveOptimizedIndex(std::ostream& output);
+        void LoadOptimizedIndex(std::istream& input);
+
+        void SaveRegularIndexBin(std::ostream& output);
+        void LoadRegularIndexBin(std::istream& input);
+        void SaveRegularIndexText(std::ostream& output);
+        void LoadRegularIndexText(std::istream& input);
+
 
     public:
         void kSearchElementsWithAttemptsLevel(const Space<dist_t> *space, const Object *queryObj, size_t NN,
