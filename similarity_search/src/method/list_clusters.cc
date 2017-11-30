@@ -55,7 +55,7 @@ ListClusters<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
 template <typename dist_t>
 ListClusters<dist_t>::ListClusters(
     const Space<dist_t>& space,
-    const ObjectVector& data) : space_(space), data_(data) { }
+    const ObjectVector& data) : Index<dist_t>(data), space_(space) { }
 
 template <typename dist_t>
 void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams) 
@@ -93,7 +93,7 @@ void ListClusters<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   // <distance to previous centers, object>
   DistObjectPairVector<dist_t> remaining;
-  for (const auto& object : data_) {
+  for (const auto& object : this->data_) {
     remaining.push_back(std::make_pair(0, object));
   }
 

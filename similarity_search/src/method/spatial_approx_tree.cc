@@ -159,19 +159,19 @@ void SpatialApproxTree<dist_t>::SATNode::Search (
 template <typename dist_t>
 SpatialApproxTree<dist_t>::SpatialApproxTree(
     const Space<dist_t>& space,
-    const ObjectVector& data) : space_(space), data_(data) {
+    const ObjectVector& data) : Index<dist_t>(data), space_(space) {
 }
 
 template <typename dist_t>
 void SpatialApproxTree<dist_t>::CreateIndex(const AnyParams& ) {
-  size_t index = RandomInt() % data_.size();
-  const Object* pivot = data_[index];
+  size_t index = RandomInt() % this->data_.size();
+  const Object* pivot = this->data_[index];
 
   DistObjectPairVector<dist_t> dp;
-  for (size_t i = 0; i < data_.size(); ++i) {
+  for (size_t i = 0; i < this->data_.size(); ++i) {
     if (i != index) {
       dp.push_back(
-          make_pair(space_.IndexTimeDistance(data_[i], pivot), data_[i]));
+          make_pair(space_.IndexTimeDistance(this->data_[i], pivot), this->data_[i]));
     }
   }
 

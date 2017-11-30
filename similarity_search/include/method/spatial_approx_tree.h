@@ -56,7 +56,6 @@ class SpatialApproxTree : public Index<dist_t> {
   class SATNode;
 
   const Space<dist_t>& space_;
-  const ObjectVector  data_;
   
   unique_ptr<SATNode> root_;
 };

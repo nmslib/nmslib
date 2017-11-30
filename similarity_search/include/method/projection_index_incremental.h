@@ -60,7 +60,6 @@ class ProjectionIndexIncremental : public Index<dist_t> {
  private:
 
   const Space<dist_t>&    space_;
-  const ObjectVector&     data_;
   bool                    PrintProgress_;
 
   float                                                 max_proj_dist_;
@@ -80,8 +79,8 @@ class ProjectionIndexIncremental : public Index<dist_t> {
 #endif
   
   size_t computeDbScan(size_t K) const {
-    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
-    return static_cast<size_t>(db_scan_frac_ * data_.size());
+    if (knn_amp_) { return min(K * knn_amp_, this->data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * this->data_.size());
   }
 
   template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;

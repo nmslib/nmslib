@@ -56,8 +56,8 @@ class PermutationPrefixIndex : public Index<dist_t> {
  private:
 
   size_t computeDbScan(size_t K) const {
-    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
-    return static_cast<size_t>(min(min_candidate_, data_.size()));
+    if (knn_amp_) { return min(K * knn_amp_, this->data_.size()); }
+    return static_cast<size_t>(min(min_candidate_, this->data_.size()));
   }
 
 
@@ -65,7 +65,6 @@ class PermutationPrefixIndex : public Index<dist_t> {
   void GenSearch(QueryType* query, size_t K) const;
 
   const Space<dist_t>&  space_;
-  const ObjectVector&   data_;
   bool                  PrintProgress_;
 
   // permutation prefix length (l in the original paper) in (0, num_pivot]

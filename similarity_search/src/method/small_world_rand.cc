@@ -111,7 +111,7 @@ template <typename dist_t>
 SmallWorldRand<dist_t>::SmallWorldRand(bool PrintProgress,
                                        const Space<dist_t>& space,
                                        const ObjectVector& data) : 
-                                       space_(space), data_(data), PrintProgress_(PrintProgress), use_proxy_dist_(false) {}
+                                       Index<dist_t>(data), space_(space), PrintProgress_(PrintProgress), use_proxy_dist_(false) {}
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::UpdateNextNodeId(size_t newNextNodeId)
@@ -354,7 +354,7 @@ void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   SetQueryTimeParams(getEmptyParams());
 
-  AddBatch(data_, PrintProgress_);
+  AddBatch(this->data_, PrintProgress_);
 
   changedAfterCreateIndex_ = false;
 }
@@ -766,17 +766,17 @@ void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
   for(ElementMap::iterator it = ElList_.begin(); it != ElList_.end(); ++it) {
     MSWNode* pNode = it->second;
     IdType nodeID = pNode->getId();
-    CHECK_MSG(nodeID >= 0 && nodeID < (ssize_t)data_.size(),
+    CHECK_MSG(nodeID >= 0 && nodeID < (ssize_t)this->data_.size(),
               "Bug: unexpected node ID " + ConvertToString(nodeID) +
               " for object ID " + ConvertToString(pNode->getData()->id()) +
-              "data_.size() = " + ConvertToString(data_.size()));
+              "data_.size() = " + ConvertToString(this->data_.size()));
     outFile << nodeID << ":" << pNode->getData()->id() << ":";
     for (const MSWNode* pNodeFriend: pNode->getAllFriends()) {
       IdType nodeFriendID = pNodeFriend->getId();
-      CHECK_MSG(nodeFriendID >= 0 && nodeFriendID < (ssize_t)data_.size(),
+      CHECK_MSG(nodeFriendID >= 0 && nodeFriendID < (ssize_t)this->data_.size(),
                 "Bug: unexpected node ID " + ConvertToString(nodeFriendID) +
                 " for object ID " + ConvertToString(pNodeFriend->getData()->id()) +
-                "data_.size() = " + ConvertToString(data_.size()));
+                "data_.size() = " + ConvertToString(this->data_.size()));
       outFile << ' ' << nodeFriendID;
     }
     outFile << endl; lineNum++;
@@ -788,7 +788,7 @@ void SmallWorldRand<dist_t>::SaveIndex(const string &location) {
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
-  vector<MSWNode *> ptrMapper(data_.size());
+  vector<MSWNode *> ptrMapper(this->data_.size());
 
   for (unsigned pass = 0; pass < 2; ++ pass) {
     ifstream inFile(location);
@@ -820,17 +820,17 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
                 string("Bug or inconsitent data, wrong format, c1=") + c1 + ",c2=" + c2 +
                 " line: " + ConvertToString(lineNum)
       );
-      CHECK_MSG(nodeID >= 0 && nodeID < (ssize_t)data_.size(),
+      CHECK_MSG(nodeID >= 0 && nodeID < (ssize_t)this->data_.size(),
                 DATA_MUTATION_ERROR_MSG + " (unexpected node ID " + ConvertToString(nodeID) +
                 " for object ID " + ConvertToString(objID) +
-                " data_.size() = " + ConvertToString(data_.size()) + ")");
-      CHECK_MSG(data_[nodeID]->id() == objID,
-                DATA_MUTATION_ERROR_MSG + " (unexpected object ID " + ConvertToString(data_[nodeID]->id()) +
+                " data_.size() = " + ConvertToString(this->data_.size()) + ")");
+      CHECK_MSG(this->data_[nodeID]->id() == objID,
+                DATA_MUTATION_ERROR_MSG + " (unexpected object ID " + ConvertToString(this->data_[nodeID]->id()) +
                 " for data element with ID " + ConvertToString(nodeID) +
                 " expected object ID: " + ConvertToString(objID) + ")"
       );
       if (pass == 0) {
-        unique_ptr<MSWNode> node(new MSWNode(data_[nodeID], nodeID));
+        unique_ptr<MSWNode> node(new MSWNode(this->data_[nodeID], nodeID));
         ptrMapper[nodeID] = node.get();
         IdType dataId = node->getData()->id();
         ElList_.insert(make_pair(dataId, node.release()));
@@ -840,9 +840,9 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
                   "Bug, got NULL pointer in the second pass for nodeID " + ConvertToString(nodeID));
         IdType nodeFriendID;
         while (str >> nodeFriendID) {
-          CHECK_MSG(nodeFriendID >= 0 && nodeFriendID < (ssize_t)data_.size(),
+          CHECK_MSG(nodeFriendID >= 0 && nodeFriendID < (ssize_t)this->data_.size(),
                     "Bug: unexpected node ID " + ConvertToString(nodeFriendID) +
-                    "data_.size() = " + ConvertToString(data_.size()));
+                    "data_.size() = " + ConvertToString(this->data_.size()));
           MSWNode *pFriendNode = ptrMapper[nodeFriendID];
           CHECK_MSG(pFriendNode != NULL,
                     "Bug, got NULL pointer in the second pass for nodeID " + ConvertToString(nodeFriendID));

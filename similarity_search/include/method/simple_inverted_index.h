@@ -39,7 +39,7 @@ class SimplInvIndex : public Index<dist_t> {
    * So, we can memorize them safely.
    */
   SimplInvIndex(Space<dist_t>& space, 
-              const ObjectVector& data) : data_(data),
+              const ObjectVector& data) : Index<dist_t>(data),
                                           pSpace_(dynamic_cast<SpaceSparseNegativeScalarProductFast*>(&space)) {
     if (pSpace_ == nullptr) {
       PREPARE_RUNTIME_ERR(err) <<
@@ -119,7 +119,6 @@ class SimplInvIndex : public Index<dist_t> {
         : post_(&pl), post_pos_(0), qval_(qval), qval_x_docval_(qval_x_docval) {}
   };
 
-  const ObjectVector&                                      data_;
   SpaceSparseNegativeScalarProductFast*                    pSpace_;
   std::unordered_map<unsigned, std::unique_ptr<PostList>>  index_;
   // disable copy and assign

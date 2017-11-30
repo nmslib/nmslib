@@ -36,7 +36,7 @@ MultiIndex<dist_t>::MultiIndex(
          bool PrintProgress,
          const string& SpaceType,
          Space<dist_t>& space, 
-         const ObjectVector& data) : space_(space), data_(data), SpaceType_(SpaceType), PrintProgress_(PrintProgress) {}
+         const ObjectVector& data) : Index<dist_t>(data), space_(space), SpaceType_(SpaceType), PrintProgress_(PrintProgress) {}
 
 
 template <typename dist_t>
@@ -54,7 +54,7 @@ void MultiIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
                                                                  MethodName_,
                                                                  SpaceType_,
                                                                  space_,
-                                                                 data_));
+                                                                 this->data_));
 
     indices_.back()->CreateIndex(RemainParams);
   }

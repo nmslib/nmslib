@@ -520,7 +520,6 @@ namespace similarity {
         unsigned int enterpointId_;
         unsigned int totalElementsStored_;
 
-        const ObjectVector &data_; // We do not copy objects
         ObjectVector data_rearranged_;
 
         VisitedListPool *visitedlistpool;

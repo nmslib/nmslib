@@ -93,7 +93,6 @@ class ListClusters : public Index<dist_t> {
   };
 
   const Space<dist_t>&  space_;
-  const ObjectVector&   data_;
 
   std::vector<Cluster*> cluster_list_;
 

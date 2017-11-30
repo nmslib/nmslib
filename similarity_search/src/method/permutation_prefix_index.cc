@@ -218,7 +218,7 @@ template <typename dist_t>
 PermutationPrefixIndex<dist_t>::PermutationPrefixIndex(
     bool  PrintProgress,
     const Space<dist_t>& space,
-    const ObjectVector& data) : space_(space), data_(data), PrintProgress_(PrintProgress) {
+    const ObjectVector& data) : Index<dist_t>(data), space_(space), PrintProgress_(PrintProgress) {
 }
 
 template <typename dist_t>
@@ -236,16 +236,16 @@ void PermutationPrefixIndex<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   LOG(LIB_INFO) << "prefix length    = " << prefix_length_;
   LOG(LIB_INFO) << "ChunkBucket      = " << chunkBucket_;
 
-  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
+  GetPermutationPivot(this->data_, space_, num_pivot_, &pivot_);
   prefixtree_.reset(new PrefixTree);
   Permutation permutation;
 
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data_.size(), cerr)
+                                new ProgressDisplay(this->data_.size(), cerr)
                                 :NULL);
 
-  for (const auto& it : data_) {
+  for (const auto& it : this->data_) {
     permutation.clear();
     GetPermutationPPIndex(pivot_, space_, it, &permutation);
     prefixtree_->Insert(permutation, it, prefix_length_);

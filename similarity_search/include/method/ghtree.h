@@ -77,7 +77,6 @@ class GHTree : public Index<dist_t> {
   };
 
   const Space<dist_t>& space_;
-  const ObjectVector&  data_;
   bool                 use_random_center_;
   unique_ptr<GHNode>   root_;
 

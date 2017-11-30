@@ -43,7 +43,7 @@ using std::unique_ptr;
 template <typename dist_t>
 BBTree<dist_t>::BBTree(
     const Space<dist_t>& space, 
-    const ObjectVector& data)  : data_(data) {
+    const ObjectVector& data)  : Index<dist_t>(data) {
   BregmanDivSpace_ = BregmanDiv<dist_t>::ConvertFrom(&space); // Should be the special space!
 }
 
@@ -61,7 +61,7 @@ void BBTree<dist_t>::CreateIndex(const AnyParams& MethParams) {
 
   pmgr.CheckUnused();
 
-  root_node_.reset(new BBNode(BregmanDivSpace_, data_, BucketSize_, ChunkBucket_));
+  root_node_.reset(new BBNode(BregmanDivSpace_, this->data_, BucketSize_, ChunkBucket_));
 }
 
 template <typename dist_t>

@@ -60,7 +60,6 @@ class PermBinVPTree : public Index<dist_t> {
  private:
 
   Space<dist_t>&            space_;
-  const ObjectVector&       data_;
   bool                      PrintProgress_;
   size_t                    bin_threshold_;
   size_t                    bin_perm_word_qty_;

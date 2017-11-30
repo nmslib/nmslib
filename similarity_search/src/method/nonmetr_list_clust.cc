@@ -43,7 +43,7 @@ void NonMetrListClust<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
     LOG(LIB_INFO) << "searchCloseIterQty=" << searchCloseIterQty;
     LOG(LIB_INFO) << "sampleDistQty=" << sampleDistQty;
-    ClusterUtils<dist_t>::doFIRMAL(printProgress_, space_, data_, centerQty, vCenters_, vClusterAssign_, vUnassigned_,
+    ClusterUtils<dist_t>::doFIRMAL(printProgress_, space_, this->data_, centerQty, vCenters_, vClusterAssign_, vUnassigned_,
                                    searchCloseIterQty, sampleDistQty, true /* do use all previous clusters in each iteration */);
   } else if (clusterType == CLUST_TYPE_CLARAN) {
     size_t randRestQty = CLARANS_RAND_RESTART_QTY;
@@ -54,7 +54,7 @@ void NonMetrListClust<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     pmgr.GetParamOptional("inClusterSampleQty", inClusterSampleQty, inClusterSampleQty);
 
     LOG(LIB_INFO) << "randRestQty=" << randRestQty;
-    ClusterUtils<dist_t>::doCLARANS(printProgress_, space_, data_, centerQty, vCenters_, vClusterAssign_,
+    ClusterUtils<dist_t>::doCLARANS(printProgress_, space_, this->data_, centerQty, vCenters_, vClusterAssign_,
                                     inClusterSwapAttempts, inClusterSampleQty, randRestQty);
   } else if (clusterType == CLUST_TYPE_REDUCT_CLARAN) {
     size_t inClusterSwapAttempts = CLARANS_SWAP_ATTEMPTS;
@@ -68,7 +68,7 @@ void NonMetrListClust<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     pmgr.GetParamOptional("keepFrac", keepFrac, keepFrac);
     LOG(LIB_INFO) << "maxMetaIterQty = " << maxMetaIterQty;
     LOG(LIB_INFO) << "keepFrac       = " << keepFrac;
-    ClusterUtils<dist_t>::doReductiveCLARANS(printProgress_, space_, data_,
+    ClusterUtils<dist_t>::doReductiveCLARANS(printProgress_, space_, this->data_,
                                              maxMetaIterQty, keepFrac,
                                              centerQty, vCenters_, vClusterAssign_, vUnassigned_,
                                              inClusterSwapAttempts, inClusterSampleQty);
@@ -139,7 +139,7 @@ NonMetrListClust<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
   // Note that GetParamOptional() should always have a default value
   pmgr.GetParamOptional("dbScanFrac", dbScanFrac, 0.1);
   CHECK_MSG(dbScanFrac > 0 && dbScanFrac <= 1, "dbScanFrac should be >0 and <=1");
-  db_scan_ = size_t(ceil(dbScanFrac * data_.size()));
+  db_scan_ = size_t(ceil(dbScanFrac * this->data_.size()));
   LOG(LIB_INFO) << "db_scan=" << db_scan_;
   pmgr.CheckUnused();
 }
