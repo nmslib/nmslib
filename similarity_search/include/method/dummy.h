@@ -42,7 +42,7 @@ class DummyMethod : public Index<dist_t> {
    * So, we can memorize them safely.
    */
   DummyMethod(Space<dist_t>& space, 
-              const ObjectVector& data) : data_(data), space_(space) {}
+              const ObjectVector& data) : Index<dist_t>(data), space_(space) {}
 
   /*
    * This function is supposed to create a search index (or call a 
@@ -105,7 +105,6 @@ class DummyMethod : public Index<dist_t> {
 
  private:
   bool                    data_duplicate_;
-  const ObjectVector&     data_;
   Space<dist_t>&          space_;
   bool                    bDoSeqSearch_;
   // disable copy and assign

@@ -83,7 +83,6 @@ class OMedRank : public Index<dist_t> {
   void IndexChunk(size_t chunkId, ProgressDisplay* displayBar);
 
   const Space<dist_t>&    space_;
-  const ObjectVector&     data_;
   bool                    PrintProgress_;
 
   size_t                  num_pivot_;
@@ -117,8 +116,8 @@ class OMedRank : public Index<dist_t> {
   // Heuristics: try to read db_scan_fraction/index_qty entries from each index part
   // or alternatively K * knn_amp_ entries, for KNN-search
   size_t computeDbScan(size_t K) const {
-    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
-    return static_cast<size_t>(db_scan_frac_ * data_.size());
+    if (knn_amp_) { return min(K * knn_amp_, this->data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * this->data_.size());
   }
 
   template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;

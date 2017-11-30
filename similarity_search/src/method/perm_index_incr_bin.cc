@@ -33,7 +33,7 @@ PermutationIndexIncrementalBin<dist_t, perm_func>::PermutationIndexIncrementalBi
     bool PrintProgress,
     const Space<dist_t>& space,
     const ObjectVector& data) 
-    : space_(space), data_(data), PrintProgress_(PrintProgress) {}
+    : Index<dist_t>(data), space_(space), PrintProgress_(PrintProgress) {}
 
 template <typename dist_t, PivotIdType (*perm_func)(const PivotIdType*, const PivotIdType*, size_t)>
 void PermutationIndexIncrementalBin<dist_t, perm_func>::CreateIndex(const AnyParams& IndexParams) {
@@ -51,17 +51,17 @@ void PermutationIndexIncrementalBin<dist_t, perm_func>::CreateIndex(const AnyPar
   LOG(LIB_INFO) << "# binarization threshold = "  << bin_threshold_;
   LOG(LIB_INFO) << "# binary entry size (words) = "  << bin_perm_word_qty_;
 
-  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
+  GetPermutationPivot(this->data_, space_, num_pivot_, &pivot_);
 
-  permtable_.resize(data_.size() * bin_perm_word_qty_);
+  permtable_.resize(this->data_.size() * bin_perm_word_qty_);
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data_.size(), cerr)
+                                new ProgressDisplay(this->data_.size(), cerr)
                                 :NULL);
 
-  for (size_t i = 0, start = 0; i < data_.size(); ++i, start += bin_perm_word_qty_) {
+  for (size_t i = 0, start = 0; i < this->data_.size(); ++i, start += bin_perm_word_qty_) {
     Permutation TmpPerm;
-    GetPermutation(pivot_, space_, data_[i], &TmpPerm);
+    GetPermutation(pivot_, space_, this->data_[i], &TmpPerm);
     CHECK(TmpPerm.size() == num_pivot_);
     vector<uint32_t>  binPivot;
     Binarize(TmpPerm, bin_threshold_, binPivot);
@@ -133,10 +133,10 @@ void PermutationIndexIncrementalBin<dist_t, perm_func>::GenSearch(QueryType* que
   Binarize(perm_q, bin_threshold_, binPivot);
 
   std::vector<IntInt> perm_dists;
-  perm_dists.reserve(data_.size());
+  perm_dists.reserve(this->data_.size());
 
   if (use_sort_) {
-    for (size_t i = 0, start = 0; i < data_.size(); ++i, start += bin_perm_word_qty_) {
+    for (size_t i = 0, start = 0; i < this->data_.size(); ++i, start += bin_perm_word_qty_) {
       perm_dists.push_back(std::make_pair(BitHamming(&permtable_[start], &binPivot[0], bin_perm_word_qty_), i));
     }
 
@@ -144,12 +144,12 @@ void PermutationIndexIncrementalBin<dist_t, perm_func>::GenSearch(QueryType* que
     for (size_t i = 0; i < db_scan; ++i) {
       const size_t idx = quick_select.GetNext().second;
       quick_select.Next();
-      if (!skip_checking_) query->CheckAndAddToResult(data_[idx]);
+      if (!skip_checking_) query->CheckAndAddToResult(this->data_[idx]);
     }
   } else {
-    for (size_t i = 0, start = 0; i < data_.size(); ++i, start += bin_perm_word_qty_) {
+    for (size_t i = 0, start = 0; i < this->data_.size(); ++i, start += bin_perm_word_qty_) {
       if (BitHamming(&permtable_[start], &binPivot[0], bin_perm_word_qty_) < max_hamming_dist_) {
-        if (!skip_checking_) query->CheckAndAddToResult(data_[i]);
+        if (!skip_checking_) query->CheckAndAddToResult(this->data_[i]);
       }
     }
   }

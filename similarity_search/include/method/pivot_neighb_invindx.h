@@ -85,7 +85,6 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
 
-  const   ObjectVector&   data_;
   const   Space<dist_t>&  space_;
   bool    PrintProgress_;
   bool    recreate_points_;
@@ -130,11 +129,11 @@ class PivotNeighbInvertedIndex : public Index<dist_t> {
   ObjectVector    genPivot_; // generated pivots
 
   size_t computeDbScan(size_t K, size_t chunkQty) const {
-    size_t totalDbScan = static_cast<size_t>(db_scan_frac_ * data_.size());
+    size_t totalDbScan = static_cast<size_t>(db_scan_frac_ * this->data_.size());
     if (knn_amp_) { 
       totalDbScan = K * knn_amp_;
     }
-    totalDbScan = min(totalDbScan, data_.size());
+    totalDbScan = min(totalDbScan, this->data_.size());
     CHECK_MSG(chunkQty, "Bug or inconsistent parameters: the number of index chunks cannot be zero!");
     return (totalDbScan + chunkQty - 1) / chunkQty;
   }

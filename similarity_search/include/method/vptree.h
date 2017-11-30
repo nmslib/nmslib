@@ -106,7 +106,6 @@ class VPTree : public Index<dist_t> {
   };
 
   Space<dist_t>&      space_;
-  const ObjectVector& data_;
   bool                PrintProgress_;
   bool                use_random_center_;
   size_t              max_pivot_select_attempts_;

@@ -53,7 +53,6 @@ class ProjectionVPTree : public Index<dist_t> {
 
 
   Space<dist_t>&                    space_;
-  const ObjectVector&               data_;
   bool                              PrintProgress_;
 
   size_t                            K_;
@@ -61,8 +60,8 @@ class ProjectionVPTree : public Index<dist_t> {
   float					                    db_scan_frac_;
 
   size_t computeDbScan(size_t K) const {
-    if (knn_amp_) { return min(K * knn_amp_, data_.size()); }
-    return static_cast<size_t>(db_scan_frac_ * data_.size());
+    if (knn_amp_) { return min(K * knn_amp_, this->data_.size()); }
+    return static_cast<size_t>(db_scan_frac_ * this->data_.size());
   }
 
   unique_ptr<Projection<dist_t> >   projObj_;

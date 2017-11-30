@@ -48,9 +48,9 @@ VPTree<dist_t, SearchOracle>::VPTree(
                        bool  PrintProgress,
                        Space<dist_t>& space,
                        const ObjectVector& data,
-                       bool use_random_center) : 
+                       bool use_random_center) :
+                              Index<dist_t>(data),
                               space_(space),
-                              data_(data),
                               PrintProgress_(PrintProgress),
                               use_random_center_(use_random_center),
                               max_pivot_select_attempts_(MAX_PIVOT_SELECT_ATTEMPTS),
@@ -82,13 +82,13 @@ void VPTree<dist_t, SearchOracle>::CreateIndex(const AnyParams& IndexParams) {
   this->ResetQueryTimeParams(); // reset query-time parameters
 
   unique_ptr<ProgressDisplay>   progress_bar(PrintProgress_ ? 
-                                              new ProgressDisplay(data_.size(), cerr):
+                                              new ProgressDisplay(this->data_.size(), cerr):
                                               NULL);
 
   root_.reset(new VPNode(0,
                      progress_bar.get(), 
                      oracle_, 
-                     space_, data_,
+                     space_, this->data_,
                      max_pivot_select_attempts_,
                      BucketSize_, ChunkBucket_,
                      use_random_center_ /* use random center */));

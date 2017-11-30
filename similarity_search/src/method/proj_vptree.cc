@@ -70,8 +70,8 @@ ProjectionVPTree<dist_t>::ProjectionVPTree(
     bool PrintProgress,
     Space<dist_t>& space,
     const ObjectVector& data) :
+      Index<dist_t>(data),
       space_(space),
-      data_(data),  
       PrintProgress_(PrintProgress),
       K_(0),
       knn_amp_(0),
@@ -126,7 +126,7 @@ void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
   projObj_.reset(Projection<dist_t>::createProjection(
                     space_,
-                    data_,
+                    this->data_,
                     projType,
                     intermDim,
                     projDim_,
@@ -163,10 +163,10 @@ void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
 
 
-  projData_.resize(data_.size());
+  projData_.resize(this->data_.size());
 
-  for (size_t id = 0; id < data_.size(); ++id) {
-    projData_[id] = ProjectOneVect(id, NULL, data_[id]);
+  for (size_t id = 0; id < this->data_.size(); ++id) {
+    projData_[id] = ProjectOneVect(id, NULL, this->data_[id]);
   }
 
   ReportIntrinsicDimensionality("Set of projections" , *VPTreeSpace_, projData_);
@@ -183,7 +183,7 @@ void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
 template <typename dist_t>
 ProjectionVPTree<dist_t>::~ProjectionVPTree() {
-  for (size_t i = 0; i < data_.size(); ++i) {
+  for (size_t i = 0; i < this->data_.size(); ++i) {
     delete projData_[i];
   }
 }
@@ -217,7 +217,7 @@ void ProjectionVPTree<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
 
   while (!ResQueue->Empty()) {
       size_t id = reinterpret_cast<const Object*>(ResQueue->TopObject())->id();
-      query->CheckAndAddToResult(data_[id]);
+      query->CheckAndAddToResult(this->data_[id]);
       ResQueue->Pop();
   }
 }
@@ -240,7 +240,7 @@ void ProjectionVPTree<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 
   while (!ResQueue->Empty()) {
       size_t id = reinterpret_cast<const Object*>(ResQueue->TopObject())->id();
-      query->CheckAndAddToResult(data_[id]);
+      query->CheckAndAddToResult(this->data_[id]);
       ResQueue->Pop();
   }
 }
