@@ -958,7 +958,8 @@ namespace similarity {
     void
     Hnsw<dist_t>::LoadIndex(const string &location) {
         LOG(LIB_INFO) << "Loading index from " << location;
-        std::ifstream input(location);//, std::ios::binary);
+        std::ifstream input(location, 
+                            std::ios::binary); /* text files can be opened in binary mode as well */
         CHECK_MSG(input, "Cannot open file '" + location + "' for reading");
 
         input.exceptions(ios::badbit | ios::failbit);
