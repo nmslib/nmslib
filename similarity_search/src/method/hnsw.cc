@@ -869,7 +869,7 @@ namespace similarity {
 
         ElList_.resize(totalElementsStored_);
         for (unsigned id = 0; id < totalElementsStored_; ++id) {
-            ElList_[id] = new HnswNode(data_[id], id);
+            ElList_[id] = new HnswNode(this->data_[id], id);
         }
 
         enterpoint_ = ElList_[enterpointId_];
@@ -926,7 +926,7 @@ namespace similarity {
 
         ElList_.resize(totalElementsStored_);
         for (unsigned id = 0; id < totalElementsStored_; ++id) {
-            ElList_[id] = new HnswNode(data_[id], id);
+            ElList_[id] = new HnswNode(this->data_[id], id);
         }
 
         enterpoint_ = ElList_[enterpointId_];
