@@ -28,7 +28,7 @@ namespace similarity {
 template <typename dist_t>
 MultiVantagePointTree<dist_t>::MultiVantagePointTree(
     const Space<dist_t>& space,
-    const ObjectVector& data) : space_(space), data_(data) {
+    const ObjectVector& data) : Index<dist_t>(data), space_(space) {
 }
 
 template <typename dist_t>
@@ -50,9 +50,9 @@ void MultiVantagePointTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   }
 
   Entries entries;
-  entries.reserve(data_.size());
-  for (size_t i = 0; i < data_.size(); ++i) {
-    entries.push_back(Entry(data_[i]));
+  entries.reserve(this->data_.size());
+  for (size_t i = 0; i < this->data_.size(); ++i) {
+    entries.push_back(Entry(this->data_[i]));
   }
   root_.reset(BuildTree(&space_, entries));
 }

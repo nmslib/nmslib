@@ -24,8 +24,8 @@ namespace similarity {
 template <typename dist_t>
 void DummyMethod<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
   if (bDoSeqSearch_) {
-    for (size_t i = 0; i < data_.size(); ++i) {
-      query->CheckAndAddToResult(data_[i]);
+    for (size_t i = 0; i < this->data_.size(); ++i) {
+      query->CheckAndAddToResult(this->data_[i]);
     }
   } else {
     for (int i =0; i < 100000; ++i);
@@ -35,8 +35,8 @@ void DummyMethod<dist_t>::Search(RangeQuery<dist_t>* query, IdType) const {
 template <typename dist_t>
 void DummyMethod<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   if (bDoSeqSearch_) {
-    for (size_t i = 0; i < data_.size(); ++i) {
-      query->CheckAndAddToResult(data_[i]);
+    for (size_t i = 0; i < this->data_.size(); ++i) {
+      query->CheckAndAddToResult(this->data_[i]);
     }
   } else {
     for (int i =0; i < 100000; ++i);

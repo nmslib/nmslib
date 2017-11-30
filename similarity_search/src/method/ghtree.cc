@@ -28,8 +28,8 @@ template <typename dist_t>
 GHTree<dist_t>::GHTree(const Space<dist_t>& space,
                        const ObjectVector& data,
                        bool use_random_center) : 
-                                space_(space), 
-                                data_(data),
+                                Index<dist_t>(data),
+                                space_(space),
                                 use_random_center_(use_random_center) {
 }
 
@@ -46,7 +46,7 @@ void GHTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   pmgr.CheckUnused();
   this->ResetQueryTimeParams();
 
-  root_.reset(new GHNode(space_, data_,
+  root_.reset(new GHNode(space_, this->data_,
                      BucketSize_, ChunkBucket_,
                      use_random_center_ /* random center */));
 }

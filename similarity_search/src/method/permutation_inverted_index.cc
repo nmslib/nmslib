@@ -67,7 +67,7 @@ template <typename dist_t>
 PermutationInvertedIndex<dist_t>::PermutationInvertedIndex(
     bool  PrintProgress,
     const Space<dist_t>& space,
-    const ObjectVector& data) : space_(space), data_(data), PrintProgress_(PrintProgress) {
+    const ObjectVector& data) : Index<dist_t>(data), space_(space), PrintProgress_(PrintProgress) {
 }
 
 
@@ -97,18 +97,18 @@ void PermutationInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
   LOG(LIB_INFO) << "# knnAmp                  = "         << knn_amp_;
 
   unique_ptr<ProgressDisplay>   progress_bar(PrintProgress_ ? 
-                                              new ProgressDisplay(data_.size(), cerr):
+                                              new ProgressDisplay(this->data_.size(), cerr):
                                               NULL);
 
 
-  GetPermutationPivot(data_, space_, num_pivot_, &pivot_);
+  GetPermutationPivot(this->data_, space_, num_pivot_, &pivot_);
 
   posting_lists_.resize(num_pivot_);
 
 
-  for (size_t id = 0; id < data_.size(); ++id) {
+  for (size_t id = 0; id < this->data_.size(); ++id) {
     Permutation perm;
-    GetPermutation(pivot_, space_, data_[id], &perm);
+    GetPermutation(pivot_, space_, this->data_[id], &perm);
     for (size_t j = 0; j < perm.size(); ++j) {
       if (perm[j] < num_pivot_index_) {
         posting_lists_[j].push_back(ObjectInvEntry(id, perm[j]));
@@ -172,7 +172,7 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
     }
   }
 
-  bool bUseMap = maxScanQty < USE_MAP_THRESHOLD * data_.size();  // TODO: @leo this is rather adhoc
+  bool bUseMap = maxScanQty < USE_MAP_THRESHOLD * this->data_.size();  // TODO: @leo this is rather adhoc
 
   vector<IntInt> perm_dists;
 
@@ -218,9 +218,9 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
   } else {
     int MaxDist = num_pivot_search_ * num_pivot_index_; 
 
-    perm_dists.reserve(data_.size());
+    perm_dists.reserve(this->data_.size());
 
-    for (size_t i = 0; i < data_.size(); ++i)
+    for (size_t i = 0; i < this->data_.size(); ++i)
       perm_dists.push_back(make_pair(MaxDist, i));
 
     for (size_t i = 0, inum = 0; i < perm_q.size(); ++i) {
@@ -255,7 +255,7 @@ void PermutationInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
   for (size_t i = 0; i < scan_qty; ++i) {
     const size_t idx = quick_select.GetNext().second;
     quick_select.Next();
-    query->CheckAndAddToResult(data_[idx]);
+    query->CheckAndAddToResult(this->data_[idx]);
   }
 }
 

@@ -52,7 +52,6 @@ class PermutationIndexLSHBin : public Index<dist_t> {
   void SetQueryTimeParams(const AnyParams &) override {}
  private:
   const Space<dist_t>&  space_;
-  const ObjectVector&   data_;
   bool                  printProgress_;
 
   size_t                num_pivot_;

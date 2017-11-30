@@ -50,6 +50,8 @@ class KNNQuery;
 template <typename dist_t>
 class Index {
 public:
+  Index(const ObjectVector& data) : data_(data) {}
+
   // Create an index using given parameters
   virtual void CreateIndex(const AnyParams& indexParams) = 0;
   // SaveIndex is not necessarily implemented
@@ -96,6 +98,11 @@ public:
                            bool checkIDs = false/* this is a debug flag only, turning it on may affect performance */) {
     throw runtime_error("DeleteBatch is not implemented!");
   }
+
+  virtual size_t GetSize() const { return data_.size(); }
+protected:
+  const ObjectVector& data_;
+
 private:
   template <typename QueryType>
   void GenericSearch(QueryType* query, IdType) const;

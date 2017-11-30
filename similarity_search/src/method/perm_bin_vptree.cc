@@ -38,7 +38,7 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
     bool PrintProgress,
     Space<dist_t>& space,
     const ObjectVector& data) : 
-      space_(space), data_(data),   
+      Index<dist_t>(data), space_(space), 
       PrintProgress_(PrintProgress),
       VPTreeSpace_(new SpaceBitHamming())
 {}
@@ -62,12 +62,12 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& Ind
   AnyParams RemainParams = pmgr.ExtractParametersExcept({ "numPivot", "binThreshold"});
 
 
-  GetPermutationPivot(data_, space_, NumPivot, &pivots_);
-  BinPermData_.resize(data_.size());
+  GetPermutationPivot(this->data_, space_, NumPivot, &pivots_);
+  BinPermData_.resize(this->data_.size());
 
-  for (size_t i = 0; i < data_.size(); ++i) {
+  for (size_t i = 0; i < this->data_.size(); ++i) {
     Permutation TmpPerm;
-    GetPermutation(pivots_, space_, data_[i], &TmpPerm);
+    GetPermutation(pivots_, space_, this->data_[i], &TmpPerm);
     vector<uint32_t>  binPivot;
     Binarize(TmpPerm, bin_threshold_, binPivot);
     CHECK(binPivot.size() == bin_perm_word_qty_);
@@ -105,7 +105,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::SetQueryTimeParams(const AnyPara
   LOG(LIB_INFO) << "Set query-time parameters for PermBinVPTree:";
   LOG(LIB_INFO) << "dbScanFrac=" << dbScanFrac;
 
-  db_scan_qty_ = max(size_t(1), static_cast<size_t>(dbScanFrac * data_.size()));
+  db_scan_qty_ = max(size_t(1), static_cast<size_t>(dbScanFrac * this->data_.size()));
 
   LOG(LIB_INFO) << "db_scan_qty_=" << db_scan_qty_;
 
@@ -115,7 +115,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::SetQueryTimeParams(const AnyPara
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>
 PermBinVPTree<dist_t, RankCorrelDistFunc>::~PermBinVPTree() {
-  for (size_t i = 0; i < data_.size(); ++i) {
+  for (size_t i = 0; i < this->data_.size(); ++i) {
     delete BinPermData_[i];
   }
 }
@@ -146,7 +146,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(RangeQuery<dist_t>* query
 
   while (!ResQueue->Empty()) {
       size_t id = reinterpret_cast<const Object*>(ResQueue->TopObject())->id();
-      query->CheckAndAddToResult(data_[id]);
+      query->CheckAndAddToResult(this->data_[id]);
       ResQueue->Pop();
   }
 }
@@ -170,7 +170,7 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::Search(KNNQuery<dist_t>* query, 
 
   while (!ResQueue->Empty()) {
       size_t id = reinterpret_cast<const Object*>(ResQueue->TopObject())->id();
-      query->CheckAndAddToResult(data_[id]);
+      query->CheckAndAddToResult(this->data_[id]);
       ResQueue->Pop();
   }
 }

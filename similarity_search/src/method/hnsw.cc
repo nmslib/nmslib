@@ -84,9 +84,9 @@ namespace similarity {
 
     template <typename dist_t>
     Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t> &space, const ObjectVector &data)
-        : space_(space)
+        : Index<dist_t>(data)
+        , space_(space)
         , PrintProgress_(PrintProgress)
-        , data_(data)
         , visitedlistpool(nullptr)
         , enterpoint_(nullptr)
         , data_level0_memory_(nullptr)
@@ -193,24 +193,24 @@ namespace similarity {
 
         SetQueryTimeParams(getEmptyParams());
 
-        if (data_.empty()) {
+        if (this->data_.empty()) {
             pmgr.CheckUnused();
             return;
         }
-        ElList_.resize(data_.size());
+        ElList_.resize(this->data_.size());
         // One entry should be added before all the threads are started, or else add() will not work properly
-        HnswNode *first = new HnswNode(data_[0], 0 /* id == 0 */);
+        HnswNode *first = new HnswNode(this->data_[0], 0 /* id == 0 */);
         first->init(getRandomLevel(mult_), maxM_, maxM0_);
         maxlevel_ = first->level;
         enterpoint_ = first;
         ElList_[0] = first;
 
-        visitedlistpool = new VisitedListPool(indexThreadQty_, data_.size());
+        visitedlistpool = new VisitedListPool(indexThreadQty_, this->data_.size());
 
-        unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
+        unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ? new ProgressDisplay(this->data_.size(), cerr) : NULL);
 
-        ParallelFor(1, data_.size(), indexThreadQty_, [&](int id) {
-            HnswNode *node = new HnswNode(data_[id], id);
+        ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int id) {
+            HnswNode *node = new HnswNode(this->data_[id], id);
             add(&space_, node);
             {
                 unique_lock<mutex> lock(ElListGuard_);
@@ -223,20 +223,20 @@ namespace similarity {
         if (post_ == 1 || post_ == 2) {
             vector<HnswNode *> temp;
             temp.swap(ElList_);
-            ElList_.resize(data_.size());
-            first = new HnswNode(data_[0], 0 /* id == 0 */);
+            ElList_.resize(this->data_.size());
+            first = new HnswNode(this->data_[0], 0 /* id == 0 */);
             first->init(getRandomLevel(mult_), maxM_, maxM0_);
             maxlevel_ = first->level;
             enterpoint_ = first;
             ElList_[0] = first;
             /// Making the same index in reverse order
-            unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(data_.size(), cerr) : NULL);
+            unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(this->data_.size(), cerr) : NULL);
 
-            ParallelFor(1, data_.size(), indexThreadQty_, [&](int pos_id) {
+            ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int pos_id) {
                 // reverse ordering (so we iterate decreasing). given
                 // parallelfor, this might not make a difference
-                int id = data_.size() - pos_id;
-                HnswNode *node = new HnswNode(data_[id], id);
+                int id = this->data_.size() - pos_id;
+                HnswNode *node = new HnswNode(this->data_[id], id);
                 add(&space_, node);
                 {
                     unique_lock<mutex> lock(ElListGuard_);
@@ -248,7 +248,7 @@ namespace similarity {
             int maxF = 0;
 
 // int degrees[100] = {0};
-            ParallelFor(1, data_.size(), indexThreadQty_, [&](int id) {
+            ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int id) {
                 HnswNode *node1 = ElList_[id];
                 HnswNode *node2 = temp[id];
                 vector<HnswNode *> f1 = node1->getAllFriends(0);

@@ -32,7 +32,7 @@ PermutationIndexLSHBin<dist_t>::PermutationIndexLSHBin(
     bool PrintProgress,
     const Space<dist_t>& space,
     const ObjectVector& data) : 
-                                space_(space), data_(data), printProgress_(PrintProgress) {}
+                                Index<dist_t>(data), space_(space), printProgress_(PrintProgress) {}
 
 template <typename dist_t>
 void PermutationIndexLSHBin<dist_t>::CreateIndex(const AnyParams& IndexParams) {
@@ -68,7 +68,7 @@ void PermutationIndexLSHBin<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   bit_sample_flags_.resize(num_hash_);
 
   for (size_t i = 0; i < num_hash_; ++i) {
-    GetPermutationPivot(data_, space_, num_pivot_, &pivots_[i]);
+    GetPermutationPivot(this->data_, space_, num_pivot_, &pivots_[i]);
     bit_sample_flags_[i].resize(num_pivot_);
 
 
@@ -113,11 +113,11 @@ void PermutationIndexLSHBin<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   }
 
   unique_ptr<ProgressDisplay> progress_bar(printProgress_ ?
-                                new ProgressDisplay(data_.size(), cerr)
+                                new ProgressDisplay(this->data_.size(), cerr)
                                 :NULL);
-  for (size_t id = 0; id < data_.size(); ++id) {
+  for (size_t id = 0; id < this->data_.size(); ++id) {
     for (size_t hashId = 0; hashId < num_hash_; ++hashId) {
-      size_t val = computeHashValue(hashId, data_[id], NULL); // Already <= hash_table_size_;
+      size_t val = computeHashValue(hashId, this->data_[id], NULL); // Already <= hash_table_size_;
       //cout << val << endl;
       if (!hash_tables_[hashId][val]) {
         hash_tables_[hashId][val] = new vector<IdType>();
@@ -152,7 +152,7 @@ void PermutationIndexLSHBin<dist_t>::GenSearch(QueryType* query) const {
        * times. At the same time, other relevant entries will be removed!
        */
       if (!found.count(id)) {
-        query->CheckAndAddToResult(data_[id]);
+        query->CheckAndAddToResult(this->data_[id]);
         found.insert(id);
       }
     }

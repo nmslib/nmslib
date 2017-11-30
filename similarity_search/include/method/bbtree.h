@@ -111,8 +111,6 @@ class BBTree : public Index<dist_t> {
     DISABLE_COPY_AND_ASSIGN(BBNode);
   };
 
-  const ObjectVector&       data_;
-
   unique_ptr<BBNode>        root_node_;
   size_t                    BucketSize_;
   int                       MaxLeavesToVisit_;

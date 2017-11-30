@@ -286,7 +286,6 @@ private:
   ObjectVector          pivots_;
 
   const Space<dist_t>&  space_;
-  const ObjectVector&   data_; // We don't copy data
   bool                  PrintProgress_;
   bool                  use_proxy_dist_;
 

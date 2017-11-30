@@ -38,7 +38,7 @@ OMedRank<dist_t>::OMedRank(
     bool                 PrintProgress,
     const Space<dist_t>& space,
     const ObjectVector& data) :
-        space_(space), data_(data), PrintProgress_(PrintProgress),
+        Index<dist_t>(data), space_(space), PrintProgress_(PrintProgress),
         index_qty_(0) // If ComputeDbScan is called before index_qty_ is computed, it will see this zero
 { }
 
@@ -58,7 +58,7 @@ void OMedRank<dist_t>::CreateIndex(const AnyParams &IndexParams) {
 
   projection_.reset(Projection<dist_t>::createProjection(
                                                       space_,
-                                                      data_,
+                                                      this->data_,
                                                       proj_type_,
                                                       interm_dim_,
                                                       num_pivot_,
@@ -70,7 +70,7 @@ void OMedRank<dist_t>::CreateIndex(const AnyParams &IndexParams) {
                         " distance value type: '" + DistTypeName<dist_t>() + "'");
   }
 
-  index_qty_ = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
+  index_qty_ = (this->data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
   
   pmgr.CheckUnused();
 
@@ -87,7 +87,7 @@ void OMedRank<dist_t>::CreateIndex(const AnyParams &IndexParams) {
   }
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                              new ProgressDisplay(data_.size(), cerr)
+                              new ProgressDisplay(this->data_.size(), cerr)
                               :NULL);
 
   for (size_t chunkId = 0; chunkId < index_qty_; ++chunkId) {
@@ -181,7 +181,7 @@ void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) const {
     size_t    minMatchPivotQty = max(size_t(1), static_cast<size_t>(round(min_freq_ * num_pivot_search_)));
 
     size_t minId = chunkId * chunk_index_size_;
-    size_t maxId = min(data_.size(), minId + chunk_index_size_);
+    size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
     size_t chunkQty = (maxId - minId);
 
     CHECK(chunkQty <= chunk_index_size_);
@@ -210,7 +210,7 @@ void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) const {
 
           if (freq == minMatchPivotQty) { // Add only the first time when we exceeded the threshold!
             ++scannedQty;
-            if (!skip_check_) query->CheckAndAddToResult(data_[objIdDiff + minId]);
+            if (!skip_check_) query->CheckAndAddToResult(this->data_[objIdDiff + minId]);
           } 
           eof = false;
         }
@@ -262,7 +262,7 @@ void OMedRank<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
 template <typename dist_t>
 void OMedRank<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* displayBar) {
   size_t minId = chunkId * chunk_index_size_;
-  size_t maxId = min(data_.size(), minId + chunk_index_size_);
+  size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
 
   auto & chunkPostLists = *posting_lists_[chunkId];
   chunkPostLists.resize(num_pivot_);
@@ -273,7 +273,7 @@ void OMedRank<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* displayBar) {
   for (size_t i = 0; i < maxId - minId; ++i) {
     IdType id = minId + i;
 
-    projection_->compProj(NULL, data_[id], &projDists[0]);
+    projection_->compProj(NULL, this->data_[id], &projDists[0]);
 
     for (size_t j = 0; j < num_pivot_; ++j) {
       /* 

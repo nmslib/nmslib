@@ -135,7 +135,7 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
     query->CheckAndAddToResult(-tmpResQueue.top_key(), data_[tmpResQueue.top_data()]);
 #else
     // This branch recomputes the distance, but it normally has a negligibly small effect on the run-time
-    query->CheckAndAddToResult(data_[tmpResQueue.top_data()]);
+    query->CheckAndAddToResult(this->data_[tmpResQueue.top_data()]);
 #endif
     tmpResQueue.pop();
   }
@@ -159,9 +159,9 @@ void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
   LOG(LIB_INFO) << "Collecting dictionary stat";
 
   {
-    ProgressDisplay  pbar(data_.size(), cerr);
+    ProgressDisplay  pbar(this->data_.size(), cerr);
 
-    for (const Object* o : data_) {
+    for (const Object* o : this->data_) {
       tmp_vect.clear();
       UnpackSparseElements(o->data(), o->datalength(), tmp_vect);
       for (const auto& e : tmp_vect) dict_qty[e.id_] ++;
@@ -182,12 +182,12 @@ void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
   }
 
   {
-    ProgressDisplay  pbar(data_.size(), cerr);
+    ProgressDisplay  pbar(this->data_.size(), cerr);
 
     // Fill posting lists
-    for (size_t did = 0; did < data_.size(); ++did) {
+    for (size_t did = 0; did < this->data_.size(); ++did) {
       tmp_vect.clear();
-      UnpackSparseElements(data_[did]->data(), data_[did]->datalength(), tmp_vect);
+      UnpackSparseElements(this->data_[did]->data(), this->data_[did]->datalength(), tmp_vect);
       // iterate over all terms in the document (non-zero values in the sparse vector)
       for (const auto& e : tmp_vect) {
         const auto wordId = e.id_;

@@ -55,7 +55,7 @@ struct SearchThreadSeqSearch {
 
 template <typename dist_t>
 SeqSearch<dist_t>::SeqSearch(Space<dist_t>& space, const ObjectVector& origData) :
-                      space_(space), origData_(origData), cacheOptimizedBucket_(NULL), pData_(NULL) {
+                      Index<dist_t>(origData), space_(space), cacheOptimizedBucket_(NULL), pData_(NULL) {
 }
 
 template <typename dist_t>
@@ -96,7 +96,7 @@ void SeqSearch<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   SetQueryTimeParams(getEmptyParams());
 
   if (bCopyMem) {
-    CreateCacheOptimizedBucket(origData_, cacheOptimizedBucket_, pData_);
+    CreateCacheOptimizedBucket(this->data_, cacheOptimizedBucket_, pData_);
   }
 }
 

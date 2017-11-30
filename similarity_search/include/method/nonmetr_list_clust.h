@@ -46,7 +46,7 @@ class NonMetrListClust : public Index<dist_t> {
  public:
   NonMetrListClust(bool printProgress,
                    Space<dist_t>& space,
-                   const ObjectVector& data) : printProgress_(printProgress), data_(data), space_(space) {
+                   const ObjectVector& data) : Index<dist_t>(data), printProgress_(printProgress), space_(space) {
     maxObjId_ = 0;
     for (const Object* o: data) {
       maxObjId_ = max(maxObjId_, o->id());
@@ -79,7 +79,6 @@ class NonMetrListClust : public Index<dist_t> {
 
  private:
   bool                    printProgress_;
-  const ObjectVector&     data_;
   Space<dist_t>&          space_;
 
   size_t                  db_scan_;

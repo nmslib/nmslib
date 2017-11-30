@@ -83,7 +83,7 @@ PivotNeighbInvertedIndex<dist_t>::PivotNeighbInvertedIndex(
     bool  PrintProgress,
     const Space<dist_t>& space,
     const ObjectVector& data) 
-      : data_(data),  
+      : Index<dist_t>(data),  
         space_(space), 
         PrintProgress_(PrintProgress),
         recreate_points_(false),
@@ -121,7 +121,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   pmgr.GetParamOptional("pivotFile", pivot_file_, "");
   
-  size_t indexQty = (data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
+  size_t indexQty = (this->data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
 
   pmgr.CheckUnused();
   this->ResetQueryTimeParams();
@@ -136,7 +136,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
   LOG(LIB_INFO) << "Do we recreate points during indexing when computing distances to pivots?  = " << recreate_points_;
 
   if (pivot_file_.empty())
-    GetPermutationPivot(data_, space_, num_pivot_, &pivot_, &pivot_pos_);
+    GetPermutationPivot(this->data_, space_, num_pivot_, &pivot_, &pivot_pos_);
   else {
     vector<string> vExternIds;
     space_.ReadDataset(pivot_, vExternIds, pivot_file_, num_pivot_);
@@ -165,7 +165,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
 
   if (index_thread_qty_ <= 1) {
     unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data_.size(), cerr)
+                                new ProgressDisplay(this->data_.size(), cerr)
                                 :NULL);
     for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
       IndexChunk(chunkId, progress_bar.get(), progressBarMutex);
@@ -181,7 +181,7 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
     LOG(LIB_INFO) << "Will create " << index_thread_qty_ << " indexing threads";;
 
     unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data_.size(), cerr)
+                                new ProgressDisplay(this->data_.size(), cerr)
                                 :NULL);
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
@@ -256,7 +256,7 @@ template <typename dist_t>
 void 
 PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* progress_bar, mutex& display_mutex) {
   size_t minId = chunkId * chunk_index_size_;
-  size_t maxId = min(data_.size(), minId + chunk_index_size_);
+  size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
 
 
   auto & chunkPostLists = *posting_lists_[chunkId];
@@ -265,7 +265,7 @@ PivotNeighbInvertedIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDisplay* pr
 
   for (size_t id = 0; id < maxId - minId; ++id) {
     Permutation perm;
-    const Object* pObj = data_[minId + id];
+    const Object* pObj = this->data_[minId + id];
 
     unique_ptr<Object> extObj;
     if (recreate_points_) {
@@ -447,9 +447,9 @@ void PivotNeighbInvertedIndex<dist_t>::LoadIndex(const string &location) {
               " from the header (location  " + location + ")");
     pivot_.resize(num_pivot_);
     for (size_t i = 0; i < pivot_pos_.size(); ++i) {
-      CHECK_MSG(pivot_pos_[i] < data_.size(),
+      CHECK_MSG(pivot_pos_[i] < this->data_.size(),
                 DATA_MUTATION_ERROR_MSG + " (detected an object index >= #of data points");
-      pivot_[i] = data_[pivot_pos_[i]];
+      pivot_[i] = this->data_[pivot_pos_[i]];
     }
     ++lineNum;
     // Read pivot object IDs
@@ -542,10 +542,10 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
   for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {
     const auto & chunkPostLists = *posting_lists_[chunkId];
     size_t minId = chunkId * chunk_index_size_;
-    size_t maxId = min(data_.size(), minId + chunk_index_size_);
+    size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
     size_t chunkQty = maxId - minId;
 
-    const auto data_start = &data_[0] + minId;
+    const auto data_start = &this->data_[0] + minId;
 
     if (use_sort_) {
       if (!db_scan) {

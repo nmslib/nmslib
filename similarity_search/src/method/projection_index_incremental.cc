@@ -44,7 +44,7 @@ ProjectionIndexIncremental<dist_t>::ProjectionIndexIncremental(
     bool  PrintProgress,
     const Space<dist_t>&  space,
     const ObjectVector&   data) 
-      :  space_(space), data_(data), PrintProgress_(PrintProgress),
+      :  Index<dist_t>(data), space_(space), PrintProgress_(PrintProgress),
          K_(0) {
 }
 
@@ -83,7 +83,7 @@ void ProjectionIndexIncremental<dist_t>::CreateIndex(const AnyParams&      Index
 
   proj_obj_.reset(Projection<dist_t>::createProjection(
                     space_,
-                    data_,
+                    this->data_,
                     proj_descr_,
                     intermDim,
                     proj_dim_,
@@ -97,15 +97,15 @@ void ProjectionIndexIncremental<dist_t>::CreateIndex(const AnyParams&      Index
             unique_ptr<AnyParams>(new AnyParams(projSpaceDesc));
 
   unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ?
-                                new ProgressDisplay(data_.size(), cerr)
+                                new ProgressDisplay(this->data_.size(), cerr)
                                 :NULL);
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
-  proj_vects_.resize(data_.size() * proj_dim_);
+  proj_vects_.resize(this->data_.size() * proj_dim_);
   vector<float> TmpVect(proj_dim_);
 
-  for (size_t i = 0, start = 0; i < data_.size(); ++i, start += proj_dim_) {
-    proj_obj_->compProj(NULL, data_[i], &TmpVect[0]);
+  for (size_t i = 0, start = 0; i < this->data_.size(); ++i, start += proj_dim_) {
+    proj_obj_->compProj(NULL, this->data_[i], &TmpVect[0]);
     memcpy(&proj_vects_[start], &TmpVect[0], sizeof(proj_vects_[0])*proj_dim_); 
     if (progress_bar) ++(*progress_bar);
   }
@@ -175,10 +175,10 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query, size_t K) c
 
   if (!use_priority_queue_) {
     std::vector<FloatInt> proj_dists;
-    proj_dists.reserve(data_.size());
+    proj_dists.reserve(this->data_.size());
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
-    for (size_t i = 0, start = 0; i < data_.size(); ++i, start += proj_dim_) {
+    for (size_t i = 0, start = 0; i < this->data_.size(); ++i, start += proj_dim_) {
       float projDist = use_cosine_ ? 
                     CosineSimilarity(&proj_vects_[start], &QueryVect[0], proj_dim_)
                     :
@@ -202,13 +202,13 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query, size_t K) c
     for (size_t i = 0; i < scan_qty; ++i) {
       const size_t idx = quick_select.GetNext().second;
       quick_select.Next();
-      query->CheckAndAddToResult(data_[idx]);
+      query->CheckAndAddToResult(this->data_[idx]);
     }
   } else {
     priority_queue<FloatInt> filterQueue;
 
 #ifdef PROJ_CONTIGUOUS_STORAGE
-    for (size_t i = 0, start = 0; i < data_.size(); ++i, start += proj_dim_) {
+    for (size_t i = 0, start = 0; i < this->data_.size(); ++i, start += proj_dim_) {
       float projDist = L2NormSIMD(&proj_vects_[start], &QueryVect[0], proj_dim_);
 #else
     for (size_t i = 0; i < proj_vects_.size(); ++i) {
@@ -223,7 +223,7 @@ void ProjectionIndexIncremental<dist_t>::GenSearch(QueryType* query, size_t K) c
     while (filterQueue.size() > db_scan) filterQueue.pop();
     while (!filterQueue.empty()) {
       const size_t idx = filterQueue.top().second;
-      query->CheckAndAddToResult(data_[idx]);
+      query->CheckAndAddToResult(this->data_[idx]);
       filterQueue.pop();
     }
   }

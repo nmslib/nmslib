@@ -43,9 +43,10 @@ class SeqSearch : public Index<dist_t> {
   void Search(KNNQuery<dist_t>* query, IdType) const override;
 
   void SetQueryTimeParams(const AnyParams& params) override {}
+
+  size_t GetSize() const override { return getData().size(); }
  private:
   Space<dist_t>&          space_;
-  const ObjectVector&     origData_;
   char*                   cacheOptimizedBucket_;
 
   ObjectVector*           pData_;
@@ -53,7 +54,7 @@ class SeqSearch : public Index<dist_t> {
   IdTypeUnsign            threadQty_;
   vector<ObjectVector>    vvThreadData;
 
-  const ObjectVector& getData() const { return pData_ != NULL ? *pData_ : origData_; }
+  const ObjectVector& getData() const { return pData_ != NULL ? *pData_ : this->data_; }
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(SeqSearch);
 };

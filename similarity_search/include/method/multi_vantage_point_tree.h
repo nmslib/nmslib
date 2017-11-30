@@ -165,7 +165,6 @@ class MultiVantagePointTree : public Index<dist_t> {
   void GenericSearch(Node* node, QueryType* query, Dists& path, size_t query_path_len, int& MaxLeavesToVisit) const;
 
   const Space<dist_t>& space_;
-  const ObjectVector& data_;
   unique_ptr<Node>    root_;               // root node
 
   size_t MaxPathLength_;   // the number of distances for the data
