@@ -558,6 +558,7 @@ namespace similarity {
                 break;
             }
             while (!resultSet.empty()) {
+                ep = resultSet.top().getMSWNodeHier(); // memorizing the closest
                 link(resultSet.top().getMSWNodeHier(), NewElement, level, space, delaunay_type_);
                 resultSet.pop();
             }
