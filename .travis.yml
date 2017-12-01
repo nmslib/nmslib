@@ -25,7 +25,6 @@ before_install:
   pip install --user --upgrade pip virtualenv
   virtualenv -p python$PYTHON venv
   source venv/bin/activate
-  rvm get stable  # work around rvm bug on osx
 
 install:
   - cmake similarity_search && make -j 4
