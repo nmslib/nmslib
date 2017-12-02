@@ -25,6 +25,9 @@ before_install:
   pip install --user --upgrade pip virtualenv
   virtualenv -p python$PYTHON venv
   source venv/bin/activate
+  if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    rvm get stable || true
+  fi
 
 install:
   - cmake similarity_search && make -j 4
