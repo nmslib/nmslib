@@ -52,7 +52,6 @@ class MultiProbeLSH : public Index<dist_t> {
  private:
   typedef lshkit::MultiProbeLshIndex<unsigned> LshIndexType;
 
-  const ObjectVector& data_;
   int dim_;
   lshkit::FloatMatrix* matrix_;
   LshIndexType* index_;
