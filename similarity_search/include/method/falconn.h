@@ -84,7 +84,6 @@ class FALCONN : public Index<dist_t> {
   // createDenseDataPoint assumes that p was initialized using dim_ as the number of elements.
   void createDenseDataPoint(const Object* o, DenseFalconnPoint& p, bool normData) const;
 
-  const ObjectVector&     data_;
   Space<dist_t>&          space_;
   bool                    sparse_;
   size_t                  dim_; // only for dense vector spaces

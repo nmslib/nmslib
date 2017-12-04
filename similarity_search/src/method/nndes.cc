@@ -67,7 +67,8 @@ NNDescentMethod<dist_t>::NNDescentMethod(
     bool  PrintProgress,
     const Space<dist_t>& space,
     const ObjectVector& data) :
-      space_(space), data_(data), PrintProgress_(PrintProgress),
+      Index<dist_t>(data),
+      space_(space), PrintProgress_(PrintProgress),
       controlQty_(0), // default value from Wei Dong's code
       nndesOracle_(space, data)
 {}
@@ -92,17 +93,17 @@ void NNDescentMethod<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
   LOG(LIB_INFO) << "Starting NN-Descent...";
 
-  nndesObj_.reset(new NNDescent<SpaceOracle>(data_.size(), // N
+  nndesObj_.reset(new NNDescent<SpaceOracle>(this->data_.size(), // N
                                              NN_, //K 
                                              rho_, //S, 
                                              nndesOracle_, GRAPH_BOTH));
 
-    float total = float(data_.size()) * (data_.size() - 1) / 2;
+    float total = float(this->data_.size()) * (this->data_.size() - 1) / 2;
     cout.precision(5);
     cout.setf(ios::fixed);
     for (int it = 0; it < iterationQty_; ++it) {
         int t = nndesObj_->iterate(PrintProgress_);
-        float rate = float(t) / (NN_ * data_.size());
+        float rate = float(t) / (NN_ * this->data_.size());
 
 // TODO @leo computation of recall needs to be re-written, can't use original Wei Dong's code
 /*
@@ -140,7 +141,7 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) const {
   const vector<KNN> &nn = nndesObj_->getNN();
 
 #if USE_BITSET_FOR_SEARCHING
-  vector<bool>                      visitedBitset(data_.size());
+  vector<bool>                      visitedBitset(this->data_.size());
 #else
   unordered_set <IdType>            visitedNodes;
 #endif
@@ -149,12 +150,12 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) const {
   /**
    * Search of most k-closest elements to the query.
    */
-    IdType randPoint = RandomInt() % data_.size();
+    IdType randPoint = RandomInt() % this->data_.size();
 
     priority_queue <dist_t>             closestDistQueue; //The set of all elements which distance was calculated
     priority_queue <EvaluatedNode>      candidateSet; //the set of elements which we can use to evaluate
 
-    const Object* currObj = data_[randPoint];
+    const Object* currObj = this->data_[randPoint];
     dist_t         d = query->DistanceObjLeft(currObj);
     query->CheckAndAddToResult(d, currObj);
     
@@ -195,7 +196,7 @@ void NNDescentMethod<dist_t>::SearchSmallWorld(KNNQuery<dist_t>* query) const {
             visitedNodes.insert(currNew);
 #endif
 
-            currObj = data_[currNew];
+            currObj = this->data_[currNew];
             d = query->DistanceObjLeft(currObj);
             query->CheckAndAddToResult(d, currObj);
             EvaluatedNode  evE1(-d, currNew);
@@ -217,10 +218,10 @@ void NNDescentMethod<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) const {
   const vector<KNN> &nn = nndesObj_->getNN();
 
   for (size_t i=0; i < initSearchAttempts_; i++) {
-    IdType curr = RandomInt() % data_.size();
+    IdType curr = RandomInt() % this->data_.size();
 
-    dist_t currDist = query->DistanceObjLeft(data_[curr]);
-    query->CheckAndAddToResult(currDist, data_[curr]);
+    dist_t currDist = query->DistanceObjLeft(this->data_[curr]);
+    query->CheckAndAddToResult(currDist, this->data_[curr]);
 
 
     IdType currOld;
@@ -231,8 +232,8 @@ void NNDescentMethod<dist_t>::SearchGreedy(KNNQuery<dist_t>* query) const {
       for (const KNNEntry&e: nn[currOld]) {
         IdType currNew = e.key;
         if (currNew != KNNEntry::BAD) {
-          dist_t currDistNew = query->DistanceObjLeft(data_[currNew]);
-          query->CheckAndAddToResult(currDistNew, data_[currNew]);
+          dist_t currDistNew = query->DistanceObjLeft(this->data_[currNew]);
+          query->CheckAndAddToResult(currDistNew, this->data_[currNew]);
           if (currDistNew < currDist) {
             curr = currNew;
             currDist = currDistNew;

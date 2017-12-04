@@ -86,7 +86,6 @@ class NNDescentMethod : public Index<dist_t> {
 
 
   const Space<dist_t>&    space_;
-  const ObjectVector&     data_;
   bool                    PrintProgress_;
 
   size_t                  NN_; // K in the original Wei Dong's code nndes.cpp

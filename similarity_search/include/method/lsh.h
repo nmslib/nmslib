@@ -143,7 +143,6 @@ class LSH : public Index<dist_t> {
  private:
   typedef lshkit::LshIndex<TailRepeatHash<lsh_t>, unsigned> LshIndexType;
 
-  const ObjectVector& data_;
   int p_;
   lshkit::FloatMatrix* matrix_;
   LshIndexType* index_;

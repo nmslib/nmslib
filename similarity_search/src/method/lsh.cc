@@ -27,7 +27,7 @@ namespace similarity {
 template <typename dist_t, typename lsh_t, typename paramcreator_t>
 LSH<dist_t, lsh_t, paramcreator_t>::LSH(const Space<dist_t>& space,
                                         const ObjectVector& data,
-                                        int P) : data_(data), p_(P) {
+                                        int P) : Index<dist_t>(data), p_(P) {
 
 }
 
@@ -43,15 +43,15 @@ void LSH<dist_t, lsh_t, paramcreator_t>::CreateIndex(const AnyParams& IndexParam
   pmgr.GetParamOptional("W",  LSH_W, 20);
   pmgr.GetParamOptional("M",  LSH_M, 20);
   pmgr.GetParamOptional("L",  LSH_L, 50);
-  pmgr.GetParamOptional("H",  LSH_H, data_.size() + 1);
+  pmgr.GetParamOptional("H",  LSH_H, this->data_.size() + 1);
 
   int is_float = std::is_same<float,dist_t>::value;
   CHECK_MSG(is_float, "LSH works only for single-precision numbers");
   CHECK_MSG(sizeof(dist_t) == sizeof(float), "LSH works only for single-precision numbers");
-  CHECK_MSG(!data_.empty(), "The data set shouldn't be empty");
+  CHECK_MSG(!this->data_.empty(), "The data set shouldn't be empty");
   CHECK_MSG(p_ == 1 || p_ == 2, "The value of the space selector should be either 1 or 2!");
 
-  const size_t datalength = data_[0]->datalength();
+  const size_t datalength = this->data_[0]->datalength();
 
   LOG(LIB_INFO) << "W (window size (used only for LSHCauchy and LSHGaussian)) : "  << LSH_W;
   LOG(LIB_INFO) << "M (# of hash functions) : "  << LSH_M;
@@ -59,11 +59,11 @@ void LSH<dist_t, lsh_t, paramcreator_t>::CreateIndex(const AnyParams& IndexParam
   LOG(LIB_INFO) << "H (# hash table size) :   "  << LSH_H;
 
   const int dim = static_cast<int>(datalength / sizeof(float));
-  matrix_ = new lshkit::FloatMatrix(dim, static_cast<int>(data_.size()));
+  matrix_ = new lshkit::FloatMatrix(dim, static_cast<int>(this->data_.size()));
 
-  for (size_t i = 0; i < data_.size(); ++i) {
-    CHECK(datalength == data_[i]->datalength());
-    const float* x = reinterpret_cast<const float*>(data_[i]->data());
+  for (size_t i = 0; i < this->data_.size(); ++i) {
+    CHECK(datalength == this->data_[i]->datalength());
+    const float* x = reinterpret_cast<const float*>(this->data_[i]->data());
     for (int j = 0; j < dim; ++j) {
       (*matrix_)[i][j] = x[j];
     }
@@ -115,7 +115,7 @@ void LSH<dist_t, lsh_t, paramcreator_t>::Search(KNNQuery<dist_t>* query, IdType)
   const lshkit::Topk<uint32_t>& knn = query_scanner.topk();
   for (size_t i = 0; i < knn.size(); ++i) {
     if (knn[i].key != std::numeric_limits<uint32_t>::max()) {
-      query->CheckAndAddToResult(knn[i].dist, data_[knn[i].key]);
+      query->CheckAndAddToResult(knn[i].dist, this->data_[knn[i].key]);
     }
   }
 }
