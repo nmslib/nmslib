@@ -26,7 +26,7 @@ namespace similarity {
 
 template <typename dist_t>
 MultiProbeLSH<dist_t>::MultiProbeLSH(const Space<dist_t>& space,
-                                     const ObjectVector& data) : data_(data) {
+                                     const ObjectVector& data) : Index<dist_t>(data) {
 }
 
 template <typename dist_t>
@@ -43,7 +43,7 @@ void MultiProbeLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
     pmgr.GetParamOptional("M",  LSH_M,  20);
     pmgr.GetParamOptional("L",  LSH_L,  50);
-    pmgr.GetParamOptional("H",  LSH_H,  data_.size() + 1);
+    pmgr.GetParamOptional("H",  LSH_H,  this->data_.size() + 1);
     pmgr.GetParamOptional("W",  LSH_W,  20);
     pmgr.GetParamOptional("T",  LSH_T,  10);
     pmgr.GetParamOptional("tuneK",  LSH_TuneK, 1);
@@ -52,7 +52,7 @@ void MultiProbeLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
 
     // For FitData():
     // number of points to use
-    unsigned N1 = data_.size();
+    unsigned N1 = this->data_.size();
     // number of pairs to sample
     unsigned P = 10000;
     // number of queries to sample
@@ -82,7 +82,7 @@ void MultiProbeLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     unsigned F = 10;
     // For MPLSHTune():
     // dataset size
-    unsigned N2 = data_.size();
+    unsigned N2 = this->data_.size();
     // desired recall
 
     CreateIndexInternal(
@@ -113,13 +113,13 @@ void MultiProbeLSH<dist_t>::CreateIndexInternal(
   int is_float = std::is_same<float,dist_t>::value;
   CHECK(is_float);
   CHECK(sizeof(dist_t) == sizeof(float));
-  CHECK(!data_.empty());
-  const size_t datalength = data_[0]->datalength();
+  CHECK(!this->data_.empty());
+  const size_t datalength = this->data_[0]->datalength();
   dim_ = static_cast<int>(datalength / sizeof(float));
-  matrix_ = new lshkit::FloatMatrix(dim_, static_cast<int>(data_.size()));
-  for (size_t i = 0; i < data_.size(); ++i) {
-    CHECK(datalength == data_[i]->datalength());
-    const float* x = reinterpret_cast<const float*>(data_[i]->data());
+  matrix_ = new lshkit::FloatMatrix(dim_, static_cast<int>(this->data_.size()));
+  for (size_t i = 0; i < this->data_.size(); ++i) {
+    CHECK(datalength == this->data_[i]->datalength());
+    const float* x = reinterpret_cast<const float*>(this->data_[i]->data());
     for (int j = 0; j < dim_; ++j) {
       (*matrix_)[i][j] = x[j];
     }
@@ -188,7 +188,7 @@ void MultiProbeLSH<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   const lshkit::Topk<uint32_t>& knn = query_scanner.topk();
   for (size_t i = 0; i < knn.size(); ++i) {
     if (knn[i].key != std::numeric_limits<uint32_t>::max()) {
-      query->CheckAndAddToResult(sqrt(knn[i].dist), data_[knn[i].key]);
+      query->CheckAndAddToResult(sqrt(knn[i].dist), this->data_[knn[i].key]);
     }
   }
 }

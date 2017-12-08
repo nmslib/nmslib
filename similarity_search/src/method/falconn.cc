@@ -107,7 +107,7 @@ void FALCONN<dist_t>::copyData(bool normData, bool centerData, size_t max_sparse
   SpaceSparseVectorInter<dist_t>* pSparseSpace = dynamic_cast<SpaceSparseVectorInter<dist_t>*>(&space_);
   VectorSpace<dist_t>*            pDenseSpace  = dynamic_cast<VectorSpace<dist_t>*>(&space_);
 
-  if (data_.empty()) return;
+  if (this->data_.empty()) return;
   if (pSparseSpace == nullptr && pDenseSpace == nullptr) {
     throw runtime_error("Only dense vector spaces and FAST sparse vector spaces are supported!");
   }
@@ -116,7 +116,7 @@ void FALCONN<dist_t>::copyData(bool normData, bool centerData, size_t max_sparse
     sparse_ = true;
     SparseFalconnPoint p;
     dim_ = 0;
-    for (const Object* o: data_) {
+    for (const Object* o: this->data_) {
       createSparseDataPoint(o, p, normData);
       falconn_data_sparse_.push_back(p);
       if (p.size())
@@ -137,9 +137,9 @@ void FALCONN<dist_t>::copyData(bool normData, bool centerData, size_t max_sparse
   }
   if (pDenseSpace != nullptr) {
     LOG(LIB_INFO) << "Copying a dense vector data set.";
-    dim_ = data_[0]->datalength() / sizeof(dist_t);
+    dim_ = this->data_[0]->datalength() / sizeof(dist_t);
     DenseFalconnPoint p(dim_);
-    for (const Object* o: data_) {
+    for (const Object* o: this->data_) {
       createDenseDataPoint(o, p, normData);
       falconn_data_dense_.emplace_back(p);
     }
@@ -171,7 +171,7 @@ void FALCONN<dist_t>::copyData(bool normData, bool centerData, size_t max_sparse
 
 template <typename dist_t>
 FALCONN<dist_t>::FALCONN(Space<dist_t>& space,
-                         const ObjectVector& data) : data_(data), space_(space), sparse_(false),
+                         const ObjectVector& data) : Index<dist_t>(data), space_(space), sparse_(false),
                                                      dim_(0), num_probes_(10) {
 }
 
@@ -242,7 +242,7 @@ void FALCONN<dist_t>::CreateIndex(const AnyParams& IndexParams)  {
    * The current formula mimics the Glove setup in ann_benchmarks,
    * where a roughly 2^20 entry data sets uses 16-bit tables.
    */
-  size_t num_hash_bits = max<size_t>(2, static_cast<size_t>(floor(log2(data_.size()>>4))));
+  size_t num_hash_bits = max<size_t>(2, static_cast<size_t>(floor(log2(this->data_.size()>>4))));
   pmgr.GetParamOptional(PARAM_NUM_HASH_BITS, num_hash_bits, num_hash_bits);
 
   /*
@@ -312,17 +312,17 @@ void FALCONN<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
     }
     // Recomputing distances for k nearest neighbors should have a very small impact on overall performance
     for (IdType ii : ids) {
-      query->CheckAndAddToResult(data_[ii]);
+      query->CheckAndAddToResult(this->data_[ii]);
     }
   } else {
     if (sparse_) {
       SparseFalconnPoint sparseQ;
       createSparseDataPoint(query->QueryObject(), sparseQ, norm_data_);
-      falconn_table_sparse_->find_k_nearest_neighbors(sparseQ, center_point_.get(), query, &data_, query->GetK(), &ids);
+      falconn_table_sparse_->find_k_nearest_neighbors(sparseQ, center_point_.get(), query, &this->data_, query->GetK(), &ids);
     } else {
       DenseFalconnPoint denseQ(dim_);
       createDenseDataPoint(query->QueryObject(), denseQ, norm_data_);
-      falconn_table_dense_->find_k_nearest_neighbors(denseQ, center_point_.get(), query, &data_, query->GetK(), &ids);
+      falconn_table_dense_->find_k_nearest_neighbors(denseQ, center_point_.get(), query, &this->data_, query->GetK(), &ids);
     }
   }
 }
