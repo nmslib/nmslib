@@ -31,32 +31,12 @@
 #include "utils.h"
 #include "space.h"
 #include "distcomp.h"
+#include "read_data.h"
 
 namespace similarity {
 
 using std::vector;
 using std::fill;
-
-template <typename dist_t>
-struct SparseVectElem {  
-  uint32_t  id_;
-  dist_t    val_;
-  SparseVectElem(uint32_t id = 0, dist_t val = 0) : id_(id), val_(val) {}
-  bool operator<(const SparseVectElem<dist_t>& that) const {
-    return id_ < that.id_;
-  }
-  bool operator==(const SparseVectElem<dist_t>& that) const {
-    return id_ == that.id_ && val_ == that.val_;
-  }
-  bool operator!=(const SparseVectElem<dist_t>& that) const {
-    return !operator==(that);
-  }
-};
-
-template <typename dist_t>
-ostream& operator<<(ostream& out, SparseVectElem<dist_t> e) {
-  return out << "[" << e.id_ << ": " << e.val_ << "]";
-}
 
 /* 
  * The maximum number of sparse elements that will be kept on the stack

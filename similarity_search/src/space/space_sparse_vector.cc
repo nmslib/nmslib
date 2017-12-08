@@ -27,30 +27,30 @@
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"
+#include "read_data.h"
 
 namespace similarity {
 
 using namespace std;
 
 template <typename dist_t>
-void SpaceSparseVector<dist_t>::ReadSparseVec(std::string line, size_t line_num, LabelType& label, vector<ElemType>& v) const
+void SpaceSparseVector<dist_t>::ReadSparseVec(string line, size_t line_num, LabelType& label, vector<ElemType>& v) const
 {
   v.clear();
 
   label = Object::extractLabel(line);
 
-  ReplaceSomePunct(line); 
-  std::stringstream str(line);
-
-  str.exceptions(std::ios::badbit);
-
-  uint32_t id;
-  dist_t   val;
+#if 0
+  if (!ReadSparseVecDataViaStream(line, v)) {
+#else
+  if (!ReadSparseVecDataEfficiently(line, v)) {
+#endif
+    PREPARE_RUNTIME_ERR(err) << "Failed to parse the line # " << line_num << ": '" << line << "'" << std::endl;
+    LOG(LIB_ERROR) << err.stream().str();
+    THROW_RUNTIME_ERR(err);
+  }
 
   try {
-    while (str >> id && str >> val) {
-      v.push_back(ElemType(id, val));
-    }
     sort(v.begin(), v.end());
 
     for (unsigned i = 1; i < v.size(); ++i) {
