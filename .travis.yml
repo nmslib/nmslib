@@ -1,10 +1,17 @@
 language: cpp
+
 matrix:
+  fast_finish: true
   include:
   - os: linux
     env: PYTHON=2.7
+  - os: linux
+    env: PYTHON=3
   - os: osx
     env: PYTHON=3.6
+  allow_failures:
+  - os: osx
+
 addons:
   apt:
     sources:
@@ -15,6 +22,10 @@ addons:
     - liblapack-dev
     - gfortran
     - cmake
+    - python3-dev
+    - libboost-all-dev
+    - libgsl0-dev
+    - libeigen3-dev
 
 before_install:
 - |
@@ -30,9 +41,15 @@ before_install:
   source venv/bin/activate
 
 install:
-  - cmake similarity_search && make -j 4
-  - travis_wait travis_retry pip install -r python_bindings/requirements.txt scipy six flake8
-  - travis_retry cd python_bindings && python setup.py build install && cd ..
+- |
+  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    cmake similarity_search -DWITH_EXTRAS=1
+  else
+    cmake similarity_search
+  fi
+  make -j 4
+  travis_wait travis_retry pip install -r python_bindings/requirements.txt scipy six flake8
+  travis_retry cd python_bindings && python setup.py build install && cd ..
 
 script:
 - |
@@ -46,6 +63,7 @@ script:
   python setup.py test
   flake8
   cd ..
+
 cache:
   - apt
   - directories:
