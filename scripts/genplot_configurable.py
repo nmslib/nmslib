@@ -134,7 +134,9 @@ def genPGFPlot(experiments, methNames, methStyles, outputFile, xAxisField, yAxis
 
         if printSameMeth == sameMethFlag:
           methodData = experiments[methodId]
-          lines.append(LATEX_LINE % (methStyles[methodId],'\n'.join(methodData), legendEntry))
+          methodData.sort()
+          methodDataStr = [ str(e[0]) + ' ' + str(e[1]) for e in methodData] 
+          lines.append(LATEX_LINE % (methStyles[methodId],'\n'.join(methodDataStr), legendEntry))
           lines.append('%s %s %s' % ('%', methodId, methodName))
 
 
@@ -184,7 +186,7 @@ def parseExpr(inputFile, lineNumber, row, header, xAxisField, yAxisField):
 
     methodId = row[METHOD_ID_FIELD_ID]
     props  = methodNameAndStyle(methodId)
-    return [methodId, props[0], props[1], row[header[xAxisField]] + ' ' + row[header[yAxisField]]]
+    return [methodId, props[0], props[1], (row[header[xAxisField]], row[header[yAxisField]]) ]
 
 def genPlotLatex(inputFile, outputFile, xAxisField, yAxisField, axisType, noLegend, printXaxis, printYaxis):
     header = {}

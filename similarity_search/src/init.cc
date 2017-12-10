@@ -28,9 +28,12 @@
 
 #include "logging.h"
 
+#include <iostream>
+
 namespace similarity {
 
 void initLibrary(LogChoice choice, const char* pLogFile) {
+  std::ios_base::sync_with_stdio(false);
   InitializeLogger(choice, pLogFile);
   initSpaces();
   initMethods();
