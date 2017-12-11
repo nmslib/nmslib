@@ -305,6 +305,7 @@ struct IndexWrapper {
   }
 
   ~IndexWrapper() {
+    LOG(LIB_DEBUG) << "Destroying Index";
     freeObjectVector(&data);
   }
 
@@ -386,17 +387,17 @@ PYBIND11_PLUGIN(nmslib) {
       switch (dtype) {
         case DISTTYPE_FLOAT: {
           auto index = new IndexWrapper<float>(method, space, space_params, data_type, dtype);
-          ret = py::cast(index);
+          ret = py::cast(index, py::return_value_policy::take_ownership);
           break;
         }
         case DISTTYPE_DOUBLE: {
           auto index = new IndexWrapper<double>(method, space, space_params, data_type, dtype);
-          ret = py::cast(index);
+          ret = py::cast(index, py::return_value_policy::take_ownership);
           break;
         }
         case DISTTYPE_INT: {
           auto index = new IndexWrapper<int>(method, space, space_params, data_type, dtype);
-          ret = py::cast(index);
+          ret = py::cast(index, py::return_value_policy::take_ownership);
           break;
         }
         default:
