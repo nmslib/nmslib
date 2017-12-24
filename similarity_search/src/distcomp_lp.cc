@@ -14,7 +14,6 @@
  *
  */
 #include "distcomp.h"
-#include "string.h"
 #include "logging.h"
 #include "utils.h"
 #include "pow.h"
