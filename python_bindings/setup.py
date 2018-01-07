@@ -4,7 +4,7 @@ from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
 
-__version__ = '1.6.3'
+__version__ = '1.7'
 
 libdir = os.path.join(".", "nmslib", "similarity_search")
 library_file = os.path.join(libdir, "release", "libNonMetricSpaceLib.a")

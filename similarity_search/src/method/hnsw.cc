@@ -377,6 +377,7 @@ namespace similarity {
 
         size_t total_memory_allocated = (memoryPerObject_ * ElList_.size());
         data_level0_memory_ = (char *)malloc(memoryPerObject_ * ElList_.size());
+        CHECK(data_level0_memory_);
 
         offsetLevel0_ = dataSectionSize;
         offsetData_ = 0;
@@ -414,6 +415,7 @@ namespace similarity {
         /////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////
         linkLists_ = (char **)malloc(sizeof(void *) * ElList_.size());
+        CHECK(linkLists_);
         for (long i = 0; i < ElList_.size(); i++) {
             if (ElList_[i]->level < 1) {
                 linkLists_[i] = nullptr;
@@ -423,6 +425,7 @@ namespace similarity {
             SIZEMASS_TYPE sizemass = ((ElList_[i]->level) * (maxM_ + 1)) * sizeof(int);
             total_memory_allocated += sizemass;
             char *linkList = (char *)malloc(sizemass);
+            CHECK(linkList);
             linkLists_[i] = linkList;
             ElList_[i]->copyHigherLevelLinksToOptIndex(linkList, 0);
         };
@@ -1016,8 +1019,10 @@ namespace similarity {
         LOG(LIB_INFO) << "Total: " << totalElementsStored_ << ", Memory per object: " << memoryPerObject_;
         size_t data_plus_links0_size = memoryPerObject_ * totalElementsStored_;
         data_level0_memory_ = (char *)malloc(data_plus_links0_size);
+        CHECK(data_level0_memory_);
         input.read(data_level0_memory_, data_plus_links0_size);
         linkLists_ = (char **)malloc(sizeof(void *) * totalElementsStored_);
+        CHECK(linkLists_);
 
         data_rearranged_.resize(totalElementsStored_);
 
@@ -1029,6 +1034,7 @@ namespace similarity {
                 linkLists_[i] = nullptr;
             } else {
                 linkLists_[i] = (char *)malloc(linkListSize);
+                CHECK(linkLists_[i]);
                 input.read(linkLists_[i], linkListSize);
             }
             data_rearranged_[i] = new Object(data_level0_memory_ + (i)*memoryPerObject_ + offsetData_);
@@ -1179,7 +1185,7 @@ namespace similarity {
 
         typedef typename SortArrBI<dist_t, HnswNode *>::Item QueueItem;
         vector<QueueItem> &queueData = sortedArr.get_data();
-        vector<QueueItem> itemBuff(16 * M_);
+        vector<QueueItem> itemBuff(1 + max(M_, max(maxM_, maxM0_)));
 
         massVisited[curNode->getId()] = currentV;
         // visitedQueue.insert(curNode->getId());
@@ -1217,6 +1223,9 @@ namespace similarity {
                     d = query->DistanceObjLeft(currObj);
 
                     if (d < topKey || sortedArr.size() < ef_) {
+                        CHECK_MSG(itemBuff.size() > itemQty,
+                                  "Perhaps a bug: buffer size is not enough " + 
+                                  ConvertToString(itemQty) + " >= " + ConvertToString(itemBuff.size()));
                         itemBuff[itemQty++] = QueueItem(d, *iter);
                     }
                 }

@@ -532,7 +532,7 @@ namespace similarity {
 
         typedef typename SortArrBI<dist_t, int>::Item QueueItem;
         vector<QueueItem> &queueData = sortedArr.get_data();
-        vector<QueueItem> itemBuff(8 * 30);
+        vector<QueueItem> itemBuff(1 + max(M_, max(maxM_, maxM0_)));
 
         massVisited[curNodeNum] = currentV;
 
@@ -566,6 +566,9 @@ namespace similarity {
                     dist_t d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
 
                     if (d < topKey || sortedArr.size() < ef_) {
+                        CHECK_MSG(itemBuff.size() > itemQty,
+                                  "Perhaps a bug: buffer size is not enough " + 
+                                   ConvertToString(itemQty) + " >= " + ConvertToString(itemBuff.size()));
                         itemBuff[itemQty++] = QueueItem(d, tnum);
                     }
                 }
@@ -788,7 +791,7 @@ namespace similarity {
 
         typedef typename SortArrBI<dist_t, int>::Item QueueItem;
         vector<QueueItem> &queueData = sortedArr.get_data();
-        vector<QueueItem> itemBuff(8 * 30);
+        vector<QueueItem> itemBuff(1 + max(M_, max(maxM_, maxM0_)));
 
         massVisited[curNodeNum] = currentV;
 
@@ -822,6 +825,9 @@ namespace similarity {
                     dist_t d = (ScalarProductSIMD(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
 
                     if (d < topKey || sortedArr.size() < ef_) {
+                        CHECK_MSG(itemBuff.size() > itemQty,
+                                  "Perhaps a bug: buffer size is not enough " + 
+                                  ConvertToString(itemQty) + " >= " + ConvertToString(itemBuff.size()));
                         itemBuff[itemQty++] = QueueItem(d, tnum);
                     }
                 }
