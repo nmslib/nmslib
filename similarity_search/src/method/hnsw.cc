@@ -1183,7 +1183,7 @@ namespace similarity {
 
         typedef typename SortArrBI<dist_t, HnswNode *>::Item QueueItem;
         vector<QueueItem> &queueData = sortedArr.get_data();
-        vector<QueueItem> itemBuff(1 + max(M_, max(maxM_, maxM0_)));
+        vector<QueueItem> itemBuff(1 + max(maxM_, maxM0_));
 
         massVisited[curNode->getId()] = currentV;
         // visitedQueue.insert(curNode->getId());

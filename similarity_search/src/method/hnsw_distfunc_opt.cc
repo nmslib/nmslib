@@ -532,7 +532,7 @@ namespace similarity {
 
         typedef typename SortArrBI<dist_t, int>::Item QueueItem;
         vector<QueueItem> &queueData = sortedArr.get_data();
-        vector<QueueItem> itemBuff(1 + max(M_, max(maxM_, maxM0_)));
+        vector<QueueItem> itemBuff(1 + max(maxM_, maxM0_));
 
         massVisited[curNodeNum] = currentV;
 
@@ -791,7 +791,7 @@ namespace similarity {
 
         typedef typename SortArrBI<dist_t, int>::Item QueueItem;
         vector<QueueItem> &queueData = sortedArr.get_data();
-        vector<QueueItem> itemBuff(1 + max(M_, max(maxM_, maxM0_)));
+        vector<QueueItem> itemBuff(1 + max(maxM_, maxM0_));
 
         massVisited[curNodeNum] = currentV;
 
