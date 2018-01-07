@@ -53,9 +53,9 @@ const size_t MAX_EXP_DEFAULT          =  1;
 
 const size_t MAX_CACHE_GS_QTY_DEFAULT =  1000;
 const size_t MAX_ITER_DEFAULT         =  10;
-const size_t MAX_REC_DEPTH_DEFAULT    =  6;
+const size_t MAX_REC_DEPTH_DEFAULT    =  5;
 const size_t STEP_N_DEFAULT           =  2;
-const size_t ADD_RESTART_QTY_DEFAULT  =  4;
+const size_t ADD_RESTART_QTY_DEFAULT  =  2;
 const double FULL_FACTOR_DEFAULT      = 8.0;
 
 using std::string; 

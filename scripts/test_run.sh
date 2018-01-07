@@ -118,9 +118,7 @@ do_run 1 "hnsw"     " -c M=10 " 1 " -t efSearch=10 -t efSearch=20 -t efSearch=40
 
 # Methods that do not support creation of an index
 do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.99,chunkBucket=1   " "0" "" ""
-do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.975,chunkBucket=1  " "0" "" ""
 do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.95,chunkBucket=1   " "0" "" ""
-do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.925,chunkBucket=1  " "0" "" ""
 do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.9,chunkBucket=1    " "0" "" ""
 
 if [ "$GEN_PLOT" = 1 ] ; then

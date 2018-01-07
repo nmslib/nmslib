@@ -84,19 +84,7 @@ if ERRORLEVEL 1 (
   echo "Failure!"
   exit /B 1
 )
-call :do_run 1 "vptree" "-c tuneK=%K%,bucketSize=50,desiredRecall=0.975,chunkBucket=1 " 0
-if ERRORLEVEL 1 (
-  echo "====================================="
-  echo "Failure!"
-  exit /B 1
-)
-call :do_run 1 "vptree" "-c tuneK=%K%,bucketSize=50,desiredRecall=0.95,chunkBucket=1 "  0
-if ERRORLEVEL 1 (
-  echo "====================================="
-  echo "Failure!"
-  exit /B 1
-)
-call :do_run 1 "vptree" "-c tuneK=%K%,bucketSize=50,desiredRecall=0.925,chunkBucket=1 " 0
+call :do_run 1 "vptree" "-c tuneK=%K%,bucketSize=50,desiredRecall=0.95,chunkBucket=1 " 0
 if ERRORLEVEL 1 (
   echo "====================================="
   echo "Failure!"
