@@ -32,7 +32,11 @@
 
 namespace similarity {
 
-void initLibrary(LogChoice choice, const char* pLogFile) {
+int randomSeed = 0;
+
+void initLibrary(int seed, LogChoice choice, const char* pLogFile) {
+  randomSeed = seed;
+
   std::ios_base::sync_with_stdio(false);
   InitializeLogger(choice, pLogFile);
   initSpaces();

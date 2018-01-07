@@ -114,11 +114,7 @@ function do_run {
 # Methods that may create an index (at least for some spaces)
 do_run 0 "napp" " -c numPivot=512,numPivotIndex=64 " 0 "-t numPivotSearch=40 -t numPivotSearch=42 -t numPivotSearch=44 -t numPivotSearch=46 -t numPivotSearch=48" "napp_${SPACE}.index"
 do_run 1 "sw-graph" " -c NN=10 " 0 " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "sw-graph_${SPACE}.index"
-if [ "$SPACE" = "l2" -o "$SPACE" = "cosinesimil" ] ; then 
-  do_run 1 "hnsw"     " -c M=10 " 1 " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "hnsw_${SPACE}.index"
-else
-  do_run 1 "hnsw"     " -c M=10 " 0 " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" 
-fi
+do_run 1 "hnsw"     " -c M=10 " 1 " -t efSearch=10 -t efSearch=20 -t efSearch=40 -t efSearch=80 -t efSearch=160 -t efSearch=240" "hnsw_${SPACE}.index"
 
 # Methods that do not support creation of an index
 do_run 1 "vptree" " -c tuneK=$K,bucketSize=50,desiredRecall=0.99,chunkBucket=1   0 " ""

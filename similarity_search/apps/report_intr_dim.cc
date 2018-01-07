@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
       THROW_RUNTIME_ERR(err);
     }
 
-    initLibrary(LIB_LOGSTDERR);
+    initLibrary(0, LIB_LOGSTDERR);
 
     if (DIST_TYPE_INT == distType) {
       TestSpace<int>(

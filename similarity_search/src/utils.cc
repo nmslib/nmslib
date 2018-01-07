@@ -40,7 +40,6 @@
 
 namespace similarity {
 
-
 const char* GetFileName(const char* fullpath) {
   for (int i = strlen(fullpath) - 1; i >= 0; --i) {
     if (fullpath[i] == '\\' || fullpath[i] == '/') {

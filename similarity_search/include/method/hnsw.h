@@ -481,8 +481,8 @@ namespace similarity {
 
         int getRandomLevel(double revSize)
         {
-            std::uniform_real_distribution<double> distribution(0.0, 1.0);
-            double r = -log(distribution(*generator)) * revSize;
+            // RandomReal is thread-safe
+            float r = -log(RandomReal<float>()) * revSize;
             return (int)r;
         }
 
@@ -513,7 +513,6 @@ namespace similarity {
 
         //
     private:
-        std::unique_ptr<std::default_random_engine> generator;
         size_t M_;
         size_t maxM_;
         size_t maxM0_;

@@ -358,7 +358,7 @@ PYBIND11_PLUGIN(nmslib) {
   py::module nmslibLogger = logging.attr("getLogger")("nmslib");
   setGlobalLogger(new PythonLogger(nmslibLogger));
 
-  initLibrary(LIB_LOGCUSTOM, NULL);
+  initLibrary(0 /* seed */, LIB_LOGCUSTOM, NULL);
 
   py::module m(module_name, "Bindings for Non-Metric Space Library (NMSLIB)");
 

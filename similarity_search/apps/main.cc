@@ -566,7 +566,7 @@ int main(int ac, char* av[]) {
                         "then you have to specify the gold-standard cache file!");
     }
 
-    initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+    initLibrary(0, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
     LOG(LIB_INFO) << "Program arguments are processed";
 

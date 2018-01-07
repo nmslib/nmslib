@@ -26,7 +26,7 @@
 
 namespace similarity {
 
-  void initLibrary(LogChoice choice = LIB_LOGNONE, const char*pLogFile = NULL);
+  void initLibrary(int seed = 0, LogChoice choice = LIB_LOGNONE, const char*pLogFile = NULL);
 }
 
 #endif

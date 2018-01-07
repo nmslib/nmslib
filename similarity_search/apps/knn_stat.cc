@@ -377,7 +377,7 @@ int main(int argc, char *argv[]) {
     LOG(LIB_FATAL) << "Failed to parse cmd arguments";
   }
 
-  initLibrary(logFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, logFile.c_str());
+  initLibrary(0, logFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, logFile.c_str());
 
   LOG(LIB_INFO) << "Program arguments are processed";
 

@@ -290,7 +290,7 @@ int main(int argc, char* argv[]) {
                                 SampleDistQty
   );
 
-  initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+  initLibrary(0, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   ToLower(DistType);
   ToLower(ClustType);

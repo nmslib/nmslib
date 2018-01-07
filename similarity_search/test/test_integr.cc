@@ -308,7 +308,7 @@ int main(int ac, char* av[]) {
   string LogFile;
   if (ac == 2) LogFile = av[1];
 
-  initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+  initLibrary(0, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   WallClockTimer timer;
   timer.reset();

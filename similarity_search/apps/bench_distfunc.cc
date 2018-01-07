@@ -1971,7 +1971,7 @@ using namespace similarity;
 int main(int argc, char* argv[]) {
     string LogFile;
     if (argc == 2) LogFile = argv[1];
-    initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+    initLibrary(0, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
     int nTest  = 0;
 

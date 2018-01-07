@@ -474,7 +474,7 @@ int main(int ac, char* av[]) {
                        IndexParams,
                        QueryTimeParams);
 
-  initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+  initLibrary(0, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   ToLower(DistType);
 

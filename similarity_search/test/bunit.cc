@@ -92,7 +92,7 @@ int TestRunner::RunAllTests() {
 int main(int argc, char *argv[]) {
   std::string LogFile;
   if (argc == 2) LogFile = argv[1];
-  similarity::initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+  similarity::initLibrary(0, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   return similarity::TestRunner::Instance().RunAllTests();
 }

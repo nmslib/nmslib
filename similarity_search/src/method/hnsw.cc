@@ -158,8 +158,6 @@ namespace similarity {
     {
         AnyParamManager pmgr(IndexParams);
 
-        generator.reset(new std::default_random_engine(100));
-
         pmgr.GetParamOptional("M", M_, 16);
 
         // Let's use a generic algorithm by default!
