@@ -85,9 +85,25 @@ class SWGraphTestCase(unittest.TestCase, DenseIndexTestMixin):
         return nmslib.init(method='sw-graph', space=space)
 
     def testReloadIndex(self):
-        # Throws an error - pEntryPoint isn't set on loadIndex
-        # RuntimeError: Check failed: Bug: there is not entry point set!
-        return NotImplemented
+        np.random.seed(23)
+        data = np.random.randn(1000, 10).astype(np.float32)
+
+        original = self._get_index()
+        original.addDataPointBatch(data)
+        original.createIndex()
+
+        # test out saving/reloading index
+        with tempfile.NamedTemporaryFile() as tmp:
+            original.saveIndex(tmp.name + ".index")
+
+            reloaded = self._get_index()
+            reloaded.addDataPointBatch(data)
+            reloaded.loadIndex(tmp.name + ".index")
+
+            original_results = original.knnQuery(data[0])
+            reloaded_results = reloaded.knnQuery(data[0])
+            npt.assert_allclose(original_results,
+                                reloaded_results)
 
 
 class BallTreeTestCase(unittest.TestCase, DenseIndexTestMixin):
