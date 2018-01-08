@@ -28,6 +28,7 @@
 #include "logging.h"
 #include "distcomp.h"
 #include "experimentconf.h"
+#include "read_data.h"
 #include "space/space_sparse_jaccard.h"
 
 namespace similarity {
@@ -40,6 +41,7 @@ static void ReadIdList(string line, LabelType& label, vector<IdType>& v)
 
   label = Object::extractLabel(line);
 
+#if 0
   ReplaceSomePunct(line); 
   stringstream str(line);
 
@@ -56,6 +58,13 @@ static void ReadIdList(string line, LabelType& label, vector<IdType>& v)
     LOG(LIB_ERROR) << "Exception: " << e.what();
     LOG(LIB_FATAL) << "Failed to parse the line: '" << line << "'";
   }
+#else
+  if (!ReadVecDataEfficiently(line, v)) {
+    PREPARE_RUNTIME_ERR(err) << "Failed to parse the line: '" << line << "'";
+    LOG(LIB_ERROR) << err.stream().str();
+    THROW_RUNTIME_ERR(err);
+  }
+#endif
 
   sort(v.begin(), v.end());
 }

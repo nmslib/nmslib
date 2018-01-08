@@ -24,6 +24,7 @@
 #include "permutation_utils.h"
 #include "logging.h"
 #include "distcomp.h"
+#include "read_data.h"
 #include "experimentconf.h"
 
 namespace similarity {
@@ -51,13 +52,15 @@ void SpaceBitHamming::ReadBitMaskVect(std::string line, LabelType& label, std::v
 
   str.exceptions(std::ios::badbit);
 
-  unsigned val;
 
   ReplaceSomePunct(line); 
 
   vector<PivotIdType> v;
 
+#if 0
   try {
+    unsigned val;
+
     while (str >> val) {
       if (val != 0 && val != 1) {
         throw runtime_error("Only zeros and ones are allowed");
@@ -70,6 +73,20 @@ void SpaceBitHamming::ReadBitMaskVect(std::string line, LabelType& label, std::v
     LOG(LIB_ERROR) << err.stream().str();
     THROW_RUNTIME_ERR(err);
   }
+#else
+  if (!ReadVecDataEfficiently(line, v)) {
+    PREPARE_RUNTIME_ERR(err) << "Failed to parse the line: '" << line << "'";
+    LOG(LIB_ERROR) << err.stream().str();
+    THROW_RUNTIME_ERR(err);
+  }
+  for (auto val : v) {
+    if (val != 0 && val != 1) {
+      PREPARE_RUNTIME_ERR(err) << "Only zeros and ones are allowed, offending line: '" << line << "'";
+      LOG(LIB_ERROR) << err.stream().str();
+      THROW_RUNTIME_ERR(err);
+    }
+  }
+#endif
   Binarize(v, 1, binVect);      // Create the binary vector
   binVect.push_back(v.size());   // Put the number of elements in the end
 }
