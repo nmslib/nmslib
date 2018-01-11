@@ -320,6 +320,14 @@ inline void ReplaceSomePunct(string &s) {
 }
 
 template <class T>
+T getRelDiff(T val1, T val2) {
+  T diff = std::fabs(val1 - val2);
+  T maxVal = std::max(std::fabs(val1), std::fabs(val2));
+  T diffRel = diff/ std::max(maxVal, numeric_limits<T>::min()) ;
+  return diffRel;
+}
+
+template <class T>
 struct AutoVectDel {
   AutoVectDel(typename std::vector<T *>& Vector) : mVector(Vector) {}
   ~AutoVectDel() {

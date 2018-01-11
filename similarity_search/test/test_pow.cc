@@ -1,0 +1,68 @@
+/**
+ * Non-metric Space Library
+ *
+ * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
+ * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+ *
+ * For the complete list of contributors and further details see:
+ * https://github.com/searchivarius/NonMetricSpaceLib 
+ * 
+ * Copyright (c) 2018
+ *
+ * This code is released under the * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
+
+#include <memory>
+#include <string>
+#include <cmath>
+#include <vector>
+#include <limits>
+
+#include "bunit.h"
+#include "pow.h"
+#include "logging.h"
+#include "utils.h"
+
+namespace similarity {
+
+using namespace std;
+
+const float MAX_REL_DIFF = 1e-6f;
+
+vector<float>   addExps = { 0, 0.125, 0.25, 0.5 };
+vector<float>   vals    = { 0.1, 0.5, 1, 1.5, 2, 4};
+
+template <typename T> bool runTest() {
+  for (unsigned i = 0; i <= 128; ++i) {
+    for (float a : addExps) {
+      T oneExp = a + i; 
+
+      PowerProxyObject<T> obj(oneExp);
+
+      for (float v : vals) {
+        T expRes = pow(T(v), oneExp); 
+        T res = obj.pow(v);
+
+        T absDiff = fabs(res - expRes);
+        T relDiff = getRelDiff(res, expRes);
+        if ( relDiff > MAX_REL_DIFF ) {
+          LOG(LIB_ERROR) << "Mismatch for base=" << v << " exponent=" << oneExp << " expected: " << expRes << " obtained: " << res << " abs diff: " << absDiff << " rel diff: " << relDiff;
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+TEST(pow_float) {
+  EXPECT_TRUE(runTest<float>());
+}
+
+TEST(pow_double) {
+  EXPECT_TRUE(runTest<double>());
+}
+
+}  // namespace similarity
