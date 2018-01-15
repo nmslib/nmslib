@@ -90,10 +90,8 @@ Limitations
 -----------------------
 
 1. Currently only static data sets are supported
-2. HNSW does not work with Clang
-3. HNSW currently duplicates memory to create optimized indices
-4. Non-optimized HNSW indices cannot be saved (for spaces other than cosine and Euclidean)
-5. Range/threshold search is not supported by many methods including SW-graph/HNSW
+2. HNSW currently duplicates memory to create optimized indices
+3. Range/threshold search is not supported by many methods including SW-graph/HNSW
 
 We plan to resolve these issues in the future.
 
