@@ -1964,6 +1964,82 @@ void TestSparseJaccardSimilarity(const string& dataFile, size_t N, size_t Rep) {
 
 }
 
+template <class T>
+void TestRenyiDivSlow(size_t N, size_t dim, size_t Rep, T alpha) {
+    T* pArr = new T[N * dim];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0), true /* norm. for regular KL */);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * renyiDivergenceSlow(pArr + j*dim, pArr + (j-1)*dim, dim, alpha) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of slow Renyi-div. (alpha=" << alpha << ") per second: " << (1e6/tDiff) * N * Rep ;
+
+    delete [] pArr;
+
+}
+
+template <class T>
+void TestRenyiDivFast(size_t N, size_t dim, size_t Rep, T alpha) {
+    T* pArr = new T[N * dim];
+
+    T *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= dim) {
+        GenRandVect(p, dim, T(RANGE_SMALL), T(1.0), true /* norm. for regular KL */);
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    T DiffSum = 0;
+
+    T fract = T(1)/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * renyiDivergenceFast(pArr + j*dim, pArr + (j-1)*dim, dim, alpha) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << typeid(T).name() << " " << "Elapsed: " << tDiff / 1e3 << " ms " << " # of fast Renyi-div. (alpha=" << alpha << ") per second: " << (1e6/tDiff) * N * Rep ;
+
+    delete [] pArr;
+
+}
+
 }  // namespace similarity
 
 using namespace similarity;
@@ -1976,6 +2052,34 @@ int main(int argc, char* argv[]) {
     int nTest  = 0;
 
     int dim = 128;
+
+    float alphaStepSlow = 1.0f/4;
+    for (float alpha = alphaStepSlow; alpha <= 2; alpha+= alphaStepSlow) {
+      if (fabs(alpha - 1) < 1e-6) continue;
+      nTest++;
+      TestRenyiDivSlow<float>(1024, dim, 100, alpha);
+    }
+#if TEST_SPEED_DOUBLE
+    for (double alpha = alphaStepSlow; alpha <= 2; alpha+= alphaStepSlow) {
+      if (fabs(alpha - 1) < 1e-6) continue;
+      nTest++;
+      TestRenyiDivSlow<double>(1024, dim, 100, alpha);
+    }
+#endif
+
+    float alphaStepFast = 1.0f/32;
+    for (float alpha = alphaStepFast; alpha <= 2; alpha+= alphaStepFast) {
+      if (fabs(alpha - 1) < 1e-6) continue;
+      nTest++;
+      TestRenyiDivFast<float>(1024, dim, 100, alpha);
+    }
+#if TEST_SPEED_DOUBLE
+    for (double alpha = alphaStepFast; alpha <= 2; alpha+= alphaStepFast) {
+      if (fabs(alpha - 1) < 1e-6) continue;
+      nTest++;
+      TestRenyiDivFast<double>(1024, dim, 100, alpha);
+    }
+#endif
 
 #if defined(WITH_EXTRAS)
     nTest++;

@@ -65,13 +65,13 @@ typedef SSIZE_T ssize_t;
 
 #define FIELD_DELIMITER ':'
 
+#define GET_RANDOM_GENERATOR    getRandomGenerator<std::mt19937>()
+
 namespace similarity {
 
 using std::string;
 using std::vector;
 using std::stringstream;
-using std::random_device;
-using std::mt19937;
 
 using namespace std;
 
@@ -85,6 +85,19 @@ bool DoesFileExist(const char *filename);
 inline bool DoesFileExist(const string &filename) { return DoesFileExist(filename.c_str()); }
 
 extern int randomSeed;
+
+/*
+ * Random number generation is thread safe when respective
+ * objects are not shared among threads. So, we will keep one
+ * random number generator per thread.
+ */ 
+template <class RandGenType>
+inline RandGenType & getRandomGenerator() {
+    static thread_local RandGenType gen(randomSeed);
+
+    return gen;
+}
+
 // random 32-bit integer number
 inline int32_t RandomInt() {
     /*
@@ -93,10 +106,9 @@ inline int32_t RandomInt() {
      * random number generator per thread.
     */ 
     // thread_local is static by default, but let's keep it static for clarity
-    static thread_local mt19937 gen(randomSeed);
     static thread_local std::uniform_int_distribution<int32_t> distr(0, std::numeric_limits<int32_t>::max());
    
-    return distr(gen); 
+    return distr(GET_RANDOM_GENERATOR); 
 }
 
 template <class T>
@@ -108,10 +120,9 @@ inline T RandomReal() {
      * random number generator per thread.
     */ 
     // thread_local is static by default, but let's keep it static for clarity
-    static thread_local mt19937 gen(randomSeed);
     static thread_local std::uniform_real_distribution<T> distr(0, 1);
 
-    return distr(gen); 
+    return distr(GET_RANDOM_GENERATOR); 
 }
 
 void RStrip(char* str);

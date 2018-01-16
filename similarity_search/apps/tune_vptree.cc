@@ -113,8 +113,7 @@ void RunExper(unsigned AddRestartQty,
 
   LOG(LIB_INFO) << "We are going to tune parameters for " << MethodName;
 
-  static  std::random_device          rd;
-  static  std::mt19937                engine(rd());
+  static  thread_local auto&          engine(GET_RANDOM_GENERATOR);
   static  std::normal_distribution<>  normGen(0.0f, log(FullFactor));
 
   AnyParamManager pmgr(IndexParams);

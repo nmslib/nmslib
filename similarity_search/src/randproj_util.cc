@@ -23,6 +23,7 @@
 #include "randproj_util.h"
 #include "distcomp.h"
 #include "logging.h"
+#include "utils.h"
 
 namespace similarity {
 
@@ -32,8 +33,7 @@ template <class dist_t> void initRandProj(size_t nSrcDim, size_t nDstDim,
                                          bool bDoOrth,
                                          vector<vector<dist_t>>& projMatr) {
   // Static is thread-safe in C++-11
-  static  std::random_device          rd;
-  static  std::mt19937                engine(rd());
+  static thread_local auto&           randGen(GET_RANDOM_GENERATOR);
   static  std::normal_distribution<>  normGen(0.0f, 1.0f);
 
   // 1. Create normally distributed vectors
@@ -41,7 +41,7 @@ template <class dist_t> void initRandProj(size_t nSrcDim, size_t nDstDim,
   for (size_t i = 0; i < nDstDim; ++i) {
     projMatr[i].resize(nSrcDim);
     for (size_t j = 0; j < nSrcDim; ++j)
-      projMatr[i][j] = normGen(engine);
+      projMatr[i][j] = normGen(randGen);
   }
   /* 
    * 2. If bDoOrth == true, normalize the basis using the numerically stable
