@@ -33,7 +33,7 @@ dist_t SpaceRenyiDivergSlow<dist_t>::HiddenDistance(const Object* obj1, const Ob
   const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
   const size_t length = obj1->datalength() / sizeof(dist_t);
 
-  return renyiDivergence(x, y, length, alpha_);
+  return renyiDivergenceSlow(x, y, length, alpha_);
 }
 
 template <typename dist_t>

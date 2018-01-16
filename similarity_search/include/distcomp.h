@@ -198,18 +198,18 @@ template <typename T> T LPGenericDistanceOptim(const T* x, const T* y, const int
  * estimators for image classification”. In: Computer Vision and Pattern Recognition (CVPR), 2012 IEEE
  * Conference on, pages 2989–2996
  */
-template <typename T> T alphaBetaDivergence(const T *x, const T *y, const int length, float alpha, float beta);
+template <typename T> T alphaBetaDivergenceSlow(const T *x, const T *y, const int length, float alpha,float beta);
 template <typename T> T alphaBetaDivergenceFast(const T *x, const T *y, const int length, float alpha, float beta);
 
 // A proxy function for alpha-beta divergence that may be used during indexing
-template <typename T> T alphaBetaDivergenceProxy(const T *x, const T *y, const int length, float alpha, float beta);
+template <typename T> T alphaBetaDivergenceSlowProxy(const T *x, const T *y, const int length, float alpha, float beta);
 template <typename T> T alphaBetaDivergenceFastProxy(const T *x, const T *y, const int length, float alpha, float beta);
 /*
  * Renyi divergence.
  * Rényi, Alfréd (1961). "On measures of information and entropy". 
  * Proceedings of the fourth Berkeley Symposium on Mathematics, Statistics and Probability 1960. pp. 547–561. 
  */
-template <typename T> T renyiDivergence(const T *x, const T *y, const int length, float alpha);
+template <typename T> T renyiDivergenceSlow(const T *x, const T *y, const int length, float alpha);
 template <typename T> T renyiDivergenceFast(const T *x, const T *y, const int length, float alpha);
 
 

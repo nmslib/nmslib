@@ -138,8 +138,10 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(double, SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
 #endif
 
-  REGISTER_SPACE_CREATOR(float,  SPACE_AB_DIVERG,  CreateAlphaBetaDiverg)
-  REGISTER_SPACE_CREATOR(double, SPACE_AB_DIVERG,  CreateAlphaBetaDiverg)
+  REGISTER_SPACE_CREATOR(float,  SPACE_AB_DIVERG_SLOW,  CreateAlphaBetaDivergSlow)
+  REGISTER_SPACE_CREATOR(double, SPACE_AB_DIVERG_SLOW,  CreateAlphaBetaDivergSlow)
+  REGISTER_SPACE_CREATOR(float,  SPACE_AB_DIVERG_FAST,  CreateAlphaBetaDivergFast)
+  REGISTER_SPACE_CREATOR(double, SPACE_AB_DIVERG_FAST,  CreateAlphaBetaDivergFast)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG_SLOW,  CreateRenyiDivergSlow)
   REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG_SLOW,  CreateRenyiDivergSlow)

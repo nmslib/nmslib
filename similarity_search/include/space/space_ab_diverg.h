@@ -30,7 +30,8 @@
 #include "space_vector.h"
 #include "distcomp.h"
 
-#define SPACE_AB_DIVERG     "ab_diverg"
+#define SPACE_AB_DIVERG_SLOW     "abdiv_slow"
+#define SPACE_AB_DIVERG_FAST     "abdiv_fast"
 
 namespace similarity {
 
@@ -45,17 +46,32 @@ namespace similarity {
  */
 
 template <typename dist_t>
-class SpaceAlphaBetaDiverg : public VectorSpaceSimpleStorage<dist_t> {
+class SpaceAlphaBetaDivergSlow : public VectorSpaceSimpleStorage<dist_t> {
  public:
-  explicit SpaceAlphaBetaDiverg(float alpha, float beta) : alpha_(alpha), beta_(beta) {}
-  virtual ~SpaceAlphaBetaDiverg() {}
+  explicit SpaceAlphaBetaDivergSlow(float alpha, float beta) : alpha_(alpha), beta_(beta) {}
+  virtual ~SpaceAlphaBetaDivergSlow() {}
 
   virtual std::string StrDesc() const override;
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const override;
   virtual dist_t ProxyDistance(const Object* obj1, const Object* obj2) const override;
  private:
-  DISABLE_COPY_AND_ASSIGN(SpaceAlphaBetaDiverg);
+  DISABLE_COPY_AND_ASSIGN(SpaceAlphaBetaDivergSlow);
+  float alpha_, beta_;
+};
+
+template <typename dist_t>
+class SpaceAlphaBetaDivergFast : public VectorSpaceSimpleStorage<dist_t> {
+ public:
+  explicit SpaceAlphaBetaDivergFast(float alpha, float beta) : alpha_(alpha), beta_(beta) {}
+  virtual ~SpaceAlphaBetaDivergFast() {}
+
+  virtual std::string StrDesc() const override;
+ protected:
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const override;
+  virtual dist_t ProxyDistance(const Object* obj1, const Object* obj2) const override;
+ private:
+  DISABLE_COPY_AND_ASSIGN(SpaceAlphaBetaDivergFast);
   float alpha_, beta_;
 };
 

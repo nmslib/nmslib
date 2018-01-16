@@ -575,7 +575,7 @@ bool TestRenyiDivAgree(size_t N, size_t dim, size_t Rep, T alpha) {
             Normalize(pVect1, dim);
             Normalize(pVect2, dim);
 
-            T val0 = renyiDivergence(pVect1, pVect2, dim, alpha);
+            T val0 = renyiDivergenceSlow(pVect1, pVect2, dim, alpha);
             T val1 = renyiDivergenceFast(pVect1, pVect2, dim, alpha);
 
             bool bug = false;
@@ -600,6 +600,53 @@ bool TestRenyiDivAgree(size_t N, size_t dim, size_t Rep, T alpha) {
 
     LOG(LIB_INFO) << typeid(T).name() << " Renyi Div. approximation error: average absolute: " << Error / TotalQty << 
                                  " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
+
+
+    return true;
+}
+
+template <class T>
+bool TestAlphaBetaDivAgree(size_t N, size_t dim, size_t Rep, T alpha, T beta) {
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+
+    T Dist = 0;
+    T Error = 0;
+    T TotalQty = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim, T(RANGE_SMALL), T(1.0), true);
+            GenRandVect(pVect2, dim, T(RANGE_SMALL), T(1.0), true);
+
+            Normalize(pVect1, dim);
+            Normalize(pVect2, dim);
+
+            T val0 = alphaBetaDivergenceSlow(pVect1, pVect2, dim, alpha, beta);
+            T val1 = alphaBetaDivergenceFast(pVect1, pVect2, dim, alpha, beta);
+
+            bool bug = false;
+
+            T AbsDiff1 = fabs(val1 - val0);
+            T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
+
+            Error += AbsDiff1;
+            ++TotalQty;
+
+            if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
+                cerr << "Bug alpha-beta Div. (1) " << typeid(T).name() << " !!! Dim = " << dim 
+                     << "alpha=" << alpha << " val0 = " << val0 << " val1 = " << val1 
+                     << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 
+                     << " AbsDiff1: " << AbsDiff1 << endl;
+                bug = true;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+    LOG(LIB_INFO) << typeid(T).name() << " alpha-beta div. approximation error: average absolute: " << Error / TotalQty << " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
 
 
     return true;
@@ -1098,6 +1145,17 @@ TEST(TestAgree) {
             TestRenyiDivAgree(1024, dim, 10, alpha);
           }
 
+          for (float alpha = -2; alpha <= 2; alpha += 0.5) 
+          for (float beta = -2; beta <= 2; beta += 0.5) 
+          {
+            TestAlphaBetaDivAgree(1024, dim, 10, alpha, beta);
+          }
+
+          for (double alpha = -2; alpha <= 2; alpha += 0.5) 
+          for (double beta = -2; beta <= 2; beta += 0.5) 
+          {
+            TestAlphaBetaDivAgree(1024, dim, 10, alpha, beta);
+          }
         }
 
         nTest++;

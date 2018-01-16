@@ -22,7 +22,7 @@
 namespace similarity {
 
 template <typename dist_t>
-Space<dist_t>* CreateAlphaBetaDiverg(const AnyParams& AllParams) {
+Space<dist_t>* CreateAlphaBetaDivergSlow(const AnyParams& AllParams) {
   AnyParamManager pmgr(AllParams);
 
   float alpha = 1.0, beta = 1.0;
@@ -30,7 +30,19 @@ Space<dist_t>* CreateAlphaBetaDiverg(const AnyParams& AllParams) {
   pmgr.GetParamOptional("alpha",  alpha, alpha);
   pmgr.GetParamOptional("beta",   beta,  beta);
 
-  return new SpaceAlphaBetaDiverg<dist_t>(alpha, beta);
+  return new SpaceAlphaBetaDivergSlow<dist_t>(alpha, beta);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateAlphaBetaDivergFast(const AnyParams& AllParams) {
+  AnyParamManager pmgr(AllParams);
+
+  float alpha = 1.0, beta = 1.0;
+
+  pmgr.GetParamOptional("alpha",  alpha, alpha);
+  pmgr.GetParamOptional("beta",   beta,  beta);
+
+  return new SpaceAlphaBetaDivergFast<dist_t>(alpha, beta);
 }
 
 /*
