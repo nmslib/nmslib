@@ -26,24 +26,45 @@
 namespace similarity {
 
 template <typename dist_t>
-dist_t SpaceRenyiDiverg<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
+dist_t SpaceRenyiDivergSlow<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
   CHECK(obj1->datalength() > 0);
   CHECK(obj1->datalength() == obj2->datalength());
   const dist_t* x = reinterpret_cast<const dist_t*>(obj1->data());
   const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
   const size_t length = obj1->datalength() / sizeof(dist_t);
 
-  return renyi_divergence(x, y, length, alpha_);
+  return renyiDivergence(x, y, length, alpha_);
 }
 
 template <typename dist_t>
-std::string SpaceRenyiDiverg<dist_t>::StrDesc() const {
+std::string SpaceRenyiDivergSlow<dist_t>::StrDesc() const {
   std::stringstream stream;
-  stream << SPACE_RENYI_DIVERG << ":alpha=" << alpha_;
+  stream << SPACE_RENYI_DIVERG_SLOW << ":alpha=" << alpha_;
   return stream.str();
 }
 
-template class SpaceRenyiDiverg<float>;
-template class SpaceRenyiDiverg<double>;
+template class SpaceRenyiDivergSlow<float>;
+template class SpaceRenyiDivergSlow<double>;
+
+template <typename dist_t>
+dist_t SpaceRenyiDivergFast<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
+  CHECK(obj1->datalength() > 0);
+  CHECK(obj1->datalength() == obj2->datalength());
+  const dist_t* x = reinterpret_cast<const dist_t*>(obj1->data());
+  const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
+  const size_t length = obj1->datalength() / sizeof(dist_t);
+
+  return renyiDivergenceFast(x, y, length, alpha_);
+}
+
+template <typename dist_t>
+std::string SpaceRenyiDivergFast<dist_t>::StrDesc() const {
+  std::stringstream stream;
+  stream << SPACE_RENYI_DIVERG_FAST << ":alpha=" << alpha_;
+  return stream.str();
+}
+
+template class SpaceRenyiDivergFast<float>;
+template class SpaceRenyiDivergFast<double>;
 
 }  // namespace similarity

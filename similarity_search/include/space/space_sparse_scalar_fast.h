@@ -75,14 +75,14 @@ private:
 class SpaceSparseCosineSimilarityFast : public SpaceSparseVectorInter<float> {
 public:
   explicit SpaceSparseCosineSimilarityFast(){}
-  virtual std::string StrDesc() const {
+  virtual std::string StrDesc() const override {
     return SPACE_SPARSE_COSINE_SIMILARITY_FAST;
   }
   virtual PivotIndex<float>* CreatePivotIndex(const ObjectVector& pivots, size_t hashTrickDim = 0) const override {
     return new PivotIndexLocal(*this, pivots, hashTrickDim);
   }
 protected:
-  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
+  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const override;
 
   class PivotIndexLocal : public SpaceDotProdPivotIndexBase {
   public:
@@ -102,7 +102,7 @@ protected:
 class SpaceSparseAngularDistanceFast : public SpaceSparseVectorInter<float> {
 public:
   explicit SpaceSparseAngularDistanceFast(){}
-  virtual std::string StrDesc() const {
+  virtual std::string StrDesc() const override {
     return SPACE_SPARSE_ANGULAR_DISTANCE_FAST;
   }
 
@@ -110,7 +110,7 @@ public:
     return new PivotIndexLocal(*this, pivots, hashTrickDim);
   }
 protected:
-  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
+  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const override;
 
   class PivotIndexLocal : public SpaceDotProdPivotIndexBase {
   public:
@@ -131,7 +131,7 @@ protected:
 class SpaceSparseNegativeScalarProductFast : public SpaceSparseVectorInter<float> {
 public:
   explicit SpaceSparseNegativeScalarProductFast(){}
-  virtual std::string StrDesc() const {
+  virtual std::string StrDesc() const override {
     return SPACE_SPARSE_NEGATIVE_SCALAR_FAST;
   }
 
@@ -139,7 +139,7 @@ public:
     return new PivotIndexLocal(*this, pivots, hashTrickDim);
   }
 protected:
-  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
+  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const override;
 
   class PivotIndexLocal : public SpaceDotProdPivotIndexBase {
   public:
@@ -159,7 +159,7 @@ protected:
 class SpaceSparseQueryNormNegativeScalarProductFast : public SpaceSparseVectorInter<float> {
 public:
   explicit SpaceSparseQueryNormNegativeScalarProductFast(){}
-  virtual std::string StrDesc() const {
+  virtual std::string StrDesc() const override {
     return SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST;
   }
 
@@ -167,7 +167,7 @@ public:
     return new PivotIndexLocal(*this, pivots, hashTrickDim);
   }
 protected:
-  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const;
+  virtual float HiddenDistance(const Object* obj1, const Object* obj2) const override;
 
   class PivotIndexLocal : public SpaceDotProdPivotIndexBase {
   public:

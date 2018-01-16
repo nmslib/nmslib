@@ -30,28 +30,43 @@
 #include "space_vector.h"
 #include "distcomp.h"
 
-#define SPACE_RENYI_DIVERG     "renyi_diverg"
+#define SPACE_RENYI_DIVERG_SLOW "renyidiv_slow"
+#define SPACE_RENYI_DIVERG_FAST "renyidiv_fast"
 
 namespace similarity {
 
 
 
 /*
- * Renyi divergence.
+ * Renyi divergences.
  * 
  */
 
 template <typename dist_t>
-class SpaceRenyiDiverg : public VectorSpaceSimpleStorage<dist_t> {
+class SpaceRenyiDivergSlow : public VectorSpaceSimpleStorage<dist_t> {
  public:
-  explicit SpaceRenyiDiverg(float alpha) : alpha_(alpha) {}
-  virtual ~SpaceRenyiDiverg() {}
+  explicit SpaceRenyiDivergSlow(float alpha) : alpha_(alpha) {}
+  virtual ~SpaceRenyiDivergSlow() {}
 
-  virtual std::string StrDesc() const;
+  virtual std::string StrDesc() const override;
  protected:
-  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const override;
  private:
-  DISABLE_COPY_AND_ASSIGN(SpaceRenyiDiverg);
+  DISABLE_COPY_AND_ASSIGN(SpaceRenyiDivergSlow);
+  float alpha_;
+};
+
+template <typename dist_t>
+class SpaceRenyiDivergFast : public VectorSpaceSimpleStorage<dist_t> {
+ public:
+  explicit SpaceRenyiDivergFast(float alpha) : alpha_(alpha) {}
+  virtual ~SpaceRenyiDivergFast() {}
+
+  virtual std::string StrDesc() const override;
+ protected:
+  virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const override;
+ private:
+  DISABLE_COPY_AND_ASSIGN(SpaceRenyiDivergFast);
   float alpha_;
 };
 

@@ -204,12 +204,12 @@ public:
     * @param  maxDig  a maximum number of binary digits to consider (should be <= 31).
     */
   PowerProxyObject(const T p, const unsigned maxDig = 18) {
-    CHECK_MSG(p >= 0, "The exponent should be non-negative");
-
+    pOrig_ = p;
+    isNeg_ = p < 0;
+    p_ = (isNeg_) ? -p : p;
     maxK_ = 1u << maxDig;
-    unsigned pfm = static_cast<unsigned>(std::floor(maxK_ * p));
+    unsigned pfm = static_cast<unsigned>(std::floor(maxK_ * p_));
 
-    p_         = p;
     isOptim_   = (fabs(maxK_*p_ - pfm) <= 2 * std::numeric_limits<T>::min());
     intPow_    = pfm >> maxDig;
     fractPow_  = pfm - (intPow_ << maxDig);
@@ -220,16 +220,19 @@ public:
     * Compute pow(base, p_) possibly efficiently. We expect base to be 
     * non-negative!
     */
-  T inline pow(const T base) {
+  T inline pow(T base) {
     if (isOptim_) {
+      if (isNeg_) base = 1/base; // Negative power
       T mult1  = intPow_ ?    EfficientPow(base, intPow_) : 1;
       T mult2  = fractPow_ ?  EfficientFractPowUtil(base, fractPow_, maxK_) : 1;
       return mult1 * mult2;
     } else {
-      return std::pow(base, p_);
+      return std::pow(base, pOrig_);
     }
   }
 private:
+  bool     isNeg_;
+  T        pOrig_;
   T        p_;
   unsigned maxK_;
   bool     isOptim_;

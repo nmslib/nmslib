@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <memory>
+#include <algorithm>
 #include <cmath>
 #include <spacefactory.h>
 
@@ -556,6 +557,54 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
     return true;
 }
 
+template <class T>
+bool TestRenyiDivAgree(size_t N, size_t dim, size_t Rep, T alpha) {
+    vector<T> vect1(dim), vect2(dim);
+    T* pVect1 = &vect1[0]; 
+    T* pVect2 = &vect2[0];
+
+    T Dist = 0;
+    T Error = 0;
+    T TotalQty = 0;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim, T(RANGE_SMALL), T(1.0), true);
+            GenRandVect(pVect2, dim, T(RANGE_SMALL), T(1.0), true);
+
+            Normalize(pVect1, dim);
+            Normalize(pVect2, dim);
+
+            T val0 = renyiDivergence(pVect1, pVect2, dim, alpha);
+            T val1 = renyiDivergenceFast(pVect1, pVect2, dim, alpha);
+
+            bool bug = false;
+
+            T AbsDiff1 = fabs(val1 - val0);
+            T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
+
+            Error += AbsDiff1;
+            ++TotalQty;
+
+            if (RelDiff1 > 1e-5 && AbsDiff1 > 1e-5) {
+                cerr << "Bug Reniy Div. (1) " << typeid(T).name() << " !!! Dim = " << dim 
+                     << "alpha=" << alpha << " val0 = " << val0 << " val1 = " << val1 
+                     << " Diff: " << (val0 - val1) << " RelDiff1: " << RelDiff1 
+                     << " AbsDiff1: " << AbsDiff1 << endl;
+                bug = true;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+    LOG(LIB_INFO) << typeid(T).name() << " Renyi Div. approximation error: average absolute: " << Error / TotalQty << 
+                                 " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
+
+
+    return true;
+}
+
 bool TestSpearmanFootruleAgree(size_t N, size_t dim, size_t Rep) {
     vector<PivotIdType> vect1(dim), vect2(dim);
     PivotIdType* pVect1 = &vect1[0]; 
@@ -1034,10 +1083,21 @@ TEST(TestAgree) {
           for (float power = 0.125; power <= 32; power += 0.125) {
             TestLPGenericAgree(1024, dim, 10, power);
           }
-
           for (double power = 0.125; power <= 32; power += 0.125) {
             TestLPGenericAgree(1024, dim, 10, power);
           }
+
+          // In the case of Renyi divergence 0 < alpha < 1, 1 < alpha < infinity
+          // https://en.wikipedia.org/wiki/R%C3%A9nyi_entropy#R%C3%A9nyi_divergence
+          for (float alpha = 0.125; alpha <= 2; alpha += 0.125) {
+            if (fabs(alpha - 1) < 1e-6) continue;
+            TestRenyiDivAgree(1024, dim, 10, alpha);
+          }
+          for (double alpha = 0.125; alpha <= 2; alpha += 0.125) {
+            if (fabs(alpha - 1) < 1e-6) continue;
+            TestRenyiDivAgree(1024, dim, 10, alpha);
+          }
+
         }
 
         nTest++;

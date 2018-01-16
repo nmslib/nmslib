@@ -141,8 +141,10 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(float,  SPACE_AB_DIVERG,  CreateAlphaBetaDiverg)
   REGISTER_SPACE_CREATOR(double, SPACE_AB_DIVERG,  CreateAlphaBetaDiverg)
 
-  REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG,  CreateRenyiDiverg)
-  REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG,  CreateRenyiDiverg)
+  REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG_SLOW,  CreateRenyiDivergSlow)
+  REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG_SLOW,  CreateRenyiDivergSlow)
+  REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG_FAST,  CreateRenyiDivergFast)
+  REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG_FAST,  CreateRenyiDivergFast)
 
 }
 

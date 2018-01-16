@@ -32,6 +32,7 @@ const float MAX_REL_DIFF = 1e-6f;
 
 vector<float>   addExps = { 0, 0.125, 0.25, 0.5 };
 vector<float>   vals    = { 0.1, 0.5, 1, 1.5, 2, 4};
+vector<float>   signs   = { 1, -1};
 
 template <typename T> bool runTest() {
   for (unsigned i = 0; i <= 128; ++i) {
@@ -40,7 +41,9 @@ template <typename T> bool runTest() {
 
       PowerProxyObject<T> obj(oneExp);
 
-      for (float v : vals) {
+      for (float vpos : vals) 
+      for (float s : signs) {
+        float v = vpos * s;
         T expRes = pow(T(v), oneExp); 
         T res = obj.pow(v);
 

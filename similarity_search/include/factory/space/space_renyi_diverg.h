@@ -25,7 +25,7 @@
 namespace similarity {
 
 template <typename dist_t>
-Space<dist_t>* CreateRenyiDiverg(const AnyParams& AllParams) {
+Space<dist_t>* CreateRenyiDivergSlow(const AnyParams& AllParams) {
   AnyParamManager pmgr(AllParams);
 
   float alpha = 0.5;
@@ -35,7 +35,21 @@ Space<dist_t>* CreateRenyiDiverg(const AnyParams& AllParams) {
   CHECK_MSG(std::fabs(alpha - 1) > 2*std::numeric_limits<float>::min() && alpha > 0,
             "alpha should be > 0 and != 1");
 
-  return new SpaceRenyiDiverg<dist_t>(alpha);
+  return new SpaceRenyiDivergSlow<dist_t>(alpha);
+}
+
+template <typename dist_t>
+Space<dist_t>* CreateRenyiDivergFast(const AnyParams& AllParams) {
+  AnyParamManager pmgr(AllParams);
+
+  float alpha = 0.5;
+
+  pmgr.GetParamOptional("alpha",  alpha, alpha);
+
+  CHECK_MSG(std::fabs(alpha - 1) > 2*std::numeric_limits<float>::min() && alpha > 0,
+            "alpha should be > 0 and != 1");
+
+  return new SpaceRenyiDivergFast<dist_t>(alpha);
 }
 
 /*

@@ -33,7 +33,7 @@ dist_t SpaceAlphaBetaDiverg<dist_t>::HiddenDistance(const Object* obj1, const Ob
   const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
   const size_t length = obj1->datalength() / sizeof(dist_t);
 
-  return alpha_beta_divergence(x, y, length, alpha_, beta_);
+  return alphaBetaDivergence(x, y, length, alpha_, beta_);
 }
 
 template <typename dist_t>
@@ -44,7 +44,7 @@ dist_t SpaceAlphaBetaDiverg<dist_t>::ProxyDistance(const Object* obj1, const Obj
   const dist_t* y = reinterpret_cast<const dist_t*>(obj2->data());
   const size_t length = obj1->datalength() / sizeof(dist_t);
 
-  return alpha_beta_divergence_proxy(x, y, length, alpha_, beta_);
+  return alphaBetaDivergenceProxy(x, y, length, alpha_, beta_);
 }
 
 template <typename dist_t>
