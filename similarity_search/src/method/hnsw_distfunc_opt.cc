@@ -532,7 +532,8 @@ namespace similarity {
 
         typedef typename SortArrBI<dist_t, int>::Item QueueItem;
         vector<QueueItem> &queueData = sortedArr.get_data();
-        vector<QueueItem> itemBuff(8 * 30);
+        vector<QueueItem> itemBuff;
+        itemBuff.reserve(8 * 30);
 
         massVisited[curNodeNum] = currentV;
 
@@ -543,7 +544,7 @@ namespace similarity {
             curNodeNum = e.data;
             ++currElem;
 
-            size_t itemQty = 0;
+            itemBuff.clear();
             dist_t topKey = sortedArr.top_key();
 
             int *data = (int *)(data_level0_memory_ + curNodeNum * memoryPerObject_ + offsetLevel0_);
@@ -566,15 +567,16 @@ namespace similarity {
                     dist_t d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
 
                     if (d < topKey || sortedArr.size() < ef_) {
-                        itemBuff[itemQty++] = QueueItem(d, tnum);
+                        itemBuff.emplace_back(d, tnum);
                     }
                 }
             }
-            if (itemQty) {
+            if (!itemBuff.empty()) {
                 _mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
-                std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+                std::sort(itemBuff.begin(), itemBuff.end());
 
                 size_t insIndex = 0;
+                size_t const itemQty = itemBuff.size();
                 if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
                     insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
 
@@ -788,7 +790,8 @@ namespace similarity {
 
         typedef typename SortArrBI<dist_t, int>::Item QueueItem;
         vector<QueueItem> &queueData = sortedArr.get_data();
-        vector<QueueItem> itemBuff(8 * 30);
+        vector<QueueItem> itemBuff;
+        itemBuff.reserve(8 * 30);
 
         massVisited[curNodeNum] = currentV;
 
@@ -799,7 +802,7 @@ namespace similarity {
             curNodeNum = e.data;
             ++currElem;
 
-            size_t itemQty = 0;
+            itemBuff.clear();
             dist_t topKey = sortedArr.top_key();
 
             int *data = (int *)(data_level0_memory_ + curNodeNum * memoryPerObject_ + offsetLevel0_);
@@ -822,16 +825,17 @@ namespace similarity {
                     dist_t d = (ScalarProductSIMD(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
 
                     if (d < topKey || sortedArr.size() < ef_) {
-                        itemBuff[itemQty++] = QueueItem(d, tnum);
+                        itemBuff.emplace_back(d, tnum);
                     }
                 }
             }
 
-            if (itemQty) {
+            if (!itemBuff.empty()) {
                 _mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
-                std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
+                std::sort(itemBuff.begin(), itemBuff.end());
 
                 size_t insIndex = 0;
+                size_t const itemQty = itemBuff.size();
                 if (itemQty > MERGE_BUFFER_ALGO_SWITCH_THRESHOLD) {
                     insIndex = sortedArr.merge_with_sorted_items(&itemBuff[0], itemQty);
 
