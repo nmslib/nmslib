@@ -74,7 +74,7 @@ class SortArrBI {
   }
 
   void sort() {
-    if (!v.empty())
+    if (!v_.empty())
       _mm_prefetch(&v_[0], _MM_HINT_T0);
     std::sort(v_.begin(), v_.begin() + num_elems_);
   }
