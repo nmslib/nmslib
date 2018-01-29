@@ -69,6 +69,11 @@ class ProgressDisplay {
     return _count;
   }
 
+  // Effects: increments enough to display a complete progress
+  void finish() {
+    operator+=(expected_count() - count());
+  }
+
   unsigned long  operator++()           { return operator+=( 1 ); }
   unsigned long  count() const          { return _count; }
   unsigned long  expected_count() const { return _expected_count; }

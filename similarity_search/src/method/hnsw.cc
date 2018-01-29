@@ -213,10 +213,12 @@ namespace similarity {
             {
                 unique_lock<mutex> lock(ElListGuard_);
                 ElList_[id] = node;
+                if (progress_bar)
+                  ++(*progress_bar);
             }
-            if (progress_bar)
-                ++(*progress_bar);
         });
+        if (progress_bar)
+          progress_bar->finish();
 
         if (post_ == 1 || post_ == 2) {
             vector<HnswNode *> temp;
@@ -239,9 +241,11 @@ namespace similarity {
                 {
                     unique_lock<mutex> lock(ElListGuard_);
                     ElList_[id] = node;
+                    if (progress_bar1)
+                        ++(*progress_bar1);
                 }
                 if (progress_bar1)
-                    ++(*progress_bar1);
+                  progress_bar1->finish();
             });
             int maxF = 0;
 
@@ -1209,7 +1213,9 @@ namespace similarity {
 
             for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
                 _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
-                _mm_prefetch((char *)(massVisited + (*iter)->getId()), _MM_HINT_T0);
+                IdType curId = (*iter)->getId();
+                CHECK(curId >= 0 && curId < this->data_.size());
+                _mm_prefetch((char *)(massVisited + curId), _MM_HINT_T0);
             }
             // calculate distance to each neighbor
             for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
