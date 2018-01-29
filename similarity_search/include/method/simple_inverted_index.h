@@ -38,8 +38,10 @@ class SimplInvIndex : public Index<dist_t> {
    * which are guaranteed to be be valid during testing.
    * So, we can memorize them safely.
    */
-  SimplInvIndex(Space<dist_t>& space, 
-              const ObjectVector& data) : Index<dist_t>(data),
+  SimplInvIndex(bool printProgress, 
+              Space<dist_t>& space, 
+              const ObjectVector& data) : printProgress_(printProgress),
+                                          Index<dist_t>(data),
                                           pSpace_(dynamic_cast<SpaceSparseNegativeScalarProductFast*>(&space)) {
     if (pSpace_ == nullptr) {
       PREPARE_RUNTIME_ERR(err) <<
@@ -119,6 +121,7 @@ class SimplInvIndex : public Index<dist_t> {
         : post_(&pl), post_pos_(0), qval_(qval), qval_x_docval_(qval_x_docval) {}
   };
 
+  bool                                                     printProgress_;
   SpaceSparseNegativeScalarProductFast*                    pSpace_;
   std::unordered_map<unsigned, std::unique_ptr<PostList>>  index_;
   // disable copy and assign

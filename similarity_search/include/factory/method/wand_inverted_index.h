@@ -30,7 +30,7 @@ Index<dist_t>* CreateWANDInvIndex(bool PrintProgress,
                            const string& SpaceType,
                            Space<dist_t>& space,
                            const ObjectVector& DataObjects) {
-    return new WandInvIndex<dist_t>(space, DataObjects);
+    return new WandInvIndex<dist_t>(PrintProgress, space, DataObjects);
 }
 
 /*

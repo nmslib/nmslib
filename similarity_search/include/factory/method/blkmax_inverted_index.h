@@ -30,7 +30,7 @@ Index<dist_t>* CreateBlockMaxInvIndex(bool PrintProgress,
                            const string& SpaceType,
                            Space<dist_t>& space,
                            const ObjectVector& DataObjects) {
-    return new BlockMaxInvIndex<dist_t>(space, DataObjects);
+    return new BlockMaxInvIndex<dist_t>(PrintProgress, space, DataObjects);
 }
 
 /*

@@ -32,8 +32,9 @@ class WandInvIndex : public SimplInvIndex<dist_t> {
    * which are guaranteed to be be valid during testing.
    * So, we can memorize them safely.
    */
-  WandInvIndex(Space<dist_t>& space,
-              const ObjectVector& data) : SimplInvIndex<dist_t>(space, data) {
+  WandInvIndex(bool printProgress,
+               Space<dist_t>& space,
+               const ObjectVector& data) : SimplInvIndex<dist_t>(printProgress, space, data) {
   }
 
   void CreateIndex(const AnyParams& IndexParams) override; 

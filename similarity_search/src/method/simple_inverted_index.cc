@@ -159,14 +159,16 @@ void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
   LOG(LIB_INFO) << "Collecting dictionary stat";
 
   {
-    ProgressDisplay  pbar(this->data_.size(), cerr);
+    unique_ptr<ProgressDisplay> pbar(printProgress_ ?
+                                     new ProgressDisplay(this->data_.size(), cerr) : nullptr);
 
     for (const Object* o : this->data_) {
       tmp_vect.clear();
       UnpackSparseElements(o->data(), o->datalength(), tmp_vect);
       for (const auto& e : tmp_vect) dict_qty[e.id_] ++;
-      ++pbar;
+      if (pbar) ++(*pbar);
     }
+    if (pbar) pbar->finish();
   }
 
   LOG(LIB_INFO) << "Actually creating the index";
@@ -182,7 +184,8 @@ void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
   }
 
   {
-    ProgressDisplay  pbar(this->data_.size(), cerr);
+    unique_ptr<ProgressDisplay> pbar(printProgress_ ?
+                                     new ProgressDisplay(this->data_.size(), cerr) : nullptr);
 
     // Fill posting lists
     for (size_t did = 0; did < this->data_.size(); ++did) {
@@ -207,8 +210,10 @@ void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
         CHECK(curr_pos < pl.qty_);
         pl.entries_[curr_pos] = PostEntry(did, e.val_);
       }
-      ++pbar;
+      if (pbar) ++(*pbar);
     }
+
+    if (pbar) pbar->finish();
   }
 #ifdef SANITY_CHECKS
   // Sanity check

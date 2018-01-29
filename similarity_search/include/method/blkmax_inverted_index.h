@@ -31,8 +31,8 @@ using std::string;
 template <typename dist_t>
 class BlockMaxInvIndex : public WandInvIndex<dist_t> {
  public:
-  BlockMaxInvIndex(Space<dist_t>& space,
-              const ObjectVector& data) : WandInvIndex<dist_t>(space, data) {
+  BlockMaxInvIndex(bool printProgress, Space<dist_t>& space,
+              const ObjectVector& data) : WandInvIndex<dist_t>(printProgress, space, data) {
   }
 
   void CreateIndex(const AnyParams& IndexParams) override; 

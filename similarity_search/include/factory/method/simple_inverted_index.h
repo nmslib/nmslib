@@ -30,7 +30,7 @@ Index<dist_t>* CreateSimplInvIndex(bool PrintProgress,
                            const string& SpaceType,
                            Space<dist_t>& space,
                            const ObjectVector& DataObjects) {
-    return new SimplInvIndex<dist_t>(space, DataObjects);
+    return new SimplInvIndex<dist_t>(PrintProgress, space, DataObjects);
 }
 
 /*

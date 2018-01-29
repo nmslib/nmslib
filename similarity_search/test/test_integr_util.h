@@ -21,6 +21,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <cstdio>
 
 #include "utils.h"
 #include "bunit.h"
@@ -45,19 +46,20 @@ using namespace similarity;
  * 3) Search outcome (recall range, range for the improvement in distance computation)
  */
 struct MethodTestCase {
-  string  mDistType;
-  string  mSpaceType;
-  string  mDataSet;
-  string  mMethodName;
-  string  mIndexParams;
-  string  mQueryTimeParams;
-  float   mRecallMin;
-  float   mRecallMax;
-  bool    mRecallOnly;
-  float   mNumCloserMin;
-  float   mNumCloserMax;
-  float   mImprDistCompMin;
-  float   mImprDistCompMax;
+  string  distType_;
+  string  spaceType_;
+  string  dataSet_;
+  string  methodName_;
+  bool    testReload_; // Test save/load index
+  string  indexParams_;
+  string  queryTypeParams_;
+  float   recallMin_;
+  float   recallMax_;
+  bool    recallOnly_;
+  float   numCloserMin_;
+  float   numCloserMax_;
+  float   imprDistCompMin_;
+  float   imprDistCompMax_;
 
   unsigned   mKNN;
   float      mRange;
@@ -67,6 +69,7 @@ struct MethodTestCase {
                string spaceType,
                string dataSet,
                string methodName,
+               bool   testReload,
                string indexParams,
                string queryTimeParams,
                unsigned  knn,
@@ -78,22 +81,23 @@ struct MethodTestCase {
                float imprDistCompMin,
                float imprDistCompMax,
                bool recallOnly = false) :
-                   mDistType(distType),
-                   mSpaceType(spaceType),
-                   mDataSet(dataSet),
-                   mMethodName(methodName),
-                   mIndexParams(indexParams),
-                   mQueryTimeParams(queryTimeParams),
-                   mRecallMin(recallMin),
-                   mRecallMax(recallMax),
-                   mRecallOnly(recallOnly),
-                   mNumCloserMin(numCloserMin),
-                   mNumCloserMax(numCloserMax),
-                   mImprDistCompMin(imprDistCompMin),
-                   mImprDistCompMax(imprDistCompMax),
+                   distType_(distType),
+                   spaceType_(spaceType),
+                   dataSet_(dataSet),
+                   methodName_(methodName),
+                   indexParams_(indexParams),
+                   testReload_(testReload),
+                   queryTypeParams_(queryTimeParams),
+                   recallMin_(recallMin),
+                   recallMax_(recallMax),
+                   recallOnly_(recallOnly),
+                   numCloserMin_(numCloserMin),
+                   numCloserMax_(numCloserMax),
+                   imprDistCompMin_(imprDistCompMin),
+                   imprDistCompMax_(imprDistCompMax),
                    mKNN(knn), mRange(range)
                 {
-                  ToLower(mDistType);
+                  ToLower(distType_);
                   ToLower(spaceType);
                 }
 };
@@ -112,77 +116,77 @@ bool ProcessAndCheckResults(
 
   ExpRes.ComputeAll();
 
-  PrintStr  = produceHumanReadableReport(config, ExpRes, testCase.mMethodName, testCase.mIndexParams, testCase.mQueryTimeParams);
+  PrintStr  = produceHumanReadableReport(config, ExpRes, testCase.methodName_, testCase.indexParams_, testCase.queryTypeParams_);
 
   bool bFail = false;
 
-  if (ExpRes.GetRecallAvg() < testCase.mRecallMin) {
-    cerr << "Failed to meet min recall requirement, expect >= " << testCase.mRecallMin 
+  if (ExpRes.GetRecallAvg() < testCase.recallMin_) {
+    cerr << "Failed to meet min recall requirement, expect >= " << testCase.recallMin_ 
          << " got " << ExpRes.GetRecallAvg() << endl 
-         << " method: " << testCase.mMethodName << " ; "
-         << " index-time params: " << testCase.mIndexParams << " ; "
-         << " query-time params: " << testCase.mQueryTimeParams << " ; "
-         << " data set: " << testCase.mDataSet << " ; "
+         << " method: " << testCase.methodName_ << " ; "
+         << " index-time params: " << testCase.indexParams_ << " ; "
+         << " query-time params: " << testCase.queryTypeParams_ << " ; "
+         << " data set: " << testCase.dataSet_ << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
   }
 
-  if (ExpRes.GetRecallAvg() > testCase.mRecallMax) {
-    cerr << "Failed to meet max recall requirement, expect <= " << testCase.mRecallMax 
+  if (ExpRes.GetRecallAvg() > testCase.recallMax_) {
+    cerr << "Failed to meet max recall requirement, expect <= " << testCase.recallMax_ 
          << " got " << ExpRes.GetRecallAvg() << endl 
-         << " method: " << testCase.mMethodName << " ; "
-         << " index-time params: " << testCase.mIndexParams << " ; "
-         << " query-time params: " << testCase.mQueryTimeParams << " ; "
-         << " data set: " << testCase.mDataSet << " ; "
+         << " method: " << testCase.methodName_ << " ; "
+         << " index-time params: " << testCase.indexParams_ << " ; "
+         << " query-time params: " << testCase.queryTypeParams_ << " ; "
+         << " data set: " << testCase.dataSet_ << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
   }
 
-  if (ExpRes.GetNumCloserAvg() < testCase.mNumCloserMin) {
-    cerr << "Failed to meet min # of points closer requirement, expect >= " << testCase.mNumCloserMin 
+  if (ExpRes.GetNumCloserAvg() < testCase.numCloserMin_) {
+    cerr << "Failed to meet min # of points closer requirement, expect >= " << testCase.numCloserMin_ 
          << " got " << ExpRes.GetNumCloserAvg() << endl 
-         << " method: " << testCase.mMethodName << " ; "
-         << " index-time params: " << testCase.mIndexParams << " ; "
-         << " query-time params: " << testCase.mQueryTimeParams << " ; "
-         << " data set: " << testCase.mDataSet << " ; "
+         << " method: " << testCase.methodName_ << " ; "
+         << " index-time params: " << testCase.indexParams_ << " ; "
+         << " query-time params: " << testCase.queryTypeParams_ << " ; "
+         << " data set: " << testCase.dataSet_ << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
   }
 
-  if (ExpRes.GetNumCloserAvg() > testCase.mNumCloserMax) {
-    cerr << "Failed to meet max # of points closer requirement, expect <= " << testCase.mNumCloserMax 
+  if (ExpRes.GetNumCloserAvg() > testCase.numCloserMax_) {
+    cerr << "Failed to meet max # of points closer requirement, expect <= " << testCase.numCloserMax_ 
          << " got " << ExpRes.GetNumCloserAvg() << endl 
-         << " method: " << testCase.mMethodName << " ; "
-         << " index-time params: " << testCase.mIndexParams << " ; "
-         << " query-time params: " << testCase.mQueryTimeParams << " ; "
-         << " data set: " << testCase.mDataSet << " ; "
+         << " method: " << testCase.methodName_ << " ; "
+         << " index-time params: " << testCase.indexParams_ << " ; "
+         << " query-time params: " << testCase.queryTypeParams_ << " ; "
+         << " data set: " << testCase.dataSet_ << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
   }
 
-  if (ExpRes.GetImprDistCompAvg() < testCase.mImprDistCompMin) {
+  if (ExpRes.GetImprDistCompAvg() < testCase.imprDistCompMin_) {
     cerr << "Failed to meet min improvement requirement in the # of distance computations, expect >= "
-         << testCase.mImprDistCompMin << " got " << ExpRes.GetImprDistCompAvg() << endl 
-         << " method: " << testCase.mMethodName << " ; "
-         << " index-time params: " << testCase.mIndexParams << " ; "
-         << " query-time params: " << testCase.mQueryTimeParams << " ; "
-         << " data set: " << testCase.mDataSet << " ; "
+         << testCase.imprDistCompMin_ << " got " << ExpRes.GetImprDistCompAvg() << endl 
+         << " method: " << testCase.methodName_ << " ; "
+         << " index-time params: " << testCase.indexParams_ << " ; "
+         << " query-time params: " << testCase.queryTypeParams_ << " ; "
+         << " data set: " << testCase.dataSet_ << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
   }
 
-  if (ExpRes.GetImprDistCompAvg() > testCase.mImprDistCompMax) {
+  if (ExpRes.GetImprDistCompAvg() > testCase.imprDistCompMax_) {
     cerr << "Failed to meet max improvement requirement in the # of distance computations, expect <= "
-         << testCase.mImprDistCompMax << " got " << ExpRes.GetImprDistCompAvg() << endl 
-         << " method: " << testCase.mMethodName << " ; "
-         << " index-time params: " << testCase.mIndexParams << " ; "
-         << " query-time params: " << testCase.mQueryTimeParams << " ; "
-         << " data set: " << testCase.mDataSet << " ; "
+         << testCase.imprDistCompMax_ << " got " << ExpRes.GetImprDistCompAvg() << endl 
+         << " method: " << testCase.methodName_ << " ; "
+         << " index-time params: " << testCase.indexParams_ << " ; "
+         << " query-time params: " << testCase.queryTypeParams_ << " ; "
+         << " data set: " << testCase.dataSet_ << " ; "
          << " dist value  type: " << distType << " ; "
          << " space type: " << spaceType << endl << cmdStr << endl;
     bFail = true;
@@ -238,9 +242,9 @@ string CreateCmdStr(
 
   res << getFirstParam(MAX_NUM_QUERY_PARAM_OPT) << " " << MaxNumQuery << " " 
       << getFirstParam(isRange ? RANGE_PARAM_OPT : KNN_PARAM_OPT)    << " " << rangeOrKnnArg << " " 
-      << getFirstParam(METHOD_PARAM_OPT)        << " " << testCase.mMethodName << " " 
-      << getFirstParam(INDEX_TIME_PARAMS_PARAM_OPT) << " " << quoteEmpty(testCase.mIndexParams) << " " 
-      << getFirstParam(QUERY_TIME_PARAMS_PARAM_OPT) << " " << quoteEmpty(testCase.mQueryTimeParams);
+      << getFirstParam(METHOD_PARAM_OPT)        << " " << testCase.methodName_ << " " 
+      << getFirstParam(INDEX_TIME_PARAMS_PARAM_OPT) << " " << quoteEmpty(testCase.indexParams_) << " " 
+      << getFirstParam(QUERY_TIME_PARAMS_PARAM_OPT) << " " << quoteEmpty(testCase.queryTypeParams_);
 
   return res.str();
 };
@@ -251,6 +255,8 @@ string CreateCmdStr(
  */
 template <typename dist_t>
 size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
+             bool                         bTestReload,
+             const string&                IndexFileNamePrefix,
              const string&                DistType, 
              string                       SpaceTypeStr,
              unsigned                     ThreadTestQty,
@@ -268,6 +274,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
   vector<dist_t>   range;
 
   size_t nFail = 0;
+
 
   if (!KnnArg.empty()) {
     if (!SplitStr(KnnArg, knn, ',')) {
@@ -340,22 +347,22 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     managerGS.Compute(ThreadTestQty, 0); // Keeping all GS entries, should be Ok here because our data sets are smallish
     
     for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
-      const string& MethodName  = vTestCases[MethNum].mMethodName;
+      const string& MethodName  = vTestCases[MethNum].methodName_;
 
       shared_ptr<AnyParams>           IndexParams; 
       vector<shared_ptr<AnyParams>>   vQueryTimeParams;
 
-      bool recallOnly = vTestCases[MethNum].mRecallOnly;
+      bool recallOnly = vTestCases[MethNum].recallOnly_;
 
       {
         vector<string>     desc;
-        ParseArg(vTestCases[MethNum].mIndexParams, desc);
+        ParseArg(vTestCases[MethNum].indexParams_, desc);
         IndexParams = shared_ptr<AnyParams>(new AnyParams(desc));
       }
 
       {
         vector<string>     desc;
-        ParseArg(vTestCases[MethNum].mQueryTimeParams, desc);
+        ParseArg(vTestCases[MethNum].queryTypeParams_, desc);
         vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(desc)));
       }
 
@@ -380,6 +387,32 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                          );
 
       IndexPtr->CreateIndex(*IndexParams);
+
+      if (bTestReload) {
+        LOG(LIB_INFO) << "Saving the index" ;
+
+        string indexLocAdd = "_" + ConvertToString(TestSetId);
+        string fullIndexName = IndexFileNamePrefix + indexLocAdd;
+
+        if (DoesFileExist(fullIndexName)) {
+          CHECK_MSG(std::remove(fullIndexName.c_str()) == 0, 
+                  "Failed to delete file '" + fullIndexName + "'")
+        }
+
+        IndexPtr->SaveIndex(fullIndexName);
+
+        IndexPtr.reset(
+                         MethodFactoryRegistry<dist_t>::Instance().
+                         CreateMethod(false /* don't print progress */,
+                                      MethodName, 
+                                      SpaceType, config.GetSpace(), 
+                                      config.GetDataObjects())
+                      );
+
+        LOG(LIB_INFO) << "Loading the index" ;
+
+        IndexPtr->LoadIndex(fullIndexName);
+      }
 
       LOG(LIB_INFO) << "==============================================";
 
@@ -507,6 +540,8 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 }
 
 inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
+               bool                         bTestReload,
+               string                       IndexFileNamePrefix,
                string                       DistType, 
                string                       SpaceTypeStr,
                unsigned                     ThreadTestQty,
@@ -522,6 +557,8 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
   ToLower(DistType);
   if (DIST_TYPE_INT == DistType) {
     bTestRes = RunTestExper<int>(vTestCases,
+                  bTestReload,
+                  IndexFileNamePrefix,
                   DistType,
                   SpaceTypeStr,
                   ThreadTestQty,
@@ -536,6 +573,8 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                  );
   } else if (DIST_TYPE_FLOAT == DistType) {
     bTestRes = RunTestExper<float>(vTestCases,
+                  bTestReload,
+                  IndexFileNamePrefix,
                   DistType,
                   SpaceTypeStr,
                   ThreadTestQty,
@@ -550,6 +589,8 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                  );
   } else if (DIST_TYPE_DOUBLE == DistType) {
     bTestRes = RunTestExper<double>(vTestCases,
+                  bTestReload,
+                  IndexFileNamePrefix,
                   DistType,
                   SpaceTypeStr,
                   ThreadTestQty,
