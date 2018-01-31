@@ -50,8 +50,8 @@ struct MethodTestCase {
   string  spaceType_;
   string  dataSet_;
   string  methodName_;
-  bool    testReload_; // Test save/load index
   string  indexParams_;
+  bool    testReload_; // Test save/load index
   string  queryTypeParams_;
   float   recallMin_;
   float   recallMax_;

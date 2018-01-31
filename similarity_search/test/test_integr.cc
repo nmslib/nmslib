@@ -64,6 +64,7 @@ using std::stringstream;
 #define TEST_SW_GRAPH 1
 #define TEST_IR 1
 #define TEST_OTHER 1
+#define TEST_FALCONN 1
 
 vector<MethodTestCase>    vTestCaseDesc = {
 #if (TEST_HNSW)
@@ -168,9 +169,9 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 1, 4, 22, 37),
 
   // Binarized
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin", true, "numPivot=32", "dbScanFrac=0.1",
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin", false, "numPivot=32", "dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.3, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_bin_vptree", true, "numPivot=32", "alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_bin_vptree", false, "numPivot=32", "alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.5, 8, 12),  
 
 
@@ -289,6 +290,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 0.999, 1.0, 0.0, 0.0, 1.2, 2.4),  
 
 #ifdef WITH_EXTRAS
+
   // *************** multi-probe LSH tests ******************** //
   // knn
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", false, "desiredRecall=0.5,tuneK=1,T=5,L=25,H=16535", "",
@@ -315,6 +317,16 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // Old NN-descent
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", false, "NN=10,rho=0.5,delta=0.001", "initSearchAttempts=10",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
+#endif
+  // *************** FALCONN test ***************************** //
+#endif
+
+#ifdef WITH_EXTRAS
+#if (TEST_FALCONN)
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "falconn", false, "num_hash_tables=20,num_hash_bits=7,feature_hashing_dimension=128,use_falconn_dist=0", "num_probes=20",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.79, 0.5, 1.5, 5.75, 6.75),  
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "falconn", false, "num_hash_tables=1,num_hash_bits=11,use_falconn_dist=0", "num_probes=1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.75, 2.75, 3.5, 4, 5.5),  
 #endif
 #endif
 };

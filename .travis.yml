@@ -57,6 +57,7 @@ script:
   if [ "$TRAVIS_OS_NAME" = "linux" -o "$TRAVIS_OS_NAME" = "osx" ] ; then
       cd similarity_search;
       ./release/bunit
+      ./release/test_integr integr.log 
       cd ..
   fi
   cd python_bindings
