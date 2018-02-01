@@ -33,6 +33,7 @@
 #include <random>
 #include <climits>
 #include <stdexcept>
+#include <memory>
 
 #include "idtype.h"
 
@@ -65,7 +66,6 @@ typedef SSIZE_T ssize_t;
 
 #define FIELD_DELIMITER ':'
 
-#define GET_RANDOM_GENERATOR    getRandomGenerator<std::mt19937>()
 
 namespace similarity {
 
@@ -74,6 +74,8 @@ using std::vector;
 using std::stringstream;
 
 using namespace std;
+
+typedef std::mt19937 RandomGeneratorType;
 
 
 const char* GetFileName(const char* fullpath);
@@ -84,18 +86,29 @@ bool DoesFileExist(const char *filename);
 
 inline bool DoesFileExist(const string &filename) { return DoesFileExist(filename.c_str()); }
 
-extern int randomSeed;
 
 /*
- * Random number generation is thread safe when respective
- * objects are not shared among threads. So, we will keep one
- * random number generator per thread.
+ * 1. Random number generation is thread safe when respective
+ *    objects are not shared among threads. So, we will keep one
+ *    random number generator per thread.
+ * 2. There is a default seed to initialize all random generators.
+ * 3. However, sometimes we may want to reset the random number generator
+ *    within a working thread (i.e., this would be only a thread-specific change).
+ *    In particular, this is needed to improve reproducibility of integration tests.
  */ 
-template <class RandGenType>
-inline RandGenType & getRandomGenerator() {
-    static thread_local RandGenType gen(randomSeed);
+extern int                                                defaultRandomSeed;
+extern thread_local std::unique_ptr<RandomGeneratorType>  randomGen;
 
-    return gen;
+inline void resetRandomGenerator(int newRandomSeed) {
+  randomGen.reset(new RandomGeneratorType(newRandomSeed));
+}
+
+inline RandomGeneratorType& getRandomGenerator() {
+    if (!randomGen) {
+      resetRandomGenerator(defaultRandomSeed);
+    }
+
+    return *randomGen;
 }
 
 // random 32-bit integer number
@@ -108,7 +121,7 @@ inline int32_t RandomInt() {
     // thread_local is static by default, but let's keep it static for clarity
     static thread_local std::uniform_int_distribution<int32_t> distr(0, std::numeric_limits<int32_t>::max());
    
-    return distr(GET_RANDOM_GENERATOR); 
+    return distr(getRandomGenerator()); 
 }
 
 template <class T>
@@ -122,7 +135,7 @@ inline T RandomReal() {
     // thread_local is static by default, but let's keep it static for clarity
     static thread_local std::uniform_real_distribution<T> distr(0, 1);
 
-    return distr(GET_RANDOM_GENERATOR); 
+    return distr(getRandomGenerator()); 
 }
 
 void RStrip(char* str);

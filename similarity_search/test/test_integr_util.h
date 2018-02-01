@@ -337,6 +337,10 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     }
   }
 
+  // For better reproducibility, let's reset
+  // random number generators. 
+  defaultRandomSeed = 0; // Will affect any new threads
+  resetRandomGenerator(defaultRandomSeed); // Affects only the current thread
 
   for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
     config.SelectTestSet(TestSetId);

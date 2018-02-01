@@ -206,7 +206,7 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
     unsigned exp_left = 0, exp_right = 0;
 
 
-    static thread_local auto&           randGen(GET_RANDOM_GENERATOR);
+    static thread_local auto&           randGen(getRandomGenerator());
     static  std::normal_distribution<>  normGen(0.0f, log(fullFactor));
 
 

@@ -29,13 +29,15 @@
 #include "logging.h"
 
 #include <iostream>
+#include <memory>
 
 namespace similarity {
 
-int randomSeed = 0;
+int                                                 defaultRandomSeed = 0;
+thread_local std::unique_ptr<RandomGeneratorType>   randomGen;
 
 void initLibrary(int seed, LogChoice choice, const char* pLogFile) {
-  randomSeed = seed;
+  defaultRandomSeed = seed;
 
   std::ios_base::sync_with_stdio(false);
   InitializeLogger(choice, pLogFile);
