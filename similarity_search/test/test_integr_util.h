@@ -280,6 +280,10 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 
   size_t nFail = 0;
 
+  if (!KnnArg.empty() && !RangeArg.empty()) {
+    PREPARE_RUNTIME_ERR(err) << "Function: " << __func__ << " cannot test range and k-NN search jointly!";
+    THROW_RUNTIME_ERR(err);
+  }
 
   if (!KnnArg.empty()) {
     if (!SplitStr(KnnArg, knn, ',')) {
@@ -346,6 +350,10 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     cout << "Testing: " << yellow << methodName << no_color << endl;
     LOG(LIB_INFO) << ">>>> Index type : " << methodName;
 
+    // Exactly one range or k-NN search is executed
+    CHECK_MSG(config.GetRange().size() + config.GetKNN().size() == 1,
+             "Exactly one k-NN or range search should be executed!");
+
     vector<vector<MetaAnalysis*>> expResRange(config.GetRange().size(), 
                                               vector<MetaAnalysis*>(1));
     vector<vector<MetaAnalysis*>> expResKNN(config.GetKNN().size(),
@@ -353,8 +361,6 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 
     vector<string>         vCmdStrRange(expResRange.size());
     vector<string>         vCmdStrKNN(expResKNN.size());
-
-    cout << yellow << "Command lines:" << no_color << endl;
 
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       expResRange[i][0] = new MetaAnalysis(config.GetTestSetToRunQty());
@@ -491,15 +497,12 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 
     }
 
-    cout << yellow << "One test complete." << no_color << endl;
-
     string Print, Data, Header;
 
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
       MetaAnalysis* res = expResRange[i][0];
 
       string cmdStr = vCmdStrRange[i];
-      cout << cmdStr << endl;
       if (!ProcessAndCheckResults(cmdStr,
                                   DistType, SpaceType, 
                                   vTestCases[methNum], config, *res, Print)) {
@@ -519,7 +522,6 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
       MetaAnalysis* res = expResKNN[i][0];
 
       string cmdStr = vCmdStrKNN[i];
-      cout << cmdStr << endl;
 
       if (!ProcessAndCheckResults(cmdStr,
                                   DistType, SpaceType, 
