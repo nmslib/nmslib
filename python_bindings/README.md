@@ -23,6 +23,8 @@ information](https://github.com/pybind/python_example#installation).
 
 #### Example Usage
 
+Here is a simple example, but we have [Python notebooks with more details](notebooks) (for both sparse and dense space):
+
 ```python
 import nmslib
 import numpy
