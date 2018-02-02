@@ -45,10 +45,6 @@ ids, distances = index.knnQuery(data[0], k=10)
 neighbours = index.knnQueryBatch(data, k=10, num_threads=4)
 ```
 
-#### Additional documentation
-
-[Even more detailed documentation is also available](https://searchivarius.github.io/nmslib/) (thanks to Ben Frederickson).
-
 #### Installing with Extras
 
 To enable extra methods like those provided by FALCONN and LSHKIT you need to follow an extra couple steps.
@@ -76,3 +72,7 @@ cd python_bindings
 pip install -r requirements.txt
 python setup.py install
 ```
+
+#### Additional documentation
+
+[More detailed documentation is also available](https://searchivarius.github.io/nmslib/) (thanks to Ben Frederickson).
