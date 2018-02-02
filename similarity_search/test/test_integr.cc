@@ -280,7 +280,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "",
                 10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.0, 5.5, 8),  
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "maxLeavesToVisit=10", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.75, 0.85, 0.3, 1.5, 48, 52),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.75, 0.85, 0.3, 1.6, 48, 52),  
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "maxLeavesToVisit=20", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.7, 0.78, 0.3, 1.6, 28, 37),  
   // range
@@ -326,7 +326,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "falconn", false, "num_hash_tables=20,num_hash_bits=7,feature_hashing_dimension=128,use_falconn_dist=0", "num_probes=20",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.79, 0.5, 1.5, 5.75, 6.75),  
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "falconn", false, "num_hash_tables=1,num_hash_bits=11,use_falconn_dist=0", "num_probes=1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.75, 2.75, 3.5, 4, 5.5),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.75, 2.4, 3.5, 4, 5.5),  
 #endif
 #endif
 };

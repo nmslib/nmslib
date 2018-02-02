@@ -270,6 +270,11 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
              const string&                RangeArg
 )
 {
+  // For better reproducibility, let's reset
+  // random number generators. 
+  defaultRandomSeed = 0; // Will affect any new threads
+  resetRandomGenerator(defaultRandomSeed); // Affects only the current thread
+
   vector<unsigned> knn;
   vector<dist_t>   range;
 
@@ -323,55 +328,94 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
   std::vector<std::string>          MethParams;
   vector<double>                    MemUsage;
 
-  vector<vector<MetaAnalysis*>> ExpResRange(config.GetRange().size(),
-                                                vector<MetaAnalysis*>(vTestCases.size()));
-  vector<vector<MetaAnalysis*>> ExpResKNN(config.GetKNN().size(),
-                                              vector<MetaAnalysis*>(vTestCases.size()));
+  vector<unique_ptr<GoldStandardManager<dist_t>>> vManagerGS(config.GetTestSetToRunQty());
 
-  for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
-    for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      ExpResRange[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
-    }
-    for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      ExpResKNN[i][MethNum] = new MetaAnalysis(config.GetTestSetToRunQty());
-    }
+  for (int testSetId = 0; testSetId < config.GetTestSetToRunQty(); ++testSetId) {
+    config.SelectTestSet(testSetId);
+
+    LOG(LIB_INFO) << ">>>> Computing GS for test set id: " << testSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
+
+    vManagerGS[testSetId].reset(new GoldStandardManager<dist_t>(config));
+    vManagerGS[testSetId]->Compute(ThreadTestQty, 0); // Keeping all GS entries, should be Ok here because our data sets are smallish
   }
+   
+  for (size_t methNum = 0; methNum < vTestCases.size(); ++methNum) {
+    const string&   methodName  = vTestCases[methNum].methodName_;
+    bool            recallOnly = vTestCases[methNum].recallOnly_;
 
-  // For better reproducibility, let's reset
-  // random number generators. 
-  defaultRandomSeed = 0; // Will affect any new threads
-  resetRandomGenerator(defaultRandomSeed); // Affects only the current thread
+    cout << "Testing: " << yellow << methodName << no_color << endl;
+    LOG(LIB_INFO) << ">>>> Index type : " << methodName;
 
-  for (int TestSetId = 0; TestSetId < config.GetTestSetToRunQty(); ++TestSetId) {
-    config.SelectTestSet(TestSetId);
+    vector<vector<MetaAnalysis*>> expResRange(config.GetRange().size(), 
+                                              vector<MetaAnalysis*>(1));
+    vector<vector<MetaAnalysis*>> expResKNN(config.GetKNN().size(),
+                                              vector<MetaAnalysis*>(1));
 
-    LOG(LIB_INFO) << ">>>> Test set id: " << TestSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
+    vector<string>         vCmdStrRange(expResRange.size());
+    vector<string>         vCmdStrKNN(expResKNN.size());
 
-    GoldStandardManager<dist_t> managerGS(config);
-    managerGS.Compute(ThreadTestQty, 0); // Keeping all GS entries, should be Ok here because our data sets are smallish
-    
-    for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
-      const string& MethodName  = vTestCases[MethNum].methodName_;
+    cout << yellow << "Command lines:" << no_color << endl;
 
-      shared_ptr<AnyParams>           IndexParams; 
-      vector<shared_ptr<AnyParams>>   vQueryTimeParams;
+    for (size_t i = 0; i < config.GetRange().size(); ++i) {
+      expResRange[i][0] = new MetaAnalysis(config.GetTestSetToRunQty());
 
-      bool recallOnly = vTestCases[MethNum].recallOnly_;
+      vCmdStrRange[i] = CreateCmdStr(vTestCases[methNum],
+                                             true,
+                                             ConvertToString(config.GetRange()[i]),
+                                             DistType, 
+                                             SpaceTypeStr,
+                                             ThreadTestQty,
+                                             TestSetQty,
+                                             DataFile,
+                                             QueryFile,
+                                             MaxNumData,
+                                             MaxNumQuery,
+                                             eps);
+      cout << vCmdStrRange[i] << endl;
+      LOG(LIB_INFO) << "Command line params: " << vCmdStrRange[i];
+    }
 
-      {
-        vector<string>     desc;
-        ParseArg(vTestCases[MethNum].indexParams_, desc);
-        IndexParams = shared_ptr<AnyParams>(new AnyParams(desc));
-      }
+    for (size_t i = 0; i < config.GetKNN().size(); ++i) {
+      expResKNN[i][0] = new MetaAnalysis(config.GetTestSetToRunQty());
 
-      {
-        vector<string>     desc;
-        ParseArg(vTestCases[MethNum].queryTypeParams_, desc);
-        vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(desc)));
-      }
+      vCmdStrKNN[i] = CreateCmdStr(vTestCases[methNum],
+                                             false,
+                                             ConvertToString(config.GetKNN()[i]),
+                                             DistType, 
+                                             SpaceTypeStr,
+                                             ThreadTestQty,
+                                             TestSetQty,
+                                             DataFile,
+                                             QueryFile,
+                                             MaxNumData,
+                                             MaxNumQuery,
+                                             eps);
+      cout << vCmdStrKNN[i] << endl;
+    }
 
-      LOG(LIB_INFO) << ">>>> Index type : " << MethodName;
-      LOG(LIB_INFO) << ">>>> Index-time parameters: " << IndexParams->ToString();
+    shared_ptr<AnyParams>           indexParams; 
+    vector<shared_ptr<AnyParams>>   vQueryTimeParams;
+
+    {
+      vector<string>     desc;
+      ParseArg(vTestCases[methNum].indexParams_, desc);
+      indexParams = shared_ptr<AnyParams>(new AnyParams(desc));
+    }
+
+    {
+      vector<string>     desc;
+      ParseArg(vTestCases[methNum].queryTypeParams_, desc);
+      vQueryTimeParams.push_back(shared_ptr<AnyParams>(new AnyParams(desc)));
+    }
+
+    LOG(LIB_INFO) << ">>>> Index-time parameters: " << indexParams->ToString();
+
+    for (int testSetId = 0; testSetId < config.GetTestSetToRunQty(); ++testSetId) {
+      config.SelectTestSet(testSetId);
+
+      LOG(LIB_INFO) << ">>>> Test set id: " << testSetId << " (set qty: " << config.GetTestSetToRunQty() << ")";
+
+      const GoldStandardManager<dist_t>& managerGS = *vManagerGS[testSetId];
 
       const double vmsize_before = mem_usage_measure.get_vmsize();
 
@@ -379,23 +423,22 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 
       wtm.reset();
       
-
       LOG(LIB_INFO) << "Creating a new index" ;
 
       shared_ptr<Index<dist_t>> IndexPtr(
                          MethodFactoryRegistry<dist_t>::Instance().
                          CreateMethod(false /* don't print progress */,
-                                      MethodName, 
+                                      methodName,
                                       SpaceType, config.GetSpace(), 
                                       config.GetDataObjects())
                          );
 
-      IndexPtr->CreateIndex(*IndexParams);
+      IndexPtr->CreateIndex(*indexParams);
 
       if (bTestReload) {
         LOG(LIB_INFO) << "Saving the index" ;
 
-        string indexLocAdd = "_" + ConvertToString(TestSetId);
+        string indexLocAdd = "_" + ConvertToString(testSetId);
         string fullIndexName = IndexFileNamePrefix + indexLocAdd;
 
         if (DoesFileExist(fullIndexName)) {
@@ -408,7 +451,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
         IndexPtr.reset(
                          MethodFactoryRegistry<dist_t>::Instance().
                          CreateMethod(false /* don't print progress */,
-                                      MethodName, 
+                                      methodName,
                                       SpaceType, config.GetSpace(), 
                                       config.GetDataObjects())
                       );
@@ -433,67 +476,33 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
       LOG(LIB_INFO) << ">>>> Data size:            " << data_size << " MBs";
       LOG(LIB_INFO) << ">>>> Time elapsed:         " << (wtm.elapsed()/double(1e6)) << " sec";
 
-      /* 
-       * We need to repackage MetaAnalysis arrays:
-       * RunAll will deal with only a single method and 
-       * a single set of query-time parameters.
-       */ 
-
-      vector<vector<MetaAnalysis*>> ExpResRangeTmp(config.GetRange().size(), vector<MetaAnalysis*>(1));
-      vector<vector<MetaAnalysis*>> ExpResKNNTmp(config.GetKNN().size(), vector<MetaAnalysis*>(1));
-
-
-      for (size_t i = 0; i < config.GetRange().size(); ++i) {
-        MetaAnalysis* res = ExpResRange[i][MethNum];
-        res->SetMem(TestSetId, TotalMemByMethod);
-        ExpResRangeTmp[i][0] = res;
-      }
-      for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-        MetaAnalysis* res = ExpResKNN[i][MethNum];
-        res->SetMem(TestSetId, TotalMemByMethod);
-        ExpResKNNTmp[i][0] = res;
-      }
-
       CHECK_MSG(vQueryTimeParams.size() == 1, 
                 "Test integration code is currently can execute only one set of query-time parameters!");
 
       Experiments<dist_t>::RunAll(true /* print progress */, 
                                   ThreadTestQty,
-                                  TestSetId,
+                                  testSetId,
                                   managerGS,
                                   recallOnly,
-                                  ExpResRangeTmp, ExpResKNNTmp,
+                                  expResRange, expResKNN,
                                   config, 
                                   *IndexPtr, 
                                   vQueryTimeParams);
 
-      }
+    }
 
-  }
+    cout << yellow << "One test complete." << no_color << endl;
 
-  for (size_t MethNum = 0; MethNum < vTestCases.size(); ++MethNum) {
     string Print, Data, Header;
 
     for (size_t i = 0; i < config.GetRange().size(); ++i) {
-      MetaAnalysis* res = ExpResRange[i][MethNum];
+      MetaAnalysis* res = expResRange[i][0];
 
-      string cmdStr = CreateCmdStr(vTestCases[MethNum],
-                                             true,
-                                             ConvertToString(config.GetRange()[i]),
-                                             DistType, 
-                                             SpaceTypeStr,
-                                             ThreadTestQty,
-                                             TestSetQty,
-                                             DataFile,
-                                             QueryFile,
-                                             MaxNumData,
-                                             MaxNumQuery,
-                                             eps);
+      string cmdStr = vCmdStrRange[i];
       cout << cmdStr << endl;
-      LOG(LIB_INFO) << "Command line params: " << cmdStr;
-      if (!ProcessAndCheckResults(cmdStr, 
+      if (!ProcessAndCheckResults(cmdStr,
                                   DistType, SpaceType, 
-                                  vTestCases[MethNum], config, *res, Print)) {
+                                  vTestCases[methNum], config, *res, Print)) {
         nFail++;
         cout << red << "failed" << no_color << " (see logs for more details) " << endl;
       } else {
@@ -507,26 +516,14 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     }
 
     for (size_t i = 0; i < config.GetKNN().size(); ++i) {
-      MetaAnalysis* res = ExpResKNN[i][MethNum];
+      MetaAnalysis* res = expResKNN[i][0];
 
-      string cmdStr = CreateCmdStr(vTestCases[MethNum],
-                                             false,
-                                             ConvertToString(config.GetKNN()[i]),
-                                             DistType, 
-                                             SpaceTypeStr,
-                                             ThreadTestQty,
-                                             TestSetQty,
-                                             DataFile,
-                                             QueryFile,
-                                             MaxNumData,
-                                             MaxNumQuery,
-                                             eps);
-
+      string cmdStr = vCmdStrKNN[i];
       cout << cmdStr << endl;
-      LOG(LIB_INFO) << "Command line params: " << cmdStr;
+
       if (!ProcessAndCheckResults(cmdStr,
                                   DistType, SpaceType, 
-                                  vTestCases[MethNum], config, *res, Print)) {
+                                  vTestCases[methNum], config, *res, Print)) {
         cout << red << "failed" << no_color << " (see logs for more details) " << endl;
         nFail++;
       } else {
