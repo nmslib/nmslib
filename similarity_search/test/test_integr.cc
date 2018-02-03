@@ -86,6 +86,8 @@ vector<MethodTestCase>    vTestCaseDesc = {
 #endif
 
 #if (TEST_SW_GRAPH)
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "sw-graph", true, "NN=10", "",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 36, 55),  
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "sw-graph", true, "efConstruction=50,NN=10", "efSearch=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 5, 10),  
   MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse_fast", "sparse_5K.txt", "sw-graph", true, "efConstruction=50,NN=10", "efSearch=50", 
@@ -118,7 +120,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=8,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=32,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 2.2, 2.7, 28, 33),
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 2.0, 3.7, 20, 33),
 #endif
 
 
@@ -141,8 +143,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", false, "multiThread=1,threadQty=4", "",
                 0 /* no-knn search */, 0.2 /* range 0.2 */ , 1.0, 1.0, 0, 0, 1, 1),  
 
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "small_world_rand", true, "NN=10", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 40, 52),  
   // 4 different types of projections
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=perm,projDim=4", "dbScanFrac=1.0",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
