@@ -97,18 +97,11 @@ inline bool DoesFileExist(const string &filename) { return DoesFileExist(filenam
  *    In particular, this is needed to improve reproducibility of integration tests.
  */ 
 extern int                                                defaultRandomSeed;
-extern thread_local std::unique_ptr<RandomGeneratorType>  randomGen;
 
-inline void resetRandomGenerator(int newRandomSeed) {
-  randomGen.reset(new RandomGeneratorType(newRandomSeed));
-}
+inline RandomGeneratorType& getThreadLocalRandomGenerator() {
+  static thread_local RandomGeneratorType  randomGen(defaultRandomSeed);
 
-inline RandomGeneratorType& getRandomGenerator() {
-    if (!randomGen) {
-      resetRandomGenerator(defaultRandomSeed);
-    }
-
-    return *randomGen;
+  return randomGen;
 }
 
 // random 32-bit integer number
@@ -121,7 +114,7 @@ inline int32_t RandomInt() {
     // thread_local is static by default, but let's keep it static for clarity
     static thread_local std::uniform_int_distribution<int32_t> distr(0, std::numeric_limits<int32_t>::max());
    
-    return distr(getRandomGenerator()); 
+    return distr(getThreadLocalRandomGenerator()); 
 }
 
 template <class T>
@@ -135,7 +128,7 @@ inline T RandomReal() {
     // thread_local is static by default, but let's keep it static for clarity
     static thread_local std::uniform_real_distribution<T> distr(0, 1);
 
-    return distr(getRandomGenerator()); 
+    return distr(getThreadLocalRandomGenerator()); 
 }
 
 void RStrip(char* str);

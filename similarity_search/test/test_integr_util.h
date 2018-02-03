@@ -273,7 +273,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
   // For better reproducibility, let's reset
   // random number generators. 
   defaultRandomSeed = 0; // Will affect any new threads
-  resetRandomGenerator(defaultRandomSeed); // Affects only the current thread
+  getThreadLocalRandomGenerator().seed(defaultRandomSeed); // Affects only the current thread
 
   vector<unsigned> knn;
   vector<dist_t>   range;

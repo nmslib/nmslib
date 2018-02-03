@@ -33,7 +33,7 @@ template <class dist_t> void initRandProj(size_t nSrcDim, size_t nDstDim,
                                          bool bDoOrth,
                                          vector<vector<dist_t>>& projMatr) {
   // Static is thread-safe in C++-11
-  static thread_local auto&           randGen(getRandomGenerator());
+  static thread_local auto&           randGen(getThreadLocalRandomGenerator());
   static  std::normal_distribution<>  normGen(0.0f, 1.0f);
 
   // 1. Create normally distributed vectors
