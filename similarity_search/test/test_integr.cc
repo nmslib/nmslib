@@ -63,22 +63,25 @@ using std::stringstream;
 #define TEST_HNSW 1
 #define TEST_SW_GRAPH 1
 #define TEST_IR 1
+#define TEST_NAPP 1
 #define TEST_OTHER 1
-// TODO something is wrong with FALCONN, 
-// When we run it as a single thing in the binary, it works fine,
-// but crashes when we run it jointly with other methods.
-#define TEST_FALCONN 0
+#define TEST_FALCONN 1
 
 vector<MethodTestCase>    vTestCaseDesc = {
 #if (TEST_HNSW)
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
+  // Make sure, it works with huge M
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=400", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.98, 0.9999, 0.0, 1, 1.8, 2.2),  
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=10", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=10", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
+  MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=10", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "hnsw", true, "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.96, 1, 0, 0.1, 40, 60),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "hnsw", true, "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.97, 1, 0, 0.1, 40, 60),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.96, 1, 0, 0.1, 40, 60),  
 #endif
 
 #if (TEST_SW_GRAPH)
@@ -98,6 +101,26 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 395, 510),  
 #endif
 
+  // *************** FALCONN test ***************************** //
+#if (TEST_FALCONN)
+#ifdef WITH_EXTRAS
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "falconn", false, "num_hash_tables=20,num_hash_bits=7,feature_hashing_dimension=128,use_falconn_dist=0", "num_probes=20",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.79, 0.5, 1.5, 5.75, 6.75),  
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "falconn", false, "num_hash_tables=1,num_hash_bits=11,use_falconn_dist=0", "num_probes=1",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.75, 2.4, 3.5, 4, 5.5),  
+#endif
+#endif
+
+#if (TEST_NAPP)
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=8,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=8,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=32,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 2.2, 2.7, 28, 33),
+#endif
+
+
 #if (TEST_OTHER)
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", false, "clusterType=clarans,centerQty=10", "dbScanFrac=0.1", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
@@ -106,8 +129,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 10 /* KNN-10 */, 0 /* no range search */ , 0.8, 0.92, 0.1, 20, 2.5, 6),  
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", false, "clusterType=reduct_clarans,centerQty=10", "dbScanFrac=0.1", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=8,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
 
   // *************** NEW versions of permutation & projection-based filtering method tests ******************** //
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", false, "", "",
@@ -140,8 +161,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mi-file", false, "numPivot=16,numPivotIndex=16", "numPivotSearch=16,dbScanFrac=1.0",
 
                 1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=8,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
 
   // Binarized permutations
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin", false, "numPivot=32", "dbScanFrac=1.0",
@@ -168,8 +187,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 3, 8),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mi-file", false, "numPivot=16,numPivotIndex=16", "numPivotSearch=16,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.95, 1.0, 0, 0.5, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=32,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 2, 4.5, 22, 37),
 
   // Binarized
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin", false, "numPivot=32", "dbScanFrac=0.1",
@@ -320,16 +337,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // Old NN-descent
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", false, "NN=10,rho=0.5,delta=0.001", "initSearchAttempts=10",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
-#endif
-
-#ifdef WITH_EXTRAS
-  // *************** FALCONN test ***************************** //
-#if (TEST_FALCONN)
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "falconn", false, "num_hash_tables=20,num_hash_bits=7,feature_hashing_dimension=128,use_falconn_dist=0", "num_probes=20",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.79, 0.5, 1.5, 5.75, 6.75),  
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "falconn", false, "num_hash_tables=1,num_hash_bits=11,use_falconn_dist=0", "num_probes=1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.75, 2.4, 3.5, 4, 5.5),  
-#endif
 #endif
 
 #endif

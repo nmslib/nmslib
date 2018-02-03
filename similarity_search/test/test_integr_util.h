@@ -416,6 +416,11 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
 
     LOG(LIB_INFO) << ">>>> Index-time parameters: " << indexParams->ToString();
 
+    // Reset random number generator before each method's run.
+    // Above we reset it before random data split
+    defaultRandomSeed = 0; // Will affect any new threads
+    getThreadLocalRandomGenerator().seed(defaultRandomSeed); // Affects only the current thread
+
     for (int testSetId = 0; testSetId < config.GetTestSetToRunQty(); ++testSetId) {
       config.SelectTestSet(testSetId);
 
