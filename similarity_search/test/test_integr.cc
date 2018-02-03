@@ -55,8 +55,8 @@ using std::stringstream;
 
 //#define MAX_THREAD_QTY 4
 #define MAX_THREAD_QTY 1
-#define TEST_SET_QTY   2
-#define MAX_NUM_QUERY  1000
+#define TEST_SET_QTY   3
+#define MAX_NUM_QUERY  700
 
 #define INDEX_FILE_NAME "index.tmp" 
 
@@ -169,7 +169,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mi-file", false, "numPivot=16,numPivotIndex=16", "numPivotSearch=16,dbScanFrac=0.1",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.95, 1.0, 0, 0.5, 8, 12),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "napp", true, "numPivot=32,numPivotIndex=8,chunkIndexSize=102", "numPivotSearch=8",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 1, 4, 22, 37),
+                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.8, 2, 4.5, 22, 37),
 
   // Binarized
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin", false, "numPivot=32", "dbScanFrac=0.1",
@@ -229,7 +229,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // *************** GH-tree tests ******************** //
   // knn
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10",  "",
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 28, 35),  
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 25, 35),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10",  "",
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 8, 10.2),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10", "maxLeavesToVisit=10", 
@@ -245,7 +245,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // *************** SA-tree tests ******************** //
   // knn
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "satree", false, "bucketSize=10", "", 
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 22, 33),  
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 20, 33),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "satree", false, "bucketSize=10", "", 
                 10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 10, 25),  
   // range
