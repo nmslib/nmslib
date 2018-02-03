@@ -23,6 +23,8 @@ information](https://github.com/pybind/python_example#installation).
 
 #### Example Usage
 
+Here is a simple example, but we also have [Python notebooks with more elaborate end-to-end examples, which include even computation of gold-standard data](notebooks) (for both sparse and dense space):
+
 ```python
 import nmslib
 import numpy
@@ -70,6 +72,7 @@ cd python_bindings
 pip install -r requirements.txt
 python setup.py install
 ```
+
 #### Additional documentation
 
 [More detailed documentation is also available](https://searchivarius.github.io/nmslib/) (thanks to Ben Frederickson).
