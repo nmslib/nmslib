@@ -185,7 +185,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
 
   // Proj. VP-tree
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_vptree", false, "projType=perm,projDim=4", "alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
+                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4.2, 8, 12),  
 
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt","pp-index", false, "numPivot=4,prefixLength=4", "minCandidate=100",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 3, 8),  
