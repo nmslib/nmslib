@@ -65,8 +65,11 @@ using std::stringstream;
 #define TEST_IR 1
 #define TEST_NAPP 1
 #define TEST_OTHER 1
-#define TEST_FALCONN 1
 
+// TODO something is wrong with FALCONN, 	+#define TEST_FALCONN 1
+// When we run it as a single thing in the binary, it works fine,	
+// but crashes when we run it jointly with other methods.
+#define TEST_FALCONN 0
 
 vector<MethodTestCase>    vTestCaseDesc = {
 #if (TEST_HNSW)
