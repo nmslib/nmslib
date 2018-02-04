@@ -45,6 +45,15 @@ ids, distances = index.knnQuery(data[0], k=10)
 neighbours = index.knnQueryBatch(data, k=10, num_threads=4)
 ```
 
+### Logging
+
+NMSLIB produces quite a few informational messages. By default, they are not shown in Python. To enable debugging, one should use the following commands before importing the library:
+
+```
+import logging
+logging.basicConfig(level=logging.INFO)
+```
+
 #### Installing with Extras
 
 To enable extra methods like those provided by FALCONN and LSHKIT you need to follow an extra couple steps.
