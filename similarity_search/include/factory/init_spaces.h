@@ -147,6 +147,7 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG_FAST,  CreateRenyiDivergFast)
   REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG_FAST,  CreateRenyiDivergFast)
 
+  REGISTER_SPACE_CREATOR(int,    SPACE_L2SQR_SIFT,  CreateL2SqrSIFT)
 }
 
 }

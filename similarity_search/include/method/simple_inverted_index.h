@@ -39,8 +39,8 @@ class SimplInvIndex : public Index<dist_t> {
    */
   SimplInvIndex(bool printProgress, 
               Space<dist_t>& space, 
-              const ObjectVector& data) : printProgress_(printProgress),
-                                          Index<dist_t>(data),
+              const ObjectVector& data) : Index<dist_t>(data),
+                                          printProgress_(printProgress),
                                           pSpace_(dynamic_cast<SpaceSparseNegativeScalarProductFast*>(&space)) {
     if (pSpace_ == nullptr) {
       PREPARE_RUNTIME_ERR(err) <<

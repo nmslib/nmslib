@@ -16,6 +16,7 @@
 #define FACTORY_SPACE_LP_H
 
 #include <space/space_lp.h>
+#include <space/space_l2sqr_sift.h>
 
 namespace similarity {
 
@@ -47,6 +48,10 @@ Space<dist_t>* CreateL(const AnyParams& AllParams) {
   pmgr.GetParamRequired("p",  p);
 
   return new SpaceLp<dist_t>(p);
+}
+
+Space<DistTypeSIFT>* CreateL2SqrSIFT(const AnyParams& ){
+  return new SpaceL2SqrSift();
 }
 
 /*

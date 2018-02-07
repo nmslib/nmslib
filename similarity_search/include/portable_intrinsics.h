@@ -14,8 +14,8 @@
  */
 #pragma once
 
-#include <portable_align.h>
 #include <portable_popcount.h>
+#include <portable_align.h>
 
 // On 64-bit platforms SSE2 is always present, but Windows doesn't set SSE2 flag
 // http://stackoverflow.com/questions/1067630/sse2-option-in-visual-c-x64

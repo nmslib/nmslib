@@ -248,13 +248,6 @@ inline float JaccardSparse(const IdType *pArr1, size_t qty1, const IdType *pArr2
   return 1 - qtyInter/(qtyS - qtyInter);
 }
 
-}
-
-/*
- * Edit distances
- */
-#include "distcomp_edist.h"
-
 // For SIFT vectors (whose dim=128) int is enough to store the smallest and the largest difference
 typedef int DistTypeSIFT;
 
@@ -265,5 +258,13 @@ DistTypeSIFT l2SqrSIFTNaive(const uint8_t* pVect1, const uint8_t* pVect2);
 DistTypeSIFT l2SqrSIFTPrecomp(const uint8_t* pVect1, const uint8_t* pVect2);
 DistTypeSIFT l2SqrSIFTPrecompAVX(const uint8_t* pVect1, const uint8_t* pVect2);
 
+}
+
+
+/*
+ * Edit distances not included into the similarity space,
+ * because the namespace is specified in the distcomp_edist.h
+ */
+#include "distcomp_edist.h"
 
 #endif
