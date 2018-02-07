@@ -40,7 +40,7 @@ newHeader =  """/**
 lenQty = len(lines)
 
 headEnd = None
-if lines[0].strip() == '/**' and lines[1].strip() == '* Non-metric Space Library':
+if lenQty > 2 and lines[0].strip() == '/**' and lines[1].strip() == '* Non-metric Space Library':
   for ln in range(lenQty):
     if lines[ln].strip() == '*/':
       headEnd = ln
@@ -50,7 +50,7 @@ if lines[0].strip() == '/**' and lines[1].strip() == '* Non-metric Space Library
     sys.exit(1)
 else:
   print('WRANING Cannot find a template header in the file %s, IGNORING' % inFileName)
-  sys.exit(0)
+  sys.exit(1)
 
 outFile.write(newHeader % (mainDevelList, now.year))
 
