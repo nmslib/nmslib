@@ -256,6 +256,7 @@ const uint_fast32_t SIFT_DIM = 128;
 // All SIFT vectors are expected to have the same dimensionality (SIFT_DIM)
 DistTypeSIFT l2SqrSIFTNaive(const uint8_t* pVect1, const uint8_t* pVect2);
 DistTypeSIFT l2SqrSIFTPrecomp(const uint8_t* pVect1, const uint8_t* pVect2);
+DistTypeSIFT l2SqrSIFTPrecompSSE2(const uint8_t* pVect1, const uint8_t* pVect2);
 DistTypeSIFT l2SqrSIFTPrecompAVX(const uint8_t* pVect1, const uint8_t* pVect2);
 
 }

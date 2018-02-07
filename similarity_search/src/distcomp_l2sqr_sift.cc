@@ -31,7 +31,7 @@ DistTypeSIFT l2SqrSIFTNaive(const uint8_t* pVect1,
                             const uint8_t* pVect2) {
   DistTypeSIFT res = 0;
   for (uint_fast32_t i = 0; i < SIFT_DIM; ++i) {
-    DistTypeSIFT d = DistTypeSIFT(pVect1[i]) - DistTypeSIFT(pVect1[i]);
+    DistTypeSIFT d = DistTypeSIFT(pVect1[i]) - DistTypeSIFT(pVect2[i]);
     res += d*d;
   }
 
@@ -49,11 +49,64 @@ DistTypeSIFT l2SqrSIFTPrecomp(const uint8_t* pVect1,
          *reinterpret_cast<const DistTypeSIFT*>(pVect2 + SIFT_DIM) - 2 * sumProd;
 }
 
+DistTypeSIFT l2SqrSIFTPrecompSSE2(const uint8_t* pVect1,
+                                  const uint8_t* pVect2) {
+#ifndef PORTABLE_SSE2
+  #pragma message WARN("l2SqrSIFTPrecompSSE4: SSE2 is not available")
+  return l2SqrSIFTPrecomp(pVect1, pVect2);
+#else
+  const unsigned dim = SIFT_DIM;
+
+  DistTypeSIFT sumProd = 0;
+
+  size_t sse_offset = (dim / 16) * 16;
+
+  const __m128i* pStart1 = reinterpret_cast<const __m128i*>(pVect1);
+  const __m128i* pStart2 = reinterpret_cast<const __m128i*>(pVect2);
+  const __m128i* pEnd2   = reinterpret_cast<const __m128i*>(pVect1 + sse_offset);
+
+  __m128i zero, x1, y1;
+  zero = _mm_xor_si128(zero,zero);
+  __m128i sum = zero;
+
+  PORTABLE_ALIGN32 int32_t unpack[4];
+
+
+  while (pStart1 < pEnd2) {
+    const __m128i x = _mm_loadu_si128(pStart1++);
+    const __m128i y = _mm_loadu_si128(pStart2++);
+    x1 = _mm_unpackhi_epi8(x,zero);
+    y1 = _mm_unpackhi_epi8(y,zero);
+    sum = _mm_add_epi32(sum, _mm_madd_epi16(x1, y1));
+    x1 = _mm_unpacklo_epi8(x,zero);
+    y1 = _mm_unpacklo_epi8(y,zero);
+    sum = _mm_add_epi32(sum, _mm_madd_epi16(x1, y1));
+  }
+  _mm_store_si128((__m128i *)unpack, sum);
+  sumProd += unpack[0] + unpack[1] + unpack[2] + unpack[3];
+
+  if (dim & 16) {
+    for (uint_fast32_t i = sse_offset; i < dim; ++i) {
+      sumProd += DistTypeSIFT(pVect1[i])*DistTypeSIFT(pVect2[i]);
+    }
+  }
+
+  return
+      *reinterpret_cast<const DistTypeSIFT*>(pVect1 + dim) +
+      *reinterpret_cast<const DistTypeSIFT*>(pVect2 + dim) - 2*sumProd;
+#endif
+}
+
 DistTypeSIFT l2SqrSIFTPrecompAVX(const uint8_t* pVect1,
                                  const uint8_t* pVect2) {
-#ifndef PORTABLE_AVX
-#pragma message WARN("l2_sqrt_sift_precomp_avx: AVX is not available, defaulting to pure C++ implementation!")
-  return l2SqrSIFTPrecomp(pVect1, pVect2);
+#ifndef PORTABLE_AVX2
+#pragma message WARN("l2SqrSIFTPrecompAVX: AVX2 is not available")
+  #ifndef PORTABLE_SSE4
+  #pragma message WARN("l2SqrSIFTPrecompAVX: SSE4 is not available")
+    return l2SqrSIFTPrecomp(pVect1, pVect2);
+  #else
+    return l2SqrSIFTPrecompSSE2(pVect1, pVect2);
+  #endif
 #else
   const unsigned dim = SIFT_DIM;
 

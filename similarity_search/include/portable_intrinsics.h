@@ -32,6 +32,10 @@
 #define PORTABLE_AVX
 #endif
 
+#if defined(__AVX2__)
+#define PORTABLE_AVX2
+#endif
+
 
 #if defined(PORTABLE_SSE2)
 #include <portable_simd.h>
