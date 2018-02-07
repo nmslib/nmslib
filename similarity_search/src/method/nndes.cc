@@ -1,12 +1,19 @@
 /**
  * Non-metric Space Library
  *
- * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+ * Main developers: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, Ben Frederickson, David Novak
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
+ * https://github.com/searchivarius/NonMetricSpaceLib
+ *
+ * Copyright (c) 2013-2018
+ *
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
+
+/*
  * This is a wrapper class for the Wei Dong implementation of https://code.google.com/p/nndes/,
  * which also contains some of the original code from Wei Dong's repository.  
  * Wei Dong implemented only the graph construction algorithm [1]. 
@@ -14,16 +21,20 @@
  * i)  A greedy walk that starts from a random point and always proceeds to the closest neighbor [2].
  * ii) A priority queue based procedure where the queue may contain more distance not necessarily
  *     adjacent nodes [3]
+ * https://github.com/searchivarius/NonMetricSpaceLib
  *
  * 1. Wei Dong, Charikar Moses, and Kai Li. 2011. 
  *    Efficient k-nearest neighbor graph construction for generic similarity measures. 
  *    In Proceedings of the 20th international conference on World wide web (WWW '11). 
  *    ACM, New York, NY, USA, 577-586. 
+ * Copyright (c) 2013-2018
  *
  * 2. K. Hajebi, Y. Abbasi-Yadkori, H. Shahbazi, and H. Zhang. 
  *    Fast approximate nearest-neighbor search with k-nearest neighbor graph. 
  *    In IJCAI Proceedings-International Joint Conference on Artificial Intelligence, 
  *    volume 22, page 1312, 2011
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  * 3. The main publication is as follows, but the basic algorithm was also presented as SISAP'12: 
  *    Malkov, Y., Ponomarenko, A., Logvinov, A., & Krylov, V., 2014. 
@@ -32,6 +43,8 @@
  * The Wei Dong's code (to construct the knn-graph) can be redistributed given 
  * that the license (see below) is retained in the source code.
  */
+
+
 /*
 Copyright (C) 2010,2011 Wei Dong <wdong@wdong.org>
 All rights reserved.

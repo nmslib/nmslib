@@ -1,23 +1,17 @@
 /**
  * Non-metric Space Library
  *
- * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+ * Main developers: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, Ben Frederickson, David Novak
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
- * Copyright (c) 2014
+ * https://github.com/searchivarius/NonMetricSpaceLib
  *
- * Patent ALERT: even though the code is released under the liberal Apache 2 license,
- * the underlying search method is patented. Therefore, it's free to use in research,
- * but may be problematic in a production setting.
+ * Copyright (c) 2013-2018
  *
  * This code is released under the
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
-
 #include <unordered_map>
 #include <algorithm>
 #include <cmath>

@@ -1,15 +1,21 @@
 /**
  * Non-metric Space Library
  *
- * Authors: Bilegsaikhan Naidan (https://github.com/bileg), Leonid Boytsov (http://boytsov.info).
- * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
+ * Main developers: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, Ben Frederickson, David Novak
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
- * 
- * Copyright (c) 2014
+ * https://github.com/searchivarius/NonMetricSpaceLib
  *
+ * Copyright (c) 2013-2018
+ *
+ * This code is released under the
+ * Apache License Version 2.0 http://www.apache.org/licenses/.
+ *
+ */
+
+/*
  * This code is based on the BBTREE implementation written by Lawrence Cayton
+ * Copyright (c) 2013-2018
  *
  * The algorithms were originally published in the papers:
  * 1) L. Cayton. Fast nearest neighbor retrieval for bregman divergences. 
@@ -20,14 +26,9 @@
  *
  * See https://github.com/lcayton/bbtree and http://lcayton.com/code.html
  *
- * Even though the original code was originally released 
- * under the terms of the GNU General Public License,
- *
- * Lawrence Cayton (the author) allowed us to release this code under the
- * Apache License Version 2.0 http://www.apache.org/licenses/.
- *
- */
-
+ * Because the original code is released under the terms of the GNU General Public License,
+ * we had to release this file under the GNU license as well.
+*/
 #include <cmath>
 #include <memory>
 
