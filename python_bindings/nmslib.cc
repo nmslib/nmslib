@@ -137,11 +137,23 @@ struct IndexWrapper {
       freeObjectVector(&queries);
     }
 
-    py::list ret;
-    for (auto & result : results) {
-      ret.append(convertResult(result.get()));
+    size_t counter = k;
+    py::array_t<int> ids({results.size(), k});
+    py::array_t<dist_t> distances({results.size(), k});
+
+    auto r = ids.mutable_data();
+    auto s = distances.mutable_data();
+
+    for (auto & res : results) {
+      while (!res->Empty()) {
+        r[--counter] = res->TopObject()->id();
+        s[counter] = res->TopDistance();
+        res->Pop();
+      }
+      counter += k + k;
     }
-    return ret;
+
+    return py::make_tuple(ids, distances);
   }
 
   py::object convertResult(KNNQueue<dist_t> * res) {
@@ -208,13 +220,26 @@ struct IndexWrapper {
       // allow numpy arrays to be returned here too
       py::array_t<dist_t, py::array::c_style | py::array::forcecast> items(input);
       auto buffer = items.request();
+
       if (buffer.ndim != 2) throw std::runtime_error("data must be a 2d array");
 
-      size_t rows = buffer.shape[0], features = buffer.shape[1];
-      for (size_t row = 0; row < rows; ++row) {
-        int id = ids.size() ? ids.at(row) : row;
-        output->push_back(new Object(id, -1, features * sizeof(dist_t), items.data(row)));
+      size_t rows = buffer.shape[0];
+      size_t datalength = buffer.shape[1] * sizeof(dist_t);
+
+      // pre-allocate space to reduce memory allocations and copies
+      output->reserve(rows + output->size());
+
+      // this will never change in-loop, reduce lookups in-loop
+      if (ids.size()) {
+        for (size_t row = 0; row < rows; ++row) {
+          output->push_back(new Object(ids.at(row), -1, datalength, items.data(row)));
+        }
+      } else {
+        for (size_t row = 0; row < rows; ++row) {
+          output->push_back(new Object(row, -1, datalength, items.data(row)));
+        }
       }
+
       return rows;
 
     } else if (data_type == DATATYPE_SPARSE_VECTOR) {
@@ -675,13 +700,16 @@ void exportLegacyAPI(py::module * m) {
   });
 
   m->def("knnQueryBatch", [](py::object self, int num_threads, int k, py::object queries) {
-    py::list results = self.attr("knnQueryBatch")(queries, k, num_threads);
+    py::tuple results = self.attr("knnQueryBatch")(queries, k, num_threads);
+    py::array_t<int> items(results[0]);
+
+    auto buffer = items.request();
+    size_t rows = buffer.shape[0];
 
     // return plain lists of just the ids
     py::list ret;
-    for (size_t i = 0; i < results.size(); ++i) {
-      py::tuple current(results[i]);
-      ret.append(py::list(current[0]));
+    for (size_t i = 0; i < rows; ++i) {
+      ret.append(items.data(i));
     }
     return ret;
   });
