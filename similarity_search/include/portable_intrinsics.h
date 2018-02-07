@@ -33,9 +33,11 @@
 #endif
 
 
-#if defined(PORTABLE_SSE4)
+#if defined(PORTABLE_SSE2)
 #include <portable_simd.h>
+#endif
 
+#if defined(PORTABLE_SSE4) 
 /*
  * Based on explanations/suggestions from here
  * http://stackoverflow.com/questions/5526658/intel-sse-why-does-mm-extract-ps-return-int-instead-of-float
@@ -50,9 +52,6 @@
  * not to use the above MM_EXTRACT_FLOAT (https://github.com/searchivarius/BlogCode/tree/master/2016/bench_sums)
  *
  */
-
-#elif defined(PORTABLE_SSE2)
-#include <portable_simd.h>
 #endif
 
 

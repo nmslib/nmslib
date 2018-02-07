@@ -17,7 +17,6 @@
 #include "utils.h"
 #include "pow.h"
 #include "portable_intrinsics.h"
-#include "portable_simd.h"
 
 #include <cstdlib>
 #include <limits>
