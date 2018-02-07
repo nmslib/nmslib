@@ -256,5 +256,15 @@ inline float JaccardSparse(const IdType *pArr1, size_t qty1, const IdType *pArr2
  */
 #include "distcomp_edist.h"
 
+// For SIFT vectors (whose dim=128) int is enough to store the smallest and the largest difference
+typedef int DistTypeSIFT;
+
+const uint_fast32_t SIFT_DIM = 128;
+
+// All SIFT vectors are expected to have the same dimensionality (SIFT_DIM)
+DistTypeSIFT l2SqrSIFTNaive(const uint8_t* pVect1, const uint8_t* pVect2);
+DistTypeSIFT l2SqrSIFTPrecomp(const uint8_t* pVect1, const uint8_t* pVect2);
+DistTypeSIFT l2SqrSIFTPrecompAVX(const uint8_t* pVect1, const uint8_t* pVect2);
+
 
 #endif

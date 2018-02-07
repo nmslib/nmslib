@@ -25,6 +25,10 @@
 #define PORTABLE_SSE4
 #endif
 
+#if defined(__AVX__)
+#define PORTABLE_AVX
+#endif
+
 
 #if defined(PORTABLE_SSE4)
 #include <portable_simd.h>

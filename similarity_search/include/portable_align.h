@@ -6,12 +6,9 @@
  */
 
 #if defined(__GNUC__)
-#define PORTABLE_ALIGN16 __attribute__((aligned(16)))
+  #define PORTABLE_ALIGN16 __attribute__((aligned(16)))
+  #define PORTABLE_ALIGN32 __attribute__((aligned(32)))
 #else
-#define PORTABLE_ALIGN16 __declspec(align(16))
-#endif
-#if defined(__GNUC__)
-#define PORTABLE_ALIGN32 __attribute__((aligned(32)))
-#else
-#define PORTABLE_ALIGN32 __declspec(align(32))
+  #define PORTABLE_ALIGN16 __declspec(align(16))
+  #define PORTABLE_ALIGN32 __declspec(align(32))
 #endif
