@@ -195,4 +195,3 @@ neighbor search small world approach.](http://www.iiis.org/CDs2011/CD2011IDI/ICT
 * Amato, Giuseppe, and Pasquale Savino. 2008 Approximate similarity search in metric spaces using inverted files. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
 * Gonzalez, Edgar Chavez, Karina Figueroa, and Gonzalo Navarro. [Effective proximity retrieval by ordering permutations.](http://www.dcc.uchile.cl/~gnavarro/ps/tpami07.pdf) Pattern Analysis and Machine Intelligence, IEEE Transactions on 30.9 (2008): 1647-1658. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/pami/ChavezFN08)
 
-
