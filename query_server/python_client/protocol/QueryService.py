@@ -237,7 +237,7 @@ class Processor(Iface, TProcessor):
     result = setQueryTimeParams_result()
     try:
       self._handler.setQueryTimeParams(args.queryTimeParams)
-    except QueryException, err:
+    except(QueryException, err):
       result.err = err
     oprot.writeMessageBegin("setQueryTimeParams", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -251,7 +251,7 @@ class Processor(Iface, TProcessor):
     result = knnQuery_result()
     try:
       result.success = self._handler.knnQuery(args.k, args.queryObj, args.retExternId, args.retObj)
-    except QueryException, err:
+    except(QueryException, err):
       result.err = err
     oprot.writeMessageBegin("knnQuery", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -265,7 +265,7 @@ class Processor(Iface, TProcessor):
     result = rangeQuery_result()
     try:
       result.success = self._handler.rangeQuery(args.r, args.queryObj, args.retExternId, args.retObj)
-    except QueryException, err:
+    except(QueryException, err):
       result.err = err
     oprot.writeMessageBegin("rangeQuery", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -279,7 +279,7 @@ class Processor(Iface, TProcessor):
     result = getDistance_result()
     try:
       result.success = self._handler.getDistance(args.obj1, args.obj2)
-    except QueryException, err:
+    except(QueryException, err):
       result.err = err
     oprot.writeMessageBegin("getDistance", TMessageType.REPLY, seqid)
     result.write(oprot)

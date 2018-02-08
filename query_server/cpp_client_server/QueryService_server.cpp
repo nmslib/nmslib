@@ -17,6 +17,7 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 #include "QueryService.h"
 #include <thrift/protocol/TBinaryProtocol.h>
@@ -40,6 +41,7 @@
 #include "knnqueue.h"
 #include "methodfactory.h"
 #include "init.h"
+#include "logging.h"
 #include "ztimer.h"
 
 #define MAX_SPIN_LOCK_QTY 1000000
@@ -448,7 +450,7 @@ void ParseCommandLineForServer(int argc, char*argv[],
     po::notify(vm);
   } catch (const exception& e) {
     Usage(argv[0], ProgOptDesc);
-    LOG(LIB_FATAL) << e.what() << endl;
+    LOG(LIB_FATAL) << e.what();
   }
 
   if (vm.count("help")  ) {
@@ -532,7 +534,7 @@ int main(int argc, char *argv[]) {
                       QueryTimeParams
   );
 
-  initLibrary(LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+  initLibrary(0, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
   ToLower(DistType);
 

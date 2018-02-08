@@ -14,7 +14,7 @@ from datetime import datetime
 import argparse
 
 def error_exit(s):
-  print "Error: %s" % s
+  print("Error: %s" % s)
   sys.exit(1)
 
 parser = argparse.ArgumentParser()
@@ -36,7 +36,7 @@ retObj = args.retObj
 retExternId = args.retObj
 
 try:
-  print "Host %s socket %d" % (host,port)
+  print("Host %s socket %d" % (host,port))
   # Make socket
   transport = TSocket.TSocket(host, port)
   # Buffering is critical. Raw sockets are very slow
@@ -62,13 +62,13 @@ try:
     k = args.knn
     if not args.range is None:
       error_exit('Range search is not allowed if the KNN search is specified!')
-    print "Running %d-NN search" % k
+    print("Running %d-NN search" % k)
     res = client.knnQuery(k, queryObj, retObj, retExternId)
   elif not args.range is None:
     r = args.range
     if not args.knn is None:
       error_exit('KNN search is not allowed if the range search is specified')
-    print "Running range search, range=%f" % r
+    print("Running range search, range=%f" % r)
     res = client.rangeQuery(r, queryObj, retObj, retExternId)
   else: 
     error_exit("Wrong search type %s" % searchType)
@@ -79,18 +79,18 @@ try:
 
   elapsed = diff.seconds * 1e3 + diff.microseconds / 1e3
 
-  print "Finished in %f ms" % elapsed
+  print("Finished in %f ms" % elapsed)
 
   for e in res:
     s=''
     if retExternId:
       s='externId=' + e.externId
-    print "id=%d dist=%f %s" % (e.id, e.dist, s)
+    print("id=%d dist=%f %s" % (e.id, e.dist, s))
     if retObj:
-      print e.obj
+      print(e.obj)
 
 # Close!
   transport.close()
 
-except Thrift.TException, tx:
-  print '%s' % (tx.message)
+except(Thrift.TException, tx):
+  print('%s' % (tx.message))
