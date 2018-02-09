@@ -177,7 +177,7 @@ struct IndexWrapper {
         py::array_t<dist_t> temp(input);
         std::vector<dist_t> tempVect(temp.data(0), temp.data(0) + temp.size());
         auto vectSpacePtr = reinterpret_cast<VectorSpace<dist_t>*>(space.get());
-        vectSpacePtr->CreateObjFromVect(id, -1, tempVect);
+        return vectSpacePtr->CreateObjFromVect(id, -1, tempVect);
         // This way it will not always work properly
         //return new Object(id, -1, temp.size() * sizeof(dist_t), temp.data(0));
       }
@@ -185,7 +185,7 @@ struct IndexWrapper {
         py::array_t<uint8_t> temp(input);
         std::vector<uint8_t> tempVect(temp.data(0), temp.data(0) + temp.size());
         auto vectSiftPtr = reinterpret_cast<SpaceL2SqrSift*>(space.get());
-        vectSiftPtr->CreateObjFromUint8Vect(id, -1, tempVect);
+        return vectSiftPtr->CreateObjFromUint8Vect(id, -1, tempVect);
       }
       case DATATYPE_OBJECT_AS_STRING: {
         std::string temp = py::cast<std::string>(input);
@@ -680,6 +680,13 @@ void exportLegacyAPI(py::module * m) {
           ((dist_type == DISTTYPE_INT) && (!py::isinstance<py::array_t<int>>(data)))) {
         throw py::value_error("Invalid datatype for data in addDataPointBatch");
       }
+    }
+    if (data_type == DATATYPE_DENSE_UINT8_VECTOR) {
+      DistType dist_type = py::cast<DistType>(self.attr("distType"));
+      if (! ((dist_type == DISTTYPE_FLOAT) && (py::isinstance<py::array_t<uint8_t>>(data))) ) {
+        throw py::value_error("Invalid datatype for data in addDataPointBatch");
+      }
+
     }
 
     size_t offset = py::len(self);
