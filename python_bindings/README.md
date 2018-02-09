@@ -47,11 +47,11 @@ neighbours = index.knnQueryBatch(data, k=10, num_threads=4)
 
 #### Logging
 
-NMSLIB produces quite a few informational messages. By default, they are not shown in Python. To enable debugging, one should use the following commands before importing the library:
+NMSLIB produces quite a few informational messages. By default, they are not shown in Python. To enable debugging, one should use the following commands **before** importing the library:
 
 ```
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 ```
 
 #### Installing with Extras
