@@ -51,7 +51,7 @@ NMSLIB produces quite a few informational messages. By default, they are not sho
 
 ```
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 ```
 
 #### Installing with Extras
