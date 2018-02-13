@@ -214,7 +214,7 @@ struct IndexWrapper {
   size_t readObjectVector(py::object input, ObjectVector * output,
                           py::object ids_ = py::none()) {
     std::vector<int> ids;
-    if (!ids_) {
+    if (!ids_.is_none()) {
       ids = py::cast<std::vector<int>>(ids_);
     }
 
