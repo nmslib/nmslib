@@ -53,6 +53,18 @@ class DenseIndexTestMixin(object):
         for query, (ids, distances) in zip(queries, results):
             self.assertTrue(get_hitrate(get_exact_cosine(query, data), ids) >= 5)
 
+        # test custom ids (set id to square of each row)
+        index = self._get_index()
+        index.addDataPointBatch(data, ids=np.arange(data.shape[0]) ** 2)
+        index.createIndex()
+
+        queries = data[:10]
+        results = index.knnQueryBatch(queries, k=10)
+        for query, (ids, distances) in zip(queries, results):
+            # convert from square back to row id
+            ids = np.sqrt(ids).astype(int)
+            self.assertTrue(get_hitrate(get_exact_cosine(query, data), ids) >= 5)
+
     def testReloadIndex(self):
         np.random.seed(23)
         data = np.random.randn(1000, 10).astype(np.float32)
