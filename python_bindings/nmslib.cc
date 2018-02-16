@@ -74,12 +74,12 @@ struct IndexWrapper {
                                                                    loadParams(space_params))) {
     auto vectSpacePtr = dynamic_cast<VectorSpace<dist_t>*>(space.get());
     if (data_type == DATATYPE_DENSE_VECTOR && vectSpacePtr == nullptr) {
-      throw std::invalid_argument("The space type " + space_type + 
+      throw std::invalid_argument("The space type " + space_type +
                                   " is not compatible with the type DENSE_VECTOR, only dense vector spaces are allowed!");
     }
     auto vectSiftPtr = dynamic_cast<SpaceL2SqrSift*>(space.get());
     if (data_type == DATATYPE_DENSE_UINT8_VECTOR && vectSiftPtr == nullptr) {
-      throw std::invalid_argument("The space type " + space_type + 
+      throw std::invalid_argument("The space type " + space_type +
                                   " is not compatible with the type DENSE_UINT8_VECTOR!");
     }
   }
@@ -361,6 +361,20 @@ struct IndexWrapper {
   ObjectVector data;
 };
 
+// pybind11::gil_scoped_acquire can deadlock when acquiring the GIL on threads
+// created from python (https://github.com/searchivarius/nmslib/issues/291)
+// This might be fixed in a future version of pybind11 (https://github.com/pybind/pybind11/pull/1211)
+// but until then, lets fall back to the python c-api to fix.
+struct AcquireGIL {
+  PyGILState_STATE state;
+  AcquireGIL()
+    : state(PyGILState_Ensure()) {
+  }
+  ~AcquireGIL() {
+    PyGILState_Release(state);
+  }
+};
+
 class PythonLogger
   : public Logger {
  public:
@@ -374,7 +388,7 @@ class PythonLogger
            int line,
            const char * function,
            const std::string & message) {
-    py::gil_scoped_acquire l;
+    AcquireGIL l;
     switch(severity) {
       case LIB_DEBUG:
         inner.attr("debug")(message);
