@@ -72,26 +72,26 @@ using std::stringstream;
 vector<MethodTestCase>    vTestCaseDesc = {
 #if (TEST_HNSW)
   // Make sure, it works with huge M
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=400", "ef=50", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.98, 0.9999, 0.0, 1, 1.8, 2.2),  
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=10", "ef=50", 
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=100,M=400", "ef=50", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.98, 0.9999, 0.0, 1, 1.3, 2.2),  
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=200,M=10", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=10", "ef=50", 
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=200,M=10", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=50,M=10", "ef=50", 
+  MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse", "sparse_5K.txt", "hnsw", true, "efConstruction=200,M=10", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 6, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "hnsw", true, "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.96, 1, 0, 0.1, 40, 60),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "hnsw", true, "efConstruction=50,M=10,skip_optimized_index=1", "ef=50", 
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.96, 1, 0, 0.1, 40, 60),  
 #endif
 
 #if (TEST_SW_GRAPH)
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "sw-graph", true, "NN=10", "",
                 1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 36, 55),  
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "sw-graph", true, "efConstruction=50,NN=10", "efSearch=50", 
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "sw-graph", true, "efConstruction=200,NN=10", "efSearch=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 5, 10),  
-  MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse_fast", "sparse_5K.txt", "sw-graph", true, "efConstruction=50,NN=10", "efSearch=50", 
+  MethodTestCase(DIST_TYPE_FLOAT, "angulardist_sparse_fast", "sparse_5K.txt", "sw-graph", true, "efConstruction=200,NN=10", "efSearch=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.88, 0.96, 0.0, 1, 5, 10),  
 #endif
 
