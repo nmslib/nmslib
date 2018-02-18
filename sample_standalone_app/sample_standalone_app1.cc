@@ -160,17 +160,19 @@ int main(int argc, char* argv[]) {
 
   cout << "We have the space and the query, let's create some search index." << endl;
 
+  int seed = 0;
+
   /* 
    * Init library, specify a log file
    */
   if (LOG_OPTION == 1)
-    initLibrary(LIB_LOGFILE, "logfile.txt"); 
+    initLibrary(seed, LIB_LOGFILE, "logfile.txt"); 
   // No logging 
   if (LOG_OPTION == 2)
-    initLibrary(LIB_LOGNONE, NULL);
+    initLibrary(seed, LIB_LOGNONE, NULL);
   // Use STDERR
   if (LOG_OPTION == 3)
-    initLibrary(LIB_LOGSTDERR, NULL);
+    initLibrary(seed, LIB_LOGSTDERR, NULL);
 
   AnyParams IndexParams(
                         {

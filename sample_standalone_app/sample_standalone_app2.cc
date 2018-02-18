@@ -92,8 +92,9 @@ int main(int argc, char* argv[]) {
   const char *dataFile  = argv[2];
   const char *queryFile = argv[3];
 
+  int seed = 0;
   
-  initLibrary(LIB_LOGSTDERR, NULL);
+  initLibrary(seed, LIB_LOGSTDERR, NULL);
 
   // Create an instance of our custom space that uses L2-distance
   AnyParams empty;

@@ -172,7 +172,7 @@ public:
        * Because each thread uses its own parameter set, we must use
        * exactly ThreadTestQty sets.
        */
-      ParallelFor(0, ThreadTestQty, ThreadTestQty, [&](unsigned QueryPart) {
+      ParallelFor(0, ThreadTestQty, ThreadTestQty, [&](unsigned QueryPart, unsigned ThreadId) {
         size_t numquery = config.GetQueryObjects().size();
 
         WallClockTimer wtm;

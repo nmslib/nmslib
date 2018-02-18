@@ -205,7 +205,7 @@ namespace similarity {
 
         unique_ptr<ProgressDisplay> progress_bar(PrintProgress_ ? new ProgressDisplay(this->data_.size(), cerr) : NULL);
 
-        ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int id) {
+        ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int id, int threadId) {
             HnswNode *node = new HnswNode(this->data_[id], id);
             add(&space_, node);
             {
@@ -230,7 +230,7 @@ namespace similarity {
             /// Making the same index in reverse order
             unique_ptr<ProgressDisplay> progress_bar1(PrintProgress_ ? new ProgressDisplay(this->data_.size(), cerr) : NULL);
 
-            ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int pos_id) {
+            ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int pos_id, int threadId) {
                 // reverse ordering (so we iterate decreasing). given
                 // parallelfor, this might not make a difference
                 int id = this->data_.size() - pos_id;
@@ -248,7 +248,7 @@ namespace similarity {
             int maxF = 0;
 
 // int degrees[100] = {0};
-            ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int id) {
+            ParallelFor(1, this->data_.size(), indexThreadQty_, [&](int id, int threadId) {
                 HnswNode *node1 = ElList_[id];
                 HnswNode *node2 = temp[id];
                 vector<HnswNode *> f1 = node1->getAllFriends(0);

@@ -127,7 +127,7 @@ setup(
     name='nmslib',
     version=__version__,
     description='Non-Metric Space Library (NMSLIB)',
-    author='Leonid Boytsov',
+    author='Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, Ben Frederickson, David Novak, and others',
     url='https://github.com/searchivarius/nmslib',
     long_description="""Non-Metric Space Library (NMSLIB) is an efficient cross-platform
  similarity search library and a toolkit for evaluation of similarity search methods. The

@@ -19,7 +19,7 @@
 namespace similarity {
 TEST(TestParallelFor) {
   std::vector<double> squares(1000);
-  ParallelFor(0, squares.size(), 0, [&](int id) {
+  ParallelFor(0, squares.size(), 0, [&](int id, int threadId) {
     squares[id] = id * id;
   });
   for (size_t i = 0; i < squares.size(); ++i) {
@@ -33,7 +33,7 @@ TEST(TestParallelForException) {
   bool has_thrown = false;
   std::string message = "not gonna do it";
   try {
-    ParallelFor(0, squares.size(), 0, [&](int id) {
+    ParallelFor(0, squares.size(), 0, [&](int id, int threadId) {
       if (id == 50) throw std::invalid_argument(message);
       squares[id] = id * id;
     });
