@@ -6,14 +6,14 @@ include requirements.txt
 include LICENSE
 include tox.ini
 
-global-exclude nmlib/similarity_search/src/method/lsh.cc
-global-exclude nmlib/similarity_search/src/method/lsh_multiprobe.cc
-global-exclude nmlib/similarity_search/src/method/lsh_space.cc
-global-exclude nmlib/similarity_search/src/method/falconn.cc
-global-exclude nmlib/similarity_search/src/method/nndes.cc
-global-exclude nmlib/similarity_search/src/space/space_sqfd.cc
-global-exclude nmlib/similarity_search/src/main.cc
+global-exclude nmslib/similarity_search/src/method/lsh.cc
+global-exclude nmslib/similarity_search/src/method/lsh_multiprobe.cc
+global-exclude nmslib/similarity_search/src/method/lsh_space.cc
+global-exclude nmslib/similarity_search/src/method/falconn.cc
+global-exclude nmslib/similarity_search/src/method/nndes.cc
+global-exclude nmslib/similarity_search/src/space/space_sqfd.cc
+global-exclude nmslib/similarity_search/src/main.cc
 
-prune nmlib/similarity_search/include/falconn
-prune nmlib/similarity_search/test
-prune nmlib/similarity_search/lshkit
+prune nmslib/similarity_search/include/falconn
+prune nmslib/similarity_search/test
+prune nmslib/similarity_search/lshkit
