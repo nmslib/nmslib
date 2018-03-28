@@ -154,7 +154,7 @@ We provide Python bindings for Python 2.7+ and Python 3.5+, which have been test
 pip install nmslib
 ```
 
-For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder. [More detailed documentation is also available](https://searchivarius.github.io/nmslib/) (thanks to Ben Frederickson).
+For examples of using the Python API, please, see the README in the [python_bindings](python_bindings) folder. [More detailed documentation is also available](https://nmslib.github.io/nmslib/) (thanks to Ben Frederickson).
 
 Quick start on Windows
 -----------------------
