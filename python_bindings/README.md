@@ -84,4 +84,4 @@ python setup.py install
 
 #### Additional documentation
 
-[More detailed documentation is also available](https://searchivarius.github.io/nmslib/) (thanks to Ben Frederickson).
+[More detailed documentation is also available](https://nmslib.github.io/nmslib/) (thanks to Ben Frederickson).
