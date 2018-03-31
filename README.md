@@ -15,7 +15,7 @@ NMSLIB is an **extendible library**, which means that is possible to add new sea
 
 **Main developers** : Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, David Novak, Ben Frederickson.
 
-Other contributors:  Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
+Other contributors:  Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
 To acknowledge the use of the library, you could provide a link to this repository and/or cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13). Some other related papers are listed in the end.
 
