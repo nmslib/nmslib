@@ -1,11 +1,11 @@
 [![Pypi version](https://img.shields.io/pypi/v/nmslib.svg)](http://pypi.python.org/pypi/nmslib)
-[![Build Status](https://travis-ci.org/nmslib/nmslib.svg?branch=master)](https://travis-ci.org/searchivarius/nmslib)
+[![Build Status](https://travis-ci.org/nmslib/nmslib.svg?branch=master)](https://travis-ci.org/nmslib/nmslib)
 [![Windows Build Status](https://ci.appveyor.com/api/projects/status/wd63b9doe7xco81t/branch/master?svg=true)](https://ci.appveyor.com/project/searchivarius/nmslib)
 [![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Non-Metric Space Library (NMSLIB) 
 =================
-The latest **pre**-release is [1.7.2](https://github.com/searchivarius/nmslib/releases/tag/v1.7.1). Note that the manual is not updated to reflect some of the changes. In particular, we changed the build procedure for Windows. Also note that the manual targets primiarily developers who will extend the library. For most other folks, [Python binding docs should be sufficient](python_bindings).
+The latest **pre**-release is [1.7.2](https://github.com/nmslib/nmslib/releases/tag/v1.7.1). Note that the manual is not updated to reflect some of the changes. In particular, we changed the build procedure for Windows. Also note that the manual targets primiarily developers who will extend the library. For most other folks, [Python binding docs should be sufficient](python_bindings).
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
 
@@ -21,7 +21,7 @@ To acknowledge the use of the library, you could provide a link to this reposito
 
 Leo(nid) Boytsov is a maintainer. Leo is supported by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa) and the following NSF grant #1618159: "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". Bileg was supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
 
-**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/searchivarius/NonMetricSpaceLib/tree/develop)**. For generic questions/inquiries, please, use Gitter (see the badge above). Bug reports should be submitted as GitHub issues.
+**Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/nmslib/nmslib/tree/develop)**. For generic questions/inquiries, please, use Gitter (see the badge above). Bug reports should be submitted as GitHub issues.
 
 NMSLIB is generic yet fast!
 =================
@@ -42,15 +42,15 @@ As of **May 2016** results are:
 <tr width="100%" border="0" style="border:none">
 <td border="0" align="center" style="border:none">
 1.19M 100d GloVe, cosine similarity.
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/manual/figures/glove.png" width="400">
+<img src="https://raw.githubusercontent.com/nmslib/nmslib/master/manual/figures/glove.png" width="400">
 </td>
 <td border="0"  align="center" style="border:none">
 1M 128d SIFT features, Euclidean distance:
-<img src="https://raw.githubusercontent.com/searchivarius/nmslib/master/manual/figures/sift.png" width="400">
+<img src="https://raw.githubusercontent.com/nmslib/nmslib/master/manual/figures/sift.png" width="400">
 </td>
 </tr></table>
 
-What's new in version 1.6 ([see this page for more details](https://github.com/searchivarius/nmslib/releases/tag/v1.6) )
+What's new in version 1.6 ([see this page for more details](https://github.com/nmslib/nmslib/releases/tag/v1.6) )
 -----------------------
 
 1. Improved portability (Can now be built on MACOS)
@@ -63,7 +63,7 @@ What's new in version 1.6 ([see this page for more details](https://github.com/s
 General information
 -----------------------
 
-A detailed description is given [in the manual](manual/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes. Also note that the manual targets primiarily developers who will extend the library. **For most other folks**, [Python binding docs should be sufficient](https://searchivarius.github.io/nmslib/).
+A detailed description is given [in the manual](manual/manual.pdf). The manual also contains instructions for building under Linux and Windows, extending the library, as well as for debugging the code using Eclipse. Note that the manual is not fully updated to reflect 1.6 changes. Also note that the manual targets primiarily developers who will extend the library. **For most other folks**, [Python binding docs should be sufficient](https://nmslib.github.io/nmslib/).
 
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
