@@ -684,6 +684,9 @@ namespace similarity {
     void
     Hnsw<dist_t>::Search(KNNQuery<dist_t> *query, IdType) const
     {
+        if (this->data_.empty()) {
+          return;
+        }
         bool useOld = searchAlgoType_ == kOld || (searchAlgoType_ == kHybrid && ef_ >= 1000);
         // cout << "Ef = " << ef_ << " use old = " << useOld << endl;
         switch (searchMethod_) {
@@ -927,6 +930,10 @@ namespace similarity {
         dist_func_type_ = 0;
         searchMethod_ = 0;
 
+        CHECK_MSG(totalElementsStored_ == this->data_.size(),
+             "The number of stored elements " + ConvertToString(totalElementsStored_) + 
+             " doesn't match the number of data points " + ConvertToString(this->data_.size() + 
+             "! Did you forget to re-load data?"))
 
         ElList_.resize(totalElementsStored_);
         for (unsigned id = 0; id < totalElementsStored_; ++id) {
