@@ -37,6 +37,7 @@ before_install:
       rvm get stable
       brew linkapps python
       brew link --overwrite python 
+      brew link --overwrite pip
   fi
   pip install --user --upgrade pip virtualenv
   virtualenv -p python$PYTHON venv
