@@ -36,6 +36,7 @@ before_install:
       command curl -sSL https://rvm.io/mpapis.asc | gpg --import -;
       rvm get stable
   fi
+  easy_install pip
   pip install --user --upgrade pip virtualenv
   virtualenv -p python$PYTHON venv
   source venv/bin/activate
