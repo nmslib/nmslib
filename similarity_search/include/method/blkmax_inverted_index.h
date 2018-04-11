@@ -44,7 +44,7 @@ class BlockMaxInvIndex : public WandInvIndex<dist_t> {
 
 
   const string StrDesc() const override {
-    return METH_WAND_INV_INDEX;
+    return METH_BLKMAX_INV_INDEX;
   }
 
  protected:
