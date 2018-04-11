@@ -35,9 +35,10 @@ before_install:
       brew upgrade python
       command curl -sSL https://rvm.io/mpapis.asc | gpg --import -;
       rvm get stable
+      pip3 install --user --upgrade pip virtualenv
+  else
+      pip install --user --upgrade pip virtualenv
   fi
-  easy_install pip
-  pip install --user --upgrade pip virtualenv
   virtualenv -p python$PYTHON venv
   source venv/bin/activate
 
