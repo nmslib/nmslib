@@ -37,10 +37,9 @@ before_install:
       rvm get stable
   else
     pip install --user --upgrade pip virtualenv
-    virtualenv -p python$PYTHON venv  
-  fi
-  source venv/bin/activate
-  
+    virtualenv -p python$PYTHON venv
+    source venv/bin/activate
+  fi 
 
 install:
 - |
