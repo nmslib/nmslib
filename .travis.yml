@@ -37,11 +37,12 @@ before_install:
       rvm get stable
       pip3 install --user --upgrade pip virtualenv
       virtualenv3 -p python$PYTHON venv
+      source venv3/bin/activate
   else
       pip install --user --upgrade pip virtualenv
       virtualenv -p python$PYTHON venv
+      source venv/bin/activate
   fi
-  source venv/bin/activate
 
 install:
 - |
