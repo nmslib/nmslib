@@ -35,7 +35,6 @@ before_install:
       brew upgrade python
       command curl -sSL https://rvm.io/mpapis.asc | gpg --import -;
       rvm get stable
-      brew linkapps python
       brew link --overwrite python 
       brew link --overwrite pip
   fi
