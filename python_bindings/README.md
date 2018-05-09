@@ -45,6 +45,10 @@ ids, distances = index.knnQuery(data[0], k=10)
 neighbours = index.knnQueryBatch(data, k=10, num_threads=4)
 ```
 
+#### Basic tuning guidelines
+
+The basic parameter tuning/selection guidelines are available [here](/python_bindings/parameters.md).
+
 #### Logging
 
 NMSLIB produces quite a few informational messages. By default, they are not shown in Python. To enable debugging, one should use the following commands **before** importing the library:
