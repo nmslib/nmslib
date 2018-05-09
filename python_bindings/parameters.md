@@ -48,7 +48,7 @@ overriden by setting the parameter ``skip_optimized_index`` to 1.
 
 #### Neighborhood APProximation index (NAPP)
 
-Generally, increasing the overall number of pivots numPivot helps to improve
+Generally, increasing the overall number of pivots (parameter ``numPivot``) helps to improve
 performance. However, using a large number of pivots leads to increased indexing
 times. A good compromise is to use numPivot somewhat larger than ``sqrt(N)`` , where
 ``N`` is the overall number of data points. Similarly, the number
@@ -61,21 +61,26 @@ optimal value of ``numPivotSearch``—which provides a necessary recall—requir
 a single run of the utility experiment (you need to specify all potentially good
 values of numPivotSearch multiple times using the option ``--QueryTimeParams``).
 
-**Selecting good pivots is extremely important to the method's efficiency**. 
+Selecting good pivots is extremely important to the method's efficiency. 
 For dense spaces, one can get a decent performance by randomly sampling
-pivots from the data set. An alternative, which we have not tested yet,
-is to generate them using (a hierarchical) k-means clustering. However,
-the latter seems to work poorly for sparse spaces.
-David Novak found (see our CIKM'2016 paper) that good pivots can be generated randomly.
+pivots from the data set (this is a default scenario). 
+An alternative way is to provide an externa set of pivots.
+
+One option for dense pivots, which we have not tested yet,
+is to generate pivots using (a hierarchical) k-means clustering. 
+However, for sparse spaces, we have found this option ineffective. 
+In contrast, David Novak has found (see our CIKM'2016 paper) that good pivots 
+can be composed from randomly (and uniformly) selected terms.
 [There is a script to do this](scripts/gen_pivots_sparse.py). 
 
 The script requires you to specify the maximum term/word ID. 
 In many cases, the value of 50 or 100 thousand is enough. 
 However, we sometimes encounter data sets with extremely long tail
-of term frequencies. 
+of frequent words.
 In these cases, one has to rely on the hashing trick to make generated pivots effective. 
 Specifically, if there is a long tail of relatively frequent words,
-you may want to set the value ``hashTrickDim`` to something like 100000.
+you may want to set the value ``hashTrickDim`` to something like 50000.
+Then, the maximum ID for the pivot generation utility would be 49999.
 
 As we mentioned, by default pivots are sampled from the data set:
 To use external pivots you need to provide them in the file specified 
