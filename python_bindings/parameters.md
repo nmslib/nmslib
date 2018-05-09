@@ -53,24 +53,25 @@ Generally, increasing the overall number of pivots (parameter ``numPivot``) help
 performance. However, using a large number of pivots leads to increased indexing
 times. A good compromise is to use numPivot somewhat larger than ``sqrt(N)`` , where
 ``N`` is the overall number of data points. Similarly, the number
- of pivots to be indexed (``numPivotIndex``) should be somewhat larger than numPivot. 
+ of pivots to be indexed (``numPivotIndex``) could be somewhat larger than ``sqrt(numPivot)``. 
  
-The number of pivots to be searched (``numPivotSearch``) should be in the order
-of ``sqrt(numPivotIndex)``. 
+As a rough guideline, the number of pivots to be searched (``numPivotSearch``) 
+could be in the order of ``sqrt(numPivotIndex)``. 
 After selecting the values of ``numPivot`` and ``numPivotIndex``, finding an 
-optimal value of ``numPivotSearch``—which provides a necessary recall—requires just
+optimal value of ``numPivotSearch`` that provides a necessary recall requires just
 a single run of the utility experiment (you need to specify all potentially good
-values of numPivotSearch multiple times using the option ``--QueryTimeParams``).
+values of numPivotSearch multiple times using the option ``--QueryTimeParams``, which 
+is aliased to ``-t``).
 
 Selecting good pivots is extremely important to the method's efficiency. 
-For dense spaces, one can get a decent performance by randomly sampling
+For dense spaces, one can get decent performance by randomly sampling
 pivots from the data set (this is a default scenario). 
-An alternative way is to provide an externa set of pivots.
+An alternative way is to provide an external set of pivots.
 
 One option for dense pivots, which we have not tested yet,
 is to generate pivots using (a hierarchical) k-means clustering. 
-However, for sparse spaces, we have found this option ineffective. 
-In contrast, David Novak has found (see our CIKM'2016 paper) that good pivots 
+However, for sparse spaces, we have found this option to be ineffective. 
+In contrast, David Novak discovered (see our CIKM'2016 paper) that good pivots 
 can be composed from randomly (and uniformly) selected terms.
 [There is a script to do this](/scripts/gen_pivots_sparse.py). 
 
@@ -78,17 +79,17 @@ The script requires you to specify the maximum term/word ID.
 In many cases, the value of 50 or 100 thousand is enough. 
 However, we sometimes encounter data sets with extremely long tail
 of frequent words.
-In these cases, one has to rely on the hashing trick to make generated pivots effective. 
+In these cases, one has to rely on the hashing trick to reduce dimensionality. 
 Specifically, if there is a long tail of relatively frequent words,
 you may want to set the value ``hashTrickDim`` to something like 50000.
 Then, the maximum ID for the pivot generation utility would be 49999.
 
 As we mentioned, by default pivots are sampled from the data set:
 To use external pivots you need to provide them in the file specified 
-in the parameter ``pivotFile``.
+by the parameter ``pivotFile``.
 
 Finally, we note that NAPP divides data set into chunks, which can be
-indexed in parallel. The chunk size (in the number of data points)
+indexed in parallel. A chunk size (in the number of data points)
 is defined by the parameter ``chunkIndexSize``.
 By default, we will try to use all the threads. However,
 the number of threads can be set explicitly using the parameter
