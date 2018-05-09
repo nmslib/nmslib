@@ -18,7 +18,8 @@ For low and moderate recall values (e.g., 60-80%) increasing these parameters
 may lead to longer retrieval times. The reasonable range of values for these
 parameters is 5-100.
 
-For HNSW, the parameter ``M`` defines the maximum number of neighbors in the 
+In what follows, we discuss HNSW-specific parameters. 
+First, for HNSW, the parameter ``M`` defines the maximum number of neighbors in the 
 zero and above-zero layers. However, the actual default maximum number of neighbors 
 for the zero layer is 2*``MM``. This behavior can be overriden by explicitly
 setting the maximum number of neighbors for the zero (``maxM0``) and
@@ -26,13 +27,20 @@ above-zero layers (``maxM``). Note that the zero layer contains all the data
 points, but the number of points included in other layers is defined by the parameter 
 ``mult`` (see the HNSW paper for details).
 
-Furthermore, in the case of HNSW, there is a trade-off between retrieval perfor-
-mance and indexing time related to the choice of the pruning heuristic (controlled
+Second, there is a trade-off between retrieval performance and indexing time 
+related to the choice of the pruning heuristic (controlled
 by the parameter ``delaunay_type``). Specifically, by default ``delaunay_type`` is
 equal to 1. Using delaunay type=1 improves performance—especially at high
 recall values (> 80%) at the expense of longer indexing times. Therefore, for
 lower recall values, we recommend using ``delaunay_type=0``.
 
-Finally, HNSW has the parameter ``post``, which defines the amount (and type) of 
+Third, HNSW has the parameter ``post``, which defines the amount (and type) of 
 postprocessing applied to the constructed graph. The default value is 0, which means 
 non postprocessing. Additional options are 1 and 2 (2 means more postprocessing).
+
+Fourth, there is a pesky design descision that an index does not necessarily
+contain the data points, which are loaded separately. HNSW, chooses
+to include data points into the index in several important cases, which include
+the dense spaces for the Euclidean and the cosine distance. These optimized indices
+are created automatically whenever possible. However, this behavior can be
+overriden by setting the parameter ``skip_optimized_index`` to 1.
