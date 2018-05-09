@@ -26,6 +26,7 @@ setting the maximum number of neighbors for the zero (``maxM0``) and
 above-zero layers (``maxM``). Note that the zero layer contains all the data
 points, but the number of points included in other layers is defined by the parameter 
 ``mult`` (see the HNSW paper for details).
+
 Second, there is a trade-off between retrieval performance and indexing time 
 related to the choice of the pruning heuristic (controlled
 by the parameter ``delaunay_type``). Specifically, by default ``delaunay_type`` is
