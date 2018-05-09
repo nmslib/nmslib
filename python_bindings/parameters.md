@@ -21,7 +21,7 @@ parameters is 5-100.
 In what follows, we discuss HNSW-specific parameters. 
 First, for HNSW, the parameter ``M`` defines the maximum number of neighbors in the 
 zero and above-zero layers. However, the actual default maximum number of neighbors 
-for the zero layer is 2*``MM``. This behavior can be overriden by explicitly
+for the zero layer is 2*``M``. This behavior can be overriden by explicitly
 setting the maximum number of neighbors for the zero (``maxM0``) and
 above-zero layers (``maxM``). Note that the zero layer contains all the data
 points, but the number of points included in other layers is defined by the parameter 
@@ -36,7 +36,7 @@ lower recall values, we recommend using ``delaunay_type=0``.
 
 Third, HNSW has the parameter ``post``, which defines the amount (and type) of 
 postprocessing applied to the constructed graph. The default value is 0, which means 
-non postprocessing. Additional options are 1 and 2 (2 means more postprocessing).
+no postprocessing. Additional options are 1 and 2 (2 means more postprocessing).
 
 Fourth, there is a pesky design descision that an index does not necessarily
 contain the data points, which are loaded separately. HNSW, chooses
