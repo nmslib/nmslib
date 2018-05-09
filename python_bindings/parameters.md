@@ -71,7 +71,7 @@ is to generate pivots using (a hierarchical) k-means clustering.
 However, for sparse spaces, we have found this option ineffective. 
 In contrast, David Novak has found (see our CIKM'2016 paper) that good pivots 
 can be composed from randomly (and uniformly) selected terms.
-[There is a script to do this](scripts/gen_pivots_sparse.py). 
+[There is a script to do this](/scripts/gen_pivots_sparse.py). 
 
 The script requires you to specify the maximum term/word ID. 
 In many cases, the value of 50 or 100 thousand is enough. 
