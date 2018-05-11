@@ -1,11 +1,11 @@
 We have Python notebooks for the following scenarios: 
 
-1. [The Euclidean space with the optimized index](search_dense_optim.ipynb);
-2. [The Euclidean space with the non-optimized index](search_dense_nonoptim.ipynb);
+1. [The Euclidean space with the optimized index](search_vector_dense_optim.ipynb);
+2. [The Euclidean space with the non-optimized index](search_vector_dense_nonoptim.ipynb);
 3. [The Euclidean space ofr for 8-bit integer SIFT vectors (the index is not optimized)](search_sift_uint8.ipynb);
 4. [KL-divergence (non-optimized index)](search_dense_kldiv.ipynb);
-3. [Sparse coseine similarity (non-optimized index)](search_sparse_cosine.ipynb);
-4. [Sparse Jaccard similarity (non-optimized index)](search_sparse_jaccard.ipynb);
+3. [Sparse cosine similarity (non-optimized index)](search_sparse_cosine.ipynb);
+4. [Sparse Jaccard similarity (non-optimized index)](search_generic_sparse_cosine.ipynb).
 
 Note that for for the dense space, we have examples of the so-called optimized and non-optimized indices. Except HNSW, all the methods save meta-indices rather than real ones. Meta indices contain only index structure, but not the data. Hence, before a meta-index can be loaded, we need to re-load data. One example is a memory efficient space to search for SIFT vectors.
 
