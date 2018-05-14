@@ -33,6 +33,8 @@
 #ifndef _BBTREE_H_
 #define _BBTREE_H_
 
+#if WITH_EXTRAS
+
 #include "index.h"
 #include "params.h"
 
@@ -125,5 +127,7 @@ class BBTree : public Index<dist_t> {
 };
 
 }  // namespace similarity
+
+#endif
 
 #endif       // _BBTREE_H_
