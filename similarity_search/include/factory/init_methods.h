@@ -59,8 +59,10 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(int,    METH_DUMMY, CreateDummy)
   
   // bbtree
+#if WITH_EXTRAS
   REGISTER_METHOD_CREATOR(float,  METH_BBTREE, CreateBBTree)
   REGISTER_METHOD_CREATOR(double, METH_BBTREE, CreateBBTree)
+#endif
 
   // ghtree
   REGISTER_METHOD_CREATOR(float,  METH_GHTREE, CreateGHTree)

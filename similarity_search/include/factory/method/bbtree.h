@@ -15,6 +15,8 @@
 #ifndef _FACTORY_BBTREE_H_
 #define _FACTORY_BBTREE_H_
 
+#if WITH_EXTRAS
+
 #include <method/bbtree.h>
 
 namespace similarity {
@@ -37,5 +39,7 @@ Index<dist_t>* CreateBBTree(bool PrintProgress,
  */
 
 }
+
+#endif
 
 #endif
