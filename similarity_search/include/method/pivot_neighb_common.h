@@ -39,7 +39,8 @@ typedef vector<IdCount> VectIdCount;
 
 typedef vector<IdTypeUnsign> PostingListInt;
 
-inline void postListUnion(const VectIdCount &lst1, const PostingListInt lst2, VectIdCount &res) {
+inline void postListUnion(const VectIdCount &lst1, const PostingListInt lst2, VectIdCount &res, 
+                          const unsigned incr = 1) {
   res.clear();
   res.reserve((lst1.size() + lst2.size()) / 2);
   auto i1 = lst1.begin();
@@ -51,10 +52,10 @@ inline void postListUnion(const VectIdCount &lst1, const PostingListInt lst2, Ve
       res.push_back(*i1);
       ++i1;
     } else if (i1->id > id2) {
-      res.push_back(IdCount(id2, 1));
+      res.push_back(IdCount(id2, incr));
       ++i2;
     } else {
-      res.push_back(IdCount(i1->id, i1->qty + 1));
+      res.push_back(IdCount(i1->id, i1->qty + incr));
       ++i1;
       ++i2;
     }
@@ -64,7 +65,7 @@ inline void postListUnion(const VectIdCount &lst1, const PostingListInt lst2, Ve
     ++i1;
   }
   while (i2 != lst2.end()) {
-    res.push_back(IdCount(*i2, 1));
+    res.push_back(IdCount(*i2, incr));
     ++i2;
   }
 }
