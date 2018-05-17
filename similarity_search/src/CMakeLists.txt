@@ -20,6 +20,7 @@ if (NOT WITH_EXTRAS)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_space.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/falconn.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/nndes.cc)
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/pivot_neighb_horder_invindx.cc) 
 
   # Extra spaces
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/space/space_sqfd.cc)
