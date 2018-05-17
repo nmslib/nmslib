@@ -16,6 +16,9 @@
 #define _FACTORY_PIVOT_NEIGHB_H_
 
 #include <method/pivot_neighb_invindx.h>
+#ifdef WITH_EXTRAS
+#include <method/pivot_neighb_horder_invindx.h>
+#endif
 
 namespace similarity {
 
@@ -36,6 +39,23 @@ Index<dist_t>* CreatePivotNeighbInvertedIndex(
       DataObjects
   );
 }
+
+#ifdef WITH_EXTRAS
+
+template <typename dist_t>
+Index<dist_t>* CreatePivotNeighbHorderInvIndex(
+    bool PrintProgress,
+    const string& SpaceType,
+    Space<dist_t>& space,
+    const ObjectVector& DataObjects) {
+  
+  return new PivotNeighbHorderInvIndex<dist_t>(
+      PrintProgress,
+      space,
+      DataObjects
+  );
+}
+#endif
 
 /*
  * End of creating functions.

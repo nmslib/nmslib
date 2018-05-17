@@ -147,7 +147,7 @@ void PivotNeighbHorderInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams
   pmgr.GetParamOptional("hashTrickDim", hash_trick_dim_, 0);
 
   if (num_prefix_ > num_pivot_) {
-    PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefix (" << num_prefix_ << ") "
+    PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_HORDER_INVINDEX << " requires that numPrefix (" << num_prefix_ << ") "
                              << "should be <= numPivot (" << num_pivot_ << ")";
     THROW_RUNTIME_ERR(err);
   }
@@ -401,7 +401,7 @@ PivotNeighbHorderInvIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTime
 
   pmgr.GetParamOptional("numPrefixSearch",num_prefix_search_, num_prefix_);
   if (num_prefix_search_ > num_pivot_) {
-    PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_INVINDEX << " requires that numPrefixSearch (" << num_prefix_search_ << ") "
+    PREPARE_RUNTIME_ERR(err) << METH_PIVOT_NEIGHB_HORDER_INVINDEX << " requires that numPrefixSearch (" << num_prefix_search_ << ") "
                              << "should be <= numPivot (" << num_pivot_ << ")";
     THROW_RUNTIME_ERR(err);
   }

@@ -25,8 +25,7 @@
 #include "permutation_utils.h"
 #include "ported_boost_progress.h"
 
-#define METH_PIVOT_NEIGHB_INVINDEX      "pivot_neighb_invindx"
-#define METH_PIVOT_NEIGHB_INVINDEX_SYN  "napp"
+#define METH_PIVOT_NEIGHB_HORDER_INVINDEX      "napp_horder"
 
 #include <method/pivot_neighb_common.h>
 
