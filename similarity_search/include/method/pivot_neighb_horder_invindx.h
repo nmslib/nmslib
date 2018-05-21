@@ -210,8 +210,7 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
 
   void GetPermutationPPIndexEfficiently(Permutation &p, const vector<bool> &vDst) const;
 
-  mutable std::mutex   stat_lock_;
-  mutable float   post_qty_ = 0;
+  mutable size_t  post_qty_ = 0;
   mutable size_t  search_time_ = 0;
   mutable size_t  dist_comp_time_ = 0;
   mutable size_t  dist_pivot_comp_time_ = 0;
@@ -219,7 +218,10 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   mutable size_t  scan_sorted_time_ = 0;
   mutable size_t  ids_gen_time_ = 0;
   mutable size_t  proc_query_qty_ = 0;
-  mutable size_t  skip_val_ = 1;
+
+  mutable mutex   stat_mutex_;
+
+  size_t  skip_val_ = 1;
 };
 
 }  // namespace similarity

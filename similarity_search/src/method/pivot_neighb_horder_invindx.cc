@@ -37,7 +37,7 @@
 
 #include "falconn_heap_mod.h"
 
-#define PRINT_PIVOT_OCCURR_STAT
+//#define PRINT_PIVOT_OCCURR_STAT
 
 //#define USE_SCAN_COUNT 
 //#define USE_MERGE
@@ -450,7 +450,7 @@ PivotNeighbHorderInvIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTime
 
 template <typename dist_t>
 PivotNeighbHorderInvIndex<dist_t>::~PivotNeighbHorderInvIndex() {
-  LOG(LIB_INFO) << "Query qty: " << proc_query_qty_ << " postings per query: " << post_qty_ / proc_query_qty_;
+  LOG(LIB_INFO) << "Query qty: " << proc_query_qty_ << " postings per query: " << float(post_qty_) / proc_query_qty_;
   LOG(LIB_INFO) << "Search time: " << search_time_ / proc_query_qty_;
   LOG(LIB_INFO) << "Posting IDS generation time: " <<  ids_gen_time_ / proc_query_qty_;
   LOG(LIB_INFO) << "Pivot-dist comp. time: " <<  dist_pivot_comp_time_ / proc_query_qty_;
@@ -471,7 +471,6 @@ const string PivotNeighbHorderInvIndex<dist_t>::StrDesc() const {
 
 template <typename dist_t>
 void PivotNeighbHorderInvIndex<dist_t>::SaveIndex(const string &location) {
-/*
   ofstream outFile(location);
   CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
   outFile.exceptions(std::ios::badbit);
@@ -481,6 +480,7 @@ void PivotNeighbHorderInvIndex<dist_t>::SaveIndex(const string &location) {
   WriteField(outFile, METHOD_DESC, StrDesc()); lineNum++;
   WriteField(outFile, "numPivot", num_pivot_); lineNum++;
   WriteField(outFile, "numPivotIndex", num_prefix_); lineNum++;
+  WriteField(outFile, "skipVal", skip_val_); lineNum++;
   WriteField(outFile, "chunkIndexSize", chunk_index_size_); lineNum++;
   WriteField(outFile, "indexQty", posting_lists_.size()); lineNum++;
   WriteField(outFile, "pivotFile", pivot_file_); lineNum++;
@@ -499,9 +499,17 @@ void PivotNeighbHorderInvIndex<dist_t>::SaveIndex(const string &location) {
     lineNum++;
   }
 
+  size_t maxPostQty = 
+#ifndef USE_THREE_PIVOTS
+    getPostQtysTwoPivots(skip_val_)
+#else
+    getPostQtysThreePivots(skip_val_)
+#endif
+  ;
+
   for(size_t i = 0; i < posting_lists_.size(); ++i) {
     WriteField(outFile, "chunkId", i); lineNum++;
-    CHECK(posting_lists_[i]->size() == num_pivot_);
+    CHECK(posting_lists_[i]->size() == maxPostQty);
     for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
       outFile << MergeIntoStr((*posting_lists_[i])[pivotId], ' ') << endl; lineNum++;
     }
@@ -510,12 +518,10 @@ void PivotNeighbHorderInvIndex<dist_t>::SaveIndex(const string &location) {
   WriteField(outFile, LINE_QTY, lineNum + 1 // including this line
   );
   outFile.close();
-*/
 }
 
 template <typename dist_t>
 void PivotNeighbHorderInvIndex<dist_t>::LoadIndex(const string &location) {
-/*
   ifstream inFile(location);
   CHECK_MSG(inFile, "Cannot open file '" + location + "' for reading");
   inFile.exceptions(std::ios::badbit);
@@ -527,6 +533,7 @@ void PivotNeighbHorderInvIndex<dist_t>::LoadIndex(const string &location) {
             "Looks like you try to use an index created by a different method: " + methDesc);
   ReadField(inFile, "numPivot", num_pivot_); lineNum++;
   ReadField(inFile, "numPivotIndex", num_prefix_); lineNum++;
+  ReadField(inFile, "skipVal", skip_val_); lineNum++;
   ReadField(inFile, "chunkIndexSize", chunk_index_size_); lineNum++;
   size_t indexQty;
   ReadField(inFile, "indexQty", indexQty);  lineNum++;
@@ -549,9 +556,9 @@ void PivotNeighbHorderInvIndex<dist_t>::LoadIndex(const string &location) {
               " from the header (location  " + location + ")");
     pivot_.resize(num_pivot_);
     for (size_t i = 0; i < pivot_pos_.size(); ++i) {
-      CHECK_MSG(pivot_pos_[i] < data_.size(),
+      CHECK_MSG(pivot_pos_[i] < this->data_.size(),
                 DATA_MUTATION_ERROR_MSG + " (detected an object index >= #of data points");
-      pivot_[i] = data_[pivot_pos_[i]];
+      pivot_[i] = this->data_[pivot_pos_[i]];
     }
     ++lineNum;
     // Read pivot object IDs
@@ -598,7 +605,7 @@ void PivotNeighbHorderInvIndex<dist_t>::LoadIndex(const string &location) {
     CHECK_MSG(tmp == chunkId, "The chunkId (" + ConvertToString(tmp) + " read from line " + ConvertToString(lineNum) +
               " doesn't match the expected chunk ID " + ConvertToString(chunkId));
     ++lineNum;
-    posting_lists_[chunkId] = shared_ptr<vector<PostingListType>>(new vector<PostingListType>());
+    posting_lists_[chunkId] = unique_ptr<vector<PostingListType>>(new vector<PostingListType>());
     (*posting_lists_[chunkId]).resize(num_pivot_);
     for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
       CHECK_MSG(getline(inFile, line),
@@ -615,7 +622,6 @@ void PivotNeighbHorderInvIndex<dist_t>::LoadIndex(const string &location) {
             DATA_MUTATION_ERROR_MSG + " (expected number of lines " + ConvertToString(ExpLineNum) +
             " read so far doesn't match the number of read lines: " + ConvertToString(lineNum));
   inFile.close();
-*/
 }
 
 template <typename dist_t>
@@ -901,13 +907,17 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
     
   }
 
-  search_time_ += z_search_time.split();
-  dist_comp_time_ += dist_comp_time;
-  dist_pivot_comp_time_ += dist_pivot_comp_time;
-  sort_comp_time_ += sort_comp_time;
-  scan_sorted_time_ += scan_sorted_time;
-  ids_gen_time_ += ids_gen_time;
-  proc_query_qty_++;
+  {
+    unique_lock<mutex> lock(stat_mutex_);
+
+    search_time_ += z_search_time.split();
+    dist_comp_time_ += dist_comp_time;
+    dist_pivot_comp_time_ += dist_pivot_comp_time;
+    sort_comp_time_ += sort_comp_time;
+    scan_sorted_time_ += scan_sorted_time;
+    ids_gen_time_ += ids_gen_time;
+    proc_query_qty_++;
+  }
 
 }
 
