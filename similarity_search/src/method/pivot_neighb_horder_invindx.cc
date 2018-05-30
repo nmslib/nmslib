@@ -510,8 +510,9 @@ void PivotNeighbHorderInvIndex<dist_t>::SaveIndex(const string &location) {
   for(size_t i = 0; i < posting_lists_.size(); ++i) {
     WriteField(outFile, "chunkId", i); lineNum++;
     CHECK(posting_lists_[i]->size() == maxPostQty);
-    for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
-      outFile << MergeIntoStr((*posting_lists_[i])[pivotId], ' ') << endl; lineNum++;
+    WriteField(outFile, "postQty", (*posting_lists_[i]).size());
+    for (const auto& e: (*posting_lists_[i])) {
+      outFile << MergeIntoStr(e, ' ') << endl; lineNum++;
     }
   }
 
@@ -606,11 +607,14 @@ void PivotNeighbHorderInvIndex<dist_t>::LoadIndex(const string &location) {
               " doesn't match the expected chunk ID " + ConvertToString(chunkId));
     ++lineNum;
     posting_lists_[chunkId] = unique_ptr<vector<PostingListType>>(new vector<PostingListType>());
-    (*posting_lists_[chunkId]).resize(num_pivot_);
-    for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
+
+    size_t postQty;
+    ReadField(inFile, "postQty", postQty);
+    (*posting_lists_[chunkId]).resize(postQty);
+    for (size_t postId = 0; postId < postQty; ++postId) {
       CHECK_MSG(getline(inFile, line),
                 "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
-      CHECK_MSG(SplitStr(line, (*posting_lists_[chunkId])[pivotId], ' '),
+      CHECK_MSG(SplitStr(line, (*posting_lists_[chunkId])[postId], ' '),
                 "Failed to extract object IDs from line #" + ConvertToString(lineNum) +
                 " chunkId " + ConvertToString(chunkId) + " location: " + location);
       ++lineNum;
