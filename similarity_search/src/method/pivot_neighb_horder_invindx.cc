@@ -71,7 +71,7 @@ struct PostListQueryState {
 };
 
 template <typename dist_t>
-struct IndexThreadParamsPNII {
+struct IndexThreadParamsHorderPNII {
   PivotNeighbHorderInvIndex<dist_t>&           index_;
   size_t                                      chunk_qty_;
   size_t                                      index_every_;
@@ -79,7 +79,7 @@ struct IndexThreadParamsPNII {
   ProgressDisplay*                            progress_bar_;
   mutex&                                      display_mutex_;
 
-  IndexThreadParamsPNII(
+  IndexThreadParamsHorderPNII(
                      PivotNeighbHorderInvIndex<dist_t>&  index,
                      size_t                             chunk_qty,
                      size_t                             index_every,
@@ -97,8 +97,8 @@ struct IndexThreadParamsPNII {
 };
 
 template <typename dist_t>
-struct IndexThreadPNII {
-  void operator()(IndexThreadParamsPNII<dist_t>& prm) {
+struct IndexThreadHOrderHorderPNII {
+  void operator()(IndexThreadParamsHorderPNII<dist_t>& prm) {
 #ifdef UINT16_IDS
     CHECK(prm.chunk_qty_ <= UINT16_ID_MAX);
 #endif
@@ -213,7 +213,7 @@ void PivotNeighbHorderInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams
     }
   } else {
     vector<thread>                                      threads(index_thread_qty_);
-    vector<shared_ptr<IndexThreadParamsPNII<dist_t>>>   threadParams;
+    vector<shared_ptr<IndexThreadParamsHorderPNII<dist_t>>>   threadParams;
 
     LOG(LIB_INFO) << "Will create " << index_thread_qty_ << " indexing threads";;
 
@@ -222,13 +222,13 @@ void PivotNeighbHorderInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams
                                 :NULL);
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
-      threadParams.push_back(shared_ptr<IndexThreadParamsPNII<dist_t>>(
-                              new IndexThreadParamsPNII<dist_t>(*this, indexQty, i, index_thread_qty_,
+      threadParams.push_back(shared_ptr<IndexThreadParamsHorderPNII<dist_t>>(
+                              new IndexThreadParamsHorderPNII<dist_t>(*this, indexQty, i, index_thread_qty_,
                                                                progress_bar.get(), progressBarMutex)));
     }
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
-      threads[i] = thread(IndexThreadPNII<dist_t>(), ref(*threadParams[i]));
+      threads[i] = thread(IndexThreadHOrderHorderPNII<dist_t>(), ref(*threadParams[i]));
     }
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
