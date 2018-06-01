@@ -23,9 +23,6 @@ addons:
     - gfortran
     - cmake
     - python3-dev
-    - libboost-all-dev
-    - libgsl0-dev
-    - libeigen3-dev
 
 before_install:
 - |
@@ -42,11 +39,7 @@ before_install:
 
 install:
 - |
-  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    cmake similarity_search -DWITH_EXTRAS=1
-  else
-    cmake similarity_search
-  fi
+  cmake similarity_search
   make -j 4
   travis_wait travis_retry pip install -r python_bindings/requirements.txt scipy six flake8
   travis_retry cd python_bindings && python setup.py build install && cd ..
