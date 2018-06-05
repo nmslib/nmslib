@@ -23,7 +23,8 @@
  *
  *
  */
-#pragma once
+#ifndef HNSW_H
+#define HNSW_H
 
 #include "index.h"
 #include "params.h"
@@ -625,3 +626,5 @@ namespace similarity {
         };
     };
 }
+
+#endif

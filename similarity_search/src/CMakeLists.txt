@@ -8,10 +8,10 @@
 #
 #
 
-file(GLOB PROJ_HDR_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/method/*.h ${PROJECT_SOURCE_DIR}/include/space/*.h ${PROJECT_SOURCE_DIR}/include/factory/*.h ${PROJ_HDR_FILES}/include/factory/*/*.h)
+file(GLOB PROJ_HDR_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/method/*.h ${PROJECT_SOURCE_DIR}/include/space/*.h ${PROJECT_SOURCE_DIR}/include/factory/*.h ${PROJ_HDR_FILES}/include/factory/*/*.h ${PROJ_HDR_FILES}/flash_lsh/*.h)
 file(GLOB OTH_HDR_FILES)
 set(HDR_FILES ${PROJ_HDR_FILES} ${OTH_HDR_FILES})
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/space/*.cc ${PROJECT_SOURCE_DIR}/src/method/*.cc)
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/space/*.cc ${PROJECT_SOURCE_DIR}/src/method/*.cc ${PROJECT_SOURCE_DIR}/src/flash_lsh/*.cpp)
 
 if (NOT WITH_EXTRAS)
   # Extra methods
@@ -20,13 +20,14 @@ if (NOT WITH_EXTRAS)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/lsh_space.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/falconn.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/nndes.cc)
+  list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/flash_lsh.cc)
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/method/pivot_neighb_horder_invindx.cc) 
 
   # Extra spaces
   list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/space/space_sqfd.cc)
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/include/flash_lsh)
 message(STATUS "Header files: ${HDR_FILES}")
 message(STATUS "Source files: ${SRC_FILES}")
 
