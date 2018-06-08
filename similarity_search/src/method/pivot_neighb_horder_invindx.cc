@@ -37,7 +37,7 @@
 
 #include "falconn_heap_mod.h"
 
-#define PRINT_PIVOT_OCCURR_STAT
+//#define PRINT_PIVOT_OCCURR_STAT
 
 //#define USE_SCAN_COUNT 
 //#define USE_MERGE
