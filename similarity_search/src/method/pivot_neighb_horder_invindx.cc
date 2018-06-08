@@ -37,7 +37,7 @@
 
 #include "falconn_heap_mod.h"
 
-//#define PRINT_PIVOT_OCCURR_STAT
+#define PRINT_PIVOT_OCCURR_STAT
 
 //#define USE_SCAN_COUNT 
 //#define USE_MERGE
@@ -261,10 +261,11 @@ void PivotNeighbHorderInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams
       total_qty += chunkPostLists[index].size();
     }
   }
-  LOG(LIB_INFO) << "Pivot occurrences stat" << 
+  LOG(LIB_INFO) << "Pivot occurrences stat" <<
                    " mean: " << Mean(&pivotOcurrQty[0], pivotOcurrQty.size()) <<
                    " std: " << StdDev(&pivotOcurrQty[0], pivotOcurrQty.size());
   LOG(LIB_INFO) << "Number of postings per document: " << total_qty / this->data_.size();
+  //LOG(LIB_INFO) << MergeIntoStr(pivotOcurrQty, ' ');
 #endif
 }
 
@@ -464,9 +465,7 @@ PivotNeighbHorderInvIndex<dist_t>::~PivotNeighbHorderInvIndex() {
 
 template <typename dist_t>
 const string PivotNeighbHorderInvIndex<dist_t>::StrDesc() const {
-  stringstream str;
-  str <<  "permutation (inverted index over neighboring pivots)";
-  return str.str();
+  return string(METH_PIVOT_NEIGHB_HORDER_INVINDEX);
 }
 
 template <typename dist_t>
@@ -695,6 +694,8 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
     }
   }
 #endif
+  LOG(LIB_INFO) << MergeIntoStr(idivs, ' ');
+
   ids_gen_time += z_ids_gen_time.split();
 
   for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {

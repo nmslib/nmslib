@@ -17,7 +17,12 @@
 
 #include <string>
 #include <sstream>
+#include <memory>
 
+
+#include "space/space_sparse_vector_inter.h"
+#include "flash_lsh/LSH.h"
+#include "flash_lsh/LSHReservoirSampler.h"
 #include "index.h"
 
 #define METH_FLASH_LSH             "lsh_flash"
@@ -35,24 +40,17 @@ class FlashLSH : public Index<dist_t> {
    * So, we can memorize them safely.
    */
   FlashLSH(Space<dist_t>& space, 
-              const ObjectVector& data) : Index<dist_t>(data), space_(space) {}
+              const ObjectVector& data) : Index<dist_t>(data), space_(space) {
+     pSparseSpace_ = dynamic_cast<SpaceSparseVectorInter<dist_t>*>(&space_);
 
-  /*
-   * This function is supposed to create a search index (or call a 
-   * function to create it)!
-   */
-  void CreateIndex(const AnyParams& IndexParams) override {
-    AnyParamManager  pmgr(IndexParams);
-    pmgr.GetParamOptional("doSeqSearch",  
-                          bDoSeqSearch_, 
-      // One should always specify the default value of an optional parameter!
-                          false
-                          );
-    // Check if a user specified extra parameters, which can be also misspelled variants of existing ones
-    pmgr.CheckUnused();
-    // Always call ResetQueryTimeParams() to set query-time parameters to their default values
-    this->ResetQueryTimeParams();
+    if (pSparseSpace_ == nullptr) {
+      throw runtime_error("Only dense vector spaces and FAST sparse vector spaces are supported!");
+    }
+    copyData();
   }
+
+
+  void CreateIndex(const AnyParams& IndexParams) override;
 
   /*
    * One can implement functions for index serialization and reading.
@@ -67,17 +65,13 @@ class FlashLSH : public Index<dist_t> {
     throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
   }
 
-  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
-
   ~FlashLSH(){};
 
   /* 
    * Just the name of the method, consider printing crucial parameter values
    */
   const std::string StrDesc() const override { 
-    stringstream str;
-    str << "Dummy method: " << (bDoSeqSearch_ ? " does seq. search " : " does nothing (really dummy)"); 
-    return str.str();
+    return METH_FLASH_LSH;
   }
 
   /* 
@@ -86,20 +80,37 @@ class FlashLSH : public Index<dist_t> {
   void Search(RangeQuery<dist_t>* query, IdType) const override;
   void Search(KNNQuery<dist_t>* query, IdType) const override;
 
-  /*
-   * In rare cases, mostly when we wrap up 3rd party methods,
-   * we simply duplicate the data set. This function
-   * let the experimentation code know this, so it could
-   * adjust the memory consumption of the index.
-   *
-   * Note, however, that this method doesn't create any data duplicates.
-   */
-  virtual bool DuplicateData() const override { return false; }
+  virtual bool DuplicateData() const override { return true; }
+
+  virtual void SetQueryTimeParams(const AnyParams& params) {}
 
  private:
-  bool                    data_duplicate_;
-  Space<dist_t>&          space_;
-  bool                    bDoSeqSearch_;
+  bool                            data_duplicate_;
+  Space<dist_t>&                  space_;
+  SpaceSparseVectorInter<dist_t>* pSparseSpace_;
+  std::vector<int>                dataIds_;
+  std::vector<float>              dataVals_;
+  std::vector<int>                dataMarkers_;
+
+  uint_fast32_t                   flashDim_;
+  uint_fast32_t                   numTables_;
+  uint_fast32_t                   lshK_;
+  uint_fast32_t                   numHashPerFamily_;
+  uint_fast32_t                   numSecHash_;
+  uint_fast32_t                   reservoirSize_;
+  uint_fast32_t                   queryProbes_;
+  uint_fast32_t                   hashingProbes_;
+  uint_fast32_t                   maxSamples_;
+  uint_fast32_t                   numHashBatch_;
+  float                           occupancy_;
+
+  std::unique_ptr<::LSH>                  lshHash_;
+  std::unique_ptr<::LSHReservoirSampler>  lshReservoir_;
+
+
+  // Copy and store data in the format the FLASH can use
+  void copyData();
+
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(FlashLSH);
 };

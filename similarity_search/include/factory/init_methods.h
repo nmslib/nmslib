@@ -23,6 +23,7 @@
 #include "factory/method/lsh_multiprobe.h"
 #include "factory/method/nndes.h"
 #include "factory/method/falconn.h"
+#include "factory/method/lsh_flash.h"
 #endif
 #include "factory/method/dummy.h"
 #include "factory/method/bbtree.h"
@@ -208,6 +209,9 @@ inline void initMethods() {
   // FALCONN LSH
   REGISTER_METHOD_CREATOR(float,  METH_FALCONN, CreateFALCONN)
   REGISTER_METHOD_CREATOR(double, METH_FALCONN, CreateFALCONN)
+
+  // FLASH LSH
+  REGISTER_METHOD_CREATOR(float,  METH_FLASH_LSH, CreateFlashLSH)
 #endif
 }
 

@@ -115,7 +115,7 @@ if (WITH_EXTRAS)
   endif (GSL_FOUND)
 
   include_directories (${PROJECT_SOURCE_DIR}/lshkit/include)
-  add_subdirectory (lshkit)
+  add_subdirectory (lshkit flash_lsh)
 
   find_package(Eigen3 3 REQUIRED)
   if (EIGEN3_FOUND)
