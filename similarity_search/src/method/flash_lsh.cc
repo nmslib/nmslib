@@ -129,7 +129,7 @@ void FlashLSH<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
   // This step as well as the conversion of the input vector
   // introduce a tiny overhead, but it's tiny
   for (unsigned resId : queryOutputs) {
-    cout << resId << " ";
+    //cout << resId << " ";
     if (resId < this->data_.size())
       query->CheckAndAddToResult(this->data_[resId]);
   }
