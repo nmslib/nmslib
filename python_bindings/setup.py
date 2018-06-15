@@ -19,7 +19,7 @@ if os.path.exists(library_file):
 
 else:
     # Otherwise build all the files here directly (excluding extras which need eigen/boost)
-    exclude_files = set("""lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
+    exclude_files = set("""bbtree.cc lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
                         dummy_app.cc main.cc""".split())
 
     for root, subdirs, files in os.walk(os.path.join("nmslib", "similarity_search", "src")):

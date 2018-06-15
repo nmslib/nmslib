@@ -289,6 +289,7 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters", false, "strategy=random,useBucketSize=1,bucketSize=10", "",
                 0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 2.4, 3.4),  
 
+#ifdef WITH_EXTRAS
   // *************** bbtree tests ******************** //
   // knn
   /* 
@@ -311,7 +312,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "",
                 0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 0.999, 1.0, 0.0, 0.0, 1.2, 2.4),  
 
-#ifdef WITH_EXTRAS
 
   // *************** multi-probe LSH tests ******************** //
   // knn
