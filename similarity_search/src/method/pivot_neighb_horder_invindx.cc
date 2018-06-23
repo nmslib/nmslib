@@ -694,7 +694,7 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
     }
   }
 #endif
-  LOG(LIB_INFO) << MergeIntoStr(idivs, ' ');
+  //LOG(LIB_INFO) << MergeIntoStr(idivs, ' ');
 
   ids_gen_time += z_ids_gen_time.split();
 
