@@ -57,7 +57,7 @@ public:
   /** Standard functions to read/write/create objects */ 
   // Create a string representation of an object.
   virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
-                                              DataFileInputState* pInpState) const;
+                                              DataFileInputState* pInpState) const override;
   virtual string CreateStrFromObj(const Object* pObj, const string& externId /* ignored */) const;
   // Open a file for reading, fetch a header (if there is any) and memorize an input state
   virtual unique_ptr<DataFileInputState> OpenReadFileHeader(const string& inputFile) const;
@@ -68,7 +68,7 @@ public:
    * Read a string representation of the next object in a file as well
    * as its label. Return false, on EOF.
    */
-  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const;
+  virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const override;
   /** End of standard functions to read/write/create objects */
 
   /*

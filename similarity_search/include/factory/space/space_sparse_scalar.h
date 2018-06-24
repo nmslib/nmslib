@@ -17,6 +17,7 @@
 
 #include <space/space_sparse_scalar.h>
 #include <space/space_sparse_scalar_fast.h>
+#include <space/space_sparse_scalar_bin_fast.h>
 
 namespace similarity {
 
@@ -58,10 +59,20 @@ Space<float>* CreateSparseCosineSimilarityFast(const AnyParams& /* ignoring para
   return new SpaceSparseCosineSimilarityFast();
 }
 
+Space<float>* CreateSparseCosineSimilarityBinFast(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceSparseCosineSimilarityBinFast();
+}
+
 
 Space<float>* CreateSparseNegativeScalarProductFast(const AnyParams& /* ignoring params */) {
   // Cosine Similarity
   return new SpaceSparseNegativeScalarProductFast();
+}
+
+Space<float>* CreateSparseNegativeScalarProductBinFast(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceSparseNegativeScalarProductBinFast();
 }
 
 Space<float>* CreateSparseQueryNormNegativeScalarProductFast(const AnyParams& /* ignoring params */) {

@@ -16,6 +16,7 @@
 #include "params_cmdline.h"
 #include "cmd_options.h"
 #include "read_data.h"
+#include "utils.h"
 
 #include <string>
 #include <fstream>
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
 
     size_t recQty = 0;
 
-    outFile.write(reinterpret_cast<const char *>(&recQty), sizeof recQty);
+    writeBinaryPOD(outFile, recQty);
 
     while (getline(inpFile, line)) {
       lineNum++;
@@ -76,15 +77,16 @@ int main(int argc, char *argv[]) {
         THROW_RUNTIME_ERR(err);
       }
       uint32_t qty = v.size();
-      outFile.write(reinterpret_cast<const char *>(&qty), sizeof qty);
+      writeBinaryPOD(outFile, qty);
+
       for (uint32_t i = 0; i < qty; ++i) {
-        outFile.write(reinterpret_cast<const char *>(&v[i].id_), sizeof v[i].id_);
-        outFile.write(reinterpret_cast<const char *>(&v[i].val_), sizeof v[i].val_);
+        writeBinaryPOD(outFile, v[i].id_);
+        writeBinaryPOD(outFile, v[i].val_);
       }
       recQty++;
     }
     outFile.seekp(0, ios_base::beg);
-    outFile.write(reinterpret_cast<const char *>(&recQty), sizeof recQty);
+    writeBinaryPOD(outFile, recQty);
 
     LOG(LIB_INFO) << "Converted " << recQty << " entries";
 

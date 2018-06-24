@@ -43,6 +43,9 @@ struct SparseVectElem {
   bool operator!=(const SparseVectElem<dist_t>& that) const {
     return !operator==(that);
   }
+  static size_t dataSize() {
+    return sizeof(id_) + sizeof(val_);
+  }
 };
 
 template <typename dist_t>
