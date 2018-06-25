@@ -19,6 +19,7 @@
 #include "utils.h"
 
 #include <string>
+#include <iostream>
 #include <fstream>
 
 using namespace std;
@@ -51,8 +52,17 @@ int main(int argc, char *argv[]) {
   LOG(LIB_INFO) << "Program arguments are processed";
 
   try {
-    ifstream inpFile(inputFileName);
-    inpFile.exceptions(ios::badbit);
+    unique_ptr<ifstream> inpFile;
+    istream* pInp = &cin;
+
+    if (inputFileName != "-") {
+      inpFile.reset(new ifstream(inputFileName));
+      pInp = inpFile.get();
+      cout << "Reading data from: " << inputFileName << endl;
+    } else {
+      cout << "Reading data from standard input" << endl;
+    }
+    pInp->exceptions(ios::badbit);
 
     ofstream outFile(outputFileName);
     outFile.exceptions(ios::badbit | ios::failbit);
@@ -67,7 +77,7 @@ int main(int argc, char *argv[]) {
 
     writeBinaryPOD(outFile, recQty);
 
-    while (getline(inpFile, line)) {
+    while (getline(*pInp, line)) {
       lineNum++;
       if (line.empty())
         continue;
