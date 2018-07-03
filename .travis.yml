@@ -73,7 +73,7 @@ script:
 - cd python_bindings && $PY setup.py test && flake8 && cd ..
 - |
   set -e
-  if [ "$TRAVIS_OS_NAME" = "linux" -o "$TRAVIS_OS_NAME" = "osx" ] ; then
+  if [ "$TRAVIS_OS_NAME" = "linux" ] ; then
       cd similarity_search;
       ./release/bunit
       ./release/test_integr integr.log 
