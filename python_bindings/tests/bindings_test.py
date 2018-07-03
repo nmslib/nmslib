@@ -169,5 +169,11 @@ class SparseTestCase(unittest.TestCase):
         self.assertEqual(index[3], [(3, 1.0)])
 
 
+class GlobalTestCase(unittest.TestCase):
+    def testGlobal(self):
+        # this is a one line reproduction of https://github.com/nmslib/nmslib/issues/327
+        GlobalTestCase.index = nmslib.init()
+
+
 if __name__ == "__main__":
     unittest.main()
