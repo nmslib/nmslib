@@ -348,7 +348,9 @@ struct IndexWrapper {
   }
 
   ~IndexWrapper() {
-    LOG(LIB_DEBUG) << "Destroying Index";
+    // In cases when the interpreter was shutting down, attempting to log in python
+    // could throw an exception (https://github.com/nmslib/nmslib/issues/327).
+    //LOG(LIB_DEBUG) << "Destroying Index";
     freeObjectVector(&data);
   }
 
