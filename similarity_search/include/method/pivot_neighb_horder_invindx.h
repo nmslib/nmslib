@@ -29,7 +29,8 @@
 
 #include <method/pivot_neighb_common.h>
 
-#define UINT16_IDS
+//#define UINT16_IDS
+#define PERM_PROC_STORE_SORT "storeSort"
 
 #ifdef UINT16_IDS
 typedef uint16_t PostingListElemType; 
@@ -84,7 +85,6 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   size_t  num_prefix_;       // K in the original paper
   size_t  num_prefix_search_;// K used during search (our modification can use a different K)
   size_t  min_times_;        // t in the original paper
-  bool    use_sort_;
   bool    skip_checking_;
   size_t  index_thread_qty_;
   size_t  num_pivot_;
@@ -95,19 +95,17 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   unique_ptr<PivotIndex<dist_t>> pivot_index_;
 
   enum eAlgProctype {
-    kScan,
-    kMap,
     kMerge,
+    kScan,
     kPriorQueue,
-    kWAND
+    kStoreSort
   } inv_proc_alg_;
 
   string toString(eAlgProctype type) const {
     if (type == kScan)   return PERM_PROC_FAST_SCAN;
-    if (type == kMap)    return PERM_PROC_MAP;
-    if (type == kMerge)  return PERM_PROC_MERGE;
     if (type == kPriorQueue) return PERM_PROC_PRIOR_QUEUE;
-    if (type == kWAND) return PERM_PROC_WAND;
+    if (type == kMerge)  return PERM_PROC_MERGE;
+    if (type == kStoreSort) return PERM_PROC_STORE_SORT;
     return "unknown";
   }
 
@@ -115,16 +113,6 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   vector<IdType>  pivot_pos_;
 
   ObjectVector    genPivot_; // generated pivots
-
-  size_t computeDbScan(size_t K, size_t chunkQty) const {
-    size_t totalDbScan = static_cast<size_t>(db_scan_frac_ * this->data_.size());
-    if (knn_amp_) { 
-      totalDbScan = K * knn_amp_;
-    }
-    totalDbScan = min(totalDbScan, this->data_.size());
-    CHECK_MSG(chunkQty, "Bug or inconsistent parameters: the number of index chunks cannot be zero!");
-    return (totalDbScan + chunkQty - 1) / chunkQty;
-  }
 
   void initPivotIndex() {
     if (disable_pivot_index_) {

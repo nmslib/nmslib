@@ -39,16 +39,10 @@
 
 //#define PRINT_PIVOT_OCCURR_STAT
 
-//#define USE_SCAN_COUNT 
-//#define USE_MERGE
-//#define USE_DAAT
-#define USE_STORE_AND_SORT
-
 //#define USE_THREE_PIVOTS
 
-#ifdef USE_STORE_AND_SORT
+// This include is used for store-and-sort merging method only
 #include <boost/sort/spreadsort/integer_sort.hpp>
-#endif
 
 namespace similarity {
 
@@ -389,8 +383,7 @@ PivotNeighbHorderInvIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTime
   string inv_proc_alg;
   
   pmgr.GetParamOptional("skipChecking", skip_checking_, false);
-  pmgr.GetParamOptional("useSort",      use_sort_,      false);
-  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg,   PERM_PROC_FAST_SCAN);
+  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg,   PERM_PROC_STORE_SORT);
 
   if (pmgr.hasParam("minTimes") && pmgr.hasParam("numPivotSearch")) {
     throw runtime_error("One shouldn't specify both parameters minTimes and numPivotSearch, b/c they are synonyms!");
@@ -409,44 +402,26 @@ PivotNeighbHorderInvIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTime
   
   if (inv_proc_alg == PERM_PROC_FAST_SCAN) {
     inv_proc_alg_ = kScan; 
-  } else if (inv_proc_alg == PERM_PROC_MAP) {
-    inv_proc_alg_ = kMap; 
+  } else if (inv_proc_alg == PERM_PROC_STORE_SORT) {
+    inv_proc_alg_ = kStoreSort; 
   } else if (inv_proc_alg == PERM_PROC_MERGE) {
     inv_proc_alg_ = kMerge; 
   } else if (inv_proc_alg == PERM_PROC_PRIOR_QUEUE) {
     inv_proc_alg_ = kPriorQueue;
-  } else if (inv_proc_alg == PERM_PROC_WAND) {
-    inv_proc_alg_ = kWAND;
   } else {
     stringstream err;
     err << "Unknown value of parameter for the inverted file processing algorithm: " << inv_proc_alg_;
     throw runtime_error(err.str());
   } 
     
-  if (pmgr.hasParam("dbScanFrac") && pmgr.hasParam("knnAmp")) {
-    throw runtime_error("One shouldn't specify both parameters dbScanFrac and knnAmp");
-  }
-
-  // It is important to use a non-zero default here, otherwise the code
-  // will through an exception when a) useSort=1 and b) the parameter dbScanFrac is not specified explicitly
-  pmgr.GetParamOptional("dbScanFrac",   db_scan_frac_,  0.05);
-  CHECK_MSG(db_scan_frac_ >=0 && db_scan_frac_ <=1, "dbScanFrac should be >=0 and <= 1");
-  pmgr.GetParamOptional("knnAmp",       knn_amp_,       0);
-
   pmgr.CheckUnused();
   
   LOG(LIB_INFO) << "Set query-time parameters for PivotNeighbHorderInvIndex:";
   LOG(LIB_INFO) << "# pivot overlap (minTimes)    = " << min_times_;
   LOG(LIB_INFO) << "# pivots to query (numPrefixSearch) = " << num_prefix_search_;
-  LOG(LIB_INFO) << "# dbScanFrac                  = " << db_scan_frac_;
-  LOG(LIB_INFO) << "# knnAmp                      = " << knn_amp_;
-  LOG(LIB_INFO) << "# useSort                     = " << use_sort_;
   LOG(LIB_INFO) << "invProcAlg (code)             = " << inv_proc_alg_ << "(" << toString(inv_proc_alg_) << ")";
   LOG(LIB_INFO) << "# skipChecking                = " << skip_checking_;
 
-  if (use_sort_ && (inv_proc_alg_ == kWAND || inv_proc_alg_ == kPriorQueue)) {
-    throw runtime_error("Unsupported invProcAlg " + toString(inv_proc_alg_) + " in the sorting mode useSort=1"); 
-  }
 }
 
 template <typename dist_t>
@@ -647,12 +622,13 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
 
   dist_pivot_comp_time = z_dist_pivot_comp_time.split();
 
-#ifdef USE_SCAN_COUNT
-  vector<unsigned>          counter(chunk_index_size_);
-#endif
-#ifdef USE_STORE_AND_SORT
-  PostingListType           tmpRes(chunk_index_size_);
-#endif
+  vector<unsigned>          counter;
+  if (inv_proc_alg_ == kScan)
+    counter.resize(chunk_index_size_);
+  PostingListType           tmpRes;
+  if (inv_proc_alg_ == kStoreSort)
+    tmpRes.resize(chunk_index_size_);
+
   ObjectVector              cands(chunk_index_size_);
   size_t                    candQty = 0;
 
@@ -699,207 +675,198 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
   ids_gen_time += z_ids_gen_time.split();
 
   for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {
-    const auto & chunkPostLists = *posting_lists_[chunkId];
+    const auto &chunkPostLists = *posting_lists_[chunkId];
     size_t minId = chunkId * chunk_index_size_;
 
-    const auto & data_start = &this->data_[0] + minId;
+    const auto &data_start = &this->data_[0] + minId;
 
     size_t thresh = min_times_ * (min_times_ - 1) / 2;
 
-#ifdef USE_DAAT
-#if defined(USE_SCAN_COUNT) or defined(USE_MERGE) or defined(USE_STORE_AND_SORT)
-  #error "More than one USE_* macro is defined!"
-#endif
+    if (inv_proc_alg_ == kPriorQueue) {
+      // sorted list (priority queue) of pairs (doc_id, its_position_in_the_posting_list)
+      //   the doc_ids are negative to keep the queue ordered the way we need
+      FalconnHeapMod1<IdType, int32_t> postListQueue;
+      // state information for each query-term posting list
+      vector<PostListQueryState> queryStates;
 
-    // sorted list (priority queue) of pairs (doc_id, its_position_in_the_posting_list)
-    //   the doc_ids are negative to keep the queue ordered the way we need
-    FalconnHeapMod1<IdType, int32_t>          postListQueue;
-    // state information for each query-term posting list
-    vector<PostListQueryState>                queryStates;
+      CHECK(num_prefix_search_ >= 1);
 
-    CHECK(num_prefix_search_ >= 1);
+      for (size_t idiv : idivs) {
+        CHECK_MSG(idiv < chunkPostLists.size(),
+                  ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
+        const PostingListType &post = chunkPostLists[idiv];
 
-    for (size_t idiv : idivs) {
-      CHECK_MSG(idiv < chunkPostLists.size(), ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
-      const PostingListType& post = chunkPostLists[idiv];
+        if (!post.empty()) {
 
-      if (!post.empty()) {
+          unsigned qsi = queryStates.size();
+          queryStates.emplace_back(PostListQueryState(post));
 
-        unsigned qsi = queryStates.size();
-        queryStates.emplace_back(PostListQueryState(post));
-
-        // initialize the postListQueue to the first position - insert pair (-doc_id, query_term_index)
-        postListQueue.push(-IdType(post[0]), qsi);
-        post_qty_++;
-      }
-    }
-
-    unsigned accum = 0;
-    
-    candQty = 0;
-
-    while (!postListQueue.empty()) {
-      // index of the posting list with the current SMALLEST doc_id
-      IdType minDocIdNeg = postListQueue.top_key();
-
-      // this while accumulates values for one document (DAAT), specifically for the one with   doc_id = -minDocIdNeg
-      while (!postListQueue.empty() && postListQueue.top_key() == minDocIdNeg) {
-        unsigned qsi = postListQueue.top_data();
-        PostListQueryState& queryState = queryStates[qsi];
-        const PostingListType& pl = queryState.post_;
-
-        accum += skip_val_;
-
-        // move to next position in the posting list
-        queryState.post_pos_++;
-        post_qty_++;
-
-        /*
-         * If we didn't reach the end of the posting list, we retrieve the next document id.
-         * Then, we push this update element down the priority queue.
-         *
-         * On reaching the end of the posting list, we evict the entry from the priority queue.
-         */
-        if (queryState.post_pos_ < pl.size()) {
-          /*
-           * Leo thinks it may be beneficial to access the posting list entry only once.
-           * This access is used for two things
-           * 1) obtain the next doc id
-           * 2) compute the contribution of the current document to the overall dot product (val_ * qval_)
-           */
-          postListQueue.replace_top_key(-IdType(pl[queryState.post_pos_]));
-        } else postListQueue.pop();
-
-      }
-
-      if (accum >= thresh) {
-        cands[candQty++]=data_start[-minDocIdNeg];
-      }
-
-      accum = 0;
-    }
-
-
-#endif
-#ifdef USE_SCAN_COUNT
-#if defined(USE_DAAT) or defined(USE_MERGE) or defined(USE_STORE_AND_SORT)
-  #error "More than one USE_* macro is defined!"
-#endif
-    size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
-    size_t chunkQty = maxId - minId;
-
-    if (chunkId) {
-      memset(&counter[0], 0, sizeof(counter[0])*counter.size());
-    }
-
-    CHECK(num_prefix_search_ >= 1);
-
-    for (size_t idiv : idivs) {
-      CHECK_MSG(idiv < chunkPostLists.size(), ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
-      const PostingListType& post = chunkPostLists[idiv];
-
-      post_qty_ += post.size();
-      for (IdType p : post) {
-        //counter[p]++;
-        counter[p] += skip_val_;
-      }
-    }
-
-    candQty = 0;
-    for (size_t i = 0; i < chunkQty; ++i) {
-      if (counter[i] >= thresh) {
-        cands[candQty++]=data_start[i];
-      }
-    }
-#endif
-#ifdef USE_MERGE
-#if defined(USE_SCAN_COUNT) or defined(USE_DAAT) or defined(USE_STORE_AND_SORT)
-  #error "More than one USE_* macro is defined!"
-#endif
-    VectIdCount   tmpRes[2];
-    unsigned      prevRes = 0;
-
-    CHECK(num_prefix_search_ >= 1);
-
-    for (size_t idiv : idivs) {
-      CHECK_MSG(idiv < chunkPostLists.size(), ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
-      const PostingListType& post = chunkPostLists[idiv];
-
-      postListUnion(tmpRes[prevRes], post, tmpRes[1-prevRes], skip_val_);
-      prevRes = 1 - prevRes;
-
-      post_qty_ += post.size();
-    }
-
-    candQty = 0;
-    for (const auto& it: tmpRes[1-prevRes]) {
-      if (it.qty >= thresh) {
-        cands[candQty++]=data_start[it.id];
-      }
-    }
-
-#endif
-#ifdef USE_STORE_AND_SORT
-#if defined(USE_SCAN_COUNT) or defined(USE_DAAT) or defined(USE_DAAT)
-  #error "More than one USE_* macro is defined!"
-#endif
-    unsigned        tmpResSize = 0;
-
-    CHECK(num_prefix_search_ >= 1);
-
-    for (size_t idiv : idivs) {
-      CHECK_MSG(idiv < chunkPostLists.size(), ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
-      const PostingListType& post = chunkPostLists[idiv];
-
-      if (post.size() + tmpResSize > tmpRes.size()) 
-        tmpRes.resize(2 * tmpResSize + post.size());
-      memcpy(&tmpRes[tmpResSize], &post[0], post.size() * sizeof(post[0]));
-      tmpResSize += post.size();
-
-      post_qty_ += post.size();
-    }
-
-    z_sort_comp_time.reset();
-
-    boost::sort::spreadsort::integer_sort(tmpRes.begin(), tmpRes.begin() + tmpResSize);
-
-    sort_comp_time += z_sort_comp_time.split();
-
-    candQty = 0;
-  
-#if 1
-    z_scan_sorted_time.reset();
-    unsigned start = 0;
-    while (start < tmpResSize) {
-      IdType prevId = tmpRes[start];
-      unsigned next = start + 1;
-      for (; next < tmpResSize && tmpRes[next] == prevId; ++next);
-      if (skip_val_ * (next - start) >= thresh) {
-        cands[candQty++] = data_start[prevId];
-      }
-      start = next;
-    }
-    scan_sorted_time += z_scan_sorted_time.split();
-#else
-    IdType prevId = -1;
-    unsigned prevQty = 0;
-    for (unsigned i = 0; i < tmpResSize; ++i) {
-      IdType id = tmpRes[i];
-      if (id == prevId) prevQty += skip_val_;
-      else {
-        if (prevQty >= thresh) {
-          cands[candQty++]=data_start[prevId];
+          // initialize the postListQueue to the first position - insert pair (-doc_id, query_term_index)
+          postListQueue.push(-IdType(post[0]), qsi);
+          post_qty_++;
         }
-        prevId = id;
-        prevQty = skip_val_;
+      }
+
+      unsigned accum = 0;
+
+      candQty = 0;
+
+      while (!postListQueue.empty()) {
+        // index of the posting list with the current SMALLEST doc_id
+        IdType minDocIdNeg = postListQueue.top_key();
+
+        // this while accumulates values for one document (DAAT), specifically for the one with   doc_id = -minDocIdNeg
+        while (!postListQueue.empty() && postListQueue.top_key() == minDocIdNeg) {
+          unsigned qsi = postListQueue.top_data();
+          PostListQueryState &queryState = queryStates[qsi];
+          const PostingListType &pl = queryState.post_;
+
+          accum += skip_val_;
+
+          // move to next position in the posting list
+          queryState.post_pos_++;
+          post_qty_++;
+
+          /*
+           * If we didn't reach the end of the posting list, we retrieve the next document id.
+           * Then, we push this update element down the priority queue.
+           *
+           * On reaching the end of the posting list, we evict the entry from the priority queue.
+           */
+          if (queryState.post_pos_ < pl.size()) {
+            /*
+             * Leo thinks it may be beneficial to access the posting list entry only once.
+             * This access is used for two things
+             * 1) obtain the next doc id
+             * 2) compute the contribution of the current document to the overall dot product (val_ * qval_)
+             */
+            postListQueue.replace_top_key(-IdType(pl[queryState.post_pos_]));
+          } else postListQueue.pop();
+
+        }
+
+        if (accum >= thresh) {
+          cands[candQty++] = data_start[-minDocIdNeg];
+        }
+
+        accum = 0;
       }
     }
-    if (prevId >= 0 && prevQty >= thresh) {
-      cands[candQty++]=data_start[prevId];
-    }
-#endif
 
-#endif
+    if (inv_proc_alg_ == kScan) {
+      size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
+      size_t chunkQty = maxId - minId;
+
+      if (chunkId) {
+        memset(&counter[0], 0, sizeof(counter[0]) * counter.size());
+      }
+
+      CHECK(num_prefix_search_ >= 1);
+
+      for (size_t idiv : idivs) {
+        CHECK_MSG(idiv < chunkPostLists.size(),
+                  ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
+        const PostingListType &post = chunkPostLists[idiv];
+
+        post_qty_ += post.size();
+        for (IdType p : post) {
+          //counter[p]++;
+          counter[p] += skip_val_;
+        }
+      }
+
+      candQty = 0;
+      for (size_t i = 0; i < chunkQty; ++i) {
+        if (counter[i] >= thresh) {
+          cands[candQty++] = data_start[i];
+        }
+      }
+    }
+
+    if (inv_proc_alg_ == kMerge) {
+      VectIdCount tmpRes[2];
+      unsigned prevRes = 0;
+
+      CHECK(num_prefix_search_ >= 1);
+
+      for (size_t idiv : idivs) {
+        CHECK_MSG(idiv < chunkPostLists.size(),
+                  ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
+        const PostingListType &post = chunkPostLists[idiv];
+
+        postListUnion(tmpRes[prevRes], post, tmpRes[1 - prevRes], skip_val_);
+        prevRes = 1 - prevRes;
+
+        post_qty_ += post.size();
+      }
+
+      candQty = 0;
+      for (const auto &it: tmpRes[1 - prevRes]) {
+        if (it.qty >= thresh) {
+          cands[candQty++] = data_start[it.id];
+        }
+      }
+    }
+
+    if (inv_proc_alg_ == kStoreSort) {
+      unsigned tmpResSize = 0;
+
+      CHECK(num_prefix_search_ >= 1);
+
+      for (size_t idiv : idivs) {
+        CHECK_MSG(idiv < chunkPostLists.size(),
+                  ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
+        const PostingListType &post = chunkPostLists[idiv];
+
+        if (post.size() + tmpResSize > tmpRes.size())
+          tmpRes.resize(2 * tmpResSize + post.size());
+        memcpy(&tmpRes[tmpResSize], &post[0], post.size() * sizeof(post[0]));
+        tmpResSize += post.size();
+
+        post_qty_ += post.size();
+      }
+
+      z_sort_comp_time.reset();
+
+      boost::sort::spreadsort::integer_sort(tmpRes.begin(), tmpRes.begin() + tmpResSize);
+
+      sort_comp_time += z_sort_comp_time.split();
+
+      candQty = 0;
+
+      #if 1
+      z_scan_sorted_time.reset();
+      unsigned start = 0;
+      while (start < tmpResSize) {
+        IdType prevId = tmpRes[start];
+        unsigned next = start + 1;
+        for (; next < tmpResSize && tmpRes[next] == prevId; ++next);
+        if (skip_val_ * (next - start) >= thresh) {
+          cands[candQty++] = data_start[prevId];
+        }
+        start = next;
+      }
+      scan_sorted_time += z_scan_sorted_time.split();
+      #else
+      IdType prevId = -1;
+      unsigned prevQty = 0;
+      for (unsigned i = 0; i < tmpResSize; ++i) {
+        IdType id = tmpRes[i];
+        if (id == prevId) prevQty += skip_val_;
+        else {
+          if (prevQty >= thresh) {
+            cands[candQty++]=data_start[prevId];
+          }
+          prevId = id;
+          prevQty = skip_val_;
+        }
+      }
+      if (prevId >= 0 && prevQty >= thresh) {
+        cands[candQty++]=data_start[prevId];
+      }
+      #endif
+    }
+
 
     z_dist_comp_time.reset();
 
@@ -909,7 +876,7 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
     }
 
     dist_comp_time += z_dist_comp_time.split();
-    
+
   }
 
   {

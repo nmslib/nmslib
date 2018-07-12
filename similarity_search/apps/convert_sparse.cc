@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
   CmdOptions    cmdOptions;
 
-  cmdOptions.Add(new CmdParam("input", "input file", &inputFileName, true));
+  cmdOptions.Add(new CmdParam("input", "input file (specify - for standard input)", &inputFileName, true));
   cmdOptions.Add(new CmdParam("output", "output file", &outputFileName, true));
 
   try {
@@ -93,6 +93,7 @@ int main(int argc, char *argv[]) {
         writeBinaryPOD(outFile, v[i].id_);
         writeBinaryPOD(outFile, v[i].val_);
       }
+
       recQty++;
     }
     outFile.seekp(0, ios_base::beg);
