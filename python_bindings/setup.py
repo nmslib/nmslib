@@ -137,6 +137,7 @@ setup(
  high dimensions and/or non-metric spaces. Hence, the main focus is on approximate methods.""",
     ext_modules=ext_modules,
     install_requires=['pybind11>=2.0', 'numpy'],
+    setup_requires=['pybind11>=2.0', 'numpy'],
     cmdclass={'build_ext': BuildExt},
     test_suite="tests",
     zip_safe=False,
