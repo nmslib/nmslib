@@ -90,7 +90,9 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   size_t  num_pivot_;
   string  pivot_file_;
   bool    disable_pivot_index_;
+  int     print_pivot_stat_;
   size_t hash_trick_dim_;
+  unsigned pivot_comb_qty_;
 
   unique_ptr<PivotIndex<dist_t>> pivot_index_;
 
@@ -178,6 +180,10 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   
   vector<unique_ptr<vector<PostingListType>>> posting_lists_;
 
+  size_t getPostQtysOnePivot(size_t skipVal) const {
+    return (skipVal - 1 + size_t(num_pivot_)) / skipVal;
+  }
+
   size_t getPostQtysTwoPivots(size_t skipVal) const {
     return (skipVal - 1 + size_t(num_pivot_) * (num_pivot_ - 1)/ 2) / skipVal;
   }
@@ -185,6 +191,15 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   size_t getPostQtysThreePivots(size_t skipVal) const {
     CHECK(num_pivot_ >= 2);
     return (skipVal - 1 + size_t(num_pivot_) * size_t(num_pivot_ - 1) * size_t(num_pivot_ - 2)/ 6) / skipVal;
+  }
+
+  size_t getPostQtys(unsigned pivotCombQty, size_t skipVal) const {
+    CHECK_MSG(pivotCombQty && pivotCombQty <= 3,
+              "Illegal number of pivots in the combinations " + ConvertToString(pivotCombQty) + " must be >0 and <=3");
+    if (pivotCombQty == 1) return getPostQtysOnePivot(skipVal);
+    if (pivotCombQty == 2) return getPostQtysTwoPivots(skipVal);
+    CHECK(pivotCombQty == 3);
+    return getPostQtysThreePivots(skipVal);
   }
 
   template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
@@ -197,6 +212,16 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   DISABLE_COPY_AND_ASSIGN(PivotNeighbHorderInvIndex);
 
   void GetPermutationPPIndexEfficiently(Permutation &p, const vector<bool> &vDst) const;
+
+
+  /*
+   * Returns the actual number of stored IDs. To reduce number of reallocations,
+   * we will only increase the size of the vector with ids, but never shrink them.
+   * This way, ids vector can be reused among calls. However, we cannot clear
+   * a vector container by calling clear(), b/c it doesn't guarantee
+   * to retain vector's capacity.
+   */
+  size_t genPivotCombIds(std::vector<uint32_t>& ids, const Permutation& perm, unsigned permPrefix) const;
 
   mutable size_t  post_qty_ = 0;
   mutable size_t  search_time_ = 0;
