@@ -37,7 +37,7 @@
 
 #include "falconn_heap_mod.h"
 
-#define SCALE_MIN_TIMES false
+#define SCALE_MIN_TIMES true
 
 // This include is used for store-and-sort merging method only
 #include <boost/sort/spreadsort/integer_sort.hpp>
@@ -701,7 +701,7 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
 #if SCALE_MIN_TIMES
     if (pivot_comb_qty_ == 3) 
       thresh = min_times_ * (num_prefix_ - 1) * (num_prefix_ - 2) / 6;
-    if (pivot_comb_qty_ == 3) 
+    if (pivot_comb_qty_ == 2) 
       thresh = min_times_ * (num_prefix_ - 1) / 2;
 #endif
 
