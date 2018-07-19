@@ -141,6 +141,7 @@ void RunExper(bool                                bPrintProgress,
              const string&                        CacheGSFilePrefix,
              float                                maxCacheGSRelativeQty,
              bool                                 recallOnly,
+             bool                                 gsIgnoreThreadQty,
              unsigned                             MaxNumData,
              unsigned                             MaxNumQuery,
              const                                vector<unsigned>& knn,
@@ -314,7 +315,8 @@ void RunExper(bool                                bPrintProgress,
             << "but obtained " << cacheTestId;
         throw runtime_error(err.str());
       }
-      CHECK_MSG(savedThreadQty == ThreadTestQty,
+      if (!gsIgnoreThreadQty) 
+        CHECK_MSG(savedThreadQty == ThreadTestQty,
                 "Error: the gold standard was computed using " +ConvertToString(savedThreadQty) + " threads, but the current test will use "  +
                 ConvertToString(ThreadTestQty) + " threads. You have to use the same number of threads while computing gold standard data and testing!");
     } else {
@@ -516,7 +518,8 @@ int main(int ac, char* av[]) {
   string                QueryFile;
   string                CacheGSFilePrefix;
   float                 maxCacheGSRelativeQty;
-  bool                  recallOnly;
+  bool                  recallOnly = false;
+  bool                  gsIgnoreThreadQty;
   unsigned              MaxNumData;
   unsigned              MaxNumQuery;
   vector<unsigned>      knn;
@@ -546,6 +549,7 @@ int main(int ac, char* av[]) {
                          CacheGSFilePrefix,
                          maxCacheGSRelativeQty,
                          recallOnly,
+                         gsIgnoreThreadQty,
                          MaxNumData,
                          MaxNumQuery,
                          knn,
@@ -588,6 +592,7 @@ int main(int ac, char* av[]) {
                     CacheGSFilePrefix,
                     maxCacheGSRelativeQty,
                     recallOnly,
+                    gsIgnoreThreadQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -612,6 +617,7 @@ int main(int ac, char* av[]) {
                     CacheGSFilePrefix,
                     maxCacheGSRelativeQty,
                     recallOnly,
+                    gsIgnoreThreadQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,
@@ -636,6 +642,7 @@ int main(int ac, char* av[]) {
                     CacheGSFilePrefix,
                     maxCacheGSRelativeQty,
                     recallOnly,
+                    gsIgnoreThreadQty,
                     MaxNumData,
                     MaxNumQuery,
                     knn,

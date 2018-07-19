@@ -55,8 +55,12 @@ const std::string MAX_CACHE_GS_QTY_PARAM_MSG     = "a maximum number of gold sta
 const float MAX_CACHE_GS_QTY_PARAM_DEFAULT       = 10.0;
 
 const std::string RECALL_ONLY_PARAM_OPT          = "recallOnly";
-const std::string RECALL_ONLY_PARAM_MSG          = "if tset, only recall is computed, but not other effectiveness metrics";
+const std::string RECALL_ONLY_PARAM_MSG          = "if set, only recall is computed, but not other effectiveness metrics";
 const bool RECALL_ONLY_PARAM_DEFAULT             = false;
+
+const std::string GS_IGNORE_THREAD_QTY_PARAM_OPT   = "gsIgnoreThreadQty";
+const std::string GS_IGNORE_THREAD_QTY_PARAM_MSG         = "if set, the check for the # of threads used to computed gold standard is ignored";
+const bool GS_IGNORE_THREAD_QTY_PARAM_DEFAULT           = false;
 
 const std::string LOG_FILE_PARAM_OPT             = "logFile,l";
 const std::string LOG_FILE_PARAM_MSG             = "log file";

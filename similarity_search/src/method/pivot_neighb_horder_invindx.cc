@@ -674,6 +674,8 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
   ObjectVector              cands(chunk_index_size_);
   size_t                    candQty = 0;
 
+  z_ids_gen_time.reset();
+
   vector<uint32_t>          combIds;
 
   combIds.reserve(getPostQtys(pivot_comb_qty_, skip_val_));
@@ -681,8 +683,6 @@ void PivotNeighbHorderInvIndex<dist_t>::GenSearch(QueryType* query, size_t K) co
   size_t qty = genPivotCombIds(combIds, perm_q, num_prefix_search_);
 
   combIds.resize(qty);
-
-  z_ids_gen_time.reset();
 
   ids_gen_time += z_ids_gen_time.split();
 
