@@ -15,7 +15,7 @@
 #ifndef _FACTORY_BBTREE_H_
 #define _FACTORY_BBTREE_H_
 
-#if WITH_EXTRAS
+#ifdef WITH_EXTRAS
 
 #include <method/bbtree.h>
 

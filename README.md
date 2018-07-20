@@ -5,7 +5,7 @@
 
 Non-Metric Space Library (NMSLIB) 
 =================
-The latest **pre**-release is [1.7.2](https://github.com/nmslib/nmslib/releases/tag/v1.7.1). Note that the manual is not updated to reflect some of the changes. In particular, we changed the build procedure for Windows. Also note that the manual targets primiarily developers who will extend the library. For most other folks, [Python binding docs should be sufficient](python_bindings). The basic parameter tuning/selection guidelines are also available [online](/python_bindings/parameters.md).
+The latest **pre**-release is [1.7.3.2](https://github.com/nmslib/nmslib/releases/tag/v1.7.3.2). Note that the manual is not updated to reflect some of the changes. In particular, we changed the build procedure for Windows. Also note that the manual targets primiarily developers who will extend the library. For most other folks, [Python binding docs should be sufficient](python_bindings). The basic parameter tuning/selection guidelines are also available [online](/python_bindings/parameters.md).
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
 

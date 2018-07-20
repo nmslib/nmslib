@@ -348,7 +348,9 @@ struct IndexWrapper {
   }
 
   ~IndexWrapper() {
-    LOG(LIB_DEBUG) << "Destroying Index";
+    // In cases when the interpreter was shutting down, attempting to log in python
+    // could throw an exception (https://github.com/nmslib/nmslib/issues/327).
+    //LOG(LIB_DEBUG) << "Destroying Index";
     freeObjectVector(&data);
   }
 
@@ -388,23 +390,32 @@ class PythonLogger
            int line,
            const char * function,
            const std::string & message) {
-    AcquireGIL l;
-    switch(severity) {
-      case LIB_DEBUG:
-        inner.attr("debug")(message);
-        break;
-      case LIB_INFO:
-        inner.attr("info")(message);
-        break;
-      case LIB_WARNING:
-        inner.attr("warning")(message);
-        break;
-      case LIB_ERROR:
-        inner.attr("error")(message);
-        break;
-      case LIB_FATAL:
-        inner.attr("critical")(message);
-        break;
+    // In cases when the interpreter was shutting down, attempting to log in python
+    // could throw an exception (https://github.com/nmslib/nmslib/issues/327).
+    // Logging shouldn't cause exceptions, so catch it and dump to stderr instead.
+    try {
+      AcquireGIL l;
+      switch(severity) {
+        case LIB_DEBUG:
+          inner.attr("debug")(message);
+          break;
+        case LIB_INFO:
+          inner.attr("info")(message);
+          break;
+        case LIB_WARNING:
+          inner.attr("warning")(message);
+          break;
+        case LIB_ERROR:
+          inner.attr("error")(message);
+          break;
+        case LIB_FATAL:
+          inner.attr("critical")(message);
+          break;
+      }
+    } catch (const std::exception & e) {
+      std::cerr << "Failed to log '" << message << "'. Exception:" << e.what() << std::endl;
+    } catch (...) {
+      std::cerr << "Failed to log '" << message << "'" << std::endl;
     }
   }
 };
