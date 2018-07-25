@@ -26,15 +26,15 @@ outf = args['outf']
 dim  = args['dim']
 
 if args['binary'] and args['gauss']:
-  print "You cannot specify both 'binary' and 'normal'"
+  print("You cannot specify both 'binary' and 'normal'")
   sys.exit(1)
 
 f=open(outf, 'w')
 if args['gauss']:
-  f.write("\n".join(["\t".join([str(random.normalvariate(0,1)) for _ in xrange(dim)]) for _ in xrange(nd+1)]))
+  f.write("\n".join(["\t".join([str(random.normalvariate(0,1)) for _ in range(dim)]) for _ in range(nd+1)]))
 elif args['binary'] :
-  f.write("\n".join(["\t".join([str(random.randint(0,1)) for _ in xrange(dim)]) for _ in xrange(nd+1)]))
+  f.write("\n".join(["\t".join([str(random.randint(0,1)) for _ in range(dim)]) for _ in range(nd+1)]))
 else:
-  f.write("\n".join(["\t".join([str(random.random()) for _ in xrange(dim)]) for _ in xrange(nd+1)]))
+  f.write("\n".join(["\t".join([str(random.random()) for _ in range(dim)]) for _ in range(nd+1)]))
 f.close()
 
