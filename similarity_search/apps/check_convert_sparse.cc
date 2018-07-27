@@ -27,7 +27,7 @@
 using namespace std;
 using namespace similarity;
 
-const unsigned REPORT_QTY = 10000;
+const unsigned REPORT_QTY = 100000;
 
 int main(int argc, char *argv[]) {
   string        inpTextFileName, inpBinFileName;
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     }
     cout << lineNum << " lines checked" << endl;
 
-    CHECK_MSG(ReadSparseVecDataEfficiently(lineText, vText) == false,
+    CHECK_MSG(SpaceSparseCosineSimilarityBinFast::readNextBinSparseVect(inpBinFile, lineBin) == false,
               "Binary input file contains more entries than the input text file!");
     CHECK_MSG(lineNum == inpBinFile.qty_, "Mismatch between text file entries: " + ConvertToString(lineNum) +
                                           " and the number of entries in the binary header: " + ConvertToString(inpBinFile.qty_));
