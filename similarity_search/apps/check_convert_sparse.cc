@@ -87,12 +87,13 @@ int main(int argc, char *argv[]) {
         LOG(LIB_ERROR) << err.stream().str();
         THROW_RUNTIME_ERR(err);
       }
+      sort(vText.begin(), vText.end());
       uint32_t qtyText = vText.size();
 
       for (uint32_t i = 1; i < qtyText; ++i) {
-        if (vText[i].id_ <= vText[i-1].id_) {
-          PREPARE_RUNTIME_ERR(err) << "Entries not sorted or have duplicates in line " << lineNum <<
-                                      " first bad index: " << i;
+        if (vText[i].id_ == vText[i-1].id_) {
+          PREPARE_RUNTIME_ERR(err) << "Input text file has duplicates in line " << lineNum <<
+                                      " smallest bad id: " << vText[i].id_;
           THROW_RUNTIME_ERR(err);
         }
       }
@@ -108,6 +109,16 @@ int main(int argc, char *argv[]) {
         PREPARE_RUNTIME_ERR(err) << "# of elements in the text entry: " << vText.size() <<
                                     " is diff. from the # of elements in the bin. entry: " << vBin.size();
         THROW_RUNTIME_ERR(err);
+      }
+
+      for (uint32_t i = 1; i < qtyText; ++i) {
+        if (vBin[i].id_ <= vBin[i-1].id_) {
+          PREPARE_RUNTIME_ERR(err) << "Input binary file has unsorted/duplicate IDs in line " << lineNum <<
+                                   " entry[" << (i - 1) << "] id " << vText[i- 1].id_ <<
+                                   " entry[" << (i) << "] id " << vText[i].id_
+                                  ;
+          THROW_RUNTIME_ERR(err);
+        }
       }
 
       for (uint32_t i = 0; i < qtyText; ++i) {
