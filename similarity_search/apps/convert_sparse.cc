@@ -86,6 +86,15 @@ int main(int argc, char *argv[]) {
         LOG(LIB_ERROR) << err.stream().str();
         THROW_RUNTIME_ERR(err);
       }
+      // It's important to sort entries!
+      sort(v.begin(), v.end());
+      for (uint_fast32_t i = 1; i < v.size(); ++i) {
+        if (v[i].id_ == v[i-1].id_) {
+          PREPARE_RUNTIME_ERR(err) << "Ids  have duplicates in line #" << lineNum << " dimension: " << v[i].id_;
+          THROW_RUNTIME_ERR(err);
+        }
+      }
+
       uint32_t qty = v.size();
       writeBinaryPOD(outFile, qty);
 
