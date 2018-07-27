@@ -28,17 +28,7 @@ namespace similarity {
 
 using namespace std;
 
-struct DataFileInputStateBinSparseVec : public DataFileInputStateOneFile {
-  DataFileInputStateBinSparseVec(const string& inpFileName) : DataFileInputStateOneFile(inpFileName) {
-    readBinaryPOD(inp_file_, qty_);
-    LOG(LIB_INFO) << "Preparing to read sparse vectors from the binary file: " << inpFileName
-                  << " header claims to have: " << qty_ << " vectors";
-  }
-  size_t        qty_;
-  size_t        readQty_ = 0;
-};
-
-static bool readNextBinSparseVect(DataFileInputStateBinSparseVec &state, string& strObj) {
+bool SpaceSparseCosineSimilarityBinFast::readNextBinSparseVect(DataFileInputStateBinSparseVec &state, string& strObj) {
   if (state.readQty_ >= state.qty_)
     return false;
 
@@ -56,7 +46,9 @@ static bool readNextBinSparseVect(DataFileInputStateBinSparseVec &state, string&
   return true;
 }
 
-static void readSparseVector(const string& strObj, vector<SparseVectElem<float>>& v) {
+void SpaceSparseCosineSimilarityBinFast::parseSparseBinVector(const string &strObj,
+                                                              vector<SparseVectElem<float>> &v,
+                                                              bool sortDimId) {
   uint32_t qty;
 
   CHECK(strObj.size() >= sizeof(qty));
@@ -79,6 +71,12 @@ static void readSparseVector(const string& strObj, vector<SparseVectElem<float>>
     readBinaryPOD(p, v[i].val_);
     p += sizeof(v[i].val_);
   }
+  if (sortDimId) {
+    sort(v.begin(), v.end());
+  }
+  for (uint_fast32_t i = 1; i < qty; ++i) {
+    CHECK_MSG(v[i].id_ > v[i-1].id_, "Ids in the input file are either unsorted or have duplicates!")
+  }
 }
 
 unique_ptr<DataFileInputState> SpaceSparseCosineSimilarityBinFast::OpenReadFileHeader(const string& inpFileName) const {
@@ -88,7 +86,7 @@ unique_ptr<DataFileInputState> SpaceSparseCosineSimilarityBinFast::OpenReadFileH
 unique_ptr<Object> SpaceSparseCosineSimilarityBinFast::CreateObjFromStr(IdType id, LabelType label, const string& s,
                                     DataFileInputState* pInpState) const {
   vector<ElemType>  vec;
-  readSparseVector(s, vec);
+  parseSparseBinVector(s, vec);
   return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
 }
 
@@ -106,13 +104,14 @@ unique_ptr<DataFileInputState> SpaceSparseNegativeScalarProductBinFast::OpenRead
 bool SpaceSparseNegativeScalarProductBinFast::ReadNextObjStr(DataFileInputState &state, string& strObj,
                                                              LabelType& , string& ) const {
 
-  return readNextBinSparseVect(dynamic_cast<DataFileInputStateBinSparseVec&>(state), strObj);
+  return SpaceSparseCosineSimilarityBinFast
+  ::readNextBinSparseVect(dynamic_cast<DataFileInputStateBinSparseVec&>(state), strObj);
 }
 
 unique_ptr<Object> SpaceSparseNegativeScalarProductBinFast::CreateObjFromStr(IdType id, LabelType label, const string& s,
                                                                              DataFileInputState* pInpState) const {
   vector<ElemType>  vec;
-  readSparseVector(s, vec);
+  SpaceSparseCosineSimilarityBinFast::parseSparseBinVector(s, vec);
   return unique_ptr<Object>(CreateObjFromVect(id, label, vec));
 }
 

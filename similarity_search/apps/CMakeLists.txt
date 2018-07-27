@@ -18,6 +18,7 @@ add_executable (test_clust                      test_clust.cc)
 add_executable (bench_projection                bench_projection.cc)
 add_executable (knn_stat                        knn_stat.cc)
 add_executable (convert_sparse                  convert_sparse.cc)
+add_executable (check_convert_sparse            check_convert_sparse.cc)
 # The following line is necessary to create an executable for the dummy application:
 add_executable (dummy_app dummy_app.cc)
 
@@ -29,6 +30,7 @@ add_dependencies (test_clust          NonMetricSpaceLib)
 add_dependencies (bench_projection    NonMetricSpaceLib)
 add_dependencies (knn_stat            knn_stat)
 add_dependencies (convert_sparse      NonMetricSpaceLib)
+add_dependencies (check_convert_sparse NonMetricSpaceLib)
 # The following line is necessary to create an executable for the dummy application:
 add_dependencies (dummy_app           NonMetricSpaceLib)
 
@@ -46,6 +48,7 @@ target_link_libraries (test_clust       NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_
 target_link_libraries (bench_projection NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries (knn_stat         NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries (convert_sparse   NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (check_convert_sparse   NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 # The following line is necessary to create an executable for the dummy application:
 target_link_libraries (dummy_app        NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
