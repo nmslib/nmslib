@@ -8,8 +8,9 @@ import sys
 import nmslib 
 import time 
 import math 
-from sklearn.neighbors import NearestNeighbors
 
+from sklearn.neighbors import NearestNeighbors
+from sklearn.datasets.samples_generator import make_blobs
 
 def testHnswRecallL2(dataMatrix, queryMatrix, k, M=30, efC=200, efS=1000, numThreads=4):
   queryQty = queryMatrix.shape[0]
@@ -69,13 +70,23 @@ def testHnswRecallL2(dataMatrix, queryMatrix, k, M=30, efC=200, efS=1000, numThr
     print('kNN recall for neighbor %d %f' % (n+1, recall))
 
 
-def testRandom(dataQty, queryQty, efS, dim, k):
+def testRandomUnif(dataQty, queryQty, efS, dim, k):
   queryQty = min(dataQty, queryQty)
   dataMatrix = np.random.randn(dataQty, dim).astype(np.float32)
   indx = np.random.choice(np.arange(dataQty), size=queryQty, replace=False)
   queryMatrix = dataMatrix[indx, ].astype(np.float32)
   testHnswRecallL2(dataMatrix, queryMatrix, k, efS=efS)
 
-testRandom(100_000, 10, dim=100, k=10, efS=1000)
+
+def testRandomClustered(dataQty, centerQty, queryQty, efS, dim, k):
+  queryQty = min(dataQty, queryQty)
+  dataMatrix, _ = make_blobs(n_samples=dataQty, centers=centerQty, n_features=dim, random_state=0)
+  dataMatrix = dataMatrix.astype(np.float32)
+  indx = np.random.choice(np.arange(dataQty), size=queryQty, replace=False)
+  queryMatrix = dataMatrix[indx, ].astype(np.float32)
+  testHnswRecallL2(dataMatrix, queryMatrix, k, efS=efS)
+
+testRandomClustered(100_000, centerQty=20, queryQty=1000, dim=100, k=10, efS=200)
+testRandomUnif(100_000, 1000, dim=100, k=10, efS=200)
   
   
