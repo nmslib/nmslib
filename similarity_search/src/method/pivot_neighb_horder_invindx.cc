@@ -148,7 +148,7 @@ void PivotNeighbHorderInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams
 
   pmgr.GetParamOptional("pivotFile", pivot_file_, "");
   pmgr.GetParamOptional("skipVal",  skip_val_, 1);
-  pmgr.GetParamOptional("pivotCombQty", pivot_comb_qty_, 1);
+  pmgr.GetParamOptional("pivotCombQty", pivot_comb_qty_, 2); // we use pairs by default
   pmgr.GetParamOptional("printPivotStat", print_pivot_stat_, 0);
 
   CHECK_MSG(pivot_comb_qty_ && pivot_comb_qty_ <= 3,
