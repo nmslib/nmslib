@@ -412,10 +412,12 @@ class PythonLogger
           inner.attr("critical")(message);
           break;
       }
-    } catch (const std::exception & e) {
-      std::cerr << "Failed to log '" << message << "'. Exception:" << e.what() << std::endl;
     } catch (...) {
-      std::cerr << "Failed to log '" << message << "'" << std::endl;
+      // This is almost certainly due to python process shut down.
+      // Just write the message out to stderr if its not a debug message
+      if (severity != LIB_DEBUG) {
+        StdErrLogger().log(severity, file, line, function, message);
+      }
     }
   }
 };
