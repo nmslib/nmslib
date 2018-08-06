@@ -70,7 +70,7 @@ install:
 
 script:
 - $PY --version
-- cd python_bindings && $PY setup.py test && flake8 && cd ..
+- cd python_bindings && $PY setup.py test && cd ..
 - |
   set -e
   if [ "$TRAVIS_OS_NAME" = "linux" ] ; then
