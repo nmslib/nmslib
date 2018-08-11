@@ -66,8 +66,7 @@ class StaticLSHTable
                            StaticLSHTable<PointType, KeyType, LSH, HashType,
                                           HashTable, DataStorageType>> {
  public:
-  StaticLSHTable(LSH* lsh, HashTable* hash_table, 
-                 const DataStorageType& points, const typename PointTypeConverter<PointType>::DensePointType* pCenter,
+  StaticLSHTable(LSH* lsh, HashTable* hash_table, const DataStorageType& points,
                  int_fast32_t num_setup_threads)
       : BasicLSHTable<LSH, HashTable,
                       StaticLSHTable<PointType, KeyType, LSH, HashType,
@@ -97,7 +96,7 @@ class StaticLSHTable
       }
       thread_results.push_back(std::async(
           std::launch::async, &StaticLSHTable::setup_table_range, this,
-          next_table_range_start, next_table_range_end, points, pCenter));
+          next_table_range_start, next_table_range_end, points));
       next_table_range_start = next_table_range_end + 1;
     }
 
@@ -118,8 +117,12 @@ class StaticLSHTable
                                         int_fast64_t num_probes,
                                         int_fast64_t max_num_candidates,
                                         std::vector<KeyType>* result) {
+      if (result == nullptr) {
+        throw LSHTableError("Results vector pointer is nullptr.");
+      }
+
       auto start_time = std::chrono::high_resolution_clock::now();
-      stats_num_queries_ += 1;
+      stats_.num_queries += 1;
 
       lsh_query_.get_probes_by_table(p, &tmp_probes_by_table_, num_probes);
 
@@ -162,8 +165,12 @@ class StaticLSHTable
     void get_unique_candidates(const PointType& p, int_fast64_t num_probes,
                                int_fast64_t max_num_candidates,
                                std::vector<KeyType>* result) {
+      if (result == nullptr) {
+        throw LSHTableError("Results vector pointer is nullptr.");
+      }
+
       auto start_time = std::chrono::high_resolution_clock::now();
-      stats_num_queries_ += 1;
+      stats_.num_queries += 1;
 
       get_unique_candidates_internal(p, num_probes, max_num_candidates, result);
 
@@ -174,42 +181,11 @@ class StaticLSHTable
       stats_.average_total_query_time += elapsed_total.count();
     }
 
-    /*void get_unique_sorted_candidates(const PointType& p,
-                                      int_fast64_t num_probes,
-                                      int_fast64_t max_num_candidates,
-                                      std::vector<KeyType>* result) {
-      auto start_time = std::chrono::high_resolution_clock::now();
-      stats_num_queries_ += 1;
-
-      get_unique_candidates_internal(p, num_probes, max_num_candidates, result);
-      std::sort(result->begin(), result->end());
-
-      auto end_time = std::chrono::high_resolution_clock::now();
-      auto elapsed_total = std::chrono::duration_cast<
-          std::chrono::duration<double>>(end_time - start_time);
-      stats_.average_total_query_time += elapsed_total.count();
-    }*/
-
-    void reset_query_statistics() {
-      stats_num_queries_ = 0;
-      stats_.average_total_query_time = 0.0;
-      stats_.average_lsh_time = 0.0;
-      stats_.average_hash_table_time = 0.0;
-      stats_.average_distance_time = 0.0;
-      stats_.average_num_candidates = 0.0;
-      stats_.average_num_unique_candidates = 0.0;
-    }
+    void reset_query_statistics() { stats_.reset(); }
 
     QueryStatistics get_query_statistics() {
       QueryStatistics res = stats_;
-      if (stats_num_queries_ > 0) {
-        res.average_total_query_time /= stats_num_queries_;
-        res.average_lsh_time /= stats_num_queries_;
-        res.average_hash_table_time /= stats_num_queries_;
-        res.average_distance_time /= stats_num_queries_;
-        res.average_num_candidates /= stats_num_queries_;
-        res.average_num_unique_candidates /= stats_num_queries_;
-      }
+      res.compute_averages();
       return res;
     }
 
@@ -226,7 +202,6 @@ class StaticLSHTable
         hash_table_iterators_;
 
     QueryStatistics stats_;
-    int_fast64_t stats_num_queries_ = 0;
 
     void get_unique_candidates_internal(const PointType& p,
                                         int_fast64_t num_probes,
@@ -278,8 +253,8 @@ class StaticLSHTable
   int_fast64_t n_;
 
   void setup_table_range(int_fast32_t from, int_fast32_t to,
-                         const DataStorageType& points, const typename PointTypeConverter<PointType>::DensePointType* pCenter) {
-    typename LSH::template BatchHash<DataStorageType, PointType> bh(*(this->lsh_), pCenter);
+                         const DataStorageType& points) {
+    typename LSH::template BatchHash<DataStorageType> bh(*(this->lsh_));
     std::vector<HashType> table_hashes;
     for (int_fast32_t ii = from; ii <= to; ++ii) {
       bh.batch_hash_single_table(points, ii, &table_hashes);

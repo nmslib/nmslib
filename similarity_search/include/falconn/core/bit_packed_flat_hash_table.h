@@ -2,6 +2,7 @@
 #define __BIT_PACKED_FLAT_HASH_TABLE_H__
 
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 #include "bit_packed_vector.h"
@@ -76,7 +77,7 @@ class BitPackedFlatHashTable {
   BitPackedFlatHashTable(IndexType num_buckets, ValueType num_items)
       : num_buckets_(num_buckets),
         num_items_(num_items),
-        bucket_start_(num_buckets, log2ceil(num_items)),
+        bucket_start_(num_buckets, log2ceil(num_items + 1)),
         indices_(num_items, log2ceil(num_items)) {
     // printf("num_buckets = %d  num_items_ = %d\n", num_buckets_, num_items_);
     if (num_buckets_ < 1) {
@@ -98,44 +99,24 @@ class BitPackedFlatHashTable {
           "Incorrect number of items in add_entries.");
     }
 
-    KeyComparator comp(keys);
-    std::vector<ValueType> tmp_indices(keys.size());
-    for (IndexType ii = 0; ii < static_cast<IndexType>(tmp_indices.size());
-         ++ii) {
+    std::vector<IndexType> bucket_counts(num_buckets_, 0);
+    for (IndexType ii = 0; ii < static_cast<IndexType>(keys.size()); ++ii) {
       if (static_cast<IndexType>(keys[ii]) >= num_buckets_ || keys[ii] < 0) {
         throw BitPackedFlatHashTableError("Key value out of range.");
       }
-      tmp_indices[ii] = ii;
-    }
-    std::sort(tmp_indices.begin(), tmp_indices.end(), comp);
-
-    for (IndexType ii = 0; ii < static_cast<IndexType>(tmp_indices.size());
-         ++ii) {
-      indices_.set(ii, tmp_indices[ii]);
+      bucket_counts[keys[ii]] += 1;
     }
 
-    IndexType cur_index = 0;
-    std::vector<bool> bucket_empty(num_buckets_, true);
-
-    while (cur_index < static_cast<IndexType>(tmp_indices.size())) {
-      IndexType end_index = cur_index;
-      do {
-        end_index += 1;
-      } while (end_index < static_cast<IndexType>(tmp_indices.size()) &&
-               keys[tmp_indices[cur_index]] == keys[tmp_indices[end_index]]);
-
-      bucket_start_.set(keys[tmp_indices[cur_index]], cur_index);
-      bucket_empty[keys[tmp_indices[cur_index]]] = false;
-      cur_index = end_index;
+    bucket_start_.set(0, 0);
+    for (IndexType ii = 1; ii < num_buckets_; ++ii) {
+      bucket_start_.set(ii, bucket_start_.get(ii - 1) + bucket_counts[ii - 1]);
     }
 
-    if (bucket_empty[num_buckets_ - 1]) {
-      bucket_start_.set(num_buckets_ - 1, num_items_);
-    }
-    for (IndexType ii = num_buckets_ - 2; ii >= 0; --ii) {
-      if (bucket_empty[ii]) {
-        bucket_start_.set(ii, bucket_start_.get(ii + 1));
-      }
+    for (IndexType ii = static_cast<IndexType>(keys.size()) - 1; ii >= 0;
+         --ii) {
+      KeyType cur_key = keys[ii];
+      indices_.set(bucket_start_.get(cur_key) + bucket_counts[cur_key] - 1, ii);
+      bucket_counts[cur_key] -= 1;
     }
   }
 
@@ -145,6 +126,7 @@ class BitPackedFlatHashTable {
     if (static_cast<IndexType>(key) < num_buckets_ - 1) {
       end = bucket_start_.get(key + 1);
     }
+    assert(start <= end);
     // printf("retrieve for key %u\n", key);
     // printf("  start: %lld  end %lld\n", start, end);
     return std::make_pair(Iterator(start, this), Iterator(end, this));

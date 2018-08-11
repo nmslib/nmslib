@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "eigen_wrapper.h"
+#include <Eigen/Dense>
 
 namespace falconn {
 
@@ -100,86 +100,53 @@ struct QueryStatistics {
   /// Average number of *unique* candidates
   ///
   double average_num_unique_candidates = 0;
-};
+  ///
+  /// Number of queries the statistics were computed over
+  ///
+  int_fast64_t num_queries = 0;
 
-template <typename PointType>
-struct PointTypeConverter {
-};
+  // TODO: move these to internal helper functions?
+  void convert_to_totals() {
+    average_total_query_time *= num_queries;
+    average_lsh_time *= num_queries;
+    average_hash_table_time *= num_queries;
+    average_distance_time *= num_queries;
+    average_num_candidates *= num_queries;
+    average_num_unique_candidates *= num_queries;
+  }
 
-template <>
-struct PointTypeConverter<DenseVector<float>> {
-  typedef DenseVector<float>             DensePointType;
-  typedef similarity::KNNQuery<float>    NMSLIBQuery;
-};
-
-template <>
-struct PointTypeConverter<DenseVector<double>> {
-  typedef DenseVector<double>             DensePointType;
-  typedef similarity::KNNQuery<double>    NMSLIBQuery;
-};
-
-template <>
-struct PointTypeConverter<SparseVector<float>> {
-  typedef DenseVector<float>             DensePointType;
-  typedef similarity::KNNQuery<float>    NMSLIBQuery;
-};
-
-template <>
-struct PointTypeConverter<SparseVector<double>> {
-  typedef DenseVector<double>             DensePointType;
-  typedef similarity::KNNQuery<double>    NMSLIBQuery;
-};
-
-template <class dist_t>
-void toDenseVector(const SparseVector<dist_t>& v, DenseVector<dist_t>& res, size_t dim) {
-  res = DenseVector<dist_t>(dim);
-  res.setZero();
-
-  for (auto e: v) {
-    if (e.first < dim) {
-      res[e.first] = e.second;
+  void compute_averages() {
+    if (num_queries > 0) {
+      average_total_query_time /= num_queries;
+      average_lsh_time /= num_queries;
+      average_hash_table_time /= num_queries;
+      average_distance_time /= num_queries;
+      average_num_candidates /= num_queries;
+      average_num_unique_candidates /= num_queries;
     }
   }
-}
 
-template <class dist_t>
-void toDenseVector(const DenseVector<dist_t>& v, DenseVector<dist_t>& res, size_t dim) {
-  res = v;
-}
+  void add_totals(const QueryStatistics& other) {
+    average_total_query_time += other.average_total_query_time;
+    average_lsh_time += other.average_lsh_time;
+    average_hash_table_time += other.average_hash_table_time;
+    average_distance_time += other.average_distance_time;
+    average_num_candidates += other.average_num_candidates;
+    average_num_unique_candidates += other.average_num_unique_candidates;
+    num_queries += other.num_queries;
+  }
 
-template <class dist_t>
-void fromDenseVector(const DenseVector<dist_t>& v, DenseVector<dist_t>& res) {
-  res = v;
-}
-
-template <class dist_t>
-void fromDenseVector(const DenseVector<dist_t>& v,
-                     SparseVector<dist_t>& res,
-                     dist_t eps = 2*std::numeric_limits<dist_t>::min()
-) {
-  res.clear();
-  for (size_t ii = 0; ii < v.rows(); ++ii)
-    if (fabs(v[ii])>=eps) {
-      res.emplace_back(make_pair(ii, v[ii]));
-    }
-}
-
-
-
-}  // namespace falconn
-
-// Workaround for the CYGWIN bug described in
-// http://stackoverflow.com/questions/28997206/cygwin-support-for-c11-in-g4-9-2
-
-#ifdef __CYGWIN__
-
-#include <cmath>
-
-namespace std {
-using ::log2;
-using ::round;
+  void reset() {
+    average_total_query_time = 0.0;
+    average_lsh_time = 0.0;
+    average_hash_table_time = 0.0;
+    average_distance_time = 0.0;
+    average_num_candidates = 0.0;
+    average_num_unique_candidates = 0.0;
+    num_queries = 0;
+  }
 };
 
-#endif
+}  // namespace falconn
 
 #endif

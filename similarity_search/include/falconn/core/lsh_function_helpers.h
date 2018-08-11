@@ -1,12 +1,9 @@
 #ifndef __LSH_FUNCTION_HELPERS_H__
 #define __LSH_FUNCTION_HELPERS_H__
 
-#include <limits>
-
 #include "../falconn_global.h"
 
 namespace falconn {
-
 namespace core {
 
 class LSHFunctionError : public FalconnError {

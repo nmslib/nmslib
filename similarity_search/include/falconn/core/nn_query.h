@@ -10,9 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include "object.h"
-#include "knnquery.h"
-
 #include "../falconn_global.h"
 #include "heap.h"
 
@@ -39,7 +36,6 @@ class NearestNeighborQuery {
                                         int_fast64_t num_probes,
                                         int_fast64_t max_num_candidates) {
     auto start_time = std::chrono::high_resolution_clock::now();
-    stats_num_queries_ += 1;
 
     table_query_->get_unique_candidates(q, num_probes, max_num_candidates,
                                         &candidates_);
@@ -85,9 +81,6 @@ class NearestNeighborQuery {
 
   void find_k_nearest_neighbors(const LSHTablePointType& q,
                                 const ComparisonPointType& q_comp,
-                                const typename PointTypeConverter<LSHTablePointType>::DensePointType* pCenter,
-                                similarity::KNNQuery<DistanceType>* pNMSLIBQuery,
-                                const similarity::ObjectVector* pNMSLIBData,
                                 int_fast64_t k, int_fast64_t num_probes,
                                 int_fast64_t max_num_candidates,
                                 std::vector<LSHTableKeyType>* result) {
@@ -96,21 +89,11 @@ class NearestNeighborQuery {
     }
 
     auto start_time = std::chrono::high_resolution_clock::now();
-    stats_num_queries_ += 1;
-
-    LSHTablePointType qCentered;
-
-    if (pCenter != nullptr) {
-      typename PointTypeConverter<LSHTablePointType>::DensePointType tmp;
-      toDenseVector(q, tmp, pCenter->rows());
-      tmp -= *pCenter;
-      fromDenseVector(tmp, qCentered);
-    }
 
     std::vector<LSHTableKeyType>& res = *result;
     res.clear();
 
-    table_query_->get_unique_candidates(pCenter == nullptr ? q : qCentered, num_probes, max_num_candidates,
+    table_query_->get_unique_candidates(q, num_probes, max_num_candidates,
                                         &candidates_);
 
     heap_.reset();
@@ -118,54 +101,35 @@ class NearestNeighborQuery {
 
     auto distance_start_time = std::chrono::high_resolution_clock::now();
 
-    if (pNMSLIBQuery == nullptr) {
-      int_fast64_t initially_inserted = 0;
+    typename DataStorage::SubsequenceIterator iter =
+        data_storage_.get_subsequence(candidates_);
 
-      typename DataStorage::SubsequenceIterator iter =
-          data_storage_.get_subsequence(candidates_);
+    int_fast64_t initially_inserted = 0;
+    for (; initially_inserted < k; ++initially_inserted) {
+      if (iter.is_valid()) {
+        heap_.insert_unsorted(-dst_(q_comp, iter.get_point()), iter.get_key());
+        ++iter;
+      } else {
+        break;
+      }
+    }
 
-      for (; initially_inserted < k; ++initially_inserted) {
-        if (iter.is_valid()) {
-          heap_.insert_unsorted(-dst_(q_comp, iter.get_point()), iter.get_key());
-          ++iter;
-        } else {
-          break;
+    if (initially_inserted >= k) {
+      heap_.heapify();
+      while (iter.is_valid()) {
+        DistanceType cur_distance = dst_(q_comp, iter.get_point());
+        if (cur_distance < -heap_.min_key()) {
+          heap_.replace_top(-cur_distance, iter.get_key());
         }
+        ++iter;
       }
+    }
 
-      if (initially_inserted >= k) {
-        heap_.heapify();
-        while (iter.is_valid()) {
-          DistanceType cur_distance = dst_(q_comp, iter.get_point());
-          if (cur_distance < -heap_.min_key()) {
-            heap_.replace_top(-cur_distance, iter.get_key());
-          }
-          ++iter;
-        }
-      }
-
-      res.resize(initially_inserted);
-      std::sort(heap_.get_data().begin(),
-                heap_.get_data().begin() + initially_inserted);
-      for (int_fast64_t ii = 0; ii < initially_inserted; ++ii) {
-        res[ii] = heap_.get_data()[initially_inserted - ii - 1].data;
-      }
-    } else {
-      size_t ki = 0;
-      CHECK_MSG(pNMSLIBData != nullptr, "If NMSLIB query object is not NULL, NMSLIB data pointer shouldn't be NULL either!");
-      const similarity::ObjectVector& ndata = *pNMSLIBData;
-
-      const size_t NNP = 3;
-      if (candidates_.size() > NNP) {
-        for (size_t k = 0; k < NNP; ++k)
-          _mm_prefetch(ndata[candidates_[k]]->buffer(), _MM_HINT_T0);
-      }
-
-      for (; ki < candidates_.size(); ++ki) {
-        int key = candidates_[ki];
-        pNMSLIBQuery->CheckAndAddToResult(ndata[key]);
-        if (ki + NNP < candidates_.size()) _mm_prefetch(ndata[candidates_[ki+NNP]]->buffer(), _MM_HINT_T0);
-      }
+    res.resize(initially_inserted);
+    std::sort(heap_.get_data().begin(),
+              heap_.get_data().begin() + initially_inserted);
+    for (int_fast64_t ii = 0; ii < initially_inserted; ++ii) {
+      res[ii] = heap_.get_data()[initially_inserted - ii - 1].data;
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -189,7 +153,6 @@ class NearestNeighborQuery {
     }
 
     auto start_time = std::chrono::high_resolution_clock::now();
-    stats_num_queries_ += 1;
 
     std::vector<LSHTableKeyType>& res = *result;
     res.clear();
@@ -219,15 +182,41 @@ class NearestNeighborQuery {
     stats_.average_total_query_time += elapsed_total.count();
   }
 
+  void get_candidates_with_duplicates(const LSHTablePointType& q,
+                                      int_fast64_t num_probes,
+                                      int_fast64_t max_num_candidates,
+                                      std::vector<LSHTableKeyType>* result) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    table_query_->get_candidates_with_duplicates(q, num_probes,
+                                                 max_num_candidates, result);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto elapsed_total =
+        std::chrono::duration_cast<std::chrono::duration<double>>(end_time -
+                                                                  start_time);
+    stats_.average_total_query_time += elapsed_total.count();
+  }
+
+  void get_unique_candidates(const LSHTablePointType& q,
+                             int_fast64_t num_probes,
+                             int_fast64_t max_num_candidates,
+                             std::vector<LSHTableKeyType>* result) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    table_query_->get_unique_candidates(q, num_probes, max_num_candidates,
+                                        result);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto elapsed_total =
+        std::chrono::duration_cast<std::chrono::duration<double>>(end_time -
+                                                                  start_time);
+    stats_.average_total_query_time += elapsed_total.count();
+  }
+
   void reset_query_statistics() {
     table_query_->reset_query_statistics();
-    stats_num_queries_ = 0;
-    stats_.average_total_query_time = 0.0;
-    stats_.average_lsh_time = 0.0;
-    stats_.average_hash_table_time = 0.0;
-    stats_.average_distance_time = 0.0;
-    stats_.average_num_candidates = 0.0;
-    stats_.average_num_unique_candidates = 0.0;
+    stats_.reset();
   }
 
   QueryStatistics get_query_statistics() {
@@ -235,9 +224,9 @@ class NearestNeighborQuery {
     res.average_total_query_time = stats_.average_total_query_time;
     res.average_distance_time = stats_.average_distance_time;
 
-    if (stats_num_queries_ > 0) {
-      res.average_total_query_time /= stats_num_queries_;
-      res.average_distance_time /= stats_num_queries_;
+    if (res.num_queries > 0) {
+      res.average_total_query_time /= res.num_queries;
+      res.average_distance_time /= res.num_queries;
     }
     return res;
   }
@@ -250,7 +239,6 @@ class NearestNeighborQuery {
   SimpleHeap<DistanceType, LSHTableKeyType> heap_;
 
   QueryStatistics stats_;
-  int_fast64_t stats_num_queries_ = 0;
 };
 
 }  // namespace core

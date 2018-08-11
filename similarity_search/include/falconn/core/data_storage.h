@@ -175,7 +175,6 @@ class ArrayDataStorage {
     return FullSequenceIterator(*this);
   }
 
-  const PointType& operator[](size_t ii) const { return data_[ii]; }
  private:
   const std::vector<PointType>& data_;
 };
