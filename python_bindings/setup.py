@@ -4,7 +4,7 @@ from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
 
-__version__ = '1.7.2'
+__version__ = '1.7.3.4'
 
 libdir = os.path.join(".", "nmslib", "similarity_search")
 library_file = os.path.join(libdir, "release", "libNonMetricSpaceLib.a")
@@ -137,6 +137,7 @@ setup(
  high dimensions and/or non-metric spaces. Hence, the main focus is on approximate methods.""",
     ext_modules=ext_modules,
     install_requires=['pybind11>=2.0', 'numpy'],
+    setup_requires=['pybind11>=2.0', 'numpy'],
     cmdclass={'build_ext': BuildExt},
     test_suite="tests",
     zip_safe=False,

@@ -616,7 +616,7 @@ namespace similarity {
         };
         ~VisitedListPool()
         {
-            LOG(LIB_INFO) << "Total " << pool.size() << " lists allocated";
+            //LOG(LIB_INFO) << "Total " << pool.size() << " lists allocated";
             while (pool.size()) {
                 VisitedList *rez = pool.front();
                 pool.pop_front();

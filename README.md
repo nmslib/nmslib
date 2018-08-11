@@ -5,7 +5,7 @@
 
 Non-Metric Space Library (NMSLIB) 
 =================
-The latest **pre**-release is [1.7.2](https://github.com/nmslib/nmslib/releases/tag/v1.7.1). Note that the manual is not updated to reflect some of the changes. In particular, we changed the build procedure for Windows. Also note that the manual targets primiarily developers who will extend the library. For most other folks, [Python binding docs should be sufficient](python_bindings). The basic parameter tuning/selection guidelines are also available [online](/python_bindings/parameters.md).
+The latest **pre**-release is [1.7.3.4](https://github.com/nmslib/nmslib/releases/tag/v1.7.3.4). Note that the manual is not updated to reflect some of the changes. In particular, we changed the build procedure for Windows. Also note that the manual targets primiarily developers who will extend the library. For most other folks, [Python binding docs should be sufficient](python_bindings). The basic parameter tuning/selection guidelines are also available [online](/python_bindings/parameters.md).
 -----------------
 Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
 
@@ -19,7 +19,7 @@ Other contributors:  Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin,
 
 **Citing:** If you find this library useful, feel free to cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13) as well as other papers listed in the end. One crucial contribution to cite is the fast Hierarchical Navigable World graph (HNSW) method [**[BibTex]**](https://dblp.uni-trier.de/rec/bibtex/journals/corr/MalkovY16).
 
-Leo(nid) Boytsov is a maintainer. Leo is supported by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa) and the following NSF grant #1618159: "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". Bileg was supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
+Leo(nid) Boytsov is a maintainer. Leo was supported by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa) and the following NSF grant #1618159: "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". Bileg was supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
 
 **Should you decide to modify the library (and, perhaps, create a pull request), please, use the [develoment branch](https://github.com/nmslib/nmslib/tree/develop)**. For generic questions/inquiries, please, use Gitter (see the badge above). Bug reports should be submitted as GitHub issues.
 

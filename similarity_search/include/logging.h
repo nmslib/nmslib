@@ -128,7 +128,7 @@ class RuntimeErrorWrapper {
 
 #define CHECK_MSG(condition,message) \
   if (!(condition)) {\
-    LOG(LIB_ERROR) << "Check failed: " << #condition;  \
+    LOG(LIB_ERROR) << "Check failed: " << #condition << " " << string(message);  \
     throw runtime_error("Check failed: " + string(message)); \
   }
 

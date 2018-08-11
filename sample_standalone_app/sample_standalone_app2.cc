@@ -114,14 +114,14 @@ int main(int argc, char* argv[]) {
   AnyParams IndexParams(
             {
             "NN=17",
-            "initIndexAttempts=3",
+            "efConstruction=50",
             "indexThreadQty=4", /* 4 indexing threads */
             }
             );
 
   AnyParams QueryTimeParams(
             {
-            "initSearchAttempts=1",
+            "efSearch=50",
             }
             );
 

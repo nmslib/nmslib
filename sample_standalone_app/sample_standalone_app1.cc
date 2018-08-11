@@ -177,11 +177,11 @@ int main(int argc, char* argv[]) {
   AnyParams IndexParams(
                         {
                         "NN=11",
-                        "initIndexAttempts=3",
+                        "efConstruction=50",
                         "indexThreadQty=4" /* 4 indexing threads */
                         });
 
-  AnyParams QueryTimeParams( { "initSearchAttempts=3" });
+  AnyParams QueryTimeParams( { "efSearch=50" });
                           
   Index<float>*   indexSmallWorld =  
                         MethodFactoryRegistry<float>::Instance().
@@ -246,10 +246,10 @@ int main(int argc, char* argv[]) {
   KNNQuery<float>   knnQ(customSpace, queryObj, K);
 
   cout << "Setting one value of a query-time param (small  world)" << endl;
-  indexSmallWorld->SetQueryTimeParams(AnyParams({ "initSearchAttempts=3" }));
+  indexSmallWorld->SetQueryTimeParams(AnyParams({ "efSearch=100" }));
   doSearch(indexSmallWorld, &knnQ, REP_QTY);
   cout << "Setting one value of a query-time param (small  world)" << endl;
-  indexSmallWorld->SetQueryTimeParams(AnyParams({ "initSearchAttempts=1" }));
+  indexSmallWorld->SetQueryTimeParams(AnyParams({ "efSearch=50" }));
   doSearch(indexSmallWorld, &knnQ, REP_QTY);
 
   doSearch(indexVPTree, &knnQ, REP_QTY);
