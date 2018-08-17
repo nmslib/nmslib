@@ -578,7 +578,7 @@ void exportIndex(py::module * m) {
       "Parameters\n"
       "----------\n"
       "filename: str\n"
-      "    The filename to read from\n",
+      "    The filename to read from\n"
       "print_progress: bool optional\n"
       "    Whether or not to display progress bar when creating index\n")
 
