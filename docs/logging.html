@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Search &mdash; nmslib 1.7.3.4 documentation</title>
+  <title>Configuring Logging for NMSLIB &mdash; nmslib 1.7.3.4 documentation</title>
   
 
   
@@ -27,7 +27,8 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="API Reference" href="api.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -63,7 +64,7 @@
 
           
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="#" method="get">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -81,10 +82,10 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html"> Quickstart</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html"> API Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="logging.html"> Logging</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"> Logging</a></li>
 </ul>
 
             
@@ -130,12 +131,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Search</li>
+      <li>Configuring Logging for NMSLIB</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
+            <a href="_sources/logging.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -147,24 +150,47 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <noscript>
-  <div id="fallback" class="admonition warning">
-    <p class="last">
-      Please activate JavaScript to enable the search
-      functionality.
-    </p>
-  </div>
-  </noscript>
+  <div class="section" id="configuring-logging-for-nmslib">
+<h1>Configuring Logging for NMSLIB<a class="headerlink" href="#configuring-logging-for-nmslib" title="Permalink to this headline">¶</a></h1>
+<p>This library logs to a Python logger named <code class="docutils literal notranslate"><span class="pre">nmslib</span></code>. This lets
+you fully control the log messages produced by nmslib in Python.</p>
+<p>For instance, to log everything produced by nmslib to a default
+python logger:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># setup basic python logging</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
 
-  
-  <div id="search-results">
-  
-  </div>
+<span class="c1"># importing nmslib logs some debug messages on startup, that</span>
+<span class="c1"># that will be output to the python log handler created above</span>
+<span class="kn">import</span> <span class="nn">nmslib</span>
+</pre></div>
+</div>
+<p>To quiet these messages you can just set the level for nmslib
+as appropiate:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># setup basic python logging</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+<span class="c1"># Only log WARNING messages and above from nmslib</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;nmslib&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">nmslib</span>
+</pre></div>
+</div>
+</div>
+
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="api.html" class="btn btn-neutral" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
@@ -204,7 +230,6 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="_static/searchtools.js"></script>
 
   
 
@@ -214,14 +239,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-  <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("searchindex.js"); });
-  </script>
-  
-  <script type="text/javascript" id="searchindexloader"></script>
-   
-
+  </script> 
 
 </body>
 </html>

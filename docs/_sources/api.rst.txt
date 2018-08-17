@@ -9,6 +9,19 @@ function should be called first before calling any other method.
 
 .. autofunction:: nmslib.init
 
+
+.. class:: nmslib.DistType
+
+    .. attribute:: FLOAT
+    .. attribute:: DOUBLE
+    .. attribute:: INT
+
+.. class:: nmslib.DataType
+
+    .. attribute:: DENSE_VECTOR
+    .. attribute:: OBJECT_AS_STRING
+    .. attribute:: SPARSE_VECTOR
+
 nmslib.FloatIndex
 -----------------
 

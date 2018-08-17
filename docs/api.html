@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; nmslib 1.6.3 documentation</title>
+  <title>API Reference &mdash; nmslib 1.7.3.4 documentation</title>
   
 
   
@@ -24,26 +24,19 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="nmslib 1.6.3 documentation" href="index.html"/>
-        <link rel="prev" title="Python bindings for NMSLIB" href="quickstart.html"/> 
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuring Logging for NMSLIB" href="logging.html" />
+    <link rel="prev" title="Python bindings for NMSLIB" href="quickstart.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -65,7 +58,7 @@
             
             
               <div class="version">
-                1.6
+                1.7
               </div>
             
           
@@ -99,6 +92,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#nmslib-intindex">nmslib.IntIndex</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="logging.html"> Logging</a></li>
 </ul>
 
             
@@ -110,7 +104,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">nmslib</a>
@@ -118,9 +112,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -195,6 +190,46 @@ function should be called first before calling any other method.</p>
 </table>
 </dd></dl>
 
+<dl class="class">
+<dt id="nmslib.DistType">
+<em class="property">class </em><code class="descclassname">nmslib.</code><code class="descname">DistType</code><a class="headerlink" href="#nmslib.DistType" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="nmslib.DistType.FLOAT">
+<code class="descname">FLOAT</code><a class="headerlink" href="#nmslib.DistType.FLOAT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="nmslib.DistType.DOUBLE">
+<code class="descname">DOUBLE</code><a class="headerlink" href="#nmslib.DistType.DOUBLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="nmslib.DistType.INT">
+<code class="descname">INT</code><a class="headerlink" href="#nmslib.DistType.INT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nmslib.DataType">
+<em class="property">class </em><code class="descclassname">nmslib.</code><code class="descname">DataType</code><a class="headerlink" href="#nmslib.DataType" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="nmslib.DataType.DENSE_VECTOR">
+<code class="descname">DENSE_VECTOR</code><a class="headerlink" href="#nmslib.DataType.DENSE_VECTOR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="nmslib.DataType.OBJECT_AS_STRING">
+<code class="descname">OBJECT_AS_STRING</code><a class="headerlink" href="#nmslib.DataType.OBJECT_AS_STRING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="nmslib.DataType.SPARSE_VECTOR">
+<code class="descname">SPARSE_VECTOR</code><a class="headerlink" href="#nmslib.DataType.SPARSE_VECTOR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="nmslib-floatindex">
 <h2>nmslib.FloatIndex<a class="headerlink" href="#nmslib-floatindex" title="Permalink to this headline">¶</a></h2>
@@ -205,7 +240,7 @@ function should be called first before calling any other method.</p>
 <dd><dl class="method">
 <dt id="nmslib.dist.FloatIndex.addDataPoint">
 <code class="descname">addDataPoint</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>id: int</em>, <em>data: object</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.FloatIndex.addDataPoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<dd><p>Adds a single datapoint to the index</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -229,7 +264,7 @@ function should be called first before calling any other method.</p>
 <dl class="method">
 <dt id="nmslib.dist.FloatIndex.addDataPointBatch">
 <code class="descname">addDataPointBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>data: object</em>, <em>ids: object=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.FloatIndex.addDataPointBatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<dd><p>Adds multiple datapoints to the index</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -303,20 +338,23 @@ row id of each object in the dataset</li>
 <dt id="nmslib.dist.FloatIndex.knnQueryBatch">
 <code class="descname">knnQueryBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>queries: object</em>, <em>k: int=10</em>, <em>num_threads: int=0</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.FloatIndex.knnQueryBatch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs multiple queries on the index, distributing the work over
-a thread pool
-:param input: A list of queries to query for
-:type input: list
-:param k: The number of neighbours to return
-:type k: int optional
-:param num_threads: The number of threads to use
-:type num_threads: int optional</p>
+a thread pool</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples of (ids, distances)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input</strong> (<em>list</em>) – A list of queries to query for</li>
+<li><strong>k</strong> (<em>int optional</em>) – The number of neighbours to return</li>
+<li><strong>num_threads</strong> (<em>int optional</em>) – The number of threads to use</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of tuples of (ids, distances)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -325,10 +363,19 @@ a thread pool
 <dl class="method">
 <dt id="nmslib.dist.FloatIndex.loadIndex">
 <code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>print_progress: bool optional</dt>
-<dd>Whether or not to display progress bar when creating index</dd>
-</dl>
+<dd><p>Loads the index from disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – The filename to read from</li>
+<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -371,7 +418,7 @@ a thread pool
 <dd><dl class="method">
 <dt id="nmslib.dist.DoubleIndex.addDataPoint">
 <code class="descname">addDataPoint</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>id: int</em>, <em>data: object</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.DoubleIndex.addDataPoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<dd><p>Adds a single datapoint to the index</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -395,7 +442,7 @@ a thread pool
 <dl class="method">
 <dt id="nmslib.dist.DoubleIndex.addDataPointBatch">
 <code class="descname">addDataPointBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>data: object</em>, <em>ids: object=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.DoubleIndex.addDataPointBatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<dd><p>Adds multiple datapoints to the index</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -469,20 +516,23 @@ row id of each object in the dataset</li>
 <dt id="nmslib.dist.DoubleIndex.knnQueryBatch">
 <code class="descname">knnQueryBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>queries: object</em>, <em>k: int=10</em>, <em>num_threads: int=0</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.DoubleIndex.knnQueryBatch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs multiple queries on the index, distributing the work over
-a thread pool
-:param input: A list of queries to query for
-:type input: list
-:param k: The number of neighbours to return
-:type k: int optional
-:param num_threads: The number of threads to use
-:type num_threads: int optional</p>
+a thread pool</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples of (ids, distances)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input</strong> (<em>list</em>) – A list of queries to query for</li>
+<li><strong>k</strong> (<em>int optional</em>) – The number of neighbours to return</li>
+<li><strong>num_threads</strong> (<em>int optional</em>) – The number of threads to use</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of tuples of (ids, distances)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -491,10 +541,19 @@ a thread pool
 <dl class="method">
 <dt id="nmslib.dist.DoubleIndex.loadIndex">
 <code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>print_progress: bool optional</dt>
-<dd>Whether or not to display progress bar when creating index</dd>
-</dl>
+<dd><p>Loads the index from disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – The filename to read from</li>
+<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -537,7 +596,7 @@ a thread pool
 <dd><dl class="method">
 <dt id="nmslib.dist.IntIndex.addDataPoint">
 <code class="descname">addDataPoint</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>id: int</em>, <em>data: object</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.IntIndex.addDataPoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<dd><p>Adds a single datapoint to the index</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -561,7 +620,7 @@ a thread pool
 <dl class="method">
 <dt id="nmslib.dist.IntIndex.addDataPointBatch">
 <code class="descname">addDataPointBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>data: object</em>, <em>ids: object=None</em><span class="sig-paren">)</span> &#x2192; int<a class="headerlink" href="#nmslib.dist.IntIndex.addDataPointBatch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<dd><p>Adds multiple datapoints to the index</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -635,20 +694,23 @@ row id of each object in the dataset</li>
 <dt id="nmslib.dist.IntIndex.knnQueryBatch">
 <code class="descname">knnQueryBatch</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>queries: object</em>, <em>k: int=10</em>, <em>num_threads: int=0</em><span class="sig-paren">)</span> &#x2192; object<a class="headerlink" href="#nmslib.dist.IntIndex.knnQueryBatch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs multiple queries on the index, distributing the work over
-a thread pool
-:param input: A list of queries to query for
-:type input: list
-:param k: The number of neighbours to return
-:type k: int optional
-:param num_threads: The number of threads to use
-:type num_threads: int optional</p>
+a thread pool</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of tuples of (ids, distances)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input</strong> (<em>list</em>) – A list of queries to query for</li>
+<li><strong>k</strong> (<em>int optional</em>) – The number of neighbours to return</li>
+<li><strong>num_threads</strong> (<em>int optional</em>) – The number of threads to use</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of tuples of (ids, distances)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -657,10 +719,19 @@ a thread pool
 <dl class="method">
 <dt id="nmslib.dist.IntIndex.loadIndex">
 <code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>print_progress: bool optional</dt>
-<dd>Whether or not to display progress bar when creating index</dd>
-</dl>
+<dd><p>Loads the index from disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – The filename to read from</li>
+<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -698,13 +769,13 @@ a thread pool
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="logging.html" class="btn btn-neutral float-right" title="Configuring Logging for NMSLIB" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="quickstart.html" class="btn btn-neutral" title="Python bindings for NMSLIB" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -720,7 +791,7 @@ a thread pool
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -738,7 +809,8 @@ a thread pool
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.6.3',
+            VERSION:'1.7.3.4',
+            LANGUAGE:'None',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -751,19 +823,13 @@ a thread pool
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>
