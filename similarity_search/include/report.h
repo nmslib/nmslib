@@ -54,6 +54,7 @@ namespace similarity {
     Print << "NumCloser:         " << round2(ExpRes.GetNumCloserAvg())    << " -> " << "[" << round2(ExpRes.GetNumCloserConfMin()) << " \t" << round2(ExpRes.GetNumCloserConfMax()) << "]" << std::endl;
     Print << "------------------------------------" << std::endl;
     Print << "QueryTime:         " << round2(ExpRes.GetQueryTimeAvg())    << " -> " << "[" << round2(ExpRes.GetQueryTimeConfMin()) << " \t" << round2(ExpRes.GetQueryTimeConfMax()) << "]" << std::endl;
+    Print << "QueryTime (sigma): " << round2(ExpRes.getQueryTimeSigma())  << std::endl;
     Print << "QueryPerSec:       " << round2(ExpRes.GetQueryPerSecAvg())    << " -> " << "[" << round2(ExpRes.GetQueryPerSecConfMin()) << " \t" << round2(ExpRes.GetQueryPerSecConfMax()) << "]" << std::endl;
     Print << "DistComp:          " << round2(ExpRes.GetDistCompAvg())     << " -> " << "[" << round2(ExpRes.GetDistCompConfMin()) << " \t" << round2(ExpRes.GetDistCompConfMax()) << "]" << std::endl;
     Print << "------------------------------------" << std::endl;

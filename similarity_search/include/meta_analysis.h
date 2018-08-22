@@ -166,13 +166,15 @@ public:
   double GetQueryPerSecConfMin() const{return QueryPerSecConfMin;}; 
   double GetQueryPerSecConfMax() const { return QueryPerSecConfMax;}
 
-  double GetQueryTimeAvg() const { return QueryTimeAvg;} 
+  double GetQueryTimeAvg() const { return QueryTimeAvg;}
+  double getQueryTimeSigma() const { return computeSigma(QueryTime_); }
   double GetQueryTimeConfMin() const{return QueryTimeConfMin;}; 
   double GetQueryTimeConfMax() const { return QueryTimeConfMax;}
 
   double GetDistCompAvg() const { return DistCompAvg;} 
   double GetDistCompConfMin() const{return DistCompConfMin;}; 
   double GetDistCompConfMax() const { return DistCompConfMax;}
+
 private:
 double RecallAvg, RecallConfMin, RecallConfMax;
 double PrecisionOfApproxAvg, PrecisionOfApproxConfMin, PrecisionOfApproxConfMax;
@@ -229,6 +231,23 @@ void ComputeOneSimple(const string& Name,
   // 5% confidence interval (assuming normal distrbution).
   ConfMin = avg - zVal_ * sigma;
   ConfMax = avg + zVal_ * sigma;
+}
+
+/*
+ * Compute the standard deviation over all splits.
+ */
+double computeSigma(const vector<vector<double>>& vals) const {
+
+  vector<double> tmp;
+
+  for (size_t i = 0; i < vals.size(); ++i) {
+    for (double v : vals[i])
+      tmp.push_back(v);
+  }
+
+  double mean = Mean(&tmp[0], tmp.size());
+
+  return sqrt(Variance(&tmp[0], tmp.size(), mean));
 }
 
 void ComputeOneMeta(const string &Name, 

@@ -92,7 +92,6 @@ const std::string INDEX_TIME_PARAMS_PARAM_MSG    = "index-time method(s) paramet
 
 const std::string METHOD_PARAM_OPT               = "method,m";
 const std::string METHOD_PARAM_MSG               = "method/index name";
-const std::string METHOD_PARAM_DEFAULT           = "";
 
 const std::string THREAD_TEST_QTY_PARAM_OPT      = "threadTestQty";
 const std::string THREAD_TEST_QTY_PARAM_MSG      = "# of threads during querying";
@@ -107,6 +106,10 @@ const std::string APPEND_TO_RES_FILE_PARAM_MSG   = "do not override information 
 
 const std::string NO_PROGRESS_PARAM_OPT          = "noProgressBar";
 const std::string NO_PROGRESS_PARAM_MSG          = "suppress displaying (mostly indexing) progress bars (for some methods)";
+
+const std::string RANDOM_SEED_PARAM_OPT                 = "seed";
+const std::string RANDOM_SEED_PARAM_MSG                 = "a random seed";
+const int RANDOM_SEED_PARAM_DEFAULT                 = 0;
 
 // Server/client parameters
 

@@ -39,6 +39,7 @@ void initLibrary(int seed, LogChoice choice, const char* pLogFile) {
 
   std::ios_base::sync_with_stdio(false);
   InitializeLogger(choice, pLogFile);
+  LOG(LIB_INFO) << "Random seed: " << seed;
   initSpaces();
   initMethods();
 }

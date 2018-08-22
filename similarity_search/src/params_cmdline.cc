@@ -32,7 +32,9 @@ namespace similarity {
 using std::multimap;
 using std::string;
 
-void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
+void ParseCommandLine(int argc, char* argv[],
+                      bool&                   bPrintProgress,
+                      int&                    randomSeed,
                       string&                 LogFile,
                       string&                 LoadIndexLoc,
                       string&                 SaveIndexLoc,
@@ -118,6 +120,8 @@ void ParseCommandLine(int argc, char* argv[], bool& bPrintProgress,
                                &ThreadTestQty, false, THREAD_TEST_QTY_PARAM_DEFAULT));
   cmd_options.Add(new CmdParam(OUT_FILE_PREFIX_PARAM_OPT, OUT_FILE_PREFIX_PARAM_MSG,
                                &ResFilePrefix, false, OUT_FILE_PREFIX_PARAM_DEFAULT));
+  cmd_options.Add(new CmdParam(RANDOM_SEED_PARAM_OPT, RANDOM_SEED_PARAM_MSG,
+                               &randomSeed, false, RANDOM_SEED_PARAM_DEFAULT));
   cmd_options.Add(new CmdParam(APPEND_TO_RES_FILE_PARAM_OPT, APPEND_TO_RES_FILE_PARAM_MSG,
                                &AppendToResFile, false));
   cmd_options.Add(new CmdParam(NO_PROGRESS_PARAM_OPT, NO_PROGRESS_PARAM_MSG,

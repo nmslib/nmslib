@@ -94,7 +94,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
 
   ExpRes.ComputeAll();
 
-  Header << "MethodName\tRecall\tRecall@1\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tIndexParams\tQueryTimeParams\tNumData" << std::endl;
+  Header << "MethodName\tRecall\tRecall@1\tPrecisionOfApprox\tRelPosError\tNumCloser\tClassAccuracy\tQueryTime\tQueryTimeSigma\tDistComp\tImprEfficiency\tImprDistComp\tMem\tIndexTime\tIndexLoadTime\tIndexSaveTime\tQueryPerSec\tIndexParams\tQueryTimeParams\tNumData" << std::endl;
 
   Data << "\"" << MethodName << "\"\t";
   Data << ExpRes.GetRecallAvg() << "\t";
@@ -104,6 +104,7 @@ void ProcessResults(const ExperimentConfig<dist_t>& config,
   Data << ExpRes.GetNumCloserAvg() << "\t";
   Data << ExpRes.GetClassAccuracyAvg() << "\t";
   Data << ExpRes.GetQueryTimeAvg() << "\t";
+  Data << ExpRes.getQueryTimeSigma() << "\t";
   Data << ExpRes.GetDistCompAvg() << "\t";
   Data << ExpRes.GetImprEfficiencyAvg() << "\t";
   Data << ExpRes.GetImprDistCompAvg() << "\t";
@@ -505,6 +506,7 @@ int main(int ac, char* av[]) {
 
 
   bool                  bPrintProgress;
+  int                   randomSeed;
   string                LogFile;
   string                DistType;
   string                LoadIndexLoc;
@@ -533,7 +535,9 @@ int main(int ac, char* av[]) {
   try {
     string                                  MethodName;
 
-    ParseCommandLine(ac, av, bPrintProgress,
+    ParseCommandLine(ac, av,
+                         bPrintProgress,
+                         randomSeed,
                          LogFile,
                          LoadIndexLoc,
                          SaveIndexLoc, 
@@ -568,7 +572,7 @@ int main(int ac, char* av[]) {
                         "then you have to specify the gold-standard cache file!");
     }
 
-    initLibrary(0, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
+    initLibrary(randomSeed, LogFile.empty() ? LIB_LOGSTDERR:LIB_LOGFILE, LogFile.c_str());
 
     LOG(LIB_INFO) << "Program arguments are processed";
 

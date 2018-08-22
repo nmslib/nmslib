@@ -31,7 +31,9 @@
 
 namespace similarity {
 
-void ParseCommandLine(int argc, char *argv[], bool& bPrintProgress,
+void ParseCommandLine(int argc, char *argv[],
+                      bool&                           bPrintProgress,
+                      int&                            randomSeed,
                       string&                         LogFile,
                       string&                         LoadIndexLoc,
                       string&                         SaveIndexLoc,
