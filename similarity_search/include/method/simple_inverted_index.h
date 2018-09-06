@@ -40,11 +40,17 @@ class SimplInvIndex : public Index<dist_t> {
   SimplInvIndex(bool printProgress, 
               Space<dist_t>& space, 
               const ObjectVector& data) : Index<dist_t>(data),
-                                          printProgress_(printProgress),
-                                          pSpace_(dynamic_cast<SpaceSparseNegativeScalarProductFast*>(&space)) {
+                                          printProgress_(printProgress) {
+    bCosineSpace_ = false;
+    pSpace_ = dynamic_cast<SpaceSparseNegativeScalarProductFast*>(&space);
+    if (nullptr == pSpace_) {
+      pSpace_ = dynamic_cast<SpaceSparseCosineSimilarityFast*>(&space);
+      bCosineSpace_ = true;
+    }
     if (pSpace_ == nullptr) {
       PREPARE_RUNTIME_ERR(err) <<
-          "The method " << StrDesc() << " works only with the space " << SPACE_SPARSE_NEGATIVE_SCALAR_FAST;
+          "The method " << StrDesc() << " works only with the following spaces (and their binary variants): "
+                                        << SPACE_SPARSE_NEGATIVE_SCALAR_FAST "," << SPACE_SPARSE_COSINE_SIMILARITY_FAST;
       THROW_RUNTIME_ERR(err);
     }
   }
@@ -121,7 +127,9 @@ class SimplInvIndex : public Index<dist_t> {
   };
 
   bool                                                     printProgress_;
-  SpaceSparseNegativeScalarProductFast*                    pSpace_;
+  SpaceSparseVectorInter<float>*                           pSpace_;
+  bool                                                     bCosineSpace_;
+  vector<float>                                            vInvNorms_;
   std::unordered_map<unsigned, std::unique_ptr<PostList>>  index_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(SimplInvIndex);

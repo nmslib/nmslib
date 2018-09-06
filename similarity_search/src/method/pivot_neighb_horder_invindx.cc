@@ -258,7 +258,8 @@ void PivotNeighbHorderInvIndex<dist_t>::CreateIndex(const AnyParams& IndexParams
                      " mean: " << Mean(&pivotOcurrQty[0], pivotOcurrQty.size()) <<
                      " std: " << StdDev(&pivotOcurrQty[0], pivotOcurrQty.size());
     LOG(LIB_INFO) << "Number of postings per document: " << total_qty / this->data_.size();
-    //LOG(LIB_INFO) << MergeIntoStr(pivotOcurrQty, ' ');
+    sort(pivotOcurrQty.begin(), pivotOcurrQty.end());
+    LOG(LIB_INFO) << MergeIntoStr(pivotOcurrQty, ' ');
   }
 }
 
@@ -362,7 +363,7 @@ PivotNeighbHorderInvIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTime
   string inv_proc_alg;
   
   pmgr.GetParamOptional("skipChecking", skip_checking_, false);
-  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg,   PERM_PROC_STORE_SORT);
+  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg,   PERM_PROC_FAST_SCAN);
 
   if (pmgr.hasParam("minTimes") && pmgr.hasParam("numPivotSearch")) {
     throw runtime_error("One shouldn't specify both parameters minTimes and numPivotSearch, b/c they are synonyms!");

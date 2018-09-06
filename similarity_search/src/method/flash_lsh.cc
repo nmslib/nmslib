@@ -70,8 +70,6 @@ void  FlashLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   pmgr.GetParamOptional("numHashPerFamily", numHashPerFamily_, 15);
   pmgr.GetParamOptional("reservoirSize", reservoirSize_, 32);
   pmgr.GetParamOptional("queryProbes", queryProbes_, 1);
-  // maxSamples is hardcoded as NUMBASE in benchmarking.h of the original FLASH code
-  pmgr.GetParamOptional("maxSamples", maxSamples_, 2386130);
   pmgr.GetParamOptional("hashingProbes", hashingProbes_, 1);
   pmgr.GetParamOptional("occupancy", occupancy_, 1.0);
   pmgr.GetParamOptional("numHashBatch", numHashBatch_, 50);
@@ -79,7 +77,7 @@ void  FlashLSH<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   lshHash_.reset(new LSH(2, lshK_, numTables_, numHashPerFamily_));
   lshReservoir_.reset(new
                         LSHReservoirSampler(lshHash_.get(), numHashPerFamily_, numTables_, reservoirSize_,
-                                            flashDim_, numSecHash_, maxSamples_,
+                                            flashDim_, numSecHash_, this->data_.size(),
                                             queryProbes_, hashingProbes_,
                                             occupancy_));
 

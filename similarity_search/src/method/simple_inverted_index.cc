@@ -107,8 +107,8 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
       } else postListQueue.pop();
     }
 
-    // tmpResQueue is a MAX-QUEUE (which is what we need, b/c we maximize the dot product
-    dist_t negAccum = -accum;
+    // tmpResQueue is a MAX-QUEUE (which is what we need, b/c we maximize the (possibly normalized) dot product
+    dist_t negAccum = bCosineSpace_ ?  -accum * vInvNorms_[-minDocIdNeg] : -accum;
 #if 1
     // This one seems to be a bit faster
     // DAVID: THIS CONSTRUCTION IS WRONG. DUE TO THE FIRST CONDITION, THERE MIGHT BE MORE THAN K DOCUMENTS IN THE
@@ -156,6 +156,8 @@ void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
   vector<SparseVectElem<dist_t>>    tmp_vect;
   LOG(LIB_INFO) << "Collecting dictionary stat";
 
+  if (bCosineSpace_)
+    vInvNorms_.reserve(this->data_.size());
   {
     unique_ptr<ProgressDisplay> pbar(printProgress_ ?
                                      new ProgressDisplay(this->data_.size(), cerr) : nullptr);
@@ -164,6 +166,12 @@ void SimplInvIndex<dist_t>::CreateIndex(AnyParamManager& ParamManager) {
       tmp_vect.clear();
       UnpackSparseElements(o->data(), o->datalength(), tmp_vect);
       for (const auto& e : tmp_vect) dict_qty[e.id_] ++;
+      if (bCosineSpace_) {
+        float sum = 0;
+        for (const auto& e : tmp_vect) sum += e.val_ * e.val_;
+        vInvNorms_.push_back(sum > 0 ? 1.0/sqrt(sum) : 0);
+      }
+
       if (pbar) ++(*pbar);
     }
     if (pbar) pbar->finish();
