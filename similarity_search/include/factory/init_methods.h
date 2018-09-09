@@ -122,9 +122,13 @@ inline void initMethods() {
 
   // Inverted index over permutation-based neighborhoods (higher-order pivot combinations)
 #ifdef WITH_EXTRAS
-  REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_HORDER_INVINDEX, CreatePivotNeighbHorderInvIndex)
-  REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_HORDER_INVINDEX, CreatePivotNeighbHorderInvIndex)
-  REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_HORDER_INVINDEX, CreatePivotNeighbHorderInvIndex)
+  REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX, CreatePivotNeighbHashPivInvIndex)
+  REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX, CreatePivotNeighbHashPivInvIndex)
+  REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX, CreatePivotNeighbHashPivInvIndex)
+
+  REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_HORDER_CLOSEPIV_INVINDEX, CreatePivotNeighbClosePivInvIndex)
+  REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_HORDER_CLOSEPIV_INVINDEX, CreatePivotNeighbClosePivInvIndex)
+  REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_HORDER_CLOSEPIV_INVINDEX, CreatePivotNeighbClosePivInvIndex)
 #endif
 
   // Rank aggregation approach (omedrank) by Fagin et al

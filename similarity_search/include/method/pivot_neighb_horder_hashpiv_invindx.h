@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef PIVOT_NEIGHBORHOOD_HORDER_INVINDEX_H
-#define PIVOT_NEIGHBORHOOD_HORDER_INVINDEX_H
+#ifndef PIVOT_NEIGHBORHOOD_HORDER_HASHPIV_INVINDEX_H
+#define PIVOT_NEIGHBORHOOD_HORDER_HASHPIV_INVINDEX_H
 
 #include <vector>
 #include <mutex>
@@ -25,7 +25,7 @@
 #include "permutation_utils.h"
 #include "ported_boost_progress.h"
 
-#define METH_PIVOT_NEIGHB_HORDER_INVINDEX      "napp_horder"
+#define METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX      "napp_horder_hashpiv"
 
 #include <method/pivot_neighb_common.h>
 
@@ -54,9 +54,9 @@ using std::unique_ptr;
  */
 
 template <typename dist_t>
-class PivotNeighbHorderInvIndex : public Index<dist_t> {
+class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
  public:
-  PivotNeighbHorderInvIndex(bool PrintProgress,
+  PivotNeighbHorderHashPivInvIndex(bool PrintProgress,
                            const Space<dist_t>& space,
                            const ObjectVector& data);
 
@@ -64,7 +64,7 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   virtual void SaveIndex(const string &location) override;
   virtual void LoadIndex(const string &location) override;
 
-  ~PivotNeighbHorderInvIndex();
+  ~PivotNeighbHorderHashPivInvIndex();
 
   const std::string StrDesc() const override;
   void Search(RangeQuery<dist_t>* query, IdType) const override;
@@ -209,7 +209,7 @@ class PivotNeighbHorderInvIndex : public Index<dist_t> {
   void GetPermutationPPIndexEfficiently(Permutation &p, const vector <dist_t> &vDst) const;
 
   // disable copy and assign
-  DISABLE_COPY_AND_ASSIGN(PivotNeighbHorderInvIndex);
+  DISABLE_COPY_AND_ASSIGN(PivotNeighbHorderHashPivInvIndex);
 
   void GetPermutationPPIndexEfficiently(Permutation &p, const vector<bool> &vDst) const;
 
