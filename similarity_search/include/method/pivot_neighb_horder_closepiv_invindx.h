@@ -14,8 +14,8 @@
  *
  */
 
-#ifndef PIVOT_NEIGHBORHOOD_HORDER_INVINDEX_H
-#define PIVOT_NEIGHBORHOOD_HORDER_INVINDEX_H
+#ifndef PIVOT_NEIGHBORHOOD_HORDER_CLOSEPIV_INVINDEX_H
+#define PIVOT_NEIGHBORHOOD_HORDER_CLOSEPIV_INVINDEX_H
 
 #include <vector>
 #include <mutex>
@@ -30,18 +30,7 @@
 #define METH_PIVOT_NEIGHB_HORDER_CLOSEPIV_INVINDEX      "napp_horder_closepiv"
 
 #include <method/pivot_neighb_common.h>
-
-//#define UINT16_IDS
-#define PERM_PROC_STORE_SORT "storeSort"
-
-#ifdef UINT16_IDS
-typedef uint16_t PostingListElemType; 
-const size_t UINT16_ID_MAX=65536;
-#else
-typedef uint32_t PostingListElemType; 
-#endif
-
-typedef std::vector<PostingListElemType> PostingListType;
+#include <method/pivot_neighb_horder_common.h>
 
 namespace similarity {
 
@@ -180,7 +169,7 @@ class PivotNeighbHorderClosePivInvIndex : public Index<dist_t> {
   
     
   
-  vector<unique_ptr<unordered_map<IdType,PostingListType>>> posting_lists_;
+  vector<unique_ptr<unordered_map<IdType,PostingListHorderType>>> posting_lists_;
 
   template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
 
@@ -203,18 +192,18 @@ class PivotNeighbHorderClosePivInvIndex : public Index<dist_t> {
    */
   size_t genPivotCombIds(std::vector<uint32_t>& ids, const Permutation& perm, unsigned permPrefix) const;
 
-  PostingListType& getPostingList(unordered_map<IdType, PostingListType> &posts, IdType id) {
-    unordered_map<IdType, PostingListType>::iterator it = posts.find(id);
+  PostingListHorderType& getPostingList(unordered_map<IdType, PostingListHorderType> &posts, IdType id) {
+    unordered_map<IdType, PostingListHorderType>::iterator it = posts.find(id);
     if (it == posts.end()) {
-      posts.insert(make_pair(id, PostingListType()));
+      posts.insert(make_pair(id, PostingListHorderType()));
       it = posts.find(id);
       //CHECK(it != posts.end());
     }
     return it->second;
   }
-  const PostingListType& getPostingList(const unordered_map<IdType, PostingListType> &posts, IdType id) const {
-    static PostingListType empty;
-    unordered_map<IdType, PostingListType>::const_iterator it = posts.find(id);
+  const PostingListHorderType& getPostingList(const unordered_map<IdType, PostingListHorderType> &posts, IdType id) const {
+    static PostingListHorderType empty;
+    unordered_map<IdType, PostingListHorderType>::const_iterator it = posts.find(id);
     return it == posts.end() ? empty : it->second;
   }
 

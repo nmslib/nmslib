@@ -27,6 +27,7 @@ using std::vector;
 #define PERM_PROC_MERGE           "merge"
 #define PERM_PROC_PRIOR_QUEUE     "pqueue"
 #define PERM_PROC_WAND            "wand"
+#define PERM_PROC_STORE_SORT      "storeSort"
 
 struct IdCount {
   size_t id;

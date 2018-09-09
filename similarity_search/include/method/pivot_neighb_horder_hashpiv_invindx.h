@@ -28,18 +28,7 @@
 #define METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX      "napp_horder_hashpiv"
 
 #include <method/pivot_neighb_common.h>
-
-//#define UINT16_IDS
-#define PERM_PROC_STORE_SORT "storeSort"
-
-#ifdef UINT16_IDS
-typedef uint16_t PostingListElemType; 
-const size_t UINT16_ID_MAX=65536;
-#else
-typedef uint32_t PostingListElemType; 
-#endif
-
-typedef std::vector<PostingListElemType> PostingListType;
+#include <method/pivot_neighb_horder_common.h>
 
 namespace similarity {
 
@@ -175,10 +164,8 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
       
    return res;
   }
-  
-    
-  
-  vector<unique_ptr<vector<PostingListType>>> posting_lists_;
+
+  vector<unique_ptr<vector<PostingListHorderType>>> posting_lists_;
 
   size_t getPostQtysOnePivot(size_t skipVal) const {
     return (skipVal - 1 + size_t(num_pivot_)) / skipVal;

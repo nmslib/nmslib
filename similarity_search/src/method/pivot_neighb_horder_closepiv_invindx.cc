@@ -49,21 +49,9 @@ using std::pair;
 using std::mutex;
 using std::unique_lock;
 
-/**
- * A structure that keeps information about current state of search within one posting list.
- */
-struct PostListQueryState {
-  // pointer to the posting list (fixed from the beginning)
-  const PostingListType&  post_;
-  // actual position in the list
-  unsigned                post_pos_;
-
-  PostListQueryState(const PostingListType& pl) : 
-                     post_(pl), post_pos_(0) {}
-};
 
 template <typename dist_t>
-struct IndexThreadParamsHorderPNII {
+struct IndexThreadParamsHorderClosePivPNII {
   PivotNeighbHorderClosePivInvIndex<dist_t>&           index_;
   size_t                                      chunk_qty_;
   size_t                                      index_every_;
@@ -71,7 +59,7 @@ struct IndexThreadParamsHorderPNII {
   ProgressDisplay*                            progress_bar_;
   mutex&                                      display_mutex_;
 
-  IndexThreadParamsHorderPNII(
+  IndexThreadParamsHorderClosePivPNII(
                      PivotNeighbHorderClosePivInvIndex<dist_t>&  index,
                      size_t                             chunk_qty,
                      size_t                             index_every,
@@ -89,8 +77,8 @@ struct IndexThreadParamsHorderPNII {
 };
 
 template <typename dist_t>
-struct IndexThreadHOrderHorderPNII {
-  void operator()(IndexThreadParamsHorderPNII<dist_t>& prm) {
+struct IndexThreadHOrderHorderClosePivPNII {
+  void operator()(IndexThreadParamsHorderClosePivPNII<dist_t>& prm) {
 #ifdef UINT16_IDS
     CHECK(prm.chunk_qty_ <= UINT16_ID_MAX);
 #endif
@@ -191,7 +179,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::CreateIndex(const AnyParams& Ind
   posting_lists_.resize(indexQty);
 
   for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
-    posting_lists_[chunkId].reset(new unordered_map<IdType,PostingListType>());
+    posting_lists_[chunkId].reset(new unordered_map<IdType,PostingListHorderType>());
   }
 
   // Don't need more thread than you have chunks
@@ -212,7 +200,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::CreateIndex(const AnyParams& Ind
     }
   } else {
     vector<thread>                                      threads(index_thread_qty_);
-    vector<shared_ptr<IndexThreadParamsHorderPNII<dist_t>>>   threadParams;
+    vector<shared_ptr<IndexThreadParamsHorderClosePivPNII<dist_t>>>   threadParams;
 
     LOG(LIB_INFO) << "Will create " << index_thread_qty_ << " indexing threads";;
 
@@ -221,13 +209,13 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::CreateIndex(const AnyParams& Ind
                                 :NULL);
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
-      threadParams.push_back(shared_ptr<IndexThreadParamsHorderPNII<dist_t>>(
-                              new IndexThreadParamsHorderPNII<dist_t>(*this, indexQty, i, index_thread_qty_,
+      threadParams.push_back(shared_ptr<IndexThreadParamsHorderClosePivPNII<dist_t>>(
+                              new IndexThreadParamsHorderClosePivPNII<dist_t>(*this, indexQty, i, index_thread_qty_,
                                                                progress_bar.get(), progressBarMutex)));
     }
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
-      threads[i] = thread(IndexThreadHOrderHorderPNII<dist_t>(), ref(*threadParams[i]));
+      threads[i] = thread(IndexThreadHOrderHorderClosePivPNII<dist_t>(), ref(*threadParams[i]));
     }
 
     for (size_t i = 0; i < index_thread_qty_; ++i) {
@@ -279,7 +267,7 @@ PivotNeighbHorderClosePivInvIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDi
   size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
 
 
-  unordered_map<IdType, PostingListType> & chunkPostLists = *posting_lists_[chunkId];
+  unordered_map<IdType, PostingListHorderType> & chunkPostLists = *posting_lists_[chunkId];
 
   vector<uint32_t > combIds;
   combIds.reserve((size_t)1 + num_prefix_ * (num_prefix_ - 1) / 2 / pivotFracInv_);
@@ -310,7 +298,7 @@ PivotNeighbHorderClosePivInvIndex<dist_t>::IndexChunk(size_t chunkId, ProgressDi
 
     for (size_t i = 0; i < qty; ++i) {
       uint32_t id = combIds[i];
-      PostingListType& post = getPostingList(chunkPostLists, id);
+      PostingListHorderType& post = getPostingList(chunkPostLists, id);
       post.push_back(objId);
     }
         
@@ -455,7 +443,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::GenSearch(QueryType* query, size
   vector<unsigned>          counter;
   if (inv_proc_alg_ == kScan)
     counter.resize(chunk_index_size_);
-  PostingListType           tmpRes;
+  PostingListHorderType     tmpRes;
   if (inv_proc_alg_ == kStoreSort)
     tmpRes.resize(chunk_index_size_);
 
@@ -498,7 +486,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::GenSearch(QueryType* query, size
       CHECK(num_prefix_search_ >= 1);
 
       for (size_t id: combIds) {
-        const PostingListType& post = getPostingList(chunkPostLists, id);
+        const PostingListHorderType& post = getPostingList(chunkPostLists, id);
 
         if (!post.empty()) {
 
@@ -523,7 +511,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::GenSearch(QueryType* query, size
         while (!postListQueue.empty() && postListQueue.top_key() == minDocIdNeg) {
           unsigned qsi = postListQueue.top_data();
           PostListQueryState &queryState = queryStates[qsi];
-          const PostingListType &pl = queryState.post_;
+          const PostingListHorderType &pl = queryState.post_;
 
           accum += pivotFracInv_;
 
@@ -568,7 +556,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::GenSearch(QueryType* query, size
       CHECK(num_prefix_search_ >= 1);
 
       for (size_t id : combIds) {
-        const PostingListType& post = getPostingList(chunkPostLists, id);
+        const PostingListHorderType& post = getPostingList(chunkPostLists, id);
 
         post_qty_ += post.size();
         for (IdType p : post) {
@@ -592,7 +580,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::GenSearch(QueryType* query, size
       CHECK(num_prefix_search_ >= 1);
 
       for (size_t id : combIds) {
-        const PostingListType& post = getPostingList(chunkPostLists, id);
+        const PostingListHorderType& post = getPostingList(chunkPostLists, id);
 
         postListUnion(tmpRes[prevRes], post, tmpRes[1 - prevRes], pivotFracInv_);
         prevRes = 1 - prevRes;
@@ -614,7 +602,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::GenSearch(QueryType* query, size
       CHECK(num_prefix_search_ >= 1);
 
       for (size_t id : combIds) {
-        const PostingListType& post = getPostingList(chunkPostLists, id);
+        const PostingListHorderType& post = getPostingList(chunkPostLists, id);
 
         if (post.size() + tmpResSize > tmpRes.size())
           tmpRes.resize(2 * tmpResSize + post.size());
