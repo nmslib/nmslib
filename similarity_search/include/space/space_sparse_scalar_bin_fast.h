@@ -27,6 +27,7 @@
 #include "query.h"
 #include "utils.h"
 #include "space.h"
+#include "space_sparse_bin_common.h"
 #include "space_sparse_scalar_fast.h"
 #include "distcomp.h"
 
@@ -34,16 +35,6 @@
 #define SPACE_SPARSE_NEGATIVE_SCALAR_PROD_BIN_FAST    "negdotprod_sparse_bin_fast"
 
 namespace similarity {
-
-struct DataFileInputStateBinSparseVec : public DataFileInputStateOneFile {
-  DataFileInputStateBinSparseVec(const string& inpFileName) : DataFileInputStateOneFile(inpFileName) {
-    readBinaryPOD(inp_file_, qty_);
-    LOG(LIB_INFO) << "Preparing to read sparse vectors from the binary file: " << inpFileName
-                  << " header claims to have: " << qty_ << " vectors";
-  }
-  size_t        qty_;
-  size_t        readQty_ = 0;
-};
 
 class SpaceSparseCosineSimilarityBinFast : public SpaceSparseCosineSimilarityFast {
 public:
@@ -55,10 +46,6 @@ public:
   virtual bool ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, string& externId) const override;
   virtual unique_ptr<Object> CreateObjFromStr(IdType id, LabelType label, const string& s,
                                               DataFileInputState* pInpState) const;
-
-  static bool readNextBinSparseVect(DataFileInputStateBinSparseVec &state, string& strObj);
-  static void parseSparseBinVector(const string& strObj, vector<SparseVectElem<float>>& v,
-                                   bool sortDimId=true);
 
   DISABLE_COPY_AND_ASSIGN(SpaceSparseCosineSimilarityBinFast);
 };

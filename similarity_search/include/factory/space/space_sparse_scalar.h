@@ -16,6 +16,7 @@
 #define FACTORY_SPACE_SPARSE_SCALAR_H
 
 #include <space/space_sparse_scalar.h>
+#include <space/space_sparse_scalar_bin.h>
 #include <space/space_sparse_scalar_fast.h>
 #include <space/space_sparse_scalar_bin_fast.h>
 
@@ -31,6 +32,11 @@ template <typename dist_t>
 Space<dist_t>* CreateSparseCosineSimilarity(const AnyParams& /* ignoring params */) {
   // Cosine Similarity
   return new SpaceSparseCosineSimilarity<dist_t>();
+}
+
+Space<float>* CreateSparseCosineSimilarityBin(const AnyParams& /* ignoring params */) {
+  // Cosine Similarity
+  return new SpaceSparseCosineSimilarityBin();
 }
 
 

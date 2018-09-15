@@ -31,6 +31,7 @@
 #include "space.h"
 #include "distcomp.h"
 #include "space_sparse_vector.h"
+#include "read_data.h"
 
 namespace similarity {
 
