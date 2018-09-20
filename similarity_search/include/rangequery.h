@@ -40,6 +40,8 @@ class RangeQuery : public Query<dist_t> {
   void Print() const;
   static std::string Type() { return "RANGE"; }
 
+  virtual void getSortedResults(vector<ResultEntry<dist_t>>&res) const override;
+
  private:
   dist_t               radius_;
   ObjectVector         result_;

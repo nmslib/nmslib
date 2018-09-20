@@ -34,6 +34,17 @@
 #define GS_TEST_SET_ID         "TestSetId"
 #define GS_THREAD_TEST_QTY     "ThreadTestQty"
 
+/*
+ * This is an ugly workaround for the case of very large data bases
+ * and testing using a lot of cores. In this case, we cannot afford
+ * keeping all the entries for all the queries.
+ * dataPointQty * threadQty * queryQty * sizeof(ResultEntry) =
+ * dataPointQty * threadQty * queryQty * 12
+ * For example for 100M data points and 100 threads, this amounts to
+ * queryQty * 100 GB.
+ */
+#define RECALL_ONLY
+
 namespace similarity {
 
 using std::vector;
@@ -43,43 +54,6 @@ using std::unique_ptr;
 using std::thread;
 using std::ref;
 
-
-template <class dist_t>
-struct ResultEntry {
-  IdType      mId;
-  LabelType   mLabel;
-  dist_t      mDist;
-  ResultEntry(IdType id = 0, LabelType label = 0, dist_t dist = 0) 
-                 : mId(id), mLabel(label), mDist(dist) {}
-
-  /*
-   * Reads entry in the binary format (can't read if the data was written
-   * on the machine with another type of endianness.)
-   */
-  void readBinary(istream& in) {
-    in.read(reinterpret_cast<char*>(&mId),    sizeof mId);
-    in.read(reinterpret_cast<char*>(&mLabel), sizeof mLabel);
-    in.read(reinterpret_cast<char*>(&mDist),  sizeof mDist);
-  }
-  /*
-   * Saves entry in the binary format, see the comment
-   * on the endianness above.
-   */
-  void writeBinary(ostream& out) const {
-    out.write(reinterpret_cast<const char*>(&mId),    sizeof mId);
-    out.write(reinterpret_cast<const char*>(&mLabel), sizeof mLabel);
-    out.write(reinterpret_cast<const char*>(&mDist),  sizeof mDist);
-  }
-  bool operator<(const ResultEntry& o) const {
-    if (mDist != o.mDist) return mDist < o.mDist;
-    return mId < o.mId;
-  }
-  bool operator==(const ResultEntry& o) const {
-    return mId    == o.mId    && 
-           mDist  == o.mDist  && 
-           mLabel == o.mLabel;
-  }
-};
 
 template <class dist_t>
 ostream& operator<<(ostream& out, const ResultEntry<dist_t>& e) {
@@ -154,23 +128,31 @@ private:
     WallClockTimer  wtm;
 
     wtm.reset();
-
+#ifndef RECALL_ONLY
     SortedAllEntries_.resize(datapoints.size());
+#endif
     const Object* pQueryObj = pQuery->QueryObject();
 
     for (size_t i = 0; i < datapoints.size(); ++i) {
+      ResultEntry<dist_t> e(datapoints[i]->id(),
+                            datapoints[i]->label(),
+                            space.IndexTimeDistance(datapoints[i], pQueryObj));
+#ifndef RECALL_ONLY
       // Distance can be asymmetric, but the query is always on the right side
-      SortedAllEntries_[i] = ResultEntry<dist_t>(datapoints[i]->id(),
-                                                 datapoints[i]->label(),
-                                                 space.IndexTimeDistance(datapoints[i], pQueryObj));
-      pQuery->CheckAndAddToResult(SortedAllEntries_[i].mDist, datapoints[i]);
+      SortedAllEntries_[i] = e;
+#endif
+      pQuery->CheckAndAddToResult(e.mDist, datapoints[i]);
     }
 
     wtm.split();
 
     SeqSearchTime_ = wtm.elapsed();
 
+#ifndef RECALL_ONLY
     std::sort(SortedAllEntries_.begin(), SortedAllEntries_.end());
+#else
+    pQuery->getSortedResults(SortedAllEntries_);
+#endif
   }
 
   uint64_t                            SeqSearchTime_;

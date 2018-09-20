@@ -15,6 +15,8 @@
 #ifndef _KNNQUERY_H_
 #define _KNNQUERY_H_
 
+#include <vector>
+
 #include "object.h"
 #include "query.h"
 
@@ -49,6 +51,8 @@ class KNNQuery : public Query<dist_t> {
   bool Equals(const KNNQuery<dist_t>* query) const;
   void Print() const;
   static std::string Type() { return "K-NN"; }
+
+  virtual void getSortedResults(std::vector<ResultEntry<dist_t>>&) const override;
 
  protected:
   unsigned K_;

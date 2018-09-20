@@ -110,6 +110,19 @@ bool KNNQuery<dist_t>::Equals(const KNNQuery<dist_t>* other) const {
 }
 
 template <typename dist_t>
+void KNNQuery<dist_t>::getSortedResults(vector<ResultEntry<dist_t>>&res) const {
+  res.resize(result_->Size());
+  unique_ptr<KNNQueue<dist_t>> ResQ(result_->Clone());
+
+  size_t resPos = result_->Size() - 1;
+  while(!ResQ->Empty()) {
+    const Object *pObj = reinterpret_cast<const Object *>(ResQ->TopObject());
+    res[resPos--] = ResultEntry<dist_t>(pObj->id(), pObj->label(), ResQ->TopDistance());
+    ResQ->Pop();
+  }
+}
+
+template <typename dist_t>
 void KNNQuery<dist_t>::Print() const {
   unique_ptr<KNNQueue<dist_t>> clone(Result()->Clone());
   std::cerr << "queryID = " << this->query_object_->id()

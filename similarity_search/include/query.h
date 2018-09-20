@@ -16,11 +16,51 @@
 #define _QUERY_H_
 
 #include "object.h"
+#include <iostream>
+#include <vector>
 
 namespace similarity {
 
 template <typename dist_t>
 class Space;
+
+
+template <class dist_t>
+struct ResultEntry {
+  IdType      mId;
+  LabelType   mLabel;
+  dist_t      mDist;
+  ResultEntry(IdType id = 0, LabelType label = 0, dist_t dist = 0)
+    : mId(id), mLabel(label), mDist(dist) {}
+
+  /*
+   * Reads entry in the binary format (can't read if the data was written
+   * on the machine with another type of endianness.)
+   */
+  void readBinary(std::istream& in) {
+    in.read(reinterpret_cast<char*>(&mId),    sizeof mId);
+    in.read(reinterpret_cast<char*>(&mLabel), sizeof mLabel);
+    in.read(reinterpret_cast<char*>(&mDist),  sizeof mDist);
+  }
+  /*
+   * Saves entry in the binary format, see the comment
+   * on the endianness above.
+   */
+  void writeBinary(std::ostream& out) const {
+    out.write(reinterpret_cast<const char*>(&mId),    sizeof mId);
+    out.write(reinterpret_cast<const char*>(&mLabel), sizeof mLabel);
+    out.write(reinterpret_cast<const char*>(&mDist),  sizeof mDist);
+  }
+  bool operator<(const ResultEntry& o) const {
+    if (mDist != o.mDist) return mDist < o.mDist;
+    return mId < o.mId;
+  }
+  bool operator==(const ResultEntry& o) const {
+    return mId    == o.mId    &&
+           mDist  == o.mDist  &&
+           mLabel == o.mLabel;
+  }
+};
 
 template <typename dist_t>
 class Query {
@@ -43,6 +83,7 @@ class Query {
   virtual unsigned ResultSize() const = 0;
   virtual bool CheckAndAddToResult(const dist_t distance, const Object* object) = 0;
   virtual void Print() const = 0;
+  virtual void getSortedResults(std::vector<ResultEntry<dist_t>>&res) const = 0;
 
  protected:
   const Space<dist_t>& space_;

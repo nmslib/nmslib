@@ -101,6 +101,16 @@ bool RangeQuery<dist_t>::Equals(const RangeQuery<dist_t>* query) const {
 }
 
 template <typename dist_t>
+void RangeQuery<dist_t>::getSortedResults(vector<ResultEntry<dist_t>>&res) const {
+  res.resize(result_.size());
+  CHECK(result_.size() == resultDists_.size());
+  for (size_t i = 0; i < result_.size(); ++i) {
+    res[i] = ResultEntry<dist_t>(result_[i]->id(), result_[i]->label(), resultDists_[i]);
+  }
+  sort(res.begin(), res.end());
+}
+
+template <typename dist_t>
 void RangeQuery<dist_t>::Print() const {
   std::cerr << "queryID = " << this->QueryObject()->id()
          << "size = " << ResultSize() << std::endl;
