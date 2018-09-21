@@ -135,7 +135,7 @@ void PivotNeighbHorderClosePivInvIndex<dist_t>::CreateIndex(const AnyParams& Ind
   CHECK(num_prefix_ <= num_pivot_);
 
   pmgr.GetParamOptional("pivotFile", pivot_file_, "");
-  pmgr.GetParamOptional("pivotFracInv",  pivotFracInv_, 1);
+  pmgr.GetParamOptional("skipVal",  pivotFracInv_, 1);
   pmgr.GetParamOptional("pivotCombQty", pivot_comb_qty_, 2); // we use pairs by default
   pmgr.GetParamOptional("printPivotStat", print_pivot_stat_, 0);
 

@@ -18,6 +18,8 @@
 #include "read_data.h"
 #include "utils.h"
 
+#include "space/space_sparse_bin_common.h"
+
 #include "space/space_sparse_scalar_bin_fast.h"
 
 #include <string>
@@ -98,13 +100,13 @@ int main(int argc, char *argv[]) {
         }
       }
 
-      if (!SpaceSparseCosineSimilarityBinFast::readNextBinSparseVect(inpBinFile, lineBin)) {
+      if (!readNextBinSparseVect(inpBinFile, lineBin)) {
         PREPARE_RUNTIME_ERR(err) << "Cannot retrieve binary entry # " << lineNum <<
                                     " although the corresponding text entry does exist";
         THROW_RUNTIME_ERR(err);
       }
 
-      SpaceSparseCosineSimilarityBinFast::parseSparseBinVector(lineBin, vBin);
+      parseSparseBinVector(lineBin, vBin);
       if (vBin.size() != vText.size()) {
         PREPARE_RUNTIME_ERR(err) << "# of elements in the text entry: " << vText.size() <<
                                     " is diff. from the # of elements in the bin. entry: " << vBin.size();
@@ -134,7 +136,7 @@ int main(int argc, char *argv[]) {
     }
     cout << lineNum << " lines checked" << endl;
 
-    CHECK_MSG(SpaceSparseCosineSimilarityBinFast::readNextBinSparseVect(inpBinFile, lineBin) == false,
+    CHECK_MSG(readNextBinSparseVect(inpBinFile, lineBin) == false,
               "Binary input file contains more entries than the input text file!");
     CHECK_MSG(lineNum == inpBinFile.qty_, "Mismatch between text file entries: " + ConvertToString(lineNum) +
                                           " and the number of entries in the binary header: " + ConvertToString(inpBinFile.qty_));
