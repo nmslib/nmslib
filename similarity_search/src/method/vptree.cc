@@ -21,6 +21,9 @@
 
 // This is only for _mm_prefetch
 #include <mmintrin.h>
+#if defined(_WIN32) || defined(WIN32)
+#include <intrin.h>
+#endif
 
 #include "portable_simd.h"
 #include "space.h"

@@ -684,7 +684,7 @@ namespace similarity {
     void
     Hnsw<dist_t>::Search(KNNQuery<dist_t> *query, IdType) const
     {
-        if (this->data_.empty() and this->data_rearranged_.empty()) {
+        if (this->data_.empty() && this->data_rearranged_.empty()) {
           return;
         }
         bool useOld = searchAlgoType_ == kOld || (searchAlgoType_ == kHybrid && ef_ >= 1000);

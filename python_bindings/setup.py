@@ -7,6 +7,11 @@ import setuptools
 __version__ = '1.7.3.4'
 
 libdir = os.path.join(".", "nmslib", "similarity_search")
+if not os.path.isdir(libdir) and sys.platform.startswith("win"):
+    # If the nmslib symlink doesn't work (windows symlink support w/ git is
+    # a little iffy), fallback to use a relative path
+    libdir = os.path.join("..", "similarity_search")
+
 library_file = os.path.join(libdir, "release", "libNonMetricSpaceLib.a")
 source_files = ['nmslib.cc']
 
@@ -22,7 +27,7 @@ else:
     exclude_files = set("""bbtree.cc lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
                         dummy_app.cc main.cc""".split())
 
-    for root, subdirs, files in os.walk(os.path.join("nmslib", "similarity_search", "src")):
+    for root, subdirs, files in os.walk(os.path.join(libdir, "src")):
         source_files.extend(os.path.join(root, f) for f in files
                             if f.endswith(".cc") and f not in exclude_files)
 
