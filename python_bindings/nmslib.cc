@@ -61,6 +61,20 @@ AnyParams loadParams(py::object o);
 void exportLegacyAPI(py::module * m);
 void freeObjectVector(ObjectVector * data);
 
+// pybind11::gil_scoped_acquire can deadlock when acquiring the GIL on threads
+// created from python (https://github.com/searchivarius/nmslib/issues/291)
+// This might be fixed in a future version of pybind11 (https://github.com/pybind/pybind11/pull/1211)
+// but until then, lets fall back to the python c-api to fix.
+struct AcquireGIL {
+  PyGILState_STATE state;
+  AcquireGIL()
+    : state(PyGILState_Ensure()) {
+  }
+  ~AcquireGIL() {
+    PyGILState_Release(state);
+  }
+};
+
 // Wrap a space/objectvector/index together for ease of use
 template <typename dist_t>
 struct IndexWrapper {
@@ -331,6 +345,17 @@ struct IndexWrapper {
     return readObjectVector(input, &data, ids);
   }
 
+  void addBatch(py::object input, py::object ids = py::none(), bool print_progress = false) {
+    ObjectVector batch;
+    readObjectVector(input, &batch, ids);
+    index->AddBatch(batch, print_progress);
+  }
+
+  void deleteBatch(py::object ids_, int del_strategy) {
+    auto ids = py::cast<std::vector<IdType>>(ids_);
+    index->DeleteBatch(ids, del_strategy);
+  }
+
   inline size_t size() const { return data.size(); }
 
   py::object at(size_t pos) { return writeObject(data.at(pos)); }
@@ -361,20 +386,6 @@ struct IndexWrapper {
   std::unique_ptr<Space<dist_t>> space;
   std::unique_ptr<Index<dist_t>> index;
   ObjectVector data;
-};
-
-// pybind11::gil_scoped_acquire can deadlock when acquiring the GIL on threads
-// created from python (https://github.com/searchivarius/nmslib/issues/291)
-// This might be fixed in a future version of pybind11 (https://github.com/pybind/pybind11/pull/1211)
-// but until then, lets fall back to the python c-api to fix.
-struct AcquireGIL {
-  PyGILState_STATE state;
-  AcquireGIL()
-    : state(PyGILState_Ensure()) {
-  }
-  ~AcquireGIL() {
-    PyGILState_Release(state);
-  }
 };
 
 class PythonLogger
@@ -631,6 +642,36 @@ void exportIndex(py::module * m) {
       "int\n"
       "    The number of items added\n")
 
+    .def("addBatch", &IndexWrapper<dist_t>::addBatch,
+      py::arg("data"),
+      py::arg("ids") = py::none(),
+      py::arg("printProgress") = false,
+      "Adds multiple datapoints to the already built index\n\n"
+      "Parameters\n"
+      "----------\n"
+      "data: object\n"
+      "    The objects to add to the index.\n"
+      "ids: array_like optional\n"
+      "    The ids of the object being inserted. If not set will default to the \n"
+      "    row id of each object in the dataset\n"
+      "printProgress: boolean optional\n"
+      "Returns\n"
+      "----------\n"
+      "void\n")
+
+    .def("deleteBatch", &IndexWrapper<dist_t>::deleteBatch,
+      py::arg("ids"),
+      py::arg("delStrategy"),
+      "Deletes multiple datapoints from the already built index\n\n"
+      "Parameters\n"
+      "----------\n"
+      "ids: array_like\n"
+      "    The ids of the object being deleted.\n"
+      "delStrategy: int\n"
+      "Returns\n"
+      "----------\n"
+      "void\n")
+
     .def_readonly("dataType", &IndexWrapper<dist_t>::data_type)
     .def_readonly("distType", &IndexWrapper<dist_t>::dist_type)
     .def("__len__", &IndexWrapper<dist_t>::size)
@@ -724,6 +765,12 @@ void exportLegacyAPI(py::module * m) {
       positions.mutable_at(i) = offset + i;
     }
     return positions;
+  });
+  m->def("addBatch", [](py::object self, bool printProgress, py::object ids, py::object data) {
+    return self.attr("addBatch")(data, ids, printProgress);
+  });
+  m->def("deleteBatch", [](py::object self, int delStrategy, py::object ids) {
+    return self.attr("deleteBatch")(ids, delStrategy);
   });
   m->def("setQueryTimeParams", [](py::object self, py::object params) {
     return self.attr("setQueryTimeParams")(params);
