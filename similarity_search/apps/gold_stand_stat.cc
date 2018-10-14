@@ -29,7 +29,7 @@ using namespace std;
 template <class dist_t>
 void getCacheStat(
   string cacheGSFilePrefix,
-  string outFile,
+  string repFile,
   string spaceType,
   string dataFile, string queryFile, unsigned testSetQty,
   unsigned maxNumData, unsigned maxNumQuery,
@@ -39,6 +39,8 @@ void getCacheStat(
   float eps = 0;
   // possible TODO we don't do range search here
   vector<dist_t>   range;
+
+  CHECK_MSG(knn.size() == 1, "This app supports only one set of KNN experiments, for just one k!")
 
   const string& cacheGSControlName = cacheGSFilePrefix + "_ctrl.txt";
   const string& cacheGSBinaryName  = cacheGSFilePrefix + "_data.bin";
@@ -94,6 +96,7 @@ void getCacheStat(
     }
     LOG(LIB_INFO) << "Test set: " << testSetId << " # of threads: " << savedThreadQty;
     vector<dist_t> allDists, allDists1;
+    CHECK(knn.size() == 1);
     for (unsigned i = 0; i < knn.size(); ++i) {
       LOG(LIB_INFO) << "k-NN set id:" << i;
       const vector<unique_ptr<GoldStandard<dist_t>>>& gsKNN = managerGS.GetKNNGS(i);
@@ -115,7 +118,8 @@ void getCacheStat(
     dist_t meanDist1 =  Mean(&allDists1[0], allDists1.size());
     LOG(LIB_INFO) << "Average distance is: " << meanDist;
     LOG(LIB_INFO) << "Average distance to the 1st neighbor is: " << meanDist1;
-    ofstream out(outFile.c_str());
+    ofstream out(repFile.c_str());
+    out << "Dist@1\tDist@" << knn[0] << endl;
     out << meanDist1 << "\t" << meanDist << endl;
   }
 }
@@ -124,7 +128,7 @@ int main(int argc, char *argv[]) {
   string      cacheGSFilePrefix;
   string      spaceType, distType;
   string      dataFile;
-  string      outFile;
+  string      repFile;
   string      projType;
   string      logFile;
   unsigned    maxNumData = 0;
@@ -145,8 +149,8 @@ int main(int argc, char *argv[]) {
                                &distType, false, std::string(DIST_TYPE_FLOAT)));
   cmd_options.Add(new CmdParam(DATA_FILE_PARAM_OPT, DATA_FILE_PARAM_MSG,
                                &dataFile, true));
-  cmd_options.Add(new CmdParam("outFile,o", "output file",
-                               &outFile, true));
+  cmd_options.Add(new CmdParam("repFile,r", "output report file",
+                               &repFile, true));
 
   cmd_options.Add(new CmdParam(QUERY_FILE_PARAM_OPT, QUERY_FILE_PARAM_MSG,
                                &queryFile, false, QUERY_FILE_PARAM_DEFAULT));
@@ -202,7 +206,7 @@ int main(int argc, char *argv[]) {
       // Possible TODO: we currently support on the float distance type
       getCacheStat<float>(
         cacheGSFilePrefix,
-        outFile,
+        repFile,
         spaceType,
         dataFile, queryFile, testSetQty,
         maxNumData, maxNumQuery,
