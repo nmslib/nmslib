@@ -96,31 +96,39 @@ void getCacheStat(
     }
     LOG(LIB_INFO) << "Test set: " << testSetId << " # of threads: " << savedThreadQty;
     vector<dist_t> allDists, allDists1;
+    vector<float>  allSeqTimes;
     CHECK(knn.size() == 1);
-    for (unsigned i = 0; i < knn.size(); ++i) {
-      LOG(LIB_INFO) << "k-NN set id:" << i;
-      const vector<unique_ptr<GoldStandard<dist_t>>>& gsKNN = managerGS.GetKNNGS(i);
-
-
+    for (unsigned knnSetId = 0; knnSetId < knn.size(); ++knnSetId) {
+      LOG(LIB_INFO) << "k-NN set id:" << knnSetId;
+      const vector<unique_ptr<GoldStandard<dist_t>>>& gsKNN = managerGS.GetKNNGS(knnSetId);
 
       for(const unique_ptr<GoldStandard<dist_t>>& oneGS : gsKNN) {
         bool bFirst = true;
+        int kIter = 0;
+        allSeqTimes.push_back(float(oneGS->GetSeqSearchTime()) / 1e6);
+
         for(const ResultEntry<dist_t>& e : oneGS->GetSortedEntries()) {
           allDists.push_back(e.mDist);
           if (bFirst) {
             bFirst = false;
             allDists1.push_back((e.mDist));
           }
+          if (++kIter >= knn[knnSetId])
+            break;
         }
       }
     }
+    size_t queryQty = allSeqTimes.size() / knn.size();
     dist_t meanDist =  Mean(&allDists[0], allDists.size());
     dist_t meanDist1 =  Mean(&allDists1[0], allDists1.size());
+    float avgSeqTime = Mean(&allSeqTimes[0], allSeqTimes.size());
+    LOG(LIB_INFO) << "Average brute-force retrieval time is :" << avgSeqTime << " (sec)";
+    LOG(LIB_INFO) << "Number of queries: " << queryQty;
     LOG(LIB_INFO) << "Average distance is: " << meanDist;
     LOG(LIB_INFO) << "Average distance to the 1st neighbor is: " << meanDist1;
     ofstream out(repFile.c_str());
-    out << "Dist@1\tDist@" << knn[0] << endl;
-    out << meanDist1 << "\t" << meanDist << endl;
+    out << "SeqSearchTime\tQueryQty\tDist@1\tDist@" << knn[0] << endl;
+    out << avgSeqTime << "\t" << queryQty << "\t" << meanDist1 << "\t" << meanDist << endl;
   }
 }
 
