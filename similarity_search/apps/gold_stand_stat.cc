@@ -85,7 +85,8 @@ void getCacheStat(
 
     size_t cacheTestId = 0, savedThreadQty = 0;
     managerGS.Read(*cacheGSControl, *cacheGSBinary,
-                   config.GetTotalQueryQty(),
+                   //config.GetTotalQueryQty(), Unfortunately this doesn't work due to a design error
+                   maxNumQuery,
                    cacheTestId, savedThreadQty);
     if (cacheTestId != testSetId) {
       stringstream err;
