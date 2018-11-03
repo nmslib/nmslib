@@ -398,8 +398,9 @@ PivotNeighbHorderHashPivInvIndex<dist_t>::~PivotNeighbHorderHashPivInvIndex() {
   LOG(LIB_INFO) << "Search time: " << search_time_ / proc_query_qty_;
   LOG(LIB_INFO) << "Posting IDS generation time: " <<  ids_gen_time_ / proc_query_qty_;
   LOG(LIB_INFO) << "Pivot-dist comp. time: " <<  dist_pivot_comp_time_ / proc_query_qty_;
-  LOG(LIB_INFO) << "Sorting time: " <<  sort_comp_time_ / proc_query_qty_;
-  LOG(LIB_INFO) << "Scanning sorted time: " <<  scan_sorted_time_ / proc_query_qty_;
+  LOG(LIB_INFO) << "Result copy time (for storeSort): " <<  copy_post_time_ / proc_query_qty_;
+  LOG(LIB_INFO) << "Sorting time (for storeSort): " <<  sort_comp_time_ / proc_query_qty_;
+  LOG(LIB_INFO) << "Scanning sorted time (for storeSort): " <<  scan_sorted_time_ / proc_query_qty_;
   LOG(LIB_INFO) << "Distance comp. time: " <<  dist_comp_time_ / proc_query_qty_;
   for (const Object* o: genPivot_) delete o;
 }
@@ -641,9 +642,10 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
   size_t sort_comp_time = 0;
   size_t scan_sorted_time = 0;
   size_t ids_gen_time = 0;
+  size_t copy_post_time = 0;
 
   WallClockTimer z_search_time, z_dist_pivot_comp_time, z_dist_comp_time, 
-                 z_sort_comp_time, z_scan_sorted_time, z_ids_gen_time;
+                 z_copy_post, z_sort_comp_time, z_scan_sorted_time, z_ids_gen_time;
   z_search_time.reset();
 
   z_dist_pivot_comp_time.reset();
@@ -825,6 +827,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
 
       CHECK(num_prefix_search_ >= 1);
 
+      z_copy_post.reset();
       for (size_t idiv : combIds) {
         CHECK_MSG(idiv < chunkPostLists.size(),
                   ConvertToString(idiv) + " vs " + ConvertToString(chunkPostLists.size()));
@@ -837,6 +840,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
 
         post_qty_ += post.size();
       }
+      copy_post_time += z_copy_post.split();
 
       z_sort_comp_time.reset();
 
@@ -898,6 +902,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
     dist_comp_time_ += dist_comp_time;
     dist_pivot_comp_time_ += dist_pivot_comp_time;
     sort_comp_time_ += sort_comp_time;
+    copy_post_time_ += copy_post_time;
     scan_sorted_time_ += scan_sorted_time;
     ids_gen_time_ += ids_gen_time;
     proc_query_qty_++;

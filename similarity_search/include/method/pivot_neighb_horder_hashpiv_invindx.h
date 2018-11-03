@@ -215,6 +215,7 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
   mutable size_t  dist_comp_time_ = 0;
   mutable size_t  dist_pivot_comp_time_ = 0;
   mutable size_t  sort_comp_time_ = 0;
+  mutable size_t  copy_post_time_ = 0;
   mutable size_t  scan_sorted_time_ = 0;
   mutable size_t  ids_gen_time_ = 0;
   mutable size_t  proc_query_qty_ = 0;
