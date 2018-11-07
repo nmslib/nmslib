@@ -19,6 +19,7 @@
 #ifdef WITH_EXTRAS
 #include <method/pivot_neighb_horder_hashpiv_invindx.h>
 #include <method/pivot_neighb_horder_closepiv_invindx.h>
+#include <method/pivot_neighb_invindx_hnsw.h>
 #endif
 
 namespace similarity {
@@ -65,6 +66,20 @@ Index<dist_t>* CreatePivotNeighbClosePivInvIndex(
     const ObjectVector& DataObjects) {
 
   return new PivotNeighbHorderClosePivInvIndex<dist_t>(
+      PrintProgress,
+      space,
+      DataObjects
+  );
+}
+
+template <typename dist_t>
+Index<dist_t>* CreatePivotNeighbInvertedIndexHNSW(
+    bool PrintProgress,
+    const string& SpaceType,
+    Space<dist_t>& space,
+    const ObjectVector& DataObjects) {
+  
+  return new PivotNeighbInvertedIndexHNSW<dist_t>(
       PrintProgress,
       space,
       DataObjects
