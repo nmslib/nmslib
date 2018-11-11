@@ -306,7 +306,7 @@ PivotNeighbInvertedIndex<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeP
   }
 
   pmgr.GetParamOptional("minTimes",        min_times_, 2);
-  pmgr.GetParamOptional("numPivotSearch",  min_times_, 2);
+  pmgr.GetParamOptional("numPivotSearch",  min_times_, min_times_);
 
   pmgr.GetParamOptional("numPrefixSearch",num_prefix_search_, num_prefix_);
   if (num_prefix_search_ > num_pivot_) {
