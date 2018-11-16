@@ -74,7 +74,7 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   pmgr.GetParamOptional("numPivotIndex", num_prefix_, 32);
   pmgr.GetParamOptional("numPrefix",     num_prefix_, num_prefix_);
 
-  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 65536);
+  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 8192 * 8);
   pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  thread::hardware_concurrency());
   pmgr.GetParamOptional("hashTrickDim", hash_trick_dim_, 0);
 
@@ -108,7 +108,7 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   this->ResetQueryTimeParams();
 
 
-  LOG(LIB_INFO) << "# of entries in an index chunk  = " << chunk_index_size_;
+  LOG(LIB_INFO) << "# of entries added to the inverted file en-mass  = " << chunk_index_size_;
   LOG(LIB_INFO) << "# of index chunks             = " << indexQty;
   LOG(LIB_INFO) << "# of indexing thread          = " << index_thread_qty_;
   LOG(LIB_INFO) << "# pivotFile                   = " << pivot_file_;
@@ -157,15 +157,16 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   pivot_index_.reset(new Hnsw<dist_t>(PrintProgress_, space_, genPivot_));
   pivot_index_->CreateIndex(hnswParamsIndex);
 
-  /*
-   * After we allocated each chunks posting lists hash,
-   * it is thread-safe to index each chunk separately.
-   */
-  posting_lists_.resize(indexQty);
+  exp_avg_post_size_ = this->data_.size() * num_prefix_ / num_pivot_;
+  expCandQtyUB_ = size_t(exp_avg_post_size_ * num_prefix_search_ * 2);
 
-  for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
-    posting_lists_[chunkId].reset(new vector<PostingListInt>(num_pivot_));
+  posting_lists_.resize(num_pivot_);
+  for (size_t i = 0; i < num_pivot_; ++i) {
+    posting_lists_[i].reset(new PostingListInt());
+    posting_lists_[i]->reserve(size_t(exp_avg_post_size_ * 1.2));
   }
+
+  vector<IdType>    closePiv((1 + num_prefix_) * chunk_index_size_);
 
   // Do it after ResetQueryTimeParams, but before we create pivot index
   // with the help of HNSW
@@ -176,9 +177,52 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   // Don't need more thread than you have chunks
   index_thread_qty_ = min(index_thread_qty_, indexQty);
 
-  ParallelFor(0, indexQty, index_thread_qty_, [&](unsigned chunkId, unsigned threadId) {
-    this->IndexChunk(chunkId);
-  });
+  for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
+    size_t minId = chunkId * chunk_index_size_;
+    size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
+
+    LOG(LIB_INFO) << "Close pivot searching...";
+    // The search for close pivots can be run in parallel,
+      // but modification of the inverted files doesn't have to be (b/c it's super fast)
+    ParallelFor(minId, maxId, index_thread_qty_, [&](unsigned id, unsigned threadId) {
+      vector<IdType> pivotIds;
+      const Object* pObj = this->data_[id];
+
+      GetClosePivotIds(pObj, num_prefix_, pivotIds);
+
+      size_t idiff = id - minId;
+
+      size_t k = 0;
+      size_t offset = idiff * (num_prefix_ + 1);
+      for ( ; k < min(pivotIds.size(), size_t(num_prefix_)); ++k) {
+        closePiv[offset + 1 + k] = pivotIds[k];
+      }
+      closePiv[offset] = k; // There might be fwer than num_preifx_ pivots found
+
+      if (id % 1000 && PrintProgress_) {
+        unique_lock<mutex> lock(progress_bar_mutex_);
+        if (progress_bar_)
+          ++(*progress_bar_);
+      }
+    });
+
+    LOG(LIB_INFO) << "inverted index building for id in [" << minId << ":" << maxId << "]";
+    for (size_t id = minId; id < maxId; ++id) {
+      size_t idiff = id - minId;
+
+      size_t offset = idiff * (num_prefix_ + 1);
+      size_t pivQty = closePiv[offset];
+      for (size_t k = 0; k < pivQty; ++k) {
+        size_t pivId = closePiv[offset + 1 + k];
+        CHECK(pivId < num_pivot_);
+        posting_lists_[pivId]->push_back(id);
+      }
+    }
+  }
+
+  tmp_res_pool_.reset(new VectorPool<IdType>(index_thread_qty_, expCandQtyUB_));
+  counter_pool_.reset(new VectorPool<unsigned>(index_thread_qty_, this->data_.size()));
+  cand_pool_.reset(new VectorPool<const Object*>(index_thread_qty_, expCandQtyUB_));
 
   if (PrintProgress_) {
     if (progress_bar_) {
@@ -195,17 +239,17 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
 
     vector<size_t> pivotOcurrQty(maxPostQty);
 
-    for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
-      auto & chunkPostLists = *posting_lists_[chunkId];
-      for (size_t index = 0; index < chunkPostLists.size(); index++) {
-        pivotOcurrQty[index ] += chunkPostLists[index].size();
-        total_qty += chunkPostLists[index].size();
-      }
+    for (size_t index = 0; index < posting_lists_.size(); index++) {
+      pivotOcurrQty[index ] += posting_lists_[index]->size();
+      total_qty += posting_lists_[index]->size();
     }
+
     LOG(LIB_INFO) << "Pivot occurrences stat" <<
                      " mean: " << Mean(&pivotOcurrQty[0], pivotOcurrQty.size()) <<
-                     " std: " << StdDev(&pivotOcurrQty[0], pivotOcurrQty.size());
-    LOG(LIB_INFO) << "Number of postings per document: " << total_qty / this->data_.size();
+                     " std: " << StdDev(&pivotOcurrQty[0], pivotOcurrQty.size()) <<
+                     " Expected mean postings size: " << exp_avg_post_size_;
+    LOG(LIB_INFO) << "Number of postings per document: " << total_qty / this->data_.size() <<
+                    " alternative version for the mean # of pivots per posting: " << total_qty / num_pivot_;
     //sort(pivotOcurrQty.begin(), pivotOcurrQty.end());
     //LOG(LIB_INFO) << MergeIntoStr(pivotOcurrQty, ' ');
   }
@@ -230,44 +274,6 @@ PivotNeighbInvertedIndexHNSW<dist_t>::GetClosePivotIds(const Object* queryObj, s
   }
 }
 
-
-template <typename dist_t>
-void
-PivotNeighbInvertedIndexHNSW<dist_t>::IndexChunk(size_t chunkId) {
-  size_t minId = chunkId * chunk_index_size_;
-  size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
-
-
-  auto & chunkPostLists = *posting_lists_[chunkId];
-  chunkPostLists.resize(num_pivot_);
-  string externId;
-
-  for (size_t id = 0; id < maxId - minId; ++id) {
-    vector<IdType> pivotIds;
-
-    const Object* pObj = this->data_[minId + id];
-
-    unique_ptr<Object> extObj;
-
-    GetClosePivotIds(pObj, num_prefix_, pivotIds);
-
-    for (IdType pivId : pivotIds) {
-      chunkPostLists[pivId].push_back(id);
-    }
-
-    if (id % 1000 && PrintProgress_) {
-      unique_lock<mutex> lock(progress_bar_mutex_);
-      if (progress_bar_)
-        ++(*progress_bar_);
-    }
-  }
-
-  // Sorting is essential for merging algos
-  for (auto & p:chunkPostLists) {
-    sort(p.begin(), p.end());
-  }
-
-}
     
 template <typename dist_t>
 void
@@ -327,13 +333,16 @@ PivotNeighbInvertedIndexHNSW<dist_t>::SetQueryTimeParams(const AnyParams& QueryT
 
 template <typename dist_t>
 PivotNeighbInvertedIndexHNSW<dist_t>::~PivotNeighbInvertedIndexHNSW() {
-  LOG(LIB_INFO) << "Query qty: " << proc_query_qty_ << " postings per query: " << float(post_qty_) / proc_query_qty_;
-  LOG(LIB_INFO) << "Search time: " << search_time_ / proc_query_qty_;
-  LOG(LIB_INFO) << "Pivot-dist comp. time: " <<  pivot_search_time_ / proc_query_qty_;
-  LOG(LIB_INFO) << "Result copy time (for storeSort): " <<  copy_post_time_ / proc_query_qty_;
-  LOG(LIB_INFO) << "Sorting time (for storeSort): " <<  sort_comp_time_ / proc_query_qty_;
-  LOG(LIB_INFO) << "Scanning sorted time (for storeSort): " <<  scan_sorted_time_ / proc_query_qty_;
-  LOG(LIB_INFO) << "Distance comp. time: " <<  dist_comp_time_ / proc_query_qty_;
+  size_t proc_query_qty = proc_query_qty_scan_ + proc_query_qty_store_sort_;
+  LOG(LIB_INFO) << "Query qty: " << proc_query_qty;
+  LOG(LIB_INFO) << PERM_PROC_FAST_SCAN << ": postings per query: " << float(post_qty_scan_) / proc_query_qty_scan_;
+  LOG(LIB_INFO) << PERM_PROC_STORE_SORT << ": postings per query: " << float(post_qty_store_sort_) / proc_query_qty_store_sort_;
+  LOG(LIB_INFO) << "Search time: " << search_time_ / proc_query_qty;
+  LOG(LIB_INFO) << "Pivot-dist comp. time: " <<  pivot_search_time_ / proc_query_qty;
+  LOG(LIB_INFO) << "Result copy time (for storeSort): " <<  copy_post_time_ / proc_query_qty;
+  LOG(LIB_INFO) << "Sorting time (for storeSort): " <<  sort_comp_time_ / proc_query_qty;
+  LOG(LIB_INFO) << "Scanning sorted time (for storeSort): " <<  scan_sorted_time_ / proc_query_qty;
+  LOG(LIB_INFO) << "Distance comp. time: " <<  dist_comp_time_ / proc_query_qty;
   for (const Object* o: genPivot_) delete o;
 }
 
@@ -361,6 +370,7 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::GenSearch(QueryType* query, size_t K)
   size_t sort_comp_time = 0;
   size_t scan_sorted_time = 0;
   size_t copy_post_time = 0;
+  size_t post_qty = 0;
 
   WallClockTimer z_search_time, z_pivot_search_time, z_dist_comp_time,
                  z_copy_post, z_sort_comp_time, z_scan_sorted_time;
@@ -369,15 +379,35 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::GenSearch(QueryType* query, size_t K)
 
   vector<IdType> pivotIds;
 
-  vector<unsigned>          counter;
-  if (inv_proc_alg_ == kScan)
-    counter.resize(chunk_index_size_);
-  vector<IdType>           tmpRes;
-  if (inv_proc_alg_ == kStoreSort)
-    tmpRes.resize(chunk_index_size_);
 
-  ObjectVector              cands(chunk_index_size_);
-  size_t                    candQty = 0;
+  vector<const Object*>*          candVectorPtr = cand_pool_->loan();
+  vector<const Object*>&          cands = *candVectorPtr;
+
+  vector<unsigned>*               counter = nullptr;
+  unsigned*                       counterBeg = nullptr;
+
+
+  size_t candSize = 0;
+  size_t tmpResSize = 0;
+
+  CHECK(candVectorPtr);
+
+  if (inv_proc_alg_ == kScan) {
+    CHECK(counter_pool_);
+    counter = counter_pool_->loan();
+
+    if (counter->size() < this->data_.size()) {
+      counter->resize(this->data_.size());
+    }
+    // Set the pointer only after potentially resizing the vector!
+    counterBeg = &(*counter)[0];
+    memset(counterBeg, 0, sizeof(*counterBeg) * counter->size());
+  }
+
+  vector<IdType>*           tmpRes = nullptr;
+  if (inv_proc_alg_ == kStoreSort) {
+    tmpRes = tmp_res_pool_->loan();
+  }
 
   z_pivot_search_time.reset();
 
@@ -385,90 +415,99 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::GenSearch(QueryType* query, size_t K)
 
   pivot_search_time += z_pivot_search_time.split();
 
-  for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {
-    const auto &chunkPostLists = *posting_lists_[chunkId];
-    size_t minId = chunkId * chunk_index_size_;
+  if (inv_proc_alg_ == kScan) {
+    CHECK(counter && counter->size() >= this->data_.size());
+    CHECK(num_prefix_search_ >= 1);
+    counterBeg = &(*counter)[0];
 
-    const auto &data_start = &this->data_[0] + minId;
+    LOG(LIB_INFO) << counter->size() << " data= " << this->data_.size();
 
-    if (inv_proc_alg_ == kScan) {
-      size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
-      size_t chunkQty = maxId - minId;
+    for (IdTypeUnsign pivId : pivotIds) {
+      const PostingListInt &post = *(posting_lists_[pivId]);
 
-      if (chunkId) {
-        memset(&counter[0], 0, sizeof(counter[0]) * counter.size());
+      post_qty += post.size();
+      for (IdType p : post) {
+        counterBeg[p]++;
       }
 
-      CHECK(num_prefix_search_ >= 1);
-
-      for (IdTypeUnsign pivId : pivotIds) {
-        const PostingListInt &post = chunkPostLists[pivId];
-
-        post_qty_ += post.size();
-        for (IdType p : post) {
-          counter[p]++;
-        }
-      }
-
-      candQty = 0;
-      for (size_t i = 0; i < chunkQty; ++i) {
-        if (counter[i] >= min_times_) {
-          cands[candQty++] = data_start[i];
-        }
-      }
     }
 
-    if (inv_proc_alg_ == kStoreSort) {
-      unsigned tmpResSize = 0;
+    for (size_t i = 0; i < this->data_.size(); ++i) {
+      if (counterBeg[i] >= min_times_) {
 
-      CHECK(num_prefix_search_ >= 1);
+        if (candSize >= cands.size())
+          cands.resize(2 * candSize + 1);
+        cands[candSize++] = this->data_[i];
 
-      z_copy_post.reset();
-      for (IdTypeUnsign pivId : pivotIds) {
-        const PostingListInt &post = chunkPostLists[pivId];
-
-        if (post.size() + tmpResSize > tmpRes.size())
-          tmpRes.resize(2 * tmpResSize + post.size());
-        memcpy(&tmpRes[tmpResSize], &post[0], post.size() * sizeof(post[0]));
-        tmpResSize += post.size();
-
-        post_qty_ += post.size();
       }
-      copy_post_time += z_copy_post.split();
-
-      z_sort_comp_time.reset();
-
-      boost::sort::spreadsort::integer_sort(tmpRes.begin(), tmpRes.begin() + tmpResSize);
-
-      sort_comp_time += z_sort_comp_time.split();
-
-      candQty = 0;
-
-      z_scan_sorted_time.reset();
-      unsigned start = 0;
-      while (start < tmpResSize) {
-        IdType prevId = tmpRes[start];
-        unsigned next = start + 1;
-        for (; next < tmpResSize && tmpRes[next] == prevId; ++next);
-        if ((next - start) >= min_times_) {
-          cands[candQty++] = data_start[prevId];
-        }
-        start = next;
-      }
-      scan_sorted_time += z_scan_sorted_time.split();
     }
-
-
-    z_dist_comp_time.reset();
-
-    if (!skip_checking_) {
-      for (size_t i = 0; i < candQty; ++i)
-        query->CheckAndAddToResult(cands[i]);
-    }
-
-    dist_comp_time += z_dist_comp_time.split();
-
   }
+
+  if (inv_proc_alg_ == kStoreSort) {
+    CHECK(tmpRes);
+    CHECK(num_prefix_search_ >= 1);
+
+    z_copy_post.reset();
+    for (IdTypeUnsign pivId : pivotIds) {
+      const PostingListInt &post = *(posting_lists_[pivId]);
+
+      if (post.size() + tmpResSize > tmpRes->size())
+        tmpRes->resize(2 * tmpResSize + post.size());
+      memcpy(&(*tmpRes)[tmpResSize], &post[0], post.size() * sizeof(post[0]));
+      tmpResSize += post.size();
+
+      post_qty += post.size();
+
+    }
+    copy_post_time += z_copy_post.split();
+
+    z_sort_comp_time.reset();
+
+    boost::sort::spreadsort::integer_sort(tmpRes->begin(), tmpRes->begin() + tmpResSize);
+
+    sort_comp_time += z_sort_comp_time.split();
+
+    z_scan_sorted_time.reset();
+    unsigned start = 0;
+    const IdType *tmpResBeg = &(*tmpRes)[0];
+    while (start < tmpResSize) {
+      IdType prevId = tmpResBeg[start];
+      unsigned next = start + 1;
+      for (; next < tmpResSize && tmpResBeg[next] == prevId; ++next);
+      if ((next - start) >= min_times_) {
+
+        if (candSize >= cands.size())
+          cands.resize(2 * candSize + 1);
+        cands[candSize++] = this->data_[prevId];
+
+      }
+      start = next;
+    }
+    scan_sorted_time += z_scan_sorted_time.split();
+  }
+
+
+  z_dist_comp_time.reset();
+
+  if (!skip_checking_) {
+    for (size_t i = 0; i < candSize; ++i) {
+      query->CheckAndAddToResult(cands[i]);
+    }
+  }
+
+  if (tmpRes) {
+    CHECK(tmp_res_pool_.get());
+    tmp_res_pool_->release(tmpRes);
+  }
+  CHECK(cand_pool_.get());
+  cand_pool_->release(candVectorPtr);
+
+  if (counter) {
+    CHECK(counter_pool_.get());
+    counter_pool_->release(counter);
+  }
+
+  dist_comp_time += z_dist_comp_time.split();
 
   {
     unique_lock<mutex> lock(stat_mutex_);
@@ -479,7 +518,14 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::GenSearch(QueryType* query, size_t K)
     sort_comp_time_ += sort_comp_time;
     copy_post_time_ += copy_post_time;
     scan_sorted_time_ += scan_sorted_time;
-    proc_query_qty_++;
+    if (inv_proc_alg_ == kScan) {
+      proc_query_qty_scan_++;
+      post_qty_scan_ += post_qty;
+    }
+    if (inv_proc_alg_ == kStoreSort) {
+      proc_query_qty_store_sort_++;
+      post_qty_store_sort_ += post_qty;
+    }
   }
 
 }

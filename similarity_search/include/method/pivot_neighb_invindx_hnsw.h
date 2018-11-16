@@ -24,6 +24,7 @@
 #include "index.h"
 #include "permutation_utils.h"
 #include "ported_boost_progress.h"
+#include "vector_pool.h"
 
 #define METH_PIVOT_NEIGHB_INVINDEX_HNSW      "napp_hnsw"
 
@@ -57,8 +58,7 @@ class PivotNeighbInvertedIndexHNSW : public Index<dist_t> {
   const std::string StrDesc() const override;
   void Search(RangeQuery<dist_t>* query, IdType) const override;
   void Search(KNNQuery<dist_t>* query, IdType) const override;
-  
-  void IndexChunk(size_t chunkId);
+
   void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
 
@@ -66,6 +66,7 @@ class PivotNeighbInvertedIndexHNSW : public Index<dist_t> {
   bool    PrintProgress_;
 
   size_t  chunk_index_size_;
+  size_t  exp_avg_post_size_;
   size_t  K_;
   size_t  num_prefix_;       // K in the original paper, also numPivotIndex
   size_t  num_prefix_search_;// K used during search (our modification can use a different K)
@@ -95,7 +96,13 @@ class PivotNeighbInvertedIndexHNSW : public Index<dist_t> {
     kStoreSort
   } inv_proc_alg_;
 
-  vector<unique_ptr<vector<PostingListInt>>> posting_lists_;
+  vector<unique_ptr<PostingListInt>> posting_lists_;
+
+  unique_ptr<VectorPool<IdType>>  tmp_res_pool_;
+  unique_ptr<VectorPool<const Object*>>  cand_pool_;
+  unique_ptr<VectorPool<unsigned>> counter_pool_;
+
+  size_t expCandQtyUB_ = 0;
 
   template <typename QueryType> void GenSearch(QueryType* query, size_t K) const;
   void GetClosePivotIds(const Object* queryObj, size_t K, vector<IdType>& pivotIds) const;
@@ -103,14 +110,16 @@ class PivotNeighbInvertedIndexHNSW : public Index<dist_t> {
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PivotNeighbInvertedIndexHNSW);
 
-  mutable size_t  post_qty_ = 0;
+  mutable size_t  post_qty_scan_ = 0;
+  mutable size_t  post_qty_store_sort_ = 0;
   mutable size_t  search_time_ = 0;
   mutable size_t  dist_comp_time_ = 0;
   mutable size_t  pivot_search_time_ = 0;
   mutable size_t  sort_comp_time_ = 0;
   mutable size_t  copy_post_time_ = 0;
   mutable size_t  scan_sorted_time_ = 0;
-  mutable size_t  proc_query_qty_ = 0;
+  mutable size_t  proc_query_qty_scan_ = 0;
+  mutable size_t  proc_query_qty_store_sort_ = 0;
 
   mutable mutex   stat_mutex_;
 
