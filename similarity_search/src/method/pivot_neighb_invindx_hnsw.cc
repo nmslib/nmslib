@@ -74,7 +74,6 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   pmgr.GetParamOptional("numPivotIndex", num_prefix_, 32);
   pmgr.GetParamOptional("numPrefix",     num_prefix_, num_prefix_);
 
-  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 8192 * 8);
   pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  thread::hardware_concurrency());
   pmgr.GetParamOptional("hashTrickDim", hash_trick_dim_, 0);
 
@@ -90,9 +89,6 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   pmgr.GetParamOptional("pivotFile", pivot_file_, "");
   pmgr.GetParamOptional("printPivotStat", print_pivot_stat_, 0);
 
-  size_t indexQty = (this->data_.size() + chunk_index_size_ - 1) / chunk_index_size_;
-
-
   pmgr.GetParamOptional("M", M_, 16);
   pmgr.GetParamOptional("delaunay_type", delaunay_type_, 2);
   int post_;
@@ -107,9 +103,6 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   pmgr.CheckUnused();
   this->ResetQueryTimeParams();
 
-
-  LOG(LIB_INFO) << "# of entries added to the inverted file en-mass  = " << chunk_index_size_;
-  LOG(LIB_INFO) << "# of index chunks             = " << indexQty;
   LOG(LIB_INFO) << "# of indexing thread          = " << index_thread_qty_;
   LOG(LIB_INFO) << "# pivotFile                   = " << pivot_file_;
   LOG(LIB_INFO) << "# pivots                      = " << num_pivot_;
@@ -121,9 +114,6 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   LOG(LIB_INFO) << "efConstruction      = " << efConstruction_;
   LOG(LIB_INFO) << "delaunay_type       = " << delaunay_type_;
   LOG(LIB_INFO) << "efPivotSearchIndex  = " << efPivotSearchIndex_;
-
-  if (PrintProgress_)
-    progress_bar_.reset(new ProgressDisplay(this->data_.size(), cerr));
 
   ObjectVector pivot;
   if (pivot_file_.empty()) {
@@ -160,13 +150,17 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   exp_avg_post_size_ = this->data_.size() * num_prefix_ / num_pivot_;
   expCandQtyUB_ = size_t(exp_avg_post_size_ * num_prefix_search_ * 2);
 
+  // Create a new progress bar only after the HNSW index is created
+  if (PrintProgress_)
+    progress_bar_.reset(new ProgressDisplay(this->data_.size(), cerr));
+
   posting_lists_.resize(num_pivot_);
+  post_list_mutexes_.resize(num_pivot_);
   for (size_t i = 0; i < num_pivot_; ++i) {
     posting_lists_[i].reset(new PostingListInt());
     posting_lists_[i]->reserve(size_t(exp_avg_post_size_ * 1.2));
+    post_list_mutexes_[i].reset(new mutex());
   }
-
-  vector<IdType>    closePiv((1 + num_prefix_) * chunk_index_size_);
 
   // Do it after ResetQueryTimeParams, but before we create pivot index
   // with the help of HNSW
@@ -174,51 +168,31 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   hnswParamsSearch.AddChangeParam("ef", efPivotSearchIndex_);
   pivot_index_->SetQueryTimeParams(hnswParamsSearch);
 
-  // Don't need more thread than you have chunks
-  index_thread_qty_ = min(index_thread_qty_, indexQty);
+  // The search for close pivots can be run in parallel,
+    // but modification of the inverted files doesn't have to be (b/c it's super fast)
+  ParallelFor(0, this->data_.size(), index_thread_qty_, [&](unsigned id, unsigned threadId) {
+    vector<IdType> pivotIds;
+    const Object* pObj = this->data_[id];
 
-  for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
-    size_t minId = chunkId * chunk_index_size_;
-    size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
+    GetClosePivotIds(pObj, num_prefix_, pivotIds);
 
-    LOG(LIB_INFO) << "Close pivot searching...";
-    // The search for close pivots can be run in parallel,
-      // but modification of the inverted files doesn't have to be (b/c it's super fast)
-    ParallelFor(minId, maxId, index_thread_qty_, [&](unsigned id, unsigned threadId) {
-      vector<IdType> pivotIds;
-      const Object* pObj = this->data_[id];
+    // We need to sort pivotIds or else we may get a deadlock!
+    boost::sort::spreadsort::integer_sort(pivotIds.begin(), pivotIds.end());
 
-      GetClosePivotIds(pObj, num_prefix_, pivotIds);
-
-      size_t idiff = id - minId;
-
-      size_t k = 0;
-      size_t offset = idiff * (num_prefix_ + 1);
-      for ( ; k < min(pivotIds.size(), size_t(num_prefix_)); ++k) {
-        closePiv[offset + 1 + k] = pivotIds[k];
-      }
-      closePiv[offset] = k; // There might be fwer than num_preifx_ pivots found
-
-      if (id % 1000 && PrintProgress_) {
-        unique_lock<mutex> lock(progress_bar_mutex_);
-        if (progress_bar_)
-          ++(*progress_bar_);
-      }
-    });
-
-    LOG(LIB_INFO) << "inverted index building for id in [" << minId << ":" << maxId << "]";
-    for (size_t id = minId; id < maxId; ++id) {
-      size_t idiff = id - minId;
-
-      size_t offset = idiff * (num_prefix_ + 1);
-      size_t pivQty = closePiv[offset];
-      for (size_t k = 0; k < pivQty; ++k) {
-        size_t pivId = closePiv[offset + 1 + k];
-        CHECK(pivId < num_pivot_);
+    for (IdType pivId: pivotIds) {
+      CHECK(pivId < num_pivot_);
+      {
+        unique_lock<mutex> lock(*post_list_mutexes_[pivId]);
         posting_lists_[pivId]->push_back(id);
       }
     }
-  }
+
+    if (id % 1000 && PrintProgress_) {
+      unique_lock<mutex> lock(progress_bar_mutex_);
+      if (progress_bar_)
+        ++(*progress_bar_);
+    }
+  });
 
   tmp_res_pool_.reset(new VectorPool<IdType>(index_thread_qty_, expCandQtyUB_));
   counter_pool_.reset(new VectorPool<unsigned>(index_thread_qty_, this->data_.size()));
@@ -419,9 +393,7 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::GenSearch(QueryType* query, size_t K)
     CHECK(counter && counter->size() >= this->data_.size());
     CHECK(num_prefix_search_ >= 1);
     counterBeg = &(*counter)[0];
-
-    LOG(LIB_INFO) << counter->size() << " data= " << this->data_.size();
-
+    
     for (IdTypeUnsign pivId : pivotIds) {
       const PostingListInt &post = *(posting_lists_[pivId]);
 

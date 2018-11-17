@@ -65,7 +65,6 @@ class PivotNeighbInvertedIndexHNSW : public Index<dist_t> {
   const   Space<dist_t>&  space_;
   bool    PrintProgress_;
 
-  size_t  chunk_index_size_;
   size_t  exp_avg_post_size_;
   size_t  K_;
   size_t  num_prefix_;       // K in the original paper, also numPivotIndex
@@ -97,6 +96,7 @@ class PivotNeighbInvertedIndexHNSW : public Index<dist_t> {
   } inv_proc_alg_;
 
   vector<unique_ptr<PostingListInt>> posting_lists_;
+  vector<unique_ptr<mutex>>          post_list_mutexes_;
 
   unique_ptr<VectorPool<IdType>>  tmp_res_pool_;
   unique_ptr<VectorPool<const Object*>>  cand_pool_;
