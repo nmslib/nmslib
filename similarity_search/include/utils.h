@@ -379,6 +379,17 @@ struct AutoMultiMapDel {
     typename std::multimap<U, V*>& mMap;
 };
 
+/*
+ * Add to vector with explicitly reserved memory. Increment the size counter.
+ */
+template <class T>
+inline void addToVectorWithResSize(vector<T>& vect, const T& elem, size_t& qty, float expandFract=2) {
+  if (qty + 1 >= vect.size()) {
+    vect.resize(static_cast<size_t>(1 + vect.size() * expandFract));
+  }
+  vect[qty++] = elem;
+}
+
 }  // namespace similarity
 
 #endif   // _UTILS_H_

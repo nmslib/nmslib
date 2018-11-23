@@ -30,6 +30,8 @@
 #include <method/pivot_neighb_common.h>
 #include <method/pivot_neighb_horder_common.h>
 
+#include "vector_pool.h"
+
 namespace similarity {
 
 using std::vector;
@@ -58,16 +60,12 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
   const std::string StrDesc() const override;
   void Search(RangeQuery<dist_t>* query, IdType) const override;
   void Search(KNNQuery<dist_t>* query, IdType) const override;
-  
-  void IndexChunk(size_t chunkId, ProgressDisplay*, mutex&);
   void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
 
   const   Space<dist_t>&  space_;
   bool    PrintProgress_;
-  bool    recreate_points_;
 
-  size_t  chunk_index_size_;
   size_t  K_;
   size_t  knn_amp_;
   float   db_scan_frac_;
@@ -165,7 +163,21 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
    return res;
   }
 
-  vector<unique_ptr<vector<PostingListHorderType>>> posting_lists_;
+
+  size_t                                        maxPostQty_;
+  vector<unique_ptr<PostingListHorderType>>     posting_lists_;
+  mutex                                         post_list_mutex_;
+
+  unique_ptr<VectorPool<IdType>>          tmp_res_pool_;
+  unique_ptr<VectorPool<const Object*>>   cand_pool_;
+  unique_ptr<VectorPool<unsigned>>        counter_pool_;
+  unique_ptr<VectorPool<uint32_t>>        combId_pool_;
+
+  size_t exp_post_per_query_qty_ = 0;
+  size_t exp_avg_post_size_ = 0;
+
+  mutex                           progress_bar_mutex_;
+  unique_ptr<ProgressDisplay>     progress_bar_;
 
   size_t getPostQtysOnePivot(size_t skipVal) const {
     return (skipVal - 1 + size_t(num_pivot_)) / skipVal;
