@@ -27,8 +27,12 @@
 
 #define METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX      "napp_horder_hashpiv"
 
+#define SINGLE_MUTEX_FLUSH
+
 #include <method/pivot_neighb_common.h>
 #include <method/pivot_neighb_horder_common.h>
+
+#include "vector_pool.h"
 
 namespace similarity {
 
@@ -58,16 +62,12 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
   const std::string StrDesc() const override;
   void Search(RangeQuery<dist_t>* query, IdType) const override;
   void Search(KNNQuery<dist_t>* query, IdType) const override;
-  
-  void IndexChunk(size_t chunkId, ProgressDisplay*, mutex&);
   void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
  private:
 
   const   Space<dist_t>&  space_;
   bool    PrintProgress_;
-  bool    recreate_points_;
 
-  size_t  chunk_index_size_;
   size_t  K_;
   size_t  knn_amp_;
   float   db_scan_frac_;
@@ -165,7 +165,28 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
    return res;
   }
 
-  vector<unique_ptr<vector<PostingListHorderType>>> posting_lists_;
+
+  size_t                                        maxPostQty_;
+  vector<unique_ptr<PostingListHorderType>>     posting_lists_;
+  #ifndef SINGLE_MUTEX_FLUSH
+  vector<mutex*>                                post_list_mutexes_;
+  #else
+  mutex                                         post_list_single_mutex_;
+  #endif
+
+  vector<unique_ptr<vector<PostingListHorderType>>>   tmp_posting_lists_;
+  vector<size_t>                                      tmp_post_doc_qty_;
+
+  unique_ptr<VectorPool<IdType>>          tmp_res_pool_;
+  unique_ptr<VectorPool<const Object*>>   cand_pool_;
+  unique_ptr<VectorPool<unsigned>>        counter_pool_;
+  unique_ptr<VectorPool<uint32_t>>        combId_pool_;
+
+  size_t exp_post_per_query_qty_ = 0;
+  size_t exp_avg_post_size_ = 0;
+
+  mutex                           progress_bar_mutex_;
+  unique_ptr<ProgressDisplay>     progress_bar_;
 
   size_t getPostQtysOnePivot(size_t skipVal) const {
     return (skipVal - 1 + size_t(num_pivot_)) / skipVal;
@@ -209,6 +230,51 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
    * to retain vector's capacity.
    */
   size_t genPivotCombIds(std::vector<uint32_t>& ids, const Permutation& perm, unsigned permPrefix) const;
+
+
+  void flushTmpPost(unsigned threadId) {
+    CHECK(threadId <= tmp_posting_lists_.size());
+
+
+    tmp_post_doc_qty_[threadId] = 0;
+    vector<PostingListHorderType>& tmpAllPivList = (*tmp_posting_lists_[threadId]);
+#ifndef SINGLE_MUTEX_FLUSH
+    for (IdType pivId = 0; pivId < maxPostQty_; ++pivId) {
+      {
+        CHECK(pivId < post_list_mutexes_.size());
+        unique_lock <mutex> lock(*post_list_mutexes_[pivId]);
+
+        PostingListInt& permList = *posting_lists_[pivId];
+        PostingListInt& tmpList = tmpAllPivList[pivId];
+
+        size_t oldSize = permList.size();
+        size_t addSize = tmpList.size();
+        permList.resize(oldSize + addSize);
+        memcpy(&permList[oldSize], &tmpList[0], sizeof(tmpList[0]) * addSize);
+        // Don't forget to clear the temporary buffer!
+        // It doesn't free the memory though: https://en.cppreference.com/w/cpp/container/vector/clear
+        tmpList.clear();
+      }
+    }
+#else
+    {
+      unique_lock<mutex> lock(post_list_single_mutex_);
+      for (IdType pivId = 0; pivId < maxPostQty_; ++pivId) {
+
+        PostingListInt& permList = *posting_lists_[pivId];
+        PostingListInt& tmpList = tmpAllPivList[pivId];
+
+        size_t oldSize = permList.size();
+        size_t addSize = tmpList.size();
+        permList.resize(oldSize + addSize);
+        memcpy(&permList[oldSize], &tmpList[0], sizeof(tmpList[0]) * addSize);
+        // Don't forget to clear the temporary buffer!
+        // It doesn't free the memory though: https://en.cppreference.com/w/cpp/container/vector/clear
+        tmpList.clear();
+      }
+    }
+#endif
+  }
 
   mutable size_t  post_qty_ = 0;
   mutable size_t  search_time_ = 0;

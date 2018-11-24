@@ -1,15 +1,8 @@
 #ifndef PIVOT_NEIGHBORHOOD_HORDER_COMMON_H
 #define PIVOT_NEIGHBORHOOD_HORDER_COMMON_H
 
-#ifdef UINT16_IDS
-typedef uint16_t PostingListHorderElemType;
-const size_t UINT16_ID_MAX=65536;
-#else
 typedef uint32_t PostingListHorderElemType;
-#endif
-
 typedef std::vector<PostingListHorderElemType> PostingListHorderType;
-
 
 /**
  * A structure that keeps information about current state of search within one posting list.

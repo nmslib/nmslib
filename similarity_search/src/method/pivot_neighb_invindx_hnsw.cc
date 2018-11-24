@@ -168,8 +168,6 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   hnswParamsSearch.AddChangeParam("ef", efPivotSearchIndex_);
   pivot_index_->SetQueryTimeParams(hnswParamsSearch);
 
-  // The search for close pivots can be run in parallel,
-    // but modification of the inverted files doesn't have to be (b/c it's super fast)
   ParallelFor(0, this->data_.size(), index_thread_qty_, [&](unsigned id, unsigned threadId) {
     vector<IdType> pivotIds;
     const Object* pObj = this->data_[id];
@@ -209,21 +207,25 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   if (print_pivot_stat_) {
     size_t total_qty = 0;
 
-    size_t maxPostQty = num_pivot_;
+    size_t postQty = posting_lists_.size();
 
-    vector<size_t> pivotOcurrQty(maxPostQty);
+    vector<size_t> pivotOcurrQty(postQty);
 
-    for (size_t index = 0; index < posting_lists_.size(); index++) {
+    for (size_t index = 0; index < postQty; index++) {
       pivotOcurrQty[index ] += posting_lists_[index]->size();
       total_qty += posting_lists_[index]->size();
     }
 
+    LOG(LIB_INFO) << "";
+    LOG(LIB_INFO) << "========================";
     LOG(LIB_INFO) << "Pivot occurrences stat" <<
                      " mean: " << Mean(&pivotOcurrQty[0], pivotOcurrQty.size()) <<
                      " std: " << StdDev(&pivotOcurrQty[0], pivotOcurrQty.size()) <<
                      " Expected mean postings size: " << exp_avg_post_size_;
-    LOG(LIB_INFO) << "Number of postings per document: " << total_qty / this->data_.size() <<
-                    " alternative version for the mean # of pivots per posting: " << total_qty / num_pivot_;
+    LOG(LIB_INFO) << " alternative version for the mean # of entries per posting: " << total_qty / postQty;
+    LOG(LIB_INFO) << "Number of postings per document: " << total_qty / this->data_.size();
+
+    LOG(LIB_INFO) << "========================";
     //sort(pivotOcurrQty.begin(), pivotOcurrQty.end());
     //LOG(LIB_INFO) << MergeIntoStr(pivotOcurrQty, ' ');
   }
