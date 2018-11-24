@@ -27,7 +27,7 @@
 
 #define METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX      "napp_horder_hashpiv"
 
-#define SINGLE_MUTEX_FLUSH
+//#define SINGLE_MUTEX_FLUSH
 
 #include <method/pivot_neighb_common.h>
 #include <method/pivot_neighb_horder_common.h>
