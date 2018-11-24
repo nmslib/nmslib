@@ -536,6 +536,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
   size_t scan_sorted_time = 0;
   size_t ids_gen_time = 0;
   size_t copy_post_time = 0;
+  size_t post_qty = 0;
 
   size_t dataQty = this->data_.size();
 
@@ -611,7 +612,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
 
           // initialize the postListQueue to the first position - insert pair (-doc_id, query_term_index)
           postListQueue.push(-IdType(post[0]), qsi);
-          post_qty_++;
+          post_qty++;
         }
       }
 
@@ -631,7 +632,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
 
           // move to next position in the posting list
           queryState.post_pos_++;
-          post_qty_++;
+          post_qty++;
 
           /*
            * If we didn't reach the end of the posting list, we retrieve the next document id.
@@ -669,7 +670,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
                   ConvertToString(idiv) + " vs " + ConvertToString(posting_lists_.size()));
         const PostingListHorderType &post = *posting_lists_[idiv];
 
-        post_qty_ += post.size();
+        post_qty += post.size();
         for (IdType p : post) {
           //counter[p]++;
           counter[p] += skip_val_;
@@ -700,7 +701,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
         postListUnion(tmpRes[prevRes], post, tmpRes[1 - prevRes], skip_val_);
         prevRes = 1 - prevRes;
 
-        post_qty_ += post.size();
+        post_qty += post.size();
       }
 
       for (const auto &it: tmpRes[1 - prevRes]) {
@@ -730,7 +731,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
         memcpy(&tmpRes[tmpResSize], &post[0], post.size() * sizeof(post[0]));
         tmpResSize += post.size();
 
-        post_qty_ += post.size();
+        post_qty += post.size();
       }
       copy_post_time += z_copy_post.split();
 
@@ -777,6 +778,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::GenSearch(QueryType* query, size_
     scan_sorted_time_ += scan_sorted_time;
     ids_gen_time_ += ids_gen_time;
     proc_query_qty_++;
+    post_qty_ += post_qty;
   }
 
   CHECK(cand_pool_.get());
