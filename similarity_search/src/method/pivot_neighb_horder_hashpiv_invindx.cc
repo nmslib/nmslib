@@ -40,7 +40,7 @@
 
 #define SCALE_MIN_TIMES true
 
-const size_t MAX_TMP_DOC_QTY = 4096;
+const size_t MAX_TMP_DOC_QTY = 4096 * 32;
 
 // This include is used for store-and-sort merging method only
 #include <boost/sort/spreadsort/integer_sort.hpp>
@@ -195,6 +195,7 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::CreateIndex(const AnyParams& Inde
 
   // Sorting is essential for merging algorithms
   ParallelFor(0, num_pivot_, index_thread_qty_, [&](unsigned pivId, unsigned threadId) {
+    flushTmpPost(threadId);
     PostingListInt& oneList = *posting_lists_[pivId];
     boost::sort::spreadsort::integer_sort(oneList.begin(), oneList.end());
   });
