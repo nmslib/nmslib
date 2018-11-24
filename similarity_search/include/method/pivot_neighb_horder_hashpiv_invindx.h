@@ -27,6 +27,8 @@
 
 #define METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX      "napp_horder_hashpiv"
 
+#define SINGLE_MUTEX_FLUSH
+
 #include <method/pivot_neighb_common.h>
 #include <method/pivot_neighb_horder_common.h>
 
@@ -166,7 +168,14 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
 
   size_t                                        maxPostQty_;
   vector<unique_ptr<PostingListHorderType>>     posting_lists_;
-  mutex                                         post_list_mutex_;
+  #ifndef SINGLE_MUTEX_FLUSH
+  vector<mutex*>                                post_list_mutexes_;
+  #else
+  mutex                                         post_list_single_mutex_;
+  #endif
+
+  vector<unique_ptr<vector<PostingListHorderType>>>   tmp_posting_lists_;
+  vector<size_t>                                      tmp_post_doc_qty_;
 
   unique_ptr<VectorPool<IdType>>          tmp_res_pool_;
   unique_ptr<VectorPool<const Object*>>   cand_pool_;
@@ -221,6 +230,51 @@ class PivotNeighbHorderHashPivInvIndex : public Index<dist_t> {
    * to retain vector's capacity.
    */
   size_t genPivotCombIds(std::vector<uint32_t>& ids, const Permutation& perm, unsigned permPrefix) const;
+
+
+  void flushTmpPost(unsigned threadId) {
+    CHECK(threadId <= tmp_posting_lists_.size());
+
+
+    tmp_post_doc_qty_[threadId] = 0;
+    vector<PostingListHorderType>& tmpAllPivList = (*tmp_posting_lists_[threadId]);
+#ifndef SINGLE_MUTEX_FLUSH
+    for (IdType pivId = 0; pivId < maxPostQty_; ++pivId) {
+      {
+        CHECK(pivId < post_list_mutexes_.size());
+        unique_lock <mutex> lock(*post_list_mutexes_[pivId]);
+
+        PostingListInt& permList = *posting_lists_[pivId];
+        PostingListInt& tmpList = tmpAllPivList[pivId];
+
+        size_t oldSize = permList.size();
+        size_t addSize = tmpList.size();
+        permList.resize(oldSize + addSize);
+        memcpy(&permList[oldSize], &tmpList[0], sizeof(tmpList[0]) * addSize);
+        // Don't forget to clear the temporary buffer!
+        // It doesn't free the memory though: https://en.cppreference.com/w/cpp/container/vector/clear
+        tmpList.clear();
+      }
+    }
+#else
+    {
+      unique_lock<mutex> lock(post_list_single_mutex_);
+      for (IdType pivId = 0; pivId < maxPostQty_; ++pivId) {
+
+        PostingListInt& permList = *posting_lists_[pivId];
+        PostingListInt& tmpList = tmpAllPivList[pivId];
+
+        size_t oldSize = permList.size();
+        size_t addSize = tmpList.size();
+        permList.resize(oldSize + addSize);
+        memcpy(&permList[oldSize], &tmpList[0], sizeof(tmpList[0]) * addSize);
+        // Don't forget to clear the temporary buffer!
+        // It doesn't free the memory though: https://en.cppreference.com/w/cpp/container/vector/clear
+        tmpList.clear();
+      }
+    }
+#endif
+  }
 
   mutable size_t  post_qty_ = 0;
   mutable size_t  search_time_ = 0;

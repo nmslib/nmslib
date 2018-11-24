@@ -40,6 +40,8 @@
 
 #define SCALE_MIN_TIMES true
 
+const size_t MAX_TMP_DOC_QTY = 4096;
+
 // This include is used for store-and-sort merging method only
 #include <boost/sort/spreadsort/integer_sort.hpp>
 
@@ -135,9 +137,25 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::CreateIndex(const AnyParams& Inde
 
   posting_lists_.resize(maxPostQty_);
 
+
   for (size_t i = 0; i < maxPostQty_; ++i) {
     posting_lists_[i].reset(new PostingListInt());
     posting_lists_[i]->reserve(size_t(exp_avg_post_size_ * 1.2));
+  }
+
+#ifndef SINGLE_MUTEX_FLUSH
+  post_list_mutexes_.resize(maxPostQty_);
+  for (size_t i = 0; i < maxPostQty_; ++i) {
+    post_list_mutexes_[i] = new mutex();
+  }
+#endif
+
+  tmp_posting_lists_.resize(index_thread_qty_);
+  tmp_post_doc_qty_.resize(index_thread_qty_);
+
+  for (unsigned i = 0; i < index_thread_qty_; ++i) {
+    tmp_posting_lists_[i].reset(new vector<PostingListInt>(maxPostQty_));
+    CHECK(tmp_posting_lists_[i]->size() == maxPostQty_);
   }
 
   ParallelFor(0, this->data_.size(), index_thread_qty_, [&](unsigned id, unsigned threadId) {
@@ -152,16 +170,18 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::CreateIndex(const AnyParams& Inde
 
     size_t cqty = genPivotCombIds(combIds, perm, num_prefix_);
 
-    {
-      unique_lock<mutex> lock(post_list_mutex_);
+    auto& postList = *tmp_posting_lists_[threadId];
 
-      for (uint32_t i = 0; i < cqty; ++i) {
-        IdType cid = combIds[i];
-        CHECK_MSG(cid < maxPostQty_,
-                  "bug cid (" + ConvertToString(cid) +") >= maxPostQty (" + ConvertToString(maxPostQty_) + ") "+
-        "i=" + ConvertToString(i) + " cqty=" + ConvertToString(cqty)) ;
-        posting_lists_[cid]->push_back(id);
-      }
+    for (uint32_t i = 0; i < cqty; ++i) {
+      IdType cid = combIds[i];
+      CHECK_MSG(cid < maxPostQty_,
+                "bug cid (" + ConvertToString(cid) +") >= maxPostQty (" + ConvertToString(maxPostQty_) + ") "+
+      "i=" + ConvertToString(i) + " cqty=" + ConvertToString(cqty)) ;
+      postList[cid].push_back(id);
+    }
+
+    if (++tmp_post_doc_qty_[threadId] >= MAX_TMP_DOC_QTY) {
+      flushTmpPost(threadId);
     }
 
     combId_pool_->release(&combIds);
@@ -206,8 +226,8 @@ void PivotNeighbHorderHashPivInvIndex<dist_t>::CreateIndex(const AnyParams& Inde
     LOG(LIB_INFO) << "Number of postings per document: " << total_qty / this->data_.size();
 
     LOG(LIB_INFO) << "========================";
-    sort(pivotOcurrQty.begin(), pivotOcurrQty.end());
-    LOG(LIB_INFO) << MergeIntoStr(pivotOcurrQty, ' ');
+    //sort(pivotOcurrQty.begin(), pivotOcurrQty.end());
+    //LOG(LIB_INFO) << MergeIntoStr(pivotOcurrQty, ' ');
   }
 }
 
