@@ -250,7 +250,7 @@ PivotNeighbHorderHashPivInvIndex<dist_t>::SetQueryTimeParams(const AnyParams& Qu
   string inv_proc_alg;
   
   pmgr.GetParamOptional("skipChecking", skip_checking_, false);
-  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg,   PERM_PROC_FAST_SCAN);
+  pmgr.GetParamOptional("invProcAlg",   inv_proc_alg,   PERM_PROC_STORE_SORT);
 
   if (pmgr.hasParam("minTimes") && pmgr.hasParam("numPivotSearch")) {
     throw runtime_error("One shouldn't specify both parameters minTimes and numPivotSearch, b/c they are synonyms!");
