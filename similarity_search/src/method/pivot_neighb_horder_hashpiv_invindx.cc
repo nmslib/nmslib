@@ -40,7 +40,7 @@
 
 #define SCALE_MIN_TIMES true
 
-const size_t MAX_TMP_DOC_QTY = 4096 * 4;
+const size_t MAX_TMP_DOC_QTY = 2048;
 
 // This include is used for store-and-sort merging method only
 #include <boost/sort/spreadsort/integer_sort.hpp>
