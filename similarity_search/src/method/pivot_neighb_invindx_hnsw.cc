@@ -115,15 +115,21 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
   LOG(LIB_INFO) << "delaunay_type       = " << delaunay_type_;
   LOG(LIB_INFO) << "efPivotSearchIndex  = " << efPivotSearchIndex_;
 
+  is_non_pivot_.resize(this->data_.size());
+  fill(is_non_pivot_.begin(), is_non_pivot_.end(), 1);
+
   ObjectVector pivot;
   if (pivot_file_.empty()) {
 
-    GetPermutationPivot(this->data_, space_, num_pivot_, &pivot);
+    GetPermutationPivot(this->data_, space_, num_pivot_, &pivot, &pivot_pos_);
     CHECK(pivot.size() == num_pivot_);
     genPivot_.resize(num_pivot_);
     // IDs must be a sequence from 0 to num_pivot_ - 1
+
     for (unsigned i = 0; i < num_pivot_; ++i) {
       genPivot_[i] = new Object(i, 0, pivot[i]->datalength(), pivot[i]->data());
+      CHECK(pivot_pos_[i] < this->data_.size());
+      is_non_pivot_[pivot_pos_[i]] = 0;
     }
   } else {
     vector<string> vExternIds;
@@ -172,17 +178,21 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::CreateIndex(const AnyParams& IndexPar
     vector<IdType> pivotIds;
     const Object* pObj = this->data_[id];
 
-    GetClosePivotIds(pObj, num_prefix_, pivotIds);
+    if (is_non_pivot_[id]) {
 
-    // We need to sort pivotIds or else we may get a deadlock!
-    boost::sort::spreadsort::integer_sort(pivotIds.begin(), pivotIds.end());
+      GetClosePivotIds(pObj, num_prefix_, pivotIds);
 
-    for (IdType pivId: pivotIds) {
-      CHECK(pivId < num_pivot_);
-      {
-        unique_lock<mutex> lock(*post_list_mutexes_[pivId]);
-        posting_lists_[pivId]->push_back(id);
+      // We need to sort pivotIds or else we may get a deadlock!
+      boost::sort::spreadsort::integer_sort(pivotIds.begin(), pivotIds.end());
+
+      for (IdType pivId: pivotIds) {
+        CHECK(pivId < num_pivot_);
+        {
+          unique_lock<mutex> lock(*post_list_mutexes_[pivId]);
+          posting_lists_[pivId]->push_back(id);
+        }
       }
+
     }
 
     if (id % 1000 && PrintProgress_) {
@@ -388,6 +398,12 @@ void PivotNeighbInvertedIndexHNSW<dist_t>::GenSearch(QueryType* query, size_t K)
   z_pivot_search_time.reset();
 
   GetClosePivotIds(query->QueryObject(), num_prefix_search_, pivotIds);
+
+  if (pivot_pos_.size() == num_pivot_) {
+    for (IdType kk : pivotIds) {
+      query->CheckAndAddToResult(this->data_[pivot_pos_[kk]]);
+    }
+  }
 
   pivot_search_time += z_pivot_search_time.split();
 

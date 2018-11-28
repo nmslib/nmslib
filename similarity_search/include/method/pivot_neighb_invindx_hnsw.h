@@ -97,6 +97,8 @@ class PivotNeighbInvertedIndexHNSW : public Index<dist_t> {
 
   vector<unique_ptr<PostingListInt>> posting_lists_;
   vector<unique_ptr<mutex>>          post_list_mutexes_;
+  vector<IdType>                     pivot_pos_;
+  vector<char>                       is_non_pivot_;
 
   unique_ptr<VectorPool<IdType>>  tmp_res_pool_;
   unique_ptr<VectorPool<const Object*>>  cand_pool_;
