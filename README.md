@@ -17,7 +17,7 @@ NMSLIB is an **extendible library**, which means that is possible to add new sea
 
 Other contributors:  Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
-**Citing:** If you find this library useful, feel free to cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13) as well as other papers listed in the end. One crucial contribution to cite is the fast Hierarchical Navigable World graph (HNSW) method [**[BibTex]**](https://dblp.uni-trier.de/rec/bibtex/journals/corr/MalkovY16). Please, [also check out the stand-alone HNSW implementation by Yury Malkov](https://github.com/nmslib/hnswlib).
+**Citing:** If you find this library useful, feel free to cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13) as well as other papers listed in the end. One crucial contribution to cite is the fast Hierarchical Navigable World graph (HNSW) method [**[BibTex]**](https://dblp.uni-trier.de/rec/bibtex/journals/corr/MalkovY16). Please, [also check out the stand-alone HNSW implementation by Yury Malkov](https://github.com/nmslib/hnswlib), which is released as a header-only HNSWLib library.
 
 Leo(nid) Boytsov is a maintainer. Leo was supported by the [Open Advancement of Question Answering Systems (OAQA) group](https://github.com/oaqa) and the following NSF grant #1618159: "[Matching and Ranking via Proximity Graphs: Applications to Question Answering and Beyond](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1618159&HistoricalAwards=false)". Bileg was supported by the [iAd Center](https://web.archive.org/web/20160306011711/http://www.iad-center.com/).
 
