@@ -194,10 +194,12 @@ void doWork(int argc, char* argv[]) {
 
   CHECK_MSG(knnK > 0, "k-NN k should be > 0!");
 
+  int seed = 0;
+
   if (LogFile != "") 
-    initLibrary(LIB_LOGFILE, LogFile.c_str());
+    initLibrary(seed, LIB_LOGFILE, LogFile.c_str());
   else
-    initLibrary(LIB_LOGSTDERR, NULL); // Use STDERR for logging
+    initLibrary(seed, LIB_LOGSTDERR, NULL); // Use STDERR for logging
 
   unique_ptr<Space<float>>  space(SpaceFactoryRegistry<float>::Instance().CreateSpace(SpaceType, *SpaceParams));
 

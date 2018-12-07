@@ -151,7 +151,21 @@ void SmallWorldRand<dist_t>::AddBatch(const ObjectVector& batchData,
                 << " futureNextNodeId + 1 after batch addition: " << futureNextNodeId;
 
   // 2) One entry should be added before all the threads are started, or else add() will not work properly  
-  addCriticalSection(new MSWNode(batchData[0], NextNodeId_));
+
+
+  bool isEmpty = false;
+
+  {
+    unique_lock<mutex> lock(ElListGuard_);
+    isEmpty = ElList_.empty();
+  }
+  int start_add=0;
+
+  if (isEmpty){
+    addCriticalSection(new MSWNode(batchData[0], NextNodeId_));
+    start_add = 1;
+  }
+
 
   unique_ptr<ProgressDisplay> progress_bar(bPrintProgress ?
                                 new ProgressDisplay(batchData.size(), cerr)
@@ -160,7 +174,7 @@ void SmallWorldRand<dist_t>::AddBatch(const ObjectVector& batchData,
   if (indexThreadQty_ <= 1) {
     // Skip the first element, one element is already added
     if (progress_bar) ++(*progress_bar);
-    for (size_t id = 1; id < batchData.size(); ++id) {
+    for (size_t id = start_add; id < batchData.size(); ++id) {
       MSWNode* node = new MSWNode(batchData[id], id + NextNodeId_);
       add(node, futureNextNodeId);
       if (progress_bar) ++(*progress_bar);
@@ -250,21 +264,32 @@ void SmallWorldRand<dist_t>::DeleteBatch(const vector<IdType>& batchData, int de
   mutex mtx;
   vector<thread> threads;
 
-  for (size_t i = 0; i < indexThreadQty_; ++i) {
-    threads.push_back(thread(
-      [&]() {
-        MSWNode* node = nullptr;
-        vector<MSWNode*> cacheDelNode;
-        while(GetNextQueueObj(mtx, toPatchQueue, node)) {
-          if (kNone == patchStrat) node->removeGivenFriends(delNodesBitset);
-          else node->removeGivenFriendsPatchWithClosestNeighbor<dist_t>(space_, use_proxy_dist_, 
-                                                                        delNodesBitset, cacheDelNode);
-        }
-      }
-    ));
-  }
-  for (auto& thread : threads) thread.join();
+  if (indexThreadQty_ <= 1) {
+    LOG(LIB_INFO) << "Single threaded batch delete: " << vToPatchNodes.size();
+    MSWNode* node = nullptr;
+    vector<MSWNode*> cacheDelNode;
+    while(GetNextQueueObj(mtx, toPatchQueue, node)) {
+      if (kNone == patchStrat) node->removeGivenFriends(delNodesBitset);
+      else node->removeGivenFriendsPatchWithClosestNeighbor<dist_t>(space_, use_proxy_dist_,
+                                                                    delNodesBitset, cacheDelNode);
+    }
 
+  } else {
+    for (size_t i = 0; i < indexThreadQty_; ++i) {
+      threads.push_back(thread(
+        [&]() {
+          MSWNode* node = nullptr;
+          vector<MSWNode*> cacheDelNode;
+          while(GetNextQueueObj(mtx, toPatchQueue, node)) {
+            if (kNone == patchStrat) node->removeGivenFriends(delNodesBitset);
+            else node->removeGivenFriendsPatchWithClosestNeighbor<dist_t>(space_, use_proxy_dist_,
+                                                                          delNodesBitset, cacheDelNode);
+          }
+        }
+      ));
+    }
+    for (auto& thread : threads) thread.join();
+  }
 
   if (checkIDs) {
     for (auto it : ElList_) {
@@ -336,6 +361,26 @@ void SmallWorldRand<dist_t>::CheckIDs() const
     visitedBitset[nodeID]=true;
   }
 }
+
+template <typename dist_t>
+void SmallWorldRand<dist_t>::InitParamsManually(const AnyParams& IndexParams)
+{
+  AnyParamManager pmgr(IndexParams);
+
+  pmgr.GetParamOptional("NN",                 NN_,                  10);
+  pmgr.GetParamOptional("efConstruction",     efConstruction_,      NN_);
+  efSearch_ = NN_;
+  pmgr.GetParamOptional("indexThreadQty",     indexThreadQty_,      thread::hardware_concurrency());
+  pmgr.GetParamOptional("useProxyDist",       use_proxy_dist_,      false);
+
+  LOG(LIB_INFO) << "NN                  = " << NN_;
+  LOG(LIB_INFO) << "efConstruction_     = " << efConstruction_;
+  LOG(LIB_INFO) << "indexThreadQty      = " << indexThreadQty_;
+  LOG(LIB_INFO) << "useProxyDist        = " << use_proxy_dist_;
+
+  pmgr.CheckUnused();
+}
+
 
 template <typename dist_t>
 void SmallWorldRand<dist_t>::CreateIndex(const AnyParams& IndexParams) 

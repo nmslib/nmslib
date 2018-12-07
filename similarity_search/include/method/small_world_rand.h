@@ -274,6 +274,11 @@ public:
   void SetQueryTimeParams(const AnyParams& ) override;
 
   enum PatchingStrategy { kNone = 0, kNeighborsOnly = 1 };
+
+  //This method should be called before LoadIndex to initialize parameters,
+  //that are usually initialized in Create Index
+  void InitParamsManually(const AnyParams& IndexParams);
+
 private:
 
   size_t                NN_;
