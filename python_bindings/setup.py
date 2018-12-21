@@ -84,8 +84,10 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
     c_opts = {
         'msvc': ['/EHsc', '/openmp', '/O2'],
-        'unix': ['-O3', '-march=native'],
+        'unix': ['-O3'],
     }
+    if 'CFLAGS' not in os.environ or "-march" not in os.environ["CFLAGS"]:
+        c_opts['unix'].append('-march=native')
     link_opts = {
         'unix': [],
         'msvc': [],
