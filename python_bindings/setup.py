@@ -84,12 +84,14 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
     c_opts = {
         'msvc': ['/EHsc', '/openmp', '/O2'],
-        'unix': ['-O3', '-march=native'],
+        'unix': ['-O3'],
     }
     if 'ARCH' in os.environ:
         # /arch:[IA32|SSE|SSE2|AVX|AVX2|ARMv7VE|VFPv4]
         # See https://docs.microsoft.com/en-us/cpp/build/reference/arch-x86
         c_opts['msvc'].append("/arch:{}".format(os.envrion['ARCH']))
+    if 'CFLAGS' not in os.environ or "-march" not in os.environ["CFLAGS"]:
+        c_opts['unix'].append('-march=native')
     link_opts = {
         'unix': [],
         'msvc': [],
