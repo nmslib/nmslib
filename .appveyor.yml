@@ -2,12 +2,19 @@ version: '{build}'
 image: Visual Studio 2015
 platform:
 - x64
+- x86
 environment:
   global:
     DISTUTILS_USE_SDK: 1
     MSSdk: 1
   matrix:
   - PYTHON: 27
+  - PYTHON: 35
+  - PYTHON: 36
+  - PYTHON: 37
+  pypipassword:
+    # https://ci.appveyor.com/tools/encrypt
+    secure: GRzEKTz0q+eRwEFvm1Vdrg==
 install:
 - cmd: '"%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%'
 - cmd: git config core.symlinks true
@@ -26,9 +33,26 @@ install:
       conda update -q conda
       conda install -q conda-build
     }
+- cmd: python --version
 build_script:
 - ps: cd python_bindings
 - cmd: |
     pip install -e .
 test_script:
 - cmd: python setup.py test
+
+deploy_script: 
+- ps: |
+    if ($env:APPVEYOR_REPO_BRANCH -ne "master" -or $env:APPVEYOR_REPO_TAG -ne "true") { return }
+    # Specify account details for PyPI
+    echo "Deploying..."
+    mv .pypirc $env:USERPROFILE\\.pypirc
+    # Workaround required to ensure setup.py finds the .pypirc under Windows
+    $env:HOME=$env:USERPROFILE
+    # Install wheel-building support
+    pip install --user wheel twine
+    # Build wheel and upload
+    python setup.py sdist bdist_wheel
+    twine upload -r pypi -p $env:pypipassword --skip-existing dist/*
+    echo "Deployment complete"
+
