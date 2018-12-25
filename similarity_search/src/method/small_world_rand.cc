@@ -56,6 +56,7 @@ struct IndexThreadParamsSW {
   ProgressDisplay*                            progress_bar_;
   mutex&                                      display_mutex_;
   size_t                                      progress_update_qty_;
+  size_t                                      start_add_;
   
   IndexThreadParamsSW(
                      const Space<dist_t>&             space,
@@ -66,7 +67,8 @@ struct IndexThreadParamsSW {
                      size_t                           out_of,
                      ProgressDisplay*                 progress_bar,
                      mutex&                           display_mutex,
-                     size_t                           progress_update_qty
+                     size_t                           progress_update_qty,
+                     size_t                           start_add
                       ) : 
                      space_(space),
                      index_(index), 
@@ -76,7 +78,8 @@ struct IndexThreadParamsSW {
                      out_of_(out_of),
                      progress_bar_(progress_bar),
                      display_mutex_(display_mutex),
-                     progress_update_qty_(progress_update_qty)
+                     progress_update_qty_(progress_update_qty),
+                     start_add_(start_add)
                      { }
 };
 
@@ -91,12 +94,12 @@ struct IndexThreadSW {
     size_t futureNextNodeId = prm.startNodeId_ + prm.batchData_.size();
 
     size_t nextQty = prm.progress_update_qty_;
-    for (size_t id = 1; id < prm.batchData_.size(); ++id) {
+    for (size_t id = prm.start_add_; id < prm.batchData_.size(); ++id) {
       if (prm.index_every_ == id % prm.out_of_) {
         MSWNode* node = new MSWNode(prm.batchData_[id], id + prm.startNodeId_);
         prm.index_.add(node, futureNextNodeId);
       
-        if ((id + 1 >= min(prm.batchData_.size(), nextQty)) && progress_bar) {
+        if (id + 1 >= nextQty && progress_bar) {
           unique_lock<mutex> lock(display_mutex);
           (*progress_bar) += (nextQty - progress_bar->count());
           nextQty += prm.progress_update_qty_;
@@ -159,7 +162,7 @@ void SmallWorldRand<dist_t>::AddBatch(const ObjectVector& batchData,
     unique_lock<mutex> lock(ElListGuard_);
     isEmpty = ElList_.empty();
   }
-  int start_add=0;
+  size_t start_add=0;
 
   if (isEmpty){
     addCriticalSection(new MSWNode(batchData[0], NextNodeId_));
@@ -189,7 +192,8 @@ void SmallWorldRand<dist_t>::AddBatch(const ObjectVector& batchData,
                               new IndexThreadParamsSW<dist_t>(space_, *this, NextNodeId_, 
                                                               batchData, 
                                                               i, indexThreadQty_,
-                                                              progress_bar.get(), progressBarMutex, 200)));
+                                                              progress_bar.get(),
+                                                              progressBarMutex, 200, start_add)));
     }
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threads[i] = thread(IndexThreadSW<dist_t>(), ref(*threadParams[i]));
