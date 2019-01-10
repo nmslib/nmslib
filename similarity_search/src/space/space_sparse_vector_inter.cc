@@ -55,7 +55,7 @@ Object* SpaceSparseVectorInter<dist_t>::CreateObjFromVect(IdType id, LabelType l
 
   PackSparseElements(InpVect, pData, dataLen);
   unique_ptr<char[]>  data(pData);
-  unique_ptr<Object> obj(new Object(id, label, dataLen, data.get()));
+  unique_ptr<Object> obj(new Object(id, label, dataLen, pData));
   return obj.release();
 }
 

@@ -133,7 +133,7 @@ class Space {
   explicit Space() {}
   virtual ~Space() {}
   // This function is public and it is not supposed to be used in the query-mode
-  dist_t IndexTimeDistance(const Object* obj1, const Object* obj2) const {
+  virtual dist_t IndexTimeDistance(const Object* obj1, const Object* obj2) const {
     if (!bIndexPhase) {
       throw runtime_error(string("The public function ") + __func__ + 
                                  " function is accessible only during the indexing phase!");
