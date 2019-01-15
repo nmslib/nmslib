@@ -11,6 +11,8 @@ from protocol import ttypes
 
 from datetime import datetime
 
+ENCODING='utf8'
+
 import argparse
 
 def error_exit(s):
@@ -63,13 +65,13 @@ try:
     if not args.range is None:
       error_exit('Range search is not allowed if the KNN search is specified!')
     print("Running %d-NN search" % k)
-    res = client.knnQuery(k, queryObj, retObj, retExternId)
+    res = client.knnQuery(k, bytearray(queryObj, ENCODING), retObj, retExternId)
   elif not args.range is None:
     r = args.range
     if not args.knn is None:
       error_exit('KNN search is not allowed if the range search is specified')
     print("Running range search, range=%f" % r)
-    res = client.rangeQuery(r, queryObj, retObj, retExternId)
+    res = client.rangeQuery(r, bytearray(queryObj, ENCODING), retObj, retExternId)
   else: 
     error_exit("Wrong search type %s" % searchType)
 
@@ -87,10 +89,10 @@ try:
       s='externId=' + e.externId
     print("id=%d dist=%f %s" % (e.id, e.dist, s))
     if retObj:
-      print(e.obj)
+      print(str(e.obj))
 
 # Close!
   transport.close()
 
-except(Thrift.TException, tx):
+except Thrift.TException as tx:
   print('%s' % (tx.message))

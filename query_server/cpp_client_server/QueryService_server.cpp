@@ -437,7 +437,7 @@ void ParseCommandLineForServer(int argc, char*argv[],
     (DIST_TYPE_PARAM_OPT.c_str(),     po::value<string>(&DistType)->default_value(DIST_TYPE_FLOAT), DIST_TYPE_PARAM_MSG.c_str())
     (DATA_FILE_PARAM_OPT.c_str(),     po::value<string>(&DataFile)->required(),                     DATA_FILE_PARAM_MSG.c_str())
     (MAX_NUM_DATA_PARAM_OPT.c_str(),  po::value<unsigned>(&MaxNumData)->default_value(MAX_NUM_DATA_PARAM_DEFAULT), MAX_NUM_DATA_PARAM_MSG.c_str())
-    (METHOD_PARAM_OPT.c_str(),        po::value<string>(&MethodName)->default_value(METHOD_PARAM_DEFAULT), METHOD_PARAM_MSG.c_str())
+    (METHOD_PARAM_OPT.c_str(),        po::value<string>(&MethodName)->required(), METHOD_PARAM_MSG.c_str())
     (LOAD_INDEX_PARAM_OPT.c_str(),    po::value<string>(&LoadIndexLoc)->default_value(LOAD_INDEX_PARAM_DEFAULT),   LOAD_INDEX_PARAM_MSG.c_str())
     (SAVE_INDEX_PARAM_OPT.c_str(),    po::value<string>(&SaveIndexLoc)->default_value(SAVE_INDEX_PARAM_DEFAULT),   SAVE_INDEX_PARAM_MSG.c_str())
     (QUERY_TIME_PARAMS_PARAM_OPT.c_str(), po::value<string>(&queryTimeParamStr)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG.c_str())
@@ -578,18 +578,18 @@ int main(int argc, char *argv[]) {
     LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
   }
 
-  boost::shared_ptr<QueryServiceIf> handler(queryHandler.get());
-  boost::shared_ptr<TProcessor> processor(new QueryServiceProcessor(handler));
-  boost::shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
-  boost::shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
-  boost::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+  ::apache::thrift::stdcxx::shared_ptr<QueryServiceIf> handler(queryHandler.get());
+  ::apache::thrift::stdcxx::shared_ptr<TProcessor> processor(new QueryServiceProcessor(handler));
+  ::apache::thrift::stdcxx::shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
+  ::apache::thrift::stdcxx::shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
+  ::apache::thrift::stdcxx::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
 #if SIMPLE_SERVER
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
   LOG(LIB_INFO) << "Started a simple server.";
 #else
-  boost::shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(threadQty);
-  boost::shared_ptr<PosixThreadFactory> threadFactory = boost::shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
+  ::apache::thrift::stdcxx::shared_ptr<ThreadManager> threadManager = ThreadManager::newSimpleThreadManager(threadQty);
+  ::apache::thrift::stdcxx::shared_ptr<PosixThreadFactory> threadFactory = ::apache::thrift::stdcxx::shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
   threadManager->threadFactory(threadFactory);
   threadManager->start();
   TThreadPoolServer server(processor,

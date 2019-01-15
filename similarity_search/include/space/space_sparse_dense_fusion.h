@@ -24,10 +24,16 @@
 
 #define SPACE_SPARSE_DENSE_FUSION   "sparse_dense_fusion"
 
+
 namespace similarity {
 
 class SpaceSparseDenseFusion : public Space<float> {
-  explicit SpaceSparseDenseFusion() {}
+  explicit SpaceSparseDenseFusion(const string& weightFileName);
+
+public:
+  SpaceSparseDenseFusion();
+
+private:
 
   virtual ~SpaceSparseDenseFusion() {}
 
@@ -102,6 +108,10 @@ protected:
   };
 
   vector<CompDesc>  vCompDesc_;
+
+  string            weightFileName_;
+  vector<float>     vHeaderIndexWeights_;
+  vector<float>     vHeaderQueryWeights_;
 
   struct DataFileInputStateSparseDenseFusion : public DataFileInputState {
     virtual void Close() { inpFile_.close(); }
