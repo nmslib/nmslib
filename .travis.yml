@@ -1,47 +1,91 @@
 language: cpp
 
-matrix:
-  fast_finish: true
-  include:
-  - os: linux
-    env: PYTHON=2.7
-  - os: linux
-    env: PYTHON=3
-  - os: osx
-    env: PYTHON=3
-    osx_image: xcode9.3
-    python: 3.7.0
-  - os: osx
-    env: PYTHON=2
-    osx_image: xcode9.3
-    python: 2.7.14
-  allow_failures:
-  - os: osx
+sudo: required
 
 addons:
   apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - g++-4.8
+    packages: &core_build
+    - g++-4.9
     - libblas-dev
     - liblapack-dev
     - gfortran
     - cmake
-    - python3-dev
     - libboost-all-dev
     - libgsl0-dev
     - libeigen3-dev
+
+matrix:
+  fast_finish: true
+  include:
+  - os: linux
+    dist: trusty
+    env: PYTHON=2.7
+    addons:
+      apt:
+        update: true
+        sources:
+        - ubuntu-toolchain-r-test
+        - deadsnakes
+        packages:
+          - *core_build
+          - python2.7-dev
+  - os: linux
+    env: PYTHON=3.5
+    dist: trusty
+    addons:
+      apt:
+        update: true
+        sources:
+        - ubuntu-toolchain-r-test
+        - deadsnakes
+        packages:
+        - *core_build
+        - python3.5-dev
+  - os: linux
+    env: PYTHON=3.6
+    dist: xenial
+    addons:
+      apt:
+        update: true
+        sources:
+        - ubuntu-toolchain-r-test
+        - deadsnakes
+        packages:
+        - *core_build
+        - python3.6-dev
+  - os: linux
+    env: PYTHON=3.7
+    dist: xenial
+    addons:
+      apt:
+        update: true
+        sources:
+        - ubuntu-toolchain-r-test
+        - deadsnakes
+        packages:
+        - *core_build
+        - python3.7-dev
+  - os: osx
+    env: PYTHON=27
+    osx_image: xcode9.3
+  - os: osx
+    env: PYTHON=35
+    osx_image: xcode9.3
+  - os: osx
+    env: PYTHON=36
+    osx_image: xcode9.3
+  - os: osx
+    env: PYTHON=37
+    osx_image: xcode9.3
+  allow_failures:
+  - os: osx
 
 before_install:
 - |
   PIP=pip
   PY=python
   if [ "$TRAVIS_OS_NAME" = "linux" ]; then 
-    export CXX=g++-4.8 CC=gcc-4.8; 
-    pip install --user --upgrade pip virtualenv
-    virtualenv -p python$PYTHON venv
-    source venv/bin/activate
+    export CXX=g++-4.9 CC=gcc-4.9;
   fi
 
   if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
@@ -51,11 +95,15 @@ before_install:
     PY=python2
     if  [ "${PYTHON:0:1}" = "3" ]; then
       brew upgrade python
-      brew install python3
+      brew install sashkab/python/python$PYTHON
       PIP=pip3
       PY=python3
     fi
   fi
+  $PIP install --user virtualenv
+  virtualenv -p $PY venv
+  source venv/bin/activate
+  $PIP install --upgrade pip
 
 install:
 - |
@@ -65,7 +113,9 @@ install:
     cmake similarity_search
   fi
   make -j 4
-  travis_wait travis_retry $PIP install -r python_bindings/requirements.txt scipy six flake8
+  $PY -m pip install --upgrade pip
+  travis_wait travis_retry $PIP install scipy six flake8
+  travis_wait travis_retry $PIP install -r python_bindings/requirements.txt
   travis_retry cd python_bindings && $PY setup.py build install && cd ..
 
 script:
@@ -79,6 +129,18 @@ script:
       ./release/test_integr integr.log 
       cd ..
   fi
+
+deploy:
+  provider: pypi
+  user: searchivarius
+  # https://docs.travis-ci.com/user/environment-variables/#defining-variables-in-repository-settings
+  password: ${PYPI_PASSWORD}
+  distributions: sdist bdist_wheel
+  skip_existing: true
+  skip_cleanup: true
+  on:
+    tags: true
+    branch: master
 
 cache:
   - apt

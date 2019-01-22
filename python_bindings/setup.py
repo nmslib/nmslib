@@ -23,7 +23,8 @@ if os.path.exists(library_file):
     extra_objects.append(library_file)
 
 else:
-    # Otherwise build all the files here directly (excluding extras which need eigen/boost)
+    # Otherwise build all the files here directly (excluding extras which need
+    # eigen/boost)
     exclude_files = set("""bbtree.cc lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
                         dummy_app.cc main.cc""".split())
 
@@ -38,11 +39,27 @@ if sys.platform.startswith('linux'):
         extra_objects.append(lshkit)
         libraries.extend(['gsl', 'gslcblas', 'boost_program_options'])
 
+
+class get_pybind_include(object):
+    """Helper class to determine the pybind11 include path
+    The purpose of this class is to postpone importing pybind11
+    until it is actually installed, so that the ``get_include()``
+    method can be invoked. """
+
+    def __init__(self, user=False):
+        self.user = user
+
+    def __str__(self):
+        import pybind11
+        return pybind11.get_include(self.user)
+
 ext_modules = [
     Extension(
         'nmslib',
         source_files,
-        include_dirs=[os.path.join(libdir, "include")],
+        include_dirs=[os.path.join(libdir, "include"),
+                      get_pybind_include(),
+                      get_pybind_include(user=True)],
         libraries=libraries,
         language='c++',
         extra_objects=extra_objects,
@@ -108,25 +125,25 @@ class BuildExt(build_ext):
         ct = self.compiler.compiler_type
         opts = self.c_opts.get(ct, [])
         if ct == 'unix':
-            opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
+            opts.append('-DVERSION_INFO="%s"' %
+                        self.distribution.get_version())
             opts.append(cpp_flag(self.compiler))
             if has_flag(self.compiler, '-fvisibility=hidden'):
                 opts.append('-fvisibility=hidden')
         elif ct == 'msvc':
-            opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
+            opts.append('/DVERSION_INFO=\\"%s\\"' %
+                        self.distribution.get_version())
 
         # extend include dirs here (don't assume numpy/pybind11 are installed when first run, since
         # pip could have installed them as part of executing this script
-        import pybind11
         import numpy as np
         for ext in self.extensions:
             ext.extra_compile_args.extend(opts)
             ext.extra_link_args.extend(self.link_opts.get(ct, []))
             ext.include_dirs.extend([
                 # Path to pybind11 headers
-                pybind11.get_include(),
-                pybind11.get_include(True),
-
+                get_pybind_include(),
+                get_pybind_include(user=True),
                 # Path to numpy headers
                 np.get_include()
             ])
