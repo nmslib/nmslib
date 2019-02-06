@@ -28,10 +28,9 @@
 namespace similarity {
 
 class SpaceSparseDenseFusion : public Space<float> {
-  explicit SpaceSparseDenseFusion(const string& weightFileName);
 
 public:
-  SpaceSparseDenseFusion();
+  explicit SpaceSparseDenseFusion(const string& weightFileName);
 
 private:
 
@@ -74,7 +73,9 @@ private:
    * Used only for testing/debugging: compares objects approximately. Floating point numbers
    * should be nearly equal. Integers and strings should coincide exactly.
    */
-  virtual bool ApproxEqual(const Object &obj1, const Object &obj2) const override;
+  virtual bool ApproxEqual(const Object &obj1, const Object &obj2) const override {
+    throw runtime_error("Not supported!");
+  }
 
   virtual string StrDesc() const override { return SPACE_SPARSE_DENSE_FUSION; }
 
@@ -143,16 +144,25 @@ protected:
     readBinaryPOD(state.inpFile_, qty);
     size_t elemSize = SparseVectElem<float>::dataSize();
     // Data has extra space for the number of sparse vector elements
-    vector<char> data(elemSize * qty  + sizeof(qty));
+    vector<char> data(elemSize * qty  + 4);
     char *p = &data[0];
-    state.inpFile_.read(p + sizeof(qty), qty * elemSize);
+
     writeBinaryPOD(p, qty);
+
+    state.inpFile_.read(p + 4, qty * elemSize);
 
     strObj.assign(p, data.size());
   }
 
   void readNextBinDenseVect(DataFileInputStateSparseDenseFusion &state, string& strObj, unsigned dim) const {
+    uint32_t qty;
+    readBinaryPOD(state.inpFile_, qty);
+    if (qty != dim) {
+      PREPARE_RUNTIME_ERR(err) << "Mismatch between dimension in the header (" << dim <<
+                               ") and the actual dimensionality of the current entry (" << qty << ")";
+      THROW_RUNTIME_ERR(err);
 
+    }
     vector<char> data(dim * sizeof(float));
     char *p = &data[0];
     state.inpFile_.read(p, data.size());
@@ -172,6 +182,7 @@ protected:
   void parseDenseBinVect(const string& strObj, vector<float>& vDense, unsigned& start, unsigned dim) const {
     const char* p = strObj.data() + start;
     size_t expectSize = dim * 4;
+    start += expectSize;
 
     CHECK_MSG(strObj.size() >= expectSize + start,
               string("The received string object is stoo little! ") +
@@ -235,6 +246,13 @@ protected:
     }
   }
 
+  inline size_t getPad4(size_t len) const {
+    size_t rem = len & 3;
+    if (rem) {
+      4 - rem;
+    }
+    return 0;
+  }
 
 
 };

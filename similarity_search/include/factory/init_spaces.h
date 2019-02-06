@@ -30,6 +30,7 @@
 #include "factory/space/space_ab_diverg.h"
 #include "factory/space/space_renyi_diverg.h"
 #include "factory/space/space_sparse_jaccard.h"
+#include "factory/space/space_sparse_dense_fusion.h"
 #if defined(WITH_EXTRAS)
 #include "factory/space/space_sqfd.h"
 #endif
@@ -148,6 +149,8 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG_FAST,  CreateRenyiDivergFast)
 
   REGISTER_SPACE_CREATOR(int,    SPACE_L2SQR_SIFT,  CreateL2SqrSIFT)
+
+  REGISTER_SPACE_CREATOR(float, SPACE_SPARSE_DENSE_FUSION, createSparseDenseFusion)
 }
 
 }
