@@ -182,10 +182,9 @@ protected:
   void parseDenseBinVect(const string& strObj, vector<float>& vDense, unsigned& start, unsigned dim) const {
     const char* p = strObj.data() + start;
     size_t expectSize = dim * 4;
-    start += expectSize;
 
     CHECK_MSG(strObj.size() >= expectSize + start,
-              string("The received string object is stoo little! ") +
+              string("The received string object is too little! ") +
               " Start: " + ConvertToString(start) +
               " Str obj size: " + ConvertToString(strObj.size()) +
               " # dim: " + ConvertToString(dim) +
@@ -197,6 +196,8 @@ protected:
       readBinaryPOD(p, vDense[i]);
       p += 4;
     }
+
+    start += expectSize;
 
   }
 
@@ -249,7 +250,7 @@ protected:
   inline size_t getPad4(size_t len) const {
     size_t rem = len & 3;
     if (rem) {
-      4 - rem;
+      return 4 - rem;
     }
     return 0;
   }
