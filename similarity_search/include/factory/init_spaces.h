@@ -46,8 +46,8 @@ inline void initSpaces() {
   // Registering binary/bit Hamming/Jaccard
   SpaceFactoryRegistry<int>::CreateFuncPtr bit_hamming_func_ptr = CreateBitHamming<int,uint32_t>;
   REGISTER_SPACE_CREATOR(int,    SPACE_BIT_HAMMING, bit_hamming_func_ptr )
-  SpaceFactoryRegistry<double>::CreateFuncPtr bit_jaccard_func_ptr = CreateBitJaccard<double,uint64_t>;
-  REGISTER_SPACE_CREATOR(double, SPACE_BIT_JACCARD,  bit_jaccard_func_ptr )
+  SpaceFactoryRegistry<float>::CreateFuncPtr bit_jaccard_func_ptr = CreateBitJaccard<float,uint32_t>;
+  REGISTER_SPACE_CREATOR(float, SPACE_BIT_JACCARD,  bit_jaccard_func_ptr )
 
   // Registering the Levensthein-distance: regular and normalized
   REGISTER_SPACE_CREATOR(int,   SPACE_LEVENSHTEIN,  CreateLevenshtein)

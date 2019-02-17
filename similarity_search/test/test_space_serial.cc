@@ -231,7 +231,7 @@ TEST(Test_BitJaccard) {
     testVect.push_back(ss.str());
   }
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<double>(testVect, maxNumRec, "tmp_out_file.txt", "bit_jaccard", emptyParams, false));
+    EXPECT_EQ(true, fullTest<float>(testVect, maxNumRec, "tmp_out_file.txt", "bit_jaccard", emptyParams, false));
   }
 }
 

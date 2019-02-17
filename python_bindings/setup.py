@@ -21,6 +21,7 @@ extra_objects = []
 if os.path.exists(library_file):
     # if we have a prebuilt nmslib library file, use that.
     extra_objects.append(library_file)
+    print("Found: " + os.path.abspath(library_file))
 else:
     raise RuntimeError("can't find prebuild lib: " + os.path.abspath(library_file))
     # # Otherwise build all the files here directly (excluding extras which need eigen/boost)

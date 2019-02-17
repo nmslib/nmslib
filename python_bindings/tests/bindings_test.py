@@ -6,6 +6,7 @@ import numpy as np
 import numpy.testing as npt
 
 import nmslib
+import psutil
 
 
 def get_exact_cosine(row, data, N=10):
@@ -92,21 +93,30 @@ class BitVectorIndexTestMixin(object):
         raise NotImplementedError()
 
     def testKnnQuery(self):
-        np.random.seed(23)
-        nbits = 128
+        nbits = 2048
+        chunk_size = 1000
 
+        ps_proc = psutil.Process()
+        print(f"\n{ps_proc.memory_info()}")
         index = self._get_index()
 
-        for i in range(100):
-            a = np.random.rand(nbits) > 0.5
-            s = " ".join(["1" if e else "0" for e in a])
-            index.addDataPoint(id=i, data=s)
+        np.random.seed(23)
+        for i in range(0, 10000, chunk_size):
+            strs = []
+            for j in range(chunk_size):
+                a = np.random.rand(nbits) > 0.5
+                s = " ".join(["1" if e else "0" for e in a])
+                strs.append(s)
+            index.addDataPointBatch(ids=np.arange(i, i +  chunk_size), data=strs)
+
+        print(f"\n{ps_proc.memory_info()}")
         index.createIndex()
+        print(f"\n{ps_proc.memory_info()}")
 
         a = np.ones(nbits)
         s = " ".join(["1" if e else "0" for e in a])
         ids, distances = index.knnQuery(s, k=10)
-        print(ids)
+        # print(ids)
         print(distances)
         # self.assertTrue(get_hitrate(get_exact_cosine(row, data), ids) >= 5)
 
@@ -170,8 +180,14 @@ class HNSWTestCase(unittest.TestCase, DenseIndexTestMixin):
 
 class BitJaccardTestCase(unittest.TestCase, BitVectorIndexTestMixin):
     def _get_index(self, space='bit_jaccard'):
-        return nmslib.init(method='hnsw', space='bit_jaccard', data_type=nmslib.DataType.OBJECT_AS_STRING,
-                           dtype=nmslib.DistType.DOUBLE)
+        return nmslib.init(method='hnsw', space=space, data_type=nmslib.DataType.OBJECT_AS_STRING,
+                           dtype=nmslib.DistType.FLOAT)
+
+
+class SparseJaccardTestCase(unittest.TestCase, BitVectorIndexTestMixin):
+    def _get_index(self, space='jaccard_sparse'):
+        return nmslib.init(method='hnsw', space=space, data_type=nmslib.DataType.OBJECT_AS_STRING,
+                           dtype=nmslib.DistType.FLOAT)
 
 
 # class BitHammingTestCase(unittest.TestCase, BitVectorIndexTestMixin):
