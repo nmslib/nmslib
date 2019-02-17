@@ -233,7 +233,7 @@ dist_t inline BitJaccard(const dist_uint_t* a, const dist_uint_t* b, size_t qty)
     den +=  __builtin_popcount(a[i] | b[i]);
   }
 
-  return dist_t(num) / dist_t(den);
+  return 1  - (dist_t(num) / dist_t(den));
 }
 
 //unsigned BitHamming(const uint32_t* a, const uint32_t* b, size_t qty);
