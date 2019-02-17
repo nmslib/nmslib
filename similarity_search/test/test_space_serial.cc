@@ -134,7 +134,10 @@ bool fullTest(const vector<string>& dataSetStr, size_t maxNumRec, const string& 
       
     dataSet1.push_back(space->CreateObjFromStr(id++, -1, s, NULL).release());
     vExternIds1.push_back(ss.str());
-    
+
+//    std::cout << space->CreateStrFromObj(dataSet1[dataSet1.size() - 1], NULL) << std::endl;
+    std::cout << s << std::endl;
+
     if (id >= maxNumRec) break;
   }
 
@@ -150,53 +153,53 @@ const char *emptyParams[] = {NULL};
 const char *paramsDistL2[]     = {"dist=" SPACE_WORD_EMBED_DIST_L2, NULL};
 const char *paramsDistCosine[] = {"dist=" SPACE_WORD_EMBED_DIST_COSINE, NULL};
 
-TEST(Test_WordEmbedSpace) {
-  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt", SPACE_WORD_EMBED, paramsDistL2, true));
-    EXPECT_EQ(true, fullTest<double>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt",SPACE_WORD_EMBED, paramsDistCosine, true));
-    EXPECT_EQ(true, fullTest<float>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt", SPACE_WORD_EMBED, paramsDistL2, true));
-    EXPECT_EQ(true, fullTest<double>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt",SPACE_WORD_EMBED, paramsDistCosine, true));
-  }
-}
-
-TEST(Test_DenseVectorSpace) {
-  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams, false));
-    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams, false));
-  }
-}
-
-TEST(Test_DenseVectorKLDiv) {
-  // Test KL-diverg. with and without precomputation of logarithms
-  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams, false));
-    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams, false));
-    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams, false));
-    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams, false));
-  }
-}
-
-TEST(Test_SparseVectorSpace) {
-  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams, false));
-    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams, false));
-    EXPECT_EQ(true, fullTest<double>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams, false));
-    EXPECT_EQ(true, fullTest<double>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams, false));
-  }
-}
-
-TEST(Test_SparseVectorSpaceFast) {
-  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse_fast", emptyParams, false));
-    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse_fast", emptyParams, false));
-  }
-}
-
-TEST(Test_StringSpace) {
-  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<int>("dna32_4_5K.txt", maxNumRec, "tmp_out_file.txt", "leven", emptyParams, false));
-  }
-}
+//TEST(Test_WordEmbedSpace) {
+//  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+//    EXPECT_EQ(true, fullTest<float>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt", SPACE_WORD_EMBED, paramsDistL2, true));
+//    EXPECT_EQ(true, fullTest<double>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt",SPACE_WORD_EMBED, paramsDistCosine, true));
+//    EXPECT_EQ(true, fullTest<float>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt", SPACE_WORD_EMBED, paramsDistL2, true));
+//    EXPECT_EQ(true, fullTest<double>("glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt",SPACE_WORD_EMBED, paramsDistCosine, true));
+//  }
+//}
+//
+//TEST(Test_DenseVectorSpace) {
+//  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+//    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams, false));
+//    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams, false));
+//  }
+//}
+//
+//TEST(Test_DenseVectorKLDiv) {
+//  // Test KL-diverg. with and without precomputation of logarithms
+//  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+//    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams, false));
+//    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams, false));
+//    EXPECT_EQ(true, fullTest<float>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams, false));
+//    EXPECT_EQ(true, fullTest<double>("final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams, false));
+//  }
+//}
+//
+//TEST(Test_SparseVectorSpace) {
+//  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+//    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams, false));
+//    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams, false));
+//    EXPECT_EQ(true, fullTest<double>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams, false));
+//    EXPECT_EQ(true, fullTest<double>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams, false));
+//  }
+//}
+//
+//TEST(Test_SparseVectorSpaceFast) {
+//  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+//    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse_fast", emptyParams, false));
+//    EXPECT_EQ(true, fullTest<float>("sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse_fast", emptyParams, false));
+//  }
+//}
+//
+//TEST(Test_StringSpace) {
+//  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+//    EXPECT_EQ(true, fullTest<int>("dna32_4_5K.txt", maxNumRec, "tmp_out_file.txt", "leven", emptyParams, false));
+//  }
+//}
 
 TEST(Test_BitHamming) {
   vector<string> testVect;
@@ -228,19 +231,19 @@ TEST(Test_BitJaccard) {
     testVect.push_back(ss.str());
   }
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<int>(testVect, maxNumRec, "tmp_out_file.txt", "bit_jaccard", emptyParams, false));
+    EXPECT_EQ(true, fullTest<double>(testVect, maxNumRec, "tmp_out_file.txt", "bit_jaccard", emptyParams, false));
   }
 }
 
-#if defined(WITH_EXTRAS)
-TEST(Test_SQFD) {
-  const char* sqfdParams[] = {"alpha=1", NULL} ; 
-  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
-    EXPECT_EQ(true, fullTest<float>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
-    EXPECT_EQ(true, fullTest<double>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
-  }
-}
-#endif
+//#if defined(WITH_EXTRAS)
+//TEST(Test_SQFD) {
+//  const char* sqfdParams[] = {"alpha=1", NULL} ;
+//  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+//    EXPECT_EQ(true, fullTest<float>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
+//    EXPECT_EQ(true, fullTest<double>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
+//  }
+//}
+//#endif
 
 
 }

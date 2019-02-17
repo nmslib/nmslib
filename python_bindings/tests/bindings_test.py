@@ -171,7 +171,7 @@ class HNSWTestCase(unittest.TestCase, DenseIndexTestMixin):
 class BitJaccardTestCase(unittest.TestCase, BitVectorIndexTestMixin):
     def _get_index(self, space='bit_jaccard'):
         return nmslib.init(method='hnsw', space='bit_jaccard', data_type=nmslib.DataType.OBJECT_AS_STRING,
-                           dtype=nmslib.DistType.INT)
+                           dtype=nmslib.DistType.DOUBLE)
 
 
 # class BitHammingTestCase(unittest.TestCase, BitVectorIndexTestMixin):

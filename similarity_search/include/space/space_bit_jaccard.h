@@ -48,7 +48,7 @@ class SpaceBitJaccard : public SpaceBitVector<dist_t,dist_uint_t> {
     const size_t length = obj1->datalength() / sizeof(dist_uint_t)
                           - 1; // the last integer is an original number of elements
 
-    return BitJaccard(x, y, length);
+    return BitJaccard<dist_t,dist_uint_t>(x, y, length);
   }
 
   DISABLE_COPY_AND_ASSIGN(SpaceBitJaccard);
