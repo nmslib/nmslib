@@ -23,7 +23,6 @@
 #include "rangequery.h"
 #include "knnquery.h"
 #include "permutation_type.h"
-#include "distcomp.h"
 #include "utils.h"
 
 namespace similarity {
@@ -159,6 +158,21 @@ inline void Binarize(const vector<PivotIdType> &perm, const PivotIdType thresh, 
 
     if (b) {
       bin_perm[i/32] |= (1<<(i%32)) ;
+    }
+  }
+}
+
+inline void Binarize(const vector<PivotIdType> &perm, const PivotIdType thresh, vector<uint64_t>&bin_perm) {
+  size_t bin_perm_word_qty = (perm.size() + 63)/64;
+
+  bin_perm.resize(bin_perm_word_qty);
+  fill(bin_perm.begin(), bin_perm.end(), 0);
+
+  for (size_t i = 0; i < perm.size(); ++i) {
+    bool b =perm[i] >= thresh;
+
+    if (b) {
+      bin_perm[i/64] |= (1<<(i%64)) ;
     }
   }
 }

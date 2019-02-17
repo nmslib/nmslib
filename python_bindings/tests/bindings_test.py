@@ -87,9 +87,97 @@ class DenseIndexTestMixin(object):
                                 reloaded_results)
 
 
+class BitVectorIndexTestMixin(object):
+    def _get_index(self, space='bit_jaccard'):
+        raise NotImplementedError()
+
+    def testKnnQuery(self):
+        np.random.seed(23)
+        nbits = 128
+
+        index = self._get_index()
+
+        for i in range(100):
+            a = np.random.rand(nbits) > 0.5
+            s = " ".join(["1" if e else "0" for e in a])
+            index.addDataPoint(id=i, data=s)
+        index.createIndex()
+
+        a = np.ones(nbits)
+        s = " ".join(["1" if e else "0" for e in a])
+        ids, distances = index.knnQuery(s, k=10)
+        print(ids)
+        print(distances)
+        # self.assertTrue(get_hitrate(get_exact_cosine(row, data), ids) >= 5)
+
+    # def testKnnQueryBatch(self):
+    #     np.random.seed(23)
+    #     data = np.random.randn(1000, 10).astype(np.float32)
+    #
+    #     index = self._get_index()
+    #     index.addDataPointBatch(data)
+    #     index.createIndex()
+    #
+    #     queries = data[:10]
+    #     results = index.knnQueryBatch(queries, k=10)
+    #     for query, (ids, distances) in zip(queries, results):
+    #         self.assertTrue(get_hitrate(get_exact_cosine(query, data), ids) >= 5)
+    #
+    #     # test col-major arrays
+    #     queries = np.asfortranarray(queries)
+    #     results = index.knnQueryBatch(queries, k=10)
+    #     for query, (ids, distances) in zip(queries, results):
+    #         self.assertTrue(get_hitrate(get_exact_cosine(query, data), ids) >= 5)
+    #
+    #     # test custom ids (set id to square of each row)
+    #     index = self._get_index()
+    #     index.addDataPointBatch(data, ids=np.arange(data.shape[0]) ** 2)
+    #     index.createIndex()
+    #
+    #     queries = data[:10]
+    #     results = index.knnQueryBatch(queries, k=10)
+    #     for query, (ids, distances) in zip(queries, results):
+    #         # convert from square back to row id
+    #         ids = np.sqrt(ids).astype(int)
+    #         self.assertTrue(get_hitrate(get_exact_cosine(query, data), ids) >= 5)
+
+    # def testReloadIndex(self):
+    #     np.random.seed(23)
+    #     data = np.random.randn(1000, 10).astype(np.float32)
+    #
+    #     original = self._get_index()
+    #     original.addDataPointBatch(data)
+    #     original.createIndex()
+    #
+    #     # test out saving/reloading index
+    #     with tempfile.NamedTemporaryFile() as tmp:
+    #         original.saveIndex(tmp.name + ".index")
+    #
+    #         reloaded = self._get_index()
+    #         reloaded.addDataPointBatch(data)
+    #         reloaded.loadIndex(tmp.name + ".index")
+    #
+    #         original_results = original.knnQuery(data[0])
+    #         reloaded_results = reloaded.knnQuery(data[0])
+    #         npt.assert_allclose(original_results,
+    #                             reloaded_results)
+
+
 class HNSWTestCase(unittest.TestCase, DenseIndexTestMixin):
     def _get_index(self, space='cosinesimil'):
         return nmslib.init(method='hnsw', space=space)
+
+
+class BitJaccardTestCase(unittest.TestCase, BitVectorIndexTestMixin):
+    def _get_index(self, space='bit_jaccard'):
+        return nmslib.init(method='hnsw', space='bit_jaccard', data_type=nmslib.DataType.OBJECT_AS_STRING,
+                           dtype=nmslib.DistType.INT)
+
+
+# class BitHammingTestCase(unittest.TestCase, BitVectorIndexTestMixin):
+#     def _get_index(self, space='bit_hamming'):
+#         return nmslib.init(method='hnsw', space='bit_hamming', data_type=nmslib.DataType.OBJECT_AS_STRING,
+#                            dtype=nmslib.DistType.INT)
 
 
 class SWGraphTestCase(unittest.TestCase, DenseIndexTestMixin):

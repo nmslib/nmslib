@@ -223,6 +223,19 @@ int SpearmanRho(const PivotIdType* x, const PivotIdType* y, size_t qty);
 int SpearmanFootruleSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 int SpearmanRhoSIMD(const PivotIdType* x, const PivotIdType* y, size_t qty);
 
+//template <typename dist_t, typename dist_uint_t>
+double inline BitJaccard(const uint64_t* a, const uint64_t* b, size_t qty) {
+  uint64_t num = 0, den = 0;
+
+  for (size_t i=0; i < qty; ++i) {
+    //  __builtin_popcount quickly computes the number on 1s
+    num +=  __builtin_popcount(a[i] & b[i]);
+    den +=  __builtin_popcount(a[i] | b[i]);
+  }
+
+  return double(num) / double(den);
+}
+
 //unsigned BitHamming(const uint32_t* a, const uint32_t* b, size_t qty);
 
 unsigned inline BitHamming(const uint32_t* a, const uint32_t* b, size_t qty) {

@@ -66,7 +66,7 @@ class PermBinVPTree : public Index<dist_t> {
   ObjectVector              BinPermData_;
 
   unique_ptr<VPTree<int, PolynomialPruner<int>>>   VPTreeIndex_;
-  unique_ptr<SpaceBitHamming>                      VPTreeSpace_;
+  unique_ptr<SpaceBitHamming<int,uint32_t>>        VPTreeSpace_;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(PermBinVPTree);
