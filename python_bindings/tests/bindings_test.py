@@ -219,9 +219,12 @@ class BitVectorIndexTestMixin(object):
         raise NotImplementedError()
 
     def testKnnQuery(self):
-        nbits = 512
+        for num_elems in [30000, 100000, 300000, 1000000]:
+            for nbits in [512, 2048]:
+                self._testKnnQuery(nbits, num_elems)
+
+    def _testKnnQuery(self, nbits, num_elems):
         chunk_size = 10000
-        num_elems = 100000
 
         ps_proc = psutil.Process()
         # print(f"\n{ps_proc.memory_info()}")
