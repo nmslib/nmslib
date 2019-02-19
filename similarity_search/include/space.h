@@ -76,7 +76,7 @@ struct DataFileInputState {
   virtual ~DataFileInputState(){};
 };
 
-struct DataFileInputStateOneFile : public DataFileInputState {
+struct  DataFileInputStateOneFile : public DataFileInputState {
   virtual void Close() { inp_file_.close(); }
   DataFileInputStateOneFile(const string& inpFileName) :
                                           inp_file_(inpFileName.c_str()), line_num_(0) {

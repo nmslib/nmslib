@@ -109,8 +109,8 @@ unique_ptr<DataFileInputState> similarity::SpaceSparseDenseFusion::OpenReadFileH
 
   uint32_t qty, compQty;
 
-  readBinaryPOD(state->inpFile_, qty);
-  readBinaryPOD(state->inpFile_, compQty);
+  readBinaryPOD(state->inp_file_, qty);
+  readBinaryPOD(state->inp_file_, compQty);
   state->qty_= qty;
 
   LOG(LIB_INFO) << "Expecting " << state->qty_ << " entries eacho of which has " << compQty << " sparse or dense vectors.";
@@ -121,8 +121,8 @@ unique_ptr<DataFileInputState> similarity::SpaceSparseDenseFusion::OpenReadFileH
     uint32_t dim;
     float indexWeight, queryWeight;
 
-    readBinaryPOD(state->inpFile_, isSparseFlag);
-    readBinaryPOD(state->inpFile_, dim);
+    readBinaryPOD(state->inp_file_, isSparseFlag);
+    readBinaryPOD(state->inp_file_, dim);
     CHECK_MSG(i < vHeaderIndexWeights_.size(),
               "Too few index weights in the weight file: " + weightFileName_ +
               ", detected while reading component # " + ConvertToString(i + 1));
@@ -156,16 +156,9 @@ SpaceSparseDenseFusion::ReadNextObjStr(DataFileInputState &stateBase, string &st
 
   strObj.clear();
 
+  readBinaryStringId(*pInpState, externId);
+
   string s;
-
-  uint32_t idSize;
-
-  readBinaryPOD(pInpState->inpFile_, idSize);
-
-  vector<char> data(idSize);
-
-  pInpState->inpFile_.read(&data[0], idSize);
-  externId.assign(&data[0], data.size());
 
   for (const auto e : pInpState->vCompDesc_) {
     if (e.isSparse_) {
