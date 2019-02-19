@@ -113,7 +113,7 @@ unique_ptr<DataFileInputState> similarity::SpaceSparseDenseFusion::OpenReadFileH
   readBinaryPOD(state->inp_file_, compQty);
   state->qty_= qty;
 
-  LOG(LIB_INFO) << "Expecting " << state->qty_ << " entries eacho of which has " << compQty << " sparse or dense vectors.";
+  LOG(LIB_INFO) << "Expecting " << state->qty_ << " entries each of which has " << compQty << " sparse or dense vectors.";
 
   for (unsigned i = 0; i < compQty; ++i) {
     // To keep a 4-byte alignment, we use only 32-bit variables

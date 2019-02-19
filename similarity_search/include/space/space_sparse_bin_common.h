@@ -174,7 +174,7 @@ inline void parseSparseBinVect(const string &strObj,
   size_t elemSize = SparseVectElem<float>::dataSize();
   size_t expectSize = sizeof(qty) + elemSize * qty;
   CHECK_MSG(strObj.size() >= expectSize + start,
-            string("The received string object is stoo little! ") +
+            string("The received string object is too little! ") +
             " Start: " + ConvertToString(start) +
             " Str obj size: " + ConvertToString(strObj.size()) +
             " # of vect elems: " + ConvertToString(qty) +
