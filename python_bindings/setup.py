@@ -21,16 +21,14 @@ extra_objects = []
 if os.path.exists(library_file):
     # if we have a prebuilt nmslib library file, use that.
     extra_objects.append(library_file)
-    print("Found: " + os.path.abspath(library_file))
 else:
-    raise RuntimeError("can't find prebuild lib: " + os.path.abspath(library_file))
-    # # Otherwise build all the files here directly (excluding extras which need eigen/boost)
-    # exclude_files = set("""bbtree.cc lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
-    #                     dummy_app.cc main.cc""".split())
-    #
-    # for root, subdirs, files in os.walk(os.path.join(libdir, "src")):
-    #     source_files.extend(os.path.join(root, f) for f in files
-    #                         if f.endswith(".cc") and f not in exclude_files)
+    # Otherwise build all the files here directly (excluding extras which need eigen/boost)
+    exclude_files = set("""bbtree.cc lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
+                        dummy_app.cc main.cc""".split())
+
+    for root, subdirs, files in os.walk(os.path.join(libdir, "src")):
+        source_files.extend(os.path.join(root, f) for f in files
+                            if f.endswith(".cc") and f not in exclude_files)
 
 
 if sys.platform.startswith('linux'):
