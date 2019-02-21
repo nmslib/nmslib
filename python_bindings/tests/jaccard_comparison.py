@@ -132,6 +132,7 @@ def bit_vector_sparse_str(bit_vect):
 
 
 def run(space, num_elems, nbits):
+    np.random.seed(23)
     if space == "bit_jaccard":
         bit_vector_str_func = bit_vector_to_str
         index = nmslib.init(method='hnsw', space=space, data_type=nmslib.DataType.OBJECT_AS_STRING,
@@ -142,7 +143,6 @@ def run(space, num_elems, nbits):
                             dtype=nmslib.DistType.FLOAT)
 
     with PeakMemoryUsage(f"All: space={space} nbits={nbits} elems={num_elems}"):
-        np.random.seed(23)
         for i in range(0, num_elems, CHUNK_SIZE):
             strs = []
             for j in range(CHUNK_SIZE):
@@ -158,6 +158,8 @@ def run(space, num_elems, nbits):
 
 
 if __name__ == "__main__":
+    np.set_printoptions(linewidth=500)
+
     logging.basicConfig(level=logging.WARNING)
     space = sys.argv[1]
     num_elems = int(sys.argv[2])
