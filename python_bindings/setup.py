@@ -21,6 +21,7 @@ extra_objects = []
 if os.path.exists(library_file):
     # if we have a prebuilt nmslib library file, use that.
     extra_objects.append(library_file)
+
 else:
     # Otherwise build all the files here directly (excluding extras which need eigen/boost)
     exclude_files = set("""bbtree.cc lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
