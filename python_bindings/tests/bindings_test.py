@@ -148,11 +148,8 @@ class BitVectorIndexTestMixin(object):
             s = self.bit_vector_str_func(np.ones(512))
             original_results = original.knnQuery(s)
             reloaded_results = reloaded.knnQuery(s)
-            original_results = list(zip(list(original_results[0]), list(original_results[1])))
-            original_results = sorted(original_results, key=lambda x: x[1])
-            reloaded_results = list(zip(list(reloaded_results[0]), list(reloaded_results[1])))
-            reloaded_results = sorted(reloaded_results, key=lambda x: x[1])
-            npt.assert_allclose(original_results, reloaded_results)
+            npt.assert_allclose(original_results,
+                                reloaded_results)
 
 
 class HNSWTestCase(unittest.TestCase, DenseIndexTestMixin):
@@ -174,7 +171,7 @@ class SparseJaccardTestCase(unittest.TestCase, BitVectorIndexTestMixin):
 
 class BitHammingTestCase(unittest.TestCase, BitVectorIndexTestMixin):
     def _get_index(self, space='bit_hamming'):
-        return nmslib.init(method='hnsw', space='bit_hamming', data_type=nmslib.DataType.OBJECT_AS_STRING,
+        return nmslib.init(method='hnsw', space=space, data_type=nmslib.DataType.OBJECT_AS_STRING,
                            dtype=nmslib.DistType.INT)
 
 
