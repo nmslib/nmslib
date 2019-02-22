@@ -134,7 +134,6 @@ bool fullTest(const vector<string>& dataSetStr, size_t maxNumRec, const string& 
       
     dataSet1.push_back(space->CreateObjFromStr(id++, -1, s, NULL).release());
     vExternIds1.push_back(ss.str());
-
     if (id >= maxNumRec) break;
   }
 
