@@ -107,12 +107,15 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
       } else postListQueue.pop();
     }
 
-    // tmpResQueue is a MAX-QUEUE (which is what we need, b/c we maximize the dot product
+    // tmpResQueue is a MAX-QUEUE, so the largest negative score represents the worst/smallest positive score.
     dist_t negAccum = -accum;
 #if 1
     // This one seems to be a bit faster
     // DAVID: THIS CONSTRUCTION IS WRONG. DUE TO THE FIRST CONDITION, THERE MIGHT BE MORE THAN K DOCUMENTS IN THE
     // RESULT, RIGHT? BUT THE SECOND FORK ONLY REPLACES ONE OF THE "WORST" DOCUMENTS
+    // Leo: if we have several elements with equal worst scores, there can be, indeed, more than K documents in the queue.
+    // When a better score comes, it, indeed, pushes out one of the worst scores, but not all of them.
+    // keeping more than K elements can have a performance penalty, but can it have effect on accuracy?
     if (tmpResQueue.size() < K || tmpResQueue.top_key() == negAccum)
       tmpResQueue.push(negAccum, -minDocIdNeg);
     else if (tmpResQueue.top_key() > negAccum)
