@@ -33,6 +33,8 @@
 
 #include "falconn_heap_mod.h"
 
+#define  PRINT_PIVOT_OCCURR_STAT
+
 namespace similarity {
 
 using std::vector;
@@ -210,11 +212,12 @@ void PivotNeighbInvertedIndex<dist_t>::CreateIndex(const AnyParams& IndexParams)
     for (size_t i = 0; i < num_pivot_; ++i)
       pivotOcurrQty[i] += chunkPostLists[i].size();
   }
+  sort(pivotOcurrQty.begin(), pivotOcurrQty.end());
   stringstream str;
   for (size_t i = 0; i < num_pivot_; ++i) {
     str << pivotOcurrQty[i] << " , ";
   }
-  LOG(LIB_INFO) << "Pivot occurrences stat.:" << str.str();
+  LOG(LIB_INFO) << "Pivot occurrences stat sorted.:" << str.str();
 #endif
 }
 

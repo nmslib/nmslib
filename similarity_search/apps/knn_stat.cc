@@ -43,7 +43,7 @@ struct RichOverlapStat {
                   float overlap_mean_left, float overlap_std_left,
                   float diff_mean_left, float diff_std_left,
                   float overlap_mean_right, float overlap_std_right,
-                  float diff_mean_right, float diff_std_right) : 
+                  float diff_mean_right, float diff_std_right) :
                     dist_(dist), 
                     overlap_qty_(overlap_qty), overlap3way_qty_(overlap3way_qty),
                     overlap_dotprod_norm_(overlap_dotprod_norm), 
@@ -87,7 +87,8 @@ void sampleDist(string spaceType,
                 string inFile, string pivotFile, unsigned maxNumPivots, string outFilePrefix,
                 unsigned knn, 
                 unsigned maxNumData,
-                unsigned knnQueryQty) {
+                unsigned knnQueryQty,
+                unsigned randCompQty) {
   ToLower(spaceType);
   vector<string> spaceDesc;
 
@@ -174,6 +175,9 @@ void sampleDist(string spaceType,
   vector<vector<unsigned>> outPivOverlapQtyMatrix(pivotQty);
   vector<vector<float>>    outPivOverlapFracMatrix(pivotQty);
 
+
+  vector<vector<unsigned>> outRandOverlapQty;
+
   queue<size_t>   qidQueue; 
   vector<thread>  qThreads; 
   mutex         mQueue;
@@ -240,6 +244,12 @@ void sampleDist(string spaceType,
       vector<RichOverlapStat<dist_t>> knn_overlap_stat;
       knn_overlap_stat.reserve(knn);
 
+      vector<unsigned> randOverlapQty;
+      randOverlapQty.reserve(randCompQty);
+
+      unordered_set<IdType> neighbIds;
+      neighbIds.reserve(knn);
+
       // Extracting results
       while (!knnQ->Empty()) {
         OverlapInfo oinfo;
@@ -252,6 +262,8 @@ void sampleDist(string spaceType,
           if (pInterSpace) {
             oinfo = pInterSpace->ComputeOverlapInfo(knnQ->TopObject(), queries[qid]); 
           }
+
+          neighbIds.insert(knnQ->TopObject()->id()); //Memorize a neighbor
 
           for (size_t pid = 0; pid < pivotQty; ++pid) {
             uint32_t overlap3way_qty = pJaccardSpace ? 
@@ -270,6 +282,23 @@ void sampleDist(string spaceType,
                                                         oinfo.diff_mean_right_, oinfo.diff_std_right_
         ));
         knnQ->Pop();
+      }
+
+      for (unsigned i = 0; i < randCompQty; ++i) {
+        unsigned iSel = 0;
+        OverlapInfo oinfo;
+        do {
+          iSel = RandomInt() % N;
+          // Should terminate quickly, b/c the probability of finding a data point, which is not previously selected, is >= 1/2
+        } while (neighbIds.find(data[iSel]->id()) != neighbIds.end());
+
+        if (pJaccardSpace) {
+          oinfo.overlap_qty_ = pJaccardSpace->ComputeOverlap(data[iSel], queries[qid]);
+        }
+        if (pInterSpace) {
+          oinfo = pInterSpace->ComputeOverlapInfo(data[iSel], queries[qid]);
+        }
+        randOverlapQty.push_back(oinfo.overlap_qty_);
       }
       {
         unique_lock<mutex> lock(mOut);
@@ -291,6 +320,9 @@ void sampleDist(string spaceType,
           outNNDiffMeanRightMatrix[k].push_back(knn_overlap_stat[k].diff_mean_right_);
           outNNDiffSTDRightMatrix[k].push_back(knn_overlap_stat[k].diff_std_right_);
         }
+
+        outRandOverlapQty.push_back(randOverlapQty);
+
       }
     }
   }));
@@ -319,6 +351,9 @@ void sampleDist(string spaceType,
     }
     outputMatrix(outFilePrefix + "_overlap_qty_pivots.tsv", outPivOverlapQtyMatrix);
     outputMatrix(outFilePrefix + "_overlap_frac_pivots.tsv", outPivOverlapFracMatrix);
+
+    outputMatrix(outFilePrefix + "_overlap_rand_qty.tsv", outRandOverlapQty);
+
   }
 
   outputMatrix(outFilePrefix + "_dists_pivots.tsv", outPivDistMatrix);
@@ -334,6 +369,7 @@ int main(int argc, char *argv[]) {
   unsigned    maxNumPivots = 0;
   unsigned    knnQueryQty = 0;
   unsigned    knn = 0;
+  unsigned    randCompQty = 100;
 
 
   CmdOptions cmd_options;
@@ -353,6 +389,8 @@ int main(int argc, char *argv[]) {
                                &maxNumPivots, false, 0));
   cmd_options.Add(new CmdParam("knnQueryQty", "number of randomly selected queries",
                                &knnQueryQty, false, 0));
+  cmd_options.Add(new CmdParam("randCompQty", "number of randomly selected data points (for overlap estimation)",
+                               &randCompQty, false, randCompQty));
   cmd_options.Add(new CmdParam(KNN_PARAM_OPT, "use this number of nearest neighbors",
                                &knn, 0));
   cmd_options.Add(new CmdParam(MAX_NUM_DATA_PARAM_OPT, MAX_NUM_DATA_PARAM_MSG,
@@ -392,13 +430,15 @@ int main(int argc, char *argv[]) {
                         inFile, pivotFile, maxNumPivots, outFilePrefix,
                         knn, 
                         maxNumData,
-                        knnQueryQty);
+                        knnQueryQty,
+                        randCompQty);
     } else if (distType == DIST_TYPE_DOUBLE) {
       sampleDist<double>(spaceType, 
                         inFile, pivotFile, maxNumPivots, outFilePrefix,
                         knn, 
                         maxNumData,
-                        knnQueryQty);
+                        knnQueryQty,
+                        randCompQty);
     } else {
       LOG(LIB_FATAL) << "Unsupported distance type: '" << distType << "'";
     }
