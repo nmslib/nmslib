@@ -167,7 +167,8 @@ void ProjectionVPTree<dist_t>::CreateIndex(const AnyParams& IndexParams) {
     projData_[id] = ProjectOneVect(id, NULL, this->data_[id]);
   }
 
-  ReportIntrinsicDimensionality("Set of projections" , *VPTreeSpace_, projData_);
+  vector<double> dist;
+  ReportIntrinsicDimensionality("Set of projections" , *VPTreeSpace_, projData_, dist);
 
   VPTreeIndex_.reset(new VPTree<float, PolynomialPruner<float>>(
                                           PrintProgress_,

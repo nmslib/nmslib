@@ -33,9 +33,10 @@ void ComputeIntrinsicDimensionality(const Space<dist_t>& space,
                                double& IntrDim,
                                double& DistMean,
                                double& DistSigma,
+                               std::vector<double>& dist,
                                size_t SampleQty = 1000000) {
-  std::vector<double> dist;
   DistMean = 0;
+  dist.clear();
   for (size_t n = 0; n < SampleQty; ++n) {
     size_t r1 = RandomInt() % dataset.size();
     size_t r2 = RandomInt() % dataset.size();
@@ -70,6 +71,7 @@ template <typename dist_t>
 void ReportIntrinsicDimensionality(const string& reportName,
                                    const Space<dist_t>& space, 
                                    const ObjectVector& dataset,
+                                   std::vector<double>& dist,
                                    size_t SampleQty = 1000000) {
     double DistMean, DistSigma, IntrDim;
 
@@ -77,6 +79,7 @@ void ReportIntrinsicDimensionality(const string& reportName,
                                   IntrDim,
                                   DistMean,
                                   DistSigma,
+                                  dist,
                                   SampleQty);
 
     LOG(LIB_INFO) << "### " << reportName;
