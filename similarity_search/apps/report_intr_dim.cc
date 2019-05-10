@@ -101,7 +101,7 @@ void TestSpace(
     of.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
   
     for (size_t i = 0; i < dist.size(); ++i) {
-      if (i) of << "\t";
+      if (i) of << ",";
       of << dist[i];
     } 
     of << std::endl;
