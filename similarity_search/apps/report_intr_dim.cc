@@ -75,7 +75,8 @@ void TestSpace(
                 string dataFile,
                 bool compMuDeffect,
                 unsigned maxNumData,
-                unsigned sampleQty
+                unsigned sampleQty,
+                string sampleFile
                ) {
   string          spaceType;
   vector<string>  vSpaceArgs;
@@ -90,9 +91,21 @@ void TestSpace(
   vector<string>  tmp;
   unique_ptr<DataFileInputState> inpState(space->ReadDataset(data, tmp, dataFile, maxNumData));
   space->UpdateParamsFromFile(*inpState);
+  vector<double>  dist;
 
   // Prints the report
-  ReportIntrinsicDimensionality("********", *space, data, sampleQty);
+  ReportIntrinsicDimensionality("********", *space, data, dist, sampleQty);
+  if (!sampleFile.empty()) {
+    ofstream of(sampleFile);
+    CHECK_MSG(of, "Cannot open for writing file: " + sampleFile);
+    of.exceptions ( std::ifstream::failbit | std::ifstream::badbit );
+  
+    for (size_t i = 0; i < dist.size(); ++i) {
+      if (i) of << ",";
+      of << dist[i];
+    } 
+    of << std::endl;
+  }
   if (compMuDeffect) {
     double    dleft, dright;
     ComputeMuDeffect<dist_t>(
@@ -108,6 +121,7 @@ void TestSpace(
 int main(int argc, char* argv[]) {
   string    spaceDesc, distType;
   string    dataFile;
+  string    sampleFile;
   unsigned  maxNumData;
   unsigned  sampleQty;
   bool      compMuDeffect;
@@ -126,6 +140,8 @@ int main(int argc, char* argv[]) {
                                &sampleQty, false, defaultSampleQty));
   cmd_options.Add(new CmdParam("muDeffect,m", "estimate the left and the right mu deffectiveness",
                                &compMuDeffect, false, false));
+  cmd_options.Add(new CmdParam("sampleFile", "optional output sample file",
+                               &sampleFile, false, ""));
 
   try {
     cmd_options.Parse(argc, argv);
@@ -143,7 +159,8 @@ int main(int argc, char* argv[]) {
                   dataFile,
                   compMuDeffect,
                   maxNumData,
-                  sampleQty
+                  sampleQty,
+                  sampleFile
                 );
     } else if (DIST_TYPE_FLOAT == distType) {
       TestSpace<float>(
@@ -151,7 +168,8 @@ int main(int argc, char* argv[]) {
                   dataFile,
                   compMuDeffect,
                   maxNumData,
-                  sampleQty
+                  sampleQty,
+                  sampleFile
                  );
     } else if (DIST_TYPE_DOUBLE == distType) {
       TestSpace<double>(
@@ -159,7 +177,8 @@ int main(int argc, char* argv[]) {
                   dataFile,
                   compMuDeffect,
                   maxNumData,
-                  sampleQty
+                  sampleQty,
+                  sampleFile
                  );
     }
 

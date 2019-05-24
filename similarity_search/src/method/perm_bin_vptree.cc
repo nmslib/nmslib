@@ -72,7 +72,8 @@ void PermBinVPTree<dist_t, RankCorrelDistFunc>::CreateIndex(const AnyParams& Ind
     BinPermData_[i] = VPTreeSpace_->CreateObjFromVect(i, -1, binPivot);
   }
 
-  ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, BinPermData_);
+  vector<double> dist;
+  ReportIntrinsicDimensionality("Set of permutations" , *VPTreeSpace_, BinPermData_, dist);
   VPTreeIndex_.reset(new VPTree<int, PolynomialPruner<int>>(
                                           PrintProgress_,
                                           *VPTreeSpace_,
