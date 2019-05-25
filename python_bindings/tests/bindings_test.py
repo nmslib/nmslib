@@ -18,6 +18,14 @@ def get_hitrate(ground_truth, ids):
     return len(set(i for i, _ in ground_truth).intersection(ids))
 
 
+def bit_vector_to_str(bit_vect):
+    return " ".join(["1" if e else "0" for e in bit_vect])
+
+
+def bit_vector_sparse_str(bit_vect):
+    return " ".join([str(k) for k, b in enumerate(bit_vect) if b])
+
+
 class DenseIndexTestMixin(object):
     def _get_index(self, space='cosinesimil'):
         raise NotImplementedError()
@@ -95,9 +103,84 @@ class DenseIndexTestMixin(object):
                                 reloaded_results)
 
 
+class BitVectorIndexTestMixin(object):
+    def _get_index(self, space='bit_jaccard'):
+        raise NotImplementedError()
+
+    def _get_batches(self, index, nbits, num_elems, chunk_size):
+        if "bit_" in str(index):
+            self.bit_vector_str_func = bit_vector_to_str
+        else:
+            self.bit_vector_str_func = bit_vector_sparse_str
+
+        batches = []
+        for i in range(0, num_elems, chunk_size):
+            strs = []
+            for j in range(chunk_size):
+                a = np.random.rand(nbits) > 0.5
+                strs.append(self.bit_vector_str_func(a))
+            batches.append([np.arange(i, i + chunk_size), strs])
+        return batches
+
+    def testKnnQuery(self):
+        np.random.seed(23)
+
+        index = self._get_index()
+        batches = self._get_batches(index, 512, 2000, 1000)
+        for ids, data in batches:
+            index.addDataPointBatch(ids=ids, data=data)
+
+        index.createIndex()
+
+        s = self.bit_vector_str_func(np.ones(512))
+        index.knnQuery(s, k=10)
+
+    def testReloadIndex(self):
+        np.random.seed(23)
+
+        original = self._get_index()
+        batches = self._get_batches(original, 512, 2000, 1000)
+        for ids, data in batches:
+            original.addDataPointBatch(ids=ids, data=data)
+        original.createIndex()
+
+        # test out saving/reloading index
+        with tempfile.NamedTemporaryFile() as tmp:
+            original.saveIndex(tmp.name + ".index")
+
+            reloaded = self._get_index()
+            for ids, data in batches:
+                reloaded.addDataPointBatch(ids=ids, data=data)
+            reloaded.loadIndex(tmp.name + ".index")
+
+            s = self.bit_vector_str_func(np.ones(512))
+            original_results = original.knnQuery(s)
+            reloaded_results = reloaded.knnQuery(s)
+            npt.assert_allclose(original_results,
+                                reloaded_results)
+
+
 class HNSWTestCase(unittest.TestCase, DenseIndexTestMixin):
     def _get_index(self, space='cosinesimil'):
         return nmslib.init(method='hnsw', space=space)
+
+
+class BitJaccardTestCase(unittest.TestCase, BitVectorIndexTestMixin):
+    def _get_index(self, space='bit_jaccard'):
+        return nmslib.init(method='hnsw', space=space, data_type=nmslib.DataType.OBJECT_AS_STRING,
+                           dtype=nmslib.DistType.FLOAT)
+
+
+class SparseJaccardTestCase(unittest.TestCase, BitVectorIndexTestMixin):
+    def _get_index(self, space='jaccard_sparse'):
+        return nmslib.init(method='hnsw', space=space, data_type=nmslib.DataType.OBJECT_AS_STRING,
+                           dtype=nmslib.DistType.FLOAT)
+
+
+class BitHammingTestCase(unittest.TestCase, BitVectorIndexTestMixin):
+    def _get_index(self, space='bit_hamming'):
+        return nmslib.init(method='hnsw', space=space, data_type=nmslib.DataType.OBJECT_AS_STRING,
+                           dtype=nmslib.DistType.INT)
 
 
 class SWGraphTestCase(unittest.TestCase, DenseIndexTestMixin):

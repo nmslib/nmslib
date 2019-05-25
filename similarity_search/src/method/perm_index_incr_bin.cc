@@ -23,6 +23,7 @@
 #include "incremental_quick_select.h"
 #include "method/perm_index_incr_bin.h"
 #include "utils.h"
+#include "distcomp.h"
 
 namespace similarity {
 

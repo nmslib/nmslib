@@ -19,6 +19,7 @@
 
 #include "factory/space/space_edist.h"
 #include "factory/space/space_bit_hamming.h"
+#include "factory/space/space_bit_jaccard.h"
 #include "factory/space/space_bregman.h"
 #include "factory/space/space_dummy.h"
 #include "factory/space/space_js.h"
@@ -36,15 +37,17 @@
 
 namespace similarity {
 
-
 inline void initSpaces() {
   // Registering a dummy space
   REGISTER_SPACE_CREATOR(int,    SPACE_DUMMY,  CreateDummy)
   REGISTER_SPACE_CREATOR(float,  SPACE_DUMMY,  CreateDummy)
   REGISTER_SPACE_CREATOR(double, SPACE_DUMMY,  CreateDummy)
 
-  // Registering binary/bit Hamming
-  REGISTER_SPACE_CREATOR(int,  SPACE_BIT_HAMMING,  CreateBitHamming)
+  // Registering binary/bit Hamming/Jaccard
+  SpaceFactoryRegistry<int>::CreateFuncPtr bit_hamming_func_ptr = CreateBitHamming<int,uint32_t>;
+  REGISTER_SPACE_CREATOR(int,    SPACE_BIT_HAMMING, bit_hamming_func_ptr )
+  SpaceFactoryRegistry<float>::CreateFuncPtr bit_jaccard_func_ptr = CreateBitJaccard<float,uint32_t>;
+  REGISTER_SPACE_CREATOR(float, SPACE_BIT_JACCARD,  bit_jaccard_func_ptr )
 
   // Registering the Levensthein-distance: regular and normalized
   REGISTER_SPACE_CREATOR(int,   SPACE_LEVENSHTEIN,  CreateLevenshtein)

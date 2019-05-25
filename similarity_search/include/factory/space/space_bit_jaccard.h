@@ -12,10 +12,10 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
-#ifndef FACTORY_SPACE_BIT_HAMMING_H
-#define FACTORY_SPACE_BIT_HAMMING_H
+#ifndef FACTORY_SPACE_BIT_JACCARD_H
+#define FACTORY_SPACE_BIT_JACCARD_H
 
-#include <space/space_bit_hamming.h>
+#include <space/space_bit_jaccard.h>
 
 namespace similarity {
 
@@ -24,8 +24,8 @@ namespace similarity {
  */
 
 template <typename dist_t, typename dist_uint_t>
-inline Space<dist_t>* CreateBitHamming(const AnyParams& /* ignoring params */) {
-  return new SpaceBitHamming<dist_t,dist_uint_t>();
+inline Space<dist_t>* CreateBitJaccard(const AnyParams& /* ignoring params */) {
+  return new SpaceBitJaccard<dist_t,dist_uint_t>();
 }
 
 /*

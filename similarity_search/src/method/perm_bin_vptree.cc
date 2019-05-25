@@ -38,7 +38,7 @@ PermBinVPTree<dist_t, RankCorrelDistFunc>::PermBinVPTree(
     const ObjectVector& data) : 
       Index<dist_t>(data), space_(space), 
       PrintProgress_(PrintProgress),
-      VPTreeSpace_(new SpaceBitHamming())
+      VPTreeSpace_(new SpaceBitHamming<int,uint32_t>())
 {}
 
 template <typename dist_t, PivotIdType (*RankCorrelDistFunc)(const PivotIdType*, const PivotIdType*, size_t)>

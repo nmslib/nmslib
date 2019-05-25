@@ -12,8 +12,8 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
-#ifndef _SPACE_BIT_HAMMING_H_
-#define _SPACE_BIT_HAMMING_H_
+#ifndef _SPACE_BIT_JACCARD_H_
+#define _SPACE_BIT_JACCARD_H_
 
 #include <string>
 #include <map>
@@ -27,17 +27,17 @@
 #include "distcomp.h"
 #include "space_bit_vector.h"
 
-#define SPACE_BIT_HAMMING "bit_hamming"
+#define SPACE_BIT_JACCARD "bit_jaccard"
 
 namespace similarity {
 
 template <typename dist_t, typename dist_uint_t>
-class SpaceBitHamming : public SpaceBitVector<dist_t,dist_uint_t> {
+class SpaceBitJaccard : public SpaceBitVector<dist_t,dist_uint_t> {
  public:
-  explicit SpaceBitHamming() {}
-  virtual ~SpaceBitHamming() {}
+  explicit SpaceBitJaccard() {}
+  virtual ~SpaceBitJaccard() {}
 
-  virtual std::string StrDesc() const { return "Hamming (bit-storage) space"; }
+  virtual std::string StrDesc() const { return "Jaccard (bit-storage) space"; }
 
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const {
@@ -48,10 +48,10 @@ class SpaceBitHamming : public SpaceBitVector<dist_t,dist_uint_t> {
     const size_t length = obj1->datalength() / sizeof(dist_uint_t)
                           - 1; // the last integer is an original number of elements
 
-    return BitHamming(x, y, length);
+    return BitJaccard<dist_t,dist_uint_t>(x, y, length);
   }
 
-  DISABLE_COPY_AND_ASSIGN(SpaceBitHamming);
+  DISABLE_COPY_AND_ASSIGN(SpaceBitJaccard);
 };
 
 }  // namespace similarity

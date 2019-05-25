@@ -134,7 +134,6 @@ bool fullTest(const vector<string>& dataSetStr, size_t maxNumRec, const string& 
       
     dataSet1.push_back(space->CreateObjFromStr(id++, -1, s, NULL).release());
     vExternIds1.push_back(ss.str());
-    
     if (id >= maxNumRec) break;
   }
 
@@ -215,9 +214,26 @@ TEST(Test_BitHamming) {
   }
 }
 
+TEST(Test_BitJaccard) {
+  vector<string> testVect;
+
+  for (size_t i = 0; i < MAX_NUM_REC; ++i) {
+    stringstream ss;
+
+    for (size_t k = 0; k < 128; ++k) {
+      if (k) ss << " ";
+      ss << (RandomInt() % 2);
+    }
+    testVect.push_back(ss.str());
+  }
+  for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
+    EXPECT_EQ(true, fullTest<float>(testVect, maxNumRec, "tmp_out_file.txt", "bit_jaccard", emptyParams, false));
+  }
+}
+
 #if defined(WITH_EXTRAS)
 TEST(Test_SQFD) {
-  const char* sqfdParams[] = {"alpha=1", NULL} ; 
+  const char* sqfdParams[] = {"alpha=1", NULL} ;
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
     EXPECT_EQ(true, fullTest<float>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
     EXPECT_EQ(true, fullTest<double>("sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
