@@ -174,7 +174,7 @@ struct IndexWrapper {
   const Object * readObject(py::object input, int id = 0) {
     switch (data_type) {
       case DATATYPE_DENSE_VECTOR: {
-        py::array_t<dist_t> temp(input);
+        py::array_t<dist_t, py::array::c_style | py::array::forcecast> temp(input);
         std::vector<dist_t> tempVect(temp.data(0), temp.data(0) + temp.size());
         auto vectSpacePtr = reinterpret_cast<VectorSpace<dist_t>*>(space.get());
         return vectSpacePtr->CreateObjFromVect(id, -1, tempVect);

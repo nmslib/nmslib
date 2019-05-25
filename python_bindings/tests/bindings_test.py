@@ -24,15 +24,23 @@ class DenseIndexTestMixin(object):
 
     def testKnnQuery(self):
         np.random.seed(23)
-        data = np.random.randn(1000, 10).astype(np.float32)
+        data = np.asfortranarray(np.random.randn(1000, 10).astype(np.float32))
 
         index = self._get_index()
         index.addDataPointBatch(data)
         index.createIndex()
 
-        row = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1.])
-        ids, distances = index.knnQuery(row, k=10)
-        self.assertTrue(get_hitrate(get_exact_cosine(row, data), ids) >= 5)
+        query = data[0]
+
+        ids, distances = index.knnQuery(query, k=10)
+        self.assertTrue(get_hitrate(get_exact_cosine(query, data), ids) >= 5)
+
+        # There is a bug when different ways to specify the input query data
+        # were causing the trouble: https://github.com/nmslib/nmslib/issues/370
+        query = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1.])
+
+        ids, distances = index.knnQuery(query, k=10)
+        self.assertTrue(get_hitrate(get_exact_cosine(query, data), ids) >= 5)
 
     def testKnnQueryBatch(self):
         np.random.seed(23)
