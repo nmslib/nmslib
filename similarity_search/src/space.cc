@@ -56,6 +56,53 @@ void Space<dist_t>::WriteDataset(const ObjectVector& dataset,
   outState->Close();
 }
 
+// Doesn't support external IDs, just makes them all empty
+template <typename dist_t>
+unique_ptr<DataFileInputState>
+Space<dist_t>::ReadObjectVectorFromBinData(ObjectVector& data,
+                                           vector<string>& vExternIds,
+                                           const std::string& fileName,
+                                           const IdTypeUnsign maxQty) const {
+  CHECK_MSG(data.empty(), "this function expects data to be empty on call");
+  size_t qty;
+  size_t objSize;
+  std::ifstream input(fileName, std::ios::binary);
+  CHECK_MSG(input, "Cannot open file '" + fileName + "' for writing");
+  input.exceptions(std::ios::badbit | std::ios::failbit);
+  vExternIds.clear();
+
+  readBinaryPOD(input, qty);
+
+  for (unsigned i = 0; i < std::min(qty, size_t(maxQty)); ++i) {
+    readBinaryPOD(input, objSize);
+    unique_ptr<char []> buf(new char[objSize]);
+    input.read(&buf[0], objSize);
+    data.push_back(new Object(buf.release()));
+  }
+  vExternIds.resize(data.size());
+  return unique_ptr<DataFileInputState>(new DataFileInputState());
+}
+
+// Doesn't support external IDs
+template <typename dist_t>
+void Space<dist_t>::WriteObjectVectorBinData(const ObjectVector& data,
+                                             const vector<string>& vExternIds,
+                                             const std::string& fileName,
+                                             const IdTypeUnsign maxQty) const {
+  std::ofstream output(fileName, std::ios::binary);
+  CHECK_MSG(output, "Cannot open file '" + fileName + "' for writing");
+  output.exceptions(std::ios::badbit | std::ios::failbit);
+
+  writeBinaryPOD(output, size_t(data.size()));
+  for (unsigned i = 0; i < std::min(data.size(), size_t(maxQty)); ++i) {
+    const Object* o = data[i];
+    writeBinaryPOD(output, o->bufferlength());
+    output.write(o->buffer(), o->bufferlength());
+  }
+  output.close();
+}
+
+
 template class Space<int>;
 template class Space<float>;
 template class Space<double>;

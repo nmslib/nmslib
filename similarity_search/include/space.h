@@ -212,8 +212,23 @@ class Space {
                    const IdTypeUnsign MaxNumObjects = MAX_DATASET_QTY) const;
   void WriteDataset(const ObjectVector& dataset,
                    const vector<string>& vExternIds,
-                   const string& inputFile,
+                   const string& outputFile,
                    const IdTypeUnsign MaxNumObjects = MAX_DATASET_QTY) const;
+
+  /*
+   * if the space stores some useful information in the input state,
+   * it needs to override ReadObjectVectorFromBinData, and WriteObjectVectorBinData.
+   * PS: Here an assumption is that data is empty
+   */
+  virtual unique_ptr<DataFileInputState> ReadObjectVectorFromBinData(ObjectVector& dataset,
+                                                                     vector<string>& vExternIds,
+                                                                     const std::string& inputFile,
+                                                                     const IdTypeUnsign maxQty=MAX_DATASET_QTY) const;
+
+  virtual void WriteObjectVectorBinData(const ObjectVector& dataset,
+                                        const vector<string>& vExternIds,
+                                        const std::string& outputFile,
+                                        const IdTypeUnsign MaxNumObjects = MAX_DATASET_QTY) const;
 
   /*
    * For some real-valued or integer-valued *DENSE* vector spaces this function
