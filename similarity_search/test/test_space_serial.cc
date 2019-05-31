@@ -54,23 +54,23 @@ bool fullTestCommon(bool binTest, Space<dist_t>* pSpace,
   unique_ptr<DataFileInputState> inpState;
 
   if (binTest) {
-    pSpace->WriteDataset(dataSet1, vExternIds1, tmpFileName);
-    inpState = pSpace->ReadDataset(dataSet2, vExternIds2, tmpFileName);
-  } else {
     pSpace->WriteObjectVectorBinData(dataSet1, vExternIds1, tmpFileName);
     inpState = pSpace->ReadObjectVectorFromBinData(dataSet2, vExternIds2, tmpFileName);
+  } else {
+    pSpace->WriteDataset(dataSet1, vExternIds1, tmpFileName);
+    inpState = pSpace->ReadDataset(dataSet2, vExternIds2, tmpFileName);
   }
 
   pSpace->UpdateParamsFromFile(*inpState);
 
   if (maxNumRec != dataSet2.size()) {
-    LOG(LIB_ERROR) << "Expected to read " << maxNumRec << " records from " 
+    LOG(LIB_ERROR) << "binTest" << binTest << "Expected to read " << maxNumRec << " records from "
             "dataSet, but read only: " << dataSet2.size();
     return false;
   }
 
   if (vExternIds2.size() != dataSet2.size()) {
-    LOG(LIB_ERROR) << "The number of external IDs (" << vExternIds1.size() << ") is different from the number of records: " << dataSet2.size();
+    LOG(LIB_ERROR) << "binTest" << binTest << "The number of external IDs (" << vExternIds1.size() << ") is different from the number of records: " << dataSet2.size();
     return false;
   }
 
@@ -81,12 +81,12 @@ bool fullTestCommon(bool binTest, Space<dist_t>* pSpace,
 
     if (bTestExternId) {
       if (vExternIds1[i] != vExternIds2[i]) {
-        LOG(LIB_ERROR) << "External IDs are different, i = " << i << " id1 = '" << vExternIds1[i] << "' id2 = '" << vExternIds2[i] << "'" ;
+        LOG(LIB_ERROR) << "binTest" << binTest << " External IDs are different, i = " << i << " id1 = '" << vExternIds1[i] << "' id2 = '" << vExternIds2[i] << "'" ;
         return false;
       }
     }
     if (!pSpace->ApproxEqual(*dataSet1[i], *dataSet2[i])) {
-      LOG(LIB_ERROR) << "Objects are different, i = " << i;
+      LOG(LIB_ERROR) << "binTest" << binTest << "Objects are different, i = " << i;
       LOG(LIB_ERROR) << "Object 1 string representation produced by the space:" <<
               pSpace->CreateStrFromObj(dataSet1[i], vExternIds1[i]);
       LOG(LIB_ERROR) << "Object 2 string representation produced by the space:" <<
@@ -94,7 +94,7 @@ bool fullTestCommon(bool binTest, Space<dist_t>* pSpace,
       return false;
     }
     if (dataSet1[i]->id() != dataSet2[i]->id()) {
-      LOG(LIB_ERROR) << "Objects IDs are different, i = " << i;
+      LOG(LIB_ERROR) << "binTest" << binTest << "Objects IDs are different, i = " << i;
       LOG(LIB_ERROR) << "Object 1 id: "<< dataSet1[i]->id() << " Object 2 id: " << dataSet2[i]->id();
     }
   }

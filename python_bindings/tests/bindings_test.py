@@ -112,18 +112,20 @@ class DenseIndexTestMixin(object):
         original.addDataPointBatch(data)
         original.createIndex()
 
-        # test out saving/reloading index
-        with tempfile.NamedTemporaryFile() as tmp:
-            original.saveIndex(tmp.name + ".index")
+        for save_data in [0, 1]:
+            # test out saving/reloading index
+            with tempfile.NamedTemporaryFile() as tmp:
+                original.saveIndex(tmp.name + ".index", save_data=save_data)
 
-            reloaded = self._get_index()
-            reloaded.addDataPointBatch(data)
-            reloaded.loadIndex(tmp.name + ".index")
+                reloaded = self._get_index()
+                if save_data == 0:
+                    reloaded.addDataPointBatch(data)
+                reloaded.loadIndex(tmp.name + ".index", load_data=save_data)
 
-            original_results = original.knnQuery(data[0])
-            reloaded_results = reloaded.knnQuery(data[0])
-            self.assert_allclose(original_results,
-                                reloaded_results)
+                original_results = original.knnQuery(data[0])
+                reloaded_results = reloaded.knnQuery(data[0])
+                self.assert_allclose(original_results,
+                                    reloaded_results)
 
 
 class BitVectorIndexTestMixin(object):
@@ -167,20 +169,22 @@ class BitVectorIndexTestMixin(object):
             original.addDataPointBatch(ids=ids, data=data)
         original.createIndex()
 
-        # test out saving/reloading index
-        with tempfile.NamedTemporaryFile() as tmp:
-            original.saveIndex(tmp.name + ".index")
+        for save_data in [0, 1]:
+            # test out saving/reloading index
+            with tempfile.NamedTemporaryFile() as tmp:
+                original.saveIndex(tmp.name + ".index", save_data=save_data)
 
-            reloaded = self._get_index()
-            for ids, data in batches:
-                reloaded.addDataPointBatch(ids=ids, data=data)
-            reloaded.loadIndex(tmp.name + ".index")
+                reloaded = self._get_index()
+                if save_data == 0:
+                    for ids, data in batches:
+                        reloaded.addDataPointBatch(ids=ids, data=data)
+                reloaded.loadIndex(tmp.name + ".index", load_data=save_data)
 
-            s = self.bit_vector_str_func(np.ones(512))
-            original_results = original.knnQuery(s)
-            reloaded_results = reloaded.knnQuery(s)
-            self.assert_allclose(original_results,
-                                reloaded_results)
+                s = self.bit_vector_str_func(np.ones(512))
+                original_results = original.knnQuery(s)
+                reloaded_results = reloaded.knnQuery(s)
+                self.assert_allclose(original_results,
+                                    reloaded_results)
 
 
 class HNSWTestCase(TestCaseBase, DenseIndexTestMixin):
@@ -219,17 +223,19 @@ class SWGraphTestCase(TestCaseBase, DenseIndexTestMixin):
         original.createIndex()
 
         # test out saving/reloading index
-        with tempfile.NamedTemporaryFile() as tmp:
-            original.saveIndex(tmp.name + ".index")
+        for save_data in [0, 1]:
+            with tempfile.NamedTemporaryFile() as tmp:
+                original.saveIndex(tmp.name + ".index", save_data=save_data)
 
-            reloaded = self._get_index()
-            reloaded.addDataPointBatch(data)
-            reloaded.loadIndex(tmp.name + ".index")
+                reloaded = self._get_index()
+                if save_data == 0:
+                    reloaded.addDataPointBatch(data)
+                reloaded.loadIndex(tmp.name + ".index", load_data=save_data)
 
-            original_results = original.knnQuery(data[0])
-            reloaded_results = reloaded.knnQuery(data[0])
-            self.assert_allclose(original_results,
-                                reloaded_results)
+                original_results = original.knnQuery(data[0])
+                reloaded_results = reloaded.knnQuery(data[0])
+                self.assert_allclose(original_results,
+                                    reloaded_results)
 
 
 class BallTreeTestCase(TestCaseBase, DenseIndexTestMixin):

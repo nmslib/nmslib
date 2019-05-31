@@ -39,7 +39,8 @@
 namespace py = pybind11;
 
 namespace similarity {
-const char * module_name = "nmslib";
+const char* module_name = "nmslib";
+const char* data_suff = ".dat";
 
 enum DistType {
   DISTTYPE_FLOAT,
@@ -93,10 +94,16 @@ struct IndexWrapper {
     index->CreateIndex(params);
   }
 
-  void loadIndex(const std::string & filename, bool print_progress = false) {
+  void loadIndex(const std::string & filename, bool load_data = false) {
     py::gil_scoped_release l;
     auto factory = MethodFactoryRegistry<dist_t>::Instance();
+    bool print_progress=false; // We are not going to creat the index anyways, only to load an existing one
     index.reset(factory.CreateMethod(print_progress, method, space_type, *space, data));
+    if (load_data) {
+      vector<string> dummy;
+      data.clear();
+      space->ReadObjectVectorFromBinData(data, dummy, filename + data_suff);
+    }
     index->LoadIndex(filename);
 
     // querying reloaded indices don't seem to work correctly (at least hnsw ones) until
@@ -104,11 +111,15 @@ struct IndexWrapper {
     index->ResetQueryTimeParams();
   }
 
-  void saveIndex(const std::string & filename) {
+  void saveIndex(const std::string & filename, bool save_data = false) {
     if (!index) {
       throw std::invalid_argument("Must call createIndex or loadIndex before this method");
     }
     py::gil_scoped_release l;
+    if (save_data) {
+      vector<string> dummy;
+      space->WriteObjectVectorBinData(data, dummy, filename + data_suff);
+    }
     index->SaveIndex(filename);
   }
 
@@ -573,22 +584,25 @@ void exportIndex(py::module * m) {
 
     .def("loadIndex", &IndexWrapper<dist_t>::loadIndex,
       py::arg("filename"),
-      py::arg("print_progress") = false,
+      py::arg("load_data") = false,
       "Loads the index from disk\n\n"
       "Parameters\n"
       "----------\n"
       "filename: str\n"
       "    The filename to read from\n"
-      "print_progress: bool optional\n"
-      "    Whether or not to display progress bar when creating index\n")
+      "load_data: bool optional\n"
+      "    Whether or not to load previously saved data.\n")
 
     .def("saveIndex", &IndexWrapper<dist_t>::saveIndex,
       py::arg("filename"),
-      "Saves the index to disk\n\n"
+      py::arg("save_data") = false,
+      "Saves the index and/or data to disk\n\n"
       "Parameters\n"
       "----------\n"
       "filename: str\n"
-      "    The filename to save to\n")
+      "    The filename to save to\n"
+      "save_data: bool optional\n"
+      "    Whether or not to save data\n")
 
     .def("setQueryTimeParams",
       [](IndexWrapper<dist_t> * self, py::object params) {

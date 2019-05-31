@@ -67,7 +67,7 @@ Space<dist_t>::ReadObjectVectorFromBinData(ObjectVector& data,
   size_t qty;
   size_t objSize;
   std::ifstream input(fileName, std::ios::binary);
-  CHECK_MSG(input, "Cannot open file '" + fileName + "' for writing");
+  CHECK_MSG(input, "Cannot open file '" + fileName + "' for reading");
   input.exceptions(std::ios::badbit | std::ios::failbit);
   vExternIds.clear();
 
