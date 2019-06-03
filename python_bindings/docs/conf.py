@@ -50,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'nmslib'
-copyright = u'2017, Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.'
+copyright = u'2019, Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.'
 author = u'Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.'
 
 # The version info for the project you're documenting, acts as replacement for

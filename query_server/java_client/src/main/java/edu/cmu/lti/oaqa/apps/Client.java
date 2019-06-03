@@ -25,6 +25,8 @@ import edu.cmu.lti.oaqa.similarity.*;
 import org.apache.thrift.protocol.*;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.*;
 
 
@@ -85,6 +87,24 @@ public class Client {
 ));
     System.exit(1);
   }
+
+
+  // Thanks to Simon Lee : https://gist.github.com/qingniufly/9d976136d908f1e52a1b69b40449565b
+  // String to ByteBuffer
+  public static ByteBuffer strToByteBuffer(String msg, Charset charset){
+      return charset.encode(msg);
+  }
+
+  // ByteBuffer to String
+  public static String byteBufferToStr(ByteBuffer buff, Charset charset){
+    return charset.decode(buff).toString();
+  }
+  
+  public static ByteBuffer bytesToByteBuffer(byte [] buff) {
+    return ByteBuffer.wrap(buff);
+  }
+
+  public static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
   
   
   public static void main(String args[]) {
@@ -187,10 +207,10 @@ public class Client {
         
         if (searchType == SearchType.kKNNSearch) {
           System.out.println(String.format("Running a %d-NN search", k));
-          res = client.knnQuery(k, queryObj, retExternId, retObj);
+          res = client.knnQuery(k, strToByteBuffer(queryObj, UTF8_CHARSET), retExternId, retObj);
         } else {
           System.out.println(String.format("Running a range search (r=%g)", r));
-          res = client.rangeQuery(r, queryObj, retExternId, retObj);
+          res = client.rangeQuery(r, strToByteBuffer(queryObj, UTF8_CHARSET), retExternId, retObj);
         }
         
         long t2 = System.nanoTime();
@@ -199,7 +219,7 @@ public class Client {
         
         for (ReplyEntry e: res) {
           System.out.println(String.format("id=%d dist=%g %s", e.getId(), e.getDist(), retExternId ? "externId="+e.getExternId():"" ));
-          if (retObj) System.out.println(e.getObj());
+          if (retObj) System.out.println(byteBufferToStr(bytesToByteBuffer(e.getObj()), UTF8_CHARSET));
         }
        
         transport.close(); // Close transport/socket !

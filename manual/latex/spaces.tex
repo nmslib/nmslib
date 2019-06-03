@@ -1,0 +1,377 @@
+\section{Spaces}\label{SectionSpaces}
+Currently we provide implementations mostly for vector spaces.
+Vector-space input files can come in either regular, i.e., dense,
+or sparse variant (see \S~\ref{SectionDatasets}). 
+A detailed list of spaces, their parameters, 
+and performance characteristics is given in Table~\ref{TableSpaces}.
+
+The mnemonic name of the space is passed to 
+python bindings function \ttt{}
+as well as to
+the benchmarking utility (see \S~\ref{SectionRunBenchmark}).
+There can be more than one version of a distance function,
+which have different space-performance trade-off.
+In particular, for distances that require computation of logarithms 
+we can achieve an order of magnitude improvement (e.g., for the GNU C++
+and Clang) by pre-computing
+logarithms at index time. This comes at a price of extra storage. 
+In the case of Jensen-Shannon distance functions, we can pre-compute some 
+of the logarithms and accurately approximate those we cannot pre-compute.
+The details are explained in \S~\ref{SectionLP}-\ref{SectionBregman}.
+
+Straightforward slow implementations of the distance functions may have the substring \ttt{slow}
+in their names, while faster versions contain the substring \ttt{fast}.
+Fast functions that involve approximate computations contain additionally the substring \ttt{approx}.
+For non-symmetric distance function, a space may have two variants: one variant is for left
+queries (the data object is the first, i.e., left, argument of the distance function 
+while the query object
+is the second argument) 
+and another is for right queries (the data object is the second argument and the query object is the first argument).
+In the latter case the name of the space ends on \ttt{rq}.
+Separating spaces by query types, might not be the best approach.
+Yet, it seems to be unavoidable, because, in many cases,
+we need separate indices to support left and right queries \cite{Cayton2008}.
+If you know a better approach, feel free, to tell us.
+
+\subsection{Details of Distance Efficiency Evaluation}\label{SectionDistEvalDetails}
+Distance computation efficiency was evaluated on a Core i7 laptop (3.4 Ghz peak frequency)
+in a single-threaded mode (by the utility \href{\replocfile similarity_search/test/bench_distfunc.cc}{bench\_distfunc}).
+It is measured in millions of computations per second for single-precision
+floating pointer numbers (double precision computations are, of course, more costly). 
+The code was compiled using the GNU compiler. 
+All data sets were small enough to fit in a CPU cache, which may have resulted in slightly more optimistic
+performance numbers for cheap distances such as $L_2$.
+
+Somewhat higher efficiency numbers can be obtained by using the Intel compiler
+or the Visual Studio (Clang seems to be equally efficient to the GNU compiler).
+In fact, performance is much better for distances relying on ``heavy'' math functions:
+slow versions of KL- and Jensen-Shannon divergences and Jensen-Shannon metrics, 
+as well as for $L_p$ spaces,
+where $p \not\in\{1,2,\infty\}$.
+
+In the efficiency test, all dense vectors have 128 elements.
+For all dense-vector distances except the Jensen-Shannon divergence,
+their elements were generated randomly and uniformly.
+For the Jensen-Shannon divergence, we first generate elements randomly,
+and next we randomly select elements that are set to zero (approximately half of all elements). 
+Additionally, for KL-divergences and the JS-divergence,
+we normalize vector elements so that they correspond a true discrete probability distribution. 
+
+Sparse space distances were tested using sparse vectors from two sample files in the
+\href{\replocfile sample_data}{sample\_data} directory.
+Sparse vectors in 
+\href{\replocfile sample_data/sparse_5K.txt}{the first} 
+and
+\href{\replocfile sample_data/sparse_wiki_5K.txt}{the second file} on average contain
+about 100 and 600 non-zero elements, respectively.
+
+String distances were tested using \href{\replocfile sample_data/dna32_4_5K.txt}{DNA sequences} sampled from a human genome.\footnote{\url{http://hgdownload.cse.ucsc.edu/goldenPath/hg38/bigZips/}}
+The length of each string was sampled from a normal distribution $\mathcal{N}(32,4)$. 
+
+The Signature Quadratic Form Distance (SQFD) \cite{Beecks:2010,Beecks:2013} was tested 
+using signatures extracted from LSVRC-2014 data set~\cite{ILSVRCarxiv14}, 
+which contains 1.2 million high resolution images.
+We implemented \href{\replocfile data/data\_conv/sqfd}{our own code} to extract signatures following the method of Beecks~\cite{Beecks:2013}.
+For each image, we selected $10^4$ pixels randomly and
+mapped them into 7-dimensional feature space:
+three color, two position, and two texture dimensions.
+The features were clustered by the standard $k$-means algorithm with 20 clusters.
+Then, each cluster was represented by an 8-dimensional vector, which included
+a 7-dimensional centroid and a cluster weight (the number of cluster points divided
+by $10^4$).
+
+\begin{table}
+\caption{Description of implemented spaces\label{TableSpaces}}
+%\centering
+\hspace{-0.6in}\begin{tabular}{l@{\hspace{2mm}}l@{\hspace{2mm}}l}
+\toprule
+\textbf{Space}& \textbf{Mnemonic Name \& Formula}   & \textbf{Efficiency} \\
+              &                           & (million op/sec) \\
+\toprule
+\multicolumn{3}{c}{\textbf{Metric Spaces}}  \\
+\toprule
+Hamming &  \ttt{bit\_hamming}                      &  240 \\
+                 &  $\sum_{i=1}^n |x_i-y_i|$                         &  \\
+\cmidrule(l){1-3} 
+$L_1$     &  \ttt{l1}, \ttt{l1\_sparse}              &                   35, 1.6 \\
+                 &  $\sum_{i=1}^n |x_i-y_i|$                         &  \\
+\cmidrule(l){1-3} 
+$L_2$     &  \ttt{l2}, \ttt{l2\_sparse}              &                  30, 1.6  \\
+                 & $\sqrt{\sum_{i=1}^n |x_i-y_i|^2}$                 &   \\
+\cmidrule(l){1-3} 
+$L_{\infty}$ &  \ttt{linf}, \ttt{linf\_sparse}      &   34 , 1.6  \\
+                    & $\max_{i=1}^n |x_i-y_i|$           & \\
+\cmidrule(l){1-3} 
+$L_p$ (generic $p \ge 1$)& \ttt{lp:p=\ldots}, \ttt{lp\_sparse:p=\ldots}  &  0.1-3, 0.1-1.2  \\
+                                & $\left(\sum_{i=1}^n |x_i-y_i|^p\right)^{1/p}$  & \\
+\cmidrule(l){1-3} 
+Angular distance & \ttt{angulardist}, \ttt{angulardist\_sparse}, \ttt{angulardist\_sparse\_fast} & { 13, 1.4, 3.5 } \\
+                        & $\arccos\left(\frac{\sum_{i=1}^n x_i y_i}{\sqrt{\sum_{i=1}^n x_i^2}\sqrt{\sum_{i=1}^n y_i^2 }}\right)$   & \\
+\cmidrule(l){1-3} 
+Jensen-Shan. metr. &\ttt{jsmetrslow, jsmetrfast, jsmetrfastapprox} &  0.3, 1.9, 4.8  \\
+                          & $\sqrt{\frac{1}{2}\sum_{i=1}^n \left[x_i \log x_i + y_i \log y_i  - (x_i+y_i)\log \frac{x_i +y_i}{2}\right]}$  & \vspace{1em} \\
+\cmidrule(l){1-3} 
+Levenshtein       &\ttt{leven} (see \S~\ref{SectionEditDistance} for details) & 0.2 \\
+\cmidrule(l){1-3} 
+SQFD              & \ttt{sqfd\_minus\_func}, \ttt{sqfd\_heuristic\_func:alpha=\ldots}, & 0.05, 0.05, 0.03 \\
+                  &  \ttt{sqfd\_gaussian\_func:alpha=\ldots} (see \S~\ref{SectionSQFD} for details) & \\
+\toprule
+\multicolumn{3}{c}{\textbf{Non-metric spaces (symmetric distance)}}  \\
+\toprule
+$L_p$ (generic $p < 1$)& \ttt{lp:p=\ldots, lp\_sparse:p=\ldots}                     &  0.1-3, 0.1-1 \\
+                              & $\left(\sum_{i=1}^n |x_i-y_i|^p\right)^{1/p}$  &   \\
+\cmidrule(l){1-3} 
+Jensen-Shan. div. &\ttt{jsdivslow, jsdivfast, jsdivfastapprox} &   0.3, 1.9, 4.8 \\
+                          & $\frac{1}{2}\sum_{i=1}^n \left[x_i \log x_i + y_i \log y_i  - (x_i+y_i)\log \frac{x_i +y_i}{2}\right]$ & \\
+\cmidrule(l){1-3} 
+Cosine distance & \ttt{cosinesimil}, \ttt{cosinesimil\_sparse}, \ttt{cosinesimil\_sparse\_fast} & { 13, 1.4, 3.5 } \\
+                        & $1-\frac{\sum_{i=1}^n x_i y_i}{\sqrt{\sum_{i=1}^n x_i^2}\sqrt{\sum_{i=1}^n y_i^2 }}$   & \vspace{1em} \\
+\cmidrule(l){1-3} 
+Norm. Levenshtein       &\ttt{normleven}, see \S~\ref{SectionEditDistance} for details & 0.2 \\
+\toprule
+\multicolumn{3}{c}{\textbf{Non-metric spaces (non-symmetric distance)}}  \\
+\toprule
+Regular KL-div. & left queries: \ttt{kldivfast}       & 0.5, 27 \\
+                       & right queries: \ttt{kldivfastrq}    &  \\
+                       & $\sum_{i=1}^n   x_i \log \frac{x_i}{y_i}$  & \\ 
+\cmidrule(l){1-3} 
+Generalized KL-div. & left queries: \ttt{kldivgenslow}, \ttt{kldivgenfast} & 0.5, 27    \\
+                           & right queries: \ttt{kldivgenfastrq} & 27    \\
+                           & $\sum_{i=1}^n \left[  x_i \log \frac{x_i}{y_i} -   x_i +   y_i \right]$   &   \\
+\cmidrule(l){1-3} 
+Itakura-Saito & left queries: \ttt{itakurasaitoslow, itakurasaitofast}   & 0.2, 3, 14 \\
+              & right queries: \ttt{itakurasaitofastrq}                  & 14         \\
+              & $\sum_{i=1}^n \left[ \frac{ x_i}{y_i} - \log \frac{x_i}{y_i}  -1 \right]$ \\
+\toprule
+\end{tabular}
+\end{table}
+
+\subsection{$L_p$-norms}\label{SectionLP}
+The $L_p$ distance between vectors $x$ and $y$ are
+given by the formula:
+\begin{equation}\label{EqMink}
+L_p(x,y) = \left(\sum_{i=1}^n |x_i-y_i|^p\right)^{1/p}
+\end{equation}
+In the limit ($p \rightarrow \infty$),
+the $L_p$ distance becomes the Maximum metric, also known as 
+the Chebyshev distance:
+\begin{equation}\label{EqCheb}
+L_{\infty}(x,y) = \max\limits_{i=1}^n |x_i-y_i|
+\end{equation}
+$L_{\infty}$ and all spaces $L_p$ for $p \ge 1$
+are true metrics. 
+They are symmetric, equal to zero only for identical elements,
+and, most importantly, satisfy \emph{the triangle inequality}.
+However, the $L_p$ norm is \emph{not} a metric if $p<1$.
+
+In the case of dense vectors, 
+we have reasonably efficient implementations 
+for $L_p$ distances where $p$ is either integer or infinity. 
+The most efficient implementations are for $L_1$ (Manhattan),
+$L_2$ (Euclidean), and $L_{\infty}$ (Chebyshev).
+As explained in the author's blog,
+\href{http://searchivarius.org/blog/efficient-exponentiation-square-rooting}{we compute exponents through square rooting}. 
+This works best when the number of digits (after the binary digit) is small, e.g., if $p=0.125$.
+
+Any $L_p$ space can have a dense and a sparse variant.
+Sparse vector spaces have their own mnemonic names, which are different
+from dense-space mnemonic names in that they contain a suffix \ttt{\_sparse} (see also Table~\ref{TableSpaces}).
+For instance \ttt{l1} and \ttt{l1\_sparse} are both $L_1$ spaces,
+but the former is dense and the latter is sparse.
+The mnemonic names of $L_1$, $L_2$, and $L_\infty$ spaces (passed to the benchmarking utility) are
+\ttt{l1}, \ttt{l2}, and \ttt{linf}, respectively.
+Other generic $L_p$ have the name \ttt{lp}, which is used in combination with a parameter.
+For instance, $L_3$ is denoted as \ttt{lp:p=3}.
+
+Distance functions for sparse-vector spaces are far less efficient, 
+due to a costly, branch-heavy, operation of matching sparse vector indices
+(between two sparse vectors).
+
+\subsection{Scalar-product Related Distances}
+We have two distance function whose formulas include normalized scalar product.
+One is the cosine distance, which is equal to:
+$$
+d(x,y) =1-\frac{\sum_{i=1}^n x_i y_i} 
+{\sqrt{\sum_{i=1}^n x_i^2} \sqrt{\sum_{i=1}^n y_i^2 } } 
+$$ 
+The cosine distance is not a true metric, but it can be converted into
+one by applying a monotonic transformation (i.e.., subtracting the 
+cosine distance from one and taking an inverse cosine).
+The resulting distance function is a true metric, which is called the angular distance.
+The angular distance is computed using the following formula:
+$$
+d(x,y) =\arccos\left(\frac{\sum_{i=1}^n x_i y_i} 
+{\sqrt{\sum_{i=1}^n x_i^2} \sqrt{\sum_{i=1}^n y_i^2 } }\right) 
+$$ 
+
+In the case of sparse spaces, to compute the scalar product,
+we need to obtain an intersection of vector element ids
+corresponding to non-zero elements.
+A classic text-book intersection algorithm (akin to a merge-sort)
+is not particularly efficient, apparently,
+due to frequent branching.
+For \emph{single-precision} floating point vector elements,
+we provide a more efficient implementation that relies on the 
+all-against-all comparison SIMD instruction \texttt{\_mm\_cmpistrm}.
+This implementation  (inspired by the set intersection algorithm of Schlegel~et~al.~\cite{schlegel2011fast})
+is about 2.5-3 times faster than a pure C++ implementation based on the merge-sort approach.
+
+\subsection{Jensen-Shannon divergence}\label{SectionJS}
+\emph{Jensen-Shannon} divergence is a symmetrized and smoothed KL-divergence:
+\begin{equation}\label{EqJS}
+\frac{1}{2}\sum_{i=1}^n\left[ x_i \log x_i + y_i \log y_i  -(x_i+y_i)\log \frac{x_i +y_i}{2}\right]
+\end{equation}
+This divergence is symmetric, but it is not a metric function.
+However, the square root of the Jensen-Shannon divergence
+is a proper a metric \cite{endres2003new},
+which we call the Jensen-Shannon metric.
+
+A straightforward implementation of Eq.~\ref{EqJS} is inefficient for two reasons 
+(at least when one uses the GNU C++ compiler)
+(1) computation of logarithms is a slow operation (2)
+the case of zero $x_i$ and/or $y_i$ requires conditional processing, i.e.,
+costly branches.
+
+A better method is to pre-compute logarithms of data at index time. 
+It is also necessary to compute logarithms of a query vector.
+However, this operation has a little cost since it is carried out once 
+for each nearest neighbor or range query.
+Pre-computation leads to a 3-10 fold improvement depending on the sparsity of vectors,
+albeit at the expense of requiring twice as much space.
+Unfortunately, it is not possible to avoid computation of the third logarithm:
+it needs to be computed in points that are not known until we see the query vector.
+
+However, it is possible to approximate it with a very good precision,
+which should be sufficient for the purpose of approximate searching.
+Let us rewrite Equation \ref{EqJS} as follows:
+$$
+\frac{1}{2}\sum_{i=1}^n\left[ x_i \log x_i + y_i \log y_i  -(x_i+y_i)\log \frac{x_i +y_i}{2}\right]=
+$$
+$$
+ = \frac{1}{2}\sum_{i=1}^n\left[ x_i \log x_i + y_i \log y_i\right]  -
+\sum_{i=1}^n\left[\frac{(x_i+y_i)}{2}\log \frac{x_i +y_i}{2} \right]=
+$$
+$$
+ = \frac{1}{2}\sum_{i=1}^n x_i \log x_i + y_i \log y_i  -
+$$
+\begin{equation}\label{Eq1}
+\sum_{i=1}^n\frac{(x_i+y_i)}{2}\left[\log\frac{1}{2} + \log \max(x_i,y_i) + 
+\log \left(1 + \frac{\min(x_i,y_i)}{\max(x_i,y_i)}\right) \right]
+\end{equation}
+We can pre-compute all the logarithms in Eq.~\ref{Eq1} except for $\log \left(1 + \frac{\min(x_i,y_i)}{\max(x_i,y_i)}\right) $. However, its argument value is in a small range: from one to two.
+We can discretize the range, compute logarithms in many intermediate points and save the computed values in a table.
+Finally, we employ the SIMD instructions to implement this approach. 
+This is a very efficient approach, which results in a very little (around $10^{-6}$ on average) relative error for the value of the Jensen-Shannon divergence.
+
+Another possible approach is to use \href{http://fastapprox.googlecode.com/svn/trunk/fastapprox/src/fastonebigheader.h}{an efficient approximation for logarithm computation}.
+\href{https://github.com/searchivarius/BlogCode/tree/master/2013/12/26}{As our tests show},
+this method is about 1.5x times faster (1.5 vs 1.0 billions of logarithms per second),
+but for the logarithms in the range $[1,2]$,
+ the relative error is one order magnitude higher (for a single logarithm) than for the table-based discretization approach.
+
+\subsection{Bregman Divergences}\label{SectionBregman}
+Bregman divergences are typically non-metric distance functions,
+which are equal to a difference between some convex differentiable function $f$
+and its first-order Taylor expansion \cite{Bregman:1967,Cayton2008}. 
+More formally, given the convex and differentiable function $f$
+(of many variables), its
+corresponding Bregman divergence $d_f(x,y)$ is equal to:
+$$
+d_f(x,y) = f(x) - f(y) - \left( f(y) \cdot ( x - y ) \right)
+$$
+where $ x \cdot y$ denotes the scalar product of vectors $x$ and $y$.
+In this library, we implement the generalized KL-divergence 
+and the Itakura-Saito divergence,
+which correspond to functions $f=\sum x_i \log x_i - \sum x_i$ and $f = - \sum \log x_i$. 
+The generalized KL-divergence is equal to:
+$$
+\sum_{i=1}^n \left[  x_i \log \frac{x_i}{y_i} -   x_i +   y_i \right],
+$$
+while the Itakura-Saito divergence is equal to:
+$$ 
+\sum_{i=1}^n \left[ \frac{ x_i}{y_i} - \log \frac{x_i}{y_i}  -1 \right].
+$$
+If vectors $x$ and $y$ are proper probability distributions, $\sum x_i = \sum y_i = 1$.
+In this case, the generalized KL-divergence becomes a regular KL-divergence:
+$$
+\sum_{i=1}^n \left[  x_i \log \frac{x_i}{y_i} \right].
+$$
+
+Computing logarithms is costly: We can considerably improve efficiency of 
+Itakura-Saito divergence and KL-divergence by pre-computing logarithms at index time.
+The spaces that implement this functionality contain the substring \ttt{fast} in their mnemonic names (see also Table~\ref{TableSpaces}).
+
+\subsection{String Distances}\label{SectionEditDistance}
+We currently provide implementations for the Levenshtein distance and its length-normalized variant.
+The \emph{original} Levenshtein distance is equal to the minimum number of insertions, deletions, and
+substitutions (but not transpositions) required to obtain one string from another \cite{Levenshtein:1966}.
+The distance between strings $p$ and $s$ is computed using the classic $O(m \times n)$
+dynamic programming solution, where $m$ and $n$ are lengths of strings $p$ and $s$, respectively. 
+The \emph{normalized} Levenshtein distance is obtained by dividing the original Levenshtein distance by
+the maximum of string lengths. If both strings are empty, the distance is equal to zero.
+
+While the original Levenshtein distance is a metric distance, the normalized Levenshtein function is not,
+because the triangle inequality may not hold.
+In practice, when there is little variance in string length, 
+the violation of the triangle inequality is infrequent and, thus, the normalized Levenshtein distance
+is approximately metric for many real data sets.
+
+
+Technically, the classic Levenshtein distance is equal to $C_{n,m}$, where $C_{i,j}$ is computed via the classic recursion:
+\begin{equation} \label{EqLeven}
+\hspace{-5em}C_{i,j} =\min \left\{\begin{array}{ll} 
+0 ,                 & \mbox{ if } i =  j = 0 \\
+{C_{i - 1, j} +1,}  & \mbox{ if } i> 0 \\
+{C_{i,j-1} +1 ,  }  & \mbox{ if } j > 0 \\
+{C_{i - 1, j - 1} + \left[p_{i} \neq s_{j} \right]} ,   & \mbox{ if } i,j > 0  \\
+\end{array}
+\right.
+\end{equation}
+Because computation time is proportional to both strings' length,
+this can be a costly operation: for the sample data set described in \S~\ref{SectionDistEvalDetails}, 
+it is possible to compute only about 200K distances per second.
+
+The classic algorithm to compute the Levenshtein distance was independently discovered by several researchers in
+various contexts, including speech recognition \cite{Vintsyuk:1968,Velichko_and_Zagoruyko:1970,Sakoe_and_Chiba:1971} and computational
+biology \cite{Needleman_and_Wunsch:1970}
+ (see Sankoff \cite{Sankoff:2000} for a historical perspective).
+Despite the early discovery, the algorithm was generally unknown
+before a publication by Wagner and Fischer \cite{Wagner_and_Fischer:1974} in a computer science journal.
+
+\subsection{Signature Quadratic Form Distance (SQFD)}\label{SectionSQFD}
+Images can be compared using a \emph{family} of metric functions called  the
+Signature Quadratic Form Distance (SQFD).
+During the preprocessing stage, each image is converted to a set of $n$ signatures (the number of signatures $n$ is a parameter).
+To this end, a fixed number of pixels is randomly selected.
+Then, each pixel is represented by a 7-dimensional vector with the following components:
+three color, two position, and two texture elements.
+These 7-dimensional vectors are clustered by the standard $k$-means algorithm with $n$ centers.
+Finally, each cluster is represented by an 8-dimensional vector, called \emph{signature}.
+A signature includes a 7-dimensional centroid and a cluster weight (the number
+of cluster points divided by the total number of randomly selected pixels).
+Cluster weights form a \emph{signature histogram}.
+ 
+The SQFD is computed as a quadratic form applied to a $2n$-dimensional vector constructed
+by combining images' signature histograms. 
+The combination vector includes
+$n$ unmodified signature histogram values of the first image 
+followed by $n$ negated signature histogram values of the second image. 
+Unlike the classic quadratic form distance, where the quadratic form matrix is fixed,
+in the case of the SQFD, the matrix is re-computed for each pair of images.
+This can be seen as computing the distance between infinite-dimensional vectors
+each of which has only a finite number of non-zero elements.
+
+To compute the quadratic form matrix, we introduce the new global enumeration of signatures,
+in which a signature $k$ from the first image has number $k$, while
+the signature $k$ from the second image has number $n+k$.
+To obtain a quadratic form matrix element in row $i$ column $j$ 
+we first compute the Euclidean distance $d$ between the $i$-th and the $j$-th signature.
+Then, the value $d$ is transformed using one of the three functions:
+negation (the \emph{minus} function $-d$), a \emph{heuristic} function $\frac{1}{\alpha + d}$,
+and the \emph{Gaussian} function $\exp(-\alpha d^2)$.
+The larger is the distance, the smaller is the coefficient in the matrix of the quadratic form.
+
+Note that the SQFD is a family of distances parameterized by the choice of the transformation
+function and $\alpha$.
+For further details, please, see the thesis of Beecks~\cite{Beecks:2013}.
+

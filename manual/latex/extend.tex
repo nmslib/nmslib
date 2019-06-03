@@ -1,0 +1,612 @@
+
+\section{Extending the code}\label{SectionExtend}
+It is possible to add new spaces and search methods.
+This is done in three steps, which we only outline here.
+A more detailed description can be found in \S~\ref{SectionCreateSpace}
+and \S~\ref{SectionCreateMethod}.
+
+In the first step, the user writes the code that implements a
+functionality of a method or a space.
+In the second step, the user writes a special helper file  
+containing a method that creates a class or a method.
+In this helper file, it is necessary to include
+the method/space header. 
+
+Because we tend to give the helper file the same name
+as the name of header for a specific method/space,
+we should not include method/space headers using quotes (in other words,
+use only \emph{angle} brackets).
+Such code fails to compile under the Visual Studio. 
+Here is an example of a proper include-directive:
+\begin{verbatim}
+#include <method/vptree.h>
+\end{verbatim}
+
+
+In the third step, the user adds 
+the registration code to either the file 
+\href{\replocfile similarity_search/include/factory/init_spaces.h}{init\_spaces.h} (for spaces)
+or to the file
+\href{\replocfile similarity_search/include/factory/init_methods.h}{init\_methods.h} (for methods).
+This step has two sub-steps. 
+First, the user includes the previously created helper file into either
+\ttt{init\_spaces.h} or \ttt{init\_methods.h}.
+Second, the function \ttt{initMethods} or \ttt{initSpaces} is extended
+by adding a macro call that actually registers the space or method in a factory class.
+
+Note that no explicit/manual modification of makefiles (or other configuration files) is required.
+However, you have to re-run \ttt{cmake} each time a new source file is created (addition
+of header files does not require a \ttt{cmake} run). This is necessary to automatically update makefiles so that they include new source files.
+
+Is is noteworthy that all implementations of methods and spaces
+are mostly template classes parameterized by the distance value type.
+Recall that the distance function can return an integer (\ttt{int}), 
+a single-precision (\ttt{float}), or a double-precision (\ttt{double}) real value.
+The user may choose to provide specializations for all possible
+distance values or decide to focus, e.g., only on integer-valued distances.
+
+The user can also add new applications, which are meant to be 
+a part of the testing framework/library.
+However, adding new applications does require minor editing of the meta-makefile \ttt{CMakeLists.txt} 
+(and re-running \ttt{cmake} \S~\ref{SectionBuildLinux}) on Linux
+It is also possible to create standalone applications that use the library.
+
+In the following subsections, 
+we consider extension tasks in more detail.
+For illustrative purposes,
+we created a zero-functionality space (\ttt{DummySpace}), 
+method (\ttt{DummyMethod}), and application (\ttt{dummy\_app}).
+These zero-functionality examples can also be used as starting points to develop fully functional code.
+
+\subsection{Test Workflow}\label{SectionWorkflow}
+The main benchmarking utility \ttt{experiment} parses command line parameters. 
+Then, it creates a space and a search method using the space and the method factories.
+Both search method and spaces can have parameters,
+which are passed to the method/space in an instance
+of the class \ttt{AnyParams}. We consider this in detail in \S~\ref{SectionCreateSpace} and \S~\ref{SectionCreateMethod}.
+
+When we create a class representing a search method,
+the constructor of the class does not create an index in the memory.
+The index is created using either the function \ttt{CreateIndex} (from scratch)
+or the function \ttt{LoadIndex} (from a previously created index image).
+The index can be saved to disk using the function \ttt{SaveIndex}.
+Note, however, that most methods do not support index (de)-serialization.
+
+Depending on parameters passed to the benchmarking utility, two test scenarios are possible.
+In the first scenario, the user specifies separate data and test files.
+In the second scenario, a test file is created by bootstrapping:
+The data set is randomly divided into training and a test set.
+Then,
+we call the function \href{\replocfile similarity_search/include/experiments.h#L70}{RunAll} 
+and subsequently \href{\replocfile similarity_search/include/experiments.h#L213}{Execute} for all possible test sets.
+
+The function \ttt{Execute} is a main workhorse, which creates queries, runs searches,
+produces gold standard data, and collects execution statistics.
+There are two types of queries: nearest-neighbor and range queries,
+which are represented by (template) classes \ttt{RangeQuery} and \ttt{KNNQuery}.
+Both classes inherit from the class \ttt{Query}.
+Similar to spaces, these template classes are parameterized by the type of the distance value.
+
+Both types of queries are similar in that they implement the \ttt{Radius} function
+and the functions \ttt{CheckAndAddToResult}. 
+In the case of the range query, the radius of a query is constant.
+However, in the case of the nearest-neighbor query,
+the radius typically decreases as we compare the query
+with previously unseen data objects (by calling the function \ttt{CheckAndAddToResult}).
+In both cases, the value of the function \ttt{Radius} can be used to prune unpromising
+partitions and data points.
+
+This commonality between the \ttt{RangeQuery} and \ttt{KNNQuery}
+allows us in many cases to carry out a nearest-neighbor query 
+using an algorithm designed to answer range queries.
+Thus, only a single implementation of a search method---that answers queries of both types---can be used in many cases.
+
+A query object proxies distance computations during the testing phase.
+Namely, the distance function is accessible through the function
+\ttt{IndexTimeDistance}, which is defined in the class \ttt{Space}.
+During the testing phase, a search method can compute a distance
+only by accessing functions \ttt{Distance}, 
+\ttt{DistanceObjLeft} (for left queries) and 
+\ttt{DistanceObjRight} for right queries,
+which are member functions of the class \ttt{Query}.
+The function \ttt{Distance} accepts two parameters (i.e., object pointers) and 
+can be used to compare two arbitrary objects.
+The functions \ttt{DistanceObjLeft} and \ttt{DistanceObjRight} are used 
+to compare data objects with the query.
+Note that it is a query object  memorizes the number of distance computations.
+This allows us to compute the variance in the number of distance evaluations
+and, consequently, a respective confidence interval.
+
+\todonoteinline{Add stuff about saving the space}
+
+\subsection{Creating a space}\label{SectionCreateSpace}
+A space is a collection of data objects.
+In our library, objects are represented by instances
+of the class \ttt{Object}.
+The functionality of this class is limited to
+creating new objects and/or their copies as well providing
+access to the raw (i.e., unstructured) representation of the data
+(through functions \ttt{data} and \ttt{datalength}).
+We would re-iterate that currently (though this may change in the future releases),
+\ttt{Object} is a very basic class that only keeps a blob of data and blob's size.
+For example, the \ttt{Object} can store an array of single-precision floating point
+numbers, but it has no function to obtain the number of elements.
+These are the spaces that are responsible for reading objects from files,
+interpreting the structure of the data blobs (stored in the \ttt{Object}), 
+and computing a distance between two objects.
+
+
+For dense vector spaces the easiest way to create a new space,
+is to create a functor (function object class) that computes a distance.
+Then, this function should be used to instantiate a template
+\href{\replocfile similarity_search/include/space/space_vector_gen.h}{VectorSpaceGen}.
+A sample implementation of this approach can be found
+in \href{\replocfile sample_standalone_app/sample_standalone_app1.cc#L114}{sample\_standalone\_app1.cc}.
+However, as we explain below, \textbf{additional work} is needed if the space should work correctly with all projection methods 
+(see \S~\ref{SectionProjMethod}) or any other methods that rely on projections (e.g., OMEDRANK \S~\ref{SectionOmedrank}).
+
+To further illustrate the process of developing a new space,
+we created a sample zero-functionality space \ttt{DummySpace}.
+It is represented by 
+the header file 
+\href{\replocfile  similarity_search/include/space/space_dummy.h}{space\_dummy.h}
+and the source file
+\href{\replocfile similarity_search/src/space/space_dummy.cc}{space\_dummy.cc}.
+The user is encouraged to study these files and read the comments.
+Here we focus only on the main aspects of creating a new space.
+
+The sample files include a template class \ttt{DummySpace} (see Table~\ref{FigDummySpace}), 
+which is declared and defined in the namespace \ttt{similarity}.
+It is a direct ancestor of the class \ttt{Space}.
+
+It is possible to provide the complete implementation of the \ttt{DummySpace}
+in the header file. However, this would make compilation slower.
+Instead, we recommend to use the mechanism of explicit template instantiation.
+To this end, the user should instantiate the template in the source file
+for all possible combination of parameters.
+In our case, the \emph{source} file 
+\href{\replocfile similarity_search/src/space/space_dummy.cc}{space\_dummy.cc}
+contains the following lines:
+\begin{verbatim}
+template class SpaceDummy<int>;
+template class SpaceDummy<float>;
+template class SpaceDummy<double>;
+\end{verbatim}
+
+\begin{table}[!htbp]
+\caption{\label{FigDummySpace}A sample space class}
+\begin{verbatim}
+template <typename dist_t>
+class SpaceDummy : public Space<dist_t> {
+ public:
+  ...
+  /** Standard functions to read/write/create objects */ 
+  // Create an object from a (possibly binary) string.
+  virtual unique_ptr<Object> 
+  CreateObjFromStr(IdType id, LabelType label, const string& s,
+                   DataFileInputState* pInpState) const;
+
+  // Create a string representation of an object.
+  // The string representation may include external ID.
+  virtual string 
+  CreateStrFromObj(const Object* pObj, const string& externId) const;
+
+  // Open a file for reading, fetch a header 
+  // (if there is any) and memorize an input state
+  virtual unique_ptr<DataFileInputState> 
+  OpenReadFileHeader(const string& inputFile) const;
+
+  // Open a file for writing, write a header (if there is any) 
+  // and memorize an output state
+  virtual unique_ptr<DataFileOutputState> 
+  OpenWriteFileHeader(const ObjectVector& dataset,
+                      const string& outputFile) const;
+  /*
+   * Read a string representation of the next object in a file as well
+   * as its label. Return false, on EOF.
+   */
+  virtual bool 
+  ReadNextObjStr(DataFileInputState &, string& strObj, LabelType& label, 
+                 string& externId) const;
+
+  /* 
+   * Write a string representation of the next object to a file. We totally delegate
+   * this to a Space object, because it may package the string representation, by
+   * e.g., in the form of an XML fragment.
+   */
+  virtual void WriteNextObj(const Object& obj, const string& externId, 
+                            DataFileOutputState &) const;
+  /** End of standard functions to read/write/create objects */ 
+
+  ...
+
+  /*
+   * CreateDenseVectFromObj and GetElemQty() are only needed, if
+   * one wants to use methods with random projections.
+   */
+  virtual void CreateDenseVectFromObj(const Object* obj, dist_t* pVect,
+                                   size_t nElem) const {
+    throw runtime_error("Cannot create vector for the space: " + StrDesc());
+  }
+  virtual size_t GetElemQty(const Object* object) const {return 0;}
+ protected:
+  virtual dist_t HiddenDistance(const Object* obj1, 
+                                const Object* obj2) const;
+  // Don't permit copying and/or assigning 
+  DISABLE_COPY_AND_ASSIGN(SpaceDummy);
+};
+\end{verbatim}
+\end{table}
+
+Most importantly, the user needs to implement the function \ttt{HiddenDistance},
+which computes the distance between objects,
+and the function \ttt{CreateObjFromStr} that creates a data point object from an instance
+of a C++ class \ttt{string}.
+For simplicity---even though this is not the most efficient approach---all our spaces create
+objects from textual representations. However, this is not a principal limitation,
+because a C++ string can hold binary data as well.
+Perhaps, the next most important function is \ttt{ReadNextObjStr}, 
+which reads a string representation of the next object from a file. 
+A file is represented by a reference to a subclass of the class \ttt{DataFileInputState}.
+
+Compared to previous releases, the new \ttt{Space} API is substantially more complex.
+This is necessary to standardize reading/writing of generic objects.
+In turn, this has been essential to implementing a generic query server.
+The query server accepts data points in the same format as they are stored in a data file.
+The above mentioned function \ttt{CreateObjFromStr} is used for de-serialization
+of both the data points stored in a file and query data points passed to the query server. 
+
+Additional complexity arises from the need to update space parameters after a space object is created.  
+This permits a more complex storage model where, e.g., parameters are stored
+in a special dedicated header file, while data points are stored elsewhere,
+e.g., split among several data files. 
+To support such functionality, we have a function that opens a data file (\ttt{OpenReadFileHeader})
+and creates a state object (sub-classed from \ttt{DataFileInputState}),
+which keeps the current file(s) state as well as all space-related parameters. 
+When we read data points using the function \ttt{ReadNextObjStr}, 
+the state object is updated.
+The function \ttt{ReadNextObjStr} may also read an optional external identifier for an object.
+When it produces a non-empty identifier it is memorized by the query server and is further
+used for query processing (see \S~\ref{SectionQueryServer}).
+After all data points are read, this state object is supposed to be passed to the \ttt{Space} object
+in the following fashion:
+\begin{verbatim}
+unique_ptr<DataFileInputState> 
+inpState(space->ReadDataset(dataSet, externIds, fileName, maxNumRec));
+space->UpdateParamsFromFile(*inpState);
+\end{verbatim}
+For a more advanced implementation of the space-related functions,
+please, see the file
+\href{\replocfile similarity_search/src/space/space_vector.cc}{space\_vector.cc}.
+
+Remember that the function \ttt{HiddenDistance} should not be directly accessible 
+by classes that are not friends of the \ttt{Space}.
+As explained in \S~\ref{SectionWorkflow},
+during the indexing phase, 
+\ttt{HiddenDistance} is accessible through the function
+\ttt{Space::IndexTimeDistance}.
+During the testing phase, a search method can compute a distance
+only by accessing functions \ttt{Distance}, \ttt{DistanceObjLeft}, or
+\ttt{DistanceObjRight}, which are member functions of the \ttt{Query}.
+This is by far not a perfect solution and we are contemplating about better ways to proxy distance computations. 
+
+Should we implement a vector space that works properly with projection methods
+and classic random projections, we need to define functions \ttt{GetElemQty} and \ttt{CreateDenseVectFromObj}. 
+In the case of a \emph{dense} vector space, \ttt{GetElemQty}
+should return the number of vector elements stored in the object.
+For \emph{sparse} vector spaces, it should return zero. The function \ttt{CreateDenseVectFromObj}
+extracts elements stored in a vector. For \emph{dense} vector spaces,
+it merely copies vector elements to a buffer. 
+For \emph{sparse} space vector spaces,
+it should do some kind of basic dimensionality reduction. 
+Currently, we do it via the hashing trick (see \S~\ref{SectionProjDetails}).
+
+
+Importantly, we need to ``tell'' the library about the space,
+by registering the space in the space factory.
+At runtime, the space is created through a helper function.
+In our case, it is called \ttt{CreateDummy}.
+The function, accepts only one parameter,
+which is a reference to an object of the type \ttt{AllParams}:
+%\newpage
+
+\begin{verbatim}
+template <typename dist_t>
+Space<dist_t>* CreateDummy(const AnyParams& AllParams) {
+  AnyParamManager pmgr(AllParams);
+
+  int param1, param2;
+
+  pmgr.GetParamRequired("param1",  param1);
+  pmgr.GetParamRequired("param2",  param2);
+
+  pmgr.CheckUnused();
+
+  return new SpaceDummy<dist_t>(param1, param2);
+}
+\end{verbatim}
+To extract parameters, the user needs an instance of the class \ttt{AnyParamManager} (see the above example).
+In most cases, it is sufficient to call two functions: \ttt{GetParamOptional} and
+\ttt{GetParamRequired}.
+To verify that no extra parameters are added, it is recommended to call the function \ttt{CheckUnused}
+(it fires an exception if some parameters are unclaimed).
+This may also help to identify situations where the user misspells 
+a parameter's name.
+
+
+Parameter values specified in the commands line are interpreted as strings.
+The \ttt{GetParam*} functions can convert these string values
+to integer or floating-point numbers if necessary.
+A conversion occurs, if the type of a receiving variable (passed as a second parameter
+to the functions \ttt{GetParam*}) is different from a string.
+It is possible to use boolean variables as parameters.
+In that, in the command line, one has to specify 1 (for \ttt{true}) or 0 (for \ttt{false}).
+Note that the function \ttt{GetParamRequired} raises an exception, 
+if the request parameter was not supplied in the command line.
+
+The function \ttt{CreateDummy} is registered in the space factory using a special macro.
+This macro should be used for all possible values of the distance function,
+for which our space is defined. For example, if the space is defined
+only for integer-valued distance function, this macro should be used only once.
+However, in our case the space \ttt{CreateDummy} is defined for integers,
+single- and double-precision floating pointer numbers. Thus, we use this macro
+three times as follows:
+\begin{verbatim}
+REGISTER_SPACE_CREATOR(int,    SPACE_DUMMY,  CreateDummy)
+REGISTER_SPACE_CREATOR(float,  SPACE_DUMMY,  CreateDummy)
+REGISTER_SPACE_CREATOR(double, SPACE_DUMMY,  CreateDummy)
+\end{verbatim}
+
+This macro should be placed into the function \ttt{initSpaces} in the 
+file 
+\href{\replocfile similarity_search/include/factory/init\_spaces.h}{init\_spaces.h}.
+Last, but not least we need to add the include-directive
+for the helper function, which creates
+the class, to the file \ttt{init\_spaces.h} as follows:
+\begin{verbatim}
+#include "factory/space/space_dummy.h"
+\end{verbatim}
+
+To conlcude, we recommend to make a \ttt{Space} object is non-copyable. 
+This can be done by using our macro \ttt{DISABLE\_COPY\_AND\_ASSIGN}.
+
+
+\subsection{Creating a search method}\label{SectionCreateMethod}
+
+%\newpage
+\begin{table}[!htbp]
+\caption{\label{FigDummyMethod}A sample search method class}
+\begin{verbatim}
+template <typename dist_t>
+class DummyMethod : public Index<dist_t> {
+ public:
+  DummyMethod(Space<dist_t>& space, 
+              const ObjectVector& data) : data_(data), space_(space) {}
+
+  void CreateIndex(const AnyParams& IndexParams) override {
+    AnyParamManager  pmgr(IndexParams);
+    pmgr.GetParamOptional("doSeqSearch",  
+                          bDoSeqSearch_, 
+    // One should always specify the default value of an optional parameter!
+                          false
+                          );
+    // Check if a user specified extra parameters, 
+    // which can be also misspelled variants of existing ones
+    pmgr.CheckUnused();
+    // It is recommended to call ResetQueryTimeParams() 
+    // to set query-time parameters to their default values
+    this->ResetQueryTimeParams();
+  }
+
+  // SaveIndex is not necessarily implemented
+  virtual void SaveIndex(const string& location) override {
+    throw runtime_error(
+            "SaveIndex is not implemented for method: " + StrDesc());
+  }
+  // LoadIndex is not necessarily implemented
+  virtual void LoadIndex(const string& location) override {
+    throw runtime_error(
+             "LoadIndex is not implemented for method: " + StrDesc());
+  }
+  void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
+
+  // Description of the method, consider printing crucial parameter values
+  const std::string StrDesc() const override { 
+    stringstream str;
+    str << "Dummy method: " 
+        << (bDoSeqSearch_ ? " does seq. search " : 
+                            " does nothing (really dummy)"); 
+    return str.str();
+  }
+
+  //  One needs to implement two search functions.
+  void Search(RangeQuery<dist_t>* query, IdType) const override;
+  void Search(KNNQuery<dist_t>* query, IdType) const override;
+
+  // If we duplicate data, let the framework know it
+  virtual bool DuplicateData() const override { return false; }
+ private:
+  ...
+  // Don't permit copying and/or assigning 
+  DISABLE_COPY_AND_ASSIGN(DummyMethod);
+};
+\end{verbatim}
+\end{table}
+
+To illustrate the basics of developing a new search method,
+we created a sample zero-functionality method \ttt{DummyMethod}.
+It is represented by 
+the header file 
+\href{\replocfile similarity_search/include/method/dummy.h}{dummy.h}
+and the source file
+\href{\replocfile similarity_search/src/method/dummy.cc}{dummy.cc}.
+The user is encouraged to study these files and read the comments.
+Here we would omit certain details.
+
+Similar to the space and query classes, a search method is implemented using
+a template class, which is parameterized by the distance function value (see Table~\ref{FigDummyMethod}).
+Note again that the constructor of the class does not create an index in the memory.
+The index is created using either the function \ttt{CreateIndex} (from scratch)
+or the function \ttt{LoadIndex} (from a previously created index image).
+The index can be saved to disk using the function \ttt{SaveIndex}.
+It does not have to be a comprehensive index that contains a copy of the data set.
+Instead, it is sufficient to memorize only the index structure itself (because
+the data set is always loaded separately).
+Also note that most methods do not support index (de)-serialization.
+
+The constructor receives a reference to a space object as well as  a reference to an array of data objects. 
+In some cases, e.g., when we wrap existing methods such as the multiprobe LSH (see \S~\ref{SectionLSH}),
+we create a copy of the data set (simply because is was easier to write the wrapper this way).
+The framework can be informed about such a situation via the virtual function \ttt{DuplicateData}.
+If this function returns true, the framework ``knows'' that the data was duplicated.
+Thus, it can correct an estimate for the memory required by the method. 
+
+The function \ttt{CreateIndex} receives a parameter object.
+In our example, the parameter object is used to retrieve the single index-time parameter: \ttt{doSeqSearch}.
+When this parameter value is true, our dummy method carries out a sequential search.
+Otherwise, it does nothing useful.
+Again, it is recommended to call the function \ttt{CheckUnused} to ensure
+that the user did not enter parameters with incorrect names.
+It is also recommended to call the function \ttt{ResetQueryTimeParams} (\ttt{this} pointer needs to
+be specified explicitly here) to reset query-time parameters after the index is created (or loaded from disk).
+
+Unlike index-time parameters, query-time parameters can be changed without rebuilding the index
+by invoking the function \ttt{SetQueryTimeParams}.
+The function \ttt{SetQueryTimeParams} accepts a constant reference to a parameter object.
+The programmer, in turn, creates a parameter manager object to extract actual parameter values.
+To this end, two functions are used: \ttt{GetParamRequired} and \ttt{GetParamOptional}.
+Note that the latter function must be supplied with a mandatory \emph{default} value for the parameter.
+Thus, the parameter value is properly reset to its default value when the user does not specify the parameter value
+explicitly (e.g., the parameter specification is omitted when the user invokes the benchmarking utility \ttt{experiment})!
+
+There are two search functions each of which receives two parameters.
+The first parameter is a pointer to a query (either a range or a \knn query).
+The second parameter is currently unused.
+Note again that during the search phase, a search method can
+compute a distance only by accessing functions \ttt{Distance}, \ttt{DistanceObjLeft}, or
+\ttt{DistanceObjRight}, which are member functions of a query object.
+The function \ttt{IndexTimeDistance} \textbf{should not be used} in a function \ttt{Search},
+but it can be used in the function \ttt{CreateIndex}. 
+If the user attempts to invoke \ttt{IndexTimeDistance} during the test phase,
+\textbf{the program will terminate}.
+\footnote{As noted previously, we want to compute the number of times
+the distance was computed for each query. This allows us to estimate the variance.
+Hence, during the testing phase, the distance function should be invoked only through
+a query object.}
+
+
+Finally, we need to ``tell'' the library about the method,
+by registering the method in the method factory,
+similarly to registering a space.
+At runtime, the method is created through a helper function,
+which accepts several parameters.
+One parameter is a reference to an object of the type \ttt{AllParams}.
+In our case, the function name is \ttt{CreateDummy}:
+
+\begin{verbatim}
+#include <method/dummy.h>
+
+namespace similarity {
+template <typename dist_t>
+Index<dist_t>* CreateDummy(bool PrintProgress,
+                           const string& SpaceType,
+                           Space<dist_t>& space,
+                           const ObjectVector& DataObjects) {
+    return new DummyMethod<dist_t>(space, DataObjects);
+}
+\end{verbatim}
+There is an include-directive preceding
+the creation function, which uses angle brackets.
+As explained previously, if you opt to using quotes (in the include-directive),
+the code may not compile under the Visual Studio.
+
+Again, similarly to the case of the space, 
+the method-creating function \ttt{CreateDummy} needs
+to be registered in the method factory in two steps.
+First, we need to include \ttt{dummy.h} into the file
+\href{\replocfile similarity_search/include/factory/init_methods.h}{init\_methods.h} as follows:
+\begin{verbatim}
+#include "factory/method/dummy.h"
+\end{verbatim}
+Then, this file is further modified by adding the following lines to the function \ttt{initMethods}:
+\begin{verbatim}
+REGISTER_METHOD_CREATOR(float,  METH_DUMMY, CreateDummy)
+REGISTER_METHOD_CREATOR(double, METH_DUMMY, CreateDummy)
+REGISTER_METHOD_CREATOR(int,    METH_DUMMY, CreateDummy)
+\end{verbatim}
+
+If we want our method to work only with integer-valued distances,
+we only need the following line:
+\begin{verbatim}
+REGISTER_METHOD_CREATOR(int,    METH_DUMMY, CreateDummy)
+\end{verbatim}
+
+When adding the method, please, consider expanding
+the test utility \ttt{test\_integr}.
+This is especially important if for some combination of parameters the method is expected
+to return all answers (and will have a perfect recall). Then, if we break the code in the future,
+this will be detected by \ttt{test\_integr}.
+
+To create a test case, the user needs to add one or more test cases 
+to the file
+\href{\replocfile similarity_search/test/test_integr.cc#L65}{test\_integr.cc}. 
+A test case is an instance of the class \ttt{MethodTestCase}. 
+It encodes the range of plausible values
+for the following performance parameters: the recall,
+the number of points closer to the query than the nearest returned point,
+and the improvement in the number of distance computations.
+
+\subsection{Creating an application on Linux (inside the framework)}\label{SectionCreateAppLinux}
+First, we create a hello-world source file 
+\href{\replocfile similarity_search/src/dummy_app.cc}{dummy\_app.cc}:
+\begin{verbatim}
+#include <iostream>
+
+using namespace std;
+int main(void) {
+  cout << "Hello world!" << endl;
+}
+\end{verbatim}
+Now we need to modify the meta-makefile
+\href{\replocfile similarity_search/src/CMakeLists.txt}{similarity\_search/src/CMakeLists.txt} and 
+re-run \ttt{cmake} as described in \S~\ref{SectionBuildLinux}.
+
+More specifically, we do the following:
+\begin{itemize}
+\item by default, all source files in the  
+\href{\replocfile similarity_search/src/}{similarity\_search/src/} directory are included into the library.
+To prevent \ttt{dummy\_app.cc} from being included into the library, we use the following command:
+\begin{verbatim}
+list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
+\end{verbatim}
+
+\item tell \ttt{cmake} to build an additional executable:
+\begin{verbatim}
+add_executable (dummy_app dummy_app.cc ${SRC_FACTORY_FILES})
+\end{verbatim}
+
+\item specify the necessary libraries:
+\begin{verbatim}
+target_link_libraries (dummy_app NonMetricSpaceLib lshkit 
+                      ${Boost_LIBRARIES} ${GSL_LIBRARIES} 
+                      ${CMAKE_THREAD_LIBS_INIT})
+\end{verbatim}
+\end{itemize}
+
+\subsection{Creating an application on Windows (inside the framework)}\label{SectionCreateAppWindows}
+The following description was created for Visual Studio Express 2015.
+It may be a bit different for newer releases of the Visual Studio.
+Creating a new sub-project in the Visual Studio is rather straightforward.
+
+In addition, one can use a provided sample project file \href{\replocfile similarity_search/src/dummy_app.vcxproj}{dummy\_app.vcxproj} as a template.
+To this end, one needs to to create a copy of this sample project file and subsequently edit it. 
+One needs to do the following:
+\begin{itemize}
+\item Obtain a new value of the project GUI and put it between the tags \newline \ttt{<ProjectGUID>...</ProjectGUID>};
+\item Add/delete new files; 
+\item Add/delete/change references to the boost directories (both header files and libraries);
+\item If the CPU has AVX extension, it may be necessary to enable them
+as explained in \S~\ref{SectionBuildWindows}.
+\item Finally, one may manually add an entry to the main project
+file \href{\replocfile similarity_search/NonMetricSpaceLib.sln}{NonMetricSpaceLib.sln}.
+\end{itemize}

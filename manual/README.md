@@ -1,8 +1,8 @@
-#NMSLIB documentation
+# NMSLIB documentation
 
 Documentation is split into several parts. 
-Links to these parts are given below.
-They are preceded by a short problem definition.
+[Links to these parts are given below](#documentation-links).
+They are preceded by a short terminological introduction.
 
 # Terminology and Problem Formulation
 
@@ -48,9 +48,9 @@ an average fraction of true neighbors returned by the method (with ties broken a
 * [Python bindings overview](/python_bindings) and [Python bindings API](https://nmslib.github.io/nmslib/index.html)
 * [A Brief List of Methods and Parameters](/manual/methods.md)
 * [A brief list of supported spaces/distance](/manual/spaces.md)
-* [Building the main library](/manual/build.md)
-* [Building and using the query server](/manual/query_server.md)
+* [Building the main library (Linux/Mac)](/manual/build.md)
+* [Building and using the query server (Linux/Mac)](/manual/query_server.md)
 * [Benchmarking using NMSLIB utility ``experiment``](/manual/benchmarking.md)
-* [Extending the library](/manual/extensions.md)
+* [Extending NMSLIB (adding spaces and/or methods)](/manual/extend.md)
 * [A more detailed and formal description of methods and spaces (PDF)](/manual/latex/manual.pdf)
 

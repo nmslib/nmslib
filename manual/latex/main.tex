@@ -1,0 +1,110 @@
+{\pdfoutput=1
+\documentclass[runningheads,a4paper]{llncs}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\setcounter{tocdepth}{3}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{todonotes}
+\usepackage{datetime}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{wrapfig}
+\usepackage{subfig}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{float}
+\usepackage{upquote}
+\usepackage{placeins}
+
+\renewcommand{\arraystretch}{1.3}
+
+\newcommand{\todonoteinline}[1]{\todo[color=red!40,inline,caption={TODO}]{#1}}
+\newcommand{\todonote}[1]{\todo[color=red!40,caption={TODO}]{#1}}
+
+
+
+\newcommand{\ttt}[1]{\texttt{#1}}
+\newcommand{\knn}{$k$-NN }
+\newcommand{\knnns}{$k$-NN}
+\newcommand{\ED}{\mbox{\rm ED}}
+\newcommand{\pos}{\mbox{\rm pos}}
+\newcommand{\rev}{\mbox{\rm rev}}
+\newcommand{\DEL}[2]{\Delta_{#1}(#2)}
+
+\newcommand{\LibVersion}{1.8}
+% replocdir and replocfile should end on '/'
+\newcommand{\replocdir}{https://github.com/searchivarius/nmslib/tree/v\LibVersion/}
+\newcommand{\replocfile}{https://github.com/searchivarius/nmslib/blob/v\LibVersion/}
+
+\setcounter{secnumdepth}{3}
+
+\begin{document}
+
+\mainmatter  % start of an individual contribution
+
+% first the title is needed
+\title{Non-Metric Space Library (NMSLIB) Manual}
+
+% a short form should be given in case it is too long for the running head
+\titlerunning{NMSLIB Manual}
+
+% the name(s) of the author(s) follow(s) next
+%
+% NB: Chinese authors should write their first names(s) in front of
+% their surnames. This ensures that the names appear correctly in
+% the running heads and the author index.
+%
+\author{Bilegsaikhan Naidan \and Leonid Boytsov \and Yury Malkov}
+%
+\authorrunning{Naidan et al}
+% (feature abused for this document to repeat the title also on left hand pages)
+
+% the affiliations are given next; don't give your e-mail address
+% unless you accept that it will be published
+
+%
+% NB: a more complex sample for affiliations and the mapping to the
+% corresponding authors can be found in the file "llncs.dem"
+% (search for the string "\mainmatter" where a contribution starts).
+% "llncs.dem" accompanies the document class "llncs.cls".
+%
+
+%\toctitle{Lecture Notes in Computer Science}
+%\tocauthor{Authors' Instructions}
+
+\maketitle
+
+{\begin{center}{\small \textbf{Maintainer}: Leonid Boytsov} \email{leo@boytsov.info}\end{center}}
+{\begin{center}{Version \LibVersion}\end{center} 
+{\begin{center}{{\today}}\end{center}}
+
+\begin{abstract}
+This document covers a library for fast similarity (\knnns) search.
+It describes only
+search methods and distances (spaces).
+Details about building, installing, Python bindings can be found online: \url{\replocdir}.
+Even though the library contains a variety of exact metric-space access methods,
+our main focus is on more \emph{generic} and \emph{approximate} search methods,
+in particular, on methods for non-metric spaces.
+NMSLIB is possibly the first library with a principled support for non-metric space searching.
+\end{abstract}
+
+\input{intro.tex}
+
+\input{methods.tex}
+
+\input{spaces.tex}
+
+\input{benchmarking.tex}
+
+\input{extend.tex}
+
+\input{efficiencyNotes.tex}
+
+\bibliographystyle{abbrv}
+%\bibliographystyle{plain}
+\bibliography{manual}
+\end{document}

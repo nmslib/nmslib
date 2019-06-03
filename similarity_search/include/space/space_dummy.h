@@ -90,7 +90,27 @@ class SpaceDummy : public Space<dist_t> {
    * e.g., in the form of an XML fragment.
    */
   virtual void WriteNextObj(const Object& obj, const string& externId, DataFileOutputState &) const;
-  /** End of standard functions to read/write/create objects */ 
+  /** End of standard functions to read/write/create objects */
+
+
+  /*
+ * if the space stores some useful information in the input state,
+ * it needs to override ReadObjectVectorFromBinData, and WriteObjectVectorBinData.
+ * PS: Here an assumption is that data is empty
+ */
+  virtual unique_ptr<DataFileInputState> ReadObjectVectorFromBinData(ObjectVector& dataset,
+                                                                     vector<string>& vExternIds,
+                                                                     const std::string& inputFile,
+                                                                     const IdTypeUnsign maxQty=MAX_DATASET_QTY) const {
+    return Space<dist_t>::ReadObjectVectorFromBinData(dataset, vExternIds, inputFile, maxQty);
+  }
+
+  virtual void WriteObjectVectorBinData(const ObjectVector& dataset,
+                                        const vector<string>& vExternIds,
+                                        const std::string& outputFile,
+                                        const IdTypeUnsign MaxNumObjects = MAX_DATASET_QTY) const {
+    Space<dist_t>::WriteObjectVectorBinData(dataset, vExternIds, outputFile, MaxNumObjects);
+  }
 
   /*
    * Used only for testing/debugging: compares objects approximately. Floating point numbers

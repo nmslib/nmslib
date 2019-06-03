@@ -1,0 +1,76 @@
+
+\section{Introduction}
+\subsection{Roadmap}
+\todonoteinline{Organization: problem formulation, methods, distances, experimentation}
+
+
+\subsection{Objectives and History}
+
+Non-Metric Space Library (NMSLIB) is an \textbf{efficient} and \textbf{extendable} cross-platform similarity search library and a toolkit for evaluation of similarity search methods.  The core-library does \textbf{not} have any third-party dependencies.
+
+The goal of the project is to create an effective and \textbf{comprehensive} toolkit for searching in \textbf{generic metric and non-metric} spaces.
+Even though the library contains a variety of metric-space access methods,
+our main focus is on \emph{generic} and \emph{approximate} search methods,
+in particular, on methods for non-metric spaces.
+NMSLIB is possibly the first library with a principled support for non-metric space searching.
+
+NMSLIB is an extendible library, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
+
+NMSLIB started as a personal project of Bilegsaikhan Naidan, who created the initial code base, the Python bindings,
+and participated in earlier evaluations. 
+The most successful class of methods--neighborhood/proximity graphs--is represented by the Hierarchical Navigable Small World Graph (HNSW)
+due to Malkov and Yashunin \cite{Malkov2016}. 
+Other most useful methods, include a modification of the Vantage-Point Tree (VP-tree) \cite{Boytsov_and_Bilegsaikhan:nips2013},
+a Neighborhood APProximation index (NAPP) \cite{tellez2013succinct},
+which was improved by David Novak,
+as well as a vanilla uncompressed inverted file. \todonoteinline{Add references to respective sections}
+
+The current version of the manual focuses on the description of distances, search methods,
+and on some internal implementation details useful for extending the library.
+We also explain how to use our evaluation utility \ttt{experiment}.
+Details about building, installing, Python bindings, as well as basic
+tuning guidelines, can be found online: \url{https://github.com/nmslib/nmslib/tree/v\LibVersion}.
+
+
+\subsection{Terminology Problem Formulation}\label{SectionProbForm}
+Similarity search is an essential part of many applications,
+which include, among others,  
+content-based retrieval of multimedia  and statistical machine learning.
+The search is carried out in a finite database of objects $\{o_i\}$,
+using a search query $q$ and a dissimilarity measure (the term data point or simply a point is often
+used a synonym to denote either a data object or a query).
+ The dissimilarity measure is typically represented by a distance function $d(o_i, q)$. 
+The ultimate goal is to answer a query by retrieving a subset of database objects sufficiently similar to the query $q$.
+These objects will be called \emph{answers}.
+A combination of data points and the distance function is called a \emph{search space},
+or simply a \emph{space}.
+
+
+Note that we use the terms \emph{distance} and the \emph{distance function} in a broader sense than
+some of the textbooks:
+We do not assume that the distance is a true metric distance. 
+The distance function can disobey the triangle inequality and/or be even non-symmetric.
+
+Two retrieval tasks are typically considered: a nearest neighbor and a range search. 
+The nearest neighbor search aims to find the least dissimilar object,
+i.e., the object at the smallest distance from the query.
+Its direct generalization is the $k$-nearest neighbor search (the \knn search),
+which looks for the $k$  closest objects.
+Given a radius $r$, 
+the range query retrieves all objects within a query ball (centered at the query object $q$) with the radius $r$,
+or, formally, all the objects~$\lbrace o_i \rbrace$ such that $d(o_i, q) \le r$. 
+In generic spaces, the distance is not necessarily symmetric. 
+Thus, two types of queries can be considered. 
+In a  \emph{left} query, the object is the left argument of the distance function,
+while the query is the right argument.
+In a \emph{right} query, $q$ is the first argument and the object is the second, i.e.,
+the right, argument.
+
+The queries can be answered either exactly, 
+i.e., by returning a complete result set that does not contain erroneous elements, or, 
+approximately, e.g., by finding only some answers.
+Thus, the methods are evaluated in terms of efficiency-effectiveness trade-offs
+rather than merely in terms of their efficiency.
+One common effectiveness metric is recall. In the case
+of the nearest neighbor search, it is computed as
+an average fraction of true neighbors returned by the method with ties broken arbitrarily.

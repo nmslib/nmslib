@@ -5,7 +5,7 @@ struct ReplyEntry {
   1: required i32 id ;   // an unique integer object ID
   2: required double dist ; // the distance to the object from the query
   3: optional string externId; // external (not necessarily unique) ID
-  4: optional string obj ;  // an optional string representation of the answer object
+  4: optional binary obj ;  // an optional binary/string representation of the answer object
 }
 
 typedef list<ReplyEntry> ReplyEntryList
@@ -27,21 +27,21 @@ service QueryService {
   void setQueryTimeParams(1: required string queryTimeParams)
   throws (1: QueryException err),
   ReplyEntryList knnQuery(1: required i32 k,           // k as in k-NN
-                          2: required string queryObj, // a string representation of a query object 
+                          2: required binary queryObj, // a binary/string representation of a query object 
                           3: required bool retExternId,// if true, we will return an external ID
                           4: required bool retObj)     // if true, we will return a string representation of each answer object
   throws (1: QueryException err),
   ReplyEntryList rangeQuery(1: required double r,      // a range value in the range search
-                          2: required string queryObj, // a string representation of a query object 
+                          2: required binary queryObj, // a binary/string representation of a query object 
                           3: required bool retExternId,// if true, we will return an external ID
                           4: required bool retObj)     // if true, we will return a string representation of each answer object
   throws (1: QueryException err),
 
   /*
-   * Compute the distance between two objects represented as strings. 
+   * Compute the distance between two objects represented as binaries. 
    * This function is intended to be used for debugging purproses.
    */
-  double getDistance(1: required string obj1,
-                     2: required string obj2)
+  double getDistance(1: required binary obj1,
+                     2: required binary obj2)
   throws (1: QueryException err)
 }

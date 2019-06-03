@@ -1,0 +1,111 @@
+\section{Notes on Efficiency}\label{SectionEfficiency}
+
+\subsection{Efficiency of Distance Functions}
+Note that improvement in efficiency and in the number of distance computations
+obtained with slow distance functions can be overly optimistic.
+That is, when a slow distance function is replaced with a more efficient version,
+the improvements over sequential search may become far less impressive.
+In some cases, the search method can become even slower than the brute-force
+comparison against every data point.
+This is why we believe that optimizing  computation of a distance function 
+is equally important (and sometimes even more important) 
+than designing better search methods.
+%Thus, we would encourage potential contributors to 
+%implement efficient distance functions whenever it is possible 
+%(should they decide to create a new space).
+
+In this library, we optimized several distance functions, 
+especially non-metric functions that involve computations of logarithms.
+%In the case of the Intel compiler or Visual Studio, 
+%logarithms can be computed reasonably fast.
+%However, many users still rely on the GNU C++ compiler and, consequently, on the GNU math library, 
+%where computation of a logarithm takes dozens of CPU cycles.
+An order of magnitude improvement can be achieved by pre-computing 
+logarithms at index time and by approximating those logarithms that are not possible
+to pre-compute (see \S~\ref{SectionJS} and \S~\ref{SectionBregman} for more details).
+Yet, this doubles the size of an index.
+
+The Intel compiler has a powerful math library, 
+which allows one to efficiently compute several hard distance functions
+such as the KL-divergence, the Jensen-Shanon divergence/metric, and
+the $L_p$ spaces for non-integer values of $p$ more efficiently than in the case of GNU C++
+and Clang.
+In the Visual Studio's fast math mode (which is enabled in the provided project files)
+it is also possible to compute some hard distances several times faster compared to GNU C++ and Clang.
+Yet, our custom implementations are often much faster.
+For example, in the case of the Intel compiler,
+the custom implementation of the KL-divergence is 10 times faster 
+than the standard one while
+the custom implementation of the JS-divergence is two times faster.
+In the case of the Visual studio, the custom KL-divergence is 
+7 times as fast as the standard one, while the custom JS-divergence is 10 times faster.
+Therefore,
+doubling the size of the data set by storing pre-computed logarithms seems to be worthwhile.
+
+
+Efficient implementations of some other distance functions 
+rely on SIMD instructions. 
+These instructions, available on most modern Intel and AMD processors, 
+operate on small vectors. 
+Some C++ implementations can be efficiently vectorized by both the GNU and Intel compilers.
+That is, instead of the scalar operations the compiler would generate
+more efficient SIMD instructions.
+Yet, the code is not always vectorized, e.g., by the Clang.
+And even the Intel compiler, fails to efficiently vectorize 
+computation of the KL-divergence (with pre-computed logarithms).
+
+There are also situations when efficient automatic vectorization
+is hardly possible. For instance,
+we provide an efficient implementation of the scalar product
+for sparse \emph{single-precision} floating point vectors.
+It relies on the all-against-all comparison SIMD instruction \texttt{\_mm\_cmpistrm}. 
+However, it requires keeping the data in a special format,
+which makes automatic vectorization impossible.
+
+Intel SSE extensions that provide SIMD instructions are automatically detected
+by all compilers but the Visual Studio.
+If some SSE extensions are not available, the compilation process will produce warnings like the
+following one:
+{
+\footnotesize
+\begin{verbatim}
+LInfNormSIMD: SSE2 is not available, defaulting to pure C++ implementation!
+\end{verbatim}
+}
+
+\subsection{Cache-friendly Data Layout}
+In our previous report \cite{Boytsov_and_Bilegsaikhan:sisap2013},
+we underestimated a cost of a random memory access.
+A more careful analysis showed that, 
+on a recent laptop (Core i7, DDR3), 
+a truly random access \href{http://searchivarius.org/blog/main-memory-similar-hard-drive}{``costs'' about 200 CPU cycles},
+which may be 2-3 times longer than a computation of a cheap distance such as $L_2$.
+
+Many implemented methods use some form of bucketing.
+For example, in the VP-tree or bbtree we recursively decompose the space
+until a partition contains at most \ttt{bucketSize} elements.
+The buckets are searched sequentially,
+which could be done much faster, if bucket objects were stored
+in contiguous memory regions.
+Thus, to check elements in a bucket we would need only one random memory access.
+
+A number of methods support this optimized storage model.
+It is activated by setting a parameter \ttt{chunkBucket} to 1.
+If \ttt{chunkBucket} is set to 1, indexing is carried out in two stages.
+At the first stage, a method creates unoptimized buckets,
+each of which is an array of pointers to data objects.
+Thus, objects are not necessarily contiguous in memory.
+In the second stage, the method iterates over buckets,
+allocates a contiguous chunk of memory,
+which is sufficiently large to keep all bucket objects,
+and copies bucket objects to this new chunk.
+
+\textbf{Important note:}
+Note that currently we do not delete old objects and do not deallocate the memory 
+they occupy. Thus, 
+if 
+\ttt{chunkBucket} is set to 1,
+the memory usage is overestimated.
+%\todonoteinline{Actually this is very easy to fix. If the method supports bucketing and chunkBucket is set to 1,
+%then one shouldn't add memory consumed by the original data set to the index size}
+In the future, we plan to address this issue.

@@ -2,9 +2,9 @@
 
 Below, there is a list of nearly all spaces (a space is a combination of data and the distance). The mnemonic name of a space is passed to python bindings function   as well  as  to  the  benchmarking  utility ``experiment``. 
 When initializing the space in Python embeddings, please use the type 
-`FLOAT` for all spaces, except `leven`: [see the description here.](https://nmslib.github.io/nmslib/api.html#nmslib-init)
+`FLOAT` for all spaces, except the space `leven`: [see the description here.](https://nmslib.github.io/nmslib/api.html#nmslib-init)
 A more detailed description is given
-in the [manual](manual/latex/manual.pdf).
+in the [manual](/manual/latex/manual.pdf).
 
 ## Specifying parameters of the space
 
