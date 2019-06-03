@@ -1,4 +1,4 @@
-#Spaces and Distances
+# Spaces and Distances
 
 Below, there is a list of nearly all spaces (a space is a combination of data and the distance). The mnemonic name of a space is passed to python bindings function   as well  as  to  the  benchmarking  utility ``experiment``. 
 When initializing the space in Python embeddings, please use the type 
@@ -6,7 +6,7 @@ When initializing the space in Python embeddings, please use the type
 A more detailed description is given
 in the [manual](manual/latex/manual.pdf).
 
-##Specifying parameters of the space
+## Specifying parameters of the space
 
 In some rare cases, spaces have parameters, which are specified after the
 colon. 
@@ -17,7 +17,7 @@ For example, ``lp:p=3`` denotes the L<sub>3</sub> space and
 ``lp:p=2`` is a synonym for the Euclidean, i.e., L<sub>2</sub> space.
 
 
-##Fast, Slow, and Approximate variants
+## Fast, Slow, and Approximate variants
 
 There can be more than one version of a distance function,
 which have different space-performance trade-off.
@@ -42,7 +42,7 @@ and another is for right queries (the data object is the second argument and the
 In the latter case the name of the space ends on ``rq``.
 
 
-##Input Format
+## Input Format
 
 For Python bindings, all dense-vector spaces require float32 numpy-array input (two-dimensional). See an example [here](python_bindings/notebooks/search_vector_dense_optim.ipynb). 
 One exception is the squared Euclidean space for SIFT vectors, which requires input as uint8 integer numpy arrays. An example can be found [here](python_bindings/notebooks/search_sift_uint8.ipynb).
@@ -62,7 +62,7 @@ currently a limitation).
 You can pass a UTF8-encoded string, but the distance will be sometimes
 larger than the actual distance. 
 
-##Storage Format
+## Storage Format
 
 For dense vector spaces, the data can be either single-precision or double-precision floating-point numbers. 
 However, double-precision has not been useful so far and we do not recommend use it.
@@ -134,14 +134,14 @@ and for the [Itakura-Saito distance](https://en.wikipedia.org/wiki/Itakura%E2%80
 We also explicitly implement the squared JS-divergence,
 which is a true metric distance.
 
-For the meaning of infixes `fast`, `slow`, `approx`, and `rq` see the information above.
+For the meaning of infixes ``fast``, ``slow``, ``approx``, and ``rq`` see the information above.
 
 | Space code(s)                              | Description and Notes                           |
 |--------------------------------------------|-------------------------------------------------|
-| ``kldivfast``, ``kldivfastrq``             | Regular KL-divergence                           |
-| ``kldivgenslow``, ``kldivgenfast``, ``kldivgenfastrq`` | Generalized KL-divergence           | 
-| ``itakurasaitoslow``, ``itakurasaitofast``, ``itakurasaitofastrq`` |  Itakura-Saito distance |
-| ``jsdivslow``, ``jsdivfast``, `jsdivfastapprox` | JS-divergence                              |
+| `kldivfast`, `kldivfastrq`             | Regular KL-divergence                           |
+| `kldivgenslow`, `kldivgenfast`, `kldivgenfastrq` | Generalized KL-divergence           | 
+| `itakurasaitoslow`, `itakurasaitofast`, `itakurasaitofastrq` |  Itakura-Saito distance |
+| `jsdivslow`, `jsdivfast`, `jsdivfastapprox` | JS-divergence                              |
 | `jsmetrslow`, `jsmetrfast`, `jsmetrfastapprox`  | JS-metric                                  |
 | `renyidiv_slow`, `renyidiv_fast`                | Renyi divergence: parameter name `alpha`   |         
 

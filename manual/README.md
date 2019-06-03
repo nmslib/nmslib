@@ -46,10 +46,11 @@ an average fraction of true neighbors returned by the method (with ties broken a
 # Documentation Links
 
 * [Python bindings overview](/python_bindings) and [Python bindings API](https://nmslib.github.io/nmslib/index.html)
-* [A Brief List of Methods and Parameters](/manual/parameters.md)
+* [A Brief List of Methods and Parameters](/manual/methods.md)
 * [A brief list of supported spaces/distance](/manual/spaces.md)
 * [Building the main library](/manual/build.md)
 * [Building and using the query server](/manual/query_server.md)
+* [Benchmarking using NMSLIB utility ``experiment``](/manual/benchmarking.md)
 * [Extending the library](/manual/extensions.md)
 * [A more detailed and formal description of methods and spaces (PDF)](/manual/latex/manual.pdf)
 
