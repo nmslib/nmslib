@@ -43,7 +43,7 @@ C++ (version 8), you may need to type:
 export CCX=g++-8 CC=gcc-8
 ```
 
-To create makeles for a release version of the code, type:
+To create makefiles for a release version of the code, type:
 ```
 cmake -DCMAKE_BUILD_TYPE=Release .
 ```
@@ -53,26 +53,26 @@ If you did not create any makeles before, you can shortcut by typing:
 cmake .
 ```
 
-To create makeles for a debug version of the code, type:
+To create makefiles for a debug version of the code, type:
 ```
 cmake -DCMAKE_BUILD_TYPE=Debug .
 ```
 
-When makeles are created, just type:
+When makefiles are created, just type:
 
 ```make```
 
 **Important note**: a shortcut command:
 ``cmake .``
-(re)-creates makeles for the previously created build. When you type ``cmake .``
-for the first time, it creates release makefiles. However, if you create debug 
+(re)-creates makefiles for the previously created build. When you type ``cmake .``
+for the first time, it creates release makefiles. However, if you create debug 
 makefiles and then type ``cmake .``, this will not lead to creation of release makefiles!
 To prevent this, you need to to delete the cmake cache and makefiles, before
 running cmake. For example, you can do the following (assuming the
 current directory is similarity search):
 
 ```
-rm -rf `find . -name CMakeFiles CMakeCache.txt`
+rm -rf `find . -name CMakeFiles CMakeCache.txt`
 ```
 
 Also note that, for some reason, cmake might sometimes ignore environmental
@@ -108,7 +108,7 @@ The utility ``test_integr`` runs complete implementations of many methods
 and checks if several effectiveness and efficiency characteristics
 meet the expectations.
 The expectations are encoded as an array of instances of the class ``MethodTestCase``
-(see [the code here](similarity_search/test/test_integr.cc#L65)).
+(see [the code here](/similarity_search/test/test_integr.cc#L65)).
 For example, we expect that the recall falls in a certain pre-recorded range.
 
 Because almost all our methods are randomized, there is a great deal of variance
