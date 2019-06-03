@@ -56,8 +56,8 @@ It is also possible to create standalone applications that use the library.
 In the following subsections, 
 we consider extension tasks in more detail.
 For illustrative purposes,
-we created a zero-functionality space (`DummySpace`), 
-method (`DummyMethod`), and application (`dummys_app`).
+we created a zero-functionality space [DummySpace](/similarity_search/include/space/space_dummy.h), 
+method [DummyMethod](/similarity_search/include/method/dummy.h), and application [dummy_app](/similarity_search/apps/dummy_app.cc).
 These zero-functionality examples can also be used as starting points to develop fully functional code.
 
 ## Benchmarking Workflow
@@ -81,8 +81,8 @@ In the first scenario, the user specifies separate data and test files.
 In the second scenario, a test file is created by bootstrapping:
 The data set is randomly divided into training and a test set.
 Then,
-we call the function [RunAll](/similarity_search/include/experiments.h#L70) 
-and subsequently [Execute](/similarity_search/include/experiments.h#L213) for all possible test sets.
+we call the function [RunAll](/similarity_search/include/experiments.h#L63) 
+and subsequently [Execute](/similarity_search/include/experiments.h#L108) for all possible test sets.
 
 The function `Execute` is a main workhorse, which creates queries, runs searches,
 produces gold standard data, and collects execution statistics.
@@ -166,7 +166,7 @@ Instead, we recommend to use the mechanism of explicit template instantiation.
 To this end, the user should instantiate the template in the source file
 for all possible combination of parameters.
 In our case, the **source** file 
-[space_dummy.cc](/similarity_search/src/space/space_dummy.cc)
+[space_dummy.cc](/similarity_search/src/space/space_dummy.cc#90)
 contains the following lines:
 ```
 template class SpaceDummy<int>;
@@ -302,7 +302,7 @@ REGISTER_SPACE_CREATOR(double, SPACE_DUMMY,  CreateDummy)
 ```
 
 This macro should be placed into the function `initSpaces` in the 
-file [init_spaces.h](/similarity_search/include/factory/init_spaces.h).
+file [init_spaces.h](/similarity_search/include/factory/init_spaces.h#40).
 Last, but not least we need to add the include-directive
 for the helper function, which creates
 the class, to the file `init_spaces.h` as follows:
@@ -405,7 +405,7 @@ Again, similarly to the case of the space,
 the method-creating function `CreateDummy` needs
 to be registered in the method factory in two steps.
 First, we need to include `dummy.h` into the file
-[init\_methods.h](/similarity_search/include/factory/init_methods.h) as follows:
+[init\_methods.h](/similarity_search/include/factory/init_methods.h#55) as follows:
 
 ```
 #include "factory/method/dummy.h"
@@ -441,12 +441,12 @@ for the following performance parameters: the recall,
 the number of points closer to the query than the nearest returned point,
 and the improvement in the number of distance computations.
 
-## Creating an Application on Linux (inside the framework)}
+## Creating an Application on Linux (inside the framework)
 
 Imagine, we need to add an additional benchmarking/testing/etc utility
 that is built as a part of NMSLIB.
 First, we would create a hello-world source file 
-[dummy\_app.cc](/similarity_search/src/dummy_app.cc):
+[dummy_app.cc](/similarity_search/apps/dummy_app.cc):
 
 ```
 #include <iostream>
@@ -457,25 +457,6 @@ int main(void) {
 }
 ```
 
-Now we need to modify 
-[the meta-makefile](/similarity_search/src/CMakeLists.txt) and 
+Then we need to modify 
+[the meta-makefile](/similarity_search/apps/CMakeLists.txt) and 
 re-run `cmake` as described in ["Building the main library"](/manual/build.md).
-
-More specifically, we do the following:
-
-* by default, all source files in the  
-[similarity_search/src/](/similarity_search/src/} directory are included into the library.
-To prevent `dummy_app.cc` from being included into the library, we use the following command:
-```
-list(REMOVE_ITEM SRC_FILES ${PROJECT_SOURCE_DIR}/src/dummy_app.cc)
-```
-* tell ```cmake``` to build an additional executable:
-```
-add_executable (dummy_app dummy_app.cc ${SRC_FACTORY_FILES})
-```
-* specify the necessary libraries:
-```
-target_link_libraries (dummy_app NonMetricSpaceLib lshkit 
-                      ${Boost_LIBRARIES} ${GSL_LIBRARIES} 
-                      ${CMAKE_THREAD_LIBS_INIT})
-```

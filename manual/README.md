@@ -51,6 +51,6 @@ an average fraction of true neighbors returned by the method (with ties broken a
 * [Building the main library (Linux/Mac)](/manual/build.md)
 * [Building and using the query server (Linux/Mac)](/manual/query_server.md)
 * [Benchmarking using NMSLIB utility ``experiment``](/manual/benchmarking.md)
-* [Extending NMSLIB (adding spaces and/or methods)](/manual/extend.md)
+* [Extending NMSLIB (adding spaces, methods, and apps)](/manual/extend.md)
 * [A more detailed and formal description of methods and spaces (PDF)](/manual/latex/manual.pdf)
 
