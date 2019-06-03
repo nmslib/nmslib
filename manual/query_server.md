@@ -18,8 +18,17 @@ if Apache Thrift is installed to a non-standard location).
 The query server has a similar set of parameters to the benchmarking utility ``experiment``.  For example,
 you can start the server as follows:
 ```
- ./query_server -i ../../sample_data/final8_10K.txt -s l2 -m sw-graph -c NN=10,efConstruction=200,initIndexAttempts=1 -p 10000
+ ./query_server -i ../../sample_data/final8_10K.txt -s l2 -m hnsw -m hnsw -c M=20,efConstruction=100 -p 10000
 ```
+If the search method supports saving the index, it possible to save both the index and the data for faster loading using a combinations of options `-S` and `--cacheData`:
+```
+ ./query_server -i ../../sample_data/final8_10K.txt -s l2 -m hnsw -m hnsw -c M=20,efConstruction=100 -p 10000 -S location --cacheData
+```
+Next time when you start a server it does not need the original and it does not need to re-create the index:
+```
+ ./query_server  -s l2 -m hnsw -m hnsw  -p 10000 -L location --cacheData
+```
+
 There are also three sample clients implemented in [C++](query_server/cpp_client_server), [Python](query_server/python_client/),
 and [Java](query_server/java_client/). 
 A client reads a string representation of a query object from the standard stream.
