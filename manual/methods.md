@@ -1,7 +1,18 @@
-Basic parameter tuning for NMSLIB
-=======
+#A Brief List of Methods and Parameters
 
-#### Graph-based search methods: SW-graph and HNSW
+## Overview
+
+Here we include the list of possibly the most useful methods, which is followed by a brief tuning guideline:
+* ``hnsw`` a Hierarchical Navigable Small World Graph.
+* ``sw-graph`` a Small World Graph.
+* ``vp-tree`` a Vantage-Point tree with a pruning rule adaptable to non-metric distances
+* ``napp`` a Neighborhood APProximation index
+* ``simple_invindx`` a vanilla, uncompressed, inverted index, which has no parameters
+* ``brute_force`` a brute-force search, which has no parameters
+
+The mnemonic name of a method is passed to python bindings function   as well  as  to  the  benchmarking  utility ``experiment``.
+
+## Graph-based search methods: SW-graph and HNSW
 
 The basic guidelines are similar for both methods. Specifically, increasing the
 value of ``efConstruction`` improves the quality of a constructed graph and leads
@@ -45,9 +56,17 @@ the dense spaces for the Euclidean and the cosine distance. These optimized indi
 are created automatically whenever possible. However, this behavior can be
 overriden by setting the parameter ``skip_optimized_index`` to 1.
 
+## A Vantage-Point tree (VP-tree)
 
+VP-tree has the autotuning procedure,
+which can be optionally initiated during the creation of the index. 
+To this end, one needs to specify the parameters ``desiredRecall``
+ (the minimum desired recall), ``bucketSize`` (the size 
+of the bucket), ``tuneK`` or ``tuneR``, and (optionally) parameters ``tuneQty``, ``minExp`` and ``maxExp``. 
+Parameters ``tuneK`` and ``tuneR`` are used to specify the value of _k_ for _k_-NN search,
+or the search radius _r_ for the range search.
 
-#### Neighborhood APProximation index (NAPP)
+## Neighborhood APProximation index (NAPP)
 
 Generally, increasing the overall number of pivots (parameter ``numPivot``) helps to improve
 performance. However, using a large number of pivots leads to increased indexing
