@@ -166,7 +166,7 @@ Instead, we recommend to use the mechanism of explicit template instantiation.
 To this end, the user should instantiate the template in the source file
 for all possible combination of parameters.
 In our case, the **source** file 
-[space_dummy.cc](/similarity_search/src/space/space_dummy.cc#90)
+[space_dummy.cc](/similarity_search/src/space/space_dummy.cc#L90)
 contains the following lines:
 ```
 template class SpaceDummy<int>;
@@ -302,7 +302,7 @@ REGISTER_SPACE_CREATOR(double, SPACE_DUMMY,  CreateDummy)
 ```
 
 This macro should be placed into the function `initSpaces` in the 
-file [init_spaces.h](/similarity_search/include/factory/init_spaces.h#40).
+file [init_spaces.h](/similarity_search/include/factory/init_spaces.h#L40).
 Last, but not least we need to add the include-directive
 for the helper function, which creates
 the class, to the file `init_spaces.h` as follows:
@@ -405,7 +405,7 @@ Again, similarly to the case of the space,
 the method-creating function `CreateDummy` needs
 to be registered in the method factory in two steps.
 First, we need to include `dummy.h` into the file
-[init\_methods.h](/similarity_search/include/factory/init_methods.h#55) as follows:
+[init\_methods.h](/similarity_search/include/factory/init_methods.h#L55) as follows:
 
 ```
 #include "factory/method/dummy.h"
