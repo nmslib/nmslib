@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>API Reference &mdash; nmslib 1.7.3.4 documentation</title>
+  <title>API Reference &mdash; nmslib 1.8 documentation</title>
   
 
   
@@ -17,34 +17,45 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'1.8',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuring Logging for NMSLIB" href="logging.html" />
     <link rel="prev" title="Python bindings for NMSLIB" href="quickstart.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -58,7 +69,7 @@
             
             
               <div class="version">
-                1.7
+                1.8
               </div>
             
           
@@ -159,6 +170,7 @@
             
   <div class="section" id="api-reference">
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<p>Information on the search methods (and their parameters) and spaces, can be found <a class="reference external" href="https://github.com/nmslib/nmslib/tree/master/manual/README.md">on this page</a>.</p>
 <div class="section" id="nmslib-init">
 <h2>nmslib.init<a class="headerlink" href="#nmslib-init" title="Permalink to this headline">¶</a></h2>
 <p>This function acts act the main entry point into NMS lib. This
@@ -362,7 +374,7 @@ a thread pool</p>
 
 <dl class="method">
 <dt id="nmslib.dist.FloatIndex.loadIndex">
-<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>filename: str</em>, <em>load_data: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the index from disk</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -370,7 +382,7 @@ a thread pool</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>filename</strong> (<em>str</em>) – The filename to read from</li>
-<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+<li><strong>load_data</strong> (<em>bool optional</em>) – Whether or not to load previously saved data.</li>
 </ul>
 </td>
 </tr>
@@ -380,13 +392,17 @@ a thread pool</p>
 
 <dl class="method">
 <dt id="nmslib.dist.FloatIndex.saveIndex">
-<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>filename: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.FloatIndex</em>, <em>filename: str</em>, <em>save_data: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.FloatIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index and/or data to disk</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – The filename to save to</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – The filename to save to</li>
+<li><strong>save_data</strong> (<em>bool optional</em>) – Whether or not to save data</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -540,7 +556,7 @@ a thread pool</p>
 
 <dl class="method">
 <dt id="nmslib.dist.DoubleIndex.loadIndex">
-<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>filename: str</em>, <em>load_data: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the index from disk</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -548,7 +564,7 @@ a thread pool</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>filename</strong> (<em>str</em>) – The filename to read from</li>
-<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+<li><strong>load_data</strong> (<em>bool optional</em>) – Whether or not to load previously saved data.</li>
 </ul>
 </td>
 </tr>
@@ -558,13 +574,17 @@ a thread pool</p>
 
 <dl class="method">
 <dt id="nmslib.dist.DoubleIndex.saveIndex">
-<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>filename: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.DoubleIndex</em>, <em>filename: str</em>, <em>save_data: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.DoubleIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index and/or data to disk</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – The filename to save to</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – The filename to save to</li>
+<li><strong>save_data</strong> (<em>bool optional</em>) – Whether or not to save data</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -718,7 +738,7 @@ a thread pool</p>
 
 <dl class="method">
 <dt id="nmslib.dist.IntIndex.loadIndex">
-<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>filename: str</em>, <em>print_progress: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loadIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>filename: str</em>, <em>load_data: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.loadIndex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the index from disk</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -726,7 +746,7 @@ a thread pool</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>filename</strong> (<em>str</em>) – The filename to read from</li>
-<li><strong>print_progress</strong> (<em>bool optional</em>) – Whether or not to display progress bar when creating index</li>
+<li><strong>load_data</strong> (<em>bool optional</em>) – Whether or not to load previously saved data.</li>
 </ul>
 </td>
 </tr>
@@ -736,13 +756,17 @@ a thread pool</p>
 
 <dl class="method">
 <dt id="nmslib.dist.IntIndex.saveIndex">
-<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>filename: str</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Saves the index to disk</p>
+<code class="descname">saveIndex</code><span class="sig-paren">(</span><em>self: nmslib.dist.IntIndex</em>, <em>filename: str</em>, <em>save_data: bool=False</em><span class="sig-paren">)</span> &#x2192; None<a class="headerlink" href="#nmslib.dist.IntIndex.saveIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the index and/or data to disk</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – The filename to save to</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – The filename to save to</li>
+<li><strong>save_data</strong> (<em>bool optional</em>) – Whether or not to save data</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -778,7 +802,7 @@ a thread pool</p>
         <a href="logging.html" class="btn btn-neutral float-right" title="Configuring Logging for NMSLIB" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="quickstart.html" class="btn btn-neutral" title="Python bindings for NMSLIB" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Python bindings for NMSLIB" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -787,7 +811,7 @@ a thread pool</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko..
+        &copy; Copyright 2019, Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. With contributions from David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
     </p>
   </div>
@@ -804,32 +828,16 @@ a thread pool</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'1.7.3.4',
-            LANGUAGE:'None',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

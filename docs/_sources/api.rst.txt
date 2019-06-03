@@ -1,6 +1,8 @@
 API Reference
 =============
 
+Information on the search methods (and their parameters) and spaces, can be found `on this page <https://github.com/nmslib/nmslib/tree/master/manual/README.md>`_.
+
 nmslib.init
 -----------
 
