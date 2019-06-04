@@ -46,22 +46,12 @@ neighbours = index.knnQueryBatch(data, k=10, num_threads=4)
 
 ## Saving Indexes and Data
 
-It is possible to save both indexes (for some of the search methods) and serialized data
- in the binary format for faster loading in the future.
-Then, one does not need to call `index.addDataPointBatch` and `index.createIndex`. 
-Instead, one can first call `index.saveIndex(indexLocation, save_data=True)` and then
+It is possible to save both indexes (for some of the search methods) and serialized data in the binary format for subsequent faster loading. Then, one does not need to call `index.addDataPointBatch` and `index.createIndex`.  Instead, one can first call `index.saveIndex(indexLocation, save_data=True)` and then
 ```
 index = nmslib.init(method='hnsw', space='cosinesimil')
 index.loadIndex(indexLocal, load_data=True)
 ```
-One **catch** thought is that for spaces `l2` and `cosinesimil`,
-HNSW's method `saveIndex` always saves its own copy of data.
-In this case, we say that HNSW saves an **optimized** version of the index.
-Thus, to avoid data duplication one can set parameters of `save_data` and `load_data` 
-to false. 
-Examples of doing so can be found [in sample Python notebooks](/python_bindings/notebooks/README.md).
-Note, though, that the function `getDistance` will **not work properly
-unless the data is reloaded** (this is certainly a deficiency, but it is not easy to fix).
+One **catch** though is that for spaces `l2` and `cosinesimil`, HNSW's method `saveIndex` always saves its own copy of data. In this case, we say that HNSW saves an **optimized** version of the index. Thus, to avoid data duplication one can set parameters of `save_data` and `load_data`  to false.  Examples of doing so can be found [in sample Python notebooks](/python_bindings/notebooks/README.md). Note, though, that the function `getDistance` will **not work properly unless the data is reloaded** (this is certainly a deficiency, but it is not easy to fix).
 
 ## Basic tuning guidelines
 
