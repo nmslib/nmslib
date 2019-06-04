@@ -55,7 +55,7 @@ One **catch** though is that for spaces `l2` and `cosinesimil`, HNSW's method `s
 
 ## Basic tuning guidelines
 
-The basic parameter tuning/selection guidelines are available [here](/python_bindings/parameters.md).
+The basic parameter tuning/selection guidelines are available [here](/python_bindings/methods.md).
 
 ## Logging
 
@@ -98,7 +98,7 @@ python setup.py install
 
 * [Python bindings API documentation is also available](https://nmslib.github.io/nmslib/) (thanks to Ben Frederickson).
 * [Sample Python notebooks](/python_bindings/notebooks/README.md)
-* [A Brief list of Methods and Parameters](/manual/methods.md)
+* [A brief list of methods and parameters](/manual/methods.md)
 * [A brief list of supported spaces/distance](/manual/spaces.md)
 * [A detailed and formal description of spaces and methods with examples of benchmarking the methods (PDF)](/manual/latex/manual.pdf)
 
