@@ -24,18 +24,14 @@ NMSLIB is possibly the first library with a principled support for non-metric sp
 
 NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
-**Authors**: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. **With contributions from** David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, @gregfriedland, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
+**Authors**: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. **With contributions from** David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, @gregfriedland, 
+Scott Gigante, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
 ## Brief History
 
 NMSLIB started as a personal project of Bilegsaikhan Naidan, who created the initial code base, the Python bindings,
 and participated in earlier evaluations. 
-The most successful class of methods--neighborhood/proximity graphs--is represented by the Hierarchical Navigable Small World Graph (HNSW) 
-due to Malkov and Yashunin (see the publications below). 
-Other most useful methods, include a modification of the VP-tree
-due to Boytsov and Naidan (2013),
-a Neighborhood APProximation index (NAPP) proposed by Tellez et al. (2013) and improved by David Novak,
-as well as a vanilla uncompressed inverted file.
+The most successful class of methods--neighborhood/proximity graphs--is represented by the Hierarchical Navigable Small World Graph (HNSW) due to Malkov and Yashunin (see the publications below). Other most useful methods, include a modification of the VP-tree due to Boytsov and Naidan (2013), a Neighborhood APProximation index (NAPP) proposed by Tellez et al. (2013) and improved by David Novak, as well as a vanilla uncompressed inverted file.
 
 
 ## Credits and Citing
