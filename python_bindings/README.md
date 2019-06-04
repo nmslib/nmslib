@@ -55,7 +55,7 @@ One **catch** though is that for spaces `l2` and `cosinesimil`, HNSW's method `s
 
 ## Basic tuning guidelines
 
-The basic parameter tuning/selection guidelines are available [here](/python_bindings/methods.md).
+The basic parameter tuning/selection guidelines are available [here](/manual/methods.md).
 
 ## Logging
 
