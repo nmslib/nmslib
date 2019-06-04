@@ -42,10 +42,8 @@ Second, there is a trade-off between retrieval performance and indexing time
 related to the choice of the pruning heuristic (controlled
 by the parameter ``delaunay_type``). 
 Specifically, by default ``delaunay_type`` is
-equal to 2. 
-This default is generally quite good.
-However, 
-it maybe worth trying other viable options values: 0, 1, and 3.
+equal to 2. This default is generally quite good.
+However, it maybe worth trying other viable options values: 0, 1, and 3.
 
 
 Third, HNSW has the parameter ``post``, which defines the amount (and type) of 
