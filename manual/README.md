@@ -11,7 +11,7 @@ contains a detailed description of implemented search spaces and methods.
 
 ## Documentation Links
 
-* [Python bindings overview](/python_bindings) and [Python bindings API](https://nmslib.github.io/nmslib/index.html)
+* [Python bindings overview](/python_bindings/README.md) and [Python bindings API](https://nmslib.github.io/nmslib/index.html)
 * [A Brief list of Methods and Parameters](/manual/methods.md)
 * [A brief list of supported spaces/distance](/manual/spaces.md)
 * [Some data used in the past](/manual/datasets.md)
