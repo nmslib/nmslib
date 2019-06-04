@@ -1,9 +1,3 @@
-
-\section{Introduction}
-\subsection{Roadmap}
-\todonoteinline{Organization: problem formulation, methods, distances, experimentation}
-
-
 \subsection{Objectives and History}
 
 Non-Metric Space Library (NMSLIB) is an \textbf{efficient} and \textbf{extendable} cross-platform similarity search library and a toolkit for evaluation of similarity search methods.  The core-library does \textbf{not} have any third-party dependencies.
@@ -23,16 +17,18 @@ due to Malkov and Yashunin \cite{Malkov2016}.
 Other most useful methods, include a modification of the Vantage-Point Tree (VP-tree) \cite{Boytsov_and_Bilegsaikhan:nips2013},
 a Neighborhood APProximation index (NAPP) \cite{tellez2013succinct},
 which was improved by David Novak,
-as well as a vanilla uncompressed inverted file. \todonoteinline{Add references to respective sections}
+as well as a vanilla uncompressed inverted file.
 
-The current version of the manual focuses on the description of distances, search methods,
-and on some internal implementation details useful for extending the library.
-We also explain how to use our evaluation utility \ttt{experiment}.
-Details about building, installing, Python bindings, as well as basic
-tuning guidelines, can be found online: \url{https://github.com/nmslib/nmslib/tree/v\LibVersion}.
+The current version of the manual focuses solely on the description of:
+\begin{itemize}
+    \item search spaces and distances (see \S~\ref{SectionSpaces});
+    \item search methods (see \S~\ref{SectionMethods}).
+\end{itemize}
 
+Details about building/installing, benchmarking, extending the code, as well as basic
+tuning guidelines, can be found online: \url{https://github.com/nmslib/nmslib/tree/v\LibVersion/manual/README.md}.
 
-\subsection{Terminology Problem Formulation}\label{SectionProbForm}
+\section{Terminology and Problem Formulation}\label{SectionProbForm}
 Similarity search is an essential part of many applications,
 which include, among others,  
 content-based retrieval of multimedia  and statistical machine learning.

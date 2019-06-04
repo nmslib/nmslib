@@ -79,7 +79,7 @@ Space<dist_t>::ReadObjectVectorFromBinData(ObjectVector& data,
     input.read(&buf[0], objSize);
     data.push_back(new Object(buf.release()));
   }
-  vExternIds.resize(data.size());
+  
   return unique_ptr<DataFileInputState>(new DataFileInputState());
 }
 

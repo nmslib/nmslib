@@ -1,14 +1,14 @@
 \section{Spaces}\label{SectionSpaces}
 Currently we provide implementations mostly for vector spaces.
 Vector-space input files can come in either regular, i.e., dense,
-or sparse variant (see \S~\ref{SectionDatasets}). 
+or sparse variant. 
 A detailed list of spaces, their parameters, 
 and performance characteristics is given in Table~\ref{TableSpaces}.
 
 The mnemonic name of the space is passed to 
 python bindings function \ttt{}
 as well as to
-the benchmarking utility (see \S~\ref{SectionRunBenchmark}).
+the benchmarking utility (see  \url{https://github.com/nmslib/nmslib/tree/v\LibVersion/manual/benchmarking.md}).
 There can be more than one version of a distance function,
 which have different space-performance trade-off.
 In particular, for distances that require computation of logarithms 
@@ -90,20 +90,17 @@ by $10^4$).
 \toprule
 \multicolumn{3}{c}{\textbf{Metric Spaces}}  \\
 \toprule
-Hamming &  \ttt{bit\_hamming}                      &  240 \\
-                 &  $\sum_{i=1}^n |x_i-y_i|$                         &  \\
+Hamming &  \ttt{bit\_hamming}  \hspace{7.5em} $\sum_{i=1}^n |x_i-y_i|$                  &  50-400 \\
+Jaccard &  \ttt{bit\_jaccard}, \ttt{jaccard\_sparse}  \hspace{0.1em} $\sum_{i=1}^n \min(x_i, y_i) / \sum_{i=1}^n \max(x_i, y_i)$         
+& 500-200, 2 \\
 \cmidrule(l){1-3} 
-$L_1$     &  \ttt{l1}, \ttt{l1\_sparse}              &                   35, 1.6 \\
-                 &  $\sum_{i=1}^n |x_i-y_i|$                         &  \\
+$L_1$     &  \ttt{l1}, \ttt{l1\_sparse} \hspace{6.8em}  $\sum_{i=1}^n |x_i-y_i|$        &  35, 1.6 \\
 \cmidrule(l){1-3} 
-$L_2$     &  \ttt{l2}, \ttt{l2\_sparse}              &                  30, 1.6  \\
-                 & $\sqrt{\sum_{i=1}^n |x_i-y_i|^2}$                 &   \\
+$L_2$     &  \ttt{l2}, \ttt{l2\_sparse}  \hspace{6.5em}  $\sqrt{\sum_{i=1}^n |x_i-y_i|^2}$   &   30, 1.6  \\
 \cmidrule(l){1-3} 
-$L_{\infty}$ &  \ttt{linf}, \ttt{linf\_sparse}      &   34 , 1.6  \\
-                    & $\max_{i=1}^n |x_i-y_i|$           & \\
+$L_{\infty}$ &  \ttt{linf}, \ttt{linf\_sparse}  \hspace{4.5em} $\max_{i=1}^n |x_i-y_i|$      &   34 , 1.6  \\
 \cmidrule(l){1-3} 
-$L_p$ (generic $p \ge 1$)& \ttt{lp:p=\ldots}, \ttt{lp\_sparse:p=\ldots}  &  0.1-3, 0.1-1.2  \\
-                                & $\left(\sum_{i=1}^n |x_i-y_i|^p\right)^{1/p}$  & \\
+$L_p$ (generic $p \ge 1$)& \ttt{lp:p=\ldots}, \ttt{lp\_sparse:p=\ldots} \hspace{0.5em} $\left(\sum_{i=1}^n |x_i-y_i|^p\right)^{1/p}$    &  0.1-3, 0.1-1.2  \\
 \cmidrule(l){1-3} 
 Angular distance & \ttt{angulardist}, \ttt{angulardist\_sparse}, \ttt{angulardist\_sparse\_fast} & { 13, 1.4, 3.5 } \\
                         & $\arccos\left(\frac{\sum_{i=1}^n x_i y_i}{\sqrt{\sum_{i=1}^n x_i^2}\sqrt{\sum_{i=1}^n y_i^2 }}\right)$   & \\
@@ -118,8 +115,7 @@ SQFD              & \ttt{sqfd\_minus\_func}, \ttt{sqfd\_heuristic\_func:alpha=\l
 \toprule
 \multicolumn{3}{c}{\textbf{Non-metric spaces (symmetric distance)}}  \\
 \toprule
-$L_p$ (generic $p < 1$)& \ttt{lp:p=\ldots, lp\_sparse:p=\ldots}                     &  0.1-3, 0.1-1 \\
-                              & $\left(\sum_{i=1}^n |x_i-y_i|^p\right)^{1/p}$  &   \\
+$L_p$ (generic $p < 1$)& \ttt{lp:p=\ldots, lp\_sparse:p=\ldots}  \hspace{1em} $\left(\sum_{i=1}^n |x_i-y_i|^p\right)^{1/p}$   &  0.1-3, 0.1-1 \\
 \cmidrule(l){1-3} 
 Jensen-Shan. div. &\ttt{jsdivslow, jsdivfast, jsdivfastapprox} &   0.3, 1.9, 4.8 \\
                           & $\frac{1}{2}\sum_{i=1}^n \left[x_i \log x_i + y_i \log y_i  - (x_i+y_i)\log \frac{x_i +y_i}{2}\right]$ & \\
@@ -142,11 +138,14 @@ Generalized KL-div. & left queries: \ttt{kldivgenslow}, \ttt{kldivgenfast} & 0.5
 Itakura-Saito & left queries: \ttt{itakurasaitoslow, itakurasaitofast}   & 0.2, 3, 14 \\
               & right queries: \ttt{itakurasaitofastrq}                  & 14         \\
               & $\sum_{i=1}^n \left[ \frac{ x_i}{y_i} - \log \frac{x_i}{y_i}  -1 \right]$ \\
+R\'{e}nyi divergence &   \ttt{renyidiv\_slow}, \ttt{renyidiv\_fast} \vspace{3em} $\frac{1}{\alpha-1}\log\left[\sum\limits_{i=1}^m x_i^\alpha y_i^{1-\alpha}\right]$      
+& 0.4, 0.5-1.5
+\\ 
 \toprule
 \end{tabular}
 \end{table}
 
-\subsection{$L_p$-norms}\label{SectionLP}
+\subsection{$L_p$-norms and the Hamming Distance}\label{SectionLP}
 The $L_p$ distance between vectors $x$ and $y$ are
 given by the formula:
 \begin{equation}\label{EqMink}
@@ -187,6 +186,10 @@ Distance functions for sparse-vector spaces are far less efficient,
 due to a costly, branch-heavy, operation of matching sparse vector indices
 (between two sparse vectors).
 
+In the special case of $L_1$ for binary vectors, the $L_1$ distance becomes the Hamming distance.
+This case is represented by the \ttt{bit\_hamming} space, where data points are stored as compact
+bit vectors.
+
 \subsection{Scalar-product Related Distances}
 We have two distance function whose formulas include normalized scalar product.
 One is the cosine distance, which is equal to:
@@ -216,7 +219,21 @@ all-against-all comparison SIMD instruction \texttt{\_mm\_cmpistrm}.
 This implementation  (inspired by the set intersection algorithm of Schlegel~et~al.~\cite{schlegel2011fast})
 is about 2.5-3 times faster than a pure C++ implementation based on the merge-sort approach.
 
-\subsection{Jensen-Shannon divergence}\label{SectionJS}
+\subsection{Jaccard Distance}\label{SectionJaccard}
+The Jaccard distance is true metric. 
+Given two binary vectors $x$ and $y$,
+the Jaccard distance (also called the index) is computed using the following formula:
+$$
+\frac{\sum_{i=1}^n \min(x_i, y_i)}{\sum_{i=1}^n \max(x_i, y_i)}
+$$
+
+For the Jaccard distance, there are two ways to represent data:
+\begin{itemize}
+    \item A sparse set of dimensions (space \ttt{jaccard\_sparse});
+    \item A dense binary bit vector (space \ttt{bit\_jaccard}).
+\end{itemize}
+
+\subsection{Jensen-Shannon Divergence}\label{SectionJS}
 \emph{Jensen-Shannon} divergence is a symmetrized and smoothed KL-divergence:
 \begin{equation}\label{EqJS}
 \frac{1}{2}\sum_{i=1}^n\left[ x_i \log x_i + y_i \log y_i  -(x_i+y_i)\log \frac{x_i +y_i}{2}\right]
@@ -300,6 +317,24 @@ $$
 Computing logarithms is costly: We can considerably improve efficiency of 
 Itakura-Saito divergence and KL-divergence by pre-computing logarithms at index time.
 The spaces that implement this functionality contain the substring \ttt{fast} in their mnemonic names (see also Table~\ref{TableSpaces}).
+
+\subsection{R\'{e}nyi Divergence}\label{SectionRenyiDiv}
+The R\'{e}nyi divergence is a family of generally non-symmetric distances computed by the formula:
+$$
+ \frac{1}{\alpha-1}\log\left[\sum\limits_{i=1}^m x_i^\alpha y_i^{1-\alpha}\right]
+$$
+The value of the parameter $\alpha$ should be greater than zero. For all values
+except $\alpha = 0.5$ these distances are non-symmetric.
+There are two variants of each space: \ttt{renyidiv\_slow}
+and \ttt{renyidiv\_fast}.
+They have a parameter \ttt{alpha}.
+The slower variant computes the exponents using a standard function \ttt{pow}.
+For the fast variant, as explained in the author's blog,
+\href{http://searchivarius.org/blog/efficient-exponentiation-square-rooting}{we compute exponents through square rooting}. 
+This works best when the number of digits (after the binary digit) is small, e.g., if $p=0.125$.
+The slow variant can actually be faster, if the compiler, e.g., MS Visual Studio or the Intel Compiler,
+implements an efficient approximate variant of the \ttt{pow} function.
+
 
 \subsection{String Distances}\label{SectionEditDistance}
 We currently provide implementations for the Levenshtein distance and its length-normalized variant.

@@ -14,10 +14,7 @@ categories:
 In the following subsections (\S~\ref{SectionSpacePartMeth}-\ref{SectionMiscMeth}),
 we describe implemented methods, explain their parameters,
 and provide examples of their use via the benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows).
-Note that a few parameters are query-time parameters, which means that they 
-can be changed without rebuilding the index see \S~\ref{SectionBenchEfficiency}.
-For the description of the utility \ttt{experiment} see \S~\ref{SectionRunBenchmark}.
-For several methods we provide \emph{basic tuning guidelines}, see \S~\ref{SectionTuningGuide}.
+The details on building the utility \ttt{experiment} can be found online: \url{https://github.com/nmslib/nmslib/tree/v\LibVersion/manual/README.md}.
 
 \subsection{Space Partitioning Methods} \label{SectionSpacePartMeth} 
 Parameters of space partitioning methods are summarized in Table~\ref{TableSpaceMethPart}.
@@ -355,6 +352,8 @@ The search process stops after vising a \ttt{maxLeavesToVisit} clusters.
 Our version is supposed to work for metric spaces (and symmetric distance functions),
 but it can also be used with mildly-nonmetric symmetric distances such as the cosine distance.
 
+\newpage 
+
 An example of testing the list of clusters using the \ttt{bucketSize} as a parameter to define
 the size of the cluster:
 {
@@ -442,7 +441,8 @@ the range searching.
 Such an implementation of the range searching is somewhat suboptimal
 and a better approach exists \cite{cayton2009efficient}.
 
-\newpage
+%\newpage
+
 The following is an example of testing the bbtree with the benchmarking utility \ttt{experiment}:
 {
 \footnotesize
@@ -684,7 +684,8 @@ optimal $\alpha_{left}$ and $\alpha_{right}$ are determined by the utility \ttt{
 This method, unfortunately, tends to perform worse than the VP-tree applied to the original space. 
 The only exception are spaces with high intrinsic (and, perhaps, representational) dimensionality
 where VP-trees (even with an approximate search algorithm) are useless unless dimensionality is reduced substantially.
-One example is Wikipedia tf-idf vectors, see \S~\ref{SectionDatasets}.
+One example is Wikipedia tf-idf vectors (see 
+\url{https://github.com/nmslib/nmslib/tree/v\LibVersion/manual/datasets.md}).
 
 The following is an example of testing the VP-tree over projections with the benchmarking utility \ttt{experiment}:
 {
@@ -750,6 +751,7 @@ By default, $\ttt{numPivot}=\ttt{numPivotSearch}$.
 Note that parameters \ttt{numPivotSearch} and \ttt{dbScanFrac}
 were introduced by us, they were not employed in the original version of OMEDRANK.
 
+\newpage
 
 The following is an example of testing OMEDRANK with the benchmarking utility \ttt{experiment}:
 {
@@ -875,7 +877,8 @@ as that of the query. If we do not get enough candidate objects, we shorten the 
 and repeat the procedure until we get a sufficient number of candidate entries.
 Note that we do not the use the parameter \ttt{dbScanFrac} here.
 
-\newpage
+%\newpage
+
 The following is an example of testing the PP-index with the benchmarking utility \ttt{experiment}.
 {
 \footnotesize
@@ -935,7 +938,8 @@ These objects are compared directly against the query.
 The filtering step of the MI-file is expensive. Therefore,
 this method is efficient only for computationally-intensive distances.
 
-\newpage
+%\newpage
+
 An example of testing this method using the utility \texttt{experiment} is as follows:
 {
 \footnotesize
@@ -1252,6 +1256,9 @@ which is equal to \ttt{M} by default).
 The maximum number of neighbors for the ground layer is \ttt{maxM0} (an index-time parameter,
 which is equal to $2\times$\ttt{M} by default). 
 The choice of the heuristic is controlled by the parameter \ttt{delaunay\_type}.
+Specifically, by default \ttt{delaunay\_type} is equal to 2. 
+This default is generally quite good.
+However, it maybe worth trying other viable options values: 0, 1, and 3.
 
 A search algorithm is similar to the indexing algorithm. 
 It starts from the maximum-level layer and proceeds to lower-level layers by searching one layer at a time.
@@ -1394,7 +1401,7 @@ release/experiment \
 \end{table}
 
 \subsection{Miscellaneous Methods} \label{SectionMiscMeth}
-Parameters of miscellaneous methods are summarized in Table~\ref{TableMiscMethParams}. 
+Currently our major miscellaneous methods do not have parameters.  
 
 \subsubsection{\textbf{Brute-force (sequential) searching}.}
 To verify how the speed of brute-force searching
@@ -1414,7 +1421,34 @@ release/experiment \
 \end{verbatim}
 }
 
-\newpage
+\subsubsection{\textbf{Term-Based Uncompressed Inverted File}.}
+For sparse data sets (especially when queries are much sparser than documents),
+it can be useful to employ the inverted file.
+The inverted file is a mapping from a set of dimensions to their respective posting lists. 
+The posting list of a dimension is a sorted list of documents/vectors, where this dimension is non-zero. 
+To answer queries, we use a classic  document-at-a-time (DAAT) processing algorithm \cite{DBLP:journals/ipm/Turtle1995}
+with a priority queue (see Figure 5.3 in \cite{DBLP:books/daglib/0031897}),
+which is a part of NMSLIB.
+This algorithm is implemented in Lucene 6.0 (and earlier versions). 
+However, our implementation is faster than Lucene  (1.5-2$\times$ faster on 
+\emph{compr} and \emph{stack}) for several reasons:
+our implementation does not use compression,
+it does not explicitly compute BM25, 
+it is written in C++ rather than Java
+
+{
+\footnotesize
+\begin{verbatim}
+release/experiment \
+  --distType float --spaceType negdotprod_sparse_fast --testSetQty 5 \
+  --maxNumQuery 100 \
+  --knn 1  \
+  --dataFile ../sample_data/sparse_wiki_5K.txt --outFilePrefix result \
+  --method simple_invindx --threadTestQty 2
+\end{verbatim}
+}
+
+%\newpage
 
 % \begin{table}[t!]
 % \caption{Parameters of miscellaneous methods \label{TableMiscMethParams}}

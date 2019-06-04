@@ -1926,6 +1926,51 @@ void TestBitHamming(size_t N, size_t dim, size_t Rep) {
 
 }
 
+void TestBitJaccard(size_t N, size_t dim, size_t Rep) {
+    size_t WordQty = (dim + 31)/32; 
+    uint32_t* pArr = new uint32_t[N * WordQty];
+
+    uint32_t *p = pArr;
+    for (size_t i = 0; i < N; ++i, p+= WordQty) {
+        vector<PivotIdType> perm(dim);
+        GenRandIntVect(&perm[0], dim);
+        for (unsigned j = 0; j < dim; ++j)
+          perm[j] = perm[j] % 2;
+        vector<uint32_t> h;
+        Binarize(perm, 1, h); 
+        CHECK(h.size() == WordQty);
+        memcpy(p, &h[0], WordQty * sizeof(h[0]));
+    }
+
+    WallClockTimer  t;
+
+    t.reset();
+
+    float DiffSum = 0;
+
+    float fract = 1.0f/N;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            DiffSum += 0.01f * BitJaccard<float, uint32_t>(pArr + j*WordQty, pArr + (j-1)*WordQty, WordQty) / N;
+        }
+        /* 
+         * Multiplying by 0.01 and dividing the sum by N is to prevent Intel from "cheating":
+         *
+         * http://searchivarius.org/blog/problem-previous-version-intels-library-benchmark
+         */
+        DiffSum *= fract;
+    }
+
+    uint64_t tDiff = t.split();
+
+    LOG(LIB_INFO) << "Ignore: " << DiffSum;
+    LOG(LIB_INFO) << "Elapsed: " << tDiff / 1e3 << " ms " << " # of BitJaccard per second: " << (1e6/tDiff) * N * Rep ;
+
+    delete [] pArr;
+
+}
+
 template <class dist_t>
 void TestSparseJaccardSimilarity(const string& dataFile, size_t N, size_t Rep) {
     typedef float T;
@@ -2117,6 +2162,19 @@ int main(int argc, char* argv[]) {
     TestBitHamming(1000, 512, 3000);
     nTest++;
     TestBitHamming(1000, 1024, 1500);
+
+    nTest++;
+    TestBitJaccard(1000, 32, 50000);
+    nTest++;
+    TestBitJaccard(1000, 64, 25000);
+    nTest++;
+    TestBitJaccard(1000, 128, 12000);
+    nTest++;
+    TestBitJaccard(1000, 256, 6000);
+    nTest++;
+    TestBitJaccard(1000, 512, 3000);
+    nTest++;
+    TestBitJaccard(1000, 1024, 1500);
 
     float pZero1 = 0.5f;
     float pZero2 = 0.25f;

@@ -843,7 +843,7 @@ to0pt{\kern0.55\wd0\vrule height0.45\ht0\hss}\box0}}}}
 \def\clearheadinfo{\gdef\@author{No Author Given}%
                    \gdef\@title{No Title Given}%
                    \gdef\@subtitle{}%
-                   \gdef\@institute{No Institute Given}%
+                   \gdef\@institute{}%
                    \gdef\@thanks{}%
                    \global\titlerunning={}\global\authorrunning={}%
                    \global\toctitle={}\global\tocauthor={}}

@@ -83,7 +83,7 @@
 
 \begin{abstract}
 This document covers a library for fast similarity (\knnns) search.
-It describes only
+It describes \textbf{only}
 search methods and distances (spaces).
 Details about building, installing, Python bindings can be found online: \url{\replocdir}.
 Even though the library contains a variety of exact metric-space access methods,
@@ -94,17 +94,19 @@ NMSLIB is possibly the first library with a principled support for non-metric sp
 
 \input{intro.tex}
 
-\input{methods.tex}
-
 \input{spaces.tex}
 
-\input{benchmarking.tex}
+%\newpage
 
-\input{extend.tex}
+\input{methods.tex}
+
 
 \input{efficiencyNotes.tex}
 
 \bibliographystyle{abbrv}
 %\bibliographystyle{plain}
 \bibliography{manual}
+
+\input{appendix.tex}
+
 \end{document}

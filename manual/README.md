@@ -1,10 +1,35 @@
-# NMSLIB documentation
+# NMSLIB Manual
+
+## Overview
 
 Documentation is split into several parts. 
 [Links to these parts are given below](#documentation-links).
-They are preceded by a short terminological introduction.
+This is followed by the list of some limitations and terminological introduction. 
+Terminology might be crucial to understand certain parts (but mostly these are well-known terms).
+Also note that the [PDF part of the manual](/manual/latex/manual.pdf)
+contains a detailed description of implemented search spaces and methods.
 
-# Terminology and Problem Formulation
+## Documentation Links
+
+* [Python bindings overview](/python_bindings) and [Python bindings API](https://nmslib.github.io/nmslib/index.html)
+* [A Brief list of Methods and Parameters](/manual/methods.md)
+* [A brief list of supported spaces/distance](/manual/spaces.md)
+* [Some data used in the past](/manual/datasets.md)
+* [Building the main library (Linux/Mac)](/manual/build.md)
+* [Building and using the query server (Linux/Mac)](/manual/query_server.md)
+* [Benchmarking using NMSLIB utility ``experiment``](/manual/benchmarking.md)
+* [Extending NMSLIB (adding spaces, methods, and apps)](/manual/extend.md)
+* [A detailed and formal description of spaces and methods with examples of benchmarking the methods (PDF)](/manual/latex/manual.pdf)
+
+
+## Some Limitations
+
+* Only static data sets are supported (with an exception of SW-graph)
+* HNSW currently duplicates memory to create optimized indices
+* Range/threshold search is not supported by many methods including SW-graph/HNSW
+
+
+## Terminology and Problem Formulation
 
 NMSLIB provides a fast similarity search.
 The search is carried out in a finite database of objects _{o<sub>i</sub>}_
@@ -42,15 +67,4 @@ rather than merely in terms of their efficiency.
 One common effectiveness metric is recall, 
 which is computed as
 an average fraction of true neighbors returned by the method (with ties broken arbitrarily).
-
-# Documentation Links
-
-* [Python bindings overview](/python_bindings) and [Python bindings API](https://nmslib.github.io/nmslib/index.html)
-* [A Brief List of Methods and Parameters](/manual/methods.md)
-* [A brief list of supported spaces/distance](/manual/spaces.md)
-* [Building the main library (Linux/Mac)](/manual/build.md)
-* [Building and using the query server (Linux/Mac)](/manual/query_server.md)
-* [Benchmarking using NMSLIB utility ``experiment``](/manual/benchmarking.md)
-* [Extending NMSLIB (adding spaces, methods, and apps)](/manual/extend.md)
-* [A more detailed and formal description of methods and spaces (PDF)](/manual/latex/manual.pdf)
 

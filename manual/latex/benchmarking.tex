@@ -1,0 +1,599 @@
+\section{Benchmarking on Linux/Mac}\label{SectionLinuxBenchmark}
+
+\subsection{Quick Start on Linux/Mac}\label{QuickStartLinux}
+To build the project, go to the directory \href{\replocdir similarity_search}{similarity\_search} and type:  
+\begin{verbatim}
+cmake .  
+make   
+\end{verbatim}
+This creates several binaries in the directory \ttt{similarity\_search/release}, 
+most importantly, 
+a benchmarking utility \ttt{experiment}, which carries out experiments,
+and testing utilities \ttt{bunit}, \ttt{test\_integer}, and \ttt{bench\_distfunc}.
+A more detailed description of the build process on Linux is given in \S~\ref{SectionBuildLinux}.
+
+\subsection{Building on Linux/MAC (more details)}\label{SectionBuildLinux}
+
+A build process creates several important binaries, which include:
+
+\begin{itemize}
+\item NMSLIB library (on Linux \ttt{libNonMetricSpaceLib.a}),
+which can be used in external applications;
+\item The main benchmarking utility \ttt{experiment} (\ttt{experiment.exe} on Windows) 
+that carries out experiments and saves evaluation results;
+\item A semi unit test utility \ttt{bunit} (\ttt{bunit.exe} on Windows);
+\item A utility \ttt{bench\_distfunc} that carries out integration tests (\ttt{bench\_distfunc.exe} on  Windows);
+\end{itemize}
+
+Implementation of similarity search methods is in the directory \ttt{similarity\_search}.
+The code is built using a \ttt{cmake}, which works on top of the GNU make.
+Before creating the makefiles, we need to ensure that a right compiler is used.
+This is done by setting two environment variables: \ttt{CXX} and \ttt{CC}.
+In the case of GNU C++ (version 4.7), you may need to type:
+\begin{verbatim}
+export CCX=g++-4.7 CC=gcc-4.7 
+\end{verbatim}
+If you do not set variables \ttt{CXX} and \ttt{CC}, 
+the default C++ compiler is used (which can be fine, if it is the right compiler already).
+
+
+To create makefiles for a release version of the code, type:
+\begin{verbatim}
+cmake -DCMAKE_BUILD_TYPE=Release .
+\end{verbatim}
+If you did not create any makefiles before, you can shortcut by typing:
+\begin{verbatim}
+cmake . 
+\end{verbatim}
+To create makefiles for a debug version of the code, type:
+\begin{verbatim}
+cmake -DCMAKE_BUILD_TYPE=Debug .
+\end{verbatim}
+When makefiles are created, just type:
+\begin{verbatim}
+make
+\end{verbatim}
+If \ttt{cmake} complains about the wrong version of the GCC, 
+it is most likely that you forgot to set the environment variables \ttt{CXX} and \ttt{CC} (as described above).
+If this is the case, make these variables point to the correction version of the compiler.
+\textbf{Important note:} 
+do not forget to delete the \ttt{cmake} cache and make file, before recreating the makefiles.
+For example, you can do the following (assuming the current directory is \ttt{similarity\_search}):
+\begin{verbatim}
+rm -rf `find . -name CMakeFiles` CMakeCache.txt
+\end{verbatim}
+
+Also note that, for some reason, \ttt{cmake} might sometimes ignore environmental variables \ttt{CXX} and \ttt{CC}.
+In this unlikely case, you can specify the compiler directly through \ttt{cmake} arguments.
+For example, in the case of the GNU C++ and the \ttt{Release} build, 
+this can be done as follows:
+\begin{verbatim}
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++-4.7 \
+-DCMAKE_GCC_COMPILER=gcc-4.7 CMAKE_CC_COMPILER=gcc-4.7 .
+\end{verbatim} 
+
+The build process creates several binaries. Most importantly,
+the main benchmarking utility \ttt{experiment}.
+The directory \ttt{similarity\_search/release} contains release versions of
+these binaries. Debug versions are placed into the folder \ttt{similarity\_search/debug}.
+
+\textbf{Important note:} a shortcut command:
+\begin{verbatim}
+cmake .
+\end{verbatim} 
+(re)-creates makefiles for the previously 
+created build. When you type \ttt{cmake .} for the first time,
+it creates release makefiles. However, if you create debug
+makefiles and then type \ttt{cmake .}, 
+this will not lead to creation of release makefiles! 
+
+If the user cannot install necessary libraries to a standard location, 
+it is still possible to build a project.
+First, download Boost to some local directory. 
+Assume it is \ttt{\$HOME/boost\_download\_dir}.
+Then, set the corresponding environment variable, which will inform \ttt{cmake}
+about the location of the Boost files:
+\begin{verbatim}
+ export BOOST_ROOT=$HOME/boost_download_dir
+\end{verbatim}
+
+Second, the user needs to install the additional libraries. Assume that the
+lib-files are installed to \ttt{\$HOME/local\_lib}, while corresponding include
+files are installed to \ttt{\$HOME/local\_include}. Then, the user 
+needs to invoke \ttt{cmake} with the following arguments (after possibly deleting previously
+created cache and makefiles):
+\begin{verbatim}
+cmake . -DCMAKE_LIBRARY_PATH=$HOME/local_lib \
+        -DCMAKE_INCLUDE_PATH=$HOME/local_include \ 
+        -DBoost_NO_SYSTEM_PATHS=true
+\end{verbatim}
+Note the last option. Sometimes, an old version of Boost is installed. 
+Setting the variable \ttt{Boost\_NO\_SYSTEM\_PATHS} to true,
+tells \ttt{cmake} to ignore such an installation.
+
+To use the library in external applications, which do not belong to the library repository,
+one needs to install the library first.
+Assume that an installation location is the folder \ttt{NonMetrLibRelease} in the
+home directory. Then, the following commands do the trick:
+\begin{verbatim}
+cmake \
+    -DCMAKE_INSTALL_PREFIX=$HOME/NonMetrLibRelease \
+    -DCMAKE_BUILD_TYPE=Release .
+make install
+\end{verbatim}
+
+A directory \href{\replocfile sample_standalone_app}{sample\_standalone\_app} 
+contains two sample programs (see files 
+\href{\replocfile sample_standalone_app/sample_standalone_app1.cc}{sample\_standalone\_app1.cc}
+and
+\href{\replocfile sample_standalone_app/sample_standalone_app2.cc}{sample\_standalone\_app2.cc})
+that use NMSLIB binaries installed in the folder \ttt{\$HOME/NonMetrLibRelease}.
+
+\subsection{Query Server (Linux/Mac)}\label{SectionQueryServer}
+\todonoteinline{What about saving/storing data here?}
+
+The query server requires Apache Thrift. We used Apache Thrift 0.9.2, but, perhaps, newer versions will work as well.  
+To install Apache Thrift, you need to \href{https://thrift.apache.org/docs/BuildingFromSource}{build it from source}.
+This usually requires additional libraries, but we do not cover their installation.
+
+After Apache Thrift is installed, you need to build the library itself. Then, change the directory
+to \href{\replocfile query_server/cpp_client_server}{query\_server/cpp\_client\_server} and type \ttt{make} (the makefile 
+may need to be modified, if Apache Thrift is installed to a non-standard location).
+The query server has a similar set of parameters to the benchmarking utility \ttt{experiment}.  For example,
+you can start the server as follows:
+\begin{verbatim}
+./query_server -i ../../sample_data/final8_10K.txt -s l2 -p 10000 \
+       -m sw-graph -c NN=10,efConstruction=200,initIndexAttempts=1
+\end{verbatim}
+
+There are also three sample clients implemented in \href{\replocfile query_server/cpp_client_server}{C++}, \href{\replocfile query_server/python_client/}{Python},
+and \href{\replocfile query_server/java_client/}{Java}. 
+A client reads a string representation of the query object from the standard stream.
+The format is the same as the format of objects in a data file. 
+Here is an example of searching for ten vectors closest to the first data set vector (stored in row one) of a provided sample data file:
+\begin{verbatim}
+export DATA_FILE=../../sample_data/final8_10K.txt
+head -1 $DATA_FILE | ./query_client -p 10000 -a localhost  -k 10
+\end{verbatim}
+
+It is also possible to generate client classes for other languages supported by Thrift from 
+\href{\replocfile query_server/protocol.thrift}{the interface definition file}, e.g., for C\#. To this end, one should invoke the thrift compiler as follows:
+\begin{verbatim}
+thrift --gen csharp  protocol.thrift
+\end{verbatim}
+For instructions on using generated code, please consult the \href{https://thrift.apache.org/tutorial/}{Apache Thrift tutorial}.
+
+\subsection{Testing the Correctness of Implementations}
+We have two main testing utilities \ttt{bunit} and \ttt{test\_integr} (\ttt{experiment.exe} and
+\ttt{test\_integr.exe} on Windows).
+Both utilities accept the single optional argument: the name of the log file.
+If the log file is not specified, a lot of informational messages are printed to the screen.
+
+The \ttt{bunit} verifies some basic functitionality akin to unit testing.
+In particular, it checks that an optimized version of the, e.g., Eucledian, distance
+returns results that are very similar to the results returned by unoptimized and simpler version.
+The utility \ttt{bunit} is expected to always run without errors.
+
+The utility \ttt{test\_integr} runs complete implementations of many methods
+and checks if several effectiveness and efficiency characteristics
+meet the expectations.
+The expectations are encoded as an array of instances of the class \ttt{MethodTestCase}
+(see \href{\replocdir similarity_search/test/test_integr.cc#L65}{the code here}).
+For example, we expect that the recall (see \S~\ref{SectionEffect})
+fall in a certain pre-recorded range.
+Because almost all our methods are randomized, there is a great deal of variance
+in the observed performance characteristics. Thus, some tests
+may fail infrequently, if e.g., the actual recall value is slightly lower or higher 
+than an expected minimum  or maximum.
+From an error message, it should be clear if the discrepancy is substantial, i.e.,
+something went wrong, or not, i.e., we observe an unlikely outcome due to randomization.
+The exact search method, however, should always have an almost perfect recall.
+
+Variance is partly due to using low-dimensional test sets. In the future, we plan to change this.
+For high-dimensional data sets, the outcomes are much more stable despite the randomized nature
+of most implementations.
+
+
+\subsection{Running Benchmarks}\label{SectionRunBenchmark}
+There are no principal differences in benchmarking on Linux and Windows.
+There is a \emph{single} benchmarking utility 
+\ttt{experiment} (\ttt{experiment.exe} on Windows) that includes implementation of all methods.
+It has multiple options, which specify, among others, 
+a space, a data set, a type of search, a method to test, and method parameters.
+These options and their use cases are described in the following subsections.
+Note that unlike older versions it is not possible to test multiple methods in a single run.
+However, it is possible to test the single method with different values of query-time parameters.
+
+\subsubsection{Space and distance value type}
+
+A distance function can return an integer (\ttt{int}), a single-precision (\ttt{float}),
+or a double-precision (\ttt{double}) real value.
+A type of the distance and its value is specified as follows:
+
+\begin{verbatim}
+  -s [ --spaceType ] arg       space type, e.g., l1, l2, lp:p=0.25
+  --distType arg (=float)      distance value type: 
+                               int, float, double
+\end{verbatim}
+
+A description of a space may contain parameters (parameters may not contain whitespaces).
+In this case, there is colon after the space mnemonic name followed by a
+comma-separated (not spaces) list of parameters in the format:
+\ttt{<parameter name>=<parameter value>}.
+Currently, this is used only for $L_p$ spaces. For instance,
+ \ttt{lp:0.5} denotes the space $L_{0.5}$.
+A detailed list of possible spaces and respective
+distance functions is given in Table~\ref{TableSpaces} in \S~\ref{SectionSpaces}.
+
+For real-valued distance functions, one can use either single- or double-precision
+type. Single-precision is a recommended default.
+One example of integer-valued distance function the Levenshtein distance.
+
+\subsubsection{Input Data/Test Set}
+There are two options that define the data to be indexed:
+\begin{verbatim}
+  -i [ --dataFile ] arg         input data file
+  -D [ --maxNumData ] arg (=0)  if non-zero, only the first 
+                                maxNumData elements are used
+\end{verbatim}
+The input file can be indexed either completely, or partially.
+In the latter case, the user can create the index using only
+the first \ttt{--maxNumData} elements.
+
+For testing, the user can use a separate query set.
+It is, again, possible to limit the number of queries:
+\begin{verbatim}
+  -q [ --queryFile ] arg        query file
+  -Q [ --maxNumQuery ] arg (=0) if non-zero, use maxNumQuery query 
+                                elements(required in the case 
+                                of bootstrapping)
+\end{verbatim}
+If a separate query set is not available, it can be simulated by bootstrapping.
+To this, end the \ttt{--maxNumData} elements of the original data set
+are randomly divided into testing and indexable sets.
+The number of queries in this case is defined by the option \ttt{--maxNumQuery}.
+A number of bootstrap iterations is specified through an option:
+\begin{verbatim}
+  -b [ --testSetQty ] arg (=0) # of sets created by bootstrapping; 
+\end{verbatim}
+Benchmarking can be carried out in either a single- or a multi-threaded
+mode. The number of test threads are specified as follows:
+\begin{verbatim}
+ --threadTestQty arg (=1)   # of threads
+\end{verbatim}
+
+\subsubsection{Query Type} 
+Our framework supports the \knn and the range search.
+The user can request to run both types of queries:
+\begin{verbatim}
+  -k [ --knn ] arg         comma-separated values of k 
+                           for the k-NN search
+  -r [ --range ] arg       comma-separated radii for range search
+\end{verbatim}
+For example, by specifying the options 
+\begin{verbatim}
+--knn 1,10 --range 0.01,0.1,1
+\end{verbatim}
+the user requests to run queries of five different types: $1$-NN, $10$-NN,
+as well three range queries with radii 0.01, 0.1, and 1.
+
+\subsubsection{Method Specification}
+Unlike older versions it is possible to test only a single method at a time.
+To specify a method's name, use the following option:
+\begin{verbatim}
+  -m [ --method ] arg           method/index name
+\end{verbatim}
+A method can have a single set of index-time parameters, which is specified
+via:
+\begin{verbatim}
+-c [ --createIndex ] arg        index-time method(s) parameters
+\end{verbatim}
+In addition to the set of index-time parameters,
+the method can have multiple sets of query-time parameters, which are specified
+using the following (possibly repeating) option:
+\begin{verbatim}
+-t [ --queryTimeParams ] arg    query-time method(s) parameters
+\end{verbatim}
+For each set of query-time parameters, i.e., for each occurrence of the option \ttt{--queryTimeParams}, 
+the benchmarking utility \ttt{experiment},
+carries out an evaluation using the specified set of queries and a query type (e.g., a 10-NN search with
+queries from a specified file). 
+If the user does not specify any query-time parameters, there is only one evaluation to be carried out.
+This evaluation uses default query-time parameters.
+In general, we ensure that \emph{whenever a query-time parameter is missed, the default value is used}.
+
+Similar to parameters of the spaces, 
+a set of method's parameters is a comma-separated list (no-spaces)
+of parameter-value pairs in the format:
+\ttt{<parameter name>=<parameter value>}.
+For a detailed list of methods and their parameters, please, refer to \S~\ref{SectionMethods}.
+
+Note that a few methods can save/restore (meta) indices. To save and load indices
+one should use the following options:
+\begin{verbatim}
+  -L [ --loadIndex ] arg        a location to load the index from 
+  -S [ --saveIndex ] arg        a location to save the index to
+\end{verbatim}
+When the user defines the location of the index using the option \ttt{--loadIndex}, 
+the index-time parameters may be ignored. 
+Specifically, if the specified index does not exist, the index is created from scratch.
+Otherwise, the index is loaded from disk.
+Also note that the benchmarking utility \emph{does not override an already existing index} (when the option \ttt{--saveIndex} is present).
+
+If the tests are run the bootstrapping mode, i.e., when queries are randomly sampled (without replacement) from the
+data set, several indices may need to be created. Specifically, for each split we create a separate index file.
+The identifier of the split is indicated using a special suffix.
+Also note that we need to memorize which data points in the split were used as queries. 
+This information is saved in a gold standard cache file (see \S~\ref{SectionEfficiency}).
+Thus, saving and loading of indices in the bootstrapping mode is possible only if 
+gold standard caching is used.
+
+\subsubsection{Saving and Processing Benchmark Results}
+The benchmarking utility may produce output of three types:
+\begin{itemize}
+\item Benchmarking results (a human readable report and a tab-separated data file);
+\item Log output (which can be redirected to a file);
+\item Progress bars to indicate the progress in index creation for some methods (cannot be currently suppressed);
+\end{itemize}
+
+To save benchmarking results to a file, on needs to specify a parameter:
+\begin{verbatim}
+  -o [ --outFilePrefix ] arg  output file prefix
+\end{verbatim}
+As noted above, we create two files: a human-readable report (suffix \ttt{.rep}) and 
+a tab-separated data file (suffix \ttt{.data}).
+By default, the benchmarking utility creates files from scratch:
+If a previously created report exists, it is erased. 
+The following option can be used to append results to the previously created report:
+\begin{verbatim}
+  -a [ --appendToResFile ]    do not override information in results
+\end{verbatim}
+For information on processing and interpreting results see \S~\ref{SectionMeasurePerf}.
+A description of the plotting utility is given in \S~\ref{SectionGenPlot}.
+
+By default, all log messages are printed to the standard error stream.
+However, they can also be redirected to a log-file:
+\begin{verbatim}
+  -l [ --logFile ] arg         log file
+\end{verbatim}
+
+\subsubsection{Efficiency of Testing}\label{SectionBenchEfficiency}
+Except for  measuring methods' performance, 
+the following are the most expensive operations: 
+\begin{itemize}
+\item computing ground truth answers (also
+known as \emph{gold standard} data);
+\item loading the data set; 
+\item indexing. 
+\end{itemize}
+To make testing faster, the following methods can be used: 
+\begin{itemize}
+\item Caching of gold standard data;
+\item Creating gold standard data using multiple threads; 
+\item Reusing previously created indices (when loading and saving is supported by a method);
+\item Carrying out multiple tests using different sets of query-time parameters. 
+\end{itemize}
+
+By default, we recompute gold standard data every time we run benchmarks, which may take long time.
+However, it is possible to save gold standard data and re-use it later
+by specifying an additional argument:
+\begin{verbatim}
+-g [ --cachePrefixGS ] arg  a prefix of gold standard cache files
+\end{verbatim}
+The benchmarks can be run in a multi-threaded mode by specifying a parameter:
+\begin{verbatim}
+--threadTestQty arg (=1)    # of threads during querying
+\end{verbatim}
+In this case, the gold standard data is also created in a multi-threaded mode (which can also be much faster).
+Note that NMSLIB directly supports only an inter-query parallelism, i.e., multiple queries are executed in parallel,
+rather than the intra-query parallelism, where a single query can be processed by multiple CPU cores.
+
+Gold standard data is stored in two files. One is a textual meta file
+that memorizes important input parameters such as the name of the data and/or query file,
+the number of test queries, etc. 
+For each query, the binary cache files contains ids of answers (as well as distances and 
+class labels). 
+When queries are created by random sampling from the main data set,
+we memorize which objects belong to each query set.
+
+When the gold standard data is reused later,
+the benchmarking code verifies if input parameters match the content of the cache file. 
+Thus, we can prevent an accidental use of gold standard data created for one data set
+while testing with a different data set.
+
+Another sanity check involves verifying that data points obtained via an approximate
+search are not closer to the query than data points obtained by an exact search.
+This check has turned out to be quite useful. 
+It has helped detecting a problem in at least the following two cases:
+\begin{itemize}
+\item The user creates a gold standard cache. Then, the user modifies a distance function and runs the tests again;
+\item Due to a bug, the search method reports distances to the query that are smaller than
+the actual distances (computed using a distance function). This may occur, e.g., due to
+a memory corruption.
+\end{itemize}
+
+When the benchmarking utility detects a situation when an approximate method
+returns points closer than points returned by an exact method, the testing procedure is terminated
+and the user sees a diagnostic message (see Table~\ref{TableFailGSCheck} for an example). 
+
+\begin{table}
+\scriptsize
+\begin{verbatim}
+... [INFO] >>>> Computing effectiveness metrics for sw-graph
+... [INFO] Ex: -2.097 id = 140154 -> Apr: -2.111 id = 140154 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.974 id = 113850 -> Apr: -2.005 id = 113850 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.883 id = 102001 -> Apr: -1.898 id = 102001 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.6667 id = 58445 -> Apr: -1.6782 id = 58445 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.6547 id = 76888 -> Apr: -1.6688 id = 76888 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.5805 id = 47669 -> Apr: -1.5947 id = 47669 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.5201 id = 65783 -> Apr: -1.4998 id = 14954 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.4688 id = 14954 -> Apr: -1.3946 id = 25564 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.454 id = 90204 -> Apr: -1.3785 id = 120613 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.3804 id = 25564 -> Apr: -1.3190 id = 22051 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.367 id = 120613 -> Apr: -1.205 id = 101722 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.318 id = 71704 -> Apr: -1.1661 id = 136738 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.3103 id = 22051 -> Apr: -1.1039 id = 52950 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.191 id = 101722 -> Apr: -1.0926 id = 16190 1 - ratio: -0.0202 diff: -0.0221
+... [INFO] Ex: -1.157 id = 136738 -> Apr: -1.0348 id = 13878 1 - ratio: -0.0202 diff: -0.0221
+... [FATAL] bug: the approximate query should not return objects that are closer to the query 
+                 than object returned by (exact) sequential searching! 
+                 Approx: -1.09269 id = 16190 Exact: -1.09247 id = 52950
+\end{verbatim}
+\caption{\label{TableFailGSCheck} A diagnostic message indicating that
+there is some mismatch in the current experimental setup and the setup used to create
+the gold standard cache file.}
+\end{table}
+
+To compute recall, it is enough to memorize only query answers.
+For example, in the case of a 10-NN search, it is enough to memorize only 10 data points closest 
+to the query as well as respective distances (to the query).
+However, this is not sufficient for computation of  a rank approximation metric (see \S~\ref{SectionEffect}).
+To control the accuracy of computation, we permit the user to change the number of entries memorized.
+This number is defined by the parameter:
+\begin{verbatim}
+--maxCacheGSRelativeQty arg (=10)   a maximum number of gold 
+                                    standard entries
+\end{verbatim}
+Note that this parameter is a coefficient: the actual number of entries is defined relative to
+the result set size. For example, if a range search returns 30 entries and the value of 
+\ttt{--maxCacheGSRelativeQty} is 10, then $30 \times 10=300$ entries are saved in the gold standard
+cache file.
+
+\subsection{Measuring Performance and Interpreting Results}\label{SectionMeasurePerf}
+\subsubsection{Efficiency.} We measure several efficiency metrics: query runtime, the number of distance computations,
+the amount of memory used by the index \emph{and} the data, and the time to create the index.
+We also measure the improvement in runtime (improvement in efficiency) 
+with respect to a sequential search (i.e., brute-force) approach
+as well as an improvement in the number of distance computations. 
+If the user runs benchmarks in a multi-threaded mode (by specifying the option \ttt{--threadTestQty}),
+we compare against the multi-threaded version of the brute-force search as well.
+
+A good method should
+carry out fewer distance computations and be faster than the brute-force search,
+which compares \emph{all the objects} directly with the query. 
+However, great reduction in the number of distance computations 
+does not always entail good improvement in efficiency:
+while we do not spend CPU time on computing directly,
+we may be spending CPU time on, e.g., computing the value of the distance 
+in the projected space (as
+in the case of projection-based methods, see \S~\ref{SectionProjMethod}).
+
+Note that the improvement in efficiency is adjusted for the number of threads.
+Therefore, it does not increase as more threads are added: in contrast,
+it typically decreases as there is more competition for computing resources (e.g., memory)
+in a multi-threaded mode.
+
+The amount of memory consumed by a search method is measured indirectly: 
+We record the overall memory usage of a benchmarking process before and after creation of the index. Then, we add the amount of memory used by the data.
+On Linux,  we query a special file \ttt{/dev/<process id>/status},
+which might not work for all Linux distributives.
+Under Windows, we retrieve the working set size using the function
+\ttt{GetProcessMemoryInfo}.
+Note that we do not have  a truly portable code to measure memory consumption of a process.
+
+\subsubsection{Effectiveness}
+\label{SectionEffect}
+
+In the following description, we assume that a method returns 
+a set of points/objects $\{o_i\}$.
+The value of $\pos(o_i)$ represents a positional distance from $o_i$ to the query, 
+i.e., the number of database objects closer to the query than $o_i$ plus one.
+Among objects with identical distances to the query, 
+the object with the smallest index is considered to be the closest.
+Note that $\pos(o_i) \ge i$.
+
+Several effectiveness metrics are computed by the benchmarking utility:
+\begin{itemize}
+\item  A \emph{number of points closer} to the query than the nearest returned point.
+This metric is equal $\pos(o_1)$ minus one. If $o_1$ is always the true nearest object,
+its positional distance is one and, thus, the \emph{number of points closer} is always equal to zero.
+\item A \emph{relative position} error for point $o_i$ is equal to $\pos(o_i)/i$,
+an aggregate value is obtained by computing the geometric mean over all returned $o_i$;
+\item \emph{Recall},  which is is equal to the fraction of all correct answers retrieved.
+\item \emph{Classification accuracy}, which is equal to the fraction of labels correctly
+predicted by a \knn based classification procedure.
+\end{itemize}
+
+The first two metrics represent a so-called rank (approximation) error.
+The closer the returned objects are to the query object, 
+the better is the quality of the search response and the lower is the rank 
+approximation error.
+
+\begin{wraptable}{R}{0.52\textwidth}
+\caption{An example of a human-readable report 
+\label{TableHRep}}
+\begin{verbatim}
+===================================
+vptree: triangle inequality
+alphaLeft=2.0,alphaRight=2.0
+===================================
+# of points: 9900
+# of queries: 100
+------------------------------------
+Recall:         0.954 -> [0.95 0.96]
+ClassAccuracy:  0     -> [0 0]
+RelPosError:    1.05  -> [1.05 1.06]
+NumCloser:      0.11  -> [0.09 0.12]
+------------------------------------
+QueryTime:      0.2   -> [0.19 0.21]
+DistComp:       2991  -> [2827 3155]
+------------------------------------
+ImprEfficiency: 2.37  -> [2.32 2.42]
+ImprDistComp:   3.32  -> [3.32 3.39]
+------------------------------------
+Memory Usage:   5.8 MB
+------------------------------------
+\end{verbatim}
+\textbf{Note:} \emph{confidence intervals} are in brackets
+%\vspace{-4em}
+\end{wraptable}
+
+
+Recall is a classic metric. 
+It was argued, however, 
+that recall does not account for positional information of returned objects
+and is, therefore, inferior to rank approximation error metrics \cite{Amato_et_al:2003,Cayton2008}.
+Consider the case of 10-NN search and imagine that there are two methods
+that, on average, find only half of true 10-NN objects.
+Also, assume that the first method always finds neighbors from one to five,
+but misses neighbors from six to ten.
+The second method always finds neighbors from six to ten, but misses the first five ones.
+Clearly, the second method produces substantially inferior results, but it has the same recall as the first one.
+
+If we had ground-truth queries and relevance judgments from human assessors,
+we could in principle compute other realistic effectiveness metrics 
+such as the mean average precision,
+or the normalized discounted cumulative gain.
+This remains for the future work.
+
+Note that it is pointless to compute the mean average precision
+when human judgments are not available, \href{http://searchivarius.org/blog/when-average-precision-equal-recall}{as the mean average precision
+is identical to the recall in this case}.
+
+\subsection{Interpreting and Processing Benchmark Results}
+If the user specifies the option \ttt{--outFilePrefix},
+the benchmarking results are stored to the file system.
+A prefix of result files is defined by the parameter \ttt{--outFilePrefix}
+while the suffix is defined by a type of the search procedure (the \knn or the range search)
+as well as by search parameters (e.g., the range search radius).
+For each type of search, two files are generated:
+a report in a human-readable format,
+and a tab-separated data file intended for automatic processing.
+The data file contains only the average values,
+which can be used to, e.g., produce efficiency-effectiveness plots
+as described in \S~\ref{SectionGenPlot}.
+
+An example of human readable report (\emph{confidence intervals} are in square brackets)
+is given in Table~\ref{TableHRep}.
+In addition to averages, the human-readable report provides 95\% confidence intervals.
+In the case of bootstrapping, statistics collected for several splits of the data set are aggregated.
+For the retrieval time and the number of distance computations,
+this is done via a classic fixed-effect model adopted in meta analysis \cite{Hedges_and_Vevea:1998}.
+When dealing with other performance metrics, 
+we employ a simplistic approach of averaging split-specific values
+and computing the sample variance over spit-specific averages.\footnote{The distribution
+of many metric values is not normal. There are approaches to resolve this issue (e.g., apply a transformation),
+but an additional investigation is needed to understand which approaches work best.}
+Note for all metrics, except relative position error, an average is computed using an arithmetic mean.
+For the relative error, however, we use the geometric mean  \cite{king:1986}.
+

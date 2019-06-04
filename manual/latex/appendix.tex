@@ -1,0 +1,54 @@
+\begin{appendix}
+\section{Description of Projection Types}\label{SectionProjDetails}
+\subsection{The classic random projections} 
+The classic random projections work only for vector spaces (both sparse and dense).
+At index time, we generate \ttt{projDim} vectors by sampling their elements from
+the standard normal distribution $\mathcal{N}(0,1)$ and orthonormalizing them. \footnote{If 
+the dimensionality of the projection space is larger than the dimensionality of the original
+space, only the first \ttt{projDim} vectors are orthonormalized. The remaining are simply
+divided by their norms.}
+Coordinates in the projection spaces are obtained by computing scalar products
+between a given vector and each of the \ttt{projDim} randomly generated vectors.
+
+In the case of sparse vector spaces, the dimensionality is first reduced via the hashing trick:
+the value of the element $i$ is equal to the sum of values for all elements whose indices are 
+hashed into number $i$. 
+After hashing, classic random projections are applied. 
+The dimensionality of the intermediate space is defined by a method's parameter \ttt{intermDim}. 
+
+The hashing trick is used purely for efficiency reasons. 
+However, for large enough values of the intermediate
+dimensionality, it has virtually no adverse affect on performance.
+For example, in the case of Wikipedia tf-idf vectors (see  
+\url{https://github.com/nmslib/nmslib/tree/v\LibVersion/manual/datasets.md}),
+it is safe to use the value \ttt{intermDim}=4096.
+
+Random projections work best if both the source and the target space are Euclidean,
+whereas the distance is either $L_2$ or the cosine distance.
+In this case, there are theoretical guarantees that the projection preserves
+well distances in the original space (see e.g. \cite{bingham2001random}).
+
+\subsection{FastMap} 
+FastMap introduced by Faloutsos and Lin \cite{faloutsos1995fastmap}
+is also a type of the random-projection method. 
+At indexing time, we randomly select $projDim$ pairs $A_i$ and $B_i$.
+The \mbox{$i$-\textit{th}} coordinate of vector $x$ is computed using the formula:
+\begin{equation}\label{EqFastMap}
+\mbox{\ttt{FastMap}}_{i}(x)  = \frac{d(A_i,x)^2 - d(B_i,x_i)^2 + d(A_i,B_i)}{2 d(A_i,B_i)^2}
+\end{equation}
+Given points $A$ and $B$ in the Euclidean space, Eq.~\ref{EqFastMap} gives the length of the
+orthogonal projection of $x$ to the line connecting $A$ and $B$.
+However, FastMap can be used in non-Euclidean spaces as well.
+
+\subsection{Distances to the Random Reference Points} 
+This method is a folklore projection approach,
+where the \mbox{$i$-\textit{th}} coordinate of point $x$ in the projected space is computed as simply $d(x, \pi_i)$,
+where $\pi_i$ is a pivot in the original space, i.e., a randomly selected reference point.
+Pivots are selected once during indexing time.
+
+\subsection{Permutation-based Projections.}
+In this approach, we also select \ttt{projDim} pivots at index time.
+However, instead of using raw distances to the pivots,
+we rely on ordinal positions of pivots sorted by their distance to a point.  
+A more detailed description is given in \S~\ref{SectionPermMethod}.
+\end{appendix}

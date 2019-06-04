@@ -69,9 +69,11 @@ bool fullTestCommon(bool binTest, Space<dist_t>* pSpace,
     return false;
   }
 
-  if (vExternIds2.size() != dataSet2.size()) {
-    LOG(LIB_ERROR) << "binTest" << binTest << "The number of external IDs (" << vExternIds1.size() << ") is different from the number of records: " << dataSet2.size();
-    return false;
+  if (bTestExternId) {
+    if (vExternIds2.size() != dataSet2.size()) {
+      LOG(LIB_ERROR) << "binTest" << binTest << "The number of external IDs (" << vExternIds1.size() << ") is different from the number of records: " << dataSet2.size();
+      return false;
+    }
   }
 
   for (size_t i = 0; i < maxNumRec; ++i) {

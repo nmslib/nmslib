@@ -40,10 +40,13 @@ points, but the number of points included in other layers is defined by the para
 
 Second, there is a trade-off between retrieval performance and indexing time 
 related to the choice of the pruning heuristic (controlled
-by the parameter ``delaunay_type``). Specifically, by default ``delaunay_type`` is
-equal to 1. Using delaunay type=1 improves performance—especially at high
-recall values (> 80%) at the expense of longer indexing times. Therefore, for
-lower recall values, we recommend using ``delaunay_type=0``.
+by the parameter ``delaunay_type``). 
+Specifically, by default ``delaunay_type`` is
+equal to 2. 
+This default is generally quite good.
+However, 
+it maybe worth trying other viable options values: 0, 1, and 3.
+
 
 Third, HNSW has the parameter ``post``, which defines the amount (and type) of 
 postprocessing applied to the constructed graph. The default value is 0, which means 

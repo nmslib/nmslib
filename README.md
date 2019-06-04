@@ -7,16 +7,10 @@
 
 ## Important Notes
 
-* NMSLIB is generic, but fast, see the results of [ANN benchmarks](https://github.com/erikbern/ann-benchmarks).
-* A stand-alone implementation of our fastest method HNSW [also exists as a header-only library](https://github.com/nmslib/hnswlib).
-* All the documentation (including using Python bindings and the query server, description of methods and spaces, building the library) can be found [on this page](/manual/README.md).
+* NMSLIB is generic but fast, see the results of [ANN benchmarks](https://github.com/erikbern/ann-benchmarks).
+* A standalone implementation of our fastest method HNSW [also exists as a header-only library](https://github.com/nmslib/hnswlib).
+* **All** the documentation (including using **Python bindings** and the query server, description of methods and spaces, building the library, etc) can be found [on this page](/manual/README.md).
 * For **generic questions/inquiries**, please, use [**the Gitter chat**](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge): GitHub issues page is for bugs and feature requests.
-
-## Some Limitations
-
-* Only static data sets are supported (with an exception of SW-graph)
-* HNSW currently duplicates memory to create optimized indices
-* Range/threshold search is not supported by many methods including SW-graph/HNSW
 
 ## Objectives
 
