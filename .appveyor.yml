@@ -2,7 +2,8 @@ version: '{build}'
 image: Visual Studio 2015
 platform:
 - x64
-- x86
+# Disable temporarily
+#- x86
 environment:
   global:
     DISTUTILS_USE_SDK: 1
