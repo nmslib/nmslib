@@ -1,4 +1,4 @@
-{\pdfoutput=1
+%{\pdfoutput=1
 \documentclass[runningheads,a4paper]{llncs}
 
 \usepackage{amssymb}
@@ -57,7 +57,7 @@
 % their surnames. This ensures that the names appear correctly in
 % the running heads and the author index.
 %
-\author{Bilegsaikhan Naidan \and Leonid Boytsov \and Yury Malkov}
+\author{Bilegsaikhan Naidan \and Leonid Boytsov \and Yury Malkov \and David Novak}
 %
 \authorrunning{Naidan et al}
 % (feature abused for this document to repeat the title also on left hand pages)
@@ -85,7 +85,7 @@
 This document covers a library for fast similarity (\knnns) search.
 It describes \textbf{only}
 search methods and distances (spaces).
-Details about building, installing, Python bindings can be found online: \url{\replocdir}.
+Details about building, installing, Python bindings can be found online: \newline \url{\replocdir}.
 Even though the library contains a variety of exact metric-space access methods,
 our main focus is on more \emph{generic} and \emph{approximate} search methods,
 in particular, on methods for non-metric spaces.
@@ -104,8 +104,9 @@ NMSLIB is possibly the first library with a principled support for non-metric sp
 \input{efficiencyNotes.tex}
 
 \bibliographystyle{abbrv}
-%\bibliographystyle{plain}
+\bibliographystyle{plain}
 \bibliography{manual}
+%\input{main.bbl}
 
 \input{appendix.tex}
 
