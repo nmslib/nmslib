@@ -24,7 +24,7 @@ NMSLIB is possibly the first library with a principled support for non-metric sp
 
 NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
-**Authors**: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov. **With contributions from** David Novak, Lawrence Cayton, Wei Dong, Avrelin Nikita, Ben Frederickson, Dmitry Yashunin, Bob Poekert, @orgoro, @gregfriedland, 
+**Authors**: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, David Novak. **With contributions from** Ben Frederickson, Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin, Bob Poekert, @orgoro, @gregfriedland, 
 Scott Gigante, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
 ## Brief History
@@ -63,7 +63,7 @@ with k-NN Search.](http://boytsov.info/pubs/cikm2016.pdf) In proceedings of CIKM
 * Boytsov, L., Bilegsaikhan, N., 2013. [Engineering Efficient and Effective Non-Metric Space Library.](http://boytsov.info/pubs/sisap2013.pdf)   In Proceedings of the 6th International Conference on Similarity Search and Applications (SISAP 2013). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13)  
 * Boytsov, L., Bilegsaikhan, N., 2013. [Learning to Prune in Metric and Non-Metric Spaces.](http://boytsov.info/pubs/nips2013.pdf)   In Advances in Neural Information Processing Systems 2013. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/nips/BoytsovN13)
 * Tellez, Eric Sadit, Edgar Chávez, and Gonzalo Navarro. [Succinct nearest neighbor search.](http://www.dcc.uchile.cl/~gnavarro/ps/is12.pdf) Information Systems 38.7 (2013): 1019-1030. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/is/TellezCN13)
-* A. Ponomarenko, Y. Malkov, A. Logvinov, , and V. Krylov  [Approximate nearest
+* A. Ponomarenko, Y. Malkov, A. Logvinov, and V. Krylov  [Approximate nearest
 neighbor search small world approach.](http://www.iiis.org/CDs2011/CD2011IDI/ICTA_2011/Abstract.asp?myurl=CT175ON.pdf) ICTA 2011 
 * Dong, Wei, Charikar Moses, and Kai Li. 2011. [Efficient k-nearest neighbor graph construction for generic similarity measures.](http://wwwconference.org/proceedings/www2011/proceedings/p577.pdf) Proceedings of the 20th international conference on World wide web. ACM, 2011.
 [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/mir/DongWCL12)
