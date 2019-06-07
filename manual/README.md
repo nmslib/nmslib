@@ -11,7 +11,10 @@ contains a detailed description of implemented search spaces and methods.
 
 ## Documentation Links
 
-* [Python bindings overview](/python_bindings/README.md) and [Python bindings API](https://nmslib.github.io/nmslib/index.html)
+* Python bindings
+  - [Overview and further links](/python_bindings/README.md) 
+  - [Sample notebooks](/python_bindings/notebooks/README.md)
+  - [Python bindings API](https://nmslib.github.io/nmslib/index.html)
 * [A brief list of methods and parameters (including basic tuning guidelines)](/manual/methods.md)
 * [A brief list of supported spaces/distance](/manual/spaces.md)
 * [Some data used in the past](/manual/datasets.md)
