@@ -49,7 +49,13 @@ using std::numeric_limits;
 
 class Object {
  public:
-  explicit Object(char* buffer) : buffer_(buffer), memory_allocated_(false) {}
+  /*
+   * Memory ownership handling of the Object class is not good, but we keep it this way for historical/compatibility reasons
+   * Currrently, when the second constructor is called, new memory is always allocated.
+   * However, this constructor is nornally called to created an object that reuses someone else's memory.
+   * In NMSLIB 1.8.1 we make it possible to take ownership of the memory provided.
+   */
+  explicit Object(char* buffer, bool memory_allocated=false) : buffer_(buffer), memory_allocated_(memory_allocated) {}
 
   Object(IdType id, LabelType label, size_t datalength, const void* data) {
     buffer_ = new char[ID_SIZE + LABEL_SIZE + DATALENGTH_SIZE + datalength];

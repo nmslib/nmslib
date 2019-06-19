@@ -77,7 +77,9 @@ Space<dist_t>::ReadObjectVectorFromBinData(ObjectVector& data,
     readBinaryPOD(input, objSize);
     unique_ptr<char []> buf(new char[objSize]);
     input.read(&buf[0], objSize);
-    data.push_back(new Object(buf.release()));
+    // true guarantees that the Object will take ownership of memory
+    // less than ideal, but ok for now
+    data.push_back(new Object(buf.release(), true));
   }
   
   return unique_ptr<DataFileInputState>(new DataFileInputState());

@@ -6,6 +6,12 @@ import numpy as np
 import numpy.testing as npt
 
 import nmslib
+import time
+
+import os, gc, psutil
+
+MEM_TEST_ITER=50
+MEM_GROW_COEFF=8 # This is a bit adhoc but seems to work in practice
 
 
 def get_exact_cosine(row, data, N=10):
@@ -293,6 +299,113 @@ class GlobalTestCase(TestCaseBase):
     def testGlobal(self):
         # this is a one line reproduction of https://github.com/nmslib/nmslib/issues/327
         GlobalTestCase.index = nmslib.init()
+
+class MemoryLeak1TestCase(TestCaseBase):
+    def testMemoryLeak1(self):
+        process = psutil.Process(os.getpid())
+
+        np.random.seed(23)
+        data = np.random.randn(10000, 10).astype(np.float32)
+        query = np.random.randn(1000, 10).astype(np.float32)
+        space_name = 'l2'
+
+        num_threads=4
+
+        index_time_params = {'M': 20, 
+                             'efConstruction': 100, 
+                             'indexThreadQty': num_threads,
+                             'post' : 0,
+                             'skip_optimized_index' : 1} # using non-optimized index!
+
+        query_time_params = {'efSearch': 100}
+
+        with tempfile.NamedTemporaryFile() as tmp:
+
+            index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
+            index.addDataPointBatch(data)
+
+            index.createIndex(index_time_params) 
+            index.saveIndex(tmp.name, save_data=True)
+
+            init_mem = process.memory_info().rss
+
+            delta1 = None
+
+            for k in range(MEM_TEST_ITER):
+
+                index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
+                index.loadIndex(tmp.name, load_data=True)
+                index.setQueryTimeParams(query_time_params)
+
+                if k == 0:
+                  delta1 = process.memory_info().rss - init_mem
+
+                nbrs = index.knnQueryBatch(query, k = 10, num_threads = num_threads)
+                
+                nbrs = None 
+                index = None
+
+                gc.collect()
+
+            gc.collect()
+            time.sleep(1)
+            gc.collect()
+            time.sleep(1)
+            delta_last = process.memory_info().rss - init_mem
+             
+            # if this check fails a memory leak is possible (but not necessarily 100% certain, memory is random)
+            self.assertTrue(delta_last < delta1 * MEM_GROW_COEFF)
+
+class MemoryLeak2TestCase(TestCaseBase):
+    def testMemoryLeak2(self):
+        process = psutil.Process(os.getpid())
+
+        np.random.seed(23)
+        data = np.random.randn(10000, 10).astype(np.float32)
+        query = np.random.randn(1000, 10).astype(np.float32)
+        space_name = 'l2'
+
+        num_threads=4
+
+        index_time_params = {'M': 20, 
+                             'efConstruction': 100, 
+                             'indexThreadQty': num_threads,
+                             'post' : 0,
+                             'skip_optimized_index' : 1} # using non-optimized index!
+
+        query_time_params = {'efSearch': 100}
+
+        with tempfile.NamedTemporaryFile() as tmp:
+
+            init_mem = process.memory_info().rss
+
+            delta1 = None
+
+            for k in range(MEM_TEST_ITER):
+
+                index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
+                index.addDataPointBatch(data)
+                index.createIndex(index_time_params) 
+
+                if k == 0:
+                  delta1 = process.memory_info().rss - init_mem
+
+                index.setQueryTimeParams(query_time_params)
+                nbrs = index.knnQueryBatch(query, k = 10, num_threads = num_threads)
+                
+                nbrs = None 
+                index = None
+
+                gc.collect()
+
+            gc.collect()
+            time.sleep(1)
+            gc.collect()
+            time.sleep(1)
+            delta_last = process.memory_info().rss - init_mem
+             
+            # if this check fails a memory leak is possible (but not necessarily 100% certain, memory is random)
+            self.assertTrue(delta_last < delta1 * MEM_GROW_COEFF)
 
 
 if __name__ == "__main__":
