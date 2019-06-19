@@ -4,7 +4,7 @@ from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
 
-__version__ = '1.8'
+__version__ = '1.8.1'
 
 libdir = os.path.join(".", "nmslib", "similarity_search")
 if not os.path.isdir(libdir) and sys.platform.startswith("win"):

@@ -60,7 +60,7 @@ template <typename dist_t> void exportIndex(py::module * m);
 template <typename dist_t> std::string distName();
 AnyParams loadParams(py::object o);
 void exportLegacyAPI(py::module * m);
-void freeObjectVector(ObjectVector * data);
+void freeAndClearObjectVector(ObjectVector& data);
 
 // Wrap a space/objectvector/index together for ease of use
 template <typename dist_t>
@@ -101,7 +101,7 @@ struct IndexWrapper {
     index.reset(factory.CreateMethod(print_progress, method, space_type, *space, data));
     if (load_data) {
       vector<string> dummy;
-      data.clear();
+      freeAndClearObjectVector(data);
       space->ReadObjectVectorFromBinData(data, dummy, filename + data_suff);
     }
     index->LoadIndex(filename);
@@ -156,7 +156,7 @@ struct IndexWrapper {
       });
 
       // TODO(@benfred): some sort of RAII auto-destroy for this
-      freeObjectVector(&queries);
+      freeAndClearObjectVector(queries);
     }
 
     py::list ret;
@@ -362,7 +362,7 @@ struct IndexWrapper {
     // In cases when the interpreter was shutting down, attempting to log in python
     // could throw an exception (https://github.com/nmslib/nmslib/issues/327).
     //LOG(LIB_DEBUG) << "Destroying Index";
-    freeObjectVector(&data);
+    freeAndClearObjectVector(data);
   }
 
   std::string method;
@@ -657,10 +657,11 @@ template <> std::string distName<int>() { return "Int"; }
 template <> std::string distName<float>() { return "Float"; }
 template <> std::string distName<double>() { return "Double"; }
 
-void freeObjectVector(ObjectVector * data) {
-  for (auto datum : *data) {
+void freeAndClearObjectVector(ObjectVector& data) {
+  for (auto datum : data) {
     delete datum;
   }
+  data.clear();
 }
 
 AnyParams loadParams(py::object o) {
