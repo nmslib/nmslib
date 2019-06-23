@@ -20,6 +20,8 @@ install:
 - cmd: '"%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%'
 - cmd: git config core.symlinks true
 - cmd: git reset --hard
+- ps: Remove-Item -Recurse -Force C:/cygwin
+- ps: Remove-Item -Recurse -Force C:/cygwin64
 - ps: |
     if ($env:PYTHON) {
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
