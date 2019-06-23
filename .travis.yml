@@ -114,7 +114,7 @@ install:
   fi
   make -j 4
   $PY -m pip install --upgrade pip
-  travis_wait travis_retry $PIP install scipy six flake8
+  travis_wait travis_retry $PIP install scipy six flake8 psutil
   travis_wait travis_retry $PIP install -r python_bindings/requirements.txt
   travis_retry cd python_bindings && $PY setup.py build install && cd ..
 
