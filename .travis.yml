@@ -130,17 +130,17 @@ script:
       cd ..
   fi
 
-deploy:
-  provider: pypi
-  user: searchivarius
-  # https://docs.travis-ci.com/user/environment-variables/#defining-variables-in-repository-settings
-  password: ${PYPI_PASSWORD}
-  distributions: sdist bdist_wheel
-  skip_existing: true
-  skip_cleanup: true
-  on:
-    tags: true
-    branch: master
+#deploy:
+#  provider: pypi
+#  user: searchivarius
+#  # https://docs.travis-ci.com/user/environment-variables/#defining-variables-in-repository-settings
+#  password: ${PYPI_PASSWORD}
+#  distributions: sdist bdist_wheel
+#  skip_existing: true
+#  skip_cleanup: true
+#  on:
+#    tags: true
+#    branch: master
 
 cache:
   - apt
