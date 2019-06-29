@@ -1,6 +1,7 @@
 import itertools
 import tempfile
 import unittest
+import shutil
 
 import numpy as np
 import numpy.testing as npt
@@ -128,20 +129,24 @@ class DenseIndexTestMixin(object):
         original.addDataPointBatch(data)
         original.createIndex()
 
+        # test out saving/reloading index
+        temp_dir = tempfile.mkdtemp()
+        temp_file_pref = os.path.join(temp_dir, 'index')
+
         for save_data in [0, 1]:
-            # test out saving/reloading index
-            with tempfile.NamedTemporaryFile() as tmp:
-                original.saveIndex(tmp.name + ".index", save_data=save_data)
 
-                reloaded = self._get_index()
-                if save_data == 0:
-                    reloaded.addDataPointBatch(data)
-                reloaded.loadIndex(tmp.name + ".index", load_data=save_data)
+            original.saveIndex(temp_file_pref, save_data=save_data)
 
-                original_results = original.knnQuery(data[0])
-                reloaded_results = reloaded.knnQuery(data[0])
-                self.assert_allclose(original_results,
-                                    reloaded_results)
+            reloaded = self._get_index()
+            if save_data == 0:
+                reloaded.addDataPointBatch(data)
+            reloaded.loadIndex(temp_file_pref, load_data=save_data)
+
+            original_results = original.knnQuery(data[0])
+            reloaded_results = reloaded.knnQuery(data[0])
+            self.assert_allclose(original_results, reloaded_results)
+
+        shutil.rmtree(temp_dir)
 
 
 class BitVectorIndexTestMixin(object):
@@ -185,22 +190,26 @@ class BitVectorIndexTestMixin(object):
             original.addDataPointBatch(ids=ids, data=data)
         original.createIndex()
 
+        temp_dir = tempfile.mkdtemp()
+        temp_file_pref = os.path.join(temp_dir, 'index')
+
         for save_data in [0, 1]:
             # test out saving/reloading index
-            with tempfile.NamedTemporaryFile() as tmp:
-                original.saveIndex(tmp.name + ".index", save_data=save_data)
 
-                reloaded = self._get_index()
-                if save_data == 0:
-                    for ids, data in batches:
-                        reloaded.addDataPointBatch(ids=ids, data=data)
-                reloaded.loadIndex(tmp.name + ".index", load_data=save_data)
+            original.saveIndex(temp_file_pref, save_data=save_data)
 
-                s = self.bit_vector_str_func(np.ones(512))
-                original_results = original.knnQuery(s)
-                reloaded_results = reloaded.knnQuery(s)
-                self.assert_allclose(original_results,
-                                    reloaded_results)
+            reloaded = self._get_index()
+            if save_data == 0:
+                for ids, data in batches:
+                    reloaded.addDataPointBatch(ids=ids, data=data)
+            reloaded.loadIndex(temp_file_pref, load_data=save_data)
+
+            s = self.bit_vector_str_func(np.ones(512))
+            original_results = original.knnQuery(s)
+            reloaded_results = reloaded.knnQuery(s)
+            self.assert_allclose(original_results, reloaded_results)
+  
+        shutil.rmtree(temp_dir)
 
 
 class HNSWTestCase(TestCaseBase, DenseIndexTestMixin):
@@ -238,20 +247,24 @@ class SWGraphTestCase(TestCaseBase, DenseIndexTestMixin):
         original.addDataPointBatch(data)
         original.createIndex()
 
+        temp_dir = tempfile.mkdtemp()
+        temp_file_pref = os.path.join(temp_dir, 'index')
+
         # test out saving/reloading index
         for save_data in [0, 1]:
-            with tempfile.NamedTemporaryFile() as tmp:
-                original.saveIndex(tmp.name + ".index", save_data=save_data)
 
-                reloaded = self._get_index()
-                if save_data == 0:
-                    reloaded.addDataPointBatch(data)
-                reloaded.loadIndex(tmp.name + ".index", load_data=save_data)
+            original.saveIndex(temp_file_pref, save_data=save_data)
 
-                original_results = original.knnQuery(data[0])
-                reloaded_results = reloaded.knnQuery(data[0])
-                self.assert_allclose(original_results,
-                                    reloaded_results)
+            reloaded = self._get_index()
+            if save_data == 0:
+                reloaded.addDataPointBatch(data)
+            reloaded.loadIndex(temp_file_pref, load_data=save_data)
+
+            original_results = original.knnQuery(data[0])
+            reloaded_results = reloaded.knnQuery(data[0])
+            self.assert_allclose(original_results, reloaded_results)
+
+        shutil.rmtree(temp_dir)
 
 
 class BallTreeTestCase(TestCaseBase, DenseIndexTestMixin):
@@ -332,49 +345,52 @@ class MemoryLeak1TestCase(TestCaseBase):
 
         init_mem = process.memory_info().rss
 
+        temp_dir = tempfile.mkdtemp()
+        temp_file_pref = os.path.join(temp_dir, 'index')
+
         for tid in range(MEM_TEST_REPEAT_QTY1):
 
-            with tempfile.NamedTemporaryFile() as tmp:
 
+            index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
+            index.addDataPointBatch(data)
+    
+            index.createIndex(index_time_params) 
+            index.saveIndex(temp_file_pref, save_data=True)
+
+            index = None
+            gc.collect()
+
+            for iter_id in range(MEM_TEST_ITER1):
+    
                 index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
-                index.addDataPointBatch(data)
-    
-                index.createIndex(index_time_params) 
-                index.saveIndex(tmp.name, save_data=True)
+                index.loadIndex(temp_file_pref, load_data=True)
+                index.setQueryTimeParams(query_time_params)
 
-                index = None
-                gc.collect()
+                if iter_id == 0 and tid == 0:
+                    delta_first = process.memory_info().rss - init_mem
 
-                for iter_id in range(MEM_TEST_ITER1):
-    
-                    index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
-                    index.loadIndex(tmp.name, load_data=True)
-                    index.setQueryTimeParams(query_time_params)
+                delta_curr = process.memory_info().rss - init_mem
 
-                    if iter_id == 0 and tid == 0:
-                      delta_first = process.memory_info().rss - init_mem
+                #print('Step %d mem deltas current: %d first: %d ratio %f' % (iter_id, delta_curr, delta_first, float(delta_curr)/max(delta_first, 1)))
 
-                    delta_curr = process.memory_info().rss - init_mem
-
-                    #print('Step %d mem deltas current: %d first: %d ratio %f' % (iter_id, delta_curr, delta_first, float(delta_curr)/max(delta_first, 1)))
-
-                    nbrs = index.knnQueryBatch(query, k = 10, num_threads = num_threads)
+                nbrs = index.knnQueryBatch(query, k = 10, num_threads = num_threads)
                 
-                    nbrs = None 
-                    index = None
-
-                    gc.collect()
+                nbrs = None 
+                index = None
 
                 gc.collect()
-                time.sleep(0.25)
-                delta_last = process.memory_info().rss - init_mem
-                #print('Delta last %d' % delta_last)
-             
-                test_qty += 1
-                if delta_last >= delta_first * MEM_GROW_COEFF:
-                  fail_qty += 1
+
+            gc.collect()
+            time.sleep(0.25)
+            delta_last = process.memory_info().rss - init_mem
+            print('Delta first/last %d/%d' % (delta_first, delta_last))
+         
+            test_qty += 1
+            if delta_last >= delta_first * MEM_GROW_COEFF:
+              fail_qty += 1
 
 
+        shutil.rmtree(temp_dir)
         print('')
         print('Fail qty %d out of %d' % (fail_qty, test_qty))
         self.assertTrue(fail_qty < MEM_TEST_ITER1 * MEM_TEST_CRIT_FAIL_RATE)
@@ -408,46 +424,49 @@ class MemoryLeak2TestCase(TestCaseBase):
         test_qty = 0
         delta_first = None
 
+        temp_dir = tempfile.mkdtemp()
+        temp_file_pref = os.path.join(temp_dir, 'index')
+
         for tid in range(MEM_TEST_REPEAT_QTY2):
-            with tempfile.NamedTemporaryFile() as tmp:
 
-                gc.collect()
-                init_mem = process.memory_info().rss
+            gc.collect()
+            init_mem = process.memory_info().rss
 
-                delta1 = None
+            delta1 = None
 
-                for iter_id in range(MEM_TEST_ITER2):
+            for iter_id in range(MEM_TEST_ITER2):
 
-                    index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
-                    index.addDataPointBatch(data)
-                    index.createIndex(index_time_params) 
+                index = nmslib.init(method='hnsw', space=space_name, data_type=nmslib.DataType.DENSE_VECTOR)
+                index.addDataPointBatch(data)
+                index.createIndex(index_time_params) 
 
-                    if iter_id == 0 and tid == 0:
-                      delta_first = process.memory_info().rss - init_mem
+                if iter_id == 0 and tid == 0:
+                    delta_first = process.memory_info().rss - init_mem
 
-                    delta_curr = process.memory_info().rss - init_mem
+                delta_curr = process.memory_info().rss - init_mem
 
-                    #print('Step %d mem deltas current: %d first: %d ratio %f' % (iter_id, delta_curr, delta_first, float(delta_curr)/max(delta_first, 1)))
+                #print('Step %d mem deltas current: %d first: %d ratio %f' % (iter_id, delta_curr, delta_first, float(delta_curr)/max(delta_first, 1)))
 
-                    index.setQueryTimeParams(query_time_params)
-                    nbrs = index.knnQueryBatch(query, k = 10, num_threads = num_threads)
+                index.setQueryTimeParams(query_time_params)
+                nbrs = index.knnQueryBatch(query, k = 10, num_threads = num_threads)
                 
-                    nbrs = None 
-                    index = None
-
-                    gc.collect()
-
+                nbrs = None 
+                index = None
 
                 gc.collect()
-                time.sleep(0.25)
-                delta_last = process.memory_info().rss - init_mem
-                #print('Delta last %d' % delta_last)
+
+
+            gc.collect()
+            time.sleep(0.25)
+            delta_last = process.memory_info().rss - init_mem
+            #print('Delta last %d' % delta_last)
              
-                test_qty += 1
-                if delta_last >= delta_first * MEM_GROW_COEFF:
-                  fail_qty += 1
+            test_qty += 1
+            if delta_last >= delta_first * MEM_GROW_COEFF:
+                fail_qty += 1
 
 
+        shutil.rmtree(temp_dir)
         print('')
         print('Fail qty %d out of %d' % (fail_qty, test_qty))
         self.assertTrue(fail_qty < MEM_TEST_ITER2 * MEM_TEST_CRIT_FAIL_RATE)
