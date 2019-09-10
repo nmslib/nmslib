@@ -16,6 +16,7 @@
 #define _FACTORY_PIVOT_NEIGHB_H_
 
 #include <method/pivot_neighb_invindx.h>
+#include <method/napp_optim.h>
 #ifdef WITH_EXTRAS
 #include <method/pivot_neighb_horder_hashpiv_invindx.h>
 #include <method/pivot_neighb_horder_closepiv_invindx.h>
@@ -36,6 +37,20 @@ Index<dist_t>* CreatePivotNeighbInvertedIndex(
     const ObjectVector& DataObjects) {
   
   return new PivotNeighbInvertedIndex<dist_t>(
+      PrintProgress,
+      space,
+      DataObjects
+  );
+}
+
+template <typename dist_t>
+Index<dist_t>* CreateNappOptim(
+    bool PrintProgress,
+    const string& SpaceType,
+    Space<dist_t>& space,
+    const ObjectVector& DataObjects) {
+  
+  return new NappOptim<dist_t>(
       PrintProgress,
       space,
       DataObjects

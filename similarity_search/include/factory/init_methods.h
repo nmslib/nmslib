@@ -120,6 +120,10 @@ inline void initMethods() {
   REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
 
+  REGISTER_METHOD_CREATOR(float,  METH_NAPP_OPTIM, CreateNappOptim)
+  REGISTER_METHOD_CREATOR(double, METH_NAPP_OPTIM, CreateNappOptim)
+  REGISTER_METHOD_CREATOR(int,    METH_NAPP_OPTIM, CreateNappOptim)
+
   // Inverted index over permutation-based neighborhoods (higher-order pivot combinations)
 #ifdef WITH_EXTRAS
   REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_HORDER_HASHPIV_INVINDEX, CreatePivotNeighbHashPivInvIndex)

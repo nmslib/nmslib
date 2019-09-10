@@ -133,18 +133,18 @@ if (WITH_EXTRAS)
   # Alternatively one can do:
   # export BOOST_ROOT=<A location where boost is downloaded and compiled>
   # cmake . -DCMAKE_LIBRARY_PATH=<Boost and other library dir> -DCMAKE_INCLUDE_PATH=<Boost and other library include path> -DBoost_NO_SYSTEM_PATHS=true
-
-  find_package (Boost 1.48 COMPONENTS system filesystem REQUIRED)
-
-  if (Boost_FOUND)
-    message (STATUS "Found BOOST.")
-    include_directories (${Boost_INCLUDE_DIR})
-    include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
-    link_directories (${Boost_LIBRARY_DIR})
-  else ()
-    message (FATAL_ERROR "Could not locate BOOST.")
-  endif ()
 endif()
+
+find_package (Boost 1.48 COMPONENTS system filesystem REQUIRED)
+
+if (Boost_FOUND)
+  message (STATUS "Found BOOST.")
+  include_directories (${Boost_INCLUDE_DIR})
+  include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
+  link_directories (${Boost_LIBRARY_DIR})
+else ()
+  message (FATAL_ERROR "Could not locate BOOST.")
+endif ()
 
 add_subdirectory (src)
 add_subdirectory (apps)
