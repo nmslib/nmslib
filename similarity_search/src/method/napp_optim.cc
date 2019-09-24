@@ -36,11 +36,20 @@
 // Don't enable without re-writing it will try to read from deleted mem
 //#define  PRINT_PIVOT_OCCURR_STAT
 
+#if 0
+#define DUMP_POSTINGS_FILE "postings.bin"
+#define DUMP_QUERIES_FILE "queries.bin"
+#endif
+
 namespace similarity {
 
 using std::vector;
 using std::pair;
 using std::mutex;
+
+#ifdef DUMP_QUERIES_FILE
+static mutex queryMutex;
+#endif
 
 template <typename dist_t>
 NappOptim<dist_t>::NappOptim(
@@ -189,6 +198,41 @@ void NappOptim<dist_t>::CreateIndex(const AnyParams& IndexParams) {
       (*progress_bar) += (progress_bar->expected_count() - progress_bar->count());
     }
   }
+
+#ifdef DUMP_POSTINGS_FILE
+  {
+    string location = DUMP_POSTINGS_FILE;
+    ofstream outFile(location,
+                   std::ios::trunc | std::ios::out |
+                   // On Windows you don't get a proper binary stream without ios::binary!
+                   ios::binary);
+
+    CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
+    outFile.exceptions(std::ios::badbit);
+
+    for (const shared_ptr<PostingListInt>& postPtr : posting_lists_) {
+      const PostingListInt& post = *postPtr;
+      uint32_t qty = post.size();
+      writeBinaryPOD(outFile, qty);
+      for (unsigned i = 0; i < qty; ++i) {
+        writeBinaryPOD(outFile, post[i]);
+      }
+    }
+
+    outFile.close();
+  }
+#endif
+#ifdef DUMP_QUERIES_FILE
+ {
+    string location = DUMP_QUERIES_FILE;
+    ofstream outFile(location,
+                   std::ios::trunc | std::ios::out |
+                   // On Windows you don't get a proper binary stream without ios::binary!
+                   ios::binary);
+
+    CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
+  } 
+#endif
 
   // Let's collect pivot occurrence statistics
 #ifdef PRINT_PIVOT_OCCURR_STAT
@@ -485,8 +529,30 @@ void NappOptim<dist_t>::GenSearch(QueryType* query, size_t K) const {
   Permutation perm_q;
   GetPermutationPPIndexEfficiently(query, perm_q);
 
+#ifdef DUMP_QUERIES_FILE
+  {
+    unique_lock<mutex> lock(queryMutex);
+    string location = DUMP_QUERIES_FILE;
+    ofstream outFile(location,
+                   std::ios::app | std::ios::out |
+                   // On Windows you don't get a proper binary stream without ios::binary!
+                   ios::binary);
 
-#define ALGO_SELECTOR (1)
+    CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing in append mode");
+    outFile.exceptions(std::ios::badbit);
+
+    uint32_t qty = num_prefix_search_;
+    writeBinaryPOD(outFile, qty);
+    for (unsigned i = 0; i < qty; ++i) {
+      writeBinaryPOD(outFile, perm_q[i]);
+    }
+
+    outFile.close();
+  }
+#endif
+
+
+#define ALGO_SELECTOR (2)
 
 #if ALGO_SELECTOR == 0
   vector<const PostingListInt*> postPtrs;
@@ -568,40 +634,7 @@ void NappOptim<dist_t>::GenSearch(QueryType* query, size_t K) const {
     }
   }
 #else
-  vector<const Object*>     tmp_cand;
-  tmp_cand.reserve(chunk_index_size_);
-  vector<uint32_t>          counter(chunk_index_size_);
-
-  for (size_t chunkId = 0; chunkId < posting_lists_.size(); ++chunkId) {
-    const auto & chunkPostLists = *posting_lists_[chunkId];
-    size_t minId = chunkId * chunk_index_size_;
-    size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
-    size_t chunkQty = maxId - minId;
-
-    const auto data_start = &this->data_[0] + minId;
-
-    if (chunkId) {
-      memset(&counter[0], 0, sizeof(counter[0])*counter.size());
-    }
-
-    for (size_t i = 0; i < num_prefix_search_; ++i) {
-      for (auto p : chunkPostLists[perm_q[i]]) {
-        counter[p]++;
-      }
-    }
-
-    for (size_t i = 0; i < chunkQty; ++i) {
-      if (counter[i] >= min_times_) {
-        tmp_cand.push_back(data_start[i]);
-      }
-    }
-  }
-
-  if (!skip_checking_) {
-    for (const Object* obj: tmp_cand) {
-      query->CheckAndAddToResult(obj);
-    }
-  }
+#error "Wrong algorithm code"
 #endif
 }
 
