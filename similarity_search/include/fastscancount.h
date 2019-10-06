@@ -7,6 +7,8 @@
 #include <cstring>
 #include <vector>
 
+#include "vector_pool.h"
+
 // credit: implementation and design by Nathan Kurz and Daniel Lemire
 
 namespace fastscancount {
@@ -53,11 +55,18 @@ uint32_t *natefastscancount_finalcheck(uint8_t *counters, size_t &it,
 
 void fastscancount(const std::vector<const std::vector<uint32_t>*> &data,
                    std::vector<uint32_t> &out, uint8_t threshold) {
+  //size_t cache_size = 65536;
   size_t cache_size = 32768;
+  static similarity::VectorPool<uint8_t> pool(1, cache_size);
   size_t range = cache_size;
-  std::vector<uint8_t> counters(cache_size);
+
+  //std::vector<uint8_t> counters(cache_size);
+  std::vector<uint8_t>* counters_ptr = pool.loan();
+
+  std::vector<uint8_t>& counters = *counters_ptr;
+
   size_t ds = data.size();
-  out.resize(out.size() + 4 * range); // let us add lots of capacity
+  out.resize( 4 * range); // let us add lots of capacity
   uint32_t *output = out.data();
   uint32_t *initout = out.data();
   std::vector<size_t> iters(ds);
@@ -97,6 +106,7 @@ void fastscancount(const std::vector<const std::vector<uint32_t>*> &data,
   }
   countsofar = output - initout;
   out.resize(countsofar);
+  pool.release(counters_ptr);
 }
 } // namespace fastscancount
 

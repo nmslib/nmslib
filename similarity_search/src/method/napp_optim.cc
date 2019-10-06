@@ -522,6 +522,23 @@ void NappOptim<dist_t>::LoadIndex(const string &location) {
 #endif
 }
 
+void scancount(std::vector<uint8_t> &counters,
+               std::vector<const std::vector<uint32_t>*> &data,
+               std::vector<uint32_t> &out, size_t threshold) {
+  std::fill(counters.begin(), counters.end(), 0);
+  out.clear();
+  for (size_t c = 0; c < data.size(); c++) {
+    const std::vector<uint32_t> &v = *data[c];
+    for (size_t i = 0; i < v.size(); i++) {
+      counters[v[i]]++;
+    }
+  }
+  for (uint32_t i = 0; i < counters.size(); i++) {
+    if (counters[i] > threshold)
+      out.push_back(i);
+  }
+}
+
 template <typename dist_t>
 template <typename QueryType>
 void NappOptim<dist_t>::GenSearch(QueryType* query, size_t K) const {
@@ -552,19 +569,18 @@ void NappOptim<dist_t>::GenSearch(QueryType* query, size_t K) const {
 #endif
 
 
-#define ALGO_SELECTOR (2)
+#define ALGO_SELECTOR (1)
 
 #if ALGO_SELECTOR == 0
   vector<const PostingListInt*> postPtrs;
   vector<uint32_t>              out;
-  vector<uint8_t>               counters(this->data_.size());
-  //#error "Here"
+  //#error "Here 0"
 
   for (size_t i = 0; i < num_prefix_search_; ++i) {
     postPtrs.push_back(posting_lists_[perm_q[i]].get());
   }
 
-  fastscancount::fastscancount_avx2(counters, postPtrs, out, min_times_ - 1);
+  fastscancount::fastscancount_avx2(postPtrs, out, min_times_ - 1);
 
   if (!skip_checking_) {
     for (uint32_t id : out) {
@@ -575,7 +591,7 @@ void NappOptim<dist_t>::GenSearch(QueryType* query, size_t K) const {
 #elif ALGO_SELECTOR == 1
   vector<const PostingListInt*> postPtrs;
   vector<uint32_t>              out;
-  //#error "Here"
+  //#error "Here 1"
 
   for (size_t i = 0; i < num_prefix_search_; ++i) {
     postPtrs.push_back(posting_lists_[perm_q[i]].get());
@@ -594,6 +610,7 @@ void NappOptim<dist_t>::GenSearch(QueryType* query, size_t K) const {
   vector<PostingListInt::const_iterator> iters;
   vector<const Object*>     tmp_cand;
   tmp_cand.reserve(chunk_index_size_);
+  #error "Here 2"
 
   for (size_t i = 0; i < num_prefix_search_; ++i) {
     iters.push_back(posting_lists_[perm_q[i]]->begin());
