@@ -15,6 +15,8 @@
 #include <cstring>
 #include <vector>
 
+#define TRAVIS_ALGO
+
 namespace fastscancount {
 namespace {
 // credit: implementation and design by Travis Downes
@@ -43,13 +45,12 @@ static inline size_t find_next_gt(uint8_t *array, const size_t size,
   return SIZE_MAX;
 }
 
-#if 0
+#ifdef TRAVIS_ALGO
 void populate_hits_avx(std::vector<uint8_t> &counters, size_t range,
                        size_t threshold, size_t start,
                        std::vector<uint32_t> &out) {
   uint8_t *array = counters.data();
 
-  size_t ro = range;
   while (true) {
     size_t next = find_next_gt(array, range, (uint8_t)threshold);
     if (next == SIZE_MAX)
@@ -108,7 +109,6 @@ void update_counters(const uint32_t *&it_, uint8_t *counters,
 
 void update_counters_final(const uint32_t *&it_, const uint32_t *end,
                            uint8_t *counters) {
-  uint64_t e;
   const uint32_t *it = it_;
   for (; it != end; it++) {
     counters[*it]++;

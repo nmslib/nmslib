@@ -97,7 +97,8 @@ class NappOptim : public Index<dist_t> {
   size_t  num_pivot_;
   string  pivot_file_;
   bool    disable_pivot_index_;
-  size_t hash_trick_dim_;
+  size_t  hash_trick_dim_;
+  bool    algo_ = 0; 
 
   unique_ptr<PivotIndex<dist_t>> pivot_index_;
 

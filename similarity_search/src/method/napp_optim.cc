@@ -338,8 +338,12 @@ NappOptim<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
     throw runtime_error("One shouldn't specify both parameters minTimes and numPivotSearch, b/c they are synonyms!");
   }
 
+  pmgr.GetParamOptional("algoType",        algo_, 0);
   pmgr.GetParamOptional("minTimes",        min_times_, 2);
   pmgr.GetParamOptional("numPivotSearch",  min_times_, min_times_);
+
+  CHECK_MSG(algo_ < 2, "algoType should be either 0 or 1");
+  CHECK_MSG(min_times_ <= 255, "minTimes/numPivotSearch shouldn't be larger than 255");
 
   CHECK_MSG(min_times_ > 0, "The parameter minTimes (aliased to numPivotSearch) should be > 0");
 
@@ -376,7 +380,6 @@ const string NappOptim<dist_t>::StrDesc() const {
 
 template <typename dist_t>
 void NappOptim<dist_t>::SaveIndex(const string &location) {
-#if 0
   ofstream outFile(location);
   CHECK_MSG(outFile, "Cannot open file '" + location + "' for writing");
   outFile.exceptions(std::ios::badbit);
@@ -386,8 +389,6 @@ void NappOptim<dist_t>::SaveIndex(const string &location) {
   WriteField(outFile, METHOD_DESC, StrDesc()); lineNum++;
   WriteField(outFile, "numPivot", num_pivot_); lineNum++;
   WriteField(outFile, "numPivotIndex", num_prefix_); lineNum++;
-  WriteField(outFile, "chunkIndexSize", chunk_index_size_); lineNum++;
-  WriteField(outFile, "indexQty", posting_lists_.size()); lineNum++;
   WriteField(outFile, "pivotFile", pivot_file_); lineNum++;
   WriteField(outFile, "disablePivotIndex", disable_pivot_index_); lineNum++;
   WriteField(outFile, "hashTrickDim", hash_trick_dim_); lineNum++;
@@ -404,22 +405,17 @@ void NappOptim<dist_t>::SaveIndex(const string &location) {
     lineNum++;
   }
 
-  for(size_t i = 0; i < posting_lists_.size(); ++i) {
-    WriteField(outFile, "chunkId", i); lineNum++;
-    CHECK(posting_lists_[i]->size() == num_pivot_);
-    for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
-      outFile << MergeIntoStr((*posting_lists_[i])[pivotId], ' ') << endl; lineNum++;
-    }
+  for (const shared_ptr<PostingListInt>& postPtr : posting_lists_) {
+    const PostingListInt& post = *postPtr;
+    outFile << MergeIntoStr(post, ' ') << endl; lineNum++;
   }
 
   WriteField(outFile, LINE_QTY, lineNum + 1 /* including this line */);
   outFile.close();
-#endif
 }
 
 template <typename dist_t>
 void NappOptim<dist_t>::LoadIndex(const string &location) {
-#if 0
   ifstream inFile(location);
   CHECK_MSG(inFile, "Cannot open file '" + location + "' for reading");
   inFile.exceptions(std::ios::badbit);
@@ -431,9 +427,6 @@ void NappOptim<dist_t>::LoadIndex(const string &location) {
             "Looks like you try to use an index created by a different method: " + methDesc);
   ReadField(inFile, "numPivot", num_pivot_); lineNum++;
   ReadField(inFile, "numPivotIndex", num_prefix_); lineNum++;
-  ReadField(inFile, "chunkIndexSize", chunk_index_size_); lineNum++;
-  size_t indexQty;
-  ReadField(inFile, "indexQty", indexQty);  lineNum++;
   ReadField(inFile, "pivotFile", pivot_file_); lineNum++;
   ReadField(inFile, "disablePivotIndex", disable_pivot_index_); lineNum++;
   ReadField(inFile, "hashTrickDim", hash_trick_dim_); lineNum++;
@@ -494,24 +487,16 @@ void NappOptim<dist_t>::LoadIndex(const string &location) {
   // Attempt to create an efficient pivot index, after pivots are loaded
   initPivotIndex();
 
-  posting_lists_.resize(indexQty);
+  posting_lists_.resize(num_pivot_);
 
-  for (size_t chunkId = 0; chunkId < indexQty; ++chunkId) {
-    size_t tmp;
-    ReadField(inFile, "chunkId", tmp);
-    CHECK_MSG(tmp == chunkId, "The chunkId (" + ConvertToString(tmp) + " read from line " + ConvertToString(lineNum) +
-              " doesn't match the expected chunk ID " + ConvertToString(chunkId));
+  for (unsigned i = 0; i < num_pivot_; ++i) {
+    posting_lists_[i] = shared_ptr<PostingListInt>(new PostingListInt());
+    CHECK_MSG(getline(inFile, line),
+              "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
+    CHECK_MSG(SplitStr(line, (*posting_lists_[i]), ' '),
+              "Failed to extract object IDs from line #" + ConvertToString(lineNum) +
+               " location: " + location);
     ++lineNum;
-    posting_lists_[chunkId] = shared_ptr<vector<PostingListInt>>(new vector<PostingListInt>());
-    (*posting_lists_[chunkId]).resize(num_pivot_);
-    for (size_t pivotId = 0; pivotId < num_pivot_; ++pivotId) {
-      CHECK_MSG(getline(inFile, line),
-                "Failed to read line #" + ConvertToString(lineNum) + " from " + location);
-      CHECK_MSG(SplitStr(line, (*posting_lists_[chunkId])[pivotId], ' '),
-                "Failed to extract object IDs from line #" + ConvertToString(lineNum) +
-                " chunkId " + ConvertToString(chunkId) + " location: " + location);
-      ++lineNum;
-    }
   }
   size_t ExpLineNum;
   ReadField(inFile, LINE_QTY, ExpLineNum);
@@ -519,7 +504,6 @@ void NappOptim<dist_t>::LoadIndex(const string &location) {
             DATA_MUTATION_ERROR_MSG + " (expected number of lines " + ConvertToString(ExpLineNum) +
             " read so far doesn't match the number of read lines: " + ConvertToString(lineNum));
   inFile.close();
-#endif
 }
 
 void scancount(std::vector<uint8_t> &counters,
@@ -569,90 +553,41 @@ void NappOptim<dist_t>::GenSearch(QueryType* query, size_t K) const {
 #endif
 
 
-#define ALGO_SELECTOR (1)
-
-#if ALGO_SELECTOR == 0
-  vector<const PostingListInt*> postPtrs;
-  vector<uint32_t>              out;
-  //#error "Here 0"
-
-  for (size_t i = 0; i < num_prefix_search_; ++i) {
-    postPtrs.push_back(posting_lists_[perm_q[i]].get());
-  }
-
-  fastscancount::fastscancount_avx2(postPtrs, out, min_times_ - 1);
-
-  if (!skip_checking_) {
-    for (uint32_t id : out) {
-      const Object* obj = this->data_[id];
-      query->CheckAndAddToResult(obj);
-    }
-  }
-#elif ALGO_SELECTOR == 1
-  vector<const PostingListInt*> postPtrs;
-  vector<uint32_t>              out;
-  //#error "Here 1"
-
-  for (size_t i = 0; i < num_prefix_search_; ++i) {
-    postPtrs.push_back(posting_lists_[perm_q[i]].get());
-  }
-
-  fastscancount::fastscancount(postPtrs, out, min_times_ - 1);
-
-  if (!skip_checking_) {
-    for (uint32_t id : out) {
-      const Object* obj = this->data_[id];
-      query->CheckAndAddToResult(obj);
-    }
-  }
-#elif ALGO_SELECTOR == 2
-  vector<uint32_t>          counter(chunk_index_size_);
-  vector<PostingListInt::const_iterator> iters;
-  vector<const Object*>     tmp_cand;
-  tmp_cand.reserve(chunk_index_size_);
-  #error "Here 2"
-
-  for (size_t i = 0; i < num_prefix_search_; ++i) {
-    iters.push_back(posting_lists_[perm_q[i]]->begin());
-  }
-
-  for (size_t chunkId = 0; chunkId < index_qty_; ++chunkId) { 
-
-    if (chunkId) {
-      memset(&counter[0], 0, sizeof(counter[0])*counter.size());
-    }
-    size_t minId = chunkId * chunk_index_size_;
-    // maxId is exclusive
-    size_t maxId = min(this->data_.size(), minId + chunk_index_size_);
-    size_t chunkQty = maxId - minId;
+  if (algo_ == 0) {
+    vector<const PostingListInt*> postPtrs;
+    vector<uint32_t>              out;
 
     for (size_t i = 0; i < num_prefix_search_; ++i) {
+      postPtrs.push_back(posting_lists_[perm_q[i]].get());
+    }
 
-      const auto iterEnd = posting_lists_[perm_q[i]]->end();
-      auto& iter = iters[i];
+    fastscancount::fastscancount_avx2(postPtrs, out, min_times_ - 1);
 
-      for (;iter != iterEnd && (*iter) < maxId; ++iter) {
-        counter[*iter - minId]++;
+    if (!skip_checking_) {
+      for (uint32_t id : out) {
+        const Object* obj = this->data_[id];
+        query->CheckAndAddToResult(obj);
       }
     }
-    const auto data_start = &this->data_[0] + minId;
+  } else if  (algo_ == 1) {
+    vector<const PostingListInt*> postPtrs;
+    vector<uint32_t>              out;
 
-    for (size_t i = 0; i < chunkQty; ++i) {
-      if (counter[i] >= min_times_) {
-        tmp_cand.push_back(data_start[i]);
+    for (size_t i = 0; i < num_prefix_search_; ++i) {
+      postPtrs.push_back(posting_lists_[perm_q[i]].get());
+    }
+
+    fastscancount::fastscancount(postPtrs, out, min_times_ - 1);
+
+    if (!skip_checking_) {
+      for (uint32_t id : out) {
+        const Object* obj = this->data_[id];
+        query->CheckAndAddToResult(obj);
       }
     }
-
+  } else {
+    throw runtime_error("Wrong algorithm code");
   }
-
-  if (!skip_checking_) {
-    for (const Object* obj: tmp_cand) {
-      query->CheckAndAddToResult(obj);
-    }
-  }
-#else
-#error "Wrong algorithm code"
-#endif
 }
 
 template <typename dist_t>
