@@ -77,7 +77,7 @@ void NappOptim<dist_t>::CreateIndex(const AnyParams& IndexParams) {
   pmgr.GetParamOptional("numPivotIndex", num_prefix_, 32);
   pmgr.GetParamOptional("numPrefix",     num_prefix_, num_prefix_);
 
-  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 16384);
+  pmgr.GetParamOptional("chunkIndexSize", chunk_index_size_, 8192);
 
   pmgr.GetParamOptional("indexThreadQty", index_thread_qty_,  thread::hardware_concurrency());
   pmgr.GetParamOptional("recreatePoints", recreate_points_,  false);
