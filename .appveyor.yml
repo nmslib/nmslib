@@ -35,6 +35,7 @@ install:
       conda config --add channels conda-forge
       conda update -q conda
       conda install -q conda-build
+      conda install numpy=1.10.0
     }
 - cmd: python --version
 build_script:
