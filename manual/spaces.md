@@ -95,9 +95,9 @@ _n/2<sup>k</sup>_, where _k_ is a small integer.
 | `linf`       | L<sub>&infin;</sub>                             |
 | `l2sqr_sift` | Euclidean distance for SIFT vectors (Uint8 storage)|
 | `lp_sparse`  | **sparse** L<sub>p</sub> space                  |
-| `l1`         | **sparse** L<sub>1</sub>                        |
-| `l2`         | **sparse** Euclidean space                      |
-| `linf`       | **sparse** L<sub>&infin;</sub>                  |
+| `l1_sparse`  | **sparse** L<sub>1</sub>                        |
+| `l2_sparse`  | **sparse** Euclidean space                      |
+| `linf_sparse`| **sparse** L<sub>&infin;</sub>                  |
 
 
 ## Inner-product Spaces
