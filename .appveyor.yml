@@ -25,10 +25,7 @@ install:
 - ps: |
     if ($env:PYTHON) {
       $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-      pip install --disable-pip-version-check --user --upgrade pip==18.0 setuptools six psutil 
-      if ($env:PYTHON -eq "27") {
-        pip install numpy==1.15.1
-      }
+      pip install --disable-pip-version-check --user --upgrade pip setuptools six psutil 
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
     } elseif ($env:CONDA) {
       if ($env:CONDA -eq "27") { $env:CONDA = "" }
