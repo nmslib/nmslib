@@ -26,7 +26,7 @@ install:
     if ($env:PYTHON) {
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
       $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-      pip install --disable-pip-version-check --user --upgrade pip setuptools six psutil
+      pip install --disable-pip-version-check --user --upgrade pip setuptools six psutil numpy=1.10.0
     } elseif ($env:CONDA) {
       if ($env:CONDA -eq "27") { $env:CONDA = "" }
       if ($env:PLATFORM -eq "x64") { $env:CONDA = "$env:CONDA-x64" }
@@ -35,7 +35,6 @@ install:
       conda config --add channels conda-forge
       conda update -q conda
       conda install -q conda-build
-      conda install numpy=1.10.0
     }
 - cmd: python --version
 build_script:
