@@ -25,7 +25,7 @@ install:
 - ps: |
     if ($env:PYTHON) {
       if ($env:PYTHON -eq "27") {
-        pip install numpy==1.10.0
+        pip install numpy==1.10.1
       }
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
       $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
