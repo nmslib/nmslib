@@ -150,12 +150,7 @@ class BuildExt(build_ext):
 
         build_ext.build_extensions(self)
 
-is_ver2=sys.version.strip().startswith('2.')
-print('Is python version 2?', is_ver2)
-numpy_ver='numpy>=1.10.0'
-if is_ver2:
-  numpy_ver += ',<=1.14.0' # newer numpy doesn't support Python 2.7
-dep_list = ['pybind11>=2.2.3', numpy_ver]
+dep_list = ['pybind11>=2.2.3', 'numpy>=1.10.0']
 
 print('Dependence list:', dep_list)
 
