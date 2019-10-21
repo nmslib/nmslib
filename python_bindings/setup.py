@@ -154,7 +154,7 @@ is_ver2=sys.version.strip().startswith('2.')
 print('Is python version 2?', is_ver2)
 numpy_ver='numpy>=1.10.0'
 if is_ver2:
-  numpy_ver += '<=1.14.0' # newer numpy doesn't support Python 2.7
+  numpy_ver += ',<=1.14.0' # newer numpy doesn't support Python 2.7
 dep_list = ['pybind11>=2.2.3', numpy_ver]
 
 print('Dependence list:', dep_list)
