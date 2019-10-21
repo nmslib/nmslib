@@ -150,6 +150,14 @@ class BuildExt(build_ext):
 
         build_ext.build_extensions(self)
 
+is_ver2=sys.version.strip().startswith('2.')
+print('Is python version 2?', is_ver2)
+numpy_ver='numpy>=1.10.0'
+if is_ver2:
+  numpy_ver += '<=1.14.0' # newer numpy doesn't support Python 2.7
+dep_list = ['pybind11>=2.2.3', numpy_ver]
+
+print('Dependence list:', dep_list)
 
 setup(
     name='nmslib',
@@ -165,8 +173,8 @@ setup(
  on methods for non-metric spaces. NMSLIB is possibly the first library with a principled 
  support for non-metric space searching.""",
     ext_modules=ext_modules,
-    install_requires=['pybind11>=2.0', 'numpy'],
-    setup_requires=['pybind11>=2.0', 'numpy'],
+    install_requires=dep_list,
+    setup_requires=dep_list,
     cmdclass={'build_ext': BuildExt},
     test_suite="tests",
     zip_safe=False,
