@@ -42,7 +42,7 @@ install:
 build_script:
 - ps: cd python_bindings
 - cmd: |
-    pip install --user -e .
+    python -m pip install -e .
 test_script:
 - cmd: python setup.py test
 
@@ -55,7 +55,7 @@ deploy_script:
     # Workaround required to ensure setup.py finds the .pypirc under Windows
     $env:HOME=$env:USERPROFILE
     # Install wheel-building support
-    pip install --user wheel twine
+    python -m pip install --user wheel twine
     # Build wheel and upload
     python setup.py sdist bdist_wheel
     twine upload -r pypi -p $env:pypipassword --skip-existing dist/*
