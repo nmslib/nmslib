@@ -25,7 +25,7 @@ install:
 - ps: |
     if ($env:PYTHON) {
       $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-      pip instal --user virtualenv
+      pip install --user virtualenv
       python -m virtualenv -p python venv
       venv\bin\activate
       pip install --disable-pip-version-check --upgrade pip setuptools six psutil 
