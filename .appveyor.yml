@@ -25,10 +25,9 @@ install:
 - ps: |
     if ($env:PYTHON) {
       $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-      pip install virtualenv
       python -m virtualenv venv
       "venv\\Scripts\\activate"
-      pip install --disable-pip-version-check --upgrade pip setuptools six psutil 
+      python -m pip install --disable-pip-version-check --upgrade pip setuptools six psutil 
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
     } elseif ($env:CONDA) {
       if ($env:CONDA -eq "27") { $env:CONDA = "" }
@@ -41,11 +40,11 @@ install:
     }
 - cmd: |
     python --version
-    pip --version
+    python -m pip --version
 build_script:
 - ps: cd python_bindings
 - cmd: |
-    pip install -e .
+    python -m pip install -e .
 test_script:
 - cmd: python setup.py test
 
@@ -58,7 +57,7 @@ deploy_script:
     # Workaround required to ensure setup.py finds the .pypirc under Windows
     $env:HOME=$env:USERPROFILE
     # Install wheel-building support
-    pip install --user wheel twine
+    python -m pip install --user wheel twine
     # Build wheel and upload
     python setup.py sdist bdist_wheel
     twine upload -r pypi -p $env:pypipassword --skip-existing dist/*
