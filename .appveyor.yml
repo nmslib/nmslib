@@ -44,7 +44,7 @@ install:
 build_script:
 - ps: cd python_bindings
 - cmd: |
-    python -m pip install -e .
+    python setup.py install
 test_script:
 - cmd: python setup.py test
 
