@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <limits>
 #include <vector>
+#include <cstddef>
 
 #include <string.h>
 #include "global.h"
@@ -205,7 +206,7 @@ inline  void UnpackSparseElements(const char* pBuff, size_t dataLen,
     pBlockBegin += elemSize * qty;
   }
 
-  CHECK(pBlockBegin - pBuff == (ssize_t)dataLen);
+  CHECK(pBlockBegin - pBuff == (ptrdiff_t)dataLen);
 }
 
 template <typename dist_t>
@@ -302,7 +303,7 @@ inline  void PackSparseElements(const vector<SparseVectElem<dist_t>>& InpVect,
     pBlockIds = reinterpret_cast<uint16_t*>(pBlockVals);
   }
 
-  CHECK(reinterpret_cast<char*>(pBlockIds) - prBuff == (ssize_t)dataSize); 
+  CHECK(reinterpret_cast<char*>(pBlockIds) - prBuff == (ptrdiff_t)dataSize); 
 }
 
 }  // namespace similarity

@@ -110,8 +110,8 @@ void OMedRank<dist_t>::GenSearch(QueryType* query, size_t K) const {
    * This simplifies the code: element arrays can be addressed
    * using the pivotId that can be > num_pivot_search_
    */
-  vector<ssize_t> lowIndx(num_pivot_);
-  vector<ssize_t> highIndx(num_pivot_);
+  vector<int64_t> lowIndx(num_pivot_);
+  vector<int64_t> highIndx(num_pivot_);
 
   ObjectInvEntry  e(IdType(0), 0); 
 

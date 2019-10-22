@@ -17,6 +17,7 @@
 #include <fstream>
 #include <vector>
 #include <limits>
+#include <cstddef>
 
 #include "utils.h"
 #include "space/space_sparse_scalar_fast.h"
@@ -94,7 +95,7 @@ void SpaceDotProdPivotIndexBase::GenVectElems(const Object& obj, bool bNorm, vec
                              pBlockQty,
                              pBlockOff,
                              pBlockBegin);
-    CHECK(ssize_t(obj.datalength()) >= (pBlockBegin-reinterpret_cast<const char*>(obj.data())));
+    CHECK(ptrdiff_t(obj.datalength()) >= (pBlockBegin-reinterpret_cast<const char*>(obj.data())));
     for (SparseVectElem<float> & e : pivElems) {
       e.val_ *= normCoeff;
     }
