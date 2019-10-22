@@ -25,9 +25,9 @@ install:
 - ps: |
     if ($env:PYTHON) {
       $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-      pip install --user virtualenv
-      python -m virtualenv -p python venv
-      venv\bin\activate
+      pip install virtualenv
+      python -m virtualenv venv
+      "venv\\Scripts\\activate"
       pip install --disable-pip-version-check --upgrade pip setuptools six psutil 
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
     } elseif ($env:CONDA) {
