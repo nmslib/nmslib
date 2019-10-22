@@ -38,7 +38,7 @@ install:
     }
 - cmd: |
     python --version
-    pip --version
+    python -m pip --version
 build_script:
 - ps: cd python_bindings
 - cmd: |
