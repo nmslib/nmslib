@@ -150,7 +150,7 @@ class BuildExt(build_ext):
 
         build_ext.build_extensions(self)
 
-dep_list = ['pybind11>=2.4.3', 'numpy>=1.10.0']
+dep_list = ['pybind11>=2.0.0', 'numpy>=1.10.0']
 
 print('Dependence list:', dep_list)
 
