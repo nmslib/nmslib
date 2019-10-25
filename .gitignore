@@ -12,3 +12,4 @@ similarity_search/test/Makefile
 *.pyc
 *.egg-info/
 .idea
+dist/

@@ -24,11 +24,10 @@ install:
 - ps: Remove-Item -Recurse -Force C:/cygwin64
 - ps: |
     if ($env:PYTHON) {
-      $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-      python -m virtualenv venv
-      "venv\\Scripts\\activate"
-      python -m pip install --disable-pip-version-check --upgrade pip setuptools six psutil pybind11>=2.2.3 numpy>=1.10.0
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
+      $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
+      python -m pip install --disable-pip-version-check --upgrade pip
+      python -m pip install -qq setuptools six psutil
     } elseif ($env:CONDA) {
       if ($env:CONDA -eq "27") { $env:CONDA = "" }
       if ($env:PLATFORM -eq "x64") { $env:CONDA = "$env:CONDA-x64" }
@@ -44,8 +43,9 @@ install:
 build_script:
 - ps: cd python_bindings
 - cmd: |
-    "venv\\Scripts\\activate"
-    python setup.py install
+    python -m pip install -qq -r requirements.txt
+    python setup.py build_ext
+    python -m pip install -U .
 test_script:
 - cmd: python setup.py test
 

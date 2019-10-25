@@ -3,10 +3,26 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
+import struct
 
 __version__ = '1.8.2'
 
-libdir = os.path.join(".", "nmslib", "similarity_search")
+if sys.platform.startswith("win") and struct.calcsize("P") * 8 == 32:
+    raise RuntimeError("Windows 32-bit is not supported.")
+
+dep_list = ['pybind11>=2.2.3']
+py_version = tuple([int(v) for v in sys.version.split('.')[:2]])
+if py_version == (2, 7):
+    dep_list.append('numpy>=1.10.0,<1.17')
+elif py_version < (3, 5):
+    raise RuntimeError("Python version 2.7 or >=3.5 required.")
+else:
+    dep_list.append('numpy>=1.10.0')
+
+print('Dependence list:', dep_list)
+
+
+libdir = os.path.join(".", "similarity_search")
 if not os.path.isdir(libdir) and sys.platform.startswith("win"):
     # If the nmslib symlink doesn't work (windows symlink support w/ git is
     # a little iffy), fallback to use a relative path
@@ -149,10 +165,6 @@ class BuildExt(build_ext):
             ])
 
         build_ext.build_extensions(self)
-
-dep_list = ['pybind11>=2.2.3', 'numpy>=1.10.0']
-
-print('Dependence list:', dep_list)
 
 setup(
     name='nmslib',
