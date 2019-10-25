@@ -221,27 +221,6 @@ int main(int argc, char* argv[]) {
   QueryTimeParams = AnyParams({ "dbScanFrac=0.2", // A fraction of the data set to scan
                              });
 
-  Index<float>*   indexPerm = 
-                           MethodFactoryRegistry<float>::Instance().
-                                CreateMethod(false /* don't print progress */,
-                                        "proj_incsort",
-                                        "custom",
-                                         customSpace,
-                                         dataSet);
-
-  indexPerm->CreateIndex(IndexParams);
-  indexPerm->SetQueryTimeParams(QueryTimeParams);
-
-  cout << "Permutation index is created!" << endl;
-
-  /* Now let's try some searches */
-  float radius = 0.12;
-  RangeQuery<float>   rangeQ(customSpace, queryObj, radius);
-
-  //doSearch(indexSmallWorld, &rangeQ); not supported for small world method
-  doSearch(indexVPTree, &rangeQ, REP_QTY);
-  doSearch(indexPerm, &rangeQ, REP_QTY);
-
   unsigned K = 5; // 5-NN query
   KNNQuery<float>   knnQ(customSpace, queryObj, K);
 
@@ -254,13 +233,6 @@ int main(int argc, char* argv[]) {
 
   doSearch(indexVPTree, &knnQ, REP_QTY);
 
-  cout << "Setting one value of a query-time param (permutation method)" << endl;
-  indexPerm->SetQueryTimeParams(AnyParams( { "dbScanFrac=0.05" }));
-  doSearch(indexPerm, &knnQ, REP_QTY);
-  cout << "Setting another value of a query-time param (permutation method)" << endl;
-  indexPerm->SetQueryTimeParams(AnyParams( { "dbScanFrac=0.5" }));
-  doSearch(indexPerm, &knnQ, REP_QTY);
-
   cout << "Saving vectors to a file: " << endl;
 
   // The number of external IDs must match the number of objects, even if these external
@@ -272,7 +244,6 @@ int main(int argc, char* argv[]) {
 
   delete indexSmallWorld;
   delete indexVPTree;
-  delete indexPerm;
 
   delete queryObj;
 

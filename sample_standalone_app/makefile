@@ -15,8 +15,6 @@ NON_METRIC_SPACE_LIBRARY_LIB=$(NON_METRIC_SPACE_LIBRARY)/release
 CXXFLAGS += -I$(NON_METRIC_SPACE_LIBRARY_INC) 
 # Enable C++11
 CXXFLAGS += -std=c++11
-# OMP flags
-CXXFLAGS += -fopenmp
 # Debug flags
 #CXXFLAGS += -g
 CXXFLAGS += -g -O3
@@ -30,7 +28,7 @@ clean:
 
 # Note -pthread: this enables threads!!!
 sample_standalone_app1: sample_standalone_app1.o data.o *.h makefile
-	$(CXX) -o$@ sample_standalone_app1.o data.o -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread -fopenmp
+	$(CXX) -o$@ sample_standalone_app1.o data.o -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread 
 
 sample_standalone_app2: sample_standalone_app2.o  *.h makefile
-	$(CXX) -o$@ sample_standalone_app2.o  -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread -fopenmp
+	$(CXX) -o$@ sample_standalone_app2.o  -lNonMetricSpaceLib -L$(NON_METRIC_SPACE_LIBRARY_LIB) $(LIB_GSL) -pthread 

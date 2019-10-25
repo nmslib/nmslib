@@ -34,7 +34,7 @@
 \newcommand{\rev}{\mbox{\rm rev}}
 \newcommand{\DEL}[2]{\Delta_{#1}(#2)}
 
-\newcommand{\LibVersion}{1.8}
+\newcommand{\LibVersion}{2.0}
 % replocdir and replocfile should end on '/'
 \newcommand{\replocdir}{https://github.com/searchivarius/nmslib/tree/v\LibVersion/}
 \newcommand{\replocfile}{https://github.com/searchivarius/nmslib/blob/v\LibVersion/}
@@ -83,12 +83,9 @@
 
 \begin{abstract}
 This document covers a library for fast similarity (\knnns) search.
-It describes \textbf{only}
-search methods and distances (spaces).
-Details about building, installing, Python bindings can be found online: \newline \url{\replocdir}.
-Even though the library contains a variety of exact metric-space access methods,
-our main focus is on more \emph{generic} and \emph{approximate} search methods,
-in particular, on methods for non-metric spaces.
+It describes \textbf{only} search methods and distances (spaces).
+ Our focus is on \emph{approximate} search methods for \emph{generic}, possibly \emph{non-metric}, spaces.
+ Details about building, installing, Python bindings can be found online: \newline \url{\replocdir}.
 NMSLIB is possibly the first library with a principled support for non-metric space searching.
 \end{abstract}
 

@@ -1,8 +1,8 @@
-# A Brief List of Methods and Parameters
+# List of Methods and Parameters
 
 ## Overview
 
-Here we include the list of possibly the most useful methods, which is followed by a brief tuning guideline:
+The list of methods is followed by a brief tuning guideline:
 * ``hnsw`` a Hierarchical Navigable Small World Graph.
 * ``sw-graph`` a Small World Graph.
 * ``vp-tree`` a Vantage-Point tree with a pruning rule adaptable to non-metric distances

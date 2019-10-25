@@ -64,11 +64,6 @@ using std::stringstream;
 #define TEST_NAPP 1
 #define TEST_OTHER 1
 
-// TODO something is wrong with FALCONN, 	+#define TEST_FALCONN 1
-// When we run it as a single thing in the binary, it works fine,	
-// but crashes when we run it jointly with other methods.
-#define TEST_FALCONN 0
-
 vector<MethodTestCase>    vTestCaseDesc = {
 #if (TEST_HNSW)
   // Make sure, it works with huge M
@@ -99,20 +94,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
 #if (TEST_IR)
   MethodTestCase(DIST_TYPE_FLOAT, "negdotprod_sparse_fast", "sparse_5K.txt", "simple_invindx", false, "", "", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 395, 510),  
-  MethodTestCase(DIST_TYPE_FLOAT, "negdotprod_sparse_fast", "sparse_5K.txt", "wand_invindx", false, "", "", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 395, 510),  
-  MethodTestCase(DIST_TYPE_FLOAT, "negdotprod_sparse_fast", "sparse_5K.txt", "blkmax_invindx", false, "", "", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 395, 510),  
-#endif
-
-  // *************** FALCONN test ***************************** //
-#if (TEST_FALCONN)
-#ifdef WITH_EXTRAS
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil_sparse_fast", "sparse_5K.txt", "falconn", false, "num_hash_tables=20,num_hash_bits=7,feature_hashing_dimension=128,use_falconn_dist=0", "num_probes=20",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.79, 0.5, 1.5, 5.75, 6.75),  
-  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "falconn", false, "num_hash_tables=1,num_hash_bits=11,use_falconn_dist=0", "num_probes=1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.65, 0.75, 2.4, 3.5, 4, 5.5),  
-#endif
 #endif
 
 #if (TEST_NAPP)
@@ -126,15 +107,8 @@ vector<MethodTestCase>    vTestCaseDesc = {
 
 
 #if (TEST_OTHER)
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", false, "clusterType=clarans,centerQty=10", "dbScanFrac=0.1", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
-  // ************** Tests for non-metric clustering *********** //
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", false, "clusterType=firmal,centerQty=10", "dbScanFrac=0.1", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.8, 0.92, 0.1, 20, 2.5, 6),  
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "nonmetr_list_clust", false, "clusterType=reduct_clarans,centerQty=10", "dbScanFrac=0.1", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.95, 0.01, 5, 2, 7),  
 
-  // *************** NEW versions of permutation & projection-based filtering method tests ******************** //
+  // *************** Sequential search tests ********** //
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", false, "", "",
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0, 0, 1, 1),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", false, "", "",
@@ -143,66 +117,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0, 0, 1, 1),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "seq_search", false, "multiThread=1,threadQty=4", "",
                 0 /* no-knn search */, 0.2 /* range 0.2 */ , 1.0, 1.0, 0, 0, 1, 1),  
-
-  // 4 different types of projections
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=perm,projDim=4", "dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=rand,projDim=4", "dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=fastmap,projDim=4", "dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=randrefpt,projDim=4", "dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-
-  // Proj. VP-tree
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_vptree", false, "projType=perm,projDim=4", "alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt","pp-index", false, "numPivot=4,prefixLength=4", "minCandidate=10000",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mi-file", false, "numPivot=16,numPivotIndex=16", "numPivotSearch=16,dbScanFrac=1.0",
-
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-
-  // Binarized permutations
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin", false, "numPivot=32", "dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_bin_vptree", false, "numPivot=32", "alphaLeft=2,alphaRight=2,dbScanFrac=1.0",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0, 0.01, 0.99, 1.01),  
-
-
-  // 4 different types of projections
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=perm,projDim=4", "dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=rand,projDim=4", "dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.01, 0.0, 0.2, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=fastmap,projDim=4", "dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.01, 0.0, 0.2, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_incsort", false, "projType=randrefpt,projDim=4", "dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.01, 0.0, 0.2, 8, 12),  
-
-  // Proj. VP-tree
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "proj_vptree", false, "projType=perm,projDim=4", "alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.4, 0.7, 0.5, 4.2, 8, 12),  
-
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt","pp-index", false, "numPivot=4,prefixLength=4", "minCandidate=100",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 1.0, 0.1, 2, 3, 8),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mi-file", false, "numPivot=16,numPivotIndex=16", "numPivotSearch=16,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.95, 1.0, 0, 0.5, 8, 12),  
-
-  // Binarized
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_incsort_bin", false, "numPivot=32", "dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.3, 8, 12),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "perm_bin_vptree", false, "numPivot=32", "alphaLeft=2,alphaRight=2,dbScanFrac=0.1",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0.01, 0.5, 8, 12),  
-
-
-  // *************** omedrank tests ******************** //
-
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "omedrank", false, "numPivot=4,chunkIndexSize=16536", "dbScanFrac=0.01,minFreq=0.5",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.97, 0.1, 3, 70, 120),  
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "omedrank", false, "numPivot=4,chunkIndexSize=16536", "dbScanFrac=0.01,minFreq=0.5",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.6, 0.9, 0.1, 3, 70, 120),  
 
   // *************** VP-tree tests ******************** //
   // knn
@@ -228,118 +142,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", false, "chunkBucket=1,bucketSize=10", "",
                 0 /* no KNN */, 0.5 /* range search radius 0.5 */ , 1.0, 1.0, 0.0, 0.0, 2.4, 4),  
 
-  // *************** MVP-tree tests ******************** //
-  // knn
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", false, "maxPathLen=4,bucketSize=10", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 100, 140),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", false, "maxPathLen=4,bucketSize=10", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 50),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", false, "maxPathLen=4,bucketSize=10", "maxLeavesToVisit=10", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.82, 0.9, 0.2, 3.5, 210, 250),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", false, "maxPathLen=4,bucketSize=10", "maxLeavesToVisit=20", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.75, 0.82, 0.2, 2.0, 85, 100),  
-
-  // range
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", false, "maxPathLen=4,bucketSize=10",  "",
-                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 40, 55),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "mvptree", false, "maxPathLen=4,bucketSize=10",  "",
-                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 3, 4),  
-
-  // *************** GH-tree tests ******************** //
-  // knn
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10",  "",
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 25, 35),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10",  "",
-                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 8, 10.2),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10", "maxLeavesToVisit=10", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 0.87, 0.2, 1.5, 95, 115),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10", "maxLeavesToVisit=20", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.75, 0.82, 0.1, 1.0, 52, 62),  
-  // range
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10", "", 
-                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 10, 16),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "ghtree", false, "bucketSize=10", "",
-                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 1, 1.2),  
-
-  // *************** SA-tree tests ******************** //
-  // knn
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "satree", false, "bucketSize=10", "", 
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 20, 33),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "satree", false, "bucketSize=10", "", 
-                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 10, 25),  
-  // range
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "satree", false, "bucketSize=10", "", 
-                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 13, 18),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "satree", false, "bucketSize=10", "", 
-                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 2.8, 3.4),  
-
-  // *************** List of clusters tests ******************** //
-  // knn
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters", false, "strategy=random,useBucketSize=1,bucketSize=10", "", 
-                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 9.5, 11.5),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters", false, "strategy=random,useBucketSize=1,bucketSize=10", "", 
-                10 /* KNN-10 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 7.5, 8.5),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters", false, "strategy=random,useBucketSize=1,bucketSize=10", "maxLeavesToVisit=10", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.78, 0.9, 0.2, 1.5, 9.5, 11.5),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters", false, "strategy=random,useBucketSize=1,bucketSize=10", "maxLeavesToVisit=20", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.85, 0.97, 0.05, 0.7, 8.5, 10.5),  
-  // range
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters", false, "strategy=random,useBucketSize=1,bucketSize=10", "",
-                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 1.0, 1.0, 0.0, 0.0, 8, 10),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "list_clusters", false, "strategy=random,useBucketSize=1,bucketSize=10", "",
-                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 1.0, 1.0, 0.0, 0.0, 2.4, 3.4),  
-
-#ifdef WITH_EXTRAS
-  // *************** bbtree tests ******************** //
-  // knn
-  /* 
-   * TODO @leo 
-   *      bbtree seems to be a bit wacky (missing a tiny fraction of answers), 
-   *      need to debug it in the future.
-   *      Therefore, we expect a slightly imperfect recall sometimes.
-   */
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.0, 9.5, 11.5),  
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.0, 5.5, 8),  
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "maxLeavesToVisit=10", 
-                1 /* KNN-1 */, 0 /* no range search */ , 0.75, 0.85, 0.3, 1.6, 45, 55),  
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "maxLeavesToVisit=20", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.7, 0.78, 0.3, 1.6, 28, 37),  
-  // range
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "",
-                0 /* no KNN */, 0.1 /* range search radius 0.1 */ , 0.999, 1.0, 0.0, 0.0, 4.5, 6.5),  
-  MethodTestCase(DIST_TYPE_FLOAT, "kldivgenfast", "final8_10K.txt", "bbtree", false, "bucketSize=10", "",
-                0 /* no KNN */, 0.5 /* range search radius 0.5*/ , 0.999, 1.0, 0.0, 0.0, 1.2, 2.4),  
-
-
-  // *************** multi-probe LSH tests ******************** //
-  // knn
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", false, "desiredRecall=0.5,tuneK=1,T=5,L=25,H=16535", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.45, 0.6, 45, 80, 70, 130),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_multiprobe", false, "desiredRecall=0.5,tuneK=10,T=5,L=25,H=16535", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 0.45, 0.6, 10, 40, 70, 130),  
-  // *************** Guassian LSH tests ******************** //
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_gaussian", false, "W=2,L=5,M=40,H=16535", "",
-
-                1 /* KNN-1 */, 0 /* no range search */ , 0.85, 0.95, 0.1, 40, 70, 130),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "lsh_gaussian", false, "W=2,L=5,M=40,H=16535", "",
-
-                10 /* KNN-10 */, 0 /* no range search */ , 0.68, 0.82, 0.1, 50, 70, 130),  
-  // *************** Cauchy LSH tests ******************** //
-  MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_cauchy", false, "W=2,L=5,M=10,H=16535", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.7, 0.9, 0.1, 50, 70, 130),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_cauchy", false, "W=2,L=5,M=10,H=16535", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 0.5, 0.8, 0.1, 50, 70, 120),  
-  // *************** Thresholding LSH tests ******************** //
-  MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_threshold", false, "L=5,M=60,H=16535", "",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.8, 0.99, 0.1, 50, 40, 70),  
-  MethodTestCase(DIST_TYPE_FLOAT, "l1", "final8_10K.txt", "lsh_threshold", false, "L=5,M=60,H=16535", "",
-                10 /* KNN-10 */, 0 /* no range search */ , 0.65, 0.85, 0.1, 50, 40, 70),  
-  // Old NN-descent
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "nndes", false, "NN=10,rho=0.5,delta=0.001", "initSearchAttempts=10",
-                1 /* KNN-1 */, 0 /* no range search */ , 0.9, 1.0, 0, 1.0, 5, 12),  
-#endif
 
 #endif
 };

@@ -98,44 +98,12 @@ endif()
 set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (WITH_EXTRAS)
-  find_package (GSL REQUIRED)
-  if (GSL_FOUND)
-      message (STATUS "Found GSL.")
-      include_directories (${GSL_INCLUDE_DIRS} ${GSLCBLAS_INCLUDE_DIRS})
-      set (LIBS ${LIBS} ${GSL_LIBRARIES} ${GSLCBLAS_LIBRARIES})
-  else (GSL_FOUND)
-      message (FATAL_ERROR "Could not locate GSL.")
-  endif (GSL_FOUND)
-
-  include_directories (${PROJECT_SOURCE_DIR}/lshkit/include)
-  add_subdirectory (lshkit)
-
   find_package(Eigen3 3 REQUIRED)
   if (EIGEN3_FOUND)
     message (STATUS "Found Eigen3.")
     include_directories (${EIGEN3_INCLUDE_DIR})
   else ()
     message (FATAL_ERROR "Could not locate Eigen3.")
-  endif ()
-
-  # Can be used to hardwire boost location.
-  #set (BOOST_ROOT $ENV{HOME}/boost_1_48_0)
-  #set (Boost_INCLUDE_DIR ${BOOST_ROOT})
-  #set (Boost_LIBRARY_DIR ${BOOST_ROOT}/stage/lib)
-
-  # Alternatively one can do:
-  # export BOOST_ROOT=<A location where boost is downloaded and compiled>
-  # cmake . -DCMAKE_LIBRARY_PATH=<Boost and other library dir> -DCMAKE_INCLUDE_PATH=<Boost and other library include path> -DBoost_NO_SYSTEM_PATHS=true
-
-  find_package (Boost 1.48 COMPONENTS system filesystem REQUIRED)
-
-  if (Boost_FOUND)
-    message (STATUS "Found BOOST.")
-    include_directories (${Boost_INCLUDE_DIR})
-    include_directories (${PROJECT_SOURCE_DIR}/lshkit/include ${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
-    link_directories (${Boost_LIBRARY_DIR})
-  else ()
-    message (FATAL_ERROR "Could not locate BOOST.")
   endif ()
 endif()
 
