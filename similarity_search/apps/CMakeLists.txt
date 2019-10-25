@@ -28,20 +28,14 @@ add_dependencies (knn_stat            knn_stat)
 # The following line is necessary to create an executable for the dummy application:
 add_dependencies (dummy_app           NonMetricSpaceLib)
 
-if (WITH_EXTRAS) 
-  add_dependencies (experiment      lshkit)
-
-  set(LSHKIT_LIB "lshkit")
-endif()
-
-target_link_libraries (experiment       NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (tune_vptree      NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (bench_distfunc   NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (report_intr_dim  NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (bench_projection NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (knn_stat         NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (experiment       NonMetricSpaceLib ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (tune_vptree      NonMetricSpaceLib  ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (bench_distfunc   NonMetricSpaceLib  ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (report_intr_dim  NonMetricSpaceLib  ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (bench_projection NonMetricSpaceLib  ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (knn_stat         NonMetricSpaceLib  ${CMAKE_THREAD_LIBS_INIT})
 # The following line is necessary to create an executable for the dummy application:
-target_link_libraries (dummy_app        NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (dummy_app        NonMetricSpaceLib   ${CMAKE_THREAD_LIBS_INIT})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")

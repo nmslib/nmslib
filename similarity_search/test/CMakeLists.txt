@@ -23,14 +23,10 @@ add_dependencies (test_integr     NonMetricSpaceLib)
 
 
 if (WITH_EXTRAS) 
-  add_dependencies (bunit         lshkit)
-  add_dependencies (test_integr   lshkit)
-
-  set(LSHKIT_LIB "lshkit")
 endif()
 
-target_link_libraries (bunit        NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries (test_integr  NonMetricSpaceLib ${LSHKIT_LIB} ${Boost_LIBRARIES} ${GSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (bunit        NonMetricSpaceLib   ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (test_integr  NonMetricSpaceLib   ${CMAKE_THREAD_LIBS_INIT})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")
