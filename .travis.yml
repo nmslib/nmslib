@@ -158,7 +158,7 @@ script:
       set -e
       cd similarity_search;
       ./release/bunit
-      ./release/test_integr integr.log 
+      travis_retry ./release/test_integr integr.log 
       cd ..
       set +e
   fi
