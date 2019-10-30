@@ -3,6 +3,7 @@ include tests/*.py
 include README.md
 include requirements.txt
 include LICENSE
+include LICENSE-Apache-2.0
 include tox.ini
 
 recursive-include similarity_search *.cc *.h

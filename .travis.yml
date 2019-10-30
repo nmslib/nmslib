@@ -13,6 +13,10 @@ addons:
     - libboost-all-dev
     - libgsl0-dev
     - libeigen3-dev
+  homebrew:
+    packages:
+    - pyenv
+    update: true
 
 matrix:
   fast_finish: true
@@ -20,6 +24,8 @@ matrix:
   - os: linux
     dist: trusty
     env: PYTHON=2.7
+    services:
+    - docker
     addons:
       apt:
         update: true
@@ -32,6 +38,8 @@ matrix:
   - os: linux
     env: PYTHON=3.5
     dist: trusty
+    services:
+    - docker
     addons:
       apt:
         update: true
@@ -44,6 +52,8 @@ matrix:
   - os: linux
     env: PYTHON=3.6
     dist: xenial
+    services:
+    - docker
     addons:
       apt:
         update: true
@@ -56,6 +66,8 @@ matrix:
   - os: linux
     env: PYTHON=3.7
     dist: xenial
+    services:
+    - docker
     addons:
       apt:
         update: true
@@ -66,44 +78,62 @@ matrix:
         - *core_build
         - python3.7-dev
   - os: osx
-    env: PYTHON=27
-    osx_image: xcode9.3
+    env: PYTHON=2.7-dev
+    osx_image: xcode9.2
   - os: osx
-    env: PYTHON=35
-    osx_image: xcode9.3
+    env: PYTHON=3.5-dev
+    osx_image: xcode9.2
   - os: osx
-    env: PYTHON=36
-    osx_image: xcode9.3
+    env: PYTHON=3.6-dev
+    osx_image: xcode9.2
   - os: osx
-    env: PYTHON=37
-    osx_image: xcode9.3
+    env: PYTHON=3.7-dev
+    osx_image: xcode9.2
+  - os: osx
+    env: PYTHON=2.7-dev
+    osx_image: xcode9.4
+  - os: osx
+    env: PYTHON=3.5-dev
+    osx_image: xcode9.4
+  - os: osx
+    env: PYTHON=3.6-dev
+    osx_image: xcode9.4
+  - os: osx
+    env: PYTHON=3.7-dev
+    osx_image: xcode9.4
+  - os: osx
+    env: PYTHON=2.7-dev
+    osx_image: xcode11.2
+  - os: osx
+    env: PYTHON=3.5-dev
+    osx_image: xcode11.2
+  - os: osx
+    env: PYTHON=3.6-dev
+    osx_image: xcode11.2
+  - os: osx
+    env: PYTHON=3.7-dev
+    osx_image: xcode11.2
   allow_failures:
   - os: osx
 
 before_install:
 - |
-  PIP=pip
   PY=python
   if [ "$TRAVIS_OS_NAME" = "linux" ]; then 
     export CXX=g++-4.9 CC=gcc-4.9;
+    if [ $(echo "$PYTHON" | grep "^3\.") ]; then
+      PY=python${PYTHON}
+      curl https://bootstrap.pypa.io/get-pip.py | sudo -H $PY
+    fi
   fi
 
   if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew update
-    brew install gcc
-    PIP=pip2
-    PY=python2
-    if  [ "${PYTHON:0:1}" = "3" ]; then
-      brew upgrade python
-      brew install sashkab/python/python$PYTHON
-      PIP=pip3
-      PY=python3
-    fi
+    pyenv install $PYTHON
+    PY=/Users/travis/.pyenv/versions/${PYTHON}/bin/python
   fi
-  $PIP install --user virtualenv
-  virtualenv -p $PY venv
-  source venv/bin/activate
-  $PIP install --upgrade pip
+
+  PIP="$PY -m pip"
+  sudo -H $PIP install --upgrade pip
 
 install:
 - |
@@ -113,40 +143,48 @@ install:
     cmake similarity_search
   fi
   make -j 4
-  $PY -m pip install --upgrade pip
-  $PIP install scipy six flake8 psutil
+  $PIP install --user scipy six flake8 psutil
   cd python_bindings
-  $PIP install -r requirements.txt
+  $PIP install --user -r requirements.txt
   $PY setup.py build_ext
-  $PIP install -U .
+  $PIP install --user .
   cd ..
 
 script:
 - $PY --version
 - cd python_bindings && $PY setup.py test && cd ..
 - |
-  set -e
   if [ "$TRAVIS_OS_NAME" = "linux" ] ; then
+      set -e
       cd similarity_search;
       ./release/bunit
-      ./release/test_integr integr.log 
+      travis_retry ./release/test_integr integr.log 
       cd ..
+      set +e
   fi
 
-#deploy:
-#  provider: pypi
-#  user: searchivarius
-#  # https://docs.travis-ci.com/user/environment-variables/#defining-variables-in-repository-settings
-#  password: ${PYPI_PASSWORD}
-#  distributions: sdist bdist_wheel
-#  skip_existing: true
-#  skip_cleanup: true
-#  on:
-#    tags: true
-#    branch: master
+after_script:
+  - |
+    if [ "$TRAVIS_TAG" ]; then
+      export TRAVIS_OS_NAME
+      export PY
+      export PIP
+      export PYTHON
+      bash travis/deploy.sh
+      $PIP install --user "six>=1.9.0"
+      $PIP install --user twine
+      cp .pypirc ~/.pypirc
+      $PY -m twine upload -r pypi -p $PYPI_PASSWORD --skip-existing python_bindings/dist/*
+    else
+      echo "Skipping deployment because this is not a tagged commit"
+    fi
+
+before_cache:
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then brew cleanup; fi
 
 cache:
   - apt
   - directories:
     - $HOME/.cache/pip
+    - $HOME/Library/Caches/Homebrew
 
