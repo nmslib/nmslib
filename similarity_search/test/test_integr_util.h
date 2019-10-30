@@ -36,6 +36,12 @@ using std::copy;
 using std::string;
 using std::stringstream;
 
+/* 
+ * Test ranges are not bullet proof, so random violations of test conditions
+ * are possible. However, several failures in a row is basically impossible
+ */
+#define ATTEMPT_QTY 10
+
 using namespace similarity;
 
 /*
@@ -562,8 +568,9 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                const string&                RangeArg) {
   bool bTestRes = false;
   ToLower(DistType);
-  if (DIST_TYPE_INT == DistType) {
-    bTestRes = RunTestExper<int>(vTestCases,
+  for (unsigned attId = 0; attId < ATTEMPT_QTY; ++attId) {
+    if (DIST_TYPE_INT == DistType) {
+      bTestRes = RunTestExper<int>(vTestCases,
                   bTestReload,
                   IndexFileNamePrefix,
                   DistType,
@@ -578,8 +585,8 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else if (DIST_TYPE_FLOAT == DistType) {
-    bTestRes = RunTestExper<float>(vTestCases,
+    } else if (DIST_TYPE_FLOAT == DistType) {
+      bTestRes = RunTestExper<float>(vTestCases,
                   bTestReload,
                   IndexFileNamePrefix,
                   DistType,
@@ -594,8 +601,8 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else if (DIST_TYPE_DOUBLE == DistType) {
-    bTestRes = RunTestExper<double>(vTestCases,
+    } else if (DIST_TYPE_DOUBLE == DistType) {
+      bTestRes = RunTestExper<double>(vTestCases,
                   bTestReload,
                   IndexFileNamePrefix,
                   DistType,
@@ -610,9 +617,12 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else {
-    PREPARE_RUNTIME_ERR(err) << "Unknown distance value type: " << DistType;
-    THROW_RUNTIME_ERR(err);
+    } else {
+      PREPARE_RUNTIME_ERR(err) << "Unknown distance value type: " << DistType;
+      THROW_RUNTIME_ERR(err);
+    }
+    if (bTestRes) break;
+    LOG(LIB_INFO) << "Failed test, attempt id: " << attId;
   }
 
   return bTestRes;
