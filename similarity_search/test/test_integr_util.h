@@ -566,11 +566,11 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                const string&                KnnArg,
                const                        float eps,
                const string&                RangeArg) {
-  bool bTestRes = false;
+  size_t failQty = 0;
   ToLower(DistType);
   for (unsigned attId = 0; attId < ATTEMPT_QTY; ++attId) {
     if (DIST_TYPE_INT == DistType) {
-      bTestRes = RunTestExper<int>(vTestCases,
+      failQty = RunTestExper<int>(vTestCases,
                   bTestReload,
                   IndexFileNamePrefix,
                   DistType,
@@ -586,7 +586,7 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   RangeArg
                  );
     } else if (DIST_TYPE_FLOAT == DistType) {
-      bTestRes = RunTestExper<float>(vTestCases,
+      failQty = RunTestExper<float>(vTestCases,
                   bTestReload,
                   IndexFileNamePrefix,
                   DistType,
@@ -602,7 +602,7 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   RangeArg
                  );
     } else if (DIST_TYPE_DOUBLE == DistType) {
-      bTestRes = RunTestExper<double>(vTestCases,
+      failQty = RunTestExper<double>(vTestCases,
                   bTestReload,
                   IndexFileNamePrefix,
                   DistType,
@@ -621,11 +621,13 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
       PREPARE_RUNTIME_ERR(err) << "Unknown distance value type: " << DistType;
       THROW_RUNTIME_ERR(err);
     }
-    if (bTestRes) break;
-    LOG(LIB_INFO) << "Failed test, attempt id: " << attId;
+    if (!failQty) {
+      return 0;
+    }
+    LOG(LIB_INFO) << "Failed " << failQty << " tests, attempt id: " << attId;
   }
 
-  return bTestRes;
+  return failQty;
 };
 
 #endif
