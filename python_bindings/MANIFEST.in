@@ -1,19 +1,21 @@
 include nmslib.cc
 include tests/*.py
-recursive-include nmslib/similarity_search *.cc *.h
 include README.md
 include requirements.txt
 include LICENSE
+include LICENSE-Apache-2.0
 include tox.ini
 
-global-exclude nmslib/similarity_search/src/method/lsh.cc
-global-exclude nmslib/similarity_search/src/method/lsh_multiprobe.cc
-global-exclude nmslib/similarity_search/src/method/lsh_space.cc
-global-exclude nmslib/similarity_search/src/method/falconn.cc
-global-exclude nmslib/similarity_search/src/method/nndes.cc
-global-exclude nmslib/similarity_search/src/space/space_sqfd.cc
-global-exclude nmslib/similarity_search/src/main.cc
+recursive-include similarity_search *.cc *.h
 
-prune nmslib/similarity_search/include/falconn
-prune nmslib/similarity_search/test
-prune nmslib/similarity_search/lshkit
+global-exclude similarity_search/src/method/lsh.cc
+global-exclude similarity_search/src/method/lsh_multiprobe.cc
+global-exclude similarity_search/src/method/lsh_space.cc
+global-exclude similarity_search/src/method/falconn.cc
+global-exclude similarity_search/src/method/nndes.cc
+global-exclude similarity_search/src/space/space_sqfd.cc
+global-exclude similarity_search/src/main.cc
+
+prune similarity_search/include/falconn
+prune similarity_search/test
+prune similarity_search/lshkit

@@ -57,12 +57,9 @@
 #define PATH_SEPARATOR "/"
 #endif
 
-#if defined(_MSC_VER)
-#include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
-#endif
-
 #define FIELD_DELIMITER ':'
+
+#define NMSLIB_SIZE_T_MAX (std::numeric_limits<size_t>::max())
 
 
 namespace similarity {

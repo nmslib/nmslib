@@ -1,0 +1,12 @@
+numpy>=1.10
+pybind11>=2.2.3
+scipy
+flake8
+psutil
+six
+setuptools
+wheel
+twine
+pip
+pytest
+

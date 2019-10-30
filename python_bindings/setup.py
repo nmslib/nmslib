@@ -3,10 +3,26 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
+import struct
 
 __version__ = '1.8.2'
 
-libdir = os.path.join(".", "nmslib", "similarity_search")
+if sys.platform.startswith("win") and struct.calcsize("P") * 8 == 32:
+    raise RuntimeError("Windows 32-bit is not supported.")
+
+dep_list = ['pybind11>=2.2.3']
+py_version = tuple([int(v) for v in sys.version.split('.')[:2]])
+if py_version == (2, 7):
+    dep_list.append('numpy>=1.10.0,<1.17')
+elif py_version < (3, 5):
+    raise RuntimeError("Python version 2.7 or >=3.5 required.")
+else:
+    dep_list.append('numpy>=1.10.0')
+
+print('Dependence list:', dep_list)
+
+
+libdir = os.path.join(".", "similarity_search")
 if not os.path.isdir(libdir) and sys.platform.startswith("win"):
     # If the nmslib symlink doesn't work (windows symlink support w/ git is
     # a little iffy), fallback to use a relative path
@@ -106,7 +122,7 @@ class BuildExt(build_ext):
     if 'ARCH' in os.environ:
         # /arch:[IA32|SSE|SSE2|AVX|AVX2|ARMv7VE|VFPv4]
         # See https://docs.microsoft.com/en-us/cpp/build/reference/arch-x86
-        c_opts['msvc'].append("/arch:{}".format(os.envrion['ARCH']))
+        c_opts['msvc'].append("/arch:{}".format(os.environ['ARCH']))  # bugfix
     if 'CFLAGS' not in os.environ or "-march" not in os.environ["CFLAGS"]:
         c_opts['unix'].append('-march=native')
     link_opts = {
@@ -150,7 +166,6 @@ class BuildExt(build_ext):
 
         build_ext.build_extensions(self)
 
-
 setup(
     name='nmslib',
     version=__version__,
@@ -165,8 +180,8 @@ setup(
  on methods for non-metric spaces. NMSLIB is possibly the first library with a principled 
  support for non-metric space searching.""",
     ext_modules=ext_modules,
-    install_requires=['pybind11>=2.0', 'numpy'],
-    setup_requires=['pybind11>=2.0', 'numpy'],
+    install_requires=dep_list,
+    setup_requires=dep_list,
     cmdclass={'build_ext': BuildExt},
     test_suite="tests",
     zip_safe=False,

@@ -26,7 +26,8 @@ install:
     if ($env:PYTHON) {
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
       $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-      pip install --disable-pip-version-check --user --upgrade pip setuptools six psutil
+      python -m pip install --disable-pip-version-check --upgrade pip
+      python -m pip install -qq setuptools six psutil
     } elseif ($env:CONDA) {
       if ($env:CONDA -eq "27") { $env:CONDA = "" }
       if ($env:PLATFORM -eq "x64") { $env:CONDA = "$env:CONDA-x64" }
@@ -36,26 +37,39 @@ install:
       conda update -q conda
       conda install -q conda-build
     }
-- cmd: python --version
+- cmd: |
+    python --version
+    python -m pip --version
 build_script:
 - ps: cd python_bindings
 - cmd: |
-    pip install -e .
+    python -m pip install -qq -r requirements.txt
+    python setup.py build_ext
+    python -m pip install -U .
+- ps: cd ..
+
 test_script:
+- ps: cd python_bindings
 - cmd: python setup.py test
+- ps: cd ..
 
 deploy_script: 
 - ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -ne "master" -or $env:APPVEYOR_REPO_TAG -ne "true") { return }
+    if ($env:APPVEYOR_REPO_TAG -ne "true") {
+      echo "Skipping deployment because this is not a tagged commit"
+      return
+    }
     # Specify account details for PyPI
     echo "Deploying..."
     mv .pypirc $env:USERPROFILE\\.pypirc
     # Workaround required to ensure setup.py finds the .pypirc under Windows
     $env:HOME=$env:USERPROFILE
     # Install wheel-building support
-    pip install --user wheel twine
+    python -m pip install --user wheel twine
     # Build wheel and upload
+    cd python_bindings
+    python setup.py build_ext
     python setup.py sdist bdist_wheel
-    twine upload -r pypi -p $env:pypipassword --skip-existing dist/*
+    python -m twine upload -r pypi -p $env:pypipassword --skip-existing dist/*
     echo "Deployment complete"
 
