@@ -174,7 +174,7 @@ after_script:
       $PIP install --user "six>=1.9.0"
       $PIP install --user twine
       cp .pypirc ~/.pypirc
-      $PY -m twine upload -r pypi -p $PYPI_PASSWORD --skip-existing python_bindings/dist/*
+      $PY -m twine upload -r pypi -p $PYPI_PASSWORD --skip-existing python_bindings/dist/* &>/dev/null
     else
       echo "Skipping deployment because this is not a tagged commit"
     fi
