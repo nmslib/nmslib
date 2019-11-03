@@ -16,6 +16,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/transport/TSocket.h>
@@ -48,7 +49,7 @@ using namespace apache::thrift::transport;
 namespace po = boost::program_options;
 
 enum SearchType {
-  kNoSearch, kKNNSearch, kRangeSearch
+  kNoSearch, kKNNSearch, kRangeSearch, kKNNSearchBatch
 };
 
 static void Usage(const char *prog,
@@ -65,7 +66,8 @@ void ParseCommandLineForClient(int argc, char*argv[],
                       double&                 r,
                       bool&                   retExternId,
                       bool&                   retObj,
-                      string&                 queryTimeParams
+                      string&                 queryTimeParams,
+                      bool&                   batch
                       ) {
   po::options_description ProgOptDesc("Allowed options");
   ProgOptDesc.add_options()
@@ -77,6 +79,7 @@ void ParseCommandLineForClient(int argc, char*argv[],
     (QUERY_TIME_PARAMS_PARAM_OPT.c_str(), po::value<string>(&queryTimeParams)->default_value(""), QUERY_TIME_PARAMS_PARAM_MSG.c_str())
     (RET_EXT_ID_PARAM_OPT.c_str(),   RET_EXT_ID_PARAM_MSG.c_str())
     (RET_OBJ_PARAM_OPT.c_str(), RET_EXT_ID_PARAM_MSG.c_str())
+    ("batch,b", po::value<bool>(&batch), "batch mode (only for knn). client can process multiple input lines)")
     ;
 
   po::variables_map vm;
@@ -95,7 +98,11 @@ void ParseCommandLineForClient(int argc, char*argv[],
       Usage(argv[0], ProgOptDesc);
       exit(1);
     }
-    searchType = kKNNSearch;
+    if (batch) {
+      searchType = kKNNSearchBatch;
+    } else {
+      searchType = kKNNSearch;
+    }
   } else if (vm.count("range") == 1) {
     if (vm.count("knn") != 0) {
       cerr << "KNN search is not allowed if the range search is specified";
@@ -126,6 +133,7 @@ int main(int argc, char *argv[]) {
   bool        retObj;
   SearchType  searchType;
   string      queryTimeParams;
+  bool        batch = false;
 
   ParseCommandLineForClient(argc, argv,
                       host,
@@ -134,19 +142,19 @@ int main(int argc, char *argv[]) {
                       k, r,
                       retExternId,
                       retObj,
-                      queryTimeParams);
+                      queryTimeParams,
+                      batch);
 
   // Let's read the query from the input stream
   string        s;
   stringstream  ss;
+  std::vector<std::string> lines;
 
   if (kNoSearch != searchType) {
     while (getline(cin, s)) {
-      ss << s << endl;
+      lines.push_back(s);
     }
   }
-
-  string queryObjStr = ss.str();
 
   ::apache::thrift::stdcxx::shared_ptr<TTransport>   socket(new TSocket(host, port));
   ::apache::thrift::stdcxx::shared_ptr<TTransport>   transport(new TBufferedTransport(socket));
@@ -165,24 +173,39 @@ int main(int argc, char *argv[]) {
       WallClockTimer wtm;
       wtm.reset();
 
-      ReplyEntryList res;
-
+      std::vector<ReplyEntryList> results;
       if (kKNNSearch == searchType) {
-        cout << "Running a " << k << "-NN query" << endl;;
-        client.knnQuery(res, k, queryObjStr, retExternId, retObj);
-      } 
+        cout << "Running a " << k << "-NN query" << endl;
+        for (auto queryObjStr: lines) {
+          ReplyEntryList res;
+          client.knnQuery(res, k, queryObjStr, retExternId, retObj);
+          results.push_back(res);
+        }
+      }
       if (kRangeSearch == searchType) {
+        string queryObjStr = lines[0];
         cout << "Running a range query with radius = " << r << endl;
+        ReplyEntryList res;
         client.rangeQuery(res, r, queryObjStr, retExternId, retObj);
+        results.push_back(res);
+      }
+      if (kKNNSearchBatch == searchType) {
+        cout << "Running a batch " << k << "-NN query" << endl;;
+        ReplyEntryListBatch resBatch;
+        client.knnQueryBatch(resBatch, k, lines, retExternId, retObj, 4);
+        results = resBatch;
       }
 
       wtm.split();
 
       cout << "Finished in: " << wtm.elapsed() / 1e3f << " ms" << endl;
 
-      for (auto e: res) {
-        cout << "id=" << e.id << " dist=" << e.dist << ( retExternId ? " externId=" + e.externId : string("")) << endl; 
-        if (retObj) cout << e.obj << endl;
+      for (auto res: results) {
+        cout << "----------------------------------" << endl;
+        for (auto e: res) {
+          cout << "id=" << e.id << " dist=" << e.dist << ( retExternId ? " externId=" + e.externId : string("")) << endl;
+          if (retObj) cout << e.obj << endl;
+        }
       }
     } catch (const QueryException& e) {
       cerr << "Query execution error: " << e.message << endl;
