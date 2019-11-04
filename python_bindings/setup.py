@@ -39,21 +39,12 @@ if os.path.exists(library_file):
     extra_objects.append(library_file)
 
 else:
-    # Otherwise build all the files here directly (excluding extras which need
-    # eigen/boost)
-    exclude_files = set("""bbtree.cc lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
-                        dummy_app.cc main.cc""".split())
+    # Otherwise build all the files here directly (excluding extras which need boost)
+    exclude_files = set("""space_sqfd.cc dummy_app.cc main.cc""".split())
 
     for root, subdirs, files in os.walk(os.path.join(libdir, "src")):
         source_files.extend(os.path.join(root, f) for f in files
                             if f.endswith(".cc") and f not in exclude_files)
-
-
-if sys.platform.startswith('linux'):
-    lshkit = os.path.join(libdir, "release", "liblshkit.a")
-    if os.path.isfile(lshkit):
-        extra_objects.append(lshkit)
-        libraries.extend(['gsl', 'gslcblas', 'boost_program_options'])
 
 
 class get_pybind_include(object):
@@ -74,6 +65,7 @@ ext_modules = [
         'nmslib',
         source_files,
         include_dirs=[os.path.join(libdir, "include"),
+                      ".", 
                       get_pybind_include(),
                       get_pybind_include(user=True)],
         libraries=libraries,
@@ -116,8 +108,8 @@ def cpp_flag(compiler):
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
     c_opts = {
-        'msvc': ['/I.', '/EHsc', '/openmp', '/O2'],
-        'unix': ['-I.', '-O3'],
+        'msvc': [ '/EHsc', '/openmp', '/O2'],
+        'unix': [ '-O3'],
     }
     arch_list = '-march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
     if 'ARCH' in os.environ:
