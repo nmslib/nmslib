@@ -43,6 +43,7 @@ If you find this library useful, feel free to cite our SISAP paper [**[BibTex]**
 Most of this code is released under the
 Apache License Version 2.0 http://www.apache.org/licenses/.
 
+Older versions of the library included the following components:
 * The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
 * The k-NN graph construction algorithm *NN-Descent* due to Dong et al. 2011 (see the links below), which is also embedded in our library, seems to be covered by a free-to-use license, similar to Apache 2.
 * FALCONN library's licence is MIT.
