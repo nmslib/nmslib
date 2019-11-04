@@ -36,6 +36,8 @@
 #include "space/space_l2sqr_sift.h"
 #include "thread_pool.h"
 
+#include "tensorflow/core/platform/cpu_feature_guard.h"
+
 namespace py = pybind11;
 
 namespace similarity {
@@ -435,6 +437,7 @@ class PythonLogger
 
 #ifdef PYBIND11_MODULE
 PYBIND11_MODULE(nmslib, m) {
+  tensorflow::port::InfoAboutUnusedCPUFeatures();
   m.doc() = "Python Bindings for Non-Metric Space Library (NMSLIB)";
 #else
 PYBIND11_PLUGIN(nmslib) {

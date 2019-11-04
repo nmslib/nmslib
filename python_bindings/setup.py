@@ -29,7 +29,7 @@ if not os.path.isdir(libdir) and sys.platform.startswith("win"):
     libdir = os.path.join("..", "similarity_search")
 
 library_file = os.path.join(libdir, "release", "libNonMetricSpaceLib.a")
-source_files = ['nmslib.cc']
+source_files = ['nmslib.cc', 'tensorflow/core/platform/cpu_feature_guard.cc', 'tensorflow/core/platform/cpu_info.cc']
 
 libraries = []
 extra_objects = []
@@ -116,14 +116,21 @@ def cpp_flag(compiler):
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
     c_opts = {
-        'msvc': ['/EHsc', '/openmp', '/O2'],
-        'unix': ['-O3'],
+        'msvc': ['/I.', '/EHsc', '/openmp', '/O2'],
+        'unix': ['-I.', '-O3'],
     }
+    arch_list = '-march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
     if 'ARCH' in os.environ:
         # /arch:[IA32|SSE|SSE2|AVX|AVX2|ARMv7VE|VFPv4]
         # See https://docs.microsoft.com/en-us/cpp/build/reference/arch-x86
         c_opts['msvc'].append("/arch:{}".format(os.environ['ARCH']))  # bugfix
-    if 'CFLAGS' not in os.environ or "-march" not in os.environ["CFLAGS"]:
+    no_arch_flag=True
+    if 'CFLAGS' in os.environ: 
+      for flag in arch_list: 
+        if flag in os.environ["CFLAGS"]:
+          no_arch_flag=False
+          break
+    if no_arch_flag:
         c_opts['unix'].append('-march=native')
     link_opts = {
         'unix': [],
@@ -149,6 +156,8 @@ class BuildExt(build_ext):
         elif ct == 'msvc':
             opts.append('/DVERSION_INFO=\\"%s\\"' %
                         self.distribution.get_version())
+
+        print('Extra compilation arguments:', opts)
 
         # extend include dirs here (don't assume numpy/pybind11 are installed when first run, since
         # pip could have installed them as part of executing this script

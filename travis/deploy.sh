@@ -3,6 +3,7 @@
 set -x
 git clean -fxd
 git clean -fXd   
+CFLAGS=-msse2
 if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     # manylinux build
     echo "Building manylinux wheels with auditwheel and docker"
@@ -15,7 +16,7 @@ if [ "$TRAVIS_OS_NAME" == "linux" ]; then
             PRE_CMD=""
         fi
         docker pull $DOCKER_IMAGE
-        docker run --rm -v `pwd`:/io -e PLAT=$PLAT -e PYTHON=$PYTHON $DOCKER_IMAGE $PRE_CMD /io/travis/build-wheels.sh
+        docker run --rm -v `pwd`:/io -e PLAT=$PLAT -e PYTHON=$PYTHON -e CFLAGS=$CFLAGS $DOCKER_IMAGE $PRE_CMD /io/travis/build-wheels.sh
     done
     WHEEL_DIR="wheelhouse"
 else
