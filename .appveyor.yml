@@ -8,6 +8,8 @@ environment:
   global:
     DISTUTILS_USE_SDK: 1
     MSSdk: 1
+    # SSE2 is the default in recent VS, but let's keep for older versions, see, e.g.: https://github.com/weidai11/cryptopp/issues/445
+    ARCH: SSE2
   matrix:
   - PYTHON: 27
   - PYTHON: 35
