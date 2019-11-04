@@ -36,7 +36,7 @@
 #include "space/space_l2sqr_sift.h"
 #include "thread_pool.h"
 
-#include "tensorflow/core/platform/cpu_feature_guard.h"
+#include "cpu_feature_guard.h"
 
 namespace py = pybind11;
 

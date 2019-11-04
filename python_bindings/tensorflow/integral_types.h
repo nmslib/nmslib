@@ -19,17 +19,19 @@ limitations under the License.
 // IWYU pragma: private, include "third_party/tensorflow/core/platform/types.h"
 // IWYU pragma: friend third_party/tensorflow/core/platform/types.h
 
+#include <cstdint>
+
 namespace tensorflow {
 
-typedef signed char int8;
-typedef short int16;
-typedef int int32;
-typedef long long int64;
+typedef std::int8_t     int8;
+typedef std::int16_t    int16;
+typedef std::int32_t    int32;
+typedef std::int64_t    int64;
 
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned int uint32;
-typedef unsigned long long uint64;
+typedef std::uint8_t    uint8;
+typedef std::uint16_t   uint16;
+typedef std::uint32_t   uint32;
+typedef std::uint64_t   uint64;
 
 }  // namespace tensorflow
 

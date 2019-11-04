@@ -29,7 +29,7 @@ if not os.path.isdir(libdir) and sys.platform.startswith("win"):
     libdir = os.path.join("..", "similarity_search")
 
 library_file = os.path.join(libdir, "release", "libNonMetricSpaceLib.a")
-source_files = ['nmslib.cc', 'tensorflow/core/platform/cpu_feature_guard.cc', 'tensorflow/core/platform/cpu_info.cc']
+source_files = ['nmslib.cc', 'tensorflow/cpu_feature_guard.cc', 'tensorflow/cpu_info.cc']
 
 libraries = []
 extra_objects = []
@@ -65,7 +65,7 @@ ext_modules = [
         'nmslib',
         source_files,
         include_dirs=[os.path.join(libdir, "include"),
-                      ".", 
+                      "tensorflow", 
                       get_pybind_include(),
                       get_pybind_include(user=True)],
         libraries=libraries,

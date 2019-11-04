@@ -13,15 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "tensorflow/core/platform/cpu_feature_guard.h"
+#include "cpu_feature_guard.h"
 
 #include <mutex>
 #include <string>
 #include <sstream>
 #include <iostream>
 
-#include "tensorflow/core/platform/byte_order.h"
-#include "tensorflow/core/platform/cpu_info.h"
+#include "byte_order.h"
+#include "cpu_info.h"
 
 namespace tensorflow {
 namespace port {

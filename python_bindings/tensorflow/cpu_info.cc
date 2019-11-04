@@ -13,14 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "tensorflow/core/platform/cpu_info.h"
-#include "tensorflow/core/platform/platform.h"
-#include "tensorflow/core/platform/types.h"
+#include "cpu_info.h"
+#include "platform.h"
+#include "types.h"
 #if defined(PLATFORM_IS_X86)
 #include <mutex>  // NOLINT
 #endif
-
-#include "logging.h"
 
 // SIMD extension querying is only available on x86.
 #ifdef PLATFORM_IS_X86
