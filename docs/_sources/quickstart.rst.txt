@@ -8,7 +8,12 @@ This project works with Python on version 2.7+ and 3.5+, and on Linux, OSX and t
 
 ``pip install nmslib``
 
-You may need to install Python dev-files. On Ubuntu, you can do it as follows:
+This command will attempt to install a pre-compiled binary, which can be a bit slower.
+For best performance, the library needs to be installed from sources:
+
+``pip install --no-binary :all: nmslib``
+
+For installation from sources, you may need to install Python dev-files. On Ubuntu, you can do it as follows:
 
 ``sudo apt-get install python3-dev``
 

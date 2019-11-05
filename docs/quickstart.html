@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Python bindings for NMSLIB &mdash; nmslib 2.0.1 documentation</title>
+  <title>Python bindings for NMSLIB &mdash; nmslib 2.0.4 documentation</title>
   
 
   
@@ -163,7 +163,10 @@
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>This project works with Python on version 2.7+ and 3.5+, and on Linux, OSX and the Windows operating systems. To install:</p>
 <p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">nmslib</span></code></p>
-<p>You may need to install Python dev-files. On Ubuntu, you can do it as follows:</p>
+<p>This command will attempt to install a pre-compiled binary, which can be a bit slower.
+For best performance, the library needs to be installed from sources:</p>
+<p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--no-binary</span> <span class="pre">:all:</span> <span class="pre">nmslib</span></code></p>
+<p>For installation from sources, you may need to install Python dev-files. On Ubuntu, you can do it as follows:</p>
 <p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python3-dev</span></code></p>
 <p>Building on Windows requires Visual Studio 2015, see <a class="reference external" href="https://github.com/pybind/python_example#installation">this project for more information</a>.</p>
 </div>
