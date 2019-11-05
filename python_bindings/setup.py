@@ -5,12 +5,12 @@ import sys
 import setuptools
 import struct
 
-__version__ = '2.0.2'
+__version__ = '2.0.3'
 
 if sys.platform.startswith("win") and struct.calcsize("P") * 8 == 32:
     raise RuntimeError("Windows 32-bit is not supported.")
 
-dep_list = ['pybind11>=2.2.3']
+dep_list = ['pybind11>=2.2.3', 'psutil']
 py_version = tuple([int(v) for v in sys.version.split('.')[:2]])
 if py_version == (2, 7):
     dep_list.append('numpy>=1.10.0,<1.17')
