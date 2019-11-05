@@ -42,7 +42,10 @@ else:
     # Otherwise build all the files here directly (excluding extras which need boost)
     exclude_files = set("""space_sqfd.cc dummy_app.cc main.cc""".split())
 
-    for root, subdirs, files in os.walk(os.path.join(libdir, "src")):
+    full_file_list = list(os.walk(os.path.join(libdir, "src")))
+    full_file_list.extend(list(os.walk("tensorflow")))
+
+    for root, subdirs, files in full_file_list:
         source_files.extend(os.path.join(root, f) for f in files
                             if f.endswith(".cc") and f not in exclude_files)
 
