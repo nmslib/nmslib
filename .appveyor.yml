@@ -17,7 +17,7 @@ environment:
   - PYTHON: 37
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
-    secure: GRzEKTz0q+eRwEFvm1Vdrg==
+    secure: 7hxZ+XinYPLuIS1aHZbTcA==
 install:
 - cmd: '"%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%'
 - cmd: git config core.symlinks true
