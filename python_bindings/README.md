@@ -10,7 +10,11 @@ Linux, OSX and the Windows operating systems. To install:
 pip install nmslib
 ```
 
-You may need to install Python dev-files. On Ubuntu, you can do it as follows:
+To install from sources:
+```
+pip install --no-binary :all: nmslib
+```
+To install from sources, you may need to install Python dev-files. On Ubuntu, you can do it as follows:
 
 ```
 sudo apt-get install python3-dev

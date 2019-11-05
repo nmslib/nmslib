@@ -158,7 +158,7 @@ void InfoAboutUnusedCPUFeatures() {
       std::cout << "Your CPU supports instructions that this binary "
                 << "was not compiled to use:" << missing_instructions << std::endl;
       std::cout << "For maximum performance, you can install NMSLIB from sources " << std::endl
-                << "pip install --no-binary :all nmslib" << std::endl; 
+                << "pip install --no-binary :all: nmslib" << std::endl; 
     }
 }
 
