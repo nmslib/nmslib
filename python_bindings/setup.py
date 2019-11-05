@@ -5,7 +5,7 @@ import sys
 import setuptools
 import struct
 
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 
 if sys.platform.startswith("win") and struct.calcsize("P") * 8 == 32:
     raise RuntimeError("Windows 32-bit is not supported.")
@@ -43,7 +43,6 @@ else:
     exclude_files = set("""space_sqfd.cc dummy_app.cc main.cc""".split())
 
     full_file_list = list(os.walk(os.path.join(libdir, "src")))
-    full_file_list.extend(list(os.walk("tensorflow")))
 
     for root, subdirs, files in full_file_list:
         source_files.extend(os.path.join(root, f) for f in files
