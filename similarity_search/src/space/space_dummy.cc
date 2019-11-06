@@ -89,6 +89,5 @@ void SpaceDummy<dist_t>::WriteNextObj(const Object& obj, const string& externId,
 
 template class SpaceDummy<int>;
 template class SpaceDummy<float>;
-template class SpaceDummy<double>;
 
 }  // namespace similarity

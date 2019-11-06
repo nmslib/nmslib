@@ -40,8 +40,6 @@
 
 #include "../test/testdataset.h"
 
-#define TEST_SPEED_DOUBLE 0
-
 #define TEST_SPEED_ LP 1
 #define RANGE          8.0f
 #define RANGE_SMALL    1e-6f
@@ -2108,13 +2106,6 @@ int main(int argc, char* argv[]) {
       nTest++;
       TestRenyiDivSlow<float>(1024, dim, 100, alpha);
     }
-#if TEST_SPEED_DOUBLE
-    for (double alpha = alphaStepSlow; alpha <= 2; alpha+= alphaStepSlow) {
-      if (fabs(alpha - 1) < 1e-6) continue;
-      nTest++;
-      TestRenyiDivSlow<double>(1024, dim, 100, alpha);
-    }
-#endif
 
     float alphaStepFast = 1.0f/32;
     for (float alpha = alphaStepFast; alpha <= 2; alpha+= alphaStepFast) {
@@ -2122,13 +2113,6 @@ int main(int argc, char* argv[]) {
       nTest++;
       TestRenyiDivFast<float>(1024, dim, 100, alpha);
     }
-#if TEST_SPEED_DOUBLE
-    for (double alpha = alphaStepFast; alpha <= 2; alpha+= alphaStepFast) {
-      if (fabs(alpha - 1) < 1e-6) continue;
-      nTest++;
-      TestRenyiDivFast<double>(1024, dim, 100, alpha);
-    }
-#endif
 
 #if defined(WITH_EXTRAS)
     nTest++;
@@ -2137,14 +2121,6 @@ int main(int argc, char* argv[]) {
     TestSQFDHeuristic<float>(2000, 50);
     nTest++;
     TestSQFDGaussian<float>(2000, 50);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestSQFDMinus<double>(2000, 50);
-    nTest++;
-    TestSQFDHeuristic<double>(2000, 50);
-    nTest++;
-    TestSQFDGaussian<double>(2000, 50);
-#endif
 #endif
 
     nTest++;
@@ -2198,25 +2174,6 @@ int main(int argc, char* argv[]) {
     nTest++;
     TestAngularDistance<float>(1000, dim, 1000);
 
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestScalarProduct<double>(1000, dim, 1000);
-    nTest++;
-    TestScalarProductSIMD<double>(1000, dim, 1000);
-
-    nTest++;
-    TestNormScalarProduct<double>(1000, dim, 1000);
-    nTest++;
-    TestNormScalarProductSIMD<double>(1000, dim, 1000);
-    nTest++;
-
-
-    nTest++;
-    TestCosineSimilarity<double>(1000, dim, 1000);
-    nTest++;
-    TestAngularDistance<double>(1000, dim, 1000);
-#endif
-
     nTest++;
     TestSparseCosineSimilarityFast(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
     nTest++;
@@ -2254,30 +2211,6 @@ int main(int argc, char* argv[]) {
     nTest++;
     TestSparseJaccardSimilarity<float>(sampleDataPrefix + "sparse_ids_5K.txt", 1000, 1000);
 
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestSparseCosineSimilarity<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
-    nTest++;
-    TestSparseCosineSimilarity<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
-    nTest++;
-    TestSparseAngularDistance<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
-    nTest++;
-    TestSparseAngularDistance<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
-    nTest++;
-    TestSparseNegativeScalarProduct<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
-    nTest++;
-    TestSparseNegativeScalarProduct<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
-    nTest++;
-    TestSparseQueryNormNegativeScalarProduct<double>(sampleDataPrefix + "sparse_5K.txt", 1000, 1000);
-    nTest++;
-    TestSparseQueryNormNegativeScalarProduct<double>(sampleDataPrefix + "sparse_wiki_5K.txt", 1000, 1000);
-
-
-    nTest++;
-    TestSparseJaccardSimilarity<double>(sampleDataPrefix + "sparse_ids_5K.txt", 1000, 1000);
-#endif
-
-
     LOG(LIB_INFO) << "Single-precision (sparse) LP-distance tests";
     nTest++;
     TestSparseLp<float>(1000, 1000, -1);
@@ -2303,14 +2236,6 @@ int main(int argc, char* argv[]) {
     TestJSStandard<float>(1024, dim, 1000, pZero2);
     nTest++;
     TestJSStandard<float>(1024, dim, 1000, pZero3);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestJSStandard<double>(1024, dim, 500, pZero1);
-    nTest++;
-    TestJSStandard<double>(1024, dim, 500, pZero2);
-    nTest++;
-    TestJSStandard<double>(1024, dim, 500, pZero3);
-#endif
 
     nTest++;
     TestJSPrecomp<float>(1024, dim, 500, pZero1);
@@ -2318,14 +2243,6 @@ int main(int argc, char* argv[]) {
     TestJSPrecomp<float>(1024, dim, 500, pZero2);
     nTest++;
     TestJSPrecomp<float>(1024, dim, 500, pZero3);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestJSPrecomp<double>(1024, dim, 500, pZero1);
-    nTest++;
-    TestJSPrecomp<double>(1024, dim, 500, pZero2);
-    nTest++;
-    TestJSPrecomp<double>(1024, dim, 500, pZero3);
-#endif
 
     nTest++;
     TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero1);
@@ -2333,14 +2250,6 @@ int main(int argc, char* argv[]) {
     TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero2);
     nTest++;
     TestJSPrecompApproxLog<float>(1024, dim, 1000, pZero3);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero1);
-    nTest++;
-    TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero2);
-    nTest++;
-    TestJSPrecompApproxLog<double>(1024, dim, 1000, pZero3);
-#endif
 
     nTest++;
     TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero1);
@@ -2348,144 +2257,64 @@ int main(int argc, char* argv[]) {
     TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero2);
     nTest++;
     TestJSPrecompSIMDApproxLog<float>(1024, dim, 2000, pZero3);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero1);
-    nTest++;
-    TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero2);
-    nTest++;
-    TestJSPrecompSIMDApproxLog<double>(1024, dim, 2000, pZero3);
-#endif
+
 
     nTest++;
     TestL1Norm<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestL1Norm<double>(1024, dim, 10000);
-#endif
 
     nTest++;
     TestL1NormStandard<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestL1NormStandard<double>(1024, dim, 10000);
-#endif
 
     nTest++;
     TestL1NormSIMD<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestL1NormSIMD<double>(1024, dim, 10000);
-#endif
-
 
     nTest++;
     TestLInfNorm<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestLInfNorm<double>(1024, dim, 10000);
-#endif
 
     nTest++;
     TestLInfNormStandard<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestLInfNormStandard<double>(1024, dim, 10000);
-#endif
 
     nTest++;
     TestLInfNormSIMD<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestLInfNormSIMD<double>(1024, dim, 10000);
-#endif
 
     nTest++;
     TestItakuraSaitoStandard<float>(1024, dim, 1000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestItakuraSaitoStandard<double>(1024, dim, 1000);
-#endif
 
 
     nTest++;
     TestItakuraSaitoPrecomp<float>(1024, dim, 2000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestItakuraSaitoPrecomp<double>(1024, dim, 2000);
-#endif
 
     nTest++;
     TestItakuraSaitoPrecompSIMD<float>(1024, dim, 4000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestItakuraSaitoPrecompSIMD<double>(1024, dim, 4000);
-#endif
 
     nTest++;
     TestL2Norm<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestL2Norm<double>(1024, dim, 10000);
-#endif
 
     nTest++;
     TestL2NormStandard<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestL2NormStandard<double>(1024, dim, 10000);
-#endif
 
     nTest++;
     TestL2NormSIMD<float>(1024, dim, 10000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestL2NormSIMD<double>(1024, dim, 10000);
-#endif
 
 
     nTest++;
     TestKLStandard<float>(1024, dim, 1000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestKLStandard<double>(1024, dim, 1000);
-#endif
 
 
     nTest++;
     TestKLPrecomp<float>(1024, dim, 2000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestKLPrecomp<double>(1024, dim, 2000);
-#endif
 
     nTest++;
     TestKLPrecompSIMD<float>(1024, dim, 4000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestKLPrecompSIMD<double>(1024, dim, 4000);
-#endif
 
     nTest++;
     TestKLGeneralStandard<float>(1024, dim, 1000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestKLGeneralStandard<double>(1024, dim, 1000);
-#endif
 
     nTest++;
     TestKLGeneralPrecomp<float>(1024, dim, 2000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestKLGeneralPrecomp<double>(1024, dim, 2000);
-#endif
 
     nTest++;
     TestKLGeneralPrecompSIMD<float>(1024, dim, 2000);
-#if TEST_SPEED_DOUBLE
-    nTest++;
-    TestKLGeneralPrecompSIMD<double>(1024, dim, 2000);
-#endif
 
 #if TEST_SPEED_LP
     float delta = 0.125/2.0;
@@ -2499,20 +2328,6 @@ int main(int argc, char* argv[]) {
     }
     LOG(LIB_INFO) << "========================================";
 
-#if TEST_SPEED_DOUBLE
-    LOG(LIB_INFO) << "Double-precision (sparse) LP-distance tests";
-    TestSparseLp<double>(1000, 1000, -1);
-    nTest++;
-    TestSparseLp<double>(1000, 1000, 1/3.0);
-    nTest++;
-    for (double power = delta, step = delta; power <= 24; power += step) {
-      nTest++;
-      // This one should use an optimized LP function
-      TestSparseLp<double>(1000, 1000, power);
-      if (power == 3) step = 0.125;
-      if (power == 8) step = 0.5;
-    }
-#endif
     LOG(LIB_INFO) << "========================================";
 
     LOG(LIB_INFO) << "Single-precision LP-distance tests";
@@ -2525,18 +2340,6 @@ int main(int argc, char* argv[]) {
       if (power == 8) step = 0.5;
     }
     LOG(LIB_INFO) << "========================================";
-#if TEST_SPEED_DOUBLE
-    LOG(LIB_INFO) << "Double-precision LP-distance tests";
-    for (double power = delta, step = delta; power <= 24; power += step) {
-      nTest++;
-      TestLPGeneric<double>(128, dim, 200, power);
-      nTest++;
-      TestLPGenericOptim<double>(128, dim, 200, power);
-      if (power == 3) step = 0.125;
-      if (power == 8) step = 0.5;
-    }
-    LOG(LIB_INFO) << "========================================";
-#endif
 #endif
 
     LOG(LIB_INFO) << "Dimensionality of dense vectors: " << dim; 

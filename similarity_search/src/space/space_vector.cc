@@ -143,12 +143,7 @@ Object* VectorSpace<dist_t>::CreateObjFromVect(IdType id, LabelType label, const
   return new Object(id, label, InpVect.size() * sizeof(dist_t), &InpVect[0]);
 };
 
-/* 
- * Note that we don't instantiate vector spaces for types other than float & double
- * The only exception is the VectorSpace<PivotIdType>
- */
 template class VectorSpace<PivotIdType>;
 template class VectorSpace<float>;
-template class VectorSpace<double>;
 
 }  // namespace similarity

@@ -107,7 +107,6 @@ void Space<dist_t>::WriteObjectVectorBinData(const ObjectVector& data,
 
 template class Space<int>;
 template class Space<float>;
-template class Space<double>;
 
 template <class dist_t>
  void DummyPivotIndex<dist_t>::ComputePivotDistancesIndexTime(const Object* pObj, vector<dist_t>& vResDist) const  {
@@ -122,8 +121,15 @@ void DummyPivotIndex<dist_t>::ComputePivotDistancesQueryTime(const Query<dist_t>
   for (size_t i = 0; i < pivots_.size(); ++i) vResDist[i] = pQuery->DistanceObjLeft(pivots_[i]);
 }
 
+template <class dist_t>
+DummyPivotIndex<dist_t>::~DummyPivotIndex() {}
+
+template <class dist_t>
+PivotIndex<dist_t>::~PivotIndex() {}
+
+template class PivotIndex<int>;
+template class PivotIndex<float>;
 template class DummyPivotIndex<int>;
 template class DummyPivotIndex<float>;
-template class DummyPivotIndex<double>;
 
 }

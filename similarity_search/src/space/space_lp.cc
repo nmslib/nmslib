@@ -42,6 +42,5 @@ std::string SpaceLp<dist_t>::StrDesc() const {
 }
 
 template class SpaceLp<float>;
-template class SpaceLp<double>;
 
 }  // namespace similarity

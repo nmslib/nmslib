@@ -868,6 +868,5 @@ namespace similarity {
     }
 
     template class Hnsw<float>;
-    template class Hnsw<double>;
     template class Hnsw<int>;
 }

@@ -618,30 +618,6 @@ int main(int ac, char* av[]) {
                     eps,
                     RangeArg
                    );
-    } else if (DIST_TYPE_DOUBLE == DistType) {
-      RunExper<double>(bPrintProgress,
-                    LoadIndexLoc,
-                    SaveIndexLoc,
-                    MethodName,
-                    IndexTimeParams,
-                    QueryTimeParams,
-                    SpaceType,
-                    SpaceParams,
-                    ThreadTestQty,
-                    DoAppend, 
-                    ResFilePrefix,
-                    TestSetQty,
-                    DataFile,
-                    QueryFile,
-                    CacheGSFilePrefix,
-                    maxCacheGSRelativeQty,
-                    recallOnly,
-                    MaxNumData,
-                    MaxNumQuery,
-                    knn,
-                    eps,
-                    RangeArg
-                   );
     } else {
       LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
     }

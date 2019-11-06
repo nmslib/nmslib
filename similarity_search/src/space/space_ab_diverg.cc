@@ -53,7 +53,6 @@ std::string SpaceAlphaBetaDivergSlow<dist_t>::StrDesc() const {
 }
 
 template class SpaceAlphaBetaDivergSlow<float>;
-template class SpaceAlphaBetaDivergSlow<double>;
 
 template <typename dist_t>
 dist_t SpaceAlphaBetaDivergFast<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
@@ -85,6 +84,5 @@ std::string SpaceAlphaBetaDivergFast<dist_t>::StrDesc() const {
 }
 
 template class SpaceAlphaBetaDivergFast<float>;
-template class SpaceAlphaBetaDivergFast<double>;
 
 }  // namespace similarity

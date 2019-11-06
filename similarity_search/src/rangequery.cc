@@ -113,7 +113,6 @@ void RangeQuery<dist_t>::Print() const {
 }
 
 template class RangeQuery<float>;
-template class RangeQuery<double>;
 template class RangeQuery<int>;
 template class RangeQuery<short int>;
 

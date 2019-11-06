@@ -328,20 +328,12 @@ Object* KLDivFastRightQuery<dist_t>::CreateObjFromVect(IdType id, LabelType labe
 }
 
 template class BregmanDiv<float>;
-template class BregmanDiv<double>;
 template class KLDivAbstract<float>;
-template class KLDivAbstract<double>;
 template class KLDivGenSlow<float>;
-template class KLDivGenSlow<double>;
 template class KLDivGenFast<float>;
-template class KLDivGenFast<double>;
 template class ItakuraSaitoFast<float>;
-template class ItakuraSaitoFast<double>;
 template class KLDivGenFastRightQuery<float>;
-template class KLDivGenFastRightQuery<double>;
 template class KLDivFast<float>;
-template class KLDivFast<double>;
 template class KLDivFastRightQuery<float>;
-template class KLDivFastRightQuery<double>;
 
 }  // namespace similarity

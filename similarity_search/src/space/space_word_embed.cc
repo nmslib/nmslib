@@ -100,10 +100,6 @@ dist_t WordEmbedSpace<dist_t>::HiddenDistance(const Object* obj1, const Object* 
   THROW_RUNTIME_ERR(err);
 }
 
-/* 
- * Note that we don't instantiate vector spaces for types other than float & double
- */
 template class WordEmbedSpace<float>;
-template class WordEmbedSpace<double>;
 
 }  // namespace similarity

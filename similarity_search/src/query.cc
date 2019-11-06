@@ -67,7 +67,6 @@ dist_t Query<dist_t>::DistanceObjRight(const Object* object) const {
 }
 
 template class Query<float>;
-template class Query<double>;
 template class Query<int>;
 template class Query<short int>;
 

@@ -146,6 +146,5 @@ Object* SpaceSparseJaccard<dist_t>::CreateObjFromIds(IdType id, LabelType label,
 };
 
 template class SpaceSparseJaccard<float>;
-template class SpaceSparseJaccard<double>;
 
 }  // namespace similarity

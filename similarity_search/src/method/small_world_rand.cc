@@ -920,7 +920,6 @@ void SmallWorldRand<dist_t>::LoadIndex(const string &location) {
 }
 
 template class SmallWorldRand<float>;
-template class SmallWorldRand<double>;
 template class SmallWorldRand<int>;
 
 }

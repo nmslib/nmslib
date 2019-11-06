@@ -44,7 +44,6 @@ const char* data_suff = ".dat";
 
 enum DistType {
   DISTTYPE_FLOAT,
-  DISTTYPE_DOUBLE,
   DISTTYPE_INT
 };
 
@@ -456,7 +455,6 @@ PYBIND11_PLUGIN(nmslib) {
 
   py::enum_<DistType>(m, "DistType")
     .value("FLOAT", DISTTYPE_FLOAT)
-    .value("DOUBLE", DISTTYPE_DOUBLE)
     .value("INT", DISTTYPE_INT);
 
   py::enum_<DataType>(m, "DataType")
@@ -474,11 +472,6 @@ PYBIND11_PLUGIN(nmslib) {
       switch (dtype) {
         case DISTTYPE_FLOAT: {
           auto index = new IndexWrapper<float>(method, space, space_params, data_type, dtype);
-          ret = py::cast(index, py::return_value_policy::take_ownership);
-          break;
-        }
-        case DISTTYPE_DOUBLE: {
-          auto index = new IndexWrapper<double>(method, space, space_params, data_type, dtype);
           ret = py::cast(index, py::return_value_policy::take_ownership);
           break;
         }
@@ -509,8 +502,6 @@ PYBIND11_PLUGIN(nmslib) {
     "    The index method to use\n"
     "data_type: nmslib.DataType optional\n"
     "    The type of data to index (dense/sparse/string vectors)\n"
-    "dist_type: nmslib.DistType optional\n"
-    "    The type of index to create (float/double/int)\n"
     "\n"
     "Returns\n"
     "----------\n"
@@ -522,7 +513,6 @@ PYBIND11_PLUGIN(nmslib) {
     "Contains Indexes and Spaces for different Distance Types");
   exportIndex<int>(&dist_module);
   exportIndex<float>(&dist_module);
-  exportIndex<double>(&dist_module);
 
   exportLegacyAPI(&m);
 
@@ -655,7 +645,6 @@ void exportIndex(py::module * m) {
 
 template <> std::string distName<int>() { return "Int"; }
 template <> std::string distName<float>() { return "Float"; }
-template <> std::string distName<double>() { return "Double"; }
 
 void freeAndClearObjectVector(ObjectVector& data) {
   for (auto datum : data) {
@@ -718,7 +707,6 @@ void exportLegacyAPI(py::module * m) {
     if (data_type == DATATYPE_DENSE_VECTOR) {
       DistType dist_type = py::cast<DistType>(self.attr("distType"));
       if (((dist_type == DISTTYPE_FLOAT) && (!py::isinstance<py::array_t<float>>(data)))  ||
-          ((dist_type == DISTTYPE_DOUBLE) && (!py::isinstance<py::array_t<double>>(data)))  ||
           ((dist_type == DISTTYPE_INT) && (!py::isinstance<py::array_t<int>>(data)))) {
         throw py::value_error("Invalid datatype for data in addDataPointBatch");
       }

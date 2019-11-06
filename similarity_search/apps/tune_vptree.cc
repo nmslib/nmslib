@@ -527,28 +527,6 @@ int main(int ac, char* av[]) {
                   FullFactor,
                   MaxCacheGSRelativeQty
                  );
-  } else if (DIST_TYPE_DOUBLE == DistType) {
-    RunExper<double>(AddRestartQty,
-                  MethodName, *IndexParams, *QueryTimeParams,
-                  SpaceType,
-                  *SpaceParams,
-                  TestSetQty,
-                  DataFile,
-                  QueryFile,
-                  MaxNumData,
-                  MaxNumQuery,
-                  knn,
-                  eps,
-                  RangeArg,
-                  ResFile,
-                  MinExp,
-                  MaxExp,
-                  MaxIter,
-                  MaxRecDepth,
-                  StepN,
-                  FullFactor,
-                  MaxCacheGSRelativeQty
-                 );
   } else {
     LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
   }

@@ -177,7 +177,6 @@ void SeqSearch<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
 }
 
 template class SeqSearch<float>;
-template class SeqSearch<double>;
 template class SeqSearch<int>;
 
 }

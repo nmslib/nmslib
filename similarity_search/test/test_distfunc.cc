@@ -129,7 +129,6 @@ TEST(DISABLE_SparsePackUnpack) {
 TEST(SparsePackUnpack) {
 #endif
   TestSparsePackUnpack<float>();
-  TestSparsePackUnpack<double>();
 }
 
 TEST(TestEfficientPower) {
@@ -1127,45 +1126,41 @@ TEST(TestAgree) {
         if (dim <= 8) {
 
           for (float power = 0.125; power <= 32; power += 0.125) {
-            TestLPGenericAgree(1024, dim, 10, power);
+            TestLPGenericAgree<float>(1024, dim, 10, power);
           }
           for (double power = 0.125; power <= 32; power += 0.125) {
-            TestLPGenericAgree(1024, dim, 10, power);
+            TestLPGenericAgree<float>(1024, dim, 10, power);
           }
 
           // In the case of Renyi divergence 0 < alpha < 1, 1 < alpha < infinity
           // https://en.wikipedia.org/wiki/R%C3%A9nyi_entropy#R%C3%A9nyi_divergence
           for (float alpha = 0.125; alpha <= 2; alpha += 0.125) {
             if (fabs(alpha - 1) < 1e-6) continue;
-            TestRenyiDivAgree(1024, dim, 10, alpha);
+            TestRenyiDivAgree<float>(1024, dim, 10, alpha);
           }
           for (double alpha = 0.125; alpha <= 2; alpha += 0.125) {
             if (fabs(alpha - 1) < 1e-6) continue;
-            TestRenyiDivAgree(1024, dim, 10, alpha);
+            TestRenyiDivAgree<float>(1024, dim, 10, alpha);
           }
 
           for (float alpha = -2; alpha <= 2; alpha += 0.5) 
           for (float beta = -2; beta <= 2; beta += 0.5) 
           {
-            TestAlphaBetaDivAgree(1024, dim, 10, alpha, beta);
+            TestAlphaBetaDivAgree<float>(1024, dim, 10, alpha, beta);
           }
 
           for (double alpha = -2; alpha <= 2; alpha += 0.5) 
           for (double beta = -2; beta <= 2; beta += 0.5) 
           {
-            TestAlphaBetaDivAgree(1024, dim, 10, alpha, beta);
+            TestAlphaBetaDivAgree<float>(1024, dim, 10, alpha, beta);
           }
         }
 
         nTest++;
         nFail += !TestNormScalarProductAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail += !TestNormScalarProductAgree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestScalarProductAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail += !TestScalarProductAgree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestSpearmanFootruleAgree(1024, dim, 10);
@@ -1175,38 +1170,24 @@ TEST(TestAgree) {
 
         nTest++;
         nFail += !TestJSAgree<float>(1024, dim, 10, 0.5);
-        nTest++;
-        nFail += !TestJSAgree<double>(1024, dim, 10, 0.5);
 
         nTest++;
         nFail += !TestKLGeneralAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail += !TestKLGeneralAgree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestLInfAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail += !TestLInfAgree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestL1Agree<float>(1024, dim, 10);
-        nTest++;
-        nFail += !TestL1Agree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestL2Agree<float>(1024, dim, 10);
-        nTest++;
-        nFail += !TestL2Agree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestKLAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail += !TestKLAgree<double>(1024, dim, 10);
 
         nTest++;
         nFail += !TestItakuraSaitoAgree<float>(1024, dim, 10);
-        nTest++;
-        nFail += !TestItakuraSaitoAgree<double>(1024, dim, 10);
     }
 
     LOG(LIB_INFO) << nTest << " (sub) tests performed " << nFail << " failed";

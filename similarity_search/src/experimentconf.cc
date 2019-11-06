@@ -426,7 +426,6 @@ void ExperimentConfig<dist_t>::PrintInfo() const {
 }
 
 template class ExperimentConfig<float>;
-template class ExperimentConfig<double>;
 template class ExperimentConfig<int>;
 
 }

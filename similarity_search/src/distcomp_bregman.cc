@@ -43,7 +43,6 @@ T ItakuraSaito(const T* pVect1, const T* pVect2, size_t qty) {
 }
 
 template float  ItakuraSaito<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double ItakuraSaito<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 template <class T> 
 T ItakuraSaitoPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
@@ -71,7 +70,6 @@ T ItakuraSaitoPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
 }
 
 template float  ItakuraSaitoPrecomp<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double ItakuraSaitoPrecomp<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 
 /* 
@@ -147,54 +145,7 @@ float ItakuraSaitoPrecompSIMD(const float* pVect1, const float* pVect2, size_t q
 #endif
 }
 
-template <>
-double ItakuraSaitoPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
-{
-#ifndef PORTABLE_SSE2
-#pragma message WARN("ItakuraSaitoPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
-    return ItakuraSaitoPrecomp(pVect1, pVect2, qty);
-#else
-    size_t qty8 = qty/8;
-
-    const double* pEnd1 = pVect1 + 8 * qty8;
-    const double* pEnd2 = pVect1 + qty;
-
-    const double* pVectLog1 = pVect1 + qty;
-    const double* pVectLog2 = pVect2 + qty;
-
-    __m128d  v1, v2, vLog1, vLog2;
-    __m128d  sum = _mm_set1_pd(0); 
-
-    while (pVect1 < pEnd1) {
-        v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;
-        v2      = _mm_loadu_pd(pVect2);     pVect2 += 2;
-        vLog1   = _mm_loadu_pd(pVectLog1);  pVectLog1 += 2;
-        vLog2   = _mm_loadu_pd(pVectLog2);  pVectLog2 += 2;
-        sum  = _mm_add_pd(sum, _mm_sub_pd(_mm_div_pd(v1, v2),  _mm_sub_pd(vLog1, vLog2)));
-    
-        v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;
-        v2      = _mm_loadu_pd(pVect2);     pVect2 += 2;
-        vLog1   = _mm_loadu_pd(pVectLog1);  pVectLog1 += 2;
-        vLog2   = _mm_loadu_pd(pVectLog2);  pVectLog2 += 2;
-        sum  = _mm_add_pd(sum, _mm_sub_pd(_mm_div_pd(v1, v2),  _mm_sub_pd(vLog1, vLog2)));
-    
-    }
-
-    double PORTABLE_ALIGN16 TmpRes[2];
-
-    _mm_store_pd(TmpRes, sum);
-    double res= TmpRes[0] + TmpRes[1];
-
-    while (pVect1 < pEnd2) {
-        res += (*pVect1)/(*pVect2) - ((*pVectLog1) - (*pVectLog2)); ++pVect1; ++pVect2; ++pVectLog1; ++pVectLog2;
-    }
-
-    return res - qty;
-#endif
-}
-
 template float  ItakuraSaitoPrecompSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double ItakuraSaitoPrecompSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 
 /*
@@ -213,7 +164,6 @@ template <class T> T KLStandard(const T *pVect1, const T *pVect2, size_t qty)
 }
 
 template float KLStandard<float>(const float *pVect1, const float *pVect2, size_t qty); 
-template double KLStandard<double>(const double *pVect1, const double *pVect2, size_t qty);
 
 template <class T> T KLStandardLogDiff(const T *p1, const T *p2, size_t qty) 
 { 
@@ -227,7 +177,6 @@ template <class T> T KLStandardLogDiff(const T *p1, const T *p2, size_t qty)
 }
 
 template float KLStandardLogDiff<float>(const float *p1, const float *p2, size_t qty);
-template double KLStandardLogDiff<double>(const double *p1, const double *p2, size_t qty);
 
 
 template <class T> 
@@ -256,7 +205,6 @@ T KLPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
 }
 
 template float KLPrecomp<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double KLPrecomp<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 /* 
  * On new architectures unaligned loads are almost as fast as aligned ones. 
@@ -324,51 +272,7 @@ float KLPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 #endif
 }
 
-template <>
-double KLPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
-{
-#ifndef PORTABLE_SSE2
-#pragma message WARN("KLPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
-    return KLPrecomp(pVect1, pVect2, qty);
-#else
-    size_t qty8 = qty/8;
-
-    const double* pEnd1 = pVect1 + 8 * qty8;
-    const double* pEnd2 = pVect1 + qty;
-
-    const double* pVectLog1 = pVect1 + qty;
-    const double* pVectLog2 = pVect2 + qty;
-
-    __m128d  v1, vLog1, vLog2;
-    __m128d  sum = _mm_set1_pd(0); 
-
-    while (pVect1 < pEnd1) {
-        v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;
-        vLog1   = _mm_loadu_pd(pVectLog1);  pVectLog1 += 2;
-        vLog2   = _mm_loadu_pd(pVectLog2);  pVectLog2 += 2;
-        sum  = _mm_add_pd(sum, _mm_mul_pd(v1, _mm_sub_pd(vLog1, vLog2)));
-    
-        v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;
-        vLog1   = _mm_loadu_pd(pVectLog1);  pVectLog1 += 2;
-        vLog2   = _mm_loadu_pd(pVectLog2);  pVectLog2 += 2;
-        sum  = _mm_add_pd(sum, _mm_mul_pd(v1, _mm_sub_pd(vLog1, vLog2)));
-    }
-
-    double PORTABLE_ALIGN16 TmpRes[2];
-
-    _mm_store_pd(TmpRes, sum);
-    double res= TmpRes[0] + TmpRes[1];
-
-    while (pVect1 < pEnd2) {
-        res += (*pVect1++) * ((*pVectLog1++) - (*pVectLog2++));
-    }
-
-    return res;
-#endif
-}
-
 template float KLPrecompSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double KLPrecompSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 template <class T> T KLGeneralStandard(const T *pVect1, const T *pVect2, size_t qty) 
 { 
@@ -386,7 +290,6 @@ template <class T> T KLGeneralStandard(const T *pVect1, const T *pVect2, size_t 
  */
 
 template float KLGeneralStandard<float>(const float *pVect1, const float *pVect2, size_t qty); 
-template double KLGeneralStandard<double>(const double *pVect1, const double *pVect2, size_t qty);
 
 template <class T> 
 T KLGeneralPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
@@ -414,7 +317,6 @@ T KLGeneralPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
 }
 
 template float KLGeneralPrecomp<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double KLGeneralPrecomp<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 /* 
  * On new architectures unaligned loads are almost as fast as aligned ones. 
@@ -490,54 +392,6 @@ float KLGeneralPrecompSIMD(const float* pVect1, const float* pVect2, size_t qty)
 #endif
 }
 
-template <>
-double KLGeneralPrecompSIMD(const double* pVect1, const double* pVect2, size_t qty)
-{
-#ifndef PORTABLE_SSE2
-#pragma message WARN("KLGeneralPrecompSIMD<double>: SSE2 is not available, defaulting to pure C++ implementation!")
-    return KLGeneralPrecomp(pVect1, pVect2, qty);
-#else
-    size_t qty8 = qty/8;
-
-    const double* pEnd1 = pVect1 + 8 * qty8;
-    const double* pEnd2 = pVect1 + qty;
-
-    const double* pVectLog1 = pVect1 + qty;
-    const double* pVectLog2 = pVect2 + qty;
-
-    __m128d  v1, v2, vLog1, vLog2;
-    __m128d  sum = _mm_set1_pd(0); 
-
-    while (pVect1 < pEnd1) {
-        v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;
-        v2      = _mm_loadu_pd(pVect2);     pVect2 += 2;
-        vLog1   = _mm_loadu_pd(pVectLog1);  pVectLog1 += 2;
-        vLog2   = _mm_loadu_pd(pVectLog2);  pVectLog2 += 2;
-        sum  = _mm_add_pd(_mm_add_pd(sum, _mm_mul_pd(v1, _mm_sub_pd(vLog1, vLog2))), _mm_sub_pd(v2, v1));
-    
-        v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;
-        v2      = _mm_loadu_pd(pVect2);     pVect2 += 2;
-        vLog1   = _mm_loadu_pd(pVectLog1);  pVectLog1 += 2;
-        vLog2   = _mm_loadu_pd(pVectLog2);  pVectLog2 += 2;
-        sum  = _mm_add_pd(_mm_add_pd(sum, _mm_mul_pd(v1, _mm_sub_pd(vLog1, vLog2))), _mm_sub_pd(v2, v1));
-    
-    }
-
-    double PORTABLE_ALIGN16 TmpRes[2];
-
-    _mm_store_pd(TmpRes, sum);
-    double res= TmpRes[0] + TmpRes[1];
-
-    while (pVect1 < pEnd2) {
-        res += (*pVect1) * ((*pVectLog1++) - (*pVectLog2++)) + (*pVect2) - (*pVect1);
-        ++pVect1; ++pVect2;
-    }
-
-    return res;
-#endif
-}
-
 template float KLGeneralPrecompSIMD<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double KLGeneralPrecompSIMD<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 }

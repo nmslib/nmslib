@@ -248,6 +248,5 @@ SpaceSparseVectorInter<dist_t>::GetElemQty(const Object* obj) const {
 } 
 
 template class SpaceSparseVectorInter<float>;
-template class SpaceSparseVectorInter<double>;
 
 }  // namespace similarity

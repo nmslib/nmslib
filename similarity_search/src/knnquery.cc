@@ -132,7 +132,6 @@ void KNNQuery<dist_t>::Print() const {
 }
 
 template class KNNQuery<float>;
-template class KNNQuery<double>;
 template class KNNQuery<int>;
 template class KNNQuery<short int>;
 

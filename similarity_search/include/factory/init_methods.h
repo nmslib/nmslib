@@ -32,41 +32,32 @@ namespace similarity {
 inline void initMethods() {
   // a dummy method
   REGISTER_METHOD_CREATOR(float,  METH_DUMMY, CreateDummy)
-  REGISTER_METHOD_CREATOR(double, METH_DUMMY, CreateDummy)
   REGISTER_METHOD_CREATOR(int,    METH_DUMMY, CreateDummy)
 
   // Inverted index over permutation-based neighborhoods
   REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
-  REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_INVINDEX, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(float,  METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
-  REGISTER_METHOD_CREATOR(double, METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
   REGISTER_METHOD_CREATOR(int,    METH_PIVOT_NEIGHB_INVINDEX_SYN, CreatePivotNeighbInvertedIndex)
 
   // Just sequential searching
   REGISTER_METHOD_CREATOR(float,  METH_SEQ_SEARCH, CreateSeqSearch)
-  REGISTER_METHOD_CREATOR(double, METH_SEQ_SEARCH, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(int,    METH_SEQ_SEARCH, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(float,  METH_SEQ_SEARCH_SYN, CreateSeqSearch)
-  REGISTER_METHOD_CREATOR(double, METH_SEQ_SEARCH_SYN, CreateSeqSearch)
   REGISTER_METHOD_CREATOR(int,    METH_SEQ_SEARCH_SYN, CreateSeqSearch)
 
   // Small-word (KNN-graph) with randomly generated neighborhood-networks
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
-  REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(float,  METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
-  REGISTER_METHOD_CREATOR(double, METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
   REGISTER_METHOD_CREATOR(int,    METH_SMALL_WORLD_RAND_SYN, CreateSmallWorldRand)
 
   REGISTER_METHOD_CREATOR(float,  METH_HNSW, CreateHnsw)
-  REGISTER_METHOD_CREATOR(double, METH_HNSW, CreateHnsw)
   REGISTER_METHOD_CREATOR(int,    METH_HNSW, CreateHnsw)
 
   // VP-tree, piecewise-polynomial approximation of the decision rule
   REGISTER_METHOD_CREATOR(int,    METH_VPTREE, CreateVPTree)
   REGISTER_METHOD_CREATOR(float,  METH_VPTREE, CreateVPTree)
-  REGISTER_METHOD_CREATOR(double, METH_VPTREE, CreateVPTree)
 
 
   // Classic DAAT inverted index

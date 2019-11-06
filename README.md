@@ -40,8 +40,8 @@ If you find this library useful, feel free to cite our SISAP paper [**[BibTex]**
 
 ## License
 
-Most of this code is released under the
-Apache License Version 2.0 http://www.apache.org/licenses/.
+The code is released under the Apache License Version 2.0 http://www.apache.org/licenses/. 
+Older versions of the library include additional components, which have different licenses (but this does not apply to NMLISB 2.x):
 
 * The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
 * The k-NN graph construction algorithm *NN-Descent* due to Dong et al. 2011 (see the links below), which is also embedded in our library, seems to be covered by a free-to-use license, similar to Apache 2.

@@ -792,7 +792,6 @@ void PivotNeighbInvertedIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) c
 }
 
 template class PivotNeighbInvertedIndex<float>;
-template class PivotNeighbInvertedIndex<double>;
 template class PivotNeighbInvertedIndex<int>;
 
 }  // namespace similarity

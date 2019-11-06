@@ -180,9 +180,7 @@ TEST(Test_WordEmbedSpace) {
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
     bool binTest = false; // saving of external IDs isn't implemented for binary data writing/reading
     EXPECT_EQ(true, fullTest<float>(binTest, "glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt", SPACE_WORD_EMBED, paramsDistL2, true));
-    EXPECT_EQ(true, fullTest<double>(binTest, "glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt",SPACE_WORD_EMBED, paramsDistCosine, true));
     EXPECT_EQ(true, fullTest<float>(binTest, "glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt", SPACE_WORD_EMBED, paramsDistL2, true));
-    EXPECT_EQ(true, fullTest<double>(binTest, "glove.6B.100d_100.txt", maxNumRec, "tmp_out_file.txt",SPACE_WORD_EMBED, paramsDistCosine, true));
   }
 }
 
@@ -190,7 +188,6 @@ TEST(Test_DenseVectorSpace) {
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
     for (unsigned binTest = 0; binTest < 2; ++binTest) {
       EXPECT_EQ(true, fullTest<float>(binTest, "final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams, false));
-      EXPECT_EQ(true, fullTest<double>(binTest, "final128_10K.txt", maxNumRec, "tmp_out_file.txt", "l2", emptyParams, false));
     }
   }
 }
@@ -200,9 +197,7 @@ TEST(Test_DenseVectorKLDiv) {
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
     for (unsigned binTest = 0; binTest < 2; ++binTest) {
       EXPECT_EQ(true, fullTest<float>(binTest, "final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams, false));
-      EXPECT_EQ(true, fullTest<double>(binTest, "final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenfast", emptyParams, false));
       EXPECT_EQ(true, fullTest<float>(binTest, "final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams, false));
-      EXPECT_EQ(true, fullTest<double>(binTest, "final128_10K.txt", maxNumRec, "tmp_out_file.txt", "kldivgenslow", emptyParams, false));
     }
   }
 }
@@ -212,8 +207,6 @@ TEST(Test_SparseVectorSpace) {
     for (unsigned binTest = 0; binTest < 2; ++binTest) {
       EXPECT_EQ(true, fullTest<float>(binTest, "sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams, false));
       EXPECT_EQ(true, fullTest<float>(binTest, "sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams, false));
-      EXPECT_EQ(true, fullTest<double>(binTest, "sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "cosinesimil_sparse", emptyParams, false));
-      EXPECT_EQ(true, fullTest<double>(binTest, "sparse_5K.txt", maxNumRec, "tmp_out_file.txt", "angulardist_sparse", emptyParams, false));
     }
   }
 }
@@ -279,7 +272,6 @@ TEST(Test_SQFD) {
   for (size_t maxNumRec = 1; maxNumRec < MAX_NUM_REC; ++maxNumRec) {
     for (unsigned binTest = 0; binTest < 2; ++binTest) {
       EXPECT_EQ(true, fullTest<float>(binTest, "sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
-      EXPECT_EQ(true, fullTest<double>(binTest, "sqfd20_10k_10k.txt", maxNumRec, "tmp_out_file.txt", "sqfd_heuristic_func", sqfdParams, false));
     }
   }
 }

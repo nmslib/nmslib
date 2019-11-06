@@ -39,7 +39,6 @@ dist_t SpaceCosineSimilarity<dist_t>::HiddenDistance(const Object* obj1, const O
 }
 
 template class SpaceCosineSimilarity<float>;
-template class SpaceCosineSimilarity<double>;
 
 template <typename dist_t>
 dist_t SpaceAngularDistance<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
@@ -56,7 +55,6 @@ dist_t SpaceAngularDistance<dist_t>::HiddenDistance(const Object* obj1, const Ob
 }
 
 template class SpaceAngularDistance<float>;
-template class SpaceAngularDistance<double>;
 
 template <typename dist_t>
 dist_t SpaceNegativeScalarProduct<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
@@ -70,6 +68,5 @@ dist_t SpaceNegativeScalarProduct<dist_t>::HiddenDistance(const Object* obj1, co
 }
 
 template class SpaceNegativeScalarProduct<float>;
-template class SpaceNegativeScalarProduct<double>;
 
 }  // namespace similarity

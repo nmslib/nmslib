@@ -92,6 +92,5 @@ void StringSpace<dist_t>::WriteNextObj(const Object& obj, const string& externId
 template class StringSpace<int>;
 // TODO: do we really need floating-point distances for string spaces? 
 template class StringSpace<float>;
-template class StringSpace<double>;
 
 }  // namespace similarity

@@ -66,12 +66,9 @@ dist_t SpaceJSBase<dist_t>::JensenShannonFunc(const Object* obj1, const Object* 
 }
 
 template class SpaceJSBase<float>;
-template class SpaceJSBase<double>;
 
 template class SpaceJSDiv<float>;
-template class SpaceJSDiv<double>;
 
 template class SpaceJSMetric<float>;
-template class SpaceJSMetric<double>;
 
 }  // namespace similarity

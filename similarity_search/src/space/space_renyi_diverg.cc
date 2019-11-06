@@ -42,7 +42,6 @@ std::string SpaceRenyiDivergSlow<dist_t>::StrDesc() const {
 }
 
 template class SpaceRenyiDivergSlow<float>;
-template class SpaceRenyiDivergSlow<double>;
 
 template <typename dist_t>
 dist_t SpaceRenyiDivergFast<dist_t>::HiddenDistance(const Object* obj1, const Object* obj2) const {
@@ -63,6 +62,5 @@ std::string SpaceRenyiDivergFast<dist_t>::StrDesc() const {
 }
 
 template class SpaceRenyiDivergFast<float>;
-template class SpaceRenyiDivergFast<double>;
 
 }  // namespace similarity

@@ -594,22 +594,6 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else if (DIST_TYPE_DOUBLE == DistType) {
-    bTestRes = RunTestExper<double>(vTestCases,
-                  bTestReload,
-                  IndexFileNamePrefix,
-                  DistType,
-                  SpaceTypeStr,
-                  ThreadTestQty,
-                  TestSetQty,
-                  DataFile,
-                  QueryFile,
-                  MaxNumData,
-                  MaxNumQuery,
-                  KnnArg,
-                  eps,
-                  RangeArg
-                 );
   } else {
     PREPARE_RUNTIME_ERR(err) << "Unknown distance value type: " << DistType;
     THROW_RUNTIME_ERR(err);

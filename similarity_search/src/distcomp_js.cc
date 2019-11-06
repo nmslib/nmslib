@@ -63,7 +63,6 @@ template <class T> T JSStandard(const T *pVect1, const T *pVect2, size_t qty)
 }
 
 template float JSStandard<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double JSStandard<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 template <class T>
 T JSPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
@@ -88,7 +87,6 @@ T JSPrecomp(const T* pVect1, const T* pVect2, size_t qty) {
 }
 
 template float JSPrecomp<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double JSPrecomp<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 const unsigned LogQty = 65536;
 
@@ -144,7 +142,6 @@ JSPrecompApproxLog(const T *pVect1, const T *pVect2, size_t qty) {
 }
 
 template float JSPrecompApproxLog<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double JSPrecompApproxLog<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 template <>
 float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qty)
@@ -231,92 +228,6 @@ float JSPrecompSIMDApproxLog(const float* pVect1, const float* pVect2, size_t qt
 }
     
 
-template <>
-double JSPrecompSIMDApproxLog(const double* pVect1, const double* pVect2, size_t qty)
-{
-#ifndef PORTABLE_SSE2
-#pragma message WARN("JSPrecompSIMDApproxLog<double>: SSE2 is not available, defaulting to pure C++ implementation!")
-    return JSPrecompApproxLog(pVect1, pVect2, qty);
-#else
-    size_t qty2  = qty/2;
-
-    static ApproxLogs<double> ApproxLogs; // Thread-safe in C++11
-    static double clog2 = log((double)2.0f); // Thread-safe in C++11 
-    static __m128d clog2simd = _mm_set1_pd(clog2); // Thread-safe in C++11
-    static double* ltbl = ApproxLogs.LogTable;
-    __m128d cmult = _mm_set1_pd(LogQty);
-
-    const double* pEnd2 = pVect1 + 2  * qty2;
-    const double* pEnd3 = pVect1 + qty;
-
-    const double* pVectLog1 = pVect1 + qty;
-    const double* pVectLog2 = pVect2 + qty;
-
-    __m128d  v1, v2, vLog1, vLog2, maxv, minv, max_mod_logv, ltmp;
-    __m128d  sum     = _mm_set1_pd(0), s1, s2;
-    __m128d  minVal  = _mm_set1_pd(numeric_limits<double>::min());
-    __m128i tmpi;
-
-    while (pVect1 < pEnd2) {
-        uint32_t PORTABLE_ALIGN16 TmpRes[4];
-
-
-        v1      = _mm_loadu_pd(pVect1);     pVect1 += 2;
-        vLog1   = _mm_loadu_pd(pVectLog1);  pVectLog1 += 2;
-        s1      = _mm_mul_pd(v1, vLog1);
-        v2      = _mm_loadu_pd(pVect2);     pVect2 += 2;
-        vLog2   = _mm_loadu_pd(pVectLog2);  pVectLog2 += 2;
-        s2      = _mm_mul_pd(v2, vLog2);
-        /* 
-         * If want to prevent division by zero, if v1 == v2 == 0,
-         * then, we don't have to compute the second factor in
-         * (v1 + v2)*(lv2 + ltbl[lapprox(v1/v2)] - clog2);
-         * correctly, it will be multiplied by zero anyway.
-         */
-        maxv    = _mm_max_pd(_mm_max_pd(v1, v2), minVal);
-        // This is the log with the largest modulo (recall that logs are < 0 here)
-        max_mod_logv = _mm_max_pd(vLog1, vLog2); 
-        minv    = _mm_min_pd(v1, v2);
-        sum     = _mm_add_pd(sum, _mm_add_pd(s1, s2));
-        tmpi    = _mm_cvttpd_epi32(_mm_mul_pd(cmult, _mm_div_pd(minv, maxv)));
-
-        _mm_store_si128(reinterpret_cast<__m128i*>(TmpRes), tmpi);
-        ltmp = _mm_set_pd(ltbl[TmpRes[1]], ltbl[TmpRes[0]]);
-        __m128d   d = _mm_sub_pd(_mm_add_pd(max_mod_logv, ltmp), clog2simd);
-
-        sum     = _mm_sub_pd(sum, _mm_mul_pd(_mm_add_pd(v1, v2), d));
-
-    }
-
-    double PORTABLE_ALIGN16 TmpRes[2];
-
-    _mm_store_pd(TmpRes, sum);
-    double res= TmpRes[0] + TmpRes[1];
-
-    while (pVect1 < pEnd3) {
-      double v1 = *pVect1;
-      double v2 = *pVect2;
-      double lv1 = *pVectLog1;
-      double lv2 = *pVectLog2;
-
-      res += v1 * lv1 + v2 * lv2;
-
-      if (v1 > v2) {
-        swap(v1, v2);
-        swap(lv1, lv2);
-      }
-      if (v2 >= numeric_limits<double>::min()) {
-        res -= (v1 + v2)*(lv2 + ltbl[lapprox(v1/v2)] - clog2);
-      }
-      pVect1++; pVect2++; pVectLog1++; pVectLog2++;
-    }
-
-    // Due to computation errors, we may get a small-magnitude negative number
-    return max(0.5*res, double(0));
-#endif
-}
-
 template float JSPrecompSIMDApproxLog<float>(const float* pVect1, const float* pVect2, size_t qty);
-template double JSPrecompSIMDApproxLog<double>(const double* pVect1, const double* pVect2, size_t qty);
 
 }

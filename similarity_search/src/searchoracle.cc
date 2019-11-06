@@ -292,7 +292,6 @@ void PolynomialPruner<dist_t>::SetIndexTimeParams(AnyParamManager& pmgr) {
 
 template class PolynomialPruner<int>;
 template class PolynomialPruner<float>;
-template class PolynomialPruner<double>;
 
 
 }

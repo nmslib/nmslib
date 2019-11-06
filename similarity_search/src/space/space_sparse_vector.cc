@@ -151,13 +151,8 @@ bool SpaceSparseVector<dist_t>::ReadNextObjStr(DataFileInputState &inpStateBase,
   return true;
 }
 
-/* 
- * We don't instantiate sparse vector spaces for types other than float & double
- */
 template class SpaceSparseVector<float>;
-template class SpaceSparseVector<double>;
 
 template class SpaceSparseVectorSimpleStorage<float>;
-template class SpaceSparseVectorSimpleStorage<double>;
 
 }  // namespace similarity

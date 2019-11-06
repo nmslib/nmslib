@@ -55,7 +55,6 @@ DummyMethod<dist_t>::SetQueryTimeParams(const AnyParams& QueryTimeParams) {
 
 
 template class DummyMethod<float>;
-template class DummyMethod<double>;
 template class DummyMethod<int>;
 
 }

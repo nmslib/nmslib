@@ -41,7 +41,6 @@ inline void initSpaces() {
   // Registering a dummy space
   REGISTER_SPACE_CREATOR(int,    SPACE_DUMMY,  CreateDummy)
   REGISTER_SPACE_CREATOR(float,  SPACE_DUMMY,  CreateDummy)
-  REGISTER_SPACE_CREATOR(double, SPACE_DUMMY,  CreateDummy)
 
   // Registering binary/bit Hamming/Jaccard
   SpaceFactoryRegistry<int>::CreateFuncPtr bit_hamming_func_ptr = CreateBitHamming<int,uint32_t>;
@@ -55,72 +54,45 @@ inline void initSpaces() {
 
   // Registering Bregman divergences
   REGISTER_SPACE_CREATOR(float,  SPACE_KLDIV_FAST, CreateKLDivFast)
-  REGISTER_SPACE_CREATOR(double, SPACE_KLDIV_FAST, CreateKLDivFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_KLDIV_FAST_RIGHT_QUERY, CreateKLDivFastRightQuery)
-  REGISTER_SPACE_CREATOR(double, SPACE_KLDIV_FAST_RIGHT_QUERY, CreateKLDivFastRightQuery)
   REGISTER_SPACE_CREATOR(float,  SPACE_KLDIVGEN_FAST, CreateKLDivGenFast)
-  REGISTER_SPACE_CREATOR(double, SPACE_KLDIVGEN_FAST, CreateKLDivGenFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_KLDIVGEN_SLOW, CreateKLDivGenSlow)
-  REGISTER_SPACE_CREATOR(double, SPACE_KLDIVGEN_SLOW, CreateKLDivGenSlow)
   REGISTER_SPACE_CREATOR(float,  SPACE_KLDIVGEN_FAST_RIGHT_QUERY, CreateKLDivGenFastRightQuery)
-  REGISTER_SPACE_CREATOR(double, SPACE_KLDIVGEN_FAST_RIGHT_QUERY, CreateKLDivGenFastRightQuery)
   REGISTER_SPACE_CREATOR(float,  SPACE_ITAKURASAITO_FAST, CreateItakuraSaitoFast)
-  REGISTER_SPACE_CREATOR(double, SPACE_ITAKURASAITO_FAST, CreateItakuraSaitoFast)
 
   // Jensen-Shannon functions and their derivatives
   REGISTER_SPACE_CREATOR(float,  SPACE_JS_DIV_SLOW, CreateJSDivSlow)
-  REGISTER_SPACE_CREATOR(double, SPACE_JS_DIV_SLOW, CreateJSDivSlow)
   REGISTER_SPACE_CREATOR(float,  SPACE_JS_DIV_FAST, CreateJSDivFastPrecomp)
-  REGISTER_SPACE_CREATOR(double, SPACE_JS_DIV_FAST, CreateJSDivFastPrecomp)
   REGISTER_SPACE_CREATOR(float,  SPACE_JS_DIV_FAST_APPROX, CreateJSDivFastPrecompApprox)
-  REGISTER_SPACE_CREATOR(double, SPACE_JS_DIV_FAST_APPROX, CreateJSDivFastPrecompApprox)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_JS_METR_SLOW, CreateJSMetricSlow)
-  REGISTER_SPACE_CREATOR(double, SPACE_JS_METR_SLOW, CreateJSMetricSlow)
   REGISTER_SPACE_CREATOR(float,  SPACE_JS_METR_FAST, CreateJSMetricFastPrecomp)
-  REGISTER_SPACE_CREATOR(double, SPACE_JS_METR_FAST, CreateJSMetricFastPrecomp)
   REGISTER_SPACE_CREATOR(float,  SPACE_JS_METR_FAST_APPROX, CreateJSMetricFastPrecompApprox)
-  REGISTER_SPACE_CREATOR(double, SPACE_JS_METR_FAST_APPROX, CreateJSMetricFastPrecompApprox)
 
   // Word embeddings
   REGISTER_SPACE_CREATOR(float,  SPACE_WORD_EMBED,  CreateWordEmbed)
-  REGISTER_SPACE_CREATOR(double, SPACE_WORD_EMBED,  CreateWordEmbed)
 
   // LP spaces
   REGISTER_SPACE_CREATOR(float,  SPACE_L,  CreateL)
-  REGISTER_SPACE_CREATOR(double, SPACE_L,  CreateL)
   REGISTER_SPACE_CREATOR(float,  SPACE_LINF, CreateLINF)
-  REGISTER_SPACE_CREATOR(double, SPACE_LINF, CreateLINF)
   REGISTER_SPACE_CREATOR(float,  SPACE_L1, CreateL1)
-  REGISTER_SPACE_CREATOR(double, SPACE_L1, CreateL1)
   REGISTER_SPACE_CREATOR(float,  SPACE_L2, CreateL2)
-  REGISTER_SPACE_CREATOR(double, SPACE_L2, CreateL2)
 
   // Scalar product and related distances
   // Dense
   REGISTER_SPACE_CREATOR(float,  SPACE_COSINE_SIMILARITY, CreateCosineSimilarity)
-  REGISTER_SPACE_CREATOR(double, SPACE_COSINE_SIMILARITY, CreateCosineSimilarity)
   REGISTER_SPACE_CREATOR(float,  SPACE_ANGULAR_DISTANCE, CreateAngularDistance)
-  REGISTER_SPACE_CREATOR(double, SPACE_ANGULAR_DISTANCE, CreateAngularDistance)
   REGISTER_SPACE_CREATOR(float,  SPACE_NEGATIVE_SCALAR, CreateNegativeScalarProduct)
-  REGISTER_SPACE_CREATOR(double, SPACE_NEGATIVE_SCALAR, CreateNegativeScalarProduct)
 
   // Sparse
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L, CreateSparseL)
-  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_L, CreateSparseL)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_LINF, CreateSparseLINF)
-  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_LINF, CreateSparseLINF)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L1, CreateSparseL1)
-  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_L1, CreateSparseL1)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_L2, CreateSparseL2)
-  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_L2, CreateSparseL2)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_COSINE_SIMILARITY, CreateSparseCosineSimilarity)
-  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_COSINE_SIMILARITY, CreateSparseCosineSimilarity)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_ANGULAR_DISTANCE, CreateSparseAngularDistance)
-  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_ANGULAR_DISTANCE, CreateSparseAngularDistance)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_NEGATIVE_SCALAR, CreateSparseNegativeScalarProduct)
-  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR, CreateSparseQueryNormNegativeScalarProduct)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_COSINE_SIMILARITY_FAST, CreateSparseCosineSimilarityFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_ANGULAR_DISTANCE_FAST, CreateSparseAngularDistanceFast)
@@ -128,27 +100,19 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST, CreateSparseQueryNormNegativeScalarProductFast)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_JACCARD,  CreateSpaceSparseJaccard)
-  REGISTER_SPACE_CREATOR(double, SPACE_SPARSE_JACCARD,  CreateSpaceSparseJaccard)
 
 #if defined(WITH_EXTRAS)
   // Signature Quadratic Form Distance
   REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_HEURISTIC_FUNC, CreateSqfdHeuristicFunc)
-  REGISTER_SPACE_CREATOR(double, SPACE_SQFD_HEURISTIC_FUNC, CreateSqfdHeuristicFunc)
   REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_MINUS_FUNC, CreateSqfdMinusFunc)
-  REGISTER_SPACE_CREATOR(double, SPACE_SQFD_MINUS_FUNC, CreateSqfdMinusFunc)
   REGISTER_SPACE_CREATOR(float,  SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
-  REGISTER_SPACE_CREATOR(double, SPACE_SQFD_GAUSSIAN_FUNC, CreateSqfdGaussianFunc)
 #endif
 
   REGISTER_SPACE_CREATOR(float,  SPACE_AB_DIVERG_SLOW,  CreateAlphaBetaDivergSlow)
-  REGISTER_SPACE_CREATOR(double, SPACE_AB_DIVERG_SLOW,  CreateAlphaBetaDivergSlow)
   REGISTER_SPACE_CREATOR(float,  SPACE_AB_DIVERG_FAST,  CreateAlphaBetaDivergFast)
-  REGISTER_SPACE_CREATOR(double, SPACE_AB_DIVERG_FAST,  CreateAlphaBetaDivergFast)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG_SLOW,  CreateRenyiDivergSlow)
-  REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG_SLOW,  CreateRenyiDivergSlow)
   REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG_FAST,  CreateRenyiDivergFast)
-  REGISTER_SPACE_CREATOR(double, SPACE_RENYI_DIVERG_FAST,  CreateRenyiDivergFast)
 
   REGISTER_SPACE_CREATOR(int,    SPACE_L2SQR_SIFT,  CreateL2SqrSIFT)
 }

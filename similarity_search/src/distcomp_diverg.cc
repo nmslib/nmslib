@@ -38,7 +38,6 @@ template <typename T> T alphaBetaDivergenceSlow(const T *x, const T *y,
 }
 
 template  float alphaBetaDivergenceSlow(const float* x, const float* y, const int length, float alpha, float beta);
-template  double alphaBetaDivergenceSlow(const double* x, const double* y, const int length, float alpha, float beta);
 
 template <typename T> T alphaBetaDivergenceFast(const T *x, const T *y, const int length, float alpha, float beta) {
   T res = 0;
@@ -51,7 +50,6 @@ template <typename T> T alphaBetaDivergenceFast(const T *x, const T *y, const in
 }
 
 template  float alphaBetaDivergenceFast(const float* x, const float* y, const int length, float alpha, float beta);
-template  double alphaBetaDivergenceFast(const double* x, const double* y, const int length, float alpha, float beta);
 
 template <typename T> T alphaBetaDivergenceSlowProxy(const T *x, const T *y,
                                                      const int length,
@@ -66,7 +64,6 @@ template <typename T> T alphaBetaDivergenceSlowProxy(const T *x, const T *y,
 }
 
 template  float alphaBetaDivergenceSlowProxy(const float* x, const float* y, const int length, float alpha, float beta);
-template  double alphaBetaDivergenceSlowProxy(const double* x, const double* y, const int length, float alpha, float beta);
 
 template <typename T> T alphaBetaDivergenceFastProxy(const T *x, const T *y, const int length, float alpha, float beta) {
   PowerProxyObject<T> powalphaPlus1(alpha + 1), powBeta(beta);
@@ -80,7 +77,6 @@ template <typename T> T alphaBetaDivergenceFastProxy(const T *x, const T *y, con
 }
 
 template  float alphaBetaDivergenceFastProxy(const float* x, const float* y, const int length, float alpha, float beta);
-template  double alphaBetaDivergenceFastProxy(const double* x, const double* y, const int length, float alpha, float beta);
 
 template <typename T> T renyiDivergenceSlow(const T *x, const T *y,
                                             const int length, float alpha) {
@@ -97,7 +93,6 @@ template <typename T> T renyiDivergenceSlow(const T *x, const T *y,
 }
 
 template  float renyiDivergenceSlow(const float* x, const float* y, const int length, float alpha);
-template  double renyiDivergenceSlow(const double* x, const double* y, const int length, float alpha);
 
 template <typename T> T renyiDivergenceFast(const T *x, const T *y, const int length, float alpha) {
   float t = alpha-1; 
@@ -114,6 +109,5 @@ template <typename T> T renyiDivergenceFast(const T *x, const T *y, const int le
 }
 
 template  float renyiDivergenceFast(const float* x, const float* y, const int length, float alpha);
-template  double renyiDivergenceFast(const double* x, const double* y, const int length, float alpha);
 
 }

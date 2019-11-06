@@ -337,7 +337,6 @@ string SpaceSqfd<dist_t>::StrDesc() const {
 }
 
 template class SpaceSqfd<float>;
-template class SpaceSqfd<double>;
 }  // namespace similarity
 
 #endif

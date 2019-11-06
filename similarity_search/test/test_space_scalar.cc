@@ -20,7 +20,7 @@
 
 namespace similarity {
 
-#define FLOAT_TYPE double
+#define FLOAT_TYPE float
 
 class VectorDataset1 : public TestDataset {
  public:
@@ -62,7 +62,7 @@ TEST(SpaceNegativeScalarProduct) {
   for (size_t i = 0; i < 8; ++i) {
     for (size_t j = 0; j < 8; ++j) {
       const FLOAT_TYPE d = space->IndexTimeDistance(dataobjects[i], dataobjects[j]);
-      EXPECT_EQ_EPS(expected[i][j], d, 1e-5);
+      EXPECT_EQ_EPS(expected[i][j], d, 1e-5f);
     }
   }
 }

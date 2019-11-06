@@ -299,7 +299,6 @@ void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
 }
 
 template class VPTree<float, PolynomialPruner<float> >;
-template class VPTree<double, PolynomialPruner<double> >;
 template class VPTree<int, PolynomialPruner<int> >;
 
 }   // namespace similarity
