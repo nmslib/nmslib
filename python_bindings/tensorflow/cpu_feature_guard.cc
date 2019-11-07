@@ -145,19 +145,19 @@ void InfoAboutUnusedCPUFeatures() {
     if (!missing_instructions.empty()) {
 /*
 #ifndef INTEL_MKL
-      std::cout << "Your CPU supports instructions that this TensorFlow "
+      std::cerr << "Your CPU supports instructions that this TensorFlow "
                 << "binary was not compiled to use:" << missing_instructions << std::endl;
 #else
-      std::cout << "This TensorFlow binary is optimized with Intel(R) MKL-DNN "
+      std::cerr << "This TensorFlow binary is optimized with Intel(R) MKL-DNN "
                 << "to use the following CPU instructions in performance "
                 << "critical operations: " << missing_instructions << std::endl
                 << "To enable them in non-MKL-DNN operations, rebuild "
                 << "TensorFlow with the appropriate compiler flags." << std::endl;
 #endif
 */
-      std::cout << "Your CPU supports instructions that this binary "
+      std::cerr << "Your CPU supports instructions that this binary "
                 << "was not compiled to use:" << missing_instructions << std::endl;
-      std::cout << "For maximum performance, you can install NMSLIB from sources " << std::endl
+      std::cerr << "For maximum performance, you can install NMSLIB from sources " << std::endl
                 << "pip install --no-binary :all: nmslib" << std::endl; 
     }
 }
