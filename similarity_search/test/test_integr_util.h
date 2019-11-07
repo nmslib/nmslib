@@ -549,7 +549,7 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     }
   }
 
-  return nFail + 0 == (RandomInt() % 10);
+  return nFail;
 }
 
 // Returns the number of failures of the last attempt
