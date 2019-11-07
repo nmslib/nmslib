@@ -8,6 +8,8 @@ environment:
   global:
     DISTUTILS_USE_SDK: 1
     MSSdk: 1
+    # SSE2 is the default in recent VS, but let's keep for older versions, see, e.g.: https://github.com/weidai11/cryptopp/issues/445
+    ARCH: SSE2
   matrix:
   - PYTHON: 27
   - PYTHON: 35
@@ -15,7 +17,7 @@ environment:
   - PYTHON: 37
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
-    secure: GRzEKTz0q+eRwEFvm1Vdrg==
+    secure: 7hxZ+XinYPLuIS1aHZbTcA==
 install:
 - cmd: '"%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%'
 - cmd: git config core.symlinks true
@@ -46,12 +48,19 @@ build_script:
     python -m pip install -qq -r requirements.txt
     python setup.py build_ext
     python -m pip install -U .
+- ps: cd ..
+
 test_script:
+- ps: cd python_bindings
 - cmd: python setup.py test
+- ps: cd ..
 
 deploy_script: 
 - ps: |
-    if ($env:APPVEYOR_REPO_BRANCH -ne "master" -or $env:APPVEYOR_REPO_TAG -ne "true") { return }
+    if ($env:APPVEYOR_REPO_TAG -ne "true") {
+      echo "Skipping deployment because this is not a tagged commit"
+      return
+    }
     # Specify account details for PyPI
     echo "Deploying..."
     mv .pypirc $env:USERPROFILE\\.pypirc
@@ -60,7 +69,9 @@ deploy_script:
     # Install wheel-building support
     python -m pip install --user wheel twine
     # Build wheel and upload
+    cd python_bindings
+    python setup.py build_ext
     python setup.py sdist bdist_wheel
-    twine upload -r pypi -p $env:pypipassword --skip-existing dist/*
+    python -m twine upload -r pypi -p $env:pypipassword --skip-existing dist/*
     echo "Deployment complete"
 

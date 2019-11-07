@@ -43,6 +43,7 @@ If you find this library useful, feel free to cite our SISAP paper [**[BibTex]**
 The code is released under the Apache License Version 2.0 http://www.apache.org/licenses/. 
 Older versions of the library include additional components, which have different licenses (but this does not apply to NMLISB 2.x):
 
+Older versions of the library included the following components:
 * The LSHKIT, which is embedded in our library, is distributed under the GNU General Public License, see http://www.gnu.org/licenses/. 
 * The k-NN graph construction algorithm *NN-Descent* due to Dong et al. 2011 (see the links below), which is also embedded in our library, seems to be covered by a free-to-use license, similar to Apache 2.
 * FALCONN library's licence is MIT.
@@ -70,4 +71,5 @@ neighbor search small world approach.](http://www.iiis.org/CDs2011/CD2011IDI/ICT
 * L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
 * Amato, Giuseppe, and Pasquale Savino. 2008 Approximate similarity search in metric spaces using inverted files. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
 * Gonzalez, Edgar Chavez, Karina Figueroa, and Gonzalo Navarro. [Effective proximity retrieval by ordering permutations.](http://www.dcc.uchile.cl/~gnavarro/ps/tpami07.pdf) Pattern Analysis and Machine Intelligence, IEEE Transactions on 30.9 (2008): 1647-1658. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/pami/ChavezFN08)
+
 

@@ -15,7 +15,6 @@ function should be called first before calling any other method.
 .. class:: nmslib.DistType
 
     .. attribute:: FLOAT
-    .. attribute:: DOUBLE
     .. attribute:: INT
 
 .. class:: nmslib.DataType
@@ -30,14 +29,6 @@ nmslib.FloatIndex
 nmslib.dist.FloatIndex
 
 .. autoclass:: nmslib.dist.FloatIndex
-   :members:
-
-nmslib.DoubleIndex
-------------------
-
-nmslib.dist.DoubleIndex
-
-.. autoclass:: nmslib.dist.DoubleIndex
    :members:
 
 nmslib.IntIndex

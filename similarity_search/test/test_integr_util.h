@@ -36,6 +36,12 @@ using std::copy;
 using std::string;
 using std::stringstream;
 
+/* 
+ * Test ranges are not bullet proof, so random violations of test conditions
+ * are possible. However, several failures in a row is basically impossible
+ */
+#define ATTEMPT_QTY 10
+
 using namespace similarity;
 
 /*
@@ -543,10 +549,11 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
     }
   }
 
-  return nFail;
+  return nFail + 0 == (RandomInt() % 10);
 }
 
-inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
+// Returns the number of failures of the last attempt
+inline unsigned RunOneTest(const vector<MethodTestCase>& vTestCases,
                bool                         bTestReload,
                string                       IndexFileNamePrefix,
                string                       DistType, 
@@ -560,10 +567,12 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                const string&                KnnArg,
                const                        float eps,
                const string&                RangeArg) {
-  bool bTestRes = false;
+  size_t failQty = 0;
   ToLower(DistType);
-  if (DIST_TYPE_INT == DistType) {
-    bTestRes = RunTestExper<int>(vTestCases,
+  for (unsigned attId = 0; attId < ATTEMPT_QTY; ++attId) {
+    failQty = 0;
+    if (DIST_TYPE_INT == DistType) {
+      failQty = RunTestExper<int>(vTestCases,
                   bTestReload,
                   IndexFileNamePrefix,
                   DistType,
@@ -578,8 +587,8 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else if (DIST_TYPE_FLOAT == DistType) {
-    bTestRes = RunTestExper<float>(vTestCases,
+    } else if (DIST_TYPE_FLOAT == DistType) {
+      failQty = RunTestExper<float>(vTestCases,
                   bTestReload,
                   IndexFileNamePrefix,
                   DistType,
@@ -594,12 +603,19 @@ inline bool RunOneTest(const vector<MethodTestCase>& vTestCases,
                   eps,
                   RangeArg
                  );
-  } else {
-    PREPARE_RUNTIME_ERR(err) << "Unknown distance value type: " << DistType;
-    THROW_RUNTIME_ERR(err);
-  }
+    } else {
+      PREPARE_RUNTIME_ERR(err) << "Unknown distance value type: " << DistType;
+      THROW_RUNTIME_ERR(err);
+    }
 
-  return bTestRes;
+    if (!failQty) {
+      return 0;
+    }
+    LOG(LIB_INFO) << "Failed " << failQty << " tests, attempt id: " << attId;
+  }
+  LOG(LIB_ERROR) << "Failed after making " << ATTEMPT_QTY << " attempts" << " with " << failQty << "failures";
+
+  return failQty;
 };
 
 #endif

@@ -5,12 +5,12 @@ import sys
 import setuptools
 import struct
 
-__version__ = '2.0'
+__version__ = '2.0.5'
 
 if sys.platform.startswith("win") and struct.calcsize("P") * 8 == 32:
     raise RuntimeError("Windows 32-bit is not supported.")
 
-dep_list = ['pybind11>=2.2.3']
+dep_list = ['pybind11>=2.2.3', 'psutil']
 py_version = tuple([int(v) for v in sys.version.split('.')[:2]])
 if py_version == (2, 7):
     dep_list.append('numpy>=1.10.0,<1.17')
@@ -29,7 +29,7 @@ if not os.path.isdir(libdir) and sys.platform.startswith("win"):
     libdir = os.path.join("..", "similarity_search")
 
 library_file = os.path.join(libdir, "release", "libNonMetricSpaceLib.a")
-source_files = ['nmslib.cc']
+source_files = ['nmslib.cc', 'tensorflow/cpu_feature_guard.cc', 'tensorflow/cpu_info.cc']
 
 libraries = []
 extra_objects = []
@@ -39,21 +39,14 @@ if os.path.exists(library_file):
     extra_objects.append(library_file)
 
 else:
-    # Otherwise build all the files here directly (excluding extras which need
-    # eigen/boost)
-    exclude_files = set("""bbtree.cc lsh.cc lsh_multiprobe.cc lsh_space.cc falconn.cc nndes.cc space_sqfd.cc
-                        dummy_app.cc main.cc""".split())
+    # Otherwise build all the files here directly (excluding extras which need boost)
+    exclude_files = set("""space_sqfd.cc dummy_app.cc main.cc""".split())
 
-    for root, subdirs, files in os.walk(os.path.join(libdir, "src")):
+    full_file_list = list(os.walk(os.path.join(libdir, "src")))
+
+    for root, subdirs, files in full_file_list:
         source_files.extend(os.path.join(root, f) for f in files
                             if f.endswith(".cc") and f not in exclude_files)
-
-
-if sys.platform.startswith('linux'):
-    lshkit = os.path.join(libdir, "release", "liblshkit.a")
-    if os.path.isfile(lshkit):
-        extra_objects.append(lshkit)
-        libraries.extend(['gsl', 'gslcblas', 'boost_program_options'])
 
 
 class get_pybind_include(object):
@@ -74,6 +67,7 @@ ext_modules = [
         'nmslib',
         source_files,
         include_dirs=[os.path.join(libdir, "include"),
+                      "tensorflow", 
                       get_pybind_include(),
                       get_pybind_include(user=True)],
         libraries=libraries,
@@ -116,14 +110,21 @@ def cpp_flag(compiler):
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
     c_opts = {
-        'msvc': ['/EHsc', '/openmp', '/O2'],
-        'unix': ['-O3'],
+        'msvc': [ '/EHsc', '/openmp', '/O2'],
+        'unix': [ '-O3'],
     }
+    arch_list = '-march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
     if 'ARCH' in os.environ:
         # /arch:[IA32|SSE|SSE2|AVX|AVX2|ARMv7VE|VFPv4]
         # See https://docs.microsoft.com/en-us/cpp/build/reference/arch-x86
         c_opts['msvc'].append("/arch:{}".format(os.environ['ARCH']))  # bugfix
-    if 'CFLAGS' not in os.environ or "-march" not in os.environ["CFLAGS"]:
+    no_arch_flag=True
+    if 'CFLAGS' in os.environ: 
+      for flag in arch_list: 
+        if flag in os.environ["CFLAGS"]:
+          no_arch_flag=False
+          break
+    if no_arch_flag:
         c_opts['unix'].append('-march=native')
     link_opts = {
         'unix': [],
@@ -149,6 +150,8 @@ class BuildExt(build_ext):
         elif ct == 'msvc':
             opts.append('/DVERSION_INFO=\\"%s\\"' %
                         self.distribution.get_version())
+
+        print('Extra compilation arguments:', opts)
 
         # extend include dirs here (don't assume numpy/pybind11 are installed when first run, since
         # pip could have installed them as part of executing this script
