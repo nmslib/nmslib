@@ -588,19 +588,6 @@ int main(int argc, char *argv[]) {
                                                     CacheData,
                                                     *IndexParams,
                                                     *QueryTimeParams));
-  } else if (DIST_TYPE_DOUBLE == DistType) {
-    queryHandler.reset(new QueryServiceHandler<double>(debugPrint,
-                                                    SpaceType,
-                                                    *SpaceParams,
-                                                    DataFile,
-                                                    MaxNumData,
-                                                    MethodName,
-                                                    LoadIndexLoc,
-                                                    SaveIndexLoc,
-                                                    CacheData,
-                                                    *IndexParams,
-                                                    *QueryTimeParams));
-  
   } else {
     LOG(LIB_FATAL) << "Unknown distance value type: " << DistType;
   }
