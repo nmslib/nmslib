@@ -27,6 +27,10 @@ def testHnswRecallL2(dataMatrix, queryMatrix, k, M=30, efC=200, efS=1000, numThr
   end = time.time() 
   print('Indexing time = %f' % (end-start))
 
+  # Setting query-time parameters
+  queryTimeParams = {'efSearch': efS}
+  print('Setting query-time parameters', queryTimeParams)
+  index.setQueryTimeParams(queryTimeParams)
 
   # Querying
   start = time.time()
@@ -51,11 +55,6 @@ def testHnswRecallL2(dataMatrix, queryMatrix, k, M=30, efC=200, efS=1000, numThr
 
   print('brute-force kNN time total=%f (sec), per query=%f (sec)' % 
        (end-start, float(end-start)/queryQty) )
-
-  # Setting query-time parameters
-  queryTimeParams = {'efSearch': efS}
-  print('Setting query-time parameters', queryTimeParams)
-  index.setQueryTimeParams(queryTimeParams)
 
   # Finally computing recall for every i-th neighbor
   for n in range(k):
