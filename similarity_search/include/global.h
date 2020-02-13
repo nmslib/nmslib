@@ -36,8 +36,8 @@ namespace similarity {
 
 #undef DISABLE_COPY_AND_ASSIGN
 #define DISABLE_COPY_AND_ASSIGN(Type) \
-  explicit Type(const Type&); \
-  Type& operator=(const Type&)
+  explicit Type(const Type&)=delete; \
+  Type& operator=(const Type&)=delete
 
 /*
  * On windows, disabling copy&assign generates way to many warnings C4661
