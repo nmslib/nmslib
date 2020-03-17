@@ -16,7 +16,7 @@
 
 ## Objectives
 
-Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies.
+Non-Metric Space Library (NMSLIB) is an **efficient** cross-platform similarity search library and a toolkit for evaluation of similarity search methods. The core-library does **not** have any third-party dependencies. It has been gaining popularity recently. In particular, it has become a part of [Amazon Elasticsearch Service](https://aws.amazon.com/about-aws/whats-new/2020/03/build-k-nearest-neighbor-similarity-search-engine-with-amazon-elasticsearch-service/).
 
 The goal of the project is to create an effective and **comprehensive** toolkit for searching in **generic and non-metric** spaces.
 Even though the library contains a variety of metric-space access methods,
