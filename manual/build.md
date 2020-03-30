@@ -31,6 +31,17 @@ make
 
 Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) and [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for 64 bit architecture using CMake **GUI**. You have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio. **Attention**: this way of building on Windows is not well tested yet. We suspect that there might be some issues related to building truly 64-bit binaries.
 
+Installing and building via vcpkg
+You can download and install nmslib using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+```
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+vcpkg install nmslib
+```
+The nmslib port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+
 ## Additional Building Details
 
 Here we cover a few details on choosing the compiler,
