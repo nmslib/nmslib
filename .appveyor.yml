@@ -15,6 +15,7 @@ environment:
   - PYTHON: 35
   - PYTHON: 36
   - PYTHON: 37
+  - PYTHON: 38
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
     secure: 7hxZ+XinYPLuIS1aHZbTcA==
