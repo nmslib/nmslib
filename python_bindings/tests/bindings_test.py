@@ -291,7 +291,7 @@ class StringTestCase(TestCaseBase):
         index.createIndex()
 
         for i, distance in zip(*index.knnQuery(strings[0])):
-            self.assertEqual(index.getDistance(0, i), distance)
+            npt.assert_allclose(index.getDistance(0, i), distance)
 
         self.assertEqual(len(index), len(strings) + 2)
         self.assertEqual(index[0], strings[0])
@@ -312,7 +312,7 @@ class SparseTestCase(TestCaseBase):
 
         ids, distances = index.knnQuery([(1, 2.), (2, 3.)])
         self.assertEqual(ids[0], 0)
-        self.assertEqual(distances[0], 0)
+        npt.assert_allclose(distances[0], 0)
 
         self.assertEqual(len(index), 4)
         self.assertEqual(index[3], [(3, 1.0)])
