@@ -79,7 +79,7 @@ matrix:
         - python3.7-dev
   - os: linux
     env: PYTHON=3.8
-    dist: xenial
+    dist: bionic
     services:
     - docker
     addons:
