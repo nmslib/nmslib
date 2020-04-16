@@ -5,7 +5,7 @@ sudo: required
 addons:
   apt:
     packages: &core_build
-    - g++-4.9
+    - g++
     - libblas-dev
     - liblapack-dev
     - gfortran
@@ -145,7 +145,7 @@ before_install:
 - |
   PY=python
   if [ "$TRAVIS_OS_NAME" = "linux" ]; then 
-    export CXX=g++-4.9 CC=gcc-4.9;
+    export CXX=g++ CC=gcc
     if [ $(echo "$PYTHON" | grep "^3\.") ]; then
       PY=python${PYTHON}
       curl https://bootstrap.pypa.io/get-pip.py | sudo -H $PY
