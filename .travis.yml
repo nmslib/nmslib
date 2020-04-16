@@ -79,7 +79,7 @@ matrix:
         - python3.7-dev
   - os: linux
     env: PYTHON=3.8
-    dist: xenial
+    dist: bionic
     services:
     - docker
     addons:
@@ -91,6 +91,8 @@ matrix:
         packages:
         - *core_build
         - python3.8-dev
+        - python3-distutils
+        - python3-lib2to3
   - os: osx
     env: PYTHON=2.7-dev
     osx_image: xcode9.2
