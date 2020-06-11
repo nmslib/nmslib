@@ -11,7 +11,7 @@ if sys.platform.startswith("win") and struct.calcsize("P") * 8 == 32:
     raise RuntimeError("Windows 32-bit is not supported.")
 
 dep_list = ['pybind11>=2.2.3', 'psutil']
-dep_list.append("numpy>=1.10.0,<1.17 ; python_version='2.7'")
+dep_list.append("numpy>=1.10.0,<1.17 ; python_version=='2.7'")
 dep_list.append("numpy>=1.10.0 ; python_version>='3.5'")
 
 py_version = tuple([int(v) for v in sys.version.split('.')[:2]])
