@@ -22,6 +22,8 @@ namespace similarity {
 
 typedef std::vector<class ReplyEntry>  ReplyEntryList;
 
+typedef std::vector<std::vector<class ReplyEntry> >  ReplyEntryListBatch;
+
 class ReplyEntry;
 
 class QueryException;

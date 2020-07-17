@@ -18,6 +18,7 @@
 #include <thread>
 #include <chrono>
 #include <iostream>
+#include <algorithm>
 
 #include "QueryService.h"
 #include <thrift/protocol/TBinaryProtocol.h>
@@ -44,6 +45,7 @@
 #include "init.h"
 #include "logging.h"
 #include "ztimer.h"
+#include "thread_pool.h"
 
 #define MAX_SPIN_LOCK_QTY 1000000
 #define SLEEP_DURATION    10
@@ -335,6 +337,7 @@ class QueryServiceHandler : virtual public QueryServiceIf {
       unique_ptr<KNNQueue<dist_t>> res(knn.Result()->Clone());
 
       _return.clear();
+      _return.reserve(k);
 
       wtm.split();
 
@@ -382,9 +385,10 @@ class QueryServiceHandler : virtual public QueryServiceIf {
             objs.insert(objs.begin(), s);
           }
         }
-        _return.insert(_return.begin(), e);
+        _return.push_back(e);
         res->Pop();
       }
+      std::reverse(_return.begin(), _return.end());
       if (debugPrint_) {
         for (size_t i = 0; i < ids.size(); ++i) {
           LOG(LIB_INFO) << "id=" << ids[i] << " dist=" << dists[i] << ( retExternId ? " " + externIds[i] : string(""));
@@ -401,6 +405,62 @@ class QueryServiceHandler : virtual public QueryServiceIf {
         throw qe;
     }
 
+
+  }
+
+  void knnQueryBatch(ReplyEntryListBatch& _return, const int32_t k,
+                     const std::vector<std::string>& queryObjs, const bool retExternId,
+                     const bool retObj, const int32_t numThreads) {
+    // This will increase the counter and prevent modification of query time parameters.
+    LockedCounterManager  mngr(counter_, mtx_);
+
+    try {
+      _return.clear();
+      _return.resize(queryObjs.size());
+
+      ParallelFor(0, queryObjs.size(), numThreads, [&](size_t queryIndex, size_t threadId) {
+        unique_ptr<Object>  queryObj(space_->CreateObjFromStr(0, -1, queryObjs[queryIndex], NULL));
+        KNNQuery<dist_t> knn(*space_, queryObj.get(), k);
+        index_->Search(&knn, -1);
+        unique_ptr<KNNQueue<dist_t>> res(knn.Result()->Clone());
+
+        _return[queryIndex].reserve(k);
+        while (!res->Empty()) {
+          const Object* topObj = res->TopObject();
+          dist_t topDist = res->TopDistance();
+
+          ReplyEntry e;
+
+          e.__set_id(topObj->id());
+          e.__set_dist(topDist);
+
+          string externId;
+
+          if (retExternId || retObj) {
+            CHECK(e.id < externIds_.size());
+            externId = externIds_[e.id];
+            e.__set_externId(externId);
+          }
+
+          if (retObj) {
+            const string& s = space_->CreateStrFromObj(topObj, externId);
+            e.__set_obj(s);
+          }
+          _return[queryIndex].push_back(e);
+          res->Pop();
+        }
+        std::reverse(_return[queryIndex].begin(), _return[queryIndex].end());
+      });
+
+    } catch (const exception& e) {
+      QueryException qe;
+      qe.__set_message(e.what());
+      throw qe;
+    } catch (...) {
+      QueryException qe;
+      qe.__set_message("Unknown exception");
+      throw qe;
+    }
 
   }
 

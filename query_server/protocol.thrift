@@ -9,6 +9,7 @@ struct ReplyEntry {
 }
 
 typedef list<ReplyEntry> ReplyEntryList
+typedef list<list<ReplyEntry>> ReplyEntryListBatch
 
 exception QueryException {
     1: string message;
@@ -35,6 +36,12 @@ service QueryService {
                           2: required binary queryObj, // a binary/string representation of a query object 
                           3: required bool retExternId,// if true, we will return an external ID
                           4: required bool retObj)     // if true, we will return a string representation of each answer object
+  throws (1: QueryException err),
+  ReplyEntryListBatch knnQueryBatch(1: required i32 k,           // k as in k-NN
+                                    2: required list<binary> queryObj, // a list of binary/string representation of a query object
+                                    3: required bool retExternId, // if true, we will return an external ID
+                                    4: required bool retObj, // if true, we will return a string representation of each answer object
+                                    5: required i32 numThreads) // number of threads for batched operations
   throws (1: QueryException err),
 
   /*
