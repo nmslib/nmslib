@@ -29,7 +29,9 @@ make
 
 ## Quick Start on Windows
 
-Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). The building process is a bit tricky and hairy, see the [AppVeyor config file for details](/.appveyor.yml) Building all the binaries can be done using [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for 64 bit architecture using CMake **GUI**. You have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio. Although it should be possible to do in theory, it is difficult to implement in practice. An easier solution is to build using **VCPKG**.
+Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). Although it is generally possible and [AppVeyor (see config file for details)](/.appveyor.yml) does create binary Windows versions of NMSLIB, it is often difficult due to subtle differences in the building environment. An easier solution is to build using **VCPKG** (see below). 
+
+AppVeyor builds only Python bindings. To create other binaries, one needs [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for 64 bit architecture using CMake **GUI**. You have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio (but, again, it is a bit tricky). 
 
 ## Installing and building via VCPKG
 You can download and install nmslib using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
