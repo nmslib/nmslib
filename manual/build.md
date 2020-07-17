@@ -1,6 +1,4 @@
-# Building the Main Library on Linux/Mac
-
-## Prerequisites
+# Prerequisites
 
 1. A modern compiler that supports C++11: G++ 4.7, Intel compiler 14, Clang 3.4, or Visual Studio 14 (version 12 can probably be used as well, but the project files need to be downgraded).
 2. **64-bit** Linux is recommended, but most of our code builds on **64-bit** Windows and MACOS as well. 
