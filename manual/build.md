@@ -89,8 +89,7 @@ On an Unix-like system do the following:
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg
 ./bootstrap-vcpkg.sh
-./vcpkg integrate install
-vcpkg install nmslib
+./vcpkg install nmslib
 ```
 
 The nmslib port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
