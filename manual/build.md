@@ -27,7 +27,7 @@ cmake . -DWITH_EXTRAS=1
 make  
 ```
 
-## Quick Start on Windows
+## Building on Windows
 
 Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). Although it is generally possible and [AppVeyor (see config file for details)](/.appveyor.yml) does create binary Windows versions of NMSLIB, it is often difficult due to subtle differences in the building environment. An easier solution is to build using **VCPKG** (see below). 
 
