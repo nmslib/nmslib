@@ -29,9 +29,9 @@ make
 
 ## Quick Start on Windows
 
-Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx) and [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for 64 bit architecture using CMake **GUI**. You have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio. **Attention**: this way of building on Windows is not well tested yet. We suspect that there might be some issues related to building truly 64-bit binaries.
+Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). The building process is a bit tricky and hairy, see the [AppVeyor config file for details](/.appveyor.yml) Building all the binaries can be done using [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for 64 bit architecture using CMake **GUI**. You have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio. Although it should be possible to do in theory, it is difficult to implement in practice. An easier solution is to build using **VCPKG**.
 
-Installing and building via vcpkg
+## Installing and building via VCPKG
 You can download and install nmslib using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
 ```
 git clone https://github.com/Microsoft/vcpkg.git
