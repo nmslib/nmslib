@@ -30,12 +30,15 @@ make
 # Building on Windows
 ## Building from sources
 
-Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). Although it is generally possible and [AppVeyor (see config file for details)](/.appveyor.yml) does create binary Windows versions of NMSLIB, it is often difficult due to subtle differences in the building environment. An easier solution is to build using **VCPKG** (see below). 
+Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). Although it is generally possible and [AppVeyor (see config file for details)](/.appveyor.yml) does create binary Windows versions of NMSLIB, it is often difficult due to subtle differences in the building environment. An easier solution is to build using **vcpkg** (see below). 
 
 AppVeyor builds only Python bindings. To create other binaries, one needs [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for 64 bit architecture using CMake **GUI**. You have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio (but, again, it is a bit tricky). 
 
-## Installing and building via VCPKG
-You can download and install nmslib using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+# Additional Building Details
+## Installing and building via vcpkg (Windows & Linux/MAC)
+You can download and install nmslib using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager on both Windows and Mac/Linux.
+On an Unix-like system do the following:
 ```
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg
@@ -43,14 +46,22 @@ cd vcpkg
 ./vcpkg integrate install
 vcpkg install nmslib
 ```
-The nmslib port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
+On Windows, one needs to use a slightly different variant:
+```
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat
+.\vcpkg integrate install
+.\vcpkg install nmslib
+```
 
-## Additional Building Details
+The nmslib port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
 
 Here we cover a few details on choosing the compiler,
 a type of the release, and manually pointing to the location
 of Boost libraries (to build with extras).
 
+## Building using CMAKE
 The compiler is chosen by setting two environment variables: ``CXX`` and ``CC``. In the case of GNU
 C++ (version 8), you may need to type:
 ```
