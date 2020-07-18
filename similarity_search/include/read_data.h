@@ -23,6 +23,8 @@
 #include <cstdio>
 #include <vector>
 
+#include "logging.h"
+
 namespace similarity {
 
 using std::string;
@@ -42,6 +44,9 @@ struct SparseVectElem {
   }
   bool operator!=(const SparseVectElem<dist_t>& that) const {
     return !operator==(that);
+  }
+  static size_t dataSize() {
+    return sizeof(id_) + sizeof(val_);
   }
 };
 
