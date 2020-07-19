@@ -65,6 +65,46 @@ class TestCaseBase(unittest.TestCase):
       npt.assert_allclose(orig,
                           (comp_resort_ids, comp_resort_dists))
 
+class TestSparseZeroVect(TestCaseBase):
+    def testSparseCosine1(self):
+        X = np.array([[4., 2., 3., 1., 0., 0., 0., 0., 0.],
+                      [2., 1., 0., 0., 3., 0., 1., 2., 1.],
+                      [4., 2., 0., 0., 3., 1., 0., 0., 0.],
+                      [0., 0., 0., 0., 0., 0., 0., 0., 0.]], dtype=np.float32)
+
+        q = np.array([[0., 0., 0., 0., 0., 0., 0., 0., 0.]], dtype=np.float32)
+
+        index = nmslib.init(method='hnsw', space='cosinesimil')
+        index.addDataPointBatch(X)
+        index.createIndex()
+        nns, dists = index.knnQueryBatch(q, k=3)[0]
+        self.assertEqual(len(nns), 3)
+        self.assertEqual(len(dists), 3)
+        npt.assert_allclose(dists, [1, 1, 1])
+        self.assertEqual(index.getDistance(3, 3), 1)
+        # The last element is all zeros, so any distance to it must be equal to one
+        for k in range(len(X)):
+            self.assertEqual(index.getDistance(k, len(X)-1), 1)
+
+
+    def testSparseNoFailOnEmpty(self):
+        # These are three sparse vectors, the last one is empty
+        data = [ [(0,1)], [(1,1)], [] ]
+        qty = len(data)
+
+        for space in ['cosinesimil_sparse', 'cosinesimil_sparse_fast', 'cosinesimil_sparse_bin_fast', 'l2_sparse', 'l1_sparse']:
+            index = nmslib.init(method='hnsw', space='cosinesimil_sparse', data_type=nmslib.DataType.SPARSE_VECTOR) 
+            index.addDataPointBatch(data)
+            self.assertEqual(len(index), qty)
+        
+            index.createIndex({'M': 30, 'indexThreadQty': 4, 'efConstruction': 100, 'post' : 0}) 
+  
+            if space.startswith('cosine'):
+                # The last element is all zeros, so any distance to it must be equal to one
+                for k in range(qty):
+                    self.assertEqual(index.getDistance(k, qty - 1), 1)
+        
+
 class DenseIndexTestMixin(object):
     def _get_index(self, space='cosinesimil'):
         raise NotImplementedError()
