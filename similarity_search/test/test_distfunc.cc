@@ -119,8 +119,8 @@ TEST(NormScalarProductForZeroVectors) {
   float allZeros[DIM] = {0, 0, 0, 0};
   float allOnes[DIM] = {1, 1, 1, 1};
 
-  EXPECT_EQ_EPS(NormScalarProduct(allZeros, allZeros, DIM), 1.f, 1e-5f);
-  EXPECT_EQ_EPS(NormScalarProduct(allZeros, allOnes, DIM), 1.f, 1e-5f);
+  EXPECT_EQ_EPS(NormScalarProduct(allZeros, allZeros, DIM), 0.f, 1e-5f);
+  EXPECT_EQ_EPS(NormScalarProduct(allZeros, allOnes, DIM), 0.f, 1e-5f);
 }
 
 TEST(NormScalarProductSIMDForZeroVectors) {
@@ -128,8 +128,8 @@ TEST(NormScalarProductSIMDForZeroVectors) {
   float allZeros[DIM] = {0, 0, 0, 0};
   float allOnes[DIM] = {1, 1, 1, 1};
 
-  EXPECT_EQ_EPS(NormScalarProductSIMD(allZeros, allZeros, DIM), 1.f, 1e-5f);
-  EXPECT_EQ_EPS(NormScalarProductSIMD(allZeros, allOnes, DIM), 1.f, 1e-5f);
+  EXPECT_EQ_EPS(NormScalarProductSIMD(allZeros, allZeros, DIM), 0.f, 1e-5f);
+  EXPECT_EQ_EPS(NormScalarProductSIMD(allZeros, allOnes, DIM), 0.f, 1e-5f);
 }
 
 TEST(BlockZeros) {

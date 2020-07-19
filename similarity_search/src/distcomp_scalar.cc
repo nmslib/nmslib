@@ -45,8 +45,9 @@ T NormScalarProduct(const T *p1, const T *p2, size_t qty)
 
     if (norm1 < eps || norm2 < eps) {
       // Issue #321, let's make computation scikitlearn-compatible,
-      // We return 1 if at least one vector has nearly zero norm
-      return 1;
+      // We return 0 if at least one vector has nearly zero norm,
+      // to be compatible with sklearn
+      return 0;
     }
     /*
      * Sometimes due to rounding errors, we get values > 1 or < -1.
@@ -153,8 +154,9 @@ float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty
 
     if (norm1 < eps || norm2 < eps) {
         // Issue #321, let's make computation scikitlearn-compatible,
-        // We return 1 if at least one vector has nearly zero norm
-        return 1;
+        // We return 0 if at least one vector has nearly zero norm,
+        // to be compatible with sklearn
+        return 0;
     }
     /*
      * Sometimes due to rounding errors, we get values > 1 or < -1.

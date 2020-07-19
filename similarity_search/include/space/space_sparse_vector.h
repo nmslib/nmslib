@@ -144,8 +144,6 @@ protected:
 
     dist_t res = 0;
 
-    CHECK(obj1->datalength() > 0);
-    CHECK(obj2->datalength() > 0);
     const ElemType* beg1 = reinterpret_cast<const ElemType*>(obj1->data());
     const ElemType* beg2 = reinterpret_cast<const ElemType*>(obj2->data());
     const ElemType* end1 = reinterpret_cast<const ElemType*>(obj1->data() + obj1->datalength());
