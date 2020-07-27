@@ -13,8 +13,7 @@ Currently, this is done only for
 [L<sub>p</sub>](https://en.wikipedia.org/wiki/Lp_space#Lp_spaces)
 and [Renyi divergences](https://en.wikipedia.org/wiki/R%C3%A9nyi_entropy#R%C3%A9nyi_divergence).
 Specifying parameters is done differently in Python bindings and the command line utility `experiment`.
-In Python bindings, one needs to specify a dictionary of space parameters, 
-see [this notebook](/python_bindings/notebooks/search_vector_dense_lp.ipynb) for an example.
+In Python bindings, one needs to specify a dictionary of space parameters, see [this notebook](/python_bindings/notebooks/search_vector_dense_lp.ipynb) for an example.
 In the command line, parameter specifiers go after the colon sign.
 For example, ``lp:p=3`` denotes the L<sub>3</sub> space and
 ``lp:p=2`` is a synonym for the Euclidean, i.e., L<sub>2</sub> space.
