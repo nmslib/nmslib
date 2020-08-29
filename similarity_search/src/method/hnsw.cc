@@ -79,8 +79,6 @@ namespace similarity {
     /*Functions from hnsw_distfunc_opt.cc:*/
     float L2SqrSIMDExt(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
     float L2SqrSIMD16Ext(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
-    // float NormScalarProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
-    // float ScalarProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
     float NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
     float NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
 
