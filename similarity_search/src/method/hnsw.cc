@@ -730,9 +730,9 @@ namespace similarity {
         case 4:
             /// Basic search using optimized index with one-time normalized cosine similarity or negative dot product
             if (useOld)
-                const_cast<Hnsw *>(this)->SearchInnerProductOld(query);
+                const_cast<Hnsw *>(this)->SearchInnerProductOld(query, iscosine_);
             else
-                const_cast<Hnsw *>(this)->SearchInnerProductV1Merge(query);
+                const_cast<Hnsw *>(this)->SearchInnerProductV1Merge(query, iscosine_);
             break;
         };
     }

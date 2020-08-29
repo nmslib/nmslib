@@ -619,21 +619,23 @@ namespace similarity {
     ****************************************************************/
     template <typename dist_t>
     void
-    Hnsw<dist_t>::SearchInnerProductOld(KNNQuery<dist_t> *query)
+    Hnsw<dist_t>::SearchInnerProductOld(KNNQuery<dist_t> *query, bool normalize)
     {
         float *pVectq = (float *)((char *)query->QueryObject()->data());
         float PORTABLE_ALIGN32 TmpRes[8];
         size_t qty = query->QueryObject()->datalength() >> 2;
 
-        float *v = pVectq;
-        float sum = 0;
-        for (int i = 0; i < qty; i++) {
-            sum += v[i] * v[i];
-        }
-        if (sum != 0.0) {
-            sum = 1 / sqrt(sum);
+        if (normalize) {
+            float *v = pVectq;
+            float sum = 0;
             for (int i = 0; i < qty; i++) {
-                v[i] *= sum;
+                sum += v[i] * v[i];
+            }
+            if (sum != 0.0) {
+                sum = 1 / sqrt(sum);
+                for (int i = 0; i < qty; i++) {
+                    v[i] *= sum;
+                }
             }
         }
 
@@ -733,21 +735,23 @@ namespace similarity {
 
     template <typename dist_t>
     void
-    Hnsw<dist_t>::SearchInnerProductV1Merge(KNNQuery<dist_t> *query)
+    Hnsw<dist_t>::SearchInnerProductV1Merge(KNNQuery<dist_t> *query, bool normalize)
     {
         float *pVectq = (float *)((char *)query->QueryObject()->data());
         float PORTABLE_ALIGN32 TmpRes[8];
         size_t qty = query->QueryObject()->datalength() >> 2;
 
-        float *v = pVectq;
-        float sum = 0;
-        for (int i = 0; i < qty; i++) {
-            sum += v[i] * v[i];
-        }
-        if (sum != 0.0) {
-            sum = 1 / sqrt(sum);
+        if (normalize) {
+            float *v = pVectq;
+            float sum = 0;
             for (int i = 0; i < qty; i++) {
-                v[i] *= sum;
+                sum += v[i] * v[i];
+            }
+            if (sum != 0.0) {
+                sum = 1 / sqrt(sum);
+                for (int i = 0; i < qty; i++) {
+                    v[i] *= sum;
+                }
             }
         }
 
