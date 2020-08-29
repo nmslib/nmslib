@@ -191,7 +191,7 @@ namespace similarity {
         return sqrt(res);
     };
     float
-    ScalarProductSIMD(const float *__restrict pVect1, const float *__restrict pVect2, size_t qty, float *__restrict TmpRes)
+    ScalarProductSIMD(const float * pVect1, const float * pVect2, size_t &qty, float * TmpRes)
     {
 #ifdef USE_AVX
         size_t qty16 = qty / 16;
@@ -230,10 +230,7 @@ namespace similarity {
         }
 
         _mm_store_ps(TmpRes, sum_prod);
-        float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
-        ;
-        return 1.0f - sum;
-// return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
+        return TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 #else
         size_t qty16 = qty / 16;
         size_t qty4 = qty / 4;
@@ -279,11 +276,9 @@ namespace similarity {
         }
 
         _mm_store_ps(TmpRes, sum_prod);
-        float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
-
-        return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum)));
+        return TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 #endif
-    };
+    }
 
     float
     NormScalarProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes)
@@ -369,8 +364,18 @@ namespace similarity {
                 return 1;
             return 0;
         }
-        return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), sum / sqrt(norm1 * norm2))));
-    };
+        return sum / sqrt(norm1 * norm2);
+    }
+
+    float
+    NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes) {
+        return -ScalarProductSIMD(pVect1, pVect2, qty, TmpRes);
+    }
+
+    float
+    NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes) {
+        return 1.0 - ScalarProductSIMD(pVect1, pVect2, qty, TmpRes);
+    }
 
     /****************************************************************
 
@@ -614,7 +619,7 @@ namespace similarity {
     ****************************************************************/
     template <typename dist_t>
     void
-    Hnsw<dist_t>::SearchCosineNormalizedOld(KNNQuery<dist_t> *query)
+    Hnsw<dist_t>::SearchInnerProductOld(KNNQuery<dist_t> *query)
     {
         float *pVectq = (float *)((char *)query->QueryObject()->data());
         float PORTABLE_ALIGN32 TmpRes[8];
@@ -638,7 +643,7 @@ namespace similarity {
 
         int maxlevel1 = maxlevel_;
         int curNodeNum = enterpointId_;
-        dist_t curdist = (ScalarProductSIMD(
+        dist_t curdist = (fstdistfunc_(
             pVectq, (float *)(data_level0_memory_ + enterpointId_ * memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
 
         for (int i = maxlevel1; i > 0; i--) {
@@ -657,7 +662,7 @@ namespace similarity {
                 for (int j = 1; j <= size; j++) {
                     int tnum = *(data + j);
 
-                    dist_t d = (ScalarProductSIMD(
+                    dist_t d = (fstdistfunc_(
                         pVectq, (float *)(data_level0_memory_ + tnum * memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
                     if (d < curdist) {
                         curdist = d;
@@ -707,7 +712,7 @@ namespace similarity {
 #endif
                     massVisited[tnum] = currentV;
                     char *currObj1 = (data_level0_memory_ + tnum * memoryPerObject_ + offsetData_);
-                    dist_t d = (ScalarProductSIMD(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
+                    dist_t d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
                     if (closestDistQueuei.top().getDistance() > d || closestDistQueuei.size() < ef_) {
                         candidateQueuei.emplace(-d, tnum);
                         _mm_prefetch(data_level0_memory_ + candidateQueuei.top().element * memoryPerObject_ + offsetLevel0_,
@@ -728,7 +733,7 @@ namespace similarity {
 
     template <typename dist_t>
     void
-    Hnsw<dist_t>::SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query)
+    Hnsw<dist_t>::SearchInnerProductV1Merge(KNNQuery<dist_t> *query)
     {
         float *pVectq = (float *)((char *)query->QueryObject()->data());
         float PORTABLE_ALIGN32 TmpRes[8];
@@ -752,7 +757,7 @@ namespace similarity {
 
         int maxlevel1 = maxlevel_;
         int curNodeNum = enterpointId_;
-        dist_t curdist = (ScalarProductSIMD(
+        dist_t curdist = (fstdistfunc_(
             pVectq, (float *)(data_level0_memory_ + enterpointId_ * memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
 
         for (int i = maxlevel1; i > 0; i--) {
@@ -771,7 +776,7 @@ namespace similarity {
                 for (int j = 1; j <= size; j++) {
                     int tnum = *(data + j);
 
-                    dist_t d = (ScalarProductSIMD(
+                    dist_t d = (fstdistfunc_(
                         pVectq, (float *)(data_level0_memory_ + tnum * memoryPerObject_ + offsetData_ + 16), qty, TmpRes));
                     if (d < curdist) {
                         curdist = d;
@@ -820,7 +825,7 @@ namespace similarity {
 #endif
                     massVisited[tnum] = currentV;
                     char *currObj1 = (data_level0_memory_ + tnum * memoryPerObject_ + offsetData_);
-                    dist_t d = (ScalarProductSIMD(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
+                    dist_t d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
 
                     if (d < topKey || sortedArr.size() < ef_) {
                         CHECK_MSG(itemBuff.size() > itemQty,

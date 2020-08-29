@@ -475,8 +475,8 @@ namespace similarity {
         void listPassingModifiedAlgorithm(KNNQuery<dist_t> *query);
         void SearchL2CustomV1Merge(KNNQuery<dist_t> *query);
         void SearchL2CustomOld(KNNQuery<dist_t> *query);
-        void SearchCosineNormalizedOld(KNNQuery<dist_t> *query);
-        void SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query);
+        void SearchInnerProductOld(KNNQuery<dist_t> *query);
+        void SearchInnerProductV1Merge(KNNQuery<dist_t> *query);
 
         int getRandomLevel(double revSize)
         {
