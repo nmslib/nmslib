@@ -364,7 +364,7 @@ namespace similarity {
                 return 1;
             return 0;
         }
-        return sum / sqrt(norm1 * norm2);
+        return std::min(float(1), sum / sqrt(norm1 * norm2));
     }
 
     float
@@ -374,7 +374,7 @@ namespace similarity {
 
     float
     NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes) {
-        return std::min(0.0, 1.0 - ScalarProductSIMD(pVect1, pVect2, qty, TmpRes));
+        return std::min(float(0), 1.0 - ScalarProductSIMD(pVect1, pVect2, qty, TmpRes));
     }
 
     /****************************************************************
