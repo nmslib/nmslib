@@ -797,6 +797,384 @@ uint32_t QueryService_rangeQuery_presult::read(::apache::thrift::protocol::TProt
 }
 
 
+QueryService_knnQueryBatch_args::~QueryService_knnQueryBatch_args() throw() {
+}
+
+
+uint32_t QueryService_knnQueryBatch_args::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_k = false;
+  bool isset_queryObj = false;
+  bool isset_retExternId = false;
+  bool isset_retObj = false;
+  bool isset_numThreads = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->k);
+          isset_k = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->queryObj.clear();
+            uint32_t _size26;
+            ::apache::thrift::protocol::TType _etype29;
+            xfer += iprot->readListBegin(_etype29, _size26);
+            this->queryObj.resize(_size26);
+            uint32_t _i30;
+            for (_i30 = 0; _i30 < _size26; ++_i30)
+            {
+              xfer += iprot->readBinary(this->queryObj[_i30]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          isset_queryObj = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->retExternId);
+          isset_retExternId = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->retObj);
+          isset_retObj = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->numThreads);
+          isset_numThreads = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_k)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_queryObj)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_retExternId)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_retObj)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_numThreads)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t QueryService_knnQueryBatch_args::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("QueryService_knnQueryBatch_args");
+
+  xfer += oprot->writeFieldBegin("k", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->k);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("queryObj", ::apache::thrift::protocol::T_LIST, 2);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->queryObj.size()));
+    std::vector<std::string> ::const_iterator _iter31;
+    for (_iter31 = this->queryObj.begin(); _iter31 != this->queryObj.end(); ++_iter31)
+    {
+      xfer += oprot->writeBinary((*_iter31));
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("retExternId", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeBool(this->retExternId);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 4);
+  xfer += oprot->writeBool(this->retObj);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("numThreads", ::apache::thrift::protocol::T_I32, 5);
+  xfer += oprot->writeI32(this->numThreads);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+
+QueryService_knnQueryBatch_pargs::~QueryService_knnQueryBatch_pargs() throw() {
+}
+
+
+uint32_t QueryService_knnQueryBatch_pargs::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  ::apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("QueryService_knnQueryBatch_pargs");
+
+  xfer += oprot->writeFieldBegin("k", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32((*(this->k)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("queryObj", ::apache::thrift::protocol::T_LIST, 2);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>((*(this->queryObj)).size()));
+    std::vector<std::string> ::const_iterator _iter32;
+    for (_iter32 = (*(this->queryObj)).begin(); _iter32 != (*(this->queryObj)).end(); ++_iter32)
+    {
+      xfer += oprot->writeBinary((*_iter32));
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("retExternId", ::apache::thrift::protocol::T_BOOL, 3);
+  xfer += oprot->writeBool((*(this->retExternId)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("retObj", ::apache::thrift::protocol::T_BOOL, 4);
+  xfer += oprot->writeBool((*(this->retObj)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("numThreads", ::apache::thrift::protocol::T_I32, 5);
+  xfer += oprot->writeI32((*(this->numThreads)));
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+
+QueryService_knnQueryBatch_result::~QueryService_knnQueryBatch_result() throw() {
+}
+
+
+uint32_t QueryService_knnQueryBatch_result::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->success.clear();
+            uint32_t _size33;
+            ::apache::thrift::protocol::TType _etype36;
+            xfer += iprot->readListBegin(_etype36, _size33);
+            this->success.resize(_size33);
+            uint32_t _i37;
+            for (_i37 = 0; _i37 < _size33; ++_i37)
+            {
+              {
+                this->success[_i37].clear();
+                uint32_t _size38;
+                ::apache::thrift::protocol::TType _etype41;
+                xfer += iprot->readListBegin(_etype41, _size38);
+                this->success[_i37].resize(_size38);
+                uint32_t _i42;
+                for (_i42 = 0; _i42 < _size38; ++_i42)
+                {
+                  xfer += this->success[_i37][_i42].read(iprot);
+                }
+                xfer += iprot->readListEnd();
+              }
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->err.read(iprot);
+          this->__isset.err = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t QueryService_knnQueryBatch_result::write(::apache::thrift::protocol::TProtocol* oprot) const {
+
+  uint32_t xfer = 0;
+
+  xfer += oprot->writeStructBegin("QueryService_knnQueryBatch_result");
+
+  if (this->__isset.success) {
+    xfer += oprot->writeFieldBegin("success", ::apache::thrift::protocol::T_LIST, 0);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_LIST, static_cast<uint32_t>(this->success.size()));
+      std::vector<std::vector<ReplyEntry> > ::const_iterator _iter43;
+      for (_iter43 = this->success.begin(); _iter43 != this->success.end(); ++_iter43)
+      {
+        {
+          xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>((*_iter43).size()));
+          std::vector<ReplyEntry> ::const_iterator _iter44;
+          for (_iter44 = (*_iter43).begin(); _iter44 != (*_iter43).end(); ++_iter44)
+          {
+            xfer += (*_iter44).write(oprot);
+          }
+          xfer += oprot->writeListEnd();
+        }
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  } else if (this->__isset.err) {
+    xfer += oprot->writeFieldBegin("err", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->err.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+
+QueryService_knnQueryBatch_presult::~QueryService_knnQueryBatch_presult() throw() {
+}
+
+
+uint32_t QueryService_knnQueryBatch_presult::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  ::apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 0:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            (*(this->success)).clear();
+            uint32_t _size45;
+            ::apache::thrift::protocol::TType _etype48;
+            xfer += iprot->readListBegin(_etype48, _size45);
+            (*(this->success)).resize(_size45);
+            uint32_t _i49;
+            for (_i49 = 0; _i49 < _size45; ++_i49)
+            {
+              {
+                (*(this->success))[_i49].clear();
+                uint32_t _size50;
+                ::apache::thrift::protocol::TType _etype53;
+                xfer += iprot->readListBegin(_etype53, _size50);
+                (*(this->success))[_i49].resize(_size50);
+                uint32_t _i54;
+                for (_i54 = 0; _i54 < _size50; ++_i54)
+                {
+                  xfer += (*(this->success))[_i49][_i54].read(iprot);
+                }
+                xfer += iprot->readListEnd();
+              }
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.success = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->err.read(iprot);
+          this->__isset.err = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+
 QueryService_getDistance_args::~QueryService_getDistance_args() throw() {
 }
 
@@ -1209,6 +1587,71 @@ void QueryServiceClient::recv_rangeQuery(ReplyEntryList& _return)
   throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "rangeQuery failed: unknown result");
 }
 
+void QueryServiceClient::knnQueryBatch(ReplyEntryListBatch& _return, const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads)
+{
+  send_knnQueryBatch(k, queryObj, retExternId, retObj, numThreads);
+  recv_knnQueryBatch(_return);
+}
+
+void QueryServiceClient::send_knnQueryBatch(const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads)
+{
+  int32_t cseqid = 0;
+  oprot_->writeMessageBegin("knnQueryBatch", ::apache::thrift::protocol::T_CALL, cseqid);
+
+  QueryService_knnQueryBatch_pargs args;
+  args.k = &k;
+  args.queryObj = &queryObj;
+  args.retExternId = &retExternId;
+  args.retObj = &retObj;
+  args.numThreads = &numThreads;
+  args.write(oprot_);
+
+  oprot_->writeMessageEnd();
+  oprot_->getTransport()->writeEnd();
+  oprot_->getTransport()->flush();
+}
+
+void QueryServiceClient::recv_knnQueryBatch(ReplyEntryListBatch& _return)
+{
+
+  int32_t rseqid = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TMessageType mtype;
+
+  iprot_->readMessageBegin(fname, mtype, rseqid);
+  if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
+    ::apache::thrift::TApplicationException x;
+    x.read(iprot_);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+    throw x;
+  }
+  if (mtype != ::apache::thrift::protocol::T_REPLY) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  if (fname.compare("knnQueryBatch") != 0) {
+    iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+    iprot_->readMessageEnd();
+    iprot_->getTransport()->readEnd();
+  }
+  QueryService_knnQueryBatch_presult result;
+  result.success = &_return;
+  result.read(iprot_);
+  iprot_->readMessageEnd();
+  iprot_->getTransport()->readEnd();
+
+  if (result.__isset.success) {
+    // _return pointer has now been filled
+    return;
+  }
+  if (result.__isset.err) {
+    throw result.err;
+  }
+  throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "knnQueryBatch failed: unknown result");
+}
+
 double QueryServiceClient::getDistance(const std::string& obj1, const std::string& obj2)
 {
   send_getDistance(obj1, obj2);
@@ -1457,6 +1900,63 @@ void QueryServiceProcessor::process_rangeQuery(int32_t seqid, ::apache::thrift::
 
   if (this->eventHandler_.get() != NULL) {
     this->eventHandler_->postWrite(ctx, "QueryService.rangeQuery", bytes);
+  }
+}
+
+void QueryServiceProcessor::process_knnQueryBatch(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext)
+{
+  void* ctx = NULL;
+  if (this->eventHandler_.get() != NULL) {
+    ctx = this->eventHandler_->getContext("QueryService.knnQueryBatch", callContext);
+  }
+  ::apache::thrift::TProcessorContextFreer freer(this->eventHandler_.get(), ctx, "QueryService.knnQueryBatch");
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preRead(ctx, "QueryService.knnQueryBatch");
+  }
+
+  QueryService_knnQueryBatch_args args;
+  args.read(iprot);
+  iprot->readMessageEnd();
+  uint32_t bytes = iprot->getTransport()->readEnd();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postRead(ctx, "QueryService.knnQueryBatch", bytes);
+  }
+
+  QueryService_knnQueryBatch_result result;
+  try {
+    iface_->knnQueryBatch(result.success, args.k, args.queryObj, args.retExternId, args.retObj, args.numThreads);
+    result.__isset.success = true;
+  } catch (QueryException &err) {
+    result.err = err;
+    result.__isset.err = true;
+  } catch (const std::exception& e) {
+    if (this->eventHandler_.get() != NULL) {
+      this->eventHandler_->handlerError(ctx, "QueryService.knnQueryBatch");
+    }
+
+    ::apache::thrift::TApplicationException x(e.what());
+    oprot->writeMessageBegin("knnQueryBatch", ::apache::thrift::protocol::T_EXCEPTION, seqid);
+    x.write(oprot);
+    oprot->writeMessageEnd();
+    oprot->getTransport()->writeEnd();
+    oprot->getTransport()->flush();
+    return;
+  }
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->preWrite(ctx, "QueryService.knnQueryBatch");
+  }
+
+  oprot->writeMessageBegin("knnQueryBatch", ::apache::thrift::protocol::T_REPLY, seqid);
+  result.write(oprot);
+  oprot->writeMessageEnd();
+  bytes = oprot->getTransport()->writeEnd();
+  oprot->getTransport()->flush();
+
+  if (this->eventHandler_.get() != NULL) {
+    this->eventHandler_->postWrite(ctx, "QueryService.knnQueryBatch", bytes);
   }
 }
 
@@ -1779,6 +2279,98 @@ void QueryServiceConcurrentClient::recv_rangeQuery(ReplyEntryList& _return, cons
       }
       // in a bad state, don't commit
       throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "rangeQuery failed: unknown result");
+    }
+    // seqid != rseqid
+    this->sync_.updatePending(fname, mtype, rseqid);
+
+    // this will temporarily unlock the readMutex, and let other clients get work done
+    this->sync_.waitForWork(seqid);
+  } // end while(true)
+}
+
+void QueryServiceConcurrentClient::knnQueryBatch(ReplyEntryListBatch& _return, const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads)
+{
+  int32_t seqid = send_knnQueryBatch(k, queryObj, retExternId, retObj, numThreads);
+  recv_knnQueryBatch(_return, seqid);
+}
+
+int32_t QueryServiceConcurrentClient::send_knnQueryBatch(const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads)
+{
+  int32_t cseqid = this->sync_.generateSeqId();
+  ::apache::thrift::async::TConcurrentSendSentry sentry(&this->sync_);
+  oprot_->writeMessageBegin("knnQueryBatch", ::apache::thrift::protocol::T_CALL, cseqid);
+
+  QueryService_knnQueryBatch_pargs args;
+  args.k = &k;
+  args.queryObj = &queryObj;
+  args.retExternId = &retExternId;
+  args.retObj = &retObj;
+  args.numThreads = &numThreads;
+  args.write(oprot_);
+
+  oprot_->writeMessageEnd();
+  oprot_->getTransport()->writeEnd();
+  oprot_->getTransport()->flush();
+
+  sentry.commit();
+  return cseqid;
+}
+
+void QueryServiceConcurrentClient::recv_knnQueryBatch(ReplyEntryListBatch& _return, const int32_t seqid)
+{
+
+  int32_t rseqid = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TMessageType mtype;
+
+  // the read mutex gets dropped and reacquired as part of waitForWork()
+  // The destructor of this sentry wakes up other clients
+  ::apache::thrift::async::TConcurrentRecvSentry sentry(&this->sync_, seqid);
+
+  while(true) {
+    if(!this->sync_.getPending(fname, mtype, rseqid)) {
+      iprot_->readMessageBegin(fname, mtype, rseqid);
+    }
+    if(seqid == rseqid) {
+      if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
+        ::apache::thrift::TApplicationException x;
+        x.read(iprot_);
+        iprot_->readMessageEnd();
+        iprot_->getTransport()->readEnd();
+        sentry.commit();
+        throw x;
+      }
+      if (mtype != ::apache::thrift::protocol::T_REPLY) {
+        iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+        iprot_->readMessageEnd();
+        iprot_->getTransport()->readEnd();
+      }
+      if (fname.compare("knnQueryBatch") != 0) {
+        iprot_->skip(::apache::thrift::protocol::T_STRUCT);
+        iprot_->readMessageEnd();
+        iprot_->getTransport()->readEnd();
+
+        // in a bad state, don't commit
+        using ::apache::thrift::protocol::TProtocolException;
+        throw TProtocolException(TProtocolException::INVALID_DATA);
+      }
+      QueryService_knnQueryBatch_presult result;
+      result.success = &_return;
+      result.read(iprot_);
+      iprot_->readMessageEnd();
+      iprot_->getTransport()->readEnd();
+
+      if (result.__isset.success) {
+        // _return pointer has now been filled
+        sentry.commit();
+        return;
+      }
+      if (result.__isset.err) {
+        sentry.commit();
+        throw result.err;
+      }
+      // in a bad state, don't commit
+      throw ::apache::thrift::TApplicationException(::apache::thrift::TApplicationException::MISSING_RESULT, "knnQueryBatch failed: unknown result");
     }
     // seqid != rseqid
     this->sync_.updatePending(fname, mtype, rseqid);

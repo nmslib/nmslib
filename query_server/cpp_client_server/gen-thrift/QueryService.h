@@ -24,6 +24,7 @@ class QueryServiceIf {
   virtual void setQueryTimeParams(const std::string& queryTimeParams) = 0;
   virtual void knnQuery(ReplyEntryList& _return, const int32_t k, const std::string& queryObj, const bool retExternId, const bool retObj) = 0;
   virtual void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj) = 0;
+  virtual void knnQueryBatch(ReplyEntryListBatch& _return, const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads) = 0;
   virtual double getDistance(const std::string& obj1, const std::string& obj2) = 0;
 };
 
@@ -61,6 +62,9 @@ class QueryServiceNull : virtual public QueryServiceIf {
     return;
   }
   void rangeQuery(ReplyEntryList& /* _return */, const double /* r */, const std::string& /* queryObj */, const bool /* retExternId */, const bool /* retObj */) {
+    return;
+  }
+  void knnQueryBatch(ReplyEntryListBatch& /* _return */, const int32_t /* k */, const std::vector<std::string> & /* queryObj */, const bool /* retExternId */, const bool /* retObj */, const int32_t /* numThreads */) {
     return;
   }
   double getDistance(const std::string& /* obj1 */, const std::string& /* obj2 */) {
@@ -416,6 +420,136 @@ class QueryService_rangeQuery_presult {
 };
 
 
+class QueryService_knnQueryBatch_args {
+ public:
+
+  QueryService_knnQueryBatch_args(const QueryService_knnQueryBatch_args&);
+  QueryService_knnQueryBatch_args& operator=(const QueryService_knnQueryBatch_args&);
+  QueryService_knnQueryBatch_args() : k(0), retExternId(0), retObj(0), numThreads(0) {
+  }
+
+  virtual ~QueryService_knnQueryBatch_args() throw();
+  int32_t k;
+  std::vector<std::string>  queryObj;
+  bool retExternId;
+  bool retObj;
+  int32_t numThreads;
+
+  void __set_k(const int32_t val);
+
+  void __set_queryObj(const std::vector<std::string> & val);
+
+  void __set_retExternId(const bool val);
+
+  void __set_retObj(const bool val);
+
+  void __set_numThreads(const int32_t val);
+
+  bool operator == (const QueryService_knnQueryBatch_args & rhs) const
+  {
+    if (!(k == rhs.k))
+      return false;
+    if (!(queryObj == rhs.queryObj))
+      return false;
+    if (!(retExternId == rhs.retExternId))
+      return false;
+    if (!(retObj == rhs.retObj))
+      return false;
+    if (!(numThreads == rhs.numThreads))
+      return false;
+    return true;
+  }
+  bool operator != (const QueryService_knnQueryBatch_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const QueryService_knnQueryBatch_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class QueryService_knnQueryBatch_pargs {
+ public:
+
+
+  virtual ~QueryService_knnQueryBatch_pargs() throw();
+  const int32_t* k;
+  const std::vector<std::string> * queryObj;
+  const bool* retExternId;
+  const bool* retObj;
+  const int32_t* numThreads;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _QueryService_knnQueryBatch_result__isset {
+  _QueryService_knnQueryBatch_result__isset() : success(false), err(false) {}
+  bool success :1;
+  bool err :1;
+} _QueryService_knnQueryBatch_result__isset;
+
+class QueryService_knnQueryBatch_result {
+ public:
+
+  QueryService_knnQueryBatch_result(const QueryService_knnQueryBatch_result&);
+  QueryService_knnQueryBatch_result& operator=(const QueryService_knnQueryBatch_result&);
+  QueryService_knnQueryBatch_result() {
+  }
+
+  virtual ~QueryService_knnQueryBatch_result() throw();
+  ReplyEntryListBatch success;
+  QueryException err;
+
+  _QueryService_knnQueryBatch_result__isset __isset;
+
+  void __set_success(const ReplyEntryListBatch& val);
+
+  void __set_err(const QueryException& val);
+
+  bool operator == (const QueryService_knnQueryBatch_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    if (!(err == rhs.err))
+      return false;
+    return true;
+  }
+  bool operator != (const QueryService_knnQueryBatch_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const QueryService_knnQueryBatch_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _QueryService_knnQueryBatch_presult__isset {
+  _QueryService_knnQueryBatch_presult__isset() : success(false), err(false) {}
+  bool success :1;
+  bool err :1;
+} _QueryService_knnQueryBatch_presult__isset;
+
+class QueryService_knnQueryBatch_presult {
+ public:
+
+
+  virtual ~QueryService_knnQueryBatch_presult() throw();
+  ReplyEntryListBatch* success;
+  QueryException err;
+
+  _QueryService_knnQueryBatch_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
+
 class QueryService_getDistance_args {
  public:
 
@@ -561,6 +695,9 @@ class QueryServiceClient : virtual public QueryServiceIf {
   void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj);
   void send_rangeQuery(const double r, const std::string& queryObj, const bool retExternId, const bool retObj);
   void recv_rangeQuery(ReplyEntryList& _return);
+  void knnQueryBatch(ReplyEntryListBatch& _return, const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads);
+  void send_knnQueryBatch(const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads);
+  void recv_knnQueryBatch(ReplyEntryListBatch& _return);
   double getDistance(const std::string& obj1, const std::string& obj2);
   void send_getDistance(const std::string& obj1, const std::string& obj2);
   double recv_getDistance();
@@ -582,6 +719,7 @@ class QueryServiceProcessor : public ::apache::thrift::TDispatchProcessor {
   void process_setQueryTimeParams(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_knnQuery(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_rangeQuery(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_knnQueryBatch(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_getDistance(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   QueryServiceProcessor(::apache::thrift::stdcxx::shared_ptr<QueryServiceIf> iface) :
@@ -589,6 +727,7 @@ class QueryServiceProcessor : public ::apache::thrift::TDispatchProcessor {
     processMap_["setQueryTimeParams"] = &QueryServiceProcessor::process_setQueryTimeParams;
     processMap_["knnQuery"] = &QueryServiceProcessor::process_knnQuery;
     processMap_["rangeQuery"] = &QueryServiceProcessor::process_rangeQuery;
+    processMap_["knnQueryBatch"] = &QueryServiceProcessor::process_knnQueryBatch;
     processMap_["getDistance"] = &QueryServiceProcessor::process_getDistance;
   }
 
@@ -647,6 +786,16 @@ class QueryServiceMultiface : virtual public QueryServiceIf {
     return;
   }
 
+  void knnQueryBatch(ReplyEntryListBatch& _return, const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads) {
+    size_t sz = ifaces_.size();
+    size_t i = 0;
+    for (; i < (sz - 1); ++i) {
+      ifaces_[i]->knnQueryBatch(_return, k, queryObj, retExternId, retObj, numThreads);
+    }
+    ifaces_[i]->knnQueryBatch(_return, k, queryObj, retExternId, retObj, numThreads);
+    return;
+  }
+
   double getDistance(const std::string& obj1, const std::string& obj2) {
     size_t sz = ifaces_.size();
     size_t i = 0;
@@ -695,6 +844,9 @@ class QueryServiceConcurrentClient : virtual public QueryServiceIf {
   void rangeQuery(ReplyEntryList& _return, const double r, const std::string& queryObj, const bool retExternId, const bool retObj);
   int32_t send_rangeQuery(const double r, const std::string& queryObj, const bool retExternId, const bool retObj);
   void recv_rangeQuery(ReplyEntryList& _return, const int32_t seqid);
+  void knnQueryBatch(ReplyEntryListBatch& _return, const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads);
+  int32_t send_knnQueryBatch(const int32_t k, const std::vector<std::string> & queryObj, const bool retExternId, const bool retObj, const int32_t numThreads);
+  void recv_knnQueryBatch(ReplyEntryListBatch& _return, const int32_t seqid);
   double getDistance(const std::string& obj1, const std::string& obj2);
   int32_t send_getDistance(const std::string& obj1, const std::string& obj2);
   double recv_getDistance(const int32_t seqid);

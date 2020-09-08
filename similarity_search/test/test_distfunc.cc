@@ -114,6 +114,24 @@ void TestSparsePackUnpack() {
   }
 }
 
+TEST(NormScalarProductForZeroVectors) {
+  const size_t DIM = 4;
+  float allZeros[DIM] = {0, 0, 0, 0};
+  float allOnes[DIM] = {1, 1, 1, 1};
+
+  EXPECT_EQ_EPS(NormScalarProduct(allZeros, allZeros, DIM), 0.f, 1e-5f);
+  EXPECT_EQ_EPS(NormScalarProduct(allZeros, allOnes, DIM), 0.f, 1e-5f);
+}
+
+TEST(NormScalarProductSIMDForZeroVectors) {
+  const size_t DIM = 4;
+  float allZeros[DIM] = {0, 0, 0, 0};
+  float allOnes[DIM] = {1, 1, 1, 1};
+
+  EXPECT_EQ_EPS(NormScalarProductSIMD(allZeros, allZeros, DIM), 0.f, 1e-5f);
+  EXPECT_EQ_EPS(NormScalarProductSIMD(allZeros, allOnes, DIM), 0.f, 1e-5f);
+}
+
 TEST(BlockZeros) {
   for (size_t id = 0 ; id <= 3*65536; id++) {
     size_t id1 = removeBlockZeros(id);

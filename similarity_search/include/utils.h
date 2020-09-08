@@ -308,6 +308,16 @@ static void readBinaryPOD(istream& in, T& podRef) {
   in.read((char*)&podRef, sizeof(T));
 }
 
+template <typename T>
+static void readBinaryPOD(const void* in, T& podRef) {
+  std::memcpy((char*)&podRef, in, sizeof(T));
+}
+
+template <typename T>
+void writeBinaryPOD(void* out, const T& podRef) {
+  std::memcpy(out, (char*)&podRef, sizeof(T));
+}
+
 /**/
 
 inline void ToLower(string &s) {

@@ -29,8 +29,8 @@ using namespace std;
  */
 
 template <class T>
-T NormScalarProduct(const T *p1, const T *p2, size_t qty) 
-{ 
+T NormScalarProduct(const T *p1, const T *p2, size_t qty)
+{
     const T eps = numeric_limits<T>::min() * 2;
 
     T sum = 0;
@@ -43,14 +43,13 @@ T NormScalarProduct(const T *p1, const T *p2, size_t qty)
       sum += p1[i] * p2[i];
     }
 
-    if (norm1 < eps) { /* 
-                        * This shouldn't normally happen for this space, but 
-                        * if it does, we don't want to get NANs 
-                        */
-      if (norm2 < eps) return 1;
+    if (norm1 < eps || norm2 < eps) {
+      // Issue #321, let's make computation scikitlearn-compatible,
+      // We return 0 if at least one vector has nearly zero norm,
+      // to be compatible with sklearn
       return 0;
-    } 
-    /* 
+    }
+    /*
      * Sometimes due to rounding errors, we get values > 1 or < -1.
      * This throws off other functions that use scalar product, e.g., acos
      */
@@ -80,7 +79,7 @@ T QueryNormScalarProduct(const T *p1, const T *p2, size_t qty)
 
 template float  QueryNormScalarProduct<float>(const float* pVect1, const float* pVect2, size_t qty);
 
-template <> 
+template <>
 float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 #ifndef PORTABLE_SSE2
 #pragma message WARN("ScalarProductSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
@@ -93,8 +92,8 @@ float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty
     const float* pEnd2 = pVect1 + 4  * qty4;
     const float* pEnd3 = pVect1 + qty;
 
-    __m128  v1, v2; 
-    __m128  sum_prod = _mm_set1_ps(0); 
+    __m128  v1, v2;
+    __m128  sum_prod = _mm_set1_ps(0);
     __m128  sum_square1 = sum_prod;
     __m128  sum_square2 = sum_prod;
 
@@ -144,23 +143,22 @@ float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty
     float norm2 = TmpResSquare2[0] + TmpResSquare2[1] + TmpResSquare2[2] + TmpResSquare2[3];
 
     while (pVect1 < pEnd3) {
-        sum += (*pVect1) * (*pVect2); 
-        norm1 += (*pVect1) * (*pVect1); 
-        norm2 += (*pVect2) * (*pVect2); 
+        sum += (*pVect1) * (*pVect2);
+        norm1 += (*pVect1) * (*pVect1);
+        norm2 += (*pVect2) * (*pVect2);
 
         ++pVect1; ++pVect2;
     }
 
     const float eps = numeric_limits<float>::min() * 2;
 
-    if (norm1 < eps) { /* 
-                        * This shouldn't normally happen for this space, but 
-                        * if it does, we don't want to get NANs 
-                        */
-      if (norm2 < eps) return 1;
-      return 0;
-    } 
-    /* 
+    if (norm1 < eps || norm2 < eps) {
+        // Issue #321, let's make computation scikitlearn-compatible,
+        // We return 0 if at least one vector has nearly zero norm,
+        // to be compatible with sklearn
+        return 0;
+    }
+    /*
      * Sometimes due to rounding errors, we get values > 1 or < -1.
      * This throws off other functions that use scalar product, e.g., acos
      */
@@ -175,10 +173,10 @@ template float   NormScalarProductSIMD<float>(const float* pVect1, const float* 
  */
 
 template <class T>
-T ScalarProduct(const T *p1, const T *p2, size_t qty) { 
+T ScalarProduct(const T *p1, const T *p2, size_t qty) {
     T sum = 0;
 
-    for (size_t i = 0; i < qty; i++) { 
+    for (size_t i = 0; i < qty; i++) {
       sum += p1[i] * p2[i];
     }
     return sum;
@@ -191,7 +189,7 @@ template float  ScalarProduct<float>(const float* pVect1, const float* pVect2, s
  * Ensuring that both pVect1 and pVect2 are similarly aligned could be hard.
  */
 
-template <> 
+template <>
 float ScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 #ifndef PORTABLE_SSE2
 #pragma message WARN("ScalarProductSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
@@ -204,8 +202,8 @@ float ScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     const float* pEnd2 = pVect1 + 4  * qty4;
     const float* pEnd3 = pVect1 + qty;
 
-    __m128  v1, v2; 
-    __m128  sum = _mm_set1_ps(0); 
+    __m128  v1, v2;
+    __m128  sum = _mm_set1_ps(0);
 
     while (pVect1 < pEnd1) {
         v1   = _mm_loadu_ps(pVect1); pVect1 += 4;
@@ -237,7 +235,7 @@ float ScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
     float res = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
 
     while (pVect1 < pEnd3) {
-        res += (*pVect1) * (*pVect2); 
+        res += (*pVect1) * (*pVect2);
         ++pVect1; ++pVect2;
     }
 
@@ -253,8 +251,8 @@ template float   ScalarProductSIMD<float>(const float* pVect1, const float* pVec
  */
 
 template <class T>
-T AngularDistance(const T *p1, const T *p2, size_t qty) 
-{ 
+T AngularDistance(const T *p1, const T *p2, size_t qty)
+{
     return acos(NormScalarProductSIMD(p1, p2, qty));
 }
 
@@ -266,8 +264,8 @@ template float  AngularDistance<float>(const float* pVect1, const float* pVect2,
  */
 
 template <class T>
-T CosineSimilarity(const T *p1, const T *p2, size_t qty) 
-{ 
+T CosineSimilarity(const T *p1, const T *p2, size_t qty)
+{
     return std::max(T(0), 1 - NormScalarProductSIMD(p1, p2, qty));
 }
 

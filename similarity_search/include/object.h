@@ -94,7 +94,7 @@ class Object {
   }
 
   inline IdType    id()         const { return *(reinterpret_cast<IdType*>(buffer_)); }
-  inline LabelType label()      const { return *(reinterpret_cast<LabelType*>(buffer_ + LABEL_SIZE)); }
+  inline LabelType label()      const { return *(reinterpret_cast<LabelType*>(buffer_ + ID_SIZE)); }
   inline size_t datalength()    const { return *(reinterpret_cast<size_t*>(buffer_ + LABEL_SIZE + ID_SIZE));}
   inline const char* data() const { return buffer_ + ID_SIZE + LABEL_SIZE+ DATALENGTH_SIZE; }
   inline char* data()             { return buffer_ + ID_SIZE + LABEL_SIZE+ DATALENGTH_SIZE; }

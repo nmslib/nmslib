@@ -190,6 +190,7 @@ namespace similarity {
 
         return sqrt(res);
     };
+
     float
     ScalarProductSIMD(const float *__restrict pVect1, const float *__restrict pVect2, size_t qty, float *__restrict TmpRes)
     {
@@ -356,13 +357,10 @@ namespace similarity {
 
         const float eps = numeric_limits<float>::min() * 2;
 
-        if (norm1 < eps) { /*
-                            * This shouldn't normally happen for this space, but
-                            * if it does, we don't want to get NANs
-                            */
-            if (norm2 < eps)
-                return 1;
-            return 0;
+        if (norm1 < eps || norm2 < eps) {
+            // Issue #321, let's make computation scikitlearn-compatible,
+            // We return 1 (as the distance value) if at least one vector has nearly zero norm, to be compatible with sklearn
+            return 1;
         }
         return std::min(float(1), sum / sqrt(norm1 * norm2));
     }

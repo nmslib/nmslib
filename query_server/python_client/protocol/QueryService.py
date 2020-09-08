@@ -46,6 +46,17 @@ class Iface(object):
         """
         pass
 
+    def knnQueryBatch(self, k, queryObj, retExternId, retObj, numThreads):
+        """
+        Parameters:
+         - k
+         - queryObj
+         - retExternId
+         - retObj
+         - numThreads
+        """
+        pass
+
     def getDistance(self, obj1, obj2):
         """
         Parameters:
@@ -171,6 +182,47 @@ class Client(Iface):
             raise result.err
         raise TApplicationException(TApplicationException.MISSING_RESULT, "rangeQuery failed: unknown result")
 
+    def knnQueryBatch(self, k, queryObj, retExternId, retObj, numThreads):
+        """
+        Parameters:
+         - k
+         - queryObj
+         - retExternId
+         - retObj
+         - numThreads
+        """
+        self.send_knnQueryBatch(k, queryObj, retExternId, retObj, numThreads)
+        return self.recv_knnQueryBatch()
+
+    def send_knnQueryBatch(self, k, queryObj, retExternId, retObj, numThreads):
+        self._oprot.writeMessageBegin('knnQueryBatch', TMessageType.CALL, self._seqid)
+        args = knnQueryBatch_args()
+        args.k = k
+        args.queryObj = queryObj
+        args.retExternId = retExternId
+        args.retObj = retObj
+        args.numThreads = numThreads
+        args.write(self._oprot)
+        self._oprot.writeMessageEnd()
+        self._oprot.trans.flush()
+
+    def recv_knnQueryBatch(self):
+        iprot = self._iprot
+        (fname, mtype, rseqid) = iprot.readMessageBegin()
+        if mtype == TMessageType.EXCEPTION:
+            x = TApplicationException()
+            x.read(iprot)
+            iprot.readMessageEnd()
+            raise x
+        result = knnQueryBatch_result()
+        result.read(iprot)
+        iprot.readMessageEnd()
+        if result.success is not None:
+            return result.success
+        if result.err is not None:
+            raise result.err
+        raise TApplicationException(TApplicationException.MISSING_RESULT, "knnQueryBatch failed: unknown result")
+
     def getDistance(self, obj1, obj2):
         """
         Parameters:
@@ -214,6 +266,7 @@ class Processor(Iface, TProcessor):
         self._processMap["setQueryTimeParams"] = Processor.process_setQueryTimeParams
         self._processMap["knnQuery"] = Processor.process_knnQuery
         self._processMap["rangeQuery"] = Processor.process_rangeQuery
+        self._processMap["knnQueryBatch"] = Processor.process_knnQueryBatch
         self._processMap["getDistance"] = Processor.process_getDistance
 
     def process(self, iprot, oprot):
@@ -305,6 +358,32 @@ class Processor(Iface, TProcessor):
             msg_type = TMessageType.EXCEPTION
             result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
         oprot.writeMessageBegin("rangeQuery", msg_type, seqid)
+        result.write(oprot)
+        oprot.writeMessageEnd()
+        oprot.trans.flush()
+
+    def process_knnQueryBatch(self, seqid, iprot, oprot):
+        args = knnQueryBatch_args()
+        args.read(iprot)
+        iprot.readMessageEnd()
+        result = knnQueryBatch_result()
+        try:
+            result.success = self._handler.knnQueryBatch(args.k, args.queryObj, args.retExternId, args.retObj, args.numThreads)
+            msg_type = TMessageType.REPLY
+        except TTransport.TTransportException:
+            raise
+        except QueryException as err:
+            msg_type = TMessageType.REPLY
+            result.err = err
+        except TApplicationException as ex:
+            logging.exception('TApplication exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = ex
+        except Exception:
+            logging.exception('Unexpected exception in handler')
+            msg_type = TMessageType.EXCEPTION
+            result = TApplicationException(TApplicationException.INTERNAL_ERROR, 'Internal error')
+        oprot.writeMessageBegin("knnQueryBatch", msg_type, seqid)
         result.write(oprot)
         oprot.writeMessageEnd()
         oprot.trans.flush()
@@ -833,6 +912,223 @@ class rangeQuery_result(object):
 all_structs.append(rangeQuery_result)
 rangeQuery_result.thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT, [ReplyEntry, None], False), None, ),  # 0
+    (1, TType.STRUCT, 'err', [QueryException, None], None, ),  # 1
+)
+
+
+class knnQueryBatch_args(object):
+    """
+    Attributes:
+     - k
+     - queryObj
+     - retExternId
+     - retObj
+     - numThreads
+    """
+
+
+    def __init__(self, k=None, queryObj=None, retExternId=None, retObj=None, numThreads=None,):
+        self.k = k
+        self.queryObj = queryObj
+        self.retExternId = retExternId
+        self.retObj = retObj
+        self.numThreads = numThreads
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 1:
+                if ftype == TType.I32:
+                    self.k = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 2:
+                if ftype == TType.LIST:
+                    self.queryObj = []
+                    (_etype17, _size14) = iprot.readListBegin()
+                    for _i18 in range(_size14):
+                        _elem19 = iprot.readBinary()
+                        self.queryObj.append(_elem19)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 3:
+                if ftype == TType.BOOL:
+                    self.retExternId = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 4:
+                if ftype == TType.BOOL:
+                    self.retObj = iprot.readBool()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 5:
+                if ftype == TType.I32:
+                    self.numThreads = iprot.readI32()
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('knnQueryBatch_args')
+        if self.k is not None:
+            oprot.writeFieldBegin('k', TType.I32, 1)
+            oprot.writeI32(self.k)
+            oprot.writeFieldEnd()
+        if self.queryObj is not None:
+            oprot.writeFieldBegin('queryObj', TType.LIST, 2)
+            oprot.writeListBegin(TType.STRING, len(self.queryObj))
+            for iter20 in self.queryObj:
+                oprot.writeBinary(iter20)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.retExternId is not None:
+            oprot.writeFieldBegin('retExternId', TType.BOOL, 3)
+            oprot.writeBool(self.retExternId)
+            oprot.writeFieldEnd()
+        if self.retObj is not None:
+            oprot.writeFieldBegin('retObj', TType.BOOL, 4)
+            oprot.writeBool(self.retObj)
+            oprot.writeFieldEnd()
+        if self.numThreads is not None:
+            oprot.writeFieldBegin('numThreads', TType.I32, 5)
+            oprot.writeI32(self.numThreads)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        if self.k is None:
+            raise TProtocolException(message='Required field k is unset!')
+        if self.queryObj is None:
+            raise TProtocolException(message='Required field queryObj is unset!')
+        if self.retExternId is None:
+            raise TProtocolException(message='Required field retExternId is unset!')
+        if self.retObj is None:
+            raise TProtocolException(message='Required field retObj is unset!')
+        if self.numThreads is None:
+            raise TProtocolException(message='Required field numThreads is unset!')
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(knnQueryBatch_args)
+knnQueryBatch_args.thrift_spec = (
+    None,  # 0
+    (1, TType.I32, 'k', None, None, ),  # 1
+    (2, TType.LIST, 'queryObj', (TType.STRING, 'BINARY', False), None, ),  # 2
+    (3, TType.BOOL, 'retExternId', None, None, ),  # 3
+    (4, TType.BOOL, 'retObj', None, None, ),  # 4
+    (5, TType.I32, 'numThreads', None, None, ),  # 5
+)
+
+
+class knnQueryBatch_result(object):
+    """
+    Attributes:
+     - success
+     - err
+    """
+
+
+    def __init__(self, success=None, err=None,):
+        self.success = success
+        self.err = err
+
+    def read(self, iprot):
+        if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
+            iprot._fast_decode(self, iprot, [self.__class__, self.thrift_spec])
+            return
+        iprot.readStructBegin()
+        while True:
+            (fname, ftype, fid) = iprot.readFieldBegin()
+            if ftype == TType.STOP:
+                break
+            if fid == 0:
+                if ftype == TType.LIST:
+                    self.success = []
+                    (_etype24, _size21) = iprot.readListBegin()
+                    for _i25 in range(_size21):
+                        _elem26 = []
+                        (_etype30, _size27) = iprot.readListBegin()
+                        for _i31 in range(_size27):
+                            _elem32 = ReplyEntry()
+                            _elem32.read(iprot)
+                            _elem26.append(_elem32)
+                        iprot.readListEnd()
+                        self.success.append(_elem26)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 1:
+                if ftype == TType.STRUCT:
+                    self.err = QueryException()
+                    self.err.read(iprot)
+                else:
+                    iprot.skip(ftype)
+            else:
+                iprot.skip(ftype)
+            iprot.readFieldEnd()
+        iprot.readStructEnd()
+
+    def write(self, oprot):
+        if oprot._fast_encode is not None and self.thrift_spec is not None:
+            oprot.trans.write(oprot._fast_encode(self, [self.__class__, self.thrift_spec]))
+            return
+        oprot.writeStructBegin('knnQueryBatch_result')
+        if self.success is not None:
+            oprot.writeFieldBegin('success', TType.LIST, 0)
+            oprot.writeListBegin(TType.LIST, len(self.success))
+            for iter33 in self.success:
+                oprot.writeListBegin(TType.STRUCT, len(iter33))
+                for iter34 in iter33:
+                    iter34.write(oprot)
+                oprot.writeListEnd()
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.err is not None:
+            oprot.writeFieldBegin('err', TType.STRUCT, 1)
+            self.err.write(oprot)
+            oprot.writeFieldEnd()
+        oprot.writeFieldStop()
+        oprot.writeStructEnd()
+
+    def validate(self):
+        return
+
+    def __repr__(self):
+        L = ['%s=%r' % (key, value)
+             for key, value in self.__dict__.items()]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not (self == other)
+all_structs.append(knnQueryBatch_result)
+knnQueryBatch_result.thrift_spec = (
+    (0, TType.LIST, 'success', (TType.LIST, (TType.STRUCT, [ReplyEntry, None], False), False), None, ),  # 0
     (1, TType.STRUCT, 'err', [QueryException, None], None, ),  # 1
 )
 

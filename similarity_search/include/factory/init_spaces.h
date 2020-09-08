@@ -31,6 +31,7 @@
 #include "factory/space/space_ab_diverg.h"
 #include "factory/space/space_renyi_diverg.h"
 #include "factory/space/space_sparse_jaccard.h"
+#include "factory/space/space_sparse_dense_fusion.h"
 #if defined(WITH_EXTRAS)
 #include "factory/space/space_sqfd.h"
 #endif
@@ -95,8 +96,10 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_NEGATIVE_SCALAR, CreateSparseNegativeScalarProduct)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_COSINE_SIMILARITY_FAST, CreateSparseCosineSimilarityFast)
+  REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_COSINE_SIMILARITY_BIN_FAST, CreateSparseCosineSimilarityBinFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_ANGULAR_DISTANCE_FAST, CreateSparseAngularDistanceFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_NEGATIVE_SCALAR_FAST, CreateSparseNegativeScalarProductFast)
+  REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_NEGATIVE_SCALAR_PROD_BIN_FAST, CreateSparseNegativeScalarProductBinFast)
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_QUERY_NORM_NEGATIVE_SCALAR_FAST, CreateSparseQueryNormNegativeScalarProductFast)
 
   REGISTER_SPACE_CREATOR(float,  SPACE_SPARSE_JACCARD,  CreateSpaceSparseJaccard)
@@ -115,6 +118,7 @@ inline void initSpaces() {
   REGISTER_SPACE_CREATOR(float,  SPACE_RENYI_DIVERG_FAST,  CreateRenyiDivergFast)
 
   REGISTER_SPACE_CREATOR(int,    SPACE_L2SQR_SIFT,  CreateL2SqrSIFT)
+  REGISTER_SPACE_CREATOR(float, SPACE_SPARSE_DENSE_FUSION, createSparseDenseFusion)
 }
 
 }
