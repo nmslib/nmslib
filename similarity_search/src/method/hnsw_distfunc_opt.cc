@@ -374,7 +374,7 @@ namespace similarity {
 
     float
     NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes) {
-        return std::min(float(0), float(1) - ScalarProductSIMD(pVect1, pVect2, qty, TmpRes));
+        return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), ScalarProductSIMD(pVect1, pVect2, qty, TmpRes))));
     }
 
     /****************************************************************
