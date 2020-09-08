@@ -719,18 +719,12 @@ namespace similarity {
             const_cast<Hnsw *>(this)->listPassingModifiedAlgorithm(query);
             break;
         case 3:
-            /// Basic search using optimized index(cosine+L2)
-            if (useOld)
-                const_cast<Hnsw *>(this)->SearchL2CustomOld(query);
-            else
-                const_cast<Hnsw *>(this)->SearchL2CustomV1Merge(query);
-            break;
         case 4:
-            /// Basic search using optimized index with one-time normalized cosine similarity or negative dot product
+            /// Basic search using optimized index for l2, cosine, negative dot product
             if (useOld)
-                const_cast<Hnsw *>(this)->SearchInnerProductOld(query, iscosine_);
+                const_cast<Hnsw *>(this)->SearchOld(query, iscosine_);
             else
-                const_cast<Hnsw *>(this)->SearchInnerProductV1Merge(query, iscosine_);
+                const_cast<Hnsw *>(this)->SearchV1Merge(query, iscosine_);
             break;
         };
     }
