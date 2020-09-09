@@ -242,10 +242,10 @@ namespace similarity {
 #else
         size_t qty16 = qty / 16;
         size_t qty4 = qty / 4;
-        const float *pEnd3 = pVect1 + qty;
 
         const float *pEnd1 = pVect1 + 16 * qty16;
         const float *pEnd2 = pVect1 + 4 * qty4;
+        const float *pEnd3 = pVect1 + qty;
 
         __m128 v1, v2;
         __m128 sum_prod = _mm_set1_ps(0);
