@@ -200,6 +200,7 @@ namespace similarity {
 
         const float *pEnd1 = pVect1 + 16 * qty16;
         const float *pEnd2 = pVect1 + 4 * qty4;
+        const float *pEnd3 = pVect1 + qty;
 
         __m256 sum256 = _mm256_set1_ps(0);
 
@@ -231,10 +232,17 @@ namespace similarity {
         }
 
         _mm_store_ps(TmpRes, sum_prod);
-        return TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
+        float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
+        while (pVect1 < pEnd3) {
+            sum += (*pVect1) * (*pVect2);
+            ++pVect1;
+            ++pVect2;
+        }
+        return sum;
 #else
         size_t qty16 = qty / 16;
         size_t qty4 = qty / 4;
+        const float *pEnd3 = pVect1 + qty;
 
         const float *pEnd1 = pVect1 + 16 * qty16;
         const float *pEnd2 = pVect1 + 4 * qty4;
@@ -277,7 +285,13 @@ namespace similarity {
         }
 
         _mm_store_ps(TmpRes, sum_prod);
-        return TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
+        float sum = TmpRes[0] + TmpRes[1] + TmpRes[2] + TmpRes[3];
+        while (pVect1 < pEnd3) {
+            sum += (*pVect1) * (*pVect2);
+            ++pVect1;
+            ++pVect2;
+        }
+        return sum;
 #endif
     }
 
