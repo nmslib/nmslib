@@ -191,7 +191,7 @@ namespace similarity {
         return sqrt(res);
     };
 
-    float
+    inline float
     ScalarProductSIMD(const float *__restrict pVect1, const float *__restrict pVect2, size_t qty, float *__restrict TmpRes)
     {
 #ifdef USE_AVX
