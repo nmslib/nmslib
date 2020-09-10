@@ -1026,8 +1026,10 @@ namespace similarity {
             fstdistfunc_ = L2SqrSIMD16Ext;
         else if (dist_func_type_ == 2)
             fstdistfunc_ = L2SqrSIMDExt;
-        else if (dist_func_type_ == 3)
+        else if (dist_func_type_ == 3) {
+            iscosine_ = true;
             fstdistfunc_ = NormCosineSIMD;
+        }
         else if (dist_func_type_ == 4)
             fstdistfunc_ = NegativeDotProductSIMD;
 
