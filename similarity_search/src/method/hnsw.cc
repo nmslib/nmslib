@@ -36,6 +36,7 @@
 #include "rangequery.h"
 #include "space.h"
 #include "space/space_lp.h"
+#include "space/space_scalar.h"
 #include "thread_pool.h"
 #include "utils.h"
 
@@ -78,7 +79,8 @@ namespace similarity {
     /*Functions from hnsw_distfunc_opt.cc:*/
     float L2SqrSIMDExt(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
     float L2SqrSIMD16Ext(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
-    float NormScalarProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
+    float NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
+    float NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
 
     template <typename dist_t>
     Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t> &space, const ObjectVector &data)
@@ -351,16 +353,28 @@ namespace similarity {
             vectorlength_ = ((dataSectionSize - 16) >> 2);
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
             iscosine_ = true;
+            fstdistfunc_ = NormCosineSIMD;
+            dist_func_type_ = 3;
             if (vectorlength_ % 4 == 0) {
                 LOG(LIB_INFO) << "Thus using an optimised function for base 4";
-                fstdistfunc_ = NormScalarProductSIMD;
-                dist_func_type_ = 3;
                 searchMethod_ = 4;
             } else {
                 LOG(LIB_INFO) << "Thus using function with any base";
                 LOG(LIB_INFO) << "Search method 4 is not allowed in this case";
-                fstdistfunc_ = NormScalarProductSIMD;
-                dist_func_type_ = 3;
+                searchMethod_ = 3;
+            }
+        } else if (space_.StrDesc().compare(SPACE_NEGATIVE_SCALAR) == 0 && sizeof(dist_t) == 4) {
+            LOG(LIB_INFO) << "\nThe space is " << SPACE_NEGATIVE_SCALAR;
+            vectorlength_ = ((dataSectionSize - 16) >> 2);
+            LOG(LIB_INFO) << "Vector length=" << vectorlength_;
+            fstdistfunc_ = NegativeDotProductSIMD;
+            dist_func_type_ = 4;
+            if (vectorlength_ % 4 == 0) {
+                LOG(LIB_INFO) << "Thus using an optimised function for base 4";
+                searchMethod_ = 4;
+            } else {
+                LOG(LIB_INFO) << "Thus using function with any base";
+                LOG(LIB_INFO) << "Search method 4 is not allowed in this case";
                 searchMethod_ = 3;
             }
         } else {
@@ -705,19 +719,12 @@ namespace similarity {
             const_cast<Hnsw *>(this)->listPassingModifiedAlgorithm(query);
             break;
         case 3:
-            /// Basic search using optimized index(cosine+L2)
-            if (useOld)
-                const_cast<Hnsw *>(this)->SearchL2CustomOld(query);
-            else
-                const_cast<Hnsw *>(this)->SearchL2CustomV1Merge(query);
-            break;
         case 4:
-            /// Basic search using optimized index with one-time normalized cosine similarity
-            /// Only for cosine similarity!
+            /// Basic search using optimized index for l2, cosine, negative dot product
             if (useOld)
-                const_cast<Hnsw *>(this)->SearchCosineNormalizedOld(query);
+                const_cast<Hnsw *>(this)->SearchOld(query, iscosine_);
             else
-                const_cast<Hnsw *>(this)->SearchCosineNormalizedV1Merge(query);
+                const_cast<Hnsw *>(this)->SearchV1Merge(query, iscosine_);
             break;
         };
     }
@@ -1019,8 +1026,12 @@ namespace similarity {
             fstdistfunc_ = L2SqrSIMD16Ext;
         else if (dist_func_type_ == 2)
             fstdistfunc_ = L2SqrSIMDExt;
-        else if (dist_func_type_ == 3)
-            fstdistfunc_ = NormScalarProductSIMD;
+        else if (dist_func_type_ == 3) {
+            iscosine_ = true;
+            fstdistfunc_ = NormCosineSIMD;
+        }
+        else if (dist_func_type_ == 4)
+            fstdistfunc_ = NegativeDotProductSIMD;
 
         //        LOG(LIB_INFO) << input.tellg();
         LOG(LIB_INFO) << "Total: " << totalElementsStored_ << ", Memory per object: " << memoryPerObject_;

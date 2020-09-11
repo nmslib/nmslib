@@ -473,10 +473,8 @@ namespace similarity {
         void baseSearchAlgorithmOld(KNNQuery<dist_t> *query);
         void baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query);
         void listPassingModifiedAlgorithm(KNNQuery<dist_t> *query);
-        void SearchL2CustomV1Merge(KNNQuery<dist_t> *query);
-        void SearchL2CustomOld(KNNQuery<dist_t> *query);
-        void SearchCosineNormalizedOld(KNNQuery<dist_t> *query);
-        void SearchCosineNormalizedV1Merge(KNNQuery<dist_t> *query);
+        void SearchOld(KNNQuery<dist_t> *query, bool normalize);
+        void SearchV1Merge(KNNQuery<dist_t> *query, bool normalize);
 
         int getRandomLevel(double revSize)
         {

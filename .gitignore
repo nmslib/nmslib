@@ -7,6 +7,10 @@ similarity_search/src/Makefile
 similarity_search/Makefile
 similarity_search/apps/Makefile
 similarity_search/test/Makefile
+similarity_search/NonMetricSpaceLib.cbp
+similarity_search/cmake-build-debug
+similarity_search/tmp_out_file.txt
+similarity_search/tmpfile.bin
 *.o
 *.so
 *.pyc
