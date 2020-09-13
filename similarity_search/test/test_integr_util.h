@@ -173,7 +173,7 @@ bool ProcessAndCheckResults(
     bFail = true;
   }
 
-  if (ExpRes.GetImprDistCompAvg() < testCase.imprDistCompMin_) {
+  if (testCase.imprDistCompMin_ > 0 && ExpRes.GetImprDistCompAvg() < testCase.imprDistCompMin_) {
     cerr << "Failed to meet min improvement requirement in the # of distance computations, expect >= "
          << testCase.imprDistCompMin_ << " got " << ExpRes.GetImprDistCompAvg() << endl 
          << " method: " << testCase.methodName_ << " ; "
@@ -185,7 +185,7 @@ bool ProcessAndCheckResults(
     bFail = true;
   }
 
-  if (ExpRes.GetImprDistCompAvg() > testCase.imprDistCompMax_) {
+  if (testCase.imprDistCompMax_ > 0 && ExpRes.GetImprDistCompAvg() > testCase.imprDistCompMax_) {
     cerr << "Failed to meet max improvement requirement in the # of distance computations, expect <= "
          << testCase.imprDistCompMax_ << " got " << ExpRes.GetImprDistCompAvg() << endl 
          << " method: " << testCase.methodName_ << " ; "

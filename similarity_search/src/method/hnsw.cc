@@ -32,6 +32,7 @@
 #include "portable_simd.h"
 #include "knnquery.h"
 #include "method/hnsw.h"
+#include "method/hnsw_distfunc_opt_impl_inline.h"
 #include "ported_boost_progress.h"
 #include "rangequery.h"
 #include "space.h"
@@ -69,18 +70,30 @@
 #define FIELD_MAX_M0    "MAX_M0"
 #define CURR_LEVEL      "CURR_LEVEL"
 
+#define EXTRA_MEM_PAD_SIZE 64
+
 namespace similarity {
+
+
+    float
+    NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes) {
+        return -ScalarProductAVX(pVect1, pVect2, qty, TmpRes);
+    }
+
+    /*
+     * Important note: This function is applicable only when both vectors are normalized!
+     */
+    float
+    NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *__restrict TmpRes) {
+        return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), ScalarProductAVX(pVect1, pVect2, qty, TmpRes))));
+    }
+
 
     // This is the counter to keep the size of neighborhood information (for one node)
     // TODO Can this one overflow? I really doubt
     typedef uint32_t SIZEMASS_TYPE;
 
     using namespace std;
-    /*Functions from hnsw_distfunc_opt.cc:*/
-    float L2SqrSIMDExt(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
-    float L2SqrSIMD16Ext(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
-    float NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
-    float NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
 
     template <typename dist_t>
     Hnsw<dist_t>::Hnsw(bool PrintProgress, const Space<dist_t> &space, const ObjectVector &data)
@@ -332,6 +345,7 @@ namespace similarity {
         }
 
         // Selecting custom made functions
+
         if (space_.StrDesc().compare("SpaceLp: p = 2 do we have a special implementation for this p? : 1") == 0 &&
             sizeof(dist_t) == 4) {
             LOG(LIB_INFO) << "\nThe space is Euclidean";
@@ -339,15 +353,14 @@ namespace similarity {
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
             if (vectorlength_ % 16 == 0) {
                 LOG(LIB_INFO) << "Thus using an optimised function for base 16";
-                fstdistfunc_ = L2SqrSIMD16Ext;
+                fstdistfunc_ = L2Sqr16ExtAVX;
                 dist_func_type_ = 1;
-                searchMethod_ = 3;
             } else {
                 LOG(LIB_INFO) << "Thus using function with any base";
-                fstdistfunc_ = L2SqrSIMDExt;
+                fstdistfunc_ = L2SqrExtSSE;
                 dist_func_type_ = 2;
-                searchMethod_ = 3;
             }
+          searchMethod_ = 3;
         } else if (space_.StrDesc().compare("CosineSimilarity") == 0 && sizeof(dist_t) == 4) {
             LOG(LIB_INFO) << "\nThe vectorspace is Cosine Similarity";
             vectorlength_ = ((dataSectionSize - 16) >> 2);
@@ -355,31 +368,16 @@ namespace similarity {
             iscosine_ = true;
             fstdistfunc_ = NormCosineSIMD;
             dist_func_type_ = 3;
-            if (vectorlength_ % 4 == 0) {
-                LOG(LIB_INFO) << "Thus using an optimised function for base 4";
-                searchMethod_ = 4;
-            } else {
-                LOG(LIB_INFO) << "Thus using function with any base";
-                LOG(LIB_INFO) << "Search method 4 is not allowed in this case";
-                searchMethod_ = 3;
-            }
+            searchMethod_ = 3;
         } else if (space_.StrDesc().compare(SPACE_NEGATIVE_SCALAR) == 0 && sizeof(dist_t) == 4) {
             LOG(LIB_INFO) << "\nThe space is " << SPACE_NEGATIVE_SCALAR;
             vectorlength_ = ((dataSectionSize - 16) >> 2);
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
             fstdistfunc_ = NegativeDotProductSIMD;
             dist_func_type_ = 4;
-            if (vectorlength_ % 4 == 0) {
-                LOG(LIB_INFO) << "Thus using an optimised function for base 4";
-                searchMethod_ = 4;
-            } else {
-                LOG(LIB_INFO) << "Thus using function with any base";
-                LOG(LIB_INFO) << "Search method 4 is not allowed in this case";
-                searchMethod_ = 3;
-            }
+            searchMethod_ = 3;
         } else {
             LOG(LIB_INFO) << "No appropriate custom distance function for " << space_.StrDesc();
-            // if (searchMethod_ != 0 && searchMethod_ != 1)
             searchMethod_ = 0;
             LOG(LIB_INFO) << "searchMethod			  = " << searchMethod_;
             pmgr.CheckUnused();
@@ -390,7 +388,8 @@ namespace similarity {
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
 
         size_t total_memory_allocated = (memoryPerObject_ * ElList_.size());
-        data_level0_memory_ = (char *)malloc(memoryPerObject_ * ElList_.size());
+        // we allocate a few extra bytes to prevent prefetch from accessing out of range memory
+        data_level0_memory_ = (char *)malloc((memoryPerObject_ * ElList_.size()) + EXTRA_MEM_PAD_SIZE);
         CHECK(data_level0_memory_);
 
         offsetLevel0_ = dataSectionSize;
@@ -413,22 +412,14 @@ namespace similarity {
         if (iscosine_) {
             for (long i = 0; i < ElList_.size(); i++) {
                 float *v = (float *)(data_level0_memory_ + (size_t)i * memoryPerObject_ + offsetData_ + 16);
-                float sum = 0;
-                for (int i = 0; i < vectorlength_; i++) {
-                    sum += v[i] * v[i];
-                }
-                if (sum != 0.0) {
-                    sum = 1 / sqrt(sum);
-                    for (int i = 0; i < vectorlength_; i++) {
-                        v[i] *= sum;
-                    }
-                }
+                NormalizeVect(v, vectorlength_);
             };
         }
 
         /////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////
-        linkLists_ = (char **)malloc(sizeof(void *) * ElList_.size());
+        // we allocate a few extra bytes to prevent prefetch from accessing out of range memory
+        linkLists_ = (char **)malloc((sizeof(void *) * ElList_.size()) + EXTRA_MEM_PAD_SIZE);
         CHECK(linkLists_);
         for (long i = 0; i < ElList_.size(); i++) {
             if (ElList_[i]->level < 1) {
@@ -704,19 +695,12 @@ namespace similarity {
         bool useOld = searchAlgoType_ == kOld || (searchAlgoType_ == kHybrid && ef_ >= 1000);
         // cout << "Ef = " << ef_ << " use old = " << useOld << endl;
         switch (searchMethod_) {
-        default:
-            throw runtime_error("Invalid searchMethod: " + ConvertToString(searchMethod_));
-            break;
         case 0:
             /// Basic search using Nmslib data structure:
             if (useOld)
                 const_cast<Hnsw *>(this)->baseSearchAlgorithmOld(query);
             else
                 const_cast<Hnsw *>(this)->baseSearchAlgorithmV1Merge(query);
-            break;
-        case 1:
-            /// Experimental search using Nmslib data structure (should not be used):
-            const_cast<Hnsw *>(this)->listPassingModifiedAlgorithm(query);
             break;
         case 3:
         case 4:
@@ -725,6 +709,9 @@ namespace similarity {
                 const_cast<Hnsw *>(this)->SearchOld(query, iscosine_);
             else
                 const_cast<Hnsw *>(this)->SearchV1Merge(query, iscosine_);
+            break;
+        default:
+                throw runtime_error("Invalid searchMethod: " + ConvertToString(searchMethod_));
             break;
         };
     }
@@ -939,8 +926,8 @@ namespace similarity {
 
         CHECK_MSG(totalElementsStored_ == this->data_.size(),
              "The number of stored elements " + ConvertToString(totalElementsStored_) + 
-             " doesn't match the number of data points " + ConvertToString(this->data_.size() + 
-             "! Did you forget to re-load data?"))
+             " doesn't match the number of data points " + ConvertToString(this->data_.size()) +
+             "! Did you forget to re-load data?")
 
         ElList_.resize(totalElementsStored_);
         for (unsigned id = 0; id < totalElementsStored_; ++id) {
@@ -1023,9 +1010,9 @@ namespace similarity {
         LOG(LIB_INFO) << "searchMethod: " << searchMethod_;
 
         if (dist_func_type_ == 1)
-            fstdistfunc_ = L2SqrSIMD16Ext;
+            fstdistfunc_ = L2Sqr16ExtAVX;
         else if (dist_func_type_ == 2)
-            fstdistfunc_ = L2SqrSIMDExt;
+            fstdistfunc_ = L2SqrExtSSE;
         else if (dist_func_type_ == 3) {
             iscosine_ = true;
             fstdistfunc_ = NormCosineSIMD;
@@ -1036,10 +1023,12 @@ namespace similarity {
         //        LOG(LIB_INFO) << input.tellg();
         LOG(LIB_INFO) << "Total: " << totalElementsStored_ << ", Memory per object: " << memoryPerObject_;
         size_t data_plus_links0_size = memoryPerObject_ * totalElementsStored_;
-        data_level0_memory_ = (char *)malloc(data_plus_links0_size);
+        // we allocate a few extra bytes to prevent prefetch from accessing out of range memory
+        data_level0_memory_ = (char *)malloc(data_plus_links0_size + EXTRA_MEM_PAD_SIZE);
         CHECK(data_level0_memory_);
         input.read(data_level0_memory_, data_plus_links0_size);
-        linkLists_ = (char **)malloc(sizeof(void *) * totalElementsStored_);
+        // we allocate a few extra bytes to prevent prefetch from accessing out of range memory
+        linkLists_ = (char **)malloc( (sizeof(void *) * totalElementsStored_) + EXTRA_MEM_PAD_SIZE);
         CHECK(linkLists_);
 
         data_rearranged_.resize(totalElementsStored_);
@@ -1285,149 +1274,7 @@ namespace similarity {
 
         visitedlistpool->releaseVisitedList(vl);
     }
-    // Experimental search algorithm
-    template <typename dist_t>
-    void
-    Hnsw<dist_t>::listPassingModifiedAlgorithm(KNNQuery<dist_t> *query)
-    {
-        int efSearchL = 4; // This parameters defines the confidence of searches at level higher than zero
-                           // for zero level it is set to ef
-                           // Getting the visitedlist
-        VisitedList *vl = visitedlistpool->getFreeVisitedList();
-        vl_type *massVisited = vl->mass;
-        vl_type currentV = vl->curV;
 
-        int maxlevel1 = enterpoint_->level;
-
-        const Object *currObj = enterpoint_->getData();
-
-        dist_t d = query->DistanceObjLeft(currObj);
-        dist_t curdist = d;
-        HnswNode *curNode = enterpoint_;
-
-        priority_queue<HnswNodeDistFarther<dist_t>> candidateQueue; // the set of elements which we can use to evaluate
-        priority_queue<HnswNodeDistCloser<dist_t>> closestDistQueue =
-            priority_queue<HnswNodeDistCloser<dist_t>>(); // The set of closest found elements
-        priority_queue<HnswNodeDistCloser<dist_t>> closestDistQueueCpy = priority_queue<HnswNodeDistCloser<dist_t>>();
-
-        HnswNodeDistFarther<dist_t> ev(curdist, curNode);
-        candidateQueue.emplace(curdist, curNode);
-        closestDistQueue.emplace(curdist, curNode);
-
-        massVisited[curNode->getId()] = currentV;
-
-        for (int i = maxlevel1; i > 0; i--) {
-            while (!candidateQueue.empty()) {
-                auto iter = candidateQueue.top();
-                const HnswNodeDistFarther<dist_t> &currEv = iter;
-                // Check condtion to end the search
-                dist_t lowerBound = closestDistQueue.top().getDistance();
-                if (currEv.getDistance() > lowerBound) {
-                    break;
-                }
-
-                HnswNode *initNode = currEv.getMSWNodeHier();
-                candidateQueue.pop();
-
-                const vector<HnswNode *> &neighbor = (initNode)->getAllFriends(i);
-
-                size_t curId;
-
-                for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                    _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
-                    _mm_prefetch((char *)(massVisited + (*iter)->getId()), _MM_HINT_T0);
-                }
-                // calculate distance to each neighbor
-                for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                    curId = (*iter)->getId();
-                    if (!(massVisited[curId] == currentV)) {
-                        massVisited[curId] = currentV;
-                        currObj = (*iter)->getData();
-                        d = query->DistanceObjLeft(currObj);
-                        if (closestDistQueue.top().getDistance() > d || closestDistQueue.size() < efSearchL) {
-                            candidateQueue.emplace(d, *iter);
-                            closestDistQueue.emplace(d, *iter);
-                            if (closestDistQueue.size() > efSearchL) {
-                                closestDistQueue.pop();
-                            }
-                        }
-                    }
-                }
-            }
-            // Updating the bitset key:
-            currentV++;
-            vl->curV++; // not to forget updating in the pool
-            if (currentV == 0) {
-                memset(massVisited, 0, ElList_.size() * sizeof(vl_type));
-                currentV++;
-                vl->curV++; // not to forget updating in the pool
-            }
-            candidateQueue = priority_queue<HnswNodeDistFarther<dist_t>>();
-            closestDistQueueCpy = priority_queue<HnswNodeDistCloser<dist_t>>(closestDistQueue);
-            if (i > 1) { // Passing the closest neighbors to layers higher than zero:
-                while (closestDistQueueCpy.size() > 0) {
-                    massVisited[closestDistQueueCpy.top().getMSWNodeHier()->getId()] = currentV;
-                    candidateQueue.emplace(closestDistQueueCpy.top().getDistance(), closestDistQueueCpy.top().getMSWNodeHier());
-                    closestDistQueueCpy.pop();
-                }
-            } else { // Passing the closest neighbors to the 0 zero layer(one has to add also to query):
-                while (closestDistQueueCpy.size() > 0) {
-                    massVisited[closestDistQueueCpy.top().getMSWNodeHier()->getId()] = currentV;
-                    candidateQueue.emplace(closestDistQueueCpy.top().getDistance(), closestDistQueueCpy.top().getMSWNodeHier());
-                    query->CheckAndAddToResult(closestDistQueueCpy.top().getDistance(),
-                                               closestDistQueueCpy.top().getMSWNodeHier()->getData());
-                    closestDistQueueCpy.pop();
-                }
-            }
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////
-        // PHASE TWO OF THE SEARCH
-        // Extraction of the neighborhood to find k nearest neighbors.
-        ////////////////////////////////////////////////////////////////////////////////
-
-        while (!candidateQueue.empty()) {
-            auto iter = candidateQueue.top();
-            const HnswNodeDistFarther<dist_t> &currEv = iter;
-            // Check condtion to end the search
-            dist_t lowerBound = closestDistQueue.top().getDistance();
-            if (currEv.getDistance() > lowerBound) {
-                break;
-            }
-
-            HnswNode *initNode = currEv.getMSWNodeHier();
-            candidateQueue.pop();
-
-            const vector<HnswNode *> &neighbor = (initNode)->getAllFriends(0);
-
-            size_t curId;
-
-            for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
-                _mm_prefetch((char *)(massVisited + (*iter)->getId()), _MM_HINT_T0);
-            }
-            // calculate distance to each neighbor
-            for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                curId = (*iter)->getId();
-                if (!(massVisited[curId] == currentV)) {
-                    massVisited[curId] = currentV;
-                    currObj = (*iter)->getData();
-                    d = query->DistanceObjLeft(currObj);
-                    if (closestDistQueue.top().getDistance() > d || closestDistQueue.size() < ef_) {
-                        {
-                            query->CheckAndAddToResult(d, currObj);
-                            candidateQueue.emplace(d, *iter);
-                            closestDistQueue.emplace(d, *iter);
-                            if (closestDistQueue.size() > ef_) {
-                                closestDistQueue.pop();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        visitedlistpool->releaseVisitedList(vl);
-    }
 
     template class Hnsw<float>;
     template class Hnsw<int>;

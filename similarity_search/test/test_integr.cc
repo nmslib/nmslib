@@ -78,7 +78,41 @@ vector<MethodTestCase>    vTestCaseDesc = {
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final8_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=50", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.96, 1, 0, 0.1, 40, 60),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=50", 
-                10 /* KNN-10 */, 0 /* no range search */ , 0.96, 1, 0, 0.1, 40, 60),  
+                10 /* KNN-10 */, 0 /* no range search */ , 0.96, 1, 0, 0.1, 40, 60),
+
+
+
+  // Now a few optimized versions
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=50",
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
+                 true /* recall only */),
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "sift_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=50",
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
+                 true /* recall only */),
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=100",
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
+                 true /* recall only */),
+  MethodTestCase(DIST_TYPE_FLOAT, "negdotprod", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=200",
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
+                 true /* recall only */),
+
+  // ... and their non-optimized versions
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=50",
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 22, 37,
+                 true /* recall only */),
+  MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=100",
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 12, 25,
+                 true /* recall only */),
+  MethodTestCase(DIST_TYPE_FLOAT, "negdotprod", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=200",
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 5, 15,
+                 true /* recall only */),
 #endif
 
 #if (TEST_SW_GRAPH)

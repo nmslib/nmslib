@@ -24,6 +24,7 @@
 
 #include "bunit.h"
 #include "space.h"
+#include "method/hnsw_distfunc_opt_impl_inline.h"
 #include "space/space_sparse_lp.h"
 #include "space/space_sparse_scalar.h"
 #include "space/space_sparse_vector_inter.h"
@@ -43,6 +44,12 @@
 namespace similarity {
 
 using namespace std;
+
+float NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes);
+/*
+ * Important note: This function is applicable only when both vectors are normalized!
+ */
+float NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
 
 
 /*
@@ -210,6 +217,72 @@ bool TestScalarProductAgree(size_t N, size_t dim, size_t Rep) {
     return true;
 }
 
+bool TestScalarProductAVXAgree(size_t N, size_t dim, size_t Rep) {
+    vector<float> vect1(dim), vect2(dim);
+    float* pVect1 = &vect1[0];
+    float* pVect2 = &vect2[0];
+
+    float maxRelDiff = 1e-6f;
+    float maxAbsDiff = 1e-6f;
+
+    float tmpRes;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim, float(1), float(2), true /* do normalize */);
+            GenRandVect(pVect2, dim, float(1), float(2), true /* do normalize */);
+
+            float val1 = ScalarProduct(pVect1, pVect2, dim);
+            float val2 = ScalarProductAVX(pVect1, pVect2, dim, &tmpRes);
+
+            bool bug = false;
+            float diff = fabs(val1 - val2);
+            float diffRel = diff/max(max(fabs(val1),fabs(val2)),float(1e-18));
+            if (diffRel > maxRelDiff && diff > maxAbsDiff) {
+                bug = true;
+                cerr << "Bug " << __func__ << " !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 <<  " diff=" << diff << " diffRel=" << diffRel << endl;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+    return true;
+}
+
+bool TestScalarProductSSEAgree(size_t N, size_t dim, size_t Rep) {
+    vector<float> vect1(dim), vect2(dim);
+    float* pVect1 = &vect1[0];
+    float* pVect2 = &vect2[0];
+
+    float maxRelDiff = 1e-6f;
+    float maxAbsDiff = 1e-6f;
+
+    float tmpRes;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim, float(1), float(2), true /* do normalize */);
+            GenRandVect(pVect2, dim, float(1), float(2), true /* do normalize */);
+
+            float val1 = ScalarProduct(pVect1, pVect2, dim);
+            float val2 = ScalarProductSSE(pVect1, pVect2, dim, &tmpRes);
+
+            bool bug = false;
+            float diff = fabs(val1 - val2);
+            float diffRel = diff/max(max(fabs(val1),fabs(val2)),float(1e-18));
+            if (diffRel > maxRelDiff && diff > maxAbsDiff) {
+                bug = true;
+                cerr << "Bug " << __func__ << " !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 <<  " diff=" << diff << " diffRel=" << diffRel << endl;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+    return true;
+}
+
 template <class T>
 bool TestNormScalarProductAgree(size_t N, size_t dim, size_t Rep) {
     vector<T> vect1(dim), vect2(dim);
@@ -339,6 +412,108 @@ bool TestL2Agree(size_t N, size_t dim, size_t Rep) {
 
 
     return true;
+}
+
+bool TestL2SqrExtSSEAgree(size_t N, size_t dim, size_t Rep) {
+    vector<float> vect1(dim), vect2(dim);
+    float* pVect1 = &vect1[0];
+    float* pVect2 = &vect2[0];
+    float  tmpRes;
+
+    for (size_t i = 0; i < Rep; ++i) {
+        for (size_t j = 1; j < N; ++j) {
+            GenRandVect(pVect1, dim, -float(RANGE), float(RANGE));
+            GenRandVect(pVect2, dim, -float(RANGE), float(RANGE));
+
+            float val1 = L2NormStandard(pVect1, pVect2, dim);
+            val1 = val1 * val1;
+            float val2 = L2SqrExtSSE(pVect1, pVect2, dim, &tmpRes);
+
+            bool bug = false;
+
+            if (fabs(val1 - val2)/max(max(val1,val2),float(1e-18)) > 1e-6) {
+                cerr << "Bug " << __func__ << " !!! Dim = " << dim << " val1 = " << val1 << " val2 = " << val2 << endl;
+                bug = true;
+            }
+
+            if (bug) return false;
+        }
+    }
+
+
+    return true;
+}
+
+bool TestL2Sqr16ExtAVXAgree(size_t N, size_t dim, size_t Rep) {
+  vector<float> vect1(dim), vect2(dim);
+  float* pVect1 = &vect1[0];
+  float* pVect2 = &vect2[0];
+  float  tmpRes;
+
+  for (size_t i = 0; i < Rep; ++i) {
+    for (size_t j = 1; j < N; ++j) {
+      GenRandVect(pVect1, dim, -float(RANGE), float(RANGE));
+      GenRandVect(pVect2, dim, -float(RANGE), float(RANGE));
+
+      float val1 = L2NormStandard(pVect1, pVect2, dim);
+      val1 = val1 * val1;
+      float val2 = L2Sqr16ExtAVX(pVect1, pVect2, dim, &tmpRes);
+
+      bool bug = false;
+
+      /*
+         A little higher error bar here, because this function is going to be tested using a large number of dimensions
+         so these little errors seem to accumulate more.
+      */
+      if (fabs(val1 - val2)/max(max(val1,val2),float(1e-18)) > 1e-5) {
+        cerr << "Bug " << __func__ << " !!! Dim = " << dim <<
+             " val1 = " << std::setprecision(6) << val1 <<
+             " val2 = " << std::setprecision(6) << val2 << endl;
+        bug = true;
+      }
+
+      if (bug) return false;
+    }
+  }
+
+
+  return true;
+}
+
+bool TestL2Sqr16ExtSSEAgree(size_t N, size_t dim, size_t Rep) {
+  vector<float> vect1(dim), vect2(dim);
+  float* pVect1 = &vect1[0];
+  float* pVect2 = &vect2[0];
+  float  tmpRes;
+
+  for (size_t i = 0; i < Rep; ++i) {
+    for (size_t j = 1; j < N; ++j) {
+      GenRandVect(pVect1, dim, -float(RANGE), float(RANGE));
+      GenRandVect(pVect2, dim, -float(RANGE), float(RANGE));
+
+      float val1 = L2NormStandard(pVect1, pVect2, dim);
+      val1 = val1 * val1;
+      float val2 = L2Sqr16ExtSSE(pVect1, pVect2, dim, &tmpRes);
+
+      bool bug = false;
+
+      /*
+         A little higher error bar here, because this function is going to be tested using a large number of dimensions
+         so these little errors seem to accumulate more.
+      */
+      if (fabs(val1 - val2)/max(max(val1,val2),float(1e-18)) > 1e-5) {
+        cerr << "Bug " << __func__ << " !!! Dim = " << dim <<
+             " val1 = " << std::setprecision(6) << val1 <<
+             " val2 = " << std::setprecision(6) << val2 << endl;
+        bug = true;
+      }
+
+      if (bug) return false;
+    }
+  }
+
+
+  return true;
 }
 
 template <class T>
@@ -1134,6 +1309,19 @@ TEST(TestAgree) {
         nFail += !TestBitHammingAgree(1000, dim, 1000);
     }
 
+    for (unsigned dim = 16; dim <= 256; dim += 16) {
+        LOG(LIB_INFO) << "Dim = " << dim;
+
+
+        // This function is good only for multiples of 16
+        nTest++;
+        nFail += !TestL2Sqr16ExtAVXAgree(1024, dim, 10);
+
+      // This function is good only for multiples of 16
+      nTest++;
+      nFail += !TestL2Sqr16ExtSSEAgree(1024, dim, 10);
+    }
+
     for (unsigned dim = 1; dim <= 32; ++dim) {
         LOG(LIB_INFO) << "Dim = " << dim;
 
@@ -1181,6 +1369,12 @@ TEST(TestAgree) {
         nFail += !TestScalarProductAgree<float>(1024, dim, 10);
 
         nTest++;
+        nFail += !TestScalarProductAVXAgree(1024, dim, 10);
+
+        nTest++;
+        nFail += !TestScalarProductSSEAgree(1024, dim, 10);
+
+        nTest++;
         nFail += !TestSpearmanFootruleAgree(1024, dim, 10);
 
         nTest++;
@@ -1200,6 +1394,9 @@ TEST(TestAgree) {
 
         nTest++;
         nFail += !TestL2Agree<float>(1024, dim, 10);
+
+        nTest++;
+        nFail += !TestL2SqrExtSSEAgree(1024, dim, 10);
 
         nTest++;
         nFail += !TestKLAgree<float>(1024, dim, 10);

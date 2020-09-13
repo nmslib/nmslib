@@ -21,6 +21,10 @@
 #include <vector>
 #include <algorithm>
 
+#include <portable_simd.h>
+// This is for _mm_prefetch
+#include <mmintrin.h>
+
 /*
  * This is not a fully functional heap and this is done on purpose.
  */

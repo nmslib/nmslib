@@ -112,11 +112,6 @@ namespace similarity {
                 resultSet1.emplace(curen2.getDistance(), curen2.getMSWNodeHier());
             }
         };
-        /*
-        * Experimental method for selection of neighbors based on local search.
-        * However is peforms worse than the previous method
-        * Note that it works correctly only in a single thread!!!
-        */
 
         template <typename dist_t>
         void getNeighborsByHeuristic2(priority_queue<HnswNodeDistCloser<dist_t>> &resultSet1, const int NN,
@@ -153,15 +148,7 @@ namespace similarity {
                 }
                 if (good)
                     returnlist.push_back(curen);
-                // else
-                //    templist.push(curen);
             }
-            // cout << returnlist.size() <<", looked:"<< h<<" ("<<h/(1.0*full) <<")
-            // missied:"<< (full-h) / (1.0*full)<<endl;
-            /*while (returnlist.size() < NN && templist.size() > 0) {
-            returnlist.push_back(templist.top());
-            templist.pop();
-            }*/
 
             for (HnswNodeDistFarther<dist_t> curen2 : returnlist) {
                 resultSet1.emplace(curen2.getDistance(), curen2.getMSWNodeHier());
@@ -472,7 +459,6 @@ namespace similarity {
         typedef std::vector<HnswNode *> ElementList;
         void baseSearchAlgorithmOld(KNNQuery<dist_t> *query);
         void baseSearchAlgorithmV1Merge(KNNQuery<dist_t> *query);
-        void listPassingModifiedAlgorithm(KNNQuery<dist_t> *query);
         void SearchOld(KNNQuery<dist_t> *query, bool normalize);
         void SearchV1Merge(KNNQuery<dist_t> *query, bool normalize);
 
@@ -482,6 +468,21 @@ namespace similarity {
             float r = -log(RandomReal<float>()) * revSize;
             return (int)r;
         }
+
+
+        void NormalizeVect(float *v, size_t qty) {
+            float sum = 0;
+            for (int i = 0; i < qty; i++) {
+                sum += v[i] * v[i];
+            }
+            if (sum != 0.0) {
+                sum = 1 / sqrt(sum);
+                for (int i = 0; i < qty; i++) {
+                  v[i] *= sum;
+                }
+            }
+        }
+
 
         void SaveOptimizedIndex(std::ostream& output);
         void LoadOptimizedIndex(std::istream& input);
@@ -562,7 +563,8 @@ namespace similarity {
         {
             curV = -1;
             numelements = numelements1;
-            mass = new vl_type[numelements];
+            // we allocate an extra sentinel element to prevent prefetch from accessing out of range memory
+            mass = new vl_type[numelements + 1];
         }
         void reset()
         {
