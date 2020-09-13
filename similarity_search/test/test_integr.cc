@@ -87,10 +87,6 @@ vector<MethodTestCase>    vTestCaseDesc = {
                  10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
                  -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
                  true /* recall only */),
-  MethodTestCase(DIST_TYPE_FLOAT, "l2", "sift_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=50",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
-                 -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
-                 true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=100",
                  10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
                  -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
