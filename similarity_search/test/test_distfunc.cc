@@ -24,6 +24,7 @@
 
 #include "bunit.h"
 #include "space.h"
+
 #include "method/hnsw_distfunc_opt_impl_inline.h"
 #include "space/space_sparse_lp.h"
 #include "space/space_sparse_scalar.h"
@@ -45,6 +46,7 @@ namespace similarity {
 
 using namespace std;
 
+// TmpRes needs to be defined using TMP_RES_ARRAY
 float NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes);
 /*
  * Important note: This function is applicable only when both vectors are normalized!
@@ -225,7 +227,7 @@ bool TestScalarProductAVXAgree(size_t N, size_t dim, size_t Rep) {
     float maxRelDiff = 1e-6f;
     float maxAbsDiff = 1e-6f;
 
-    float tmpRes;
+    TMP_RES_ARRAY(tmpRes);
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -233,7 +235,7 @@ bool TestScalarProductAVXAgree(size_t N, size_t dim, size_t Rep) {
             GenRandVect(pVect2, dim, float(1), float(2), true /* do normalize */);
 
             float val1 = ScalarProduct(pVect1, pVect2, dim);
-            float val2 = ScalarProductAVX(pVect1, pVect2, dim, &tmpRes);
+            float val2 = ScalarProductAVX(pVect1, pVect2, dim, tmpRes);
 
             bool bug = false;
             float diff = fabs(val1 - val2);
@@ -258,7 +260,7 @@ bool TestScalarProductSSEAgree(size_t N, size_t dim, size_t Rep) {
     float maxRelDiff = 1e-6f;
     float maxAbsDiff = 1e-6f;
 
-    float tmpRes;
+    TMP_RES_ARRAY(tmpRes);
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -266,7 +268,7 @@ bool TestScalarProductSSEAgree(size_t N, size_t dim, size_t Rep) {
             GenRandVect(pVect2, dim, float(1), float(2), true /* do normalize */);
 
             float val1 = ScalarProduct(pVect1, pVect2, dim);
-            float val2 = ScalarProductSSE(pVect1, pVect2, dim, &tmpRes);
+            float val2 = ScalarProductSSE(pVect1, pVect2, dim, tmpRes);
 
             bool bug = false;
             float diff = fabs(val1 - val2);
@@ -418,7 +420,7 @@ bool TestL2SqrExtSSEAgree(size_t N, size_t dim, size_t Rep) {
     vector<float> vect1(dim), vect2(dim);
     float* pVect1 = &vect1[0];
     float* pVect2 = &vect2[0];
-    float  tmpRes;
+    TMP_RES_ARRAY(tmpRes);
 
     for (size_t i = 0; i < Rep; ++i) {
         for (size_t j = 1; j < N; ++j) {
@@ -427,7 +429,7 @@ bool TestL2SqrExtSSEAgree(size_t N, size_t dim, size_t Rep) {
 
             float val1 = L2NormStandard(pVect1, pVect2, dim);
             val1 = val1 * val1;
-            float val2 = L2SqrExtSSE(pVect1, pVect2, dim, &tmpRes);
+            float val2 = L2SqrExtSSE(pVect1, pVect2, dim, tmpRes);
 
             bool bug = false;
 
@@ -448,7 +450,7 @@ bool TestL2Sqr16ExtAVXAgree(size_t N, size_t dim, size_t Rep) {
   vector<float> vect1(dim), vect2(dim);
   float* pVect1 = &vect1[0];
   float* pVect2 = &vect2[0];
-  float  tmpRes;
+  TMP_RES_ARRAY(tmpRes);
 
   for (size_t i = 0; i < Rep; ++i) {
     for (size_t j = 1; j < N; ++j) {
@@ -457,7 +459,7 @@ bool TestL2Sqr16ExtAVXAgree(size_t N, size_t dim, size_t Rep) {
 
       float val1 = L2NormStandard(pVect1, pVect2, dim);
       val1 = val1 * val1;
-      float val2 = L2Sqr16ExtAVX(pVect1, pVect2, dim, &tmpRes);
+      float val2 = L2Sqr16ExtAVX(pVect1, pVect2, dim, tmpRes);
 
       bool bug = false;
 
@@ -484,7 +486,7 @@ bool TestL2Sqr16ExtSSEAgree(size_t N, size_t dim, size_t Rep) {
   vector<float> vect1(dim), vect2(dim);
   float* pVect1 = &vect1[0];
   float* pVect2 = &vect2[0];
-  float  tmpRes;
+  TMP_RES_ARRAY(tmpRes);
 
   for (size_t i = 0; i < Rep; ++i) {
     for (size_t j = 1; j < N; ++j) {
@@ -493,7 +495,7 @@ bool TestL2Sqr16ExtSSEAgree(size_t N, size_t dim, size_t Rep) {
 
       float val1 = L2NormStandard(pVect1, pVect2, dim);
       val1 = val1 * val1;
-      float val2 = L2Sqr16ExtSSE(pVect1, pVect2, dim, &tmpRes);
+      float val2 = L2Sqr16ExtSSE(pVect1, pVect2, dim, tmpRes);
 
       bool bug = false;
 
@@ -1317,9 +1319,9 @@ TEST(TestAgree) {
         nTest++;
         nFail += !TestL2Sqr16ExtAVXAgree(1024, dim, 10);
 
-      // This function is good only for multiples of 16
-      nTest++;
-      nFail += !TestL2Sqr16ExtSSEAgree(1024, dim, 10);
+        // This function is good only for multiples of 16
+        nTest++;
+        nFail += !TestL2Sqr16ExtSSEAgree(1024, dim, 10);
     }
 
     for (unsigned dim = 1; dim <= 32; ++dim) {

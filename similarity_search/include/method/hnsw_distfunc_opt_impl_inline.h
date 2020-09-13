@@ -32,6 +32,10 @@
 
 namespace similarity {
 
+// Define a temporary array for the functions below. The AVX uses 256-bit registers, which
+// is 8 floats
+#define TMP_RES_ARRAY(varName)  float PORTABLE_ALIGN32 (varName)[8];
+
 inline float
 L2Sqr16ExtSSE(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes) {
 #ifdef PORTABLE_SSE2

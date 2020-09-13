@@ -53,12 +53,6 @@
 #define USE_BITSET_FOR_INDEXING 1
 #define EXTEND_USE_EXTENDED_NEIGHB_AT_CONSTR (0) // 0 is faster build, 1 is faster search on clustered data
 
-#if defined(__GNUC__)
-#define PORTABLE_ALIGN16 __attribute__((aligned(16)))
-#else
-#define PORTABLE_ALIGN16 __declspec(align(16))
-#endif
-
 // For debug purposes we also implemented saving an index to a text file
 #define USE_TEXT_REGULAR_INDEX (false)
 

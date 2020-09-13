@@ -24,7 +24,7 @@
 */
 
 #include "method/hnsw.h"
-#include "portable_align.h"
+#include "method/hnsw_distfunc_opt_impl_inline.h"
 #include "knnquery.h"
 #include "ported_boost_progress.h"
 #include "rangequery.h"
@@ -49,7 +49,7 @@ namespace similarity {
     Hnsw<dist_t>::SearchOld(KNNQuery<dist_t> *query, bool normalize)
     {
         float *pVectq = (float *)((char *)query->QueryObject()->data());
-        float PORTABLE_ALIGN32 TmpRes[8];
+        TMP_RES_ARRAY(TmpRes);
         size_t qty = query->QueryObject()->datalength() >> 2;
 
         if (normalize) {
@@ -155,7 +155,7 @@ namespace similarity {
     Hnsw<dist_t>::SearchV1Merge(KNNQuery<dist_t> *query, bool normalize)
     {
         float *pVectq = (float *)((char *)query->QueryObject()->data());
-        float PORTABLE_ALIGN32 TmpRes[8];
+        TMP_RES_ARRAY(TmpRes);
         size_t qty = query->QueryObject()->datalength() >> 2;
 
         if (normalize) {
