@@ -1,7 +1,7 @@
 Scripts to reproduce our previous results are in subdirectories [sisap2013](sisap2013), [nips2013](nips2013), [da2014](smallworld_Apr2014), and [vldb2015](vldb2015).
 Notes on reproducibility:
-* All scripts except for **vldb2015** should use binaries  [version 1.0](https://github.com/searchivarius/NonMetricSpaceLib/releases/tag/v1.0).
-* **vldb2015** should use use binaries [version 1.1](https://github.com/searchivarius/NonMetricSpaceLib/releases/tag/v1.1). 
+* All scripts except for **vldb2015** should use binaries  [version 1.0](https://github.com/nmslib/nmslib/releases/tag/v1.0).
+* **vldb2015** should use use binaries [version 1.1](https://github.com/nmslib/nmslib/releases/tag/v1.1). 
 
 Note that release 1.1 contains implementations of proximity graphs that are actually more efficient than those used for vldb2015 paper. In the case of light-weight distance, e.g., L2, the new implementations are about 3 times as efficient as the old ones. 
 
