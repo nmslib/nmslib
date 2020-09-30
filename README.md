@@ -7,7 +7,7 @@
 
 # Non-Metric Space Library (NMSLIB) 
 
-## Important Notes
+## Important Notes - AN AMAZING PROJECT
 
 * NMSLIB is generic but fast, see the results of [ANN benchmarks](https://github.com/erikbern/ann-benchmarks).
 * A standalone implementation of our fastest method HNSW [also exists as a header-only library](https://github.com/nmslib/hnswlib).
@@ -38,7 +38,7 @@ The most successful class of methods--neighborhood/proximity graphs--is represen
 
 ## Credits and Citing
 
-If you find this library useful, feel free to cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13) as well as other papers listed in the end. One **crucial contribution** to cite is the fast Hierarchical Navigable World graph (HNSW) method [**[BibTex]**](https://dblp.uni-trier.de/rec/bibtex/journals/corr/MalkovY16). Please, [also check out the stand-alone HNSW implementation by Yury Malkov](https://github.com/nmslib/hnswlib), which is released as a header-only HNSWLib library.
+If you find this library useful, feel free to cite our SISAP paper [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/sisap/BoytsovN13) as well as other papers listed in the end. One **crucial contribution** to site is the fast Hierarchical Navigable World graph (HNSW) method [**[BibTex]**](https://dblp.uni-trier.de/rec/bibtex/journals/corr/MalkovY16). Please, [also check out the stand-alone HNSW implementation by Yury Malkov](https://github.com/nmslib/hnswlib), which is released as a header-only HNSWLib library.
 
 ## License
 
