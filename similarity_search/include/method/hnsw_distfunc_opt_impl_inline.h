@@ -353,7 +353,7 @@ inline float L2Sqr16Ext(const float *pVect1, const float *pVect2, size_t &qty, f
     pVect1 += 4;
     v2_32_4 = vld1q_f32(pVect2);
     pVect2 += 4;
-    diff = vsubq_f32(v1_32_4, v2_32_4);
+    diff_32_4 = vsubq_f32(v1_32_4, v2_32_4);
     sum_32_4 = vfmaq_f32(sum_32_4, diff_32_4, diff_32_4);
 
     v1_32_4 = vld1q_f32(pVect1);
