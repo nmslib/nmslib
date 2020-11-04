@@ -16,9 +16,8 @@
 #include <memory>
 #include <iostream>
 #include <cstddef>
-// This is only for _mm_prefetch
-#include <mmintrin.h>
-
+// This is only for PREFETCH
+#include <portable_intrinsics.h>
 #if defined(_WIN32) || defined(WIN32)
 #include <intrin.h>
 #endif
@@ -659,10 +658,10 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
     ++currElem;
 
     for (MSWNode* neighbor : currNode->getAllFriends()) {
-      _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
+      PREFETCH(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
     }
     for (MSWNode* neighbor : currNode->getAllFriends()) {
-      _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
+      PREFETCH(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
     }
 
     if (currNode->getAllFriends().size() > itemBuff.size())
@@ -687,7 +686,7 @@ void SmallWorldRand<dist_t>::SearchV1Merge(KNNQuery<dist_t>* query) const {
     }
 
     if (itemQty) {
-      _mm_prefetch(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
+      PREFETCH(const_cast<const char*>(reinterpret_cast<char*>(&itemBuff[0])), _MM_HINT_T0);
       std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 
       size_t insIndex=0;
@@ -764,10 +763,10 @@ void SmallWorldRand<dist_t>::SearchOld(KNNQuery<dist_t>* query) const {
     }
 
     for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
-      _mm_prefetch(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
+      PREFETCH(reinterpret_cast<const char*>(const_cast<const Object*>(neighbor->getData())), _MM_HINT_T0);
     }
     for (MSWNode* neighbor : (currEv.getMSWNode())->getAllFriends()) {
-      _mm_prefetch(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
+      PREFETCH(const_cast<const char*>(neighbor->getData()->data()), _MM_HINT_T0);
     }
 
     const vector<MSWNode*>& neighbor = (currEv.getMSWNode())->getAllFriends();

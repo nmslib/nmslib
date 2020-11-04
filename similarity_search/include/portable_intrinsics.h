@@ -41,6 +41,10 @@
 #include <portable_simd.h>
 #endif
 
+#if defined(__ARM_NEON)
+#define PORTABLE_NEON
+#endif
+
 #if defined(PORTABLE_SSE4) 
 /*
  * Based on explanations/suggestions from here
@@ -59,3 +63,11 @@
 #endif
 
 
+
+#if defined(__x86_64__) || defined(__i386__)
+#define PREFETCH(a,sel) _mm_prefetch(a, sel)
+#elif defined(__aarch64__)
+#define PREFETCH(a,sel) __builtin_prefetch(a, 0, 0)
+#else
+#define PREFETCH(a,sel) do {} while (0)
+#endif
