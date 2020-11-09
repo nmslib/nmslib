@@ -36,13 +36,12 @@
 #define PORTABLE_AVX2
 #endif
 
+#if defined(__ARM_NEON)
+#define PORTABLE_NEON
+#endif
 
 #if defined(PORTABLE_SSE2)
 #include <portable_simd.h>
-#endif
-
-#if defined(__ARM_NEON)
-#define PORTABLE_NEON
 #endif
 
 #if defined(PORTABLE_SSE4) 
@@ -60,14 +59,4 @@
  * not to use the above MM_EXTRACT_FLOAT (https://github.com/searchivarius/BlogCode/tree/master/2016/bench_sums)
  *
  */
-#endif
-
-
-
-#if defined(__x86_64__) || defined(__i386__)
-#define PREFETCH(a,sel) _mm_prefetch(a, sel)
-#elif defined(__aarch64__)
-#define PREFETCH(a,sel) __builtin_prefetch(a, 0, 0)
-#else
-#define PREFETCH(a,sel) do {} while (0)
 #endif

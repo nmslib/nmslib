@@ -28,6 +28,7 @@
 
 #include "portable_simd.h"
 #include "portable_intrinsics.h"
+#include "portable_prefetch.h"
 #include "distcomp.h"
 
 namespace similarity {

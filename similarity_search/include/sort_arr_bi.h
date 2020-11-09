@@ -21,9 +21,8 @@
 #include <vector>
 #include <algorithm>
 
-#include <portable_simd.h>
-// This is only for PREFETCH
-#include <portable_intrinsics.h>
+#include "portable_simd.h"
+#include "portable_prefetch.h"
 
 /*
  * This is not a fully functional heap and this is done on purpose.

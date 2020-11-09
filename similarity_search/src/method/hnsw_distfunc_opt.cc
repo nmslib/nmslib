@@ -29,8 +29,7 @@
 #include "ported_boost_progress.h"
 #include "rangequery.h"
 
-// This is only for PREFETCH
-#include <portable_intrinsics.h>
+#include "portable_prefetch.h"
 #include "space.h"
 
 #include "sort_arr_bi.h"

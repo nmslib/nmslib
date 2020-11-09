@@ -19,8 +19,7 @@
 #include <string>
 #include <cmath>
 
-// This is only for PREFETCH
-#include <portable_intrinsics.h>
+#include "portable_prefetch.h"
 #if defined(_WIN32) || defined(WIN32)
 #include <intrin.h>
 #endif

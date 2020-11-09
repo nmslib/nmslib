@@ -20,9 +20,7 @@
 #include <thread>
 #include <unordered_map>
 
-// This is only for PREFETCH
-#include <portable_intrinsics.h>
-
+#include "portable_prefetch.h"
 #include "portable_simd.h"
 #include "space.h"
 #include "rangequery.h"

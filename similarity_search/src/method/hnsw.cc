@@ -26,9 +26,8 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
-// This is only for PREFETCH
-#include <portable_intrinsics.h>
 
+#include "portable_prefetch.h"
 #include "portable_simd.h"
 #include "knnquery.h"
 #include "method/hnsw.h"
