@@ -12,7 +12,6 @@
  * Apache License Version 2.0 http://www.apache.org/licenses/.
  *
  */
-#include <sys/time.h>
 
 #include <logging.h>
 #include <idtype.h>
