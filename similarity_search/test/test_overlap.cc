@@ -101,10 +101,10 @@ TEST(TestIntersect2Way) {
   EXPECT_EQ(vvIds1.size(), vInterQty.size());
 
   for (size_t i = 0; i < vvIds1.size(); ++i) {
-    size_t qty1 = IntersectSizeScalarFast(&vvIds1[i][0], vvIds1[i].size(), 
-                                          &vvIds2[i][0], vvIds2[i].size());
-    size_t qty2 = IntersectSizeScalarStand(&vvIds1[i][0], vvIds1[i].size(), 
-                                          &vvIds2[i][0], vvIds2[i].size());
+    size_t qty1 = IntersectSizeScalarFast(vvIds1[i].size() ? &vvIds1[i][0] : 0, vvIds1[i].size(),
+                                          vvIds2[i].size() ? &vvIds2[i][0] : 0, vvIds2[i].size());
+    size_t qty2 = IntersectSizeScalarStand(vvIds1[i].size() ? &vvIds1[i][0] : 0, vvIds1[i].size(),
+                                           vvIds2[i].size() ? &vvIds2[i][0] : 0, vvIds2[i].size());
     EXPECT_EQ(qty1, vInterQty[i]);
     EXPECT_EQ(qty2, vInterQty[i]);
 
@@ -220,10 +220,10 @@ TEST(TestOverlapInfoDetailed) {
     if (norm1 > 0) overlap_dotprod_norm /= norm1;
     if (norm2 > 0) overlap_dotprod_norm /= norm2;
 
-    size_t qty1 = IntersectSizeScalarFast(&vIds1[0], vIds1.size(), 
-                                          &vIds2[0], vIds2.size());
-    size_t qty2 = IntersectSizeScalarStand(&vIds1[0], vIds1.size(), 
-                                          &vIds2[0], vIds2.size());
+    size_t qty1 = IntersectSizeScalarFast(vIds1.size() ? &vIds1[0] : 0, vIds1.size(),
+            vIds2.size() ? &vIds2[0] : 0, vIds2.size());
+    size_t qty2 = IntersectSizeScalarStand(vIds1.size() ? &vIds1[0] : 0, vIds1.size(),
+            vIds2.size() ? &vIds2[0] : 0, vIds2.size());
     EXPECT_EQ(qty1, qOverlap);
     EXPECT_EQ(qty2, qOverlap);
 
@@ -235,21 +235,21 @@ TEST(TestOverlapInfoDetailed) {
 
     EXPECT_EQ_EPS(overlap_dotprod_norm, oinfo.overlap_dotprod_norm_, eps);
 
-    EXPECT_EQ_EPS(Sum(&vDiffLeft[0], vDiffLeft.size()), oinfo.diff_sum_left_, eps);
-    EXPECT_EQ_EPS(Mean(&vDiffLeft[0], vDiffLeft.size()), oinfo.diff_mean_left_, eps);
-    EXPECT_EQ_EPS(StdDev(&vDiffLeft[0], vDiffLeft.size()), oinfo.diff_std_left_, eps);
+    EXPECT_EQ_EPS(Sum(vDiffLeft.size() ? &vDiffLeft[0] : 0, vDiffLeft.size()), oinfo.diff_sum_left_, eps);
+    EXPECT_EQ_EPS(Mean(vDiffLeft.size() ? &vDiffLeft[0] : 0, vDiffLeft.size()), oinfo.diff_mean_left_, eps);
+    EXPECT_EQ_EPS(StdDev(vDiffLeft.size() ? &vDiffLeft[0] : 0, vDiffLeft.size()), oinfo.diff_std_left_, eps);
 
-    EXPECT_EQ_EPS(Sum(&vOverlapLeft[0], vOverlapLeft.size()), oinfo.overlap_sum_left_, eps);
-    EXPECT_EQ_EPS(Mean(&vOverlapLeft[0], vOverlapLeft.size()), oinfo.overlap_mean_left_, eps);
-    EXPECT_EQ_EPS(StdDev(&vOverlapLeft[0], vOverlapLeft.size()), oinfo.overlap_std_left_, eps);
+    EXPECT_EQ_EPS(Sum(vOverlapLeft.size() ? &vOverlapLeft[0] : 0, vOverlapLeft.size()), oinfo.overlap_sum_left_, eps);
+    EXPECT_EQ_EPS(Mean(vOverlapLeft.size() ? &vOverlapLeft[0] : 0, vOverlapLeft.size()), oinfo.overlap_mean_left_, eps);
+    EXPECT_EQ_EPS(StdDev(vOverlapLeft.size() ? &vOverlapLeft[0] : 0, vOverlapLeft.size()), oinfo.overlap_std_left_, eps);
 
-    EXPECT_EQ_EPS(Sum(&vDiffRight[0], vDiffRight.size()), oinfo.diff_sum_right_, eps);
-    EXPECT_EQ_EPS(Mean(&vDiffRight[0], vDiffRight.size()), oinfo.diff_mean_right_, eps);
-    EXPECT_EQ_EPS(StdDev(&vDiffRight[0], vDiffRight.size()), oinfo.diff_std_right_, eps);
+    EXPECT_EQ_EPS(Sum(vDiffRight.size() ? &vDiffRight[0] : 0, vDiffRight.size()), oinfo.diff_sum_right_, eps);
+    EXPECT_EQ_EPS(Mean(vDiffRight.size() ? &vDiffRight[0] : 0, vDiffRight.size()), oinfo.diff_mean_right_, eps);
+    EXPECT_EQ_EPS(StdDev(vDiffRight.size() ? &vDiffRight[0] : 0, vDiffRight.size()), oinfo.diff_std_right_, eps);
 
-    EXPECT_EQ_EPS(Sum(&vOverlapRight[0], vOverlapRight.size()), oinfo.overlap_sum_right_, eps);
-    EXPECT_EQ_EPS(Mean(&vOverlapRight[0], vOverlapRight.size()), oinfo.overlap_mean_right_, eps);
-    EXPECT_EQ_EPS(StdDev(&vOverlapRight[0], vOverlapRight.size()), oinfo.overlap_std_right_, eps);
+    EXPECT_EQ_EPS(Sum(vOverlapRight.size() ? &vOverlapRight[0] : 0, vOverlapRight.size()), oinfo.overlap_sum_right_, eps);
+    EXPECT_EQ_EPS(Mean(vOverlapRight.size() ? &vOverlapRight[0] : 0, vOverlapRight.size()), oinfo.overlap_mean_right_, eps);
+    EXPECT_EQ_EPS(StdDev(vOverlapRight.size() ? &vOverlapRight[0] : 0, vOverlapRight.size()), oinfo.overlap_std_right_, eps);
 
   } 
 }
@@ -361,15 +361,15 @@ TEST(TestIntersect3Way) {
 
   
   for (size_t i = 0; i < vvAddIds1.size(); ++i) {
-    size_t qty1 = IntersectSizeScalar3way(&vvAddIds1[i][0], vvAddIds1[i].size(), 
-                                          &vvAddIds2[i][0], vvAddIds2[i].size(),
-                                          &vvAddIds3[i][0], vvAddIds3[i].size());
-    size_t qty2 = IntersectSizeScalar3way(&vvAddIds3[i][0], vvAddIds3[i].size(), 
-                                          &vvAddIds1[i][0], vvAddIds1[i].size(),
-                                          &vvAddIds2[i][0], vvAddIds2[i].size());
-    size_t qty3 = IntersectSizeScalar3way(&vvAddIds3[i][0], vvAddIds3[i].size(), 
-                                          &vvAddIds2[i][0], vvAddIds2[i].size(),
-                                          &vvAddIds1[i][0], vvAddIds1[i].size());
+    size_t qty1 = IntersectSizeScalar3way(vvAddIds1[i].size() ? &vvAddIds1[i][0] : 0, vvAddIds1[i].size(),
+                                          vvAddIds2[i].size() ? &vvAddIds2[i][0] : 0, vvAddIds2[i].size(),
+                                          vvAddIds3[i].size() ? &vvAddIds3[i][0] : 0, vvAddIds3[i].size());
+    size_t qty2 = IntersectSizeScalar3way(vvAddIds3[i].size() ? &vvAddIds3[i][0] : 0, vvAddIds3[i].size(),
+                                          vvAddIds1[i].size() ? &vvAddIds1[i][0] : 0, vvAddIds1[i].size(),
+                                          vvAddIds2[i].size() ? &vvAddIds2[i][0] : 0, vvAddIds2[i].size());
+    size_t qty3 = IntersectSizeScalar3way(vvAddIds3[i].size() ? &vvAddIds3[i][0] : 0, vvAddIds3[i].size(),
+                                          vvAddIds2[i].size() ? &vvAddIds2[i][0] : 0, vvAddIds2[i].size(),
+                                          vvAddIds1[i].size() ? &vvAddIds1[i][0] : 0, vvAddIds1[i].size());
     if (qty1 != vAddInterQty[i] || 
         qty2 != vAddInterQty[i] || 
         qty3 != vAddInterQty[i]) LOG(LIB_INFO) << "Failed test (3-way intersect funcs), index: " << i;
