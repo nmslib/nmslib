@@ -14,7 +14,7 @@
  */
 #pragma once
 
-#if defined(_MSC_VER) && (defined(__x86_64__) || defined(__i386__))
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
 #include <intrin.h>
 #define PREFETCH(a,sel) _mm_prefetch(a, sel)
 #elif defined(__x86_64__) || defined(__i386__)
