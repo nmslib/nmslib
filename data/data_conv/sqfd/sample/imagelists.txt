@@ -1,3 +1,0 @@
-/tmp/sample/from_thesis.jpg
-/tmp/sample/lena.png
-/tmp/sample/street.jpg
