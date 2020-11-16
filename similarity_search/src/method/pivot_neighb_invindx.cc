@@ -20,9 +20,7 @@
 #include <thread>
 #include <unordered_map>
 
-// This is only for _mm_prefetch
-#include <mmintrin.h>
-
+#include "portable_prefetch.h"
 #include "portable_simd.h"
 #include "space.h"
 #include "rangequery.h"
@@ -648,9 +646,9 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
           for (size_t i = 0; i < cand_tmp_qty; ++i) {
             query->CheckAndAddToResult(tmp_cand[i]);
             if (i + 3 < cand_tmp_qty) {
-              _mm_prefetch(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
-              _mm_prefetch(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
-              _mm_prefetch(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
             }
           }
         }
@@ -706,9 +704,9 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
           for (size_t i = 0; i < cand_tmp_qty; ++i) {
             query->CheckAndAddToResult(tmp_cand[i]);
             if (i + 3 < cand_tmp_qty) {
-              _mm_prefetch(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
-              _mm_prefetch(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
-              _mm_prefetch(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
             }
           }
         }
@@ -753,9 +751,9 @@ void PivotNeighbInvertedIndex<dist_t>::GenSearch(QueryType* query, size_t K) con
           for (size_t i = 0; i < cand_tmp_qty; ++i) {
             query->CheckAndAddToResult(tmp_cand[i]);
             if (i + 3 < cand_tmp_qty) {
-              _mm_prefetch(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
-              _mm_prefetch(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
-              _mm_prefetch(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+1]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+2]->buffer(), _MM_HINT_T0);
+              PREFETCH(tmp_cand[i+3]->buffer(), _MM_HINT_T0);
             }
           }
         }

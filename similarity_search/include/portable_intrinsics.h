@@ -36,6 +36,9 @@
 #define PORTABLE_AVX2
 #endif
 
+#if defined(__ARM_NEON)
+#define PORTABLE_NEON
+#endif
 
 #if defined(PORTABLE_SSE2)
 #include <portable_simd.h>
@@ -57,5 +60,3 @@
  *
  */
 #endif
-
-

@@ -33,7 +33,7 @@ TEST(TestMean) {
     float sum = 0;
     for (float e : v) sum += e;
 
-    float m = Mean(&v[0], v.size())*v.size();
+    float m = Mean(v.size() ? &v[0] : 0, v.size())*v.size();
 
     EXPECT_FALSE(my_isnan(m)); 
     EXPECT_EQ_EPS(sum, m, 1e-5f);

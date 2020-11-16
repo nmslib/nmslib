@@ -19,8 +19,7 @@
 #include <string>
 #include <cmath>
 
-// This is only for _mm_prefetch
-#include <mmintrin.h>
+#include "portable_prefetch.h"
 #if defined(_WIN32) || defined(WIN32)
 #include <intrin.h>
 #endif
@@ -253,7 +252,7 @@ void VPTree<dist_t, SearchOracle>::VPNode::GenericSearch(QueryType* query,
     --MaxLeavesToVisit;
 
     if (CacheOptimizedBucket_) {
-      _mm_prefetch(CacheOptimizedBucket_, _MM_HINT_T0);
+      PREFETCH(CacheOptimizedBucket_, _MM_HINT_T0);
     }
 
     for (unsigned i = 0; i < bucket_->size(); ++i) {

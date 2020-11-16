@@ -29,8 +29,7 @@
 #include "ported_boost_progress.h"
 #include "rangequery.h"
 
-// This is only for _mm_prefetch
-#include <mmintrin.h>
+#include "portable_prefetch.h"
 #include "space.h"
 
 #include "sort_arr_bi.h"
@@ -72,7 +71,7 @@ namespace similarity {
                 int *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1) * (i - 1) * sizeof(int));
                 int size = *data;
                 for (int j = 1; j <= size; j++) {
-                    _mm_prefetch(data_level0_memory_ + (*(data + j)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
+                    PREFETCH(data_level0_memory_ + (*(data + j)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
                 }
 #ifdef DIST_CALC
                 query->distance_computations_ += size;
@@ -116,15 +115,15 @@ namespace similarity {
             curNodeNum = currEv.element;
             int *data = (int *)(data_level0_memory_ + curNodeNum * memoryPerObject_ + offsetLevel0_);
             int size = *data;
-            _mm_prefetch((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
-            _mm_prefetch((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
-            _mm_prefetch(data_level0_memory_ + (*(data + 1)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
-            _mm_prefetch((char *)(data + 2), _MM_HINT_T0);
+            PREFETCH((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
+            PREFETCH((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
+            PREFETCH(data_level0_memory_ + (*(data + 1)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
+            PREFETCH((char *)(data + 2), _MM_HINT_T0);
 
             for (int j = 1; j <= size; j++) {
                 int tnum = *(data + j);
-                _mm_prefetch((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
-                _mm_prefetch(data_level0_memory_ + (*(data + j + 1)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
+                PREFETCH((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
+                PREFETCH(data_level0_memory_ + (*(data + j + 1)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
                 if (!(massVisited[tnum] == currentV)) {
 #ifdef DIST_CALC
                     query->distance_computations_++;
@@ -134,7 +133,7 @@ namespace similarity {
                     dist_t d = (fstdistfunc_(pVectq, (float *)(currObj1 + 16), qty, TmpRes));
                     if (closestDistQueuei.top().getDistance() > d || closestDistQueuei.size() < ef_) {
                         candidateQueuei.emplace(-d, tnum);
-                        _mm_prefetch(data_level0_memory_ + candidateQueuei.top().element * memoryPerObject_ + offsetLevel0_,
+                        PREFETCH(data_level0_memory_ + candidateQueuei.top().element * memoryPerObject_ + offsetLevel0_,
                                      _MM_HINT_T0);
                         // query->CheckAndAddToResult(d, new Object(currObj1));
                         query->CheckAndAddToResult(d, data_rearranged_[tnum]);
@@ -178,7 +177,7 @@ namespace similarity {
                 int *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1) * (i - 1) * sizeof(int));
                 int size = *data;
                 for (int j = 1; j <= size; j++) {
-                    _mm_prefetch(data_level0_memory_ + (*(data + j)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
+                    PREFETCH(data_level0_memory_ + (*(data + j)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
                 }
 #ifdef DIST_CALC
                 query->distance_computations_ += size;
@@ -221,15 +220,15 @@ namespace similarity {
 
             int *data = (int *)(data_level0_memory_ + curNodeNum * memoryPerObject_ + offsetLevel0_);
             int size = *data;
-            _mm_prefetch((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
-            _mm_prefetch((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
-            _mm_prefetch(data_level0_memory_ + (*(data + 1)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
-            _mm_prefetch((char *)(data + 2), _MM_HINT_T0);
+            PREFETCH((char *)(massVisited + *(data + 1)), _MM_HINT_T0);
+            PREFETCH((char *)(massVisited + *(data + 1) + 64), _MM_HINT_T0);
+            PREFETCH(data_level0_memory_ + (*(data + 1)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
+            PREFETCH((char *)(data + 2), _MM_HINT_T0);
 
             for (int j = 1; j <= size; j++) {
                 int tnum = *(data + j);
-                _mm_prefetch((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
-                _mm_prefetch(data_level0_memory_ + (*(data + j + 1)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
+                PREFETCH((char *)(massVisited + *(data + j + 1)), _MM_HINT_T0);
+                PREFETCH(data_level0_memory_ + (*(data + j + 1)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
                 if (!(massVisited[tnum] == currentV)) {
 #ifdef DIST_CALC
                     query->distance_computations_++;
@@ -248,7 +247,7 @@ namespace similarity {
             }
 
             if (itemQty) {
-                _mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
+                PREFETCH(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
                 std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 
                 size_t insIndex = 0;
@@ -267,7 +266,7 @@ namespace similarity {
                     }
                 }
                 // because itemQty > 1, there would be at least item in sortedArr
-                _mm_prefetch(data_level0_memory_ + sortedArr.top_item().data * memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
+                PREFETCH(data_level0_memory_ + sortedArr.top_item().data * memoryPerObject_ + offsetLevel0_, _MM_HINT_T0);
             }
             // To ensure that we either reach the end of the unexplored queue or currElem points to the first unused element
             while (currElem < sortedArr.size() && queueData[currElem].used == true)

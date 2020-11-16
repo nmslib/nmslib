@@ -26,9 +26,8 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
-// This is only for _mm_prefetch
-#include <mmintrin.h>
 
+#include "portable_prefetch.h"
 #include "portable_simd.h"
 #include "knnquery.h"
 #include "method/hnsw.h"
@@ -71,7 +70,7 @@ namespace similarity {
 
     float
     NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes) {
-        return -ScalarProductAVX(pVect1, pVect2, qty, TmpRes);
+        return -ScalarProduct(pVect1, pVect2, qty, TmpRes);
     }
 
     /*
@@ -79,7 +78,7 @@ namespace similarity {
      */
     float
     NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *__restrict TmpRes) {
-        return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), ScalarProductAVX(pVect1, pVect2, qty, TmpRes))));
+        return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), ScalarProduct(pVect1, pVect2, qty, TmpRes))));
     }
 
 
@@ -347,11 +346,11 @@ namespace similarity {
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
             if (vectorlength_ % 16 == 0) {
                 LOG(LIB_INFO) << "Thus using an optimised function for base 16";
-                fstdistfunc_ = L2Sqr16ExtAVX;
+                fstdistfunc_ = L2Sqr16Ext;
                 dist_func_type_ = 1;
             } else {
                 LOG(LIB_INFO) << "Thus using function with any base";
-                fstdistfunc_ = L2SqrExtSSE;
+                fstdistfunc_ = L2SqrExt;
                 dist_func_type_ = 2;
             }
           searchMethod_ = 3;
@@ -524,7 +523,7 @@ namespace similarity {
                     int size = neighbor.size();
                     for (int i = 0; i < size; i++) {
                         HnswNode *node = neighbor[i];
-                        _mm_prefetch((char *)(node)->getData(), _MM_HINT_T0);
+                        PREFETCH((char *)(node)->getData(), _MM_HINT_T0);
                     }
                     for (int i = 0; i < size; i++) {
                         currObj = (neighbor[i])->getData();
@@ -633,7 +632,7 @@ namespace similarity {
 
             // calculate distance to each neighbor
             for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
+                PREFETCH((char *)(*iter)->getData(), _MM_HINT_T0);
             }
 
             for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
@@ -1004,9 +1003,9 @@ namespace similarity {
         LOG(LIB_INFO) << "searchMethod: " << searchMethod_;
 
         if (dist_func_type_ == 1)
-            fstdistfunc_ = L2Sqr16ExtAVX;
+            fstdistfunc_ = L2Sqr16Ext;
         else if (dist_func_type_ == 2)
-            fstdistfunc_ = L2SqrExtSSE;
+            fstdistfunc_ = L2SqrExt;
         else if (dist_func_type_ == 3) {
             iscosine_ = true;
             fstdistfunc_ = NormCosineSIMD;
@@ -1067,7 +1066,7 @@ namespace similarity {
 
                 const vector<HnswNode *> &neighbor = curNode->getAllFriends(i);
                 for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                    _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
+                    PREFETCH((char *)(*iter)->getData(), _MM_HINT_T0);
                 }
                 for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
                     currObj = (*iter)->getData();
@@ -1114,8 +1113,8 @@ namespace similarity {
             size_t curId;
 
             for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
-                _mm_prefetch((char *)(massVisited + (*iter)->getId()), _MM_HINT_T0);
+                PREFETCH((char *)(*iter)->getData(), _MM_HINT_T0);
+                PREFETCH((char *)(massVisited + (*iter)->getId()), _MM_HINT_T0);
             }
             // calculate distance to each neighbor
             for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
@@ -1165,7 +1164,7 @@ namespace similarity {
 
                 const vector<HnswNode *> &neighbor = curNode->getAllFriends(i);
                 for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                    _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
+                    PREFETCH((char *)(*iter)->getData(), _MM_HINT_T0);
                 }
                 for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
                     currObj = (*iter)->getData();
@@ -1211,10 +1210,10 @@ namespace similarity {
             size_t curId;
 
             for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
-                _mm_prefetch((char *)(*iter)->getData(), _MM_HINT_T0);
+                PREFETCH((char *)(*iter)->getData(), _MM_HINT_T0);
                 IdType curId = (*iter)->getId();
                 CHECK(curId >= 0 && curId < this->data_.size());
-                _mm_prefetch((char *)(massVisited + curId), _MM_HINT_T0);
+                PREFETCH((char *)(massVisited + curId), _MM_HINT_T0);
             }
             // calculate distance to each neighbor
             for (auto iter = neighbor.begin(); iter != neighbor.end(); ++iter) {
@@ -1235,7 +1234,7 @@ namespace similarity {
             }
 
             if (itemQty) {
-                _mm_prefetch(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
+                PREFETCH(const_cast<const char *>(reinterpret_cast<char *>(&itemBuff[0])), _MM_HINT_T0);
                 std::sort(itemBuff.begin(), itemBuff.begin() + itemQty);
 
                 size_t insIndex = 0;

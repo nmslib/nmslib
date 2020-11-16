@@ -21,9 +21,8 @@
 #include <vector>
 #include <algorithm>
 
-#include <portable_simd.h>
-// This is for _mm_prefetch
-#include <mmintrin.h>
+#include "portable_simd.h"
+#include "portable_prefetch.h"
 
 /*
  * This is not a fully functional heap and this is done on purpose.
@@ -77,7 +76,7 @@ class SortArrBI {
 
   void sort() {
     if (!v_.empty())
-      _mm_prefetch(&v_[0], _MM_HINT_T0);
+      PREFETCH(&v_[0], _MM_HINT_T0);
     std::sort(v_.begin(), v_.begin() + num_elems_);
   }
 
@@ -109,7 +108,7 @@ class SortArrBI {
 
     if (num_elems_ < v_.size()) num_elems_++;
     // curr + 1 <= num_elems_
-    _mm_prefetch((char *)&v_[curr], _MM_HINT_T0);
+    PREFETCH((char *)&v_[curr], _MM_HINT_T0);
 
     if (num_elems_ - (1 + curr) > 0)
       memmove((char *)&v_[curr+1], &v_[curr], (num_elems_ - (1 + curr)) * sizeof(v_[0]));
@@ -181,7 +180,7 @@ class SortArrBI {
       if (d > curr) d = curr;
     }
 
-    _mm_prefetch((char*)&v_[curr], _MM_HINT_T0);
+    PREFETCH((char*)&v_[curr], _MM_HINT_T0);
     if (curr < prev) {
       curr = std::lower_bound(&v_[curr], &v_[prev], Item(key)) - &v_[0];
     }
