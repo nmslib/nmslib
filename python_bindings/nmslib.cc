@@ -4,7 +4,7 @@
  * Main developers: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, Ben Frederickson, David Novak
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib
+ * https://github.com/nmslib/nmslib
  *
  * Copyright (c) 2013-2018
  *
@@ -376,7 +376,7 @@ struct IndexWrapper {
 };
 
 // pybind11::gil_scoped_acquire can deadlock when acquiring the GIL on threads
-// created from python (https://github.com/searchivarius/nmslib/issues/291)
+// created from python (https://github.com/nmslib/nmslib/issues/291)
 // This might be fixed in a future version of pybind11 (https://github.com/pybind/pybind11/pull/1211)
 // but until then, lets fall back to the python c-api to fix.
 struct AcquireGIL {

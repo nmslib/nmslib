@@ -4,7 +4,7 @@
  * Main developers: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, Ben Frederickson, David Novak
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib
+ * https://github.com/nmslib/nmslib
  *
  * Copyright (c) 2013-2018
  *
@@ -236,7 +236,7 @@ class Space {
    * 0.
    *
    * TODO: @leo This seems to be related to issue #7
-   * https://github.com/searchivarius/NonMetricSpaceLib/issues/7
+   * https://github.com/nmslib/nmslib/issues/7
    *
    * With a proper hierarchy of Object classes, getDimension() would
    * be a function of an object, not of a space. At some point Object

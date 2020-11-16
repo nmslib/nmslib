@@ -5,7 +5,7 @@
  * With contributions from Lawrence Cayton (http://lcayton.com/) and others.
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib 
+ * https://github.com/nmslib/nmslib 
  * 
  * Copyright (c) 2015
  *

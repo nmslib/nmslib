@@ -4,7 +4,7 @@
  * Main developers: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, Ben Frederickson, David Novak
  *
  * For the complete list of contributors and further details see:
- * https://github.com/searchivarius/NonMetricSpaceLib
+ * https://github.com/nmslib/nmslib
  *
  * Copyright (c) 2013-2018
  *
