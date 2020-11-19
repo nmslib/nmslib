@@ -44,6 +44,19 @@
 
 namespace similarity {
 
+
+    typedef float (*EfficientDistFuncType)(const float *pVect1, const float *pVect2, size_t &qty, float * TmpRes);
+
+    enum DistFuncType {
+      kDistTypeUnknown = -1,
+      kDistTypeL2Sqr16Ext = 1,
+      kDistTypeL2SqrExt = 2,
+      kDistTypeNormCosineSIMD = 3,
+      kDistTypeNegativeDotProductSIMD = 4,
+      kDistTypeL1NormSIMD = 5,
+      kDistTypeLInfNormSIMD = 6
+    };
+
     using std::string;
     using std::vector;
     using std::thread;
@@ -536,13 +549,13 @@ namespace similarity {
         ElementList ElList_;
 
         int vectorlength_ = 0;
-        int dist_func_type_;
+        DistFuncType dist_func_type_ = kDistTypeUnknown;
         bool iscosine_ = false;
         size_t offsetData_, offsetLevel0_;
         char *data_level0_memory_;
         char **linkLists_;
         size_t memoryPerObject_;
-        float (*fstdistfunc_)(const float *pVect1, const float *pVect2, size_t &qty, float *TmpRes);
+        EfficientDistFuncType fstdistfunc_;
 
         enum AlgoType { kOld, kV1Merge, kHybrid };
 

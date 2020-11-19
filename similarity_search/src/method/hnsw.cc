@@ -67,7 +67,6 @@
 
 namespace similarity {
 
-
     float
     NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes) {
         return -ScalarProduct(pVect1, pVect2, qty, TmpRes);
@@ -81,8 +80,30 @@ namespace similarity {
         return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), ScalarProduct(pVect1, pVect2, qty, TmpRes))));
     }
 
+    float L1NormSIMDWrapper(const float *pVect1, const float *pVect2, size_t &qty, float *) {
+        return L1NormSIMD(pVect1, pVect2, qty);
+    }
 
-    // This is the counter to keep the size of neighborhood information (for one node)
+    float LInfNormSIMDWrapper(const float *pVect1, const float *pVect2, size_t &qty, float *) {
+        return LInfNormSIMD(pVect1, pVect2, qty);
+    }
+
+    EfficientDistFuncType getDistFunc(DistFuncType funcType) {
+        switch (funcType) {
+            case kDistTypeL2Sqr16Ext : return L2Sqr16Ext;
+            case kDistTypeL2SqrExt   : return L2SqrExt;
+            case kDistTypeNormCosineSIMD : return NormCosineSIMD;
+            case kDistTypeNegativeDotProductSIMD : return NegativeDotProductSIMD;
+            case kDistTypeL1NormSIMD : return L1NormSIMDWrapper;
+            case kDistTypeLInfNormSIMD : return LInfNormSIMDWrapper;
+        }
+
+        return nullptr;
+    }
+
+
+
+// This is the counter to keep the size of neighborhood information (for one node)
     // TODO Can this one overflow? I really doubt
     typedef uint32_t SIZEMASS_TYPE;
 
@@ -158,6 +179,7 @@ namespace similarity {
         out.close();
         return;
     }
+
     template <typename dist_t>
     void
     Hnsw<dist_t>::CreateIndex(const AnyParams &IndexParams)
@@ -338,44 +360,58 @@ namespace similarity {
         }
 
         // Selecting custom made functions
+        dist_func_type_ = kDistTypeUnknown;
 
-        if (space_.StrDesc().compare("SpaceLp: p = 2 do we have a special implementation for this p? : 1") == 0 &&
-            sizeof(dist_t) == 4) {
-            LOG(LIB_INFO) << "\nThe space is Euclidean";
-            vectorlength_ = ((dataSectionSize - 16) >> 2);
-            LOG(LIB_INFO) << "Vector length=" << vectorlength_;
-            if (vectorlength_ % 16 == 0) {
-                LOG(LIB_INFO) << "Thus using an optimised function for base 16";
-                fstdistfunc_ = L2Sqr16Ext;
-                dist_func_type_ = 1;
-            } else {
-                LOG(LIB_INFO) << "Thus using function with any base";
-                fstdistfunc_ = L2SqrExt;
-                dist_func_type_ = 2;
+        // Although we removed double, let's keep this check here
+        CHECK(sizeof(dist_t) == 4);
+
+
+        const SpaceLp<dist_t>* pLpSpace = dynamic_cast<const SpaceLp<dist_t>*>(&space_);
+
+        fstdistfunc_ = nullptr;
+        iscosine_ = false;
+        searchMethod_ = 3; // The same for all "optimized" indices
+        if (pLpSpace != nullptr) {
+            if (pLpSpace->getP() == 2) {
+                LOG(LIB_INFO) << "\nThe space is Euclidean";
+                vectorlength_ = ((dataSectionSize - 16) >> 2);
+                LOG(LIB_INFO) << "Vector length=" << vectorlength_;
+                if (vectorlength_ % 16 == 0) {
+                    LOG(LIB_INFO) << "Thus using an optimised function for base 16";
+                    dist_func_type_ = kDistTypeL2Sqr16Ext;
+                } else {
+                    LOG(LIB_INFO) << "Thus using function with any base";
+                    dist_func_type_ = kDistTypeL2SqrExt;
+                }
+            } else if (pLpSpace->getP() == 1) {
+                dist_func_type_ = kDistTypeL1NormSIMD;
+            } else if (pLpSpace->getP() == -1) {
+                dist_func_type_ = kDistTypeLInfNormSIMD;
             }
-          searchMethod_ = 3;
-        } else if (space_.StrDesc().compare("CosineSimilarity") == 0 && sizeof(dist_t) == 4) {
-            LOG(LIB_INFO) << "\nThe vectorspace is Cosine Similarity";
+        } else if (dynamic_cast<const SpaceCosineSimilarity<dist_t>*>(&space_) != nullptr) {
+            LOG(LIB_INFO) << "\nThe vector space is " << space_.StrDesc();
             vectorlength_ = ((dataSectionSize - 16) >> 2);
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
-            iscosine_ = true;
-            fstdistfunc_ = NormCosineSIMD;
-            dist_func_type_ = 3;
-            searchMethod_ = 3;
-        } else if (space_.StrDesc().compare(SPACE_NEGATIVE_SCALAR) == 0 && sizeof(dist_t) == 4) {
+            dist_func_type_ = kDistTypeNormCosineSIMD;
+        } else if (dynamic_cast<const SpaceNegativeScalarProduct<dist_t>*>(&space_) != nullptr) {
             LOG(LIB_INFO) << "\nThe space is " << SPACE_NEGATIVE_SCALAR;
             vectorlength_ = ((dataSectionSize - 16) >> 2);
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
-            fstdistfunc_ = NegativeDotProductSIMD;
-            dist_func_type_ = 4;
-            searchMethod_ = 3;
-        } else {
+            dist_func_type_ = kDistTypeNegativeDotProductSIMD;
+        }
+
+        fstdistfunc_ = getDistFunc(dist_func_type_);
+        iscosine_ = (dist_func_type_ == kDistTypeNormCosineSIMD);
+
+        if (fstdistfunc_ == nullptr) {
             LOG(LIB_INFO) << "No appropriate custom distance function for " << space_.StrDesc();
             searchMethod_ = 0;
             LOG(LIB_INFO) << "searchMethod			  = " << searchMethod_;
             pmgr.CheckUnused();
             return; // No optimized index
         }
+        CHECK(dist_func_type_ != kDistTypeUnknown);
+
         pmgr.CheckUnused();
         LOG(LIB_INFO) << "searchMethod			  = " << searchMethod_;
         memoryPerObject_ = dataSectionSize + friendsSectionSize;
@@ -858,7 +894,7 @@ namespace similarity {
         ReadField(input, FIELD_MAX_M0, maxM0_); lineNum++;
 
         fstdistfunc_ = nullptr;
-        dist_func_type_ = 0;
+        dist_func_type_ = kDistTypeUnknown;
         searchMethod_ = 0;
 
         ElList_.resize(totalElementsStored_);
@@ -914,7 +950,7 @@ namespace similarity {
         readBinaryPOD(input, maxM0_);
 
         fstdistfunc_ = nullptr;
-        dist_func_type_ = 0;
+        dist_func_type_ = kDistTypeUnknown;
         searchMethod_ = 0;
 
         CHECK_MSG(totalElementsStored_ == this->data_.size(),
@@ -1002,16 +1038,9 @@ namespace similarity {
 
         LOG(LIB_INFO) << "searchMethod: " << searchMethod_;
 
-        if (dist_func_type_ == 1)
-            fstdistfunc_ = L2Sqr16Ext;
-        else if (dist_func_type_ == 2)
-            fstdistfunc_ = L2SqrExt;
-        else if (dist_func_type_ == 3) {
-            iscosine_ = true;
-            fstdistfunc_ = NormCosineSIMD;
-        }
-        else if (dist_func_type_ == 4)
-            fstdistfunc_ = NegativeDotProductSIMD;
+        fstdistfunc_ = getDistFunc(dist_func_type_);
+        iscosine_ = (dist_func_type_ == kDistTypeNormCosineSIMD);
+        CHECK_MSG(fstdistfunc_ != nullptr, "Unknown distance function code: " + ConvertToString(dist_func_type_));
 
         //        LOG(LIB_INFO) << input.tellg();
         LOG(LIB_INFO) << "Total: " << totalElementsStored_ << ", Memory per object: " << memoryPerObject_;

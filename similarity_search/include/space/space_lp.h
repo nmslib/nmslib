@@ -79,6 +79,8 @@ class SpaceLp : public VectorSpaceSimpleStorage<dist_t> {
   explicit SpaceLp(dist_t p) : distObj_(p) {}
   virtual ~SpaceLp() {}
 
+  dist_t getP() const { return distObj_.getP(); }
+
   virtual std::string StrDesc() const;
  protected:
   virtual dist_t HiddenDistance(const Object* obj1, const Object* obj2) const;
