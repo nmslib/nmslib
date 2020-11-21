@@ -755,16 +755,16 @@ namespace similarity {
 
         unsigned int optimIndexFlag = data_level0_memory_ != nullptr;
 
+        writeBinaryPOD(output, optimIndexFlag);
 
         if (!optimIndexFlag) {
 #if USE_TEXT_REGULAR_INDEX
             SaveRegularIndexText(output);
 #else
-            writeBinaryPOD(output, optimIndexFlag);
+
             SaveRegularIndexBin(output);
 #endif
         } else {
-            writeBinaryPOD(output, optimIndexFlag);
             SaveOptimizedIndex(output);
         }
 
@@ -954,7 +954,7 @@ namespace similarity {
         searchMethod_ = 0;
 
         CHECK_MSG(totalElementsStored_ == this->data_.size(),
-             "The number of stored elements " + ConvertToString(totalElementsStored_) + 
+             "The number of stored elements " + ConvertToString(totalElementsStored_) +
              " doesn't match the number of data points " + ConvertToString(this->data_.size()) +
              "! Did you forget to re-load data?")
 
@@ -963,7 +963,9 @@ namespace similarity {
             ElList_[id] = new HnswNode(this->data_[id], id);
         }
 
-        enterpoint_ = ElList_[enterpointId_];
+        if (!ElList_.empty()) {
+            enterpoint_ = ElList_[enterpointId_];
+        }
 
         for (unsigned id = 0; id < totalElementsStored_; ++id) {
             HnswNode& node = *ElList_[id];

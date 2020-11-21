@@ -511,6 +511,21 @@ class MemoryLeak2TestCase(TestCaseBase):
         print('Fail qty %d out of %d' % (fail_qty, test_qty))
         self.assertTrue(fail_qty < MEM_TEST_ITER2 * MEM_TEST_CRIT_FAIL_RATE)
 
+class TestLoadEmptyIndex(TestCaseBase):
+    # A regression test for issue #452
+    def testRegression452(self):
+        temp_dir = tempfile.mkdtemp()
+        temp_file_pref = os.path.join(temp_dir, 'index')
+
+        for skip_optim in [0, 1]:
+            print(skip_optim)
+            index_params = {'skip_optimized_index' : skip_optim}
+            index = nmslib.init(method='hnsw', space='l2')
+            index.createIndex()
+            index.saveIndex(temp_file_pref, True)
+            index.loadIndex(temp_file_pref, True)
+
+        shutil.rmtree(temp_dir)
 
 
 class GlobalTestCase(TestCaseBase):
