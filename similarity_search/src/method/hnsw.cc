@@ -88,14 +88,14 @@ namespace similarity {
         return LInfNormSIMD(pVect1, pVect2, qty);
     }
 
-    EfficientDistFuncType getDistFunc(DistFuncType funcType) {
+    EfficientDistFunc getDistFunc(DistFuncType funcType) {
         switch (funcType) {
-            case kDistTypeL2Sqr16Ext : return L2Sqr16Ext;
-            case kDistTypeL2SqrExt   : return L2SqrExt;
-            case kDistTypeNormCosineSIMD : return NormCosineSIMD;
-            case kDistTypeNegativeDotProductSIMD : return NegativeDotProductSIMD;
-            case kDistTypeL1NormSIMD : return L1NormSIMDWrapper;
-            case kDistTypeLInfNormSIMD : return LInfNormSIMDWrapper;
+            case kL2Sqr16Ext : return L2Sqr16Ext;
+            case kL2SqrExt   : return L2SqrExt;
+            case kNormCosine : return NormCosineSIMD;
+            case kNegativeDotProduct : return NegativeDotProductSIMD;
+            case kL1Norm : return L1NormSIMDWrapper;
+            case kLInfNorm : return LInfNormSIMDWrapper;
         }
 
         return nullptr;
@@ -378,30 +378,30 @@ namespace similarity {
                 LOG(LIB_INFO) << "Vector length=" << vectorlength_;
                 if (vectorlength_ % 16 == 0) {
                     LOG(LIB_INFO) << "Thus using an optimised function for base 16";
-                    dist_func_type_ = kDistTypeL2Sqr16Ext;
+                    dist_func_type_ = kL2Sqr16Ext;
                 } else {
                     LOG(LIB_INFO) << "Thus using function with any base";
-                    dist_func_type_ = kDistTypeL2SqrExt;
+                    dist_func_type_ = kL2SqrExt;
                 }
             } else if (pLpSpace->getP() == 1) {
-                dist_func_type_ = kDistTypeL1NormSIMD;
+                dist_func_type_ = kL1Norm;
             } else if (pLpSpace->getP() == -1) {
-                dist_func_type_ = kDistTypeLInfNormSIMD;
+                dist_func_type_ = kLInfNorm;
             }
         } else if (dynamic_cast<const SpaceCosineSimilarity<dist_t>*>(&space_) != nullptr) {
             LOG(LIB_INFO) << "\nThe vector space is " << space_.StrDesc();
             vectorlength_ = ((dataSectionSize - 16) >> 2);
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
-            dist_func_type_ = kDistTypeNormCosineSIMD;
+            dist_func_type_ = kNormCosine;
         } else if (dynamic_cast<const SpaceNegativeScalarProduct<dist_t>*>(&space_) != nullptr) {
             LOG(LIB_INFO) << "\nThe space is " << SPACE_NEGATIVE_SCALAR;
             vectorlength_ = ((dataSectionSize - 16) >> 2);
             LOG(LIB_INFO) << "Vector length=" << vectorlength_;
-            dist_func_type_ = kDistTypeNegativeDotProductSIMD;
+            dist_func_type_ = kNegativeDotProduct;
         }
 
         fstdistfunc_ = getDistFunc(dist_func_type_);
-        iscosine_ = (dist_func_type_ == kDistTypeNormCosineSIMD);
+        iscosine_ = (dist_func_type_ == kNormCosine);
 
         if (fstdistfunc_ == nullptr) {
             LOG(LIB_INFO) << "No appropriate custom distance function for " << space_.StrDesc();
@@ -1041,7 +1041,7 @@ namespace similarity {
         LOG(LIB_INFO) << "searchMethod: " << searchMethod_;
 
         fstdistfunc_ = getDistFunc(dist_func_type_);
-        iscosine_ = (dist_func_type_ == kDistTypeNormCosineSIMD);
+        iscosine_ = (dist_func_type_ == kNormCosine);
         CHECK_MSG(fstdistfunc_ != nullptr, "Unknown distance function code: " + ConvertToString(dist_func_type_));
 
         //        LOG(LIB_INFO) << input.tellg();
