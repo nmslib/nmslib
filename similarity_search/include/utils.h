@@ -44,12 +44,14 @@
  * cross-platform warnings
  * is taken from http://stackoverflow.com/a/1911632/2120401
  * Use: #pragma message WARN("My message")
+ * Use: #pragma message INFO("My message")
  *
  * Note: We may need other other definitions for other compilers,
  *       but so far it worked for MSVS, GCC, CLang, and Intel.
  */
 #   define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) ") : "
 #   define WARN(exp) (FILE_LINE_LINK "WARNING: " exp)
+#   define INFO(exp) (FILE_LINE_LINK "INFO: " exp)
 
 #ifdef _MSC_VER
 #define PATH_SEPARATOR "\\"

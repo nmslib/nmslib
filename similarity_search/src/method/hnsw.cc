@@ -68,7 +68,7 @@
 namespace similarity {
 
     float
-    NegativeDotProductSIMD(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes) {
+    NegativeDotProduct(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes) {
         return -ScalarProduct(pVect1, pVect2, qty, TmpRes);
     }
 
@@ -76,15 +76,15 @@ namespace similarity {
      * Important note: This function is applicable only when both vectors are normalized!
      */
     float
-    NormCosineSIMD(const float *pVect1, const float *pVect2, size_t &qty, float *__restrict TmpRes) {
+    NormCosine(const float *pVect1, const float *pVect2, size_t &qty, float *__restrict TmpRes) {
         return std::max(0.0f, 1 - std::max(float(-1), std::min(float(1), ScalarProduct(pVect1, pVect2, qty, TmpRes))));
     }
 
-    float L1NormSIMDWrapper(const float *pVect1, const float *pVect2, size_t &qty, float *) {
+    float L1NormWrapper(const float *pVect1, const float *pVect2, size_t &qty, float *) {
         return L1NormSIMD(pVect1, pVect2, qty);
     }
 
-    float LInfNormSIMDWrapper(const float *pVect1, const float *pVect2, size_t &qty, float *) {
+    float LInfNormWrapper(const float *pVect1, const float *pVect2, size_t &qty, float *) {
         return LInfNormSIMD(pVect1, pVect2, qty);
     }
 
@@ -92,10 +92,10 @@ namespace similarity {
         switch (funcType) {
             case kL2Sqr16Ext : return L2Sqr16Ext;
             case kL2SqrExt   : return L2SqrExt;
-            case kNormCosine : return NormCosineSIMD;
-            case kNegativeDotProduct : return NegativeDotProductSIMD;
-            case kL1Norm : return L1NormSIMDWrapper;
-            case kLInfNorm : return LInfNormSIMDWrapper;
+            case kNormCosine : return NormCosine;
+            case kNegativeDotProduct : return NegativeDotProduct;
+            case kL1Norm : return L1NormWrapper;
+            case kLInfNorm : return LInfNormWrapper;
         }
 
         return nullptr;
