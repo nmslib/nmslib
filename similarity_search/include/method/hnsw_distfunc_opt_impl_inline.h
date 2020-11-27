@@ -507,19 +507,19 @@ inline float ScalarProduct(const float *__restrict pVect1, const float *__restri
 #else
 
 inline float L2SqrExt(const float *pVect1, const float *pVect2, size_t &qty, float *__restrict TmpRes) {
-  #pragma message WARN("L2SqrExt: SIMD is not available")
+  #pragma message INFO("L2SqrExt: SIMD is not available")
   float v = L2NormStandard(pVect1, pVect2, qty);
   return v * v;
 }
 
 inline float L2Sqr16Ext(const float *pVect1, const float *pVect2, size_t &qty, float * __restrict TmpRes) {
-  #pragma message WARN("L2Sqr16Ext: SIMD is not available")
+  #pragma message INFO("L2Sqr16Ext: SIMD is not available")
   return L2SqrExt(pVect1, pVect2, qty, TmpRes);
 }
 
 inline float ScalarProduct(const float *__restrict pVect1, const float *__restrict pVect2, size_t qty,
                   float *__restrict TmpRes) {
-  #pragma message WARN("ScalarProduct: SIMD is not available")
+  #pragma message INFO("ScalarProduct: SIMD is not available")
   return ScalarProduct(pVect1, pVect2, qty);
 }
 
