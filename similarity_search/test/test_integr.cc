@@ -84,45 +84,45 @@ vector<MethodTestCase>    vTestCaseDesc = {
 
   // Now a few optimized versions
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=50",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
                  true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=100",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
                  true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "negdotprod", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=200",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
                  true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=0", "ef=200",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
                  true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "linf", "final128_10K.txt", "hnsw", true, "efConstruction=400,M=10,skip_optimized_index=0", "ef=400",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  -1, -1, /* -1 means no testing for the improv. in # of dist computation, which cannot be measured for optimized indices */
                  true /* recall only */),
 
   // ... and their non-optimized versions
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=50",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  22, 37,
                  true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "cosinesimil", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=100",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  12, 25,
                  true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "negdotprod", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=200",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  5, 15,
                  true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "l1", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=200",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  7, 8,
                  true /* recall only */),
   MethodTestCase(DIST_TYPE_FLOAT, "linf", "final128_10K.txt", "hnsw", true, "efConstruction=200,M=10,skip_optimized_index=1", "ef=400",
-                 10 /* KNN-10 */, 0 /* no range search */ , 0.99, 1, 0, 0.05,
+                 10 /* KNN-10 */, 0 /* no range search */ , 0.98, 1, 0, 0.05,
                  3.5, 4.5,
                  true /* recall only */),
 #endif
