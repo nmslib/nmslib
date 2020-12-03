@@ -92,6 +92,52 @@ matrix:
         - *core_build
         - python3.8-dev
         - python3.8-distutils
+  - os: linux
+    dist: xenial
+    env: PYTHON=3.6
+    arch: arm64
+    services:
+    - docker
+    addons:
+      apt:
+       update: true
+       sources:
+       - deadsnakes
+       - sourceline: 'ppa:ubuntu-toolchain-r/test'
+       packages:
+         - *core_build
+         - python3.6-dev
+  - os: linux
+    dist: xenial
+    env: PYTHON=3.7
+    arch: arm64
+    services:
+    - docker
+    addons:
+      apt:
+       update: true
+       sources:
+       - deadsnakes
+       - sourceline: 'ppa:ubuntu-toolchain-r/test'
+       packages:
+         - *core_build
+         - python3.7-dev
+  - os: linux
+    dist: xenial
+    env: PYTHON=3.8
+    arch: arm64
+    services:
+    - docker
+    addons:
+      apt:
+       update: true
+       sources:
+       - deadsnakes
+       - sourceline: 'ppa:ubuntu-toolchain-r/test'
+       packages:
+         - *core_build
+         - python3.8-dev
+         - python3.8-distutils
   - os: osx
     env: PYTHON=2.7-dev
     osx_image: xcode9.2
