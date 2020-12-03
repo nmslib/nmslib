@@ -140,49 +140,35 @@ matrix:
          - python3.8-distutils
   - os: osx
     env: PYTHON=2.7-dev
-    osx_image: xcode9.2
+    osx_image: xcode11.2
   - os: osx
     env: PYTHON=3.5-dev
-    osx_image: xcode9.2
+    osx_image: xcode11.2
   - os: osx
     env: PYTHON=3.6-dev
-    osx_image: xcode9.2
+    osx_image: xcode11.2
   - os: osx
     env: PYTHON=3.7-dev
-    osx_image: xcode9.2
+    osx_image: xcode11.2
   - os: osx
     env: PYTHON=3.8-dev
-    osx_image: xcode9.2
+    osx_image: xcode11.2
+
   - os: osx
     env: PYTHON=2.7-dev
-    osx_image: xcode9.4
+    osx_image: xcode12
   - os: osx
     env: PYTHON=3.5-dev
-    osx_image: xcode9.4
+    osx_image: xcode12
   - os: osx
     env: PYTHON=3.6-dev
-    osx_image: xcode9.4
+    osx_image: xcode12
   - os: osx
     env: PYTHON=3.7-dev
-    osx_image: xcode9.4
+    osx_image: xcode12
   - os: osx
     env: PYTHON=3.8-dev
-    osx_image: xcode9.4
-  - os: osx
-    env: PYTHON=2.7-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.5-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.6-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.7-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.8-dev
-    osx_image: xcode11.2
+    osx_image: xcode12
   allow_failures:
   - os: osx
 
