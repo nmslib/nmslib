@@ -172,7 +172,7 @@ setup(
     version=__version__,
     description='Non-Metric Space Library (NMSLIB)',
     author='B. Naidan, L. Boytsov, Yu. Malkov, B. Frederickson, D. Novak, et al.',
-    url='https://github.com/searchivarius/nmslib',
+    url='https://github.com/nmslib/nmslib',
     long_description="""Non-Metric Space Library (NMSLIB) is an efficient cross-platform
  similarity search library and a toolkit for evaluation of similarity search methods. 
  The goal of the project is to create an effective and comprehensive toolkit for searching 
