@@ -1,14 +1,20 @@
 import numpy as np
 import nmslib
 import collections
+import os
 
 from sklearn.neighbors import NearestNeighbors
 from scipy.special import rel_entr
 from time import time
 from datasets import VECTOR_SPARSE, VECTOR_DENSE
+from misc_utils import  to_int, del_files_with_prefix, dict_param_to_str
 
 ExperResult = collections.namedtuple('ExperResult',
                                      'recall index_time query_time qps')
+
+
+PHASE_NEW_INDEX = 'new'
+PHASE_RELOAD_INDEX = 'reload'
 
 DIST_L3 = 'l3'
 DIST_L2 = 'l2'
@@ -42,13 +48,6 @@ SPACENAME_MAP = {
     (VECTOR_DENSE, DIST_INNER_PROD) : 'negdotprod',
     (VECTOR_SPARSE, DIST_INNER_PROD): 'negdotprod_sparse_fast'
 }
-
-def to_int(n):
-    """Converts a string to an integer value. Returns None, if the string cannot be converted."""
-    try:
-        return int(n)
-    except ValueError:
-        return None
 
 
 def get_neighbors_from_dists(dists, K):
@@ -120,13 +119,16 @@ def compute_neighbors(dist_type, data, queries, K):
         raise Exception(f'Unsupported distance: {dist_type}')
 
 
-def benchmark_bindings(dist_type, data_type,
+def benchmark_bindings(work_dir,
+                       dist_type, data_type,
                        method_name, index_time_params, query_time_param_arr,
                        data, queries, K, repeat_qty,
                        num_threads=0):
-    """Carry out a benchmark of Python bindings:
-       for each set of query parameters carry out search repeat_qty: times.
+    """Carry out a benchmark of Python bindings in two phases.
+       In phase 1 we create the index from scratch. In phase 2 we reload it from disk.
+       In each phase, for each set of query parameters we repeat the search procedure repeat_qty: times.
 
+    :param work_dir               working directory to store indices.
     :param dist_type:             the type of the distance
     :param data_type:             the type of the data
     :param method_name:           the name of the search method
@@ -138,7 +140,8 @@ def benchmark_bindings(dist_type, data_type,
     :param repeat_qty:            a # of times to repeat queries
     :param num_threads:           # of threads to use (or zero to use all threads)
 
-    :return: an array of ExperResults objects
+    :return: a dictionary of arrays of ExperResults objects: one array is for newly created
+             indices and the second array for indices loaded from the disk.
 
     """
     if not data_type in DATATYPE_MAP:
@@ -158,47 +161,68 @@ def benchmark_bindings(dist_type, data_type,
 
     gold_stand = compute_neighbors(dist_type, data, queries, K)
 
-    res = []
+    res = {
+            PHASE_NEW_INDEX : [],
+            PHASE_RELOAD_INDEX : []
+    }
 
-    print(f'Indexing data')
-    start = time()
+    index_file_name = os.path.join(work_dir,
+                                   f'{method_name}_{space_name}_' + dict_param_to_str(index_time_params))
+    del_files_with_prefix(index_file_name)
 
-    index = nmslib.init(method=method_name, space=space_name, data_type=DATATYPE_MAP[data_type])
-    index.addDataPointBatch(data)
-    index.createIndex(index_time_params)
-
-    end = time()
-    index_tm = end - start
-    print(f'Indexing took: {index_tm:.1f}')
-
-    for query_time_params in query_time_param_arr:
-        index.setQueryTimeParams(query_time_params)
-        print('Query time parameters: ', query_time_params)
-        best_tm = float('inf')
-        best_tm_recall = 0
+    for phase in [PHASE_NEW_INDEX, PHASE_RELOAD_INDEX]:
+        index = nmslib.init(method=method_name, space=space_name, data_type=DATATYPE_MAP[data_type])
 
 
-        for exp_id in range(repeat_qty):
-            print(f'Running experiment # {exp_id+1}')
+        if phase == PHASE_NEW_INDEX:
+            print(f'Indexing data')
+            index.addDataPointBatch(data)
+
             start = time()
-            nbrs = index.knnQueryBatch(queries, k=K, num_threads=num_threads)
+
+            index.createIndex(index_time_params)
+
             end = time()
+            index_tm = end - start
+            print(f'Indexing took: {index_tm:.1f}')
 
-            query_tm = end - start
+            index.saveIndex(index_file_name, save_data=True)
+        else:
+            assert phase == PHASE_RELOAD_INDEX
+            index_tm = 0 # no index
 
-            recall=0
-            for i in range(query_qty):
-                correct_set = set(gold_stand[i])
-                ret_set = set(nbrs[i][0])
-                recall = recall + float(len(correct_set.intersection(ret_set))) / len(correct_set)
-            recall = recall / query_qty
-            qps = query_qty / query_tm
-            print(f'{K}-NN recall: recall: {recall:.3f} QPS: {qps:g}')
-            if query_tm < best_tm:
-                best_tm = query_tm
-                best_tm_recall = recall
+            print(f'Loading index & data')
 
-        res.append(ExperResult(recall=best_tm_recall, index_time=index_tm, query_time=best_tm, qps= query_qty / best_tm))
+            index.loadIndex(index_file_name, load_data=True)
+
+        for query_time_params in query_time_param_arr:
+            index.setQueryTimeParams(query_time_params)
+            print('Query time parameters: ', query_time_params)
+            best_tm = float('inf')
+            best_tm_recall = 0
+
+            for exp_id in range(repeat_qty):
+                print(f'Running experiment # {exp_id+1}')
+                start = time()
+                nbrs = index.knnQueryBatch(queries, k=K, num_threads=num_threads)
+                end = time()
+
+                query_tm = end - start
+
+                recall=0
+                for i in range(query_qty):
+                    correct_set = set(gold_stand[i])
+                    ret_set = set(nbrs[i][0])
+                    recall = recall + float(len(correct_set.intersection(ret_set))) / len(correct_set)
+                recall = recall / query_qty
+                qps = query_qty / query_tm
+                print(f'{K}-NN recall: recall: {recall:.3f} QPS: {qps:g}')
+                if query_tm < best_tm:
+                    best_tm = query_tm
+                    best_tm_recall = recall
+
+            res[phase].append(
+                ExperResult(recall=best_tm_recall, index_time=index_tm, query_time=best_tm, qps= query_qty / best_tm))
 
 
     return res
