@@ -46,7 +46,7 @@ SPACENAME_MAP = {
     (VECTOR_DENSE, DIST_LINF)       : 'linf',
     (VECTOR_DENSE, DIST_L1)         : 'l1',
     (VECTOR_DENSE, DIST_L2)         : 'l2',
-    (VECTOR_DENSE, DIST_L3)         : 'l3',
+    (VECTOR_DENSE, DIST_L3)         : 'lp:p=3',
     (VECTOR_DENSE, DIST_COSINE)     : 'cosinesimil',
     (VECTOR_SPARSE, DIST_COSINE)    : 'cosinesimil_sparse_fast',
     (VECTOR_DENSE, DIST_INNER_PROD) : 'negdotprod',
@@ -403,9 +403,21 @@ def benchmark_bindings(work_dir,
 
     del_files_with_prefix(index_file_name)
 
-    for phase in [PHASE_NEW_INDEX, PHASE_RELOAD_INDEX]:
-        index = nmslib.init(method=method_name, space=space_name, data_type=DATATYPE_MAP[data_type])
+    # TODO parsing parameters is broken and needs to be fixed
+    # # NMSLIB space name can have parameters, which need to be extracted
+    # tmp = space_name.split(':')
+    # space_name = tmp[0]
+    # assert len(tmp) < 3
+    # space_params = None
+    # if len(tmp) == 2:
+    #     space_params = tmp[1].split(',')
+    #
+    # print(f'Space name: {space_name}  params: {space_params}')
 
+    for phase in [PHASE_NEW_INDEX, PHASE_RELOAD_INDEX]:
+        index = nmslib.init(space=space_name,
+                            method=method_name,
+                            data_type=DATATYPE_MAP[data_type])
 
         if phase == PHASE_NEW_INDEX:
             print(f'Indexing data')

@@ -38,11 +38,14 @@ TEST_CASES = [
              index_time_params=DEFAULT_HNSW_INDEX_TIME_PARAM, query_time_param_arr=DEFAULT_HSNW_QUERY_TIME_PARAM_ARR),
     TestCase(dataset_name=SIFT1M, dist_type=DIST_L2, K=10, method_name=METHOD_HNSW,
              index_time_params=DEFAULT_HNSW_INDEX_TIME_PARAM, query_time_param_arr=DEFAULT_HSNW_QUERY_TIME_PARAM_ARR),
+
+    # TODO
+    # L3 requires passing space parameters, but this unfortunately is broken currently
     # L3 SIFT
-    TestCase(dataset_name=SIFT1M, dist_type=DIST_L3, K=10, method_name=METHOD_HNSW,
-             index_time_params=DEFAULT_HNSW_INDEX_TIME_PARAM, query_time_param_arr=DEFAULT_HSNW_QUERY_TIME_PARAM_ARR),
-    TestCase(dataset_name=SIFT1M, dist_type=DIST_L3, K=10, method_name=METHOD_HNSW,
-             index_time_params=DEFAULT_HNSW_INDEX_TIME_PARAM, query_time_param_arr=DEFAULT_HSNW_QUERY_TIME_PARAM_ARR),
+    # TestCase(dataset_name=SIFT1M, dist_type=DIST_L3, K=10, method_name=METHOD_HNSW,
+    #          index_time_params=DEFAULT_HNSW_INDEX_TIME_PARAM, query_time_param_arr=DEFAULT_HSNW_QUERY_TIME_PARAM_ARR),
+    # TestCase(dataset_name=SIFT1M, dist_type=DIST_L3, K=10, method_name=METHOD_HNSW,
+    #          index_time_params=DEFAULT_HNSW_INDEX_TIME_PARAM, query_time_param_arr=DEFAULT_HSNW_QUERY_TIME_PARAM_ARR),
     # LINF SIFT
     TestCase(dataset_name=SIFT1M, dist_type=DIST_LINF, K=10, method_name=METHOD_HNSW,
              index_time_params=DEFAULT_HNSW_INDEX_TIME_PARAM, query_time_param_arr=DEFAULT_HSNW_QUERY_TIME_PARAM_ARR),
