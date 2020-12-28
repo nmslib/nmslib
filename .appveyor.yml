@@ -42,6 +42,10 @@ install:
       conda install -q conda-build
     }
 - cmd: |
+    ECHO Platform : %PLATFORM%
+    ECHO Python : %PYTHON%
+    ECHO PATH : %PATH%
+    dir "C:\"
     python --version
     python -m pip --version
 build_script:
