@@ -93,6 +93,21 @@ matrix:
         - python3.8-dev
         - python3.8-distutils
   - os: linux
+    env: PYTHON=3.9
+    dist: xenial
+    services:
+    - docker
+    addons:
+      apt:
+        update: true
+        sources:
+        - ubuntu-toolchain-r-test
+        - deadsnakes
+        packages:
+        - *core_build
+        - python3.9-dev
+        - python3.9-distutils
+  - os: linux
     dist: xenial
     env: PYTHON=3.6
     arch: arm64
@@ -138,6 +153,22 @@ matrix:
          - *core_build
          - python3.8-dev
          - python3.8-distutils
+  - os: linux
+    dist: xenial
+    env: PYTHON=3.9
+    arch: arm64
+    services:
+    - docker
+    addons:
+      apt:
+       update: true
+       sources:
+       - deadsnakes
+       - sourceline: 'ppa:ubuntu-toolchain-r/test'
+       packages:
+         - *core_build
+         - python3.9-dev
+         - python3.9-distutils
   - os: osx
     env: PYTHON=2.7-dev
     osx_image: xcode11.2
@@ -152,6 +183,9 @@ matrix:
     osx_image: xcode11.2
   - os: osx
     env: PYTHON=3.8-dev
+    osx_image: xcode11.2
+  - os: osx
+    env: PYTHON=3.9-dev
     osx_image: xcode11.2
 
   - os: osx
@@ -168,6 +202,9 @@ matrix:
     osx_image: xcode12
   - os: osx
     env: PYTHON=3.8-dev
+    osx_image: xcode12
+  - os: osx
+    env: PYTHON=3.9-dev
     osx_image: xcode12
   allow_failures:
   - os: osx

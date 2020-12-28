@@ -7,7 +7,7 @@ import pickle
 
 DEFAULT_HNSW_INDEX_TIME_PARAM = {'M': 20, 'efConstruction': 200, 'post': 0}
 
-DEFAULT_QUERY_QTY=1000
+DEFAULT_QUERY_QTY=5000
 
 from eval import *
 from datasets import *
@@ -18,7 +18,13 @@ sys.path.append('.')
 TestCase = collections.namedtuple('TestCase',
                                   'dataset_name dist_type K method_name index_time_params query_time_param_arr')
 
-ExpandExperResult = collections.namedtuple('ExpandExperResult', 'case_id nmslib_version is_binary is_reload result_list')
+ExpandExperResult = collections.namedtuple('ExpandExperResult',
+                                           'case_id nmslib_version '
+                                           'dataset_name dist_type K '
+                                           'is_binary is_reload '
+                                           'repeat_qty query_qty max_data_qty '
+                                           'num_threads '
+                                           'result_list')
 
 DEFAULT_HSNW_QUERY_TIME_PARAM_ARR = [{'ef':25}, {'ef': 50}, {'ef':100}, {'ef':250}, {'ef':500}, {'ef':1000}, {'ef': 2000 }]
 
@@ -161,9 +167,13 @@ def main():
                                              num_threads=args.num_threads, max_data_qty=args.max_data_qty)
 
             for phase in [PHASE_NEW_INDEX, PHASE_RELOAD_INDEX]:
-                results.append(ExpandExperResult(case_id=case_id, is_reload=phase==PHASE_RELOAD_INDEX,
-                                                 nmslib_version=nmslib.__version__,
-                                                 is_binary=False,
+                results.append(ExpandExperResult(case_id=case_id,
+                                                 nmslib_version=None,
+                                                 dataset_name=case.dataset_name, K=case.K,
+                                                 num_threads=args.num_threads, dist_type=case.dist_type,
+                                                 is_binary=False, is_reload=phase==PHASE_RELOAD_INDEX,
+                                                 repeat_qty=args.repeat_qty, query_qty=args.query_qty,
+                                                 max_data_qty=args.max_data_qty,
                                                  result_list=result_dict[phase]))
 
         if True:
@@ -180,9 +190,13 @@ def main():
                                            num_threads=args.num_threads, max_data_qty=args.max_data_qty)
 
             for phase in [PHASE_NEW_INDEX, PHASE_RELOAD_INDEX]:
-                results.append(ExpandExperResult(case_id=case_id, is_reload=phase==PHASE_RELOAD_INDEX,
+                results.append(ExpandExperResult(case_id=case_id,
                                                  nmslib_version=None,
-                                                 is_binary=True,
+                                                 dataset_name=case.dataset_name, K=case.K,
+                                                 num_threads=args.num_threads, dist_type=case.dist_type,
+                                                 is_binary=True, is_reload=phase==PHASE_RELOAD_INDEX,
+                                                 repeat_qty=args.repeat_qty, query_qty=args.query_qty,
+                                                 max_data_qty=args.max_data_qty,
                                                  result_list=result_dict[phase]))
 
     with open(args.output, 'wb') as f:
