@@ -159,7 +159,7 @@ class FileWrapper:
 
 
 def download_and_unpack(url, dst_dir, dst_name):
-    """Download and unpack the file
+    """Download and unpack the file.
 
     :param url:     download URL
     :param dst_dir: destination directory
