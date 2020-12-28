@@ -1,5 +1,5 @@
 version: '{build}'
-image: Visual Studio 2015
+image: Visual Studio 2019
 platform:
 - x64
 # Disable temporarily
@@ -11,12 +11,12 @@ environment:
     # SSE2 is the default in recent VS, but let's keep for older versions, see, e.g.: https://github.com/weidai11/cryptopp/issues/445
     ARCH: SSE2
   matrix:
+  - PYTHON: 39
   - PYTHON: 27
   - PYTHON: 35
   - PYTHON: 36
   - PYTHON: 37
   - PYTHON: 38
-  - PYTHON: 39
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
     secure: 7hxZ+XinYPLuIS1aHZbTcA==
