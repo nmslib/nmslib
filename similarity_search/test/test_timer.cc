@@ -22,7 +22,8 @@
 
 namespace similarity {
 
-const unsigned TIMER_ERR_TOL = 200;
+// We expect both timers to differ in at most 1 ms
+const unsigned TIMER_ERR_TOL = 1000;
 
 /*
  * These test is intended to run only on Unix-like systems.
@@ -74,7 +75,6 @@ TEST(TestTimer) {
   z.split();
 
   LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed();
-  // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < TIMER_ERR_TOL, true);
 
   BurnCPU();
@@ -82,7 +82,6 @@ TEST(TestTimer) {
   z.split();
 
   LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed();
-  // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < TIMER_ERR_TOL, true);
 
   z.reset();
@@ -93,7 +92,6 @@ TEST(TestTimer) {
   z.split();
 
   LOG(LIB_INFO) << "Timer: " << z.elapsed() << " : " << oldz.elapsed();
-  // We expect both timers to differ in at most 0.1 ms
   EXPECT_EQ(std::abs(static_cast<int64_t>(z.elapsed()) - static_cast<int64_t>(oldz.elapsed())) < TIMER_ERR_TOL, true);
 }
 
