@@ -22,7 +22,7 @@
 
 namespace similarity {
 
-const unsigned TIMER_ERR_TOL = 200;
+const unsigned TIMER_ERR_TOL = 300;
 
 /*
  * These test is intended to run only on Unix-like systems.
