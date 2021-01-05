@@ -4,8 +4,8 @@ set -e -x
 # Auditwheel requirements
 yum install -y atlas-devel
 # nmslib requirements
-yum install -y gsl-devel
-yum install -y boost-devel
+#yum install -y gsl-devel
+#yum install -y boost-devel
 
 OUT_DIR=/io/python_bindings/dist/
 mkdir -p "${OUT_DIR}"
