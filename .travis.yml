@@ -268,8 +268,9 @@ after_script:
       $PIP install --user twine
       cp .pypirc ~/.pypirc
       pwd
-      ls /io/python_bindings/
-      $PY -m twine upload -r pypi -p $PYPI_PASSWORD --skip-existing /io/python_bindings/dist/* &>/dev/null
+      ls python_bindings/
+      ls python_bindings/dist/
+      $PY -m twine upload -r pypi -p $PYPI_PASSWORD --skip-existing python_bindings/dist/* &>/dev/null
       echo "Twine upload status: $?"
     else
       echo "Skipping deployment because this is not a tagged commit"
