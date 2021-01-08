@@ -272,7 +272,7 @@ after_script:
       else
         echo "PyPi password is set!"
       fi
-      $PY -m twine upload -r pypi -p $PYPI_PASSWORD --skip-existing python_bindings/dist/* &>/dev/null
+      $PY -m twine upload -r pypi -p $PYPI_PASSWORD --skip-existing python_bindings/dist/*
       echo "Twine upload status: $?"
     else
       echo "Skipping deployment because this is not a tagged commit"
@@ -287,6 +287,3 @@ cache:
     - $HOME/.cache/pip
     - $HOME/Library/Caches/Homebrew
 
-env:
-  global:
-  - secure: Z5TOlUMWbPpcL8bfJF7C33t+B+qhoLPsZSlnQedpFLVhygS9iXMjuEfXlh0EuhFS39cJkmqBzgYDWK8T3klDTbVwlUUNFzNC9D/n2v9ct9Hulz0IWalXjzHEclcVC7hmCno1LtZFmOt6Oyc6euvgQLv7+yV501GiX1z3dMUFG4S+tEsynARCsOt0KKzzEgxj5DWhbaqqP4fm1tV7H1BspxLZpyn1turadhTSEuv398tJcbU08AtJGds4LFaQfhBf2vID4O3DZjxCRTLIn4g6TdjseiCPtYSkWOFiC4/+IOhFXgX046JiRaX1wynIbdnuAst9LgL5Ie87dQ0RoWMOsx2cVyOf6i+paJUpvEEQUltK4PdDecjeVYAbK6cIYf0UKjU2OJQtudktgdkSmf6IRrFvQdE1rZBaFCmMlorfOK3RuARtKCSp7E6S7P0OJxKTK3AwdTxEORhZ9FgqAWf1JWUMda7BC1d+qTofOkoiat8n3pPaZJCt+5tqAswoAcN9RFP951GPf9nhKlw22S58iFhtCwW7Odl+YtVSFPO5egGCOT48UnUIvcrsV3r2YQyw3ObAGn44C6wakR2ZfZHvzUKw8sD7VRbAe1PQuq8yn+mIUVa6K5/VEHq/gsmmpGKwatgeeoqTLsm8TC58fJKTGBH0p622dXOwef1TSzViyRM=
