@@ -745,9 +745,15 @@ namespace similarity {
         };
     }
 
-    template <typename dist_t>
+	template <typename dist_t>
     void
     Hnsw<dist_t>::SaveIndex(const string &location) {
+        SaveIndex(location, nullptr);
+    }
+
+    template <typename dist_t>
+    void
+    Hnsw<dist_t>::SaveIndex(const string &location, const ObjectVector* pdata) {
         std::ofstream output(location,
                              std::ios::binary /* text files can be opened in binary mode as well */);
         CHECK_MSG(output, "Cannot open file '" + location + "' for writing");
@@ -761,8 +767,11 @@ namespace similarity {
 #if USE_TEXT_REGULAR_INDEX
             SaveRegularIndexText(output);
 #else
-
+			if(pdata != nullptr) {
+				SaveRegularDataBin(output, pdata);
+			}
             SaveRegularIndexBin(output);
+
 #endif
         } else {
             SaveOptimizedIndex(output);
@@ -841,6 +850,23 @@ namespace similarity {
 
     template <typename dist_t>
     void
+	Hnsw<dist_t>::SaveRegularDataBin(std::ostream& output, const ObjectVector* pdata) {
+		if (pdata == nullptr) return;
+		uint32_t maxQty = std::numeric_limits<int32_t>::max();
+		if (pdata->size() > 0) {
+			writeBinaryPOD(output, size_t(pdata->size()));
+			for (unsigned i = 0; i < std::min(pdata->size(), size_t(maxQty)); ++i) {
+				const Object *o = (*pdata)[i];
+				writeBinaryPOD(output, o->bufferlength());
+				output.write(o->buffer(), o->bufferlength());
+			}
+		}
+		return;	
+	}
+
+
+    template <typename dist_t>
+    void
     Hnsw<dist_t>::SaveRegularIndexText(std::ostream& output) {
 
         size_t lineNum = 0;
@@ -880,6 +906,25 @@ namespace similarity {
         WriteField(output, LINE_QTY, lineNum);
     }
 
+	template <typename dist_t>
+	void
+	Hnsw<dist_t>::LoadRegularDataBin(std::istream& input, ObjectVector* pdata) {
+		if(pdata == nullptr) return;
+		CHECK_MSG(pdata->empty(), "this function expects data to be empty on call");
+		uint32_t maxQty = std::numeric_limits<int32_t>::max();
+		size_t qty = 0;
+		size_t objSize = 0;
+		readBinaryPOD(input, qty);
+
+		for (unsigned i = 0; i < std::min(qty, size_t(maxQty)); ++i) {
+			readBinaryPOD(input, objSize);
+			unique_ptr<char[]> buf(new char[objSize]);
+			input.read(&buf[0], objSize);
+			// true guarantees that the Object will take ownership of memory
+			// less than ideal, but ok for now
+			pdata->push_back(new Object(buf.release(), true));
+		}
+	}
 
     template <typename dist_t>
     void
@@ -989,10 +1034,15 @@ namespace similarity {
             }
         }
     }
+	template <typename dist_t>
+    void
+    Hnsw<dist_t>::LoadIndex(const string &location) {
+		LoadIndex(location, nullptr);
+	}
 
     template <typename dist_t>
     void
-    Hnsw<dist_t>::LoadIndex(const string &location) {
+    Hnsw<dist_t>::LoadIndex(const string &location, ObjectVector* pdata) {
         LOG(LIB_INFO) << "Loading index from " << location;
         std::ifstream input(location, 
                             std::ios::binary); /* text files can be opened in binary mode as well */
@@ -1008,6 +1058,9 @@ namespace similarity {
         readBinaryPOD(input, optimIndexFlag);
 
         if (!optimIndexFlag) {
+			if(pdata != nullptr) {
+				LoadRegularDataBin(input, pdata);
+			}
             LoadRegularIndexBin(input);
         } else {
             LoadOptimizedIndex(input);

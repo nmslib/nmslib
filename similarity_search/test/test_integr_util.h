@@ -462,19 +462,38 @@ size_t RunTestExper(const vector<MethodTestCase>& vTestCases,
                   "Failed to delete file '" + fullIndexName + "'")
         }
 
-        IndexPtr->SaveIndex(fullIndexName);
+		if(IndexPtr->StrDesc() == "hnsw") {
+			IndexPtr->SaveIndex(fullIndexName, &(config.GetDataObjects()));
+			IndexPtr.reset(
+				MethodFactoryRegistry<dist_t>::Instance().
+				CreateMethod(false /* don't print progress */,
+					methodName,
+					SpaceType, config.GetSpace(), 
+					config.GetDataWriteableObjects())
+			);
 
-        IndexPtr.reset(
-                         MethodFactoryRegistry<dist_t>::Instance().
-                         CreateMethod(false /* don't print progress */,
-                                      methodName,
-                                      SpaceType, config.GetSpace(), 
-                                      config.GetDataObjects())
-                      );
 
-        LOG(LIB_INFO) << "Loading the index" ;
+			LOG(LIB_INFO) << "Loading the index and data" ;
+			config.ClearWriteableObjects();
+        	IndexPtr->LoadIndex(fullIndexName, &(config.GetDataWriteableObjects()));
 
-        IndexPtr->LoadIndex(fullIndexName);
+
+		} else {
+			IndexPtr->SaveIndex(fullIndexName);
+			IndexPtr.reset(
+				MethodFactoryRegistry<dist_t>::Instance().
+				CreateMethod(false /* don't print progress */,
+					methodName,
+					SpaceType, config.GetSpace(), 
+					config.GetDataObjects())
+			);
+
+			LOG(LIB_INFO) << "Loading the index" ;
+
+        	IndexPtr->LoadIndex(fullIndexName);
+		}
+
+
       }
 
       LOG(LIB_INFO) << "==============================================";
