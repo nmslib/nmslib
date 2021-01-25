@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 import sys
 import argparse
-import collections
 import nmslib
-import pickle
+import json
 
 DEFAULT_HNSW_INDEX_TIME_PARAM = {'M': 20, 'efConstruction': 200, 'post': 0}
 
@@ -21,7 +20,7 @@ TestCase = collections.namedtuple('TestCase',
 ExpandExperResult = collections.namedtuple('ExpandExperResult',
                                            'case_id nmslib_version '
                                            'dataset_name dist_type K '
-                                           'is_binary is_reload '
+                                           'is_binary is_index_reload '
                                            'repeat_qty query_qty max_data_qty '
                                            'num_threads '
                                            'result_list')
@@ -77,11 +76,17 @@ def main():
                         help='a directory to store/retrieve datasets',
                         type=str,
                         required=True)
+    parser.add_argument('--binding_ver',
+                        metavar='binding ver. to test',
+                        help='Specify this variable to test a specific version of bindings. '
+                             'Testing will be aborted if the version does not match',
+                        type=str,
+                        default=None)
     parser.add_argument('--binary_dir',
                         metavar='NSMLIB binary dir',
                         help='a directory with compiled NMSLIB binaries',
                         type=str,
-                        required=True)
+                        default=None)
     parser.add_argument('--max_data_qty',
                         metavar='max # of points',
                         help='a max # of data points to use in a test',
@@ -113,26 +118,39 @@ def main():
                         metavar='distance type',
                         type=str,
                         help='an optional distance type (if specified we run tests only for this distance)',
-                        default=None)
+                        default=None,
+                        choices=[DIST_INNER_PROD, DIST_KL_DIV, DIST_COSINE, DIST_L1, DIST_L2, DIST_LINF])
     parser.add_argument('--data_type',
                         metavar='data type',
                         type=str,
                         help='an optional type of the data (if specified we run tests only for this data type)',
-                        default=None)
+                        default=None,
+                        choices=[VECTOR_DENSE, VECTOR_SPARSE])
     parser.add_argument('--dataset_name',
                         type=str,
                         metavar='dataset name',
                         help='an optional dataset type (if specified we run tests only for this dataset)',
                         default=None)
 
+    print(f'Installed version of NMSLIB bindings: {nmslib.__version__}')
+
     args = parser.parse_args()
+
+    if args.binary_dir is None and args.binding_ver is None:
+        print('You need to specify either --binary_dir or --binding_ver')
+        sys.exit(1)
 
     # First make sure we have all the data
     download_and_process_data(args.dataset_dir)
 
     results = []
 
-    print(f'NMSLIB bindings version: {nmslib.__version__}')
+    if args.binding_ver is not None:
+        # Check installed bindings
+        ver = nmslib.__version__
+        if ver != args.binding_ver:
+            print('A mismatch between installed bindings version {ver} and requested one to test: {args.binding_ver}')
+            sys.exit(1)
 
     for case_id, case in enumerate(TEST_CASES):
         if args.dataset_name is not None and args.dataset_name != case.dataset_name:
@@ -142,14 +160,13 @@ def main():
             print(f'Ignoring distance {case.dist_type}')
             continue
 
-
         data_type = DATASET_DESC[case.dataset_name].type
 
         if args.data_type is not None and args.data_type != data_type:
             print(f'Ignoring data type {data_type}')
             continue
 
-        if True: # Python bindings test
+        if args.binding_ver is not None: # Python bindings test
             if data_type == VECTOR_DENSE:
                 all_data = load_dense(os.path.join(args.dataset_dir, case.dataset_name ))
             elif data_type == VECTOR_SPARSE:
@@ -171,15 +188,15 @@ def main():
 
             for phase in [PHASE_NEW_INDEX, PHASE_RELOAD_INDEX]:
                 results.append(ExpandExperResult(case_id=case_id,
-                                                 nmslib_version=None,
+                                                 nmslib_version=nmslib.__version__,
                                                  dataset_name=case.dataset_name, K=case.K,
                                                  num_threads=args.num_threads, dist_type=case.dist_type,
-                                                 is_binary=False, is_reload=phase==PHASE_RELOAD_INDEX,
+                                                 is_binary=False, is_index_reload=phase==PHASE_RELOAD_INDEX,
                                                  repeat_qty=args.repeat_qty, query_qty=args.query_qty,
                                                  max_data_qty=args.max_data_qty,
-                                                 result_list=result_dict[phase]))
+                                                 result_list=result_dict[phase])._asdict())
 
-        if True:
+        if args.binary_dir is not None:
             result_dict = benchamrk_binary(work_dir=args.work_dir,
                                            binary_dir = args.binary_dir,
                                            dist_type=case.dist_type,
@@ -197,13 +214,15 @@ def main():
                                                  nmslib_version=None,
                                                  dataset_name=case.dataset_name, K=case.K,
                                                  num_threads=args.num_threads, dist_type=case.dist_type,
-                                                 is_binary=True, is_reload=phase==PHASE_RELOAD_INDEX,
+                                                 is_binary=True, is_index_reload=phase==PHASE_RELOAD_INDEX,
                                                  repeat_qty=args.repeat_qty, query_qty=args.query_qty,
                                                  max_data_qty=args.max_data_qty,
-                                                 result_list=result_dict[phase]))
+                                                 result_list=result_dict[phase])._asdict())
 
-    with open(args.output, 'wb') as f:
-        pickle.dump(results, f)
+    with open(args.output, 'w') as f:
+        json.dump(results,
+                  f,
+                  indent=4) # Indent for a pretty print
 
 
 if __name__ == "__main__":

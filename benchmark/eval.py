@@ -1,9 +1,10 @@
 import numpy as np
-import nmslib
 import collections
 import os
+import gc
 import subprocess
 import pandas
+import nmslib
 
 from sklearn.neighbors import NearestNeighbors
 from scipy.special import rel_entr
@@ -12,6 +13,8 @@ from datasets import VECTOR_SPARSE, VECTOR_DENSE
 from misc_utils import  to_int, del_files_with_prefix, dict_param_to_nsmlib_bin_str
 
 ExperResult = collections.namedtuple('ExperResult', 'recall index_time query_time qps')
+
+DIST_COMPUTE_BATCH_SIZE=100
 
 METHOD_HNSW='hnsw'
 
@@ -71,22 +74,63 @@ def get_neighbors_from_dists(dists, K):
     return dists_sorted[:,:K]
 
 
-def compute_kl_div_neighbors(data_matrix, query_matrix, K):
-    """Compute neighbors for the KL-divergence. By default,
-       in NMSLIB, queries are left, i.e., the data object is
-       the first (left) argument.
+def inner_prod_neighbor_dists(data_matrix, query_matrix_batch):
+    """Compute values of the sparse OR dense-vector inner-product.
+
+    :param data_matrix:             data matrix
+    :param query_matrix_batch:      query matrix
+    :return: an output in the shape <#of queries> X min(K, <# of data points>)
+    """
+
+    dists_batch = query_matrix_batch.dot(data_matrix.transpose())
+    if type(query_matrix_batch) != np.ndarray:
+        # The result of dot + todense operator is going to be numpy.matrix,
+        # which is not really a usable data type
+        dists_batch = np.array(dists_batch.todense())
+
+    # Take a minus, because larger inner product values denote closer data points
+    return -dists_batch
+
+
+def kldiv_neighbor_dists(data_matrix, query_matrix_batch):
+    """Compute values of the KL-divergence for dense vectors.
+
+    :param data_matrix:             data matrix
+    :param query_matrix_batch:      query matrix
+    :return: an output in the shape <#of queries> X min(K, <# of data points>)
+    """
+
+    dists_batch = []
+    for k in range(len(query_matrix_batch)):
+        v = rel_entr(data_matrix, query_matrix_batch[k])
+        dists_batch.append(np.sum(v, axis=-1))
+
+    return dists_batch
+
+
+def compute_neighbors_batched(data_matrix, query_matrix, K,
+                              batch_processor, batch_size):
+    """Compute neighbors in a batched fashion where a query is split into batches.
 
     :param data_matrix:      data matrix
     :param query_matrix:     query matrix
     :param K:                the number of neighbors
+    :param batch_processor:  a distance-specific function to compute distances between all data elements and queries 
+                             in a given batch
+    :param batch_size
     :return: an output in the shape <#of queries> X min(K, <# of data points>)
     """
-    dists = []
-    for i in range(len(query_matrix)):
-        v = rel_entr(data_matrix, query_matrix[i])
-        dists.append(np.sum(v, axis=-1))
+    query_qty = query_matrix.shape[0]
+    neighbors = []
 
-    return get_neighbors_from_dists(np.stack(dists, axis=0), K)
+    # If the number of queries is too large, we run out of memory
+    # unless we compute neighbors in batches and merge the result
+    for i in range(0, query_qty, batch_size):
+        gc.collect()
+        dists_batch = batch_processor(data_matrix, query_matrix[i : i + batch_size])
+        neighbors.append(get_neighbors_from_dists(dists_batch, K))
+
+    return np.concatenate(neighbors, axis=0)
 
 
 def compute_neighbors(dist_type, data, queries, K):
@@ -113,17 +157,10 @@ def compute_neighbors(dist_type, data, queries, K):
         return sindx.kneighbors(queries, return_distance=False)
 
     elif dist_type == DIST_INNER_PROD:
-        dists = queries.dot(data.transpose())
-        if type(queries) != np.ndarray:
-            # The result of dot + todense operator is going to be numpy.matrix,
-            # which is not really a usable data type
-            dists = np.array(dists.todense())
-
-        # Take a minus, because larger inner product values denote closer data points
-        return get_neighbors_from_dists(-dists, K)
+        return compute_neighbors_batched(data, queries, K, inner_prod_neighbor_dists, DIST_COMPUTE_BATCH_SIZE)
 
     elif dist_type == DIST_KL_DIV:
-        return compute_kl_div_neighbors(data, queries, K)
+        return compute_neighbors_batched(data, queries, K, kldiv_neighbor_dists, DIST_COMPUTE_BATCH_SIZE)
 
     else:
         raise Exception(f'Unsupported distance: {dist_type}')
@@ -244,10 +281,11 @@ def run_binary_test_case(binary_dir,
             # NMSLIB produces query time in MILLIseconds, but index time in seconds, it also measures time as latency
             # to be consistent with our Python binding tests, let's take the number of query per second and convert
             # it to time
-            query_tm = query_qty / dt[QPS_FIELD][row_id]
-            recall = dt[RECALL_FIELD][row_id]
+            # Make explicit casts to types that are always possible to serialize to JSON (numpy.int64 isn't that type!)
+            query_tm = float(query_qty / dt[QPS_FIELD][row_id])
+            recall = float(dt[RECALL_FIELD][row_id])
             if k == 0:
-                index_tm = dt[INDEX_TIME_FIELD][row_id]
+                index_tm = float(dt[INDEX_TIME_FIELD][row_id])
 
             if query_tm < best_tm:
                 best_tm = query_tm
@@ -256,7 +294,7 @@ def run_binary_test_case(binary_dir,
         qps = query_qty / best_tm
         print('Query time parameters: ', query_time_params, f'{K}-NN recall: recall: {recall:.3f} QPS: {qps:g}')
 
-        res.append(ExperResult(recall=best_tm_recall, index_time=index_tm, query_time=best_tm, qps=qps))
+        res.append(ExperResult(recall=best_tm_recall, index_time=index_tm, query_time=best_tm, qps=qps)._asdict())
 
     return res
 
@@ -370,6 +408,8 @@ def benchmark_bindings(work_dir,
              indices and the second array for indices loaded from the disk.
 
     """
+    import nmslib
+
     if not data_type in DATATYPE_MAP:
         raise Exception(f'Invalid data type: {data_type}')
 
@@ -470,7 +510,7 @@ def benchmark_bindings(work_dir,
             qps = query_qty / best_tm
             print('Query time parameters: ', query_time_params, f'{K}-NN recall: recall: {recall:.3f} QPS: {qps:g}')
 
-            res[phase].append(ExperResult(recall=best_tm_recall, index_time=index_tm, query_time=best_tm, qps=qps))
+            res[phase].append(ExperResult(recall=best_tm_recall, index_time=index_tm, query_time=best_tm, qps=qps)._asdict())
 
     print('---------------------')
 

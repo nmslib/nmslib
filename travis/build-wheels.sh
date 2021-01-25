@@ -4,9 +4,8 @@ set -e -x
 # Auditwheel requirements
 yum install -y atlas-devel
 # nmslib requirements
-yum install -y gsl-devel
-yum install -y boost-devel
-yum install -y eigen3-devel
+#yum install -y gsl-devel
+#yum install -y boost-devel
 
 OUT_DIR=/io/python_bindings/dist/
 mkdir -p "${OUT_DIR}"
@@ -30,7 +29,7 @@ for PYBIN in /opt/python/*/bin; do
 
     # Bundle external shared libraries into the wheels
     ls -lrt $TMP_DIR
-    for whl in $(ls -1 ${TMP_DIR}); do
+    for whl in $(ls -1 ${TMP_DIR} | grep nmslib); do
       auditwheel repair --plat "$PLAT" -w "${REPAIR_DIR}" ${TMP_DIR}/$whl 
     done
 
