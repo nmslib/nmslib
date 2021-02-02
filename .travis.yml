@@ -212,9 +212,12 @@ matrix:
 before_install:
 - |
   PY=python
+  echo "TRAVIS_OS_NAME=$TRAVIS_OS_NAME"
+  echo "PYTHON=$PYTHON"
   if [ "$TRAVIS_OS_NAME" = "linux" ]; then 
     export CXX=g++ CC=gcc
     if [ $(echo "$PYTHON" | grep "^3\.") ]; then
+      echo "bootstrapping pip module"
       PY=python${PYTHON}
       curl https://bootstrap.pypa.io/get-pip.py | sudo -H $PY
     fi
