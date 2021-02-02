@@ -219,7 +219,14 @@ before_install:
     if [ $(echo "$PYTHON" | grep "^3\.") ]; then
       echo "bootstrapping pip module"
       PY=python${PYTHON}
-      curl https://bootstrap.pypa.io/get-pip.py | sudo -H $PY
+      # For older PYTHON need a separate script or else it may fail
+      if [ "$PYTHON" = "3.5" ] ; then
+        GET_PIP_SCRIPT="https://bootstrap.pypa.io/3.5/get-pip.py"
+      else
+        GET_PIP_SCRIPT="https://bootstrap.pypa.io/get-pip.py"
+      fi
+      echo "Using PIP bootstrapping script $GET_PIP_SCRIPT"
+      curl  "$GET_PIP_SCRIPT" | sudo -H $PY
     fi
   fi
 
@@ -229,7 +236,12 @@ before_install:
   fi
 
   PIP="$PY -m pip"
-  sudo -H $PIP install --upgrade pip
+  if [ "$PYTHON" = "2.7" ] ; then
+    echo "Keeping an old pip version for Python$PYTHON"
+    sudo -H $PIP install --upgrade "pip < 21.0"
+  else
+    sudo -H $PIP install --upgrade pip
+  fi
 
 install:
 - |
