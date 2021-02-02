@@ -37,7 +37,7 @@ matrix:
           - python2.7-dev
   - os: linux
     env: PYTHON=3.5
-    dist: trusty
+    dist: xenial
     services:
     - docker
     addons:
