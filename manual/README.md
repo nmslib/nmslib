@@ -11,7 +11,7 @@ contains a detailed description of implemented search spaces and methods.
 
 ## Notes about issues with deploying version 2.0.x
 
-We unfortunately had deployment issues. As a result we had to delete several versions between 2.0.6 and 2.1.1. If you installed one of these versions, it is better to uninstall them.
+We unfortunately had deployment issues. As a result we had to delete several versions between 2.0.6 and 2.1.1. If you installed one of these versions, please, delete them and install a more recent version (>=2.1.1).
 
 ## Documentation Links
 
