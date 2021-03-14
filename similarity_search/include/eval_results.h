@@ -181,9 +181,9 @@ private:
 
     ClassCorrect_      = kClassUnknown;
     Recall_            = EvalRecall<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
+    RecallAt1_         = NumberCloser_ > 0.1 ? 0.0 : 1;
     if (!recallOnly) {
-      NumberCloser_      = EvalNumberCloser<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
-      RecallAt1_         = NumberCloser_ > 0.1 ? 0.0 : 1;
       PrecisionOfApprox_ = EvalPrecisionOfApprox<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
       LogRelPosError_    = EvalLogRelPosError<dist_t>()(ExactResultSize, SortedAllEntries_, ExactResultIds_, ApproxEntries_, ApproxResultIds_);
 
