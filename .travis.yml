@@ -221,7 +221,7 @@ before_install:
       PY=python${PYTHON}
       # For older PYTHON need a separate script or else it may fail
       if [ "$PYTHON" = "3.5" ] ; then
-        GET_PIP_SCRIPT="https://bootstrap.pypa.io/3.5/get-pip.py"
+        GET_PIP_SCRIPT="https://bootstrap.pypa.io/pip/3.5/get-pip.py"
       else
         GET_PIP_SCRIPT="https://bootstrap.pypa.io/get-pip.py"
       fi
