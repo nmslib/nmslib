@@ -24,7 +24,7 @@ our main focus is on **generic** and **approximate** search methods,
 in particular, on methods for non-metric spaces.
 NMSLIB is possibly the first library with a principled support for non-metric space searching.
 
-NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
+NMSLIB is an **extendible library**, which means that is possible to add new search methods and distance functions. NMSLIB can be used directly in C++ and Python (via Python bindings). In addition, it is also possible to build a query server, which can be used from Java (or other languages supported by Apache Thrift (**version 0.12**). Java has a native client, i.e., it works on many platforms without requiring a C++ library to be installed.
 
 **Authors**: Bilegsaikhan Naidan, Leonid Boytsov, Yury Malkov, David Novak. **With contributions from** Ben Frederickson, Lawrence Cayton, Wei Dong, Avrelin Nikita, Dmitry Yashunin, Bob Poekert, @orgoro, @gregfriedland, 
 Scott Gigante, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
