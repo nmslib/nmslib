@@ -114,12 +114,12 @@ inline void readNextBinDenseVect(DataFileInputStateSparseDenseFusion &state, str
   }
   size_t vec_size = dim * sizeof(float);
   vector<char> data(4 + vec_size);
-  char *p = &data[0];
-  writeBinaryPOD(p, qty);
-  p += 4;
-  state.inp_file_.read(p, vec_size);
+  char * const pStart = &data[0];
+  writeBinaryPOD(pStart, qty);
 
-  strObj.assign(p, data.size());
+  state.inp_file_.read(pStart + 4, vec_size);
+
+  strObj.assign(pStart, data.size());
 }
 
 /*
