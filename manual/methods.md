@@ -5,7 +5,7 @@
 The list of methods is followed by a brief tuning guideline:
 * ``hnsw`` a Hierarchical Navigable Small World Graph.
 * ``sw-graph`` a Small World Graph.
-* ``vp-tree`` a Vantage-Point tree with a pruning rule adaptable to non-metric distances
+* ``vptree`` a Vantage-Point tree with a pruning rule adaptable to non-metric distances
 * ``napp`` a Neighborhood APProximation index
 * ``simple_invindx`` a vanilla, uncompressed, inverted index, which has no parameters
 * ``brute_force`` a brute-force search, which has no parameters
