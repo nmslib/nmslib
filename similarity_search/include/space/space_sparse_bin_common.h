@@ -112,11 +112,14 @@ inline void readNextBinDenseVect(DataFileInputStateSparseDenseFusion &state, str
     THROW_RUNTIME_ERR(err);
 
   }
-  vector<char> data(dim * sizeof(float));
-  char *p = &data[0];
-  state.inp_file_.read(p, data.size());
+  size_t vec_size = dim * sizeof(float);
+  vector<char> data(4 + vec_size);
+  char * const pStart = &data[0];
+  writeBinaryPOD(pStart, qty);
 
-  strObj.assign(p, data.size());
+  state.inp_file_.read(pStart + 4, vec_size);
+
+  strObj.assign(pStart, data.size());
 }
 
 /*
@@ -130,14 +133,21 @@ inline void readNextBinDenseVect(DataFileInputStateSparseDenseFusion &state, str
  */
 inline void parseDenseBinVect(const string& strObj, vector<float>& vDense, unsigned& start, unsigned dim)  {
   const char* p = strObj.data() + start;
-  size_t expectSize = dim * 4;
+  size_t expectSize = 4 + dim * 4;
 
   CHECK_MSG(strObj.size() >= expectSize + start,
-            string("The received string object is too little! ") +
+            string("The received string object is too small! ") +
             " Start: " + ConvertToString(start) +
             " Str obj size: " + ConvertToString(strObj.size()) +
             " # dim: " + ConvertToString(dim) +
             " expected size: " + ConvertToString(expectSize));
+
+  uint32_t qty;
+
+  readBinaryPOD(p, qty);
+  p += 4;
+
+  CHECK_MSG(qty == dim, "Unexpected # of vector elements: " + ConvertToString(qty) + " expected: " + ConvertToString(dim));
 
   vDense.resize(dim);
 
