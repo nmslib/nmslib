@@ -182,7 +182,7 @@ template <typename dist_t, typename SearchOracle>
 void
 VPTree<dist_t, SearchOracle>::SaveNodeData(
   std::ofstream& output,
-  const VPTree<dist_t, SearchOracle>::VPNode* node) const {
+  const typename VPTree<dist_t, SearchOracle>::VPNode* node) const {
 
   // Nodes are written to output in pre-order. If a node doesn't have a left/right
   // child, a sentinel value of -1.0 is written instead. Regular nodes are
