@@ -1,4 +1,5 @@
 version: '{build}'
+# If changed sync with the command in the install section
 image: Visual Studio 2019
 platform:
 - x64
@@ -22,7 +23,7 @@ environment:
     # https://ci.appveyor.com/tools/encrypt
     secure: 7hxZ+XinYPLuIS1aHZbTcA==
 install:
-- cmd: '"%VS160COMNTOOLS%\..\..\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%'
+- cmd: '"c:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%'
 - cmd: git config core.symlinks true
 - cmd: git reset --hard
 - ps: Remove-Item -Recurse -Force C:/cygwin
