@@ -4,6 +4,7 @@ from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
 import struct
+import platform
 
 __version__ = '2.1.1'
 
@@ -14,7 +15,7 @@ dep_list = ['pybind11>=2.2.3', 'psutil']
 dep_list.append("numpy>=1.10.0,<1.17 ; python_version=='2.7'")
 dep_list.append("numpy>=1.10.0 ; python_version>='3.5'")
 
-py_version = tuple([int(v) for v in sys.version.split('.')[:2]])
+py_version = tuple([int(s) for s in platform.python_version().split('.')])
 if py_version != (2, 7) and py_version < (3, 5):
     raise RuntimeError("Python version 2.7 or >=3.5 required.")
 
@@ -146,8 +147,12 @@ class BuildExt(build_ext):
             if has_flag(self.compiler, '-fvisibility=hidden'):
                 opts.append('-fvisibility=hidden')
         elif ct == 'msvc':
-            opts.append('/DVERSION_INFO=\\"%s\\"' %
-                        self.distribution.get_version())
+            # Leo has no idea why escaping works differently for MSVC
+            # and Python 3.9, but it is required for Python 3.8 and earlier:
+            # weird 
+            esc_char = '\\' if py_version < (3, 9) else ''
+            
+            opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, esc_char, self.distribution.get_version()))
 
         print('Extra compilation arguments:', opts)
 

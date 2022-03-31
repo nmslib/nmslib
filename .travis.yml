@@ -1,5 +1,11 @@
 language: cpp
 
+branches:
+  only:
+  - master
+  - develop
+
+
 sudo: required
 
 addons:
