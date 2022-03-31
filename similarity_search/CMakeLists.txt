@@ -8,27 +8,25 @@
 #
 #
 
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.16)
 
 project (NonMetricSpaceLib)
 
 #
-# Runs compiler with "-dumpversion" and parses major/minor
-# version with a regex.
+# Runs compiler with "-dumpversion" 
 #
 # Taken&Modified from Boost.cmake
 #
 function(CXX_COMPILER_DUMPVERSION _OUTPUT_VERSION)
-
-  exec_program(${CMAKE_CXX_COMPILER}
-    ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
+  execute_process(
+    COMMAND ${CMAKE_CXX_COMPILER} -dumpversion
     OUTPUT_VARIABLE COMPILER_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  #string(REGEX REPLACE "([0-9])\\.([0-9])(\\.[0-9])?" "\\1\\2"
-  #   COMPILER_VERSION ${COMPILER_VERSION})
 
-  set(${_OUTPUT_VERSION} ${COMPILER_VERSION} PARENT_SCOPE)
+  set(${_OUTPUT_VERSION} "${COMPILER_VERSION}" PARENT_SCOPE)
 endfunction()
+
 
 if(NOT WIN32)
     CXX_COMPILER_DUMPVERSION(CXX_COMPILER_VERSION)
@@ -55,7 +53,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     endif()
     set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wunreachable-code -Ofast -DNDEBUG -std=c++11 -DHAVE_CXX0X -pthread ${SIMD_FLAGS} -fpic")
     set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wunreachable-code -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X -pthread ${SIMD_FLAGS} -fpic")
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     if (CMAKE_SYSTEM_NAME MATCHES Darwin)
         # MACOSX
         set (CMAKE_CXX_FLAGS_RELEASE "${WARN_FLAGS} -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X -pthread -fpic ${SIMD_FLAGS}")

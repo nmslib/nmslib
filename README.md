@@ -1,16 +1,16 @@
 [![Pypi version](https://img.shields.io/pypi/v/nmslib.svg)](http://pypi.python.org/pypi/nmslib)
+[![build & test](https://github.com/nmslib/nmslib/actions/workflows/build_and_test_some_ver.yml/badge.svg)](https://github.com/nmslib/nmslib/actions/workflows/build_and_test_some_ver.yml)
 [![Downloads](https://pepy.tech/badge/nmslib)](https://pepy.tech/project/nmslib)
 [![Downloads](https://pepy.tech/badge/nmslib/month)](https://pepy.tech/project/nmslib)
-[![Build Status](https://travis-ci.org/nmslib/nmslib.svg?branch=master)](https://travis-ci.org/nmslib/nmslib)
-[![Windows Build Status](https://ci.appveyor.com/api/projects/status/wd63b9doe7xco81t/branch/master?svg=true)](https://ci.appveyor.com/project/searchivarius/nmslib)
-[![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # Non-Metric Space Library (NMSLIB) 
 
 ## Important Notes
 
-* NMSLIB is generic but fast, see the results of [ANN benchmarks](https://github.com/erikbern/ann-benchmarks).
+* NMSLIB is generic but fast.
+* A history of creation of the library is covered in [this episode of the Vector Podcast](https://www.youtube.com/watch?v=gzWErcOXIKk&t=19s).
 * A standalone implementation of our fastest method HNSW [also exists as a header-only library](https://github.com/nmslib/hnswlib).
+* We provide binaries for Python 3.8-3.13 (also 3.14 for Linux) for three OS (Linux, MacOS, Windows) and two types of CPU (Intel, ARM).
 * **All the documentation** (including using **Python bindings** and the query server, description of methods and spaces, building the library, etc) can be found [on this page](/manual/README.md).
 * For **generic questions/inquiries**, please, use [**the Gitter chat**](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge): GitHub issues page is for bugs and feature requests.
 
@@ -31,10 +31,9 @@ Scott Gigante, Maxim Andreev, Daniel Lemire, Nathan Kurz, Alexander Ponomarenko.
 
 ## Brief History
 
-NMSLIB started as a personal project of Bilegsaikhan Naidan, who created the initial code base, the Python bindings,
-and participated in earlier evaluations. 
+NMSLIB started as a personal project of Bilegsaikhan Naidan, who created the initial code base, the Python bindings, and participated in earlier evaluations. 
 The most successful class of methods--neighborhood/proximity graphs--is represented by the Hierarchical Navigable Small World Graph (HNSW) due to Malkov and Yashunin (see the publications below). Other most useful methods, include a modification of the VP-tree due to Boytsov and Naidan (2013), a Neighborhood APProximation index (NAPP) proposed by Tellez et al. (2013) and improved by David Novak, as well as a vanilla uncompressed inverted file.
-
+The history of NMSLIB is also covered in [this episode of the Vector Podcast](https://www.youtube.com/watch?v=gzWErcOXIKk&t=19s)
 
 ## Credits and Citing
 
@@ -73,4 +72,5 @@ neighbor search small world approach.](http://www.iiis.org/CDs2011/CD2011IDI/ICT
 * L. Cayton, 2008 [Fast nearest neighbor retrieval for bregman divergences.](http://lcayton.com/bbtree.pdf) Twenty-Fifth International Conference on Machine Learning (ICML). [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/icml/Cayton08)
 * Amato, Giuseppe, and Pasquale Savino. 2008 Approximate similarity search in metric spaces using inverted files. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/conf/infoscale/AmatoS08)
 * Gonzalez, Edgar Chavez, Karina Figueroa, and Gonzalo Navarro. [Effective proximity retrieval by ordering permutations.](http://www.dcc.uchile.cl/~gnavarro/ps/tpami07.pdf) Pattern Analysis and Machine Intelligence, IEEE Transactions on 30.9 (2008): 1647-1658. [**[BibTex]**](http://dblp.uni-trier.de/rec/bibtex/journals/pami/ChavezFN08)
+
 

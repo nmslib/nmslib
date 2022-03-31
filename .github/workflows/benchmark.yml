@@ -1,0 +1,276 @@
+name: Benchmark NMSLIB
+
+on:
+  workflow_dispatch:
+    inputs:
+      NMSLIB_VER:
+        description: "nmslib version to pip install (e.g., 2.1.2)"
+        required: true
+        type: string
+      PYTHON_VER:
+        description: "Python version to use (e.g., 3.11)"
+        required: true
+        default: "3.11"
+        type: string
+      RUN_ARM:
+        description: "Run ARM-based benchmarks? true/false"
+        required: true
+        default: "true"
+        type: string
+      DATASET_NAME:
+        description: "Choose a specific dataset to test, if set to 'all' then all datasets will be used"
+        required: true
+        default: "all"
+        type: string
+
+permissions: {}
+
+env:
+  # Will be set from inputs inside jobs as well (handy for artifact names)
+  NMSLIB_VERSION: ${{ inputs.NMSLIB_VER }}
+  PY_VERSION: ${{ inputs.PYTHON_VER }}
+  DATASET_NAME: ${{ inputs.DATASET_NAME }}
+
+jobs:
+  # Tiny config job to allow easy enable/disable like your wheel builder
+  config:
+    runs-on: ubuntu-24.04
+    outputs:
+      run_linux_macos: ${{ steps.set.outputs.linux_macos }}
+      run_windows: ${{ steps.set.outputs.windows }}
+      run_arm: ${{ steps.set.outputs.run_arm }}
+    steps:
+      - id: set
+        run: |
+          echo "linux_macos=true" >> "$GITHUB_OUTPUT"
+          echo "windows=true" >> "$GITHUB_OUTPUT"
+          echo "run_arm=${{ inputs.RUN_ARM }}" >> "$GITHUB_OUTPUT"
+
+
+  linux_macos:
+    name: Linux & macOS benchmark
+    needs: config
+    if: ${{ needs.config.outputs.run_linux_macos == 'true' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 1200 
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        os: ${{ fromJson(needs.config.outputs.run_arm == 'true'
+          && '["ubuntu-24.04", "ubuntu-24.04-arm", "macos-14", "macos-15", "macos-15-intel"]'
+          || '["ubuntu-24.04", "macos-15-intel"]') }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ inputs.PYTHON_VER }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.PYTHON_VER }}
+          allow-prereleases: true
+
+      - name: Show Python info
+        run: |
+          python --version
+          python -c "import platform,sys; print('machine:', platform.machine(), 'arch:', platform.processor()); print(sys.executable)"
+
+      - name: Install nmslib (${{ inputs.NMSLIB_VER }})
+        run: |
+          python -m pip install -U pip
+          python -m pip install "nmslib==${{ inputs.NMSLIB_VER }}"
+
+      - name: Prepare result paths
+        id: prep
+        shell: bash
+        run: |
+          # Compose arch/os/python specific subdir as requested
+          SUBDIR="results-${{ inputs.PYTHON_VER }}-${{ matrix.os }}-${{ runner.arch }}-${{ env.NMSLIB_VERSION }}"
+          echo "SUBDIR=$SUBDIR" >> "$GITHUB_ENV"
+          echo "subdir=$SUBDIR" >> "$GITHUB_OUTPUT"
+          mkdir -p "benchmark/workdir/$SUBDIR"
+
+      - name: Install benchmark requirements
+        working-directory: benchmark
+        run: |
+          python -m pip install -r requirements.txt
+
+      - name: Run benchmark
+        working-directory: benchmark
+        shell: bash
+        env:
+          BINDING_VER: ${{ env.NMSLIB_VERSION }}
+          DATASET_NAME: ${{ env.DATASET_NAME }}
+        run: |
+          set -euo pipefail
+          python ./benchmark_nmslib.py \
+            --dataset_name "${DATASET_NAME}"  \
+            --dataset_dir ./workdir/datasets \
+            --work_dir ./workdir \
+            --output "./workdir/${{ env.SUBDIR }}/results.json" \
+            --binding_ver "${BINDING_VER}"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.prep.outputs.subdir }}
+          path: |
+            benchmark/workdir/${{ env.SUBDIR }}/results.json
+
+  windows:
+    name: Windows benchmark
+    needs: config
+    if: ${{ needs.config.outputs.run_windows == 'true' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 1200 
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      # Disabling Windows-ARM until sklearn becomes available there.
+      matrix:
+        #os: ${{ fromJson(needs.config.outputs.run_arm == 'true' && '["windows-2022","windows-11-arm"]' || '["windows-2022"]') }}
+        os: ${{ fromJson(needs.config.outputs.run_arm == 'true' && '["windows-2022"]' || '["windows-2022"]') }}
+
+    steps:
+      - name: Validate Python version on Windows ARM
+        if: ${{ runner.arch == 'ARM64' && inputs.PYTHON_VER < '3.11' }}
+        shell: pwsh
+        run: |
+          Write-Host "Python < 3.11 is not supported on windows-11-arm"
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      # Setup Python:
+      # - x64 via setup-python
+      # - ARM64 via manual installer (mirrors your wheels workflow)
+      - name: Setup Python (x64)
+        if: runner.arch != 'ARM64'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.PYTHON_VER }}
+          architecture: 'x64'
+          allow-prereleases: true
+
+      - name: Setup Python (ARM64 manual)
+        if: runner.arch == 'ARM64'
+        shell: pwsh
+        run: |
+          $py = "${{ inputs.PYTHON_VER }}"
+          if ($py -eq "3.11") { $full = "3.11.9" } else { $full = "$py.0" }
+          $mm = $py -replace '\.', ''  # e.g. 311
+          $dest = "C:\Python$mm-arm64"
+          $url = "https://www.python.org/ftp/python/$full/python-$full-arm64.exe"
+          Write-Host "Downloading $url"
+          Invoke-WebRequest -Uri $url -OutFile python-installer.exe
+          $args = @(
+            '/quiet','InstallAllUsers=0','PrependPath=1','Include_test=0','Include_launcher=0','SimpleInstall=1',
+            "TargetDir=$dest","/log=$pwd\py_install.log"
+          )
+          $p = Start-Process -FilePath .\python-installer.exe -ArgumentList $args -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Get-Content .\py_install.log -Tail 200; throw "Python install failed $($p.ExitCode)" }
+          Remove-Item .\python-installer.exe -Force
+          echo "PYTHON_ROOT=$dest" | Out-File -FilePath $env:GITHUB_ENV -Append
+          & "$dest\python.exe" --version
+          & "$dest\python.exe" -c "import platform; print('Python arch:', platform.machine())"
+
+      - name: Show Python info
+        shell: pwsh
+        run: |
+          $exe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
+          & $exe --version
+          & $exe -c "import platform,sys; print('machine:', platform.machine(), 'arch:', platform.processor()); print(sys.executable)"
+
+      - name: Install nmslib (${{ inputs.NMSLIB_VER }})
+        shell: pwsh
+        run: |
+          $exe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
+          & $exe -m pip install -U pip
+          & $exe -m pip install "nmslib==${{ inputs.NMSLIB_VER }}"
+
+      - name: Prepare result paths
+        id: prep
+        shell: pwsh
+        run: |
+          $sub = "results-${{ inputs.PYTHON_VER }}-${{ matrix.os }}-${{ runner.arch }}-${{ env.NMSLIB_VERSION }}"
+          echo "SUBDIR=$sub" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "subdir=$sub" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          New-Item -ItemType Directory -Force -Path "benchmark/workdir/$sub" | Out-Null
+
+      - name: Install benchmark requirements
+        working-directory: benchmark
+        shell: pwsh
+        run: |
+          $exe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
+          & $exe -m pip install -r requirements.txt
+
+      - name: Run benchmark
+        working-directory: benchmark
+        shell: pwsh
+        env:
+          BINDING_VER: ${{ env.NMSLIB_VERSION }}
+          DATASET_NAME: ${{ env.DATASET_NAME }}
+        run: |
+          $exe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
+          & $exe .\benchmark_nmslib.py `
+             --dataset_name "$env:DATASET_NAME"  `
+             --dataset_dir .\workdir\datasets `
+             --work_dir .\workdir `
+             --output ".\workdir\${{ env.SUBDIR }}\results.json" `
+             --binding_ver "$env:BINDING_VER"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.prep.outputs.subdir }}
+          path: |
+            benchmark/workdir/${{ env.SUBDIR }}/results.json
+
+  aggregate:
+    name: Aggregate all benchmark artifacts
+    needs: [linux_macos, windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: combined-benchmark-artifacts
+
+      - name: Setup Python for plotting
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.PYTHON_VER }}
+          allow-prereleases: true
+
+      - name: Install plotting requirements
+        run: |
+          python -m pip install -U pip
+          # Use the same requirements the benchmark uses (contains matplotlib, etc.)
+          python -m pip install -r benchmark/requirements.txt
+
+      - name: Render plots for every results.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find combined-benchmark-artifacts -type f -name results.json)
+          echo "Found ${#files[@]} results.json files"
+          for f in "${files[@]}"; do
+            outdir="$(dirname "$f")/plots"
+            mkdir -p "$outdir"
+            echo "Plotting: $f -> $outdir"
+            python benchmark/make_plots.py "$f" --out "$outdir"
+          done
+
+      - name: Show combined contents
+        run: ls -R combined-benchmark-artifacts
+
+      - name: Upload combined artifact (results + plots)
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-benchmark-results
+          path: combined-benchmark-artifacts/
+

@@ -51,18 +51,8 @@ class SimplInvIndex : public Index<dist_t> {
 
   void CreateIndex(const AnyParams& IndexParams) override; 
 
-  /*
-   * One can implement functions for index serialization and reading.
-   * However, this is not required.
-   */
-  // SaveIndex is not necessarily implemented
-  virtual void SaveIndex(const string& location) override {
-    throw runtime_error("SaveIndex is not implemented for method: " + StrDesc());
-  }
-  // LoadIndex is not necessarily implemented
-  virtual void LoadIndex(const string& location) override {
-    throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
-  }
+  virtual void SaveIndex(const string& location) override;
+  virtual void LoadIndex(const string& location) override;
 
   void SetQueryTimeParams(const AnyParams& QueryTimeParams) override;
 
@@ -122,7 +112,7 @@ class SimplInvIndex : public Index<dist_t> {
 
   bool                                                     printProgress_;
   SpaceSparseNegativeScalarProductFast*                    pSpace_;
-  std::unordered_map<unsigned, std::unique_ptr<PostList>>  index_;
+  std::unordered_map<uint32_t, std::unique_ptr<PostList>>  index_;
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(SimplInvIndex);
 };

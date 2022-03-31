@@ -7,13 +7,14 @@ from data_utils import download_and_unpack, \
                 NP_SUFF, NPZ_SUFF
 
 FINAL32 = 'final32'
+FINAL8 = 'final8'
 
 SIFT1M = 'sift1m'
 
 GLOVE100D = 'glove100d'
 WIKI250K = 'wiki250K'
 
-BASE_URL='http://boytsov.info/datasets/nmslib_benchmark/'
+BASE_URL='https://pub-9f9b6b8d87734ec19359b06a8a76fc50.r2.dev'
 TEXT_SUFF='.txt'
 DATA_PROC_IND_SUFF='.data_proc'
 
@@ -27,7 +28,8 @@ DATASET_DESC = {
     WIKI250K : VectorDataProp(url=f'{BASE_URL}/wikipedia250K.txt.bz2', type=VECTOR_SPARSE),
     GLOVE100D: VectorDataProp(url=f'{BASE_URL}/glove_noword.6B.100d.txt.bz2', type=VECTOR_DENSE),
     SIFT1M: VectorDataProp(url=f'{BASE_URL}/sift_texmex_base1m.txt.bz2', type=VECTOR_DENSE),
-    FINAL32: VectorDataProp(url=f'{BASE_URL}/final32.txt.bz2', type=VECTOR_DENSE)
+    FINAL8: VectorDataProp(url=f'{BASE_URL}/final8.txt.bz2', type=VECTOR_DENSE),
+    FINAL32: VectorDataProp(url=f'{BASE_URL}/final32.txt.bz2', type=VECTOR_DENSE),
 }
 
 def get_bin_suff(data_type):
@@ -36,7 +38,7 @@ def get_bin_suff(data_type):
     elif data_type == VECTOR_SPARSE:
         return NPZ_SUFF
     else:
-        raise Exception(f'Illegal data type: {prop.type}')
+        raise Exception(f'Illegal data type: {data_type}')
 
 
 def download_and_process_data(dst_dir):
@@ -49,16 +51,18 @@ def download_and_process_data(dst_dir):
 
     :param dst_dir: destination directory
     """
+
     for name, prop in DATASET_DESC.items():
+        dst_name = name + TEXT_SUFF
         data_done_path  = os.path.join(dst_dir, name + DATA_PROC_IND_SUFF)
-        data_text_path = os.path.join(dst_dir, name + TEXT_SUFF)
+        data_text_path = os.path.join(dst_dir, dst_name)
         data_bin_path = os.path.join(dst_dir, name)
 
         if os.path.exists(data_done_path):
             print(f'Ignore already processed dataset {name}')
             continue
 
-        download_and_unpack(url=prop.url, dst_dir=dst_dir, dst_name=data_text_path)
+        download_and_unpack(url=prop.url, dst_dir=dst_dir, dst_name=dst_name)
 
         if prop.type == VECTOR_DENSE:
             print('Converting to numpy format')

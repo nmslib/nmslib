@@ -1,4 +1,15 @@
 import os
+from pathlib import Path
+
+
+def ensure_file_parent_dir(path: str):
+    """Create parent directories for the given file path."""
+    p = Path(path)
+    parent = p.parent
+
+    if parent and str(parent) != ".":
+        parent.mkdir(parents=True, exist_ok=True)
+
 
 def to_int(n):
     """Converts a string to an integer value. Returns None, if the string cannot be converted."""

@@ -22,6 +22,7 @@
 #include "pow.h"
 #include "logging.h"
 #include "utils.h"
+#include "my_isnan_isinf.h"
 
 namespace similarity {
 
@@ -29,7 +30,7 @@ using namespace std;
 
 const float MAX_REL_DIFF = 1e-6f;
 
-vector<float>   addExps = { 0, 0.125, 0.25, 0.5 };
+vector<float>   addExps = { 0, 0.125, 0.25, 0.5, 1, 1.5, 2, 2.5 };
 vector<float>   vals    = { 0.1, 0.5, 1, 1.5, 2, 4};
 vector<float>   signs   = { 1, -1};
 
@@ -43,7 +44,14 @@ template <typename T> bool runTest() {
       for (float vpos : vals) 
       for (float s : signs) {
         float v = vpos * s;
+        if (s < 0 && (oneExp - static_cast<unsigned>(oneExp) > 1e-10)) {
+          continue; // negative to the fractional degree will be nan
+        }
         T expRes = pow(T(v), oneExp); 
+        if (my_isinf(expRes)) {
+          continue;
+        }
+        //cout << "Not skiping: " << v << " ^ " << oneExp << endl;
         T res = obj.pow(v);
 
         T absDiff = fabs(res - expRes);

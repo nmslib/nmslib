@@ -15,6 +15,7 @@
 #include "portable_intrinsics.h"
 #include "distcomp.h"
 #include "string.h"
+#include "utils.h"
 
 #include <cstdlib>
 #include <limits>

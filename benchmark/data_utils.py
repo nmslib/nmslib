@@ -6,6 +6,16 @@ from scipy.sparse import csr_matrix
 from scipy.sparse import save_npz, load_npz
 from sklearn.model_selection import train_test_split
 
+import urllib.request
+
+opener = urllib.request.build_opener()
+opener.addheaders = [
+    ("User-Agent", "Mozilla/5.0"),
+    ("Accept", "*/*"),
+    ("Connection", "keep-alive"),
+]
+urllib.request.install_opener(opener)
+
 from urllib.request import urlretrieve
 
 NP_SUFF='.npy'
