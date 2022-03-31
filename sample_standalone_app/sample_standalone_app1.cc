@@ -209,10 +209,25 @@ int main(int argc, char* argv[]) {
                                         customSpace,
                                         dataSet);
 
+  Index<float>*   indexVPTreeLoaded =
+                        MethodFactoryRegistry<float>::Instance().
+                                CreateMethod(false /* don't print progress */,
+                                        "vptree",
+                                        "custom",
+                                        customSpace,
+                                        dataSet);
+
   indexVPTree->CreateIndex(IndexParams);
   indexVPTree->SetQueryTimeParams(QueryTimeParams);
 
   cout << "VP-tree index is created!" << endl;
+
+  cout << "Saving VP-tree index to file (vptree.dat)." << endl;
+  indexVPTree->SaveIndex("vptree.dat");
+
+  cout << "Loading VP-tree index from file (vptree.dat)." << endl;
+  indexVPTreeLoaded->LoadIndex("vptree.dat");
+  indexVPTreeLoaded->SetQueryTimeParams(QueryTimeParams);
 
   IndexParams= AnyParams({ "projDim=16",   // Projection dimensionality
                            "projType=perm", // using permutations => the number of pivots is equal to projDim and should be < #of objects
@@ -232,6 +247,9 @@ int main(int argc, char* argv[]) {
   doSearch(indexSmallWorld, &knnQ, REP_QTY);
 
   doSearch(indexVPTree, &knnQ, REP_QTY);
+
+  cout << "Searching in loaded VP tree" << endl;
+  doSearch(indexVPTreeLoaded, &knnQ, REP_QTY);
 
   cout << "Saving vectors to a file: " << endl;
 

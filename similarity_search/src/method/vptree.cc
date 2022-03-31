@@ -13,6 +13,7 @@
  *
  */
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -121,6 +122,142 @@ void VPTree<dist_t, SearchOracle>::Search(KNNQuery<dist_t>* query, IdType) const
 }
 
 template <typename dist_t, typename SearchOracle>
+void VPTree<dist_t, SearchOracle>::SaveIndex(const std::string& location) {
+
+  std::ofstream output(location, std::ios::binary);
+  CHECK_MSG(output, "Cannot open file '" + location + "' for writing");
+  output.exceptions(ios::badbit | ios::failbit);
+
+  // Save version number
+  const uint32_t version = 1;
+  writeBinaryPOD(output, version);
+
+  // Save dataset size, so that we can compare with dataset size upon loading
+  writeBinaryPOD(output, this->data_.size());
+
+  // Save tree parameters
+  writeBinaryPOD(output, max_pivot_select_attempts_);
+  writeBinaryPOD(output, BucketSize_);
+  writeBinaryPOD(output, ChunkBucket_);
+  writeBinaryPOD(output, use_random_center_);
+
+  // Save node data
+  if (root_) {
+    SaveNodeData(output, root_.get());
+  }
+}
+
+template <typename dist_t, typename SearchOracle>
+void VPTree<dist_t, SearchOracle>::LoadIndex(const std::string& location) {
+
+  std::ifstream input(location, std::ios::binary);
+  CHECK_MSG(input, "Cannot open file '" + location + "' for reading");
+  input.exceptions(ios::badbit | ios::failbit);
+
+  uint32_t version;
+  readBinaryPOD(input, version);
+  if (version != 1) {
+    PREPARE_RUNTIME_ERR(err) << "File version number (" << version << ") differs from "
+                             << "expected version (1)";
+    THROW_RUNTIME_ERR(err);
+  }
+
+  size_t datasize;
+  readBinaryPOD(input, datasize);
+  if (datasize != this->data_.size()) {
+    PREPARE_RUNTIME_ERR(err) << "Saved dataset size (" << datasize
+                             << ") differs from actual size (" << this->data_.size() << ")";
+    THROW_RUNTIME_ERR(err);
+  }
+
+  readBinaryPOD(input, max_pivot_select_attempts_);
+  readBinaryPOD(input, BucketSize_);
+  readBinaryPOD(input, ChunkBucket_);
+  readBinaryPOD(input, use_random_center_);
+
+  root_ = std::unique_ptr<VPNode>(LoadNodeData(input));
+}
+
+template <typename dist_t, typename SearchOracle>
+void
+VPTree<dist_t, SearchOracle>::SaveNodeData(
+  std::ofstream& output,
+  const typename VPTree<dist_t, SearchOracle>::VPNode* node) const {
+
+  // Nodes are written to output in pre-order. If a node doesn't have a left/right
+  // child, a sentinel value of -1.0 is written instead. Regular nodes are
+  // serialized in the following order:
+  //
+  // * mediandist (always non-negative)
+  // * number of bucket elements or 0 if not a leaf node (pivot)
+  // * IDs of bucket data, or ID of pivot
+  // * left child tree
+  // * right child tree
+
+  if (node == nullptr) {
+    // write sentinel
+    writeBinaryPOD(output, static_cast<float>(-1.0));
+
+    return;
+  }
+
+  writeBinaryPOD(output, node->mediandist_);
+
+  if (node->bucket_) {
+    writeBinaryPOD(output, node->bucket_->size());
+    for (const auto& element : *(node->bucket_)) {
+      writeBinaryPOD(output, element->id());
+    }
+  } else if (node->pivot_) {
+    size_t bucketsize = 0;
+    writeBinaryPOD(output, bucketsize);
+    writeBinaryPOD(output, node->pivot_->id());
+  }
+
+  SaveNodeData(output, node->left_child_);
+  SaveNodeData(output, node->right_child_);
+}
+
+template <typename dist_t, typename SearchOracle>
+typename VPTree<dist_t, SearchOracle>::VPNode*
+VPTree<dist_t, SearchOracle>::LoadNodeData(std::ifstream& input) const {
+
+  float mediandist;
+
+  readBinaryPOD(input, mediandist);
+  if (mediandist < 0) {
+    // sentinel node
+    return nullptr;
+  }
+
+  VPNode* node = new VPNode(oracle_);
+  node->mediandist_ = mediandist;
+
+  size_t bucketsize;
+  readBinaryPOD(input, bucketsize);
+
+  IdType dataId = 0;
+  if (bucketsize == 0) {
+    // read one element, the pivot
+    readBinaryPOD(input, dataId);
+    node->pivot_ = this->data_[dataId];
+  } else {
+    // read bucket content
+    ObjectVector bucket(bucketsize);
+    for (size_t i = 0; i < bucketsize; i++) {
+      readBinaryPOD(input, dataId);
+      bucket[i] = this->data_[dataId];
+    }
+    node->CreateBucket(false, bucket, nullptr);
+  }
+
+  node->left_child_ = LoadNodeData(input);
+  node->right_child_ = LoadNodeData(input);
+
+  return node;
+}
+
+template <typename dist_t, typename SearchOracle>
 void VPTree<dist_t, SearchOracle>::VPNode::CreateBucket(bool ChunkBucket, 
                                                         const ObjectVector& data, 
                                                         ProgressDisplay* progress_bar) {
@@ -131,6 +268,16 @@ void VPTree<dist_t, SearchOracle>::VPNode::CreateBucket(bool ChunkBucket,
     }
     if (progress_bar) (*progress_bar) += data.size();
 }
+
+template <typename dist_t, typename SearchOracle>
+VPTree<dist_t, SearchOracle>::VPNode::VPNode(const SearchOracle& oracle)
+    : oracle_(oracle),
+      pivot_(NULL),
+      mediandist_(0),
+      left_child_(NULL),
+      right_child_(NULL),
+      bucket_(NULL),
+      CacheOptimizedBucket_(NULL) {}
 
 template <typename dist_t, typename SearchOracle>
 VPTree<dist_t, SearchOracle>::VPNode::VPNode(
