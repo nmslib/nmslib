@@ -1,6 +1,6 @@
 ## Query Server (Linux/Mac)
 
-The query server requires Apache Thrift. We used Apache Thrift 0.11.0. If a newer version is used, one may need to regenerate both the client and the source code. To install Apache Thrift on Mac we can use brew:
+The query server requires Apache Thrift. We used **Apache Thrift 0.12.0**. If a newer version is used, one may need to regenerate both the client and the source code. To install Apache Thrift on Mac we can use brew:
 ```
 brew install thrift
 ```
