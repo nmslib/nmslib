@@ -146,7 +146,7 @@ class BuildExt(build_ext):
             if has_flag(self.compiler, '-fvisibility=hidden'):
                 opts.append('-fvisibility=hidden')
         elif ct == 'msvc':
-            opts.append('/DVERSION_INFO="%s"' %
+            opts.append('/DVERSION_INFO=\\"%s\\"' %
                         self.distribution.get_version())
 
         print('Extra compilation arguments:', opts)
