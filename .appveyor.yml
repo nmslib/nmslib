@@ -1,8 +1,8 @@
 version: '{build}'
-image: Visual Studio 2015
+image: Visual Studio 2019
 platform:
 - x64
-# Disable temporarily
+# 32 build does not work
 #- x86
 environment:
   global:
@@ -16,13 +16,13 @@ environment:
   - PYTHON: 36
   - PYTHON: 37
   - PYTHON: 38
-  # Need to disable b/c it doesn't work with older Visual Studio images.
-  #- PYTHON: 39
+  - PYTHON: 39
+  - PYTHON: 310
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
     secure: 7hxZ+XinYPLuIS1aHZbTcA==
 install:
-- cmd: '"%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%'
+- cmd: '"%VS160COMNTOOLS%\..\..\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%'
 - cmd: git config core.symlinks true
 - cmd: git reset --hard
 - ps: Remove-Item -Recurse -Force C:/cygwin
