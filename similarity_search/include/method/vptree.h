@@ -49,6 +49,9 @@ class VPTree : public Index<dist_t> {
 
   const std::string StrDesc() const override;
 
+  void SaveIndex(const string& location) override;
+  void LoadIndex(const string& location) override;
+
   void Search(RangeQuery<dist_t>* query, IdType) const override;
   void Search(KNNQuery<dist_t>* query, IdType) const override;
 
@@ -72,6 +75,7 @@ class VPTree : public Index<dist_t> {
     // We want trees to be balanced
     const size_t BalanceConst = 4; 
 
+    VPNode(const SearchOracle& oracle);
     VPNode(unsigned level,
            ProgressDisplay* progress_bar,
            const SearchOracle&  oracle,
@@ -87,6 +91,7 @@ class VPTree : public Index<dist_t> {
    private:
     void CreateBucket(bool ChunkBucket, const ObjectVector& data, 
                       ProgressDisplay* progress_bar);
+
     const SearchOracle& oracle_; // The search oracle must be accessed by reference,
                                  // so that VP-tree may be able to change its parameters
     const Object* pivot_;
@@ -116,6 +121,9 @@ class VPTree : public Index<dist_t> {
   bool                ChunkBucket_;
 
   vector<string>  QueryTimeParams_;
+
+  VPNode* LoadNodeData(std::ifstream& input) const;
+  void    SaveNodeData(std::ofstream& output, const VPNode* node) const;
 
   // disable copy and assign
   DISABLE_COPY_AND_ASSIGN(VPTree);
