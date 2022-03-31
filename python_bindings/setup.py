@@ -131,6 +131,8 @@ class BuildExt(build_ext):
     }
 
     if sys.platform == 'darwin':
+        if platform.processor() == 'arm64':
+            c_opts['unix'].remove('-march=native')
         c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
         link_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
     else:
@@ -152,7 +154,7 @@ class BuildExt(build_ext):
             # weird 
             esc_char = '\\' if py_version < (3, 9) else ''
             
-            opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, esc_char, self.distribution.get_version()))
+            opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, self.distribution.get_version(), esc_char))
 
         print('Extra compilation arguments:', opts)
 

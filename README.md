@@ -1,7 +1,7 @@
 [![Pypi version](https://img.shields.io/pypi/v/nmslib.svg)](http://pypi.python.org/pypi/nmslib)
 [![Downloads](https://pepy.tech/badge/nmslib)](https://pepy.tech/project/nmslib)
 [![Downloads](https://pepy.tech/badge/nmslib/month)](https://pepy.tech/project/nmslib)
-[![Build Status](https://travis-ci.org/nmslib/nmslib.svg?branch=master)](https://travis-ci.org/nmslib/nmslib)
+[![Build Status](https://app.travis-ci.com/nmslib/nmslib.svg?branch=master)](https://app.travis-ci.com/nmslib/nmslib)
 [![Windows Build Status](https://ci.appveyor.com/api/projects/status/wd63b9doe7xco81t/branch/master?svg=true)](https://ci.appveyor.com/project/searchivarius/nmslib)
 [![Join the chat at https://gitter.im/nmslib/Lobby](https://badges.gitter.im/nmslib/Lobby.svg)](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
