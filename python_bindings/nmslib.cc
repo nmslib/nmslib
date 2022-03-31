@@ -444,7 +444,7 @@ PYBIND11_PLUGIN(nmslib) {
 #endif
   // Log using the python logger, instead of defaults built in here
   py::module logging = py::module::import("logging");
-  py::module nmslibLogger = logging.attr("getLogger")("nmslib");
+  py::object nmslibLogger = logging.attr("getLogger")("nmslib");
   setGlobalLogger(new PythonLogger(nmslibLogger));
 
   initLibrary(0 /* seed */, LIB_LOGCUSTOM, NULL);
