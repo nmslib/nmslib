@@ -108,7 +108,7 @@ def cpp_flag(compiler):
 class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
     c_opts = {
-        'msvc': [ '/EHsc', '/openmp', '/O2'],
+        'msvc': [ '/EHsc', '/openmp', '/O2', '/permissive-'],
         'unix': [ '-O3'],
     }
     arch_list = '-march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
@@ -146,7 +146,7 @@ class BuildExt(build_ext):
             if has_flag(self.compiler, '-fvisibility=hidden'):
                 opts.append('-fvisibility=hidden')
         elif ct == 'msvc':
-            opts.append('/DVERSION_INFO=\\"%s\\"' %
+            opts.append('/DVERSION_INFO="%s"' %
                         self.distribution.get_version())
 
         print('Extra compilation arguments:', opts)
