@@ -289,8 +289,9 @@ inline void CreateObjIdToPosMapper(const ObjectVector& data, std::vector<IdType>
 }
 
 inline IdType ConvertId(IdType srcId,  const std::vector<IdType>& mapper) {
+  CHECK_MSG(mapper.size() > 0, "Only non-empty datasets are supported!");
   CHECK_MSG(srcId >= 0, "Invalid negative source ID");
-  CHECK_MSG(srcId < mapper.size(), "Invalid source ID: " + ConvertToString(srcId) + " max allowed: " + ConvertToString(ssize_t(mapper.size()) - 1));
+  CHECK_MSG(srcId < mapper.size(), "Invalid source ID: " + ConvertToString(srcId) + " max allowed: " + ConvertToString(mapper.size() - 1));
   return mapper[srcId];
 }
 
