@@ -27,6 +27,7 @@
 #include <cstdint>
 
 #include "global.h"
+#include "utils.h"
 #include "idtype.h"
 #include "logging.h"
 
@@ -278,11 +279,19 @@ inline void CreateObjIdToPosMapper(const ObjectVector& data, std::vector<IdType>
     CHECK_MSG(pObj->id() >= 0, "Bug: encountered negative object ID");
     maxId = std::max(maxId, pObj->id());
   }
-  mapper.resize(maxId);
+  mapper.resize(maxId + 1);
   std::fill(mapper.begin(), mapper.end(), -1);
   for (IdTypeUnsign i = 0; i < data.size(); ++i) {
+    CHECK(data[i]->id() >= 0);
+    CHECK(data[i]->id() < mapper.size());
     mapper[data[i]->id()] = i;
   }
+}
+
+inline IdType ConvertId(IdType srcId,  const std::vector<IdType>& mapper) {
+  CHECK_MSG(srcId >= 0, "Invalid negative source ID");
+  CHECK_MSG(srcId < mapper.size(), "Invalid source ID: " + ConvertToString(srcId) + " max allowed: " + ConvertToString(ssize_t(mapper.size()) - 1));
+  return mapper[srcId];
 }
 
 

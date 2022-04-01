@@ -168,6 +168,13 @@ vector<MethodTestCase>    vTestCaseDesc = {
   // knn
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", false, "chunkBucket=1,bucketSize=10",  "",
                 1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 80),  
+
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", true /* test index reloading */, "chunkBucket=1,bucketSize=10",  "",
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 80),  
+  MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", true /* test index reloading */, "chunkBucket=0,bucketSize=10" /* test without optimized buckets */,  "",
+                1 /* KNN-1 */, 0 /* no range search */ , 1.0, 1.0, 0.0, 0.0, 40, 80),  
+
+
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final8_10K.txt", "vptree", false, "chunkBucket=1,bucketSize=10", "alphaLeft=2,alphaRight=2", 
                 1 /* KNN-1 */, 0 /* no range search */ , 0.93, 0.97, 0.03, 0.09, 120, 190),  
   MethodTestCase(DIST_TYPE_FLOAT, "l2", "final128_10K.txt", "vptree", false, "chunkBucket=1,bucketSize=10", "",

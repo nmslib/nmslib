@@ -253,7 +253,7 @@ public:
   const AnyParams& GetAllParams() const { return params; }
 
   void copySeen(AnyParamManager& other) {
-    for (const string s: seen) other.seen.insert(s);
+    for (const string& s: seen) other.seen.insert(s);
   }
 
 private:

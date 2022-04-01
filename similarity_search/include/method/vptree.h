@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "index.h"
+#include "object.h"
 #include "params.h"
 #include "ported_boost_progress.h"
 
@@ -122,7 +123,7 @@ class VPTree : public Index<dist_t> {
 
   vector<string>  QueryTimeParams_;
 
-  VPNode* LoadNodeData(std::ifstream& input) const;
+  VPNode* LoadNodeData(std::ifstream& input, bool ChunkBucket, const vector<IdType>& IdMapper) const;
   void    SaveNodeData(std::ofstream& output, const VPNode* node) const;
 
   // disable copy and assign

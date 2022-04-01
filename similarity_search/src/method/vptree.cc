@@ -44,6 +44,9 @@ using std::stringstream;
 using std::endl;
 using std::cout;
 using std::cerr;
+
+const IdType PIVOT_ID_NULL_NODE = -2;
+const IdType PIVOT_ID_NULL_PIVOT = -1;
     
 template <typename dist_t, typename SearchOracle>
 VPTree<dist_t, SearchOracle>::VPTree(
@@ -145,6 +148,7 @@ void VPTree<dist_t, SearchOracle>::SaveIndex(const std::string& location) {
   if (root_) {
     SaveNodeData(output, root_.get());
   }
+  output.close();
 }
 
 template <typename dist_t, typename SearchOracle>
@@ -175,7 +179,11 @@ void VPTree<dist_t, SearchOracle>::LoadIndex(const std::string& location) {
   readBinaryPOD(input, ChunkBucket_);
   readBinaryPOD(input, use_random_center_);
 
-  root_ = std::unique_ptr<VPNode>(LoadNodeData(input));
+  vector<IdType> IdMapper;
+
+  CreateObjIdToPosMapper(this->data_, IdMapper);
+
+  root_ = std::unique_ptr<VPNode>(LoadNodeData(input, ChunkBucket_, IdMapper));
 }
 
 template <typename dist_t, typename SearchOracle>
@@ -184,35 +192,39 @@ VPTree<dist_t, SearchOracle>::SaveNodeData(
   std::ofstream& output,
   const typename VPTree<dist_t, SearchOracle>::VPNode* node) const {
 
-  // Nodes are written to output in pre-order. If a node doesn't have a left/right
-  // child, a sentinel value of -1.0 is written instead. Regular nodes are
+  // Nodes are written to output in pre-order. 
+  // If a node is null, we write a sentinel value instead (PIVOT_ID_NULL_NODE).
+  // Regular nodes are
   // serialized in the following order:
   //
-  // * mediandist (always non-negative)
-  // * number of bucket elements or 0 if not a leaf node (pivot)
-  // * IDs of bucket data, or ID of pivot
+  // * pivot ID (or PIVOT_ID_NULL_NODE or PIVOT_ID_NULL_PIVOT)
+  // * median distance
+  // * number of bucket elements: if the bucket is empty or null, we write zero
+  // * IDs of bucket data elements
   // * left child tree
   // * right child tree
 
-  if (node == nullptr) {
-    // write sentinel
-    writeBinaryPOD(output, static_cast<float>(-1.0));
+  IdType pivotId = PIVOT_ID_NULL_NODE;
+  if (node != nullptr) {
+    pivotId = node->pivot_ ? node->pivot_->id() : PIVOT_ID_NULL_PIVOT;
+  }
+  writeBinaryPOD(output, pivotId);
 
+  if (node == nullptr) {
     return;
   }
 
+  CHECK(node != nullptr);
   writeBinaryPOD(output, node->mediandist_);
 
+  size_t bucket_size = node->bucket_ ? node->bucket_->size() : 0; 
+  writeBinaryPOD(output, bucket_size);
+
   if (node->bucket_) {
-    writeBinaryPOD(output, node->bucket_->size());
     for (const auto& element : *(node->bucket_)) {
       writeBinaryPOD(output, element->id());
     }
-  } else if (node->pivot_) {
-    size_t bucketsize = 0;
-    writeBinaryPOD(output, bucketsize);
-    writeBinaryPOD(output, node->pivot_->id());
-  }
+  } 
 
   SaveNodeData(output, node->left_child_);
   SaveNodeData(output, node->right_child_);
@@ -220,39 +232,50 @@ VPTree<dist_t, SearchOracle>::SaveNodeData(
 
 template <typename dist_t, typename SearchOracle>
 typename VPTree<dist_t, SearchOracle>::VPNode*
-VPTree<dist_t, SearchOracle>::LoadNodeData(std::ifstream& input) const {
+VPTree<dist_t, SearchOracle>::LoadNodeData(std::ifstream& input, bool ChunkBucket, const vector<IdType>& IdMapper) const {
+  IdType pivotId = 0;
+  // read one element, the pivot
+  readBinaryPOD(input, pivotId);
 
-  float mediandist;
-
-  readBinaryPOD(input, mediandist);
-  if (mediandist < 0) {
-    // sentinel node
+  if (pivotId == PIVOT_ID_NULL_NODE) {
+    // empty node
     return nullptr;
   }
 
   VPNode* node = new VPNode(oracle_);
+  if (pivotId >= 0) {
+    pivotId = ConvertId(pivotId, IdMapper);
+    CHECK_MSG(pivotId >= 0, "Incorrect element ID: " + ConvertToString(pivotId));
+    CHECK_MSG(pivotId < this->data_.size(), "Incorrect element ID: " + ConvertToString(pivotId));
+    node->pivot_ = this->data_[pivotId];
+  } else {
+    CHECK(pivotId == PIVOT_ID_NULL_PIVOT);
+  }
+
+  float mediandist;
+  readBinaryPOD(input, mediandist);
   node->mediandist_ = mediandist;
 
   size_t bucketsize;
   readBinaryPOD(input, bucketsize);
 
-  IdType dataId = 0;
-  if (bucketsize == 0) {
-    // read one element, the pivot
-    readBinaryPOD(input, dataId);
-    node->pivot_ = this->data_[dataId];
-  } else {
+  if (bucketsize) {
     // read bucket content
     ObjectVector bucket(bucketsize);
+    IdType dataId = 0;
     for (size_t i = 0; i < bucketsize; i++) {
       readBinaryPOD(input, dataId);
+      CHECK(dataId >= 0);
+      dataId = ConvertId(dataId, IdMapper);
+      CHECK_MSG(dataId >= 0, "Incorrect element ID: " + ConvertToString(dataId));
+      CHECK_MSG(dataId < this->data_.size(), "Incorrect element ID: " + ConvertToString(dataId));
       bucket[i] = this->data_[dataId];
     }
-    node->CreateBucket(false, bucket, nullptr);
+    node->CreateBucket(ChunkBucket, bucket, nullptr);
   }
 
-  node->left_child_ = LoadNodeData(input);
-  node->right_child_ = LoadNodeData(input);
+  node->left_child_ = LoadNodeData(input, ChunkBucket, IdMapper);
+  node->right_child_ = LoadNodeData(input, ChunkBucket, IdMapper);
 
   return node;
 }
