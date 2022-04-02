@@ -25,6 +25,8 @@
 
 namespace similarity {
 
+const uint32_t VERSION_NUMBER = 1;
+
 using namespace std;
 
 template <typename dist_t>
@@ -136,6 +138,69 @@ void SimplInvIndex<dist_t>::Search(KNNQuery<dist_t>* query, IdType) const {
     query->CheckAndAddToResult(this->data_[tmpResQueue.top_data()]);
 #endif
     tmpResQueue.pop();
+  }
+}
+
+template <typename dist_t>
+void SimplInvIndex<dist_t>::SaveIndex(const string& location) {
+  std::ofstream output(location, std::ios::binary);
+  CHECK_MSG(output, "Cannot open file '" + location + "' for writing");
+  output.exceptions(ios::badbit | ios::failbit);
+
+  // Save version number
+  const uint32_t version = VERSION_NUMBER;
+  writeBinaryPOD(output, version);
+
+  size_t entryQty = index_.size(); 
+  writeBinaryPOD(output, entryQty);
+
+  for (const auto & e: index_) {
+    uint32_t elemId = e.first;
+    writeBinaryPOD(output, elemId);
+    const PostList& pl = *e.second;
+    writeBinaryPOD(output, pl.qty_);
+    for (size_t i = 0; i < pl.qty_; i++) {
+      const PostEntry& e = pl.entries_[i];
+      writeBinaryPOD(output, e.doc_id_);
+      writeBinaryPOD(output, e.val_);
+    }
+  }
+
+  output.close();
+}
+
+template <typename dist_t>
+void SimplInvIndex<dist_t>::LoadIndex(const string& location) {
+  std::ifstream input(location, std::ios::binary);
+  CHECK_MSG(input, "Cannot open file '" + location + "' for reading");
+  input.exceptions(ios::badbit | ios::failbit);
+
+  uint32_t version;
+  readBinaryPOD(input, version);
+  if (version != VERSION_NUMBER) {
+    PREPARE_RUNTIME_ERR(err) << "File version number (" << version << ") differs from "
+                             << "expected version (" << VERSION_NUMBER << ")";
+    THROW_RUNTIME_ERR(err);
+  }
+
+  index_.clear();
+  size_t entryQty = 0;
+  readBinaryPOD(input, entryQty);
+
+  index_.clear();
+
+  for (size_t qi = 0; qi < entryQty; qi++) {
+    uint32_t wordId = 0;
+    readBinaryPOD(input, wordId);
+    size_t postQty = 0;
+    readBinaryPOD(input, postQty);
+    auto pl = unique_ptr<PostList>(new PostList(postQty));
+    for (size_t pi = 0; pi < postQty; pi++) {
+      PostEntry& e = pl->entries_[pi];
+      readBinaryPOD(input, e.doc_id_);
+      readBinaryPOD(input, e.val_);
+    }
+    index_.insert(make_pair(wordId, pl.release()));
   }
 }
 

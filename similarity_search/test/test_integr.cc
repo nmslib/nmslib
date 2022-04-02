@@ -58,11 +58,11 @@ using std::stringstream;
 
 #define INDEX_FILE_NAME "index.tmp" 
 
-#define TEST_HNSW 1
-#define TEST_SW_GRAPH 1
+#define TEST_HNSW 0
+#define TEST_SW_GRAPH 0
 #define TEST_IR 1
-#define TEST_NAPP 1
-#define TEST_OTHER 1
+#define TEST_NAPP 0
+#define TEST_OTHER 0
 
 vector<MethodTestCase>    vTestCaseDesc = {
 #if (TEST_HNSW)
@@ -139,6 +139,8 @@ vector<MethodTestCase>    vTestCaseDesc = {
 
 #if (TEST_IR)
   MethodTestCase(DIST_TYPE_FLOAT, "negdotprod_sparse_fast", "sparse_5K.txt", "simple_invindx", false, "", "", 
+                10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 395, 510),  
+  MethodTestCase(DIST_TYPE_FLOAT, "negdotprod_sparse_fast", "sparse_5K.txt", "simple_invindx", true, "", "", 
                 10 /* KNN-10 */, 0 /* no range search */ , 0.999, 1.0, 0.0, 0.001, 395, 510),  
 #endif
 

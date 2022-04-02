@@ -47,6 +47,7 @@ using std::cerr;
 
 const IdType PIVOT_ID_NULL_NODE = -2;
 const IdType PIVOT_ID_NULL_PIVOT = -1;
+const uint32_t VERSION_NUMBER = 2;
     
 template <typename dist_t, typename SearchOracle>
 VPTree<dist_t, SearchOracle>::VPTree(
@@ -132,7 +133,7 @@ void VPTree<dist_t, SearchOracle>::SaveIndex(const std::string& location) {
   output.exceptions(ios::badbit | ios::failbit);
 
   // Save version number
-  const uint32_t version = 1;
+  const uint32_t version = VERSION_NUMBER;
   writeBinaryPOD(output, version);
 
   // Save dataset size, so that we can compare with dataset size upon loading
@@ -160,9 +161,9 @@ void VPTree<dist_t, SearchOracle>::LoadIndex(const std::string& location) {
 
   uint32_t version;
   readBinaryPOD(input, version);
-  if (version != 1) {
+  if (version != VERSION_NUMBER) {
     PREPARE_RUNTIME_ERR(err) << "File version number (" << version << ") differs from "
-                             << "expected version (1)";
+                             << "expected version (" << VERSION_NUMBER << ")";
     THROW_RUNTIME_ERR(err);
   }
 
