@@ -1,5 +1,8 @@
 language: cpp
 
+on:
+   tags: true
+
 branches:
   only:
   - master
