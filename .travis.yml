@@ -204,22 +204,22 @@ matrix:
 
   - os: osx
     env: PYTHON=3.5-dev
-    osx_image: xcode12.3
+    osx_image: xcode11
   - os: osx
     env: PYTHON=3.6-dev
-    osx_image: xcode12.3
+    osx_image: xcode11
   - os: osx
     env: PYTHON=3.7-dev
-    osx_image: xcode12.3
+    osx_image: xcode11
   - os: osx
     env: PYTHON=3.8-dev
-    osx_image: xcode12.3
+    osx_image: xcode11
   - os: osx
     env: PYTHON=3.9-dev
-    osx_image: xcode12.3
+    osx_image: xcode11
   - os: osx
     env: PYTHON=3.10-dev
-    osx_image: xcode12.3
+    osx_image: xcode11
   #allow_failures:
   #- os: osx
 
@@ -263,7 +263,7 @@ install:
   else
     cmake similarity_search
   fi
-  make -j 4
+  travis_wait make -j 2
   $PIP install --user scipy six flake8 psutil
   cd python_bindings
   $PIP install --user -r requirements.txt
