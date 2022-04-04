@@ -12,12 +12,11 @@ environment:
     # SSE2 is the default in recent VS, but let's keep for older versions, see, e.g.: https://github.com/weidai11/cryptopp/issues/445
     ARCH: SSE2
   matrix:
-  - PYTHON: 27
-  - PYTHON: 39
   - PYTHON: 35
   - PYTHON: 36
   - PYTHON: 37
   - PYTHON: 38
+  - PYTHON: 39
   - PYTHON: 310
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
@@ -80,6 +79,6 @@ deploy_script:
     cd python_bindings
     python setup.py build_ext
     python setup.py sdist bdist_wheel
-    python -m twine upload -r pypi -p $env:pypipassword --skip-existing dist/*
+    python -m twine upload -r testpypi -p $env:pypipassword --skip-existing dist/*
     echo "Deployment complete"
 

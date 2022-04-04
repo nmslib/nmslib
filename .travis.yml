@@ -28,20 +28,6 @@ matrix:
   fast_finish: true
   include:
   - os: linux
-    dist: trusty
-    env: PYTHON=2.7
-    services:
-    - docker
-    addons:
-      apt:
-        update: true
-        sources:
-        - ubuntu-toolchain-r-test
-        - deadsnakes
-        packages:
-          - *core_build
-          - python2.7-dev
-  - os: linux
     env: PYTHON=3.5
     dist: xenial
     services:
@@ -207,9 +193,6 @@ matrix:
          - python3.10-dev
          - python3.10-distutils
   - os: osx
-    env: PYTHON=2.7-dev
-    osx_image: xcode11.2
-  - os: osx
     env: PYTHON=3.5-dev
     osx_image: xcode11.2
   - os: osx
@@ -229,9 +212,6 @@ matrix:
     osx_image: xcode11.2
 
   - os: osx
-    env: PYTHON=2.7-dev
-    osx_image: xcode12
-  - os: osx
     env: PYTHON=3.5-dev
     osx_image: xcode12
   - os: osx
@@ -249,8 +229,8 @@ matrix:
   - os: osx
     env: PYTHON=3.10-dev
     osx_image: xcode12
-  allow_failures:
-  - os: osx
+  #allow_failures:
+  #- os: osx
 
 before_install:
 - |
@@ -279,12 +259,7 @@ before_install:
   fi
 
   PIP="$PY -m pip"
-  if [ "$PYTHON" = "2.7" ] ; then
-    echo "Keeping an old pip version for Python$PYTHON"
-    sudo -H $PIP install --upgrade "pip < 21.0"
-  else
-    sudo -H $PIP install --upgrade pip
-  fi
+  sudo -H $PIP install --upgrade pip
 
 install:
 - |
@@ -328,7 +303,7 @@ after_script:
       pwd
       ls python_bindings/
       ls python_bindings/dist/
-      $PY -m twine upload -r pypi -p $PYPI_PASSWORD --skip-existing python_bindings/dist/* &>/dev/null
+      $PY -m twine upload -r testpypi -p $PYPI_PASSWORD --skip-existing python_bindings/dist/* &>/dev/null
       echo "Twine upload status: $?"
     else
       echo "Skipping deployment because this is not a tagged commit"
