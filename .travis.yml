@@ -23,7 +23,7 @@ matrix:
   include:
   - os: linux
     env: PYTHON=3.5
-    dist: xenial
+    dist: bionic
     services:
     - docker
     addons:
@@ -109,7 +109,7 @@ matrix:
         - python3.10-dev
         - python3.10-distutils
   - os: linux
-    dist: xenial
+    dist: bionic
     env: PYTHON=3.5
     arch: arm64
     services:
