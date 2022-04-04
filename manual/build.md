@@ -84,7 +84,7 @@ export BOOST_ROOT=$HOME/boost_download_dir
 
 ## Installing and building via vcpkg
 You can download and install nmslib using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager on both Windows and Mac/Linux.
-On an Unix-like system do the following:
+In a command line do the following:
 ```
 git clone https://github.com/Microsoft/vcpkg.git
 cd vcpkg
