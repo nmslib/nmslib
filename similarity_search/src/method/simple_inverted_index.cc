@@ -200,7 +200,7 @@ void SimplInvIndex<dist_t>::LoadIndex(const string& location) {
       readBinaryPOD(input, e.doc_id_);
       readBinaryPOD(input, e.val_);
     }
-    index_.insert(make_pair(wordId, pl.release()));
+    index_.insert(make_pair(wordId, unique_ptr<PostList>(pl.release())));
   }
 }
 

@@ -97,17 +97,18 @@ The nmslib port in vcpkg is kept up to date by Microsoft team members and commun
 # Building on Windows
 ## Building from sources
 
-Building on Windows requires [Visual Studio 2015 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). Although it is generally possible and [AppVeyor (see config file for details)](/.appveyor.yml) does create binary Windows versions of NMSLIB, it is often difficult due to subtle differences in the building environment. An easier solution is to build using **vcpkg** (see below). 
+Building on Windows requires [Visual Studio 2019 Express for Desktop](https://www.visualstudio.com/en-us/downloads/download-visual-studio-vs.aspx). Some earlier versions may work as well, but we have trouble using Visual Studio 2022, which failed to initialized the working environment properly.
+It might be still difficult due to subtle differences in the building environment. An easier solution is to build using **vcpkg** as explained above.
 
-AppVeyor builds only Python bindings. To create other binaries, one needs [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for 64 bit architecture using CMake **GUI**. You have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio (but, again, it is a bit tricky). 
-It is easier to use vcpkg:
+Generally, building python bindings/binaries from the command line is pretty straightforward. It requires:
+1. Initializing the working environment by calling, e.g. `"c:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64`.
+2. Installing necessary python packages and running `python setup.py build_ext`: see [AppVeyor config file for details.](/.appveyor.yml) does create binary Windows versions of NMSLIB, 
+
+AppVeyor builds only Python bindings. To create other binaries, one needs [CMake for Windows](https://cmake.org/download/). First, generate Visual Studio solution file for **64 bit** architecture using CMake:
 ```
-git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg
-.\bootstrap-vcpkg.bat
-.\vcpkg integrate install
-.\vcpkg install nmslib
+cmake -G "Visual Studio 16 2019" -A x64
 ```
+Note that you have to specify both the platform and the version of Visual Studio. Then, the generated solution can be built using Visual Studio.
 
 # Testing the Correctness of Implementations
 
