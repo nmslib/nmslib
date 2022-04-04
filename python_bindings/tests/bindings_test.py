@@ -188,7 +188,7 @@ class DenseIndexTestMixin(object):
 
             original_results = original.knnQuery(data[0])
             reloaded_results = reloaded.knnQuery(data[0])
-            self.assert_allclose(original_results, reloaded_results, rtol=RTOL, atol=ATOL)
+            self.assert_allclose(original_results, reloaded_results)
 
         shutil.rmtree(temp_dir)
 
@@ -251,7 +251,7 @@ class BitVectorIndexTestMixin(object):
             s = self.bit_vector_str_func(np.ones(512))
             original_results = original.knnQuery(s)
             reloaded_results = reloaded.knnQuery(s)
-            self.assert_allclose(original_results, reloaded_results, rtol=RTOL, atol=ATOL)
+            self.assert_allclose(original_results, reloaded_results)
   
         shutil.rmtree(temp_dir)
 
@@ -306,7 +306,7 @@ class SWGraphTestCase(TestCaseBase, DenseIndexTestMixin):
 
             original_results = original.knnQuery(data[0])
             reloaded_results = reloaded.knnQuery(data[0])
-            self.assert_allclose(original_results, reloaded_results, rtol=RTOL, atol=ATOL)
+            self.assert_allclose(original_results, reloaded_results)
 
         shutil.rmtree(temp_dir)
 
