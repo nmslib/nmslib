@@ -201,43 +201,25 @@ matrix:
          - *core_build
          - python3.10-dev
          - python3.10-distutils
-  - os: osx
-    env: PYTHON=3.5-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.6-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.7-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.8-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.9-dev
-    osx_image: xcode11.2
-  - os: osx
-    env: PYTHON=3.10-dev
-    osx_image: xcode11.2
 
   - os: osx
     env: PYTHON=3.5-dev
-    osx_image: xcode12
+    osx_image: xcode12.3
   - os: osx
     env: PYTHON=3.6-dev
-    osx_image: xcode12
+    osx_image: xcode12.3
   - os: osx
     env: PYTHON=3.7-dev
-    osx_image: xcode12
+    osx_image: xcode12.3
   - os: osx
     env: PYTHON=3.8-dev
-    osx_image: xcode12
+    osx_image: xcode12.3
   - os: osx
     env: PYTHON=3.9-dev
-    osx_image: xcode12
+    osx_image: xcode12.3
   - os: osx
     env: PYTHON=3.10-dev
-    osx_image: xcode12
+    osx_image: xcode12.3
   #allow_failures:
   #- os: osx
 
