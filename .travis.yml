@@ -37,7 +37,7 @@ matrix:
         - python3.5-dev
   - os: linux
     env: PYTHON=3.6
-    dist: xenial
+    dist: bionic
     services:
     - docker
     addons:
@@ -51,7 +51,7 @@ matrix:
         - python3.6-dev
   - os: linux
     env: PYTHON=3.7
-    dist: xenial
+    dist: bionic
     services:
     - docker
     addons:
@@ -65,7 +65,7 @@ matrix:
         - python3.7-dev
   - os: linux
     env: PYTHON=3.8
-    dist: xenial
+    dist: bionic
     services:
     - docker
     addons:
@@ -80,7 +80,7 @@ matrix:
         - python3.8-distutils
   - os: linux
     env: PYTHON=3.9
-    dist: xenial
+    dist: bionic
     services:
     - docker
     addons:
@@ -95,7 +95,7 @@ matrix:
         - python3.9-distutils
   - os: linux
     env: PYTHON=3.10
-    dist: xenial
+    dist: bionic
     services:
     - docker
     addons:
@@ -110,6 +110,21 @@ matrix:
         - python3.10-distutils
   - os: linux
     dist: xenial
+    env: PYTHON=3.5
+    arch: arm64
+    services:
+    - docker
+    addons:
+      apt:
+       update: true
+       sources:
+       - deadsnakes
+       - sourceline: 'ppa:ubuntu-toolchain-r/test'
+       packages:
+         - *core_build
+         - python3.5-dev
+  - os: linux
+    dist: bionic
     env: PYTHON=3.6
     arch: arm64
     services:
@@ -124,7 +139,7 @@ matrix:
          - *core_build
          - python3.6-dev
   - os: linux
-    dist: xenial
+    dist: bionic
     env: PYTHON=3.7
     arch: arm64
     services:
@@ -139,7 +154,7 @@ matrix:
          - *core_build
          - python3.7-dev
   - os: linux
-    dist: xenial
+    dist: bionic
     env: PYTHON=3.8
     arch: arm64
     services:
@@ -155,7 +170,7 @@ matrix:
          - python3.8-dev
          - python3.8-distutils
   - os: linux
-    dist: xenial
+    dist: bionic
     env: PYTHON=3.9
     arch: arm64
     services:
@@ -171,7 +186,7 @@ matrix:
          - python3.9-dev
          - python3.9-distutils
   - os: linux
-    dist: xenial
+    dist: bionic
     env: PYTHON=3.10
     arch: arm64
     services:
