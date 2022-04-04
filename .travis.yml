@@ -255,7 +255,11 @@ before_install:
       if [ "$PYTHON" = "3.5" ] ; then
         GET_PIP_SCRIPT="https://bootstrap.pypa.io/pip/3.5/get-pip.py"
       else
-        GET_PIP_SCRIPT="https://bootstrap.pypa.io/get-pip.py"
+        if [ "$PYTHON" = "3.6" ] ; then
+          GET_PIP_SCRIPT="https://bootstrap.pypa.io/pip/3.6/get-pip.py"
+        else
+          GET_PIP_SCRIPT="https://bootstrap.pypa.io/get-pip.py"
+        fi
       fi
       echo "Using PIP bootstrapping script $GET_PIP_SCRIPT"
       curl  "$GET_PIP_SCRIPT" | sudo -H $PY

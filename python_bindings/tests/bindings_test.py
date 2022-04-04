@@ -25,6 +25,9 @@ MEM_TEST_QUERY_QTY=200
 MEM_GROW_COEFF=1.5 # This is a bit adhoc but seems to work in practice
 MEM_TEST_DATA_DIM=4
 
+RTOL=1e-7
+ATOL=1e-7
+
 def get_exact_cosine(row, data, N=10):
     scores = data.dot(row) / np.linalg.norm(data, axis=-1)
     best = np.argpartition(scores, -N)[-N:]
@@ -63,7 +66,8 @@ class TestCaseBase(unittest.TestCase):
         comp_resort_dists.append(ids2dist[one_id])
 
       npt.assert_allclose(orig,
-                          (comp_resort_ids, comp_resort_dists))
+                          (comp_resort_ids, comp_resort_dists), 
+                           rtol=RTOL, atol=ATOL)
 
 class TestSparseZeroVect(TestCaseBase):
     def testSparseCosine1(self):
@@ -80,7 +84,7 @@ class TestSparseZeroVect(TestCaseBase):
         nns, dists = index.knnQueryBatch(q, k=3)[0]
         self.assertEqual(len(nns), 3)
         self.assertEqual(len(dists), 3)
-        npt.assert_allclose(dists, [1, 1, 1])
+        npt.assert_allclose(dists, [1, 1, 1], rtol=RTOL, atol=ATOL)
         self.assertEqual(index.getDistance(3, 3), 1)
         # The last element is all zeros, so any distance to it must be equal to one
         for k in range(len(X)):
@@ -184,7 +188,7 @@ class DenseIndexTestMixin(object):
 
             original_results = original.knnQuery(data[0])
             reloaded_results = reloaded.knnQuery(data[0])
-            self.assert_allclose(original_results, reloaded_results)
+            self.assert_allclose(original_results, reloaded_results, rtol=RTOL, atol=ATOL)
 
         shutil.rmtree(temp_dir)
 
@@ -247,7 +251,7 @@ class BitVectorIndexTestMixin(object):
             s = self.bit_vector_str_func(np.ones(512))
             original_results = original.knnQuery(s)
             reloaded_results = reloaded.knnQuery(s)
-            self.assert_allclose(original_results, reloaded_results)
+            self.assert_allclose(original_results, reloaded_results, rtol=RTOL, atol=ATOL)
   
         shutil.rmtree(temp_dir)
 
@@ -302,7 +306,7 @@ class SWGraphTestCase(TestCaseBase, DenseIndexTestMixin):
 
             original_results = original.knnQuery(data[0])
             reloaded_results = reloaded.knnQuery(data[0])
-            self.assert_allclose(original_results, reloaded_results)
+            self.assert_allclose(original_results, reloaded_results, rtol=RTOL, atol=ATOL)
 
         shutil.rmtree(temp_dir)
 
@@ -352,7 +356,7 @@ class SparseTestCase(TestCaseBase):
 
         ids, distances = index.knnQuery([(1, 2.), (2, 3.)])
         self.assertEqual(ids[0], 0)
-        npt.assert_allclose(distances[0], 0)
+        npt.assert_allclose(distances[0], 0, rtol=RTOL, atol=ATOL)
 
         self.assertEqual(len(index), 4)
         self.assertEqual(index[3], [(3, 1.0)])
