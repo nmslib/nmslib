@@ -264,11 +264,11 @@ install:
     cmake similarity_search
   fi
   travis_wait make -j 2
-  $PIP install --user scipy six flake8 psutil
+  travis_wait $PIP install --user scipy six flake8 psutil
   cd python_bindings
-  $PIP install --user -r requirements.txt
-  $PY setup.py build_ext
-  $PIP install --user .
+  travis_wait $PIP install --user -r requirements.txt
+  travis_wait $PY setup.py build_ext
+  travis_wait $PIP install --user .
   cd ..
 
 script:
@@ -291,9 +291,9 @@ after_script:
       export PY
       export PIP
       export PYTHON
-      bash travis/deploy.sh
-      $PIP install --user "six>=1.9.0"
-      $PIP install --user twine
+      travis_wait bash travis/deploy.sh
+      travis_wait $PIP install --user "six>=1.9.0"
+      travis_wait $PIP install --user twine
       cp .pypirc ~/.pypirc
       pwd
       ls python_bindings/
