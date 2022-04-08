@@ -258,11 +258,11 @@ before_install:
 
 install:
 - |
-  if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    cmake similarity_search -DWITH_EXTRAS=1
-  else
+  #if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    #cmake similarity_search -DWITH_EXTRAS=1
+  #else
     cmake similarity_search
-  fi
+  #fi
   travis_wait make -j 2
   travis_wait $PIP install --user scipy six flake8 psutil
   cd python_bindings
