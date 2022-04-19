@@ -130,7 +130,7 @@ class BuildExt(build_ext):
     }
 
     if sys.platform == 'darwin':
-        if platform.processor() == 'arm64':
+        if platform.processor() in ('arm64', 'arm'):
             c_opts['unix'].remove('-march=native')
             # thanks to @https://github.com/drkeoni
             # https://github.com/nmslib/nmslib/issues/476#issuecomment-876094529
