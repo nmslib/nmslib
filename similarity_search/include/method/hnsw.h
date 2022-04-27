@@ -454,8 +454,10 @@ namespace similarity {
     template <typename dist_t> class Hnsw : public Index<dist_t> {
     public:
         virtual void SaveIndex(const string &location) override;
+		virtual void SaveIndex(const string &location, const ObjectVector* pdata) override;
 
         virtual void LoadIndex(const string &location) override;
+		virtual void LoadIndex(const string &location, ObjectVector* pdata) override;
 
         Hnsw(bool PrintProgress, const Space<dist_t> &space, const ObjectVector &data);
         void CreateIndex(const AnyParams &IndexParams) override;
@@ -501,7 +503,9 @@ namespace similarity {
         void LoadOptimizedIndex(std::istream& input);
 
         void SaveRegularIndexBin(std::ostream& output);
+        void SaveRegularDataBin(std::ostream& output, const ObjectVector* pdata);
         void LoadRegularIndexBin(std::istream& input);
+        void LoadRegularDataBin(std::istream& input, ObjectVector* pdata);
         void SaveRegularIndexText(std::ostream& output);
         void LoadRegularIndexText(std::istream& input);
 

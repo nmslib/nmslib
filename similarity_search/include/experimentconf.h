@@ -110,6 +110,9 @@ public:
     for (auto it = origQuery_.begin(); it != origQuery_.end(); ++it) {
       delete *it;
     }
+	for (auto it = loaddataobjects_.begin(); it != loaddataobjects_.end(); ++it) {
+	  delete *it;
+    }
   }
 
   void PrintInfo() const;
@@ -126,6 +129,14 @@ public:
   const Space<dist_t>&  GetSpace() const { return space_; }
   Space<dist_t>&  GetSpace() { return space_; }
   const ObjectVector& GetDataObjects() const { return dataobjects_; }
+  void ClearWriteableObjects() {
+      for (auto it = loaddataobjects_.begin(); it != loaddataobjects_.end(); ++it) {
+          if(*it != nullptr)
+          delete *it;
+      }
+      loaddataobjects_.clear();
+  }
+  ObjectVector& GetDataWriteableObjects() { return loaddataobjects_; }
   const ObjectVector& GetQueryObjects() const { return queryobjects_; }
   const typename std::vector<unsigned>& GetKNN() const { return knn_; }
   float GetEPS() const { return eps_; }
@@ -162,6 +173,7 @@ public:
 private:
   Space<dist_t>&    space_;
   ObjectVector      dataobjects_;
+  ObjectVector      loaddataobjects_;
   ObjectVector      queryobjects_;
   ObjectVector      origData_;
   ObjectVector      origQuery_;

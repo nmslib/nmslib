@@ -57,8 +57,14 @@ public:
   virtual void SaveIndex(const string& location) {
     throw runtime_error("SaveIndex is not implemented for method: " + StrDesc());
   }
+  virtual void SaveIndex(const string& location,const  ObjectVector* pdata) {
+    throw runtime_error("SaveIndex is not implemented for method: " + StrDesc());
+  }
   // LoadIndex is not necessarily implemented
   virtual void LoadIndex(const string& location) {
+    throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
+  }
+  virtual void LoadIndex(const string& location, ObjectVector* pdata) {
     throw runtime_error("LoadIndex is not implemented for method: " + StrDesc());
   }
   virtual ~Index() {}
