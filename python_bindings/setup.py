@@ -5,6 +5,7 @@ import sys
 import setuptools
 import struct
 import platform
+import re
 
 __version__ = '2.1.2'
 
@@ -130,7 +131,7 @@ class BuildExt(build_ext):
     }
 
     if sys.platform == 'darwin':
-        if platform.processor() in ('arm64', 'arm'):
+        if re.search('ARM64', platform.uname().version):
             c_opts['unix'].remove('-march=native')
             # thanks to @https://github.com/drkeoni
             # https://github.com/nmslib/nmslib/issues/476#issuecomment-876094529

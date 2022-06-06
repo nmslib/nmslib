@@ -82,7 +82,7 @@ template float  QueryNormScalarProduct<float>(const float* pVect1, const float* 
 template <>
 float NormScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 #ifndef PORTABLE_SSE2
-#pragma message WARN("ScalarProductSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
+#pragma message ("ScalarProductSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return NormScalarProduct(pVect1, pVect2, qty);
 #else
     size_t qty16  = qty/16;
@@ -192,7 +192,7 @@ template float  ScalarProduct<float>(const float* pVect1, const float* pVect2, s
 template <>
 float ScalarProductSIMD(const float* pVect1, const float* pVect2, size_t qty) {
 #ifndef PORTABLE_SSE2
-#pragma message WARN("ScalarProductSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
+#pragma message ("ScalarProductSIMD<float>: SSE2 is not available, defaulting to pure C++ implementation!")
     return ScalarProduct(pVect1, pVect2, qty);
 #else
     size_t qty16  = qty/16;
