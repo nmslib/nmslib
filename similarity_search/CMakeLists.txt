@@ -55,7 +55,7 @@ elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
     endif()
     set (CMAKE_CXX_FLAGS_RELEASE "-Wall -Wunreachable-code -Ofast -DNDEBUG -std=c++11 -DHAVE_CXX0X -pthread ${SIMD_FLAGS} -fpic")
     set (CMAKE_CXX_FLAGS_DEBUG   "-Wall -Wunreachable-code -ggdb  -DNDEBUG -std=c++11 -DHAVE_CXX0X -pthread ${SIMD_FLAGS} -fpic")
-elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     if (CMAKE_SYSTEM_NAME MATCHES Darwin)
         # MACOSX
         set (CMAKE_CXX_FLAGS_RELEASE "${WARN_FLAGS} -O3 -DNDEBUG -std=c++11 -DHAVE_CXX0X -pthread -fpic ${SIMD_FLAGS}")
