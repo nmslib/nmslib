@@ -157,7 +157,7 @@ class BuildExt(build_ext):
             # That said, it seems to have been fixed by now, so no escaping is required:
             esc_char = ''
             
-            opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, self.distribution.get_version(), esc_char))
+            opts.append("/DVERSION_INFO=%s'%s%s'" % (esc_char, self.distribution.get_version(), esc_char))
 
         print('Extra compilation arguments:', opts)
 

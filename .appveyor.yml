@@ -11,11 +11,11 @@ environment:
     # SSE2 is the default in recent VS, but let's keep for older versions, see, e.g.: https://github.com/weidai11/cryptopp/issues/445
     ARCH: SSE2
   matrix:
-  - PYTHON: 312
-  - PYTHON: 311
   - PYTHON: 310
   - PYTHON: 39
   - PYTHON: 38
+  - PYTHON: 312
+  - PYTHON: 311
   - PYTHON: 37
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
