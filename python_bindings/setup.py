@@ -156,8 +156,7 @@ class BuildExt(build_ext):
             #esc_char = '\\' if py_version < (3, 9) else ''
             esc_char = ''
             
-            #opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, self.distribution.get_version(), esc_char))
-            opts.extend(['/D' ,'VERSION_INFO=%s"%s%s"' % (esc_char, self.distribution.get_version(), esc_char)])
+            opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, self.distribution.get_version(), esc_char))
 
         print('Extra compilation arguments:', opts)
 
