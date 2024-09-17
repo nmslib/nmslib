@@ -31,7 +31,7 @@ install:
     $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
     echo $env:PATH
     python -m pip install --disable-pip-version-check --upgrade pip
-    python -m pip install -qq setuptools six psutil
+    python -m pip install -qq setuptools six psutil scikit-learn pytest pytest-runner
 - cmd: |
     ECHO Platform : %PLATFORM%
     ECHO Python : %PYTHON%
@@ -49,7 +49,7 @@ build_script:
 
 test_script:
 - ps: cd python_bindings
-- cmd: python setup.py test
+- cmd: pytest tests
 - ps: cd ..
 
 deploy_script: 
