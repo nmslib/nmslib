@@ -151,10 +151,11 @@ class BuildExt(build_ext):
             if has_flag(self.compiler, '-fvisibility=hidden'):
                 opts.append('-fvisibility=hidden')
         elif ct == 'msvc':
-            # Leo has no idea why escaping works differently for MSVC
+            # Leo has no idea why escaping used to work differently for MSVC
             # and Python 3.9, but it is required for Python 3.8 and earlier:
-            # weird 
-            esc_char = '\\' if py_version < (3, 9) else ''
+            #esc_char = '\\' if py_version < (3, 9) else ''
+            # That said, it seems to have been fixed by now, so no escaping is required:
+            esc_char = ''
             
             opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, self.distribution.get_version(), esc_char))
 
