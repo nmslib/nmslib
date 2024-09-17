@@ -13,10 +13,10 @@ environment:
   matrix:
   - PYTHON: 37
   - PYTHON: 312
-#  - PYTHON: 38
-#  - PYTHON: 310
-#  - PYTHON: 39
-#  - PYTHON: 311
+  - PYTHON: 38
+  - PYTHON: 310
+  - PYTHON: 39
+  - PYTHON: 311
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
     secure: 7hxZ+XinYPLuIS1aHZbTcA==
