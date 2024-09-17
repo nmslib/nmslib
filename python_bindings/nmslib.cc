@@ -449,9 +449,10 @@ PYBIND11_PLUGIN(nmslib) {
 
   initLibrary(0 /* seed */, LIB_LOGCUSTOM, NULL);
 
+#define STRINGIZER(x)   #x
 
 #ifdef VERSION_INFO
-  m.attr("__version__") = py::str(VERSION_INFO);
+  m.attr("__version__") = py::str(STRINGIZER(VERSION_INFO));
 #else
   m.attr("__version__") = py::str("dev");
 #endif
