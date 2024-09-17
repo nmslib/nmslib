@@ -49,7 +49,6 @@ install:
     ECHO Python : %PYTHON%
     ECHO PATH : %PATH%
     set
-    python -c 'import struct ; print("# of bits in the pointer", struct.calcsize("P") * 8)'
     python --version
     python -m pip --version
 build_script:
