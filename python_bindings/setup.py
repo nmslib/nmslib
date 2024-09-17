@@ -154,7 +154,7 @@ class BuildExt(build_ext):
             # Leo has no idea why escaping used to work differently for MSVC
             # and Python 3.9, but it is required for Python 3.8 and earlier:
             #esc_char = '\\' if py_version < (3, 9) else ''
-            esc_char= ''
+            esc_char = '"' if py_version < (3, 9) else ''
             
             opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, self.distribution.get_version(), esc_char))
 
