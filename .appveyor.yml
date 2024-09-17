@@ -25,8 +25,9 @@ install:
 - cmd: '"c:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%'
 - cmd: git config core.symlinks true
 - cmd: git reset --hard
-- ps: Remove-Item -Recurse -Force C:/cygwin
-- ps: Remove-Item -Recurse -Force C:/cygwin64
+- ps: Remove-Item -Recurse -Force C:/cygwin*
+#- ps: Remove-Item -Recurse -Force C:/cygwin
+#- ps: Remove-Item -Recurse -Force C:/cygwin64
 - ps: |
     if ($env:PYTHON) {
       if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
