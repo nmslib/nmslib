@@ -153,11 +153,9 @@ class BuildExt(build_ext):
         elif ct == 'msvc':
             # Leo has no idea why escaping used to work differently for MSVC
             # and Python 3.9, but it is required for Python 3.8 and earlier:
-            #esc_char = '\\' if py_version < (3, 9) else ''
-            # That said, it seems to have been fixed by now, so no escaping is required:
-            esc_char = ''
+            esc_char = '\\' if py_version < (3, 9) else ''
             
-            opts.append("/DVERSION_INFO=%s'%s%s'" % (esc_char, self.distribution.get_version(), esc_char))
+            opts.append('/DVERSION_INFO=%s"%s%s"' % (esc_char, self.distribution.get_version(), esc_char))
 
         print('Extra compilation arguments:', opts)
 
