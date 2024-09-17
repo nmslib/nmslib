@@ -2,9 +2,8 @@ version: '{build}'
 # If changed sync with the command in the install section
 image: Visual Studio 2019
 platform:
+# It is hardcoded 32 won't work
 - x64
-# 32 build does not work
-#- x86
 environment:
   global:
     DISTUTILS_USE_SDK: 1
@@ -18,6 +17,8 @@ environment:
   - PYTHON: 38
   - PYTHON: 39
   - PYTHON: 310
+  - PYTHON: 311
+  - PYTHON: 312
   pypipassword:
     # https://ci.appveyor.com/tools/encrypt
     secure: 7hxZ+XinYPLuIS1aHZbTcA==
@@ -27,23 +28,12 @@ install:
 - cmd: git reset --hard
 - cmd: rmdir "C:\cygwin" /s /q
 - cmd: rmdir "C:\cygwin64" /s /q
-#- ps: Remove-Item -Recurse -Force C:/cygwin
-#- ps: Remove-Item -Recurse -Force C:/cygwin64
 - ps: |
-    if ($env:PYTHON) {
-      if ($env:PLATFORM -eq "x64") { $env:PYTHON = "$env:PYTHON-x64" }
-      $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
-      python -m pip install --disable-pip-version-check --upgrade pip
-      python -m pip install -qq setuptools six psutil
-    } elseif ($env:CONDA) {
-      if ($env:CONDA -eq "27") { $env:CONDA = "" }
-      if ($env:PLATFORM -eq "x64") { $env:CONDA = "$env:CONDA-x64" }
-      $env:PATH = "C:\Miniconda$env:CONDA\;C:\Miniconda$env:CONDA\Scripts\;$env:PATH"
-      conda config --set always_yes yes --set changeps1 no
-      conda config --add channels conda-forge
-      conda update -q conda
-      conda install -q conda-build
-    }
+    $env:PYTHON = "$env:PYTHON-x64" 
+    $env:PATH = "C:\Python$env:PYTHON\;C:\Python$env:PYTHON\Scripts\;$env:PATH"
+    echo $env:PATH
+    python -m pip install --disable-pip-version-check --upgrade pip
+    python -m pip install -qq setuptools six psutil
 - cmd: |
     ECHO Platform : %PLATFORM%
     ECHO Python : %PYTHON%
