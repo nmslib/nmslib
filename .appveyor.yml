@@ -25,7 +25,8 @@ install:
 - cmd: '"c:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%'
 - cmd: git config core.symlinks true
 - cmd: git reset --hard
-- ps: dir C:/
+- cmd: rmdir C:/cygwin
+- cmd: rmdir C:/cygwin64
 #- ps: Remove-Item -Recurse -Force C:/cygwin
 #- ps: Remove-Item -Recurse -Force C:/cygwin64
 - ps: |
@@ -48,6 +49,7 @@ install:
     ECHO Python : %PYTHON%
     ECHO PATH : %PATH%
     set
+    python -c 'import struct ; print("# of bits in the pointer", struct.calcsize("P") * 8)'
     python --version
     python -m pip --version
 build_script:
