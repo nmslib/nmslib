@@ -109,7 +109,7 @@ class BuildExt(build_ext):
     """A custom build extension for adding compiler-specific options."""
     c_opts = {
         'msvc': [ '/EHsc', '/openmp', '/O2', '/permissive-'],
-        'unix': [ '-O3'],
+        'unix': [ '-O3', '-fpermissive', '-DEMAXNC'],
     }
     arch_list = '-march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
     if 'ARCH' in os.environ:

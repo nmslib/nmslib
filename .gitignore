@@ -17,3 +17,6 @@ similarity_search/tmpfile.bin
 *.egg-info/
 .idea
 dist/
+build/
+lib/
+.vscode

@@ -1,0 +1,46 @@
+
+## EMAX7 Compiler                      ##
+##         Copyright (C) 2012 by NAIST ##
+##         Primary writer: Y.Nakashima ##
+##                nakashim@is.naist.jp ##
+
+PROGRAM	      = conv-c2d-bsd
+ifeq ($(MACHTYPE),x86_64)
+CFLAGS        = -O2 -fsigned-char
+LDFLAGS       =
+else
+CFLAGS        = -O2 -m32 -fsigned-char
+LDFLAGS       = -m32
+endif
+LIBFLAGS      =
+
+OBJS	      = main.o \
+		y.tab.o \
+		emax7.o
+
+SRCS	      = main.c \
+		y.tab.c \
+		emax7.c
+
+all:	      $(PROGRAM)
+
+$(PROGRAM):     $(OBJS)
+		@echo -n "Loading $(PROGRAM) ... "
+		@cc $(OBJS) $(LDFLAGS) -o $(PROGRAM) $(LIBFLAGS)
+		@echo "done"
+
+.c.o:;		cc -c $(CFLAGS) $<
+
+y.tab.c:	conv-c2d.y
+		yacc conv-c2d.y
+
+lex.yy.c:	conv-c2d.l
+		lex -l conv-c2d.l
+
+clean:;		@rm -f $(OBJS) y.tab.c lex.yy.c core mon.out Make.log *~
+
+###
+
+main.o:		conv-c2d.h
+y.tab.o:	conv-c2d.h emax7.h lex.yy.c
+emax7.o:	conv-c2d.h emax7.h

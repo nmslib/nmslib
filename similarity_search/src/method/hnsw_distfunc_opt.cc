@@ -39,6 +39,10 @@
 #include <limits>
 #include <vector>
 
+int LANE = 1;
+#include "conv-c2d/emax7.h"
+#include "conv-c2d/emax7lib.h"
+
 //#define DIST_CALC
 namespace similarity {
 
@@ -176,6 +180,117 @@ namespace similarity {
                 changed = false;
                 int *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1) * (i - 1) * sizeof(int));
                 int size = *data;
+#define IMAX3
+#ifdef IMAX3
+#define IMAX_KERNEL_ROW_SIZE 60
+#define IMAX_KERNEL_COL_SIZE 60
+#define NCHIP 1
+                int imax_emb = qty % IMAX_KERNEL_COL_SIZE ? ((qty/IMAX_KERNEL_COL_SIZE) + 1)*IMAX_KERNEL_COL_SIZE : qty;
+                int imax_size = size % 2 ? ((size/2) + 1)*2 : size;
+                Uint imax_key_array[size*imax_emb];
+                Ull imax_query_array[imax_emb];
+                Uint imax_result_array[imax_size];
+                for (int j = 1; j <= imax_size; j++) {
+                    int tnum = *(data + j);
+                    for (int k = 0; k < imax_emb; k++) {
+                        if (k < qty) {
+                            imax_key_array[(j-1)*imax_size + k] = *(data_level0_memory_ + tnum * memoryPerObject_ + offsetData_ + 16 + k);
+                        } else {
+                            imax_key_array[(j-1)*imax_size + k] = 0;
+                        }
+                    }
+                }
+                for (int j = 0; j < imax_emb; j++) {
+                    if (j < qty) {
+                        ((Uint*)imax_query_array)[j] = pVectq[j];
+                    } else {
+                        ((Uint*)imax_query_array)[j] = 0;
+                    }
+                }
+
+                Ull imax_key_array_addr[imax_emb * 4];
+                for (int j = 0; j < imax_emb; j++) {
+                    for (int k = 0; k < 4; k++) {
+                        imax_key_array_addr[j] = (Ull)imax_key_array + (4 * imax_emb * j) + (k * 8);
+                    }
+                }
+
+                Ull imax_result_array_addr[imax_size * 4];
+                for (int j = 0; j < imax_size; j++) {
+                    for (int k = 0; k < 4; k++) {
+                        imax_result_array_addr[j] = (Ull)imax_result_array + (4 * imax_size * j) + (k * 8);
+                    }
+                }
+
+                for (int j = 0; j < imax_size; j++) {
+                    for (int k = 0; k < 4; k++) {
+                        imax_result_array[j] = (Ull)imax_result_array + (4 * imax_size * j) + (k * 8);
+                    }
+                }
+                Ull CHIP, LOLP, INIT0, INIT1, LOOP0, LOOP1;
+                Ull cofs, rofs;
+                Ull fetch_size = qty * 4;
+                Ull rofs_init = (0-1*8LL)<<32|(0-1*4LL)&0xFFFFFFFF;
+                Ull BR[64][4][4], AR[64][4];
+
+#define mv1_core(r, rm1, b) \
+                        mop(OP_LDR, 3, &BR[rm1][1][1], (Ull)imax_key_array_addr[b*4 + 0], (Ull)rofs, MSK_W1, (Ull)imax_key_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_LDR, 3, &BR[rm1][1][0], (Ull)imax_key_array_addr[b*4 + 1], (Ull)rofs, MSK_W1, (Ull)imax_key_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_LDR, 3, &BR[rm1][0][1], (Ull)imax_key_array_addr[b*4 + 2], (Ull)rofs, MSK_W1, (Ull)imax_key_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_LDR, 3, &BR[rm1][0][0], (Ull)imax_key_array_addr[b*4 + 3], (Ull)rofs, MSK_W1, (Ull)imax_key_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        exe(OP_FMA, &AR[r][3], BR[1][1][1], EXP_H3210, imax_query_array[b*4 + 0], EXP_H3210, AR[rm1][0], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
+                        exe(OP_FMA, &AR[r][2], BR[1][1][0], EXP_H3210, imax_query_array[b*4 + 1], EXP_H3210, AR[rm1][0], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
+                        exe(OP_FMA, &AR[r][1], BR[1][0][1], EXP_H3210, imax_query_array[b*4 + 2], EXP_H3210, AR[rm1][0], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
+                        exe(OP_FMA, &AR[r][0], BR[1][0][0], EXP_H3210, imax_query_array[b*4 + 3], EXP_H3210, AR[rm1][0], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL)
+
+#define mv1_store(r, rm1) \
+                        mop(OP_LDR, 3, &BR[rm1][1][1], (Ull)imax_result_array_addr[0], (Ull)rofs, MSK_W1, (Ull)imax_result_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_LDR, 3, &BR[rm1][1][0], (Ull)imax_result_array_addr[1], (Ull)rofs, MSK_W1, (Ull)imax_result_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_LDR, 3, &BR[rm1][0][1], (Ull)imax_result_array_addr[2], (Ull)rofs, MSK_W1, (Ull)imax_result_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_LDR, 3, &BR[rm1][0][0], (Ull)imax_result_array_addr[3], (Ull)rofs, MSK_W1, (Ull)imax_result_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        exe(OP_FMA, &AR[r][3], BR[rm1][1][1], EXP_H3210, AR[rm1][0], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
+                        exe(OP_FMA, &AR[r][2], BR[rm1][1][0], EXP_H3210, AR[rm1][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
+                        exe(OP_FMA, &AR[r][1], BR[rm1][0][1], EXP_H3210, AR[rm1][2], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
+                        exe(OP_FMA, &AR[r][0], BR[rm1][0][0], EXP_H3210, AR[rm1][3], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
+                        mop(OP_STR, 3, &AR[r][0], (Ull)imax_result_array_addr[0], (Ull)rofs, MSK_D0, (Ull)imax_result_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_STR, 3, &AR[r][1], (Ull)imax_result_array_addr[1], (Ull)rofs, MSK_D0, (Ull)imax_result_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_STR, 3, &AR[r][2], (Ull)imax_result_array_addr[2], (Ull)rofs, MSK_D0, (Ull)imax_result_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0); \
+                        mop(OP_STR, 3, &AR[r][3], (Ull)imax_result_array_addr[3], (Ull)rofs, MSK_D0, (Ull)imax_result_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0)
+
+//EMAX%A begin mv1 mapdist=0
+                for (CHIP=0;CHIP<NCHIP;CHIP++) {
+                    for (INIT0=1,LOOP0=IMAX_KERNEL_ROW_SIZE/2,rofs=rofs_init;LOOP0--;INIT0=0) {
+                        exe(OP_ADD, &rofs, rofs, EXP_H3210, (0-1*8LL)<<32|(0-1*4LL)&0xFFFFFFFF, EXP_H3210, 0LL, EXP_H3210, OP_AND, 0xFFFFFFFFFFFFFFFFLL, OP_NOP, 0LL);
+
+                        mop(OP_LDR, 3, &BR[1][1][1], (Ull)imax_key_array_addr[0], (Ull)rofs, MSK_W1, (Ull)imax_key_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0);
+                        mop(OP_LDR, 3, &BR[1][1][0], (Ull)imax_key_array_addr[1], (Ull)rofs, MSK_W1, (Ull)imax_key_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0);
+                        mop(OP_LDR, 3, &BR[1][0][1], (Ull)imax_key_array_addr[2], (Ull)rofs, MSK_W1, (Ull)imax_key_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0);
+                        mop(OP_LDR, 3, &BR[1][0][0], (Ull)imax_key_array_addr[3], (Ull)rofs, MSK_W1, (Ull)imax_key_array_addr[0], fetch_size, 0, 0, (Ull)NULL, 0);
+
+                        exe(OP_FML, &AR[2][3], BR[1][1][1], EXP_H3210, imax_query_array[0], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                        exe(OP_FML, &AR[2][2], BR[1][1][0], EXP_H3210, imax_query_array[1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                        exe(OP_FML, &AR[2][1], BR[1][0][1], EXP_H3210, imax_query_array[2], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                        exe(OP_FML, &AR[2][0], BR[1][0][0], EXP_H3210, imax_query_array[3], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+
+                        mv1_core( 3,  2,  1);mv1_core( 4,  3,  2);
+                        mv1_core( 5,  4,  3);mv1_core( 6,  5,  4);mv1_core( 7,  6,  5);mv1_core( 8,  7,  6);mv1_core( 9,  8,  7);
+                        mv1_core(10,  9,  8);mv1_core(11, 10,  9);mv1_core(12, 11, 10);mv1_core(13, 12, 11);mv1_core(14, 13, 12);
+                        mv1_core(15, 14, 13);mv1_core(16, 15, 14);mv1_core(17, 16, 15);mv1_core(18, 17, 16);mv1_core(19, 18, 17);
+                        mv1_core(20, 19, 18);mv1_core(21, 20, 19);mv1_core(22, 21, 20);mv1_core(23, 22, 21);mv1_core(24, 23, 22);
+                        mv1_core(25, 24, 23);mv1_core(26, 25, 24);mv1_core(27, 26, 25);mv1_core(28, 27, 26);mv1_core(29, 28, 27);
+                        mv1_core(30, 29, 28);mv1_core(31, 30, 29);mv1_core(32, 31, 30);mv1_core(33, 32, 31);mv1_core(34, 33, 32);
+                        mv1_core(35, 34, 33);mv1_core(36, 35, 34);mv1_core(37, 36, 35);mv1_core(38, 37, 36);mv1_core(39, 38, 37);
+                        mv1_core(40, 39, 38);mv1_core(41, 40, 39);mv1_core(42, 41, 40);mv1_core(43, 42, 41);mv1_core(44, 43, 42);
+                        mv1_core(45, 44, 43);mv1_core(46, 45, 44);mv1_core(47, 46, 45);mv1_core(48, 47, 46);mv1_core(49, 48, 47);
+                        mv1_core(50, 49, 48);mv1_core(51, 50, 49);mv1_core(52, 51, 50);mv1_core(53, 52, 51);mv1_core(54, 53, 52);
+                        mv1_core(55, 54, 53);mv1_core(56, 55, 54);mv1_core(57, 56, 55);mv1_core(58, 57, 56);mv1_core(59, 58, 57);
+                        mv1_core(60, 59, 58);mv1_core(61, 60, 59);
+
+                        mv1_store(62, 61);
+                    }
+                }
+//EMAX5A end
+#else
                 for (int j = 1; j <= size; j++) {
                     PREFETCH(data_level0_memory_ + (*(data + j)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);
                 }
@@ -194,6 +309,7 @@ namespace similarity {
                         changed = true;
                     }
                 }
+#endif
             }
         }
 

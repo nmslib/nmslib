@@ -1,0 +1,83 @@
+#!/usr/local/bin/perl
+
+sub MAX {
+    my $max = pop(@_);
+    foreach $foo (@_) {
+	$max = $foo if $max < $foo;
+    }
+    $max;
+}
+
+@OARGV = @ARGV;
+$HOME  = $ENV{"HOME"};
+$PROG  = $0;
+$TIME  = (stat($DF))[9];
+chomp($CWD = `pwd`);
+
+while ($_ = $ARGV[0], /^-/) {
+    shift;
+    last if /^--$/;
+    if (/^-D(.*)/) { $option = 1; $debuglevel = substr($_,2); }
+    elsif (/^-v/)  { $option = 1; $verbose = 1;  }
+    else           { $option = 1; }
+}
+
+if ($#ARGV != 0) {
+    printf "Usage: %s <src>\n", $PROG;
+    exit 1;
+}
+
+if (!open(INFH, $ARGV[0])) {
+    die "can't open $ARGV[0]";
+}
+
+$emax5a_mode = 0;
+$emax5t_mode = 0;
+
+while (<INFH>) {
+    if (/^#/) {
+	print $_;
+    }
+    elsif (/^(\/\/EMAX5A)\s+(begin)\s+(\w+)\s+(mapdist=)(\d+)/) {
+	print "#define printf(format,...)\n";
+	print "\/-EMAX5AB-\/ ", $3, " ", $5, "\n";
+	$emax5a_mode = 1;
+    }
+    elsif (/^(\/\/EMAX5A)\s+(end)/) {
+	print "\/-EMAX5AE-\/\n";
+	print "#undef printf\n";
+	$emax5a_mode = 0;
+    }
+    elsif (/^(\/\/EMAX5A)\s+(drain_dirty_lmm)/) {
+	print "\/-EMAX5AD-\/\n";
+	$emax5a_mode = 0;
+    }
+    elsif (/^(\/\/EMAX5T)\s+(begin)\s+(\w+)\s+(mapdist=)(\d+)/) {
+	print "#define printf(format,...)\n";
+	print "\/-EMAX5TB-\/ ", $3, " ", $5, "\n";
+	$emax5t_mode = 1;
+    }
+    elsif (/^(\/\/EMAX5T)\s+(end)/) {
+	print "\/-EMAX5TE-\/\n";
+	print "#undef printf\n";
+	$emax5t_mode = 0;
+    }
+    elsif ($emax5a_mode) {
+	if (/^(.*for.*LOOP[01]\s*=)(.*)(,\s*[\w\[\]]+\s*=)(.*)(;.*;.*)/) {
+	    print "\/-EMAX5AS-\/ ", $1, "\"\"", $2, "\"\"", $3, "\"\"", $4, "\"\"", $5, "\n";
+	}
+	else {
+	    print "\/-EMAX5AS-\/ ", $_;
+	}
+    }
+    elsif ($emax5t_mode) {
+	print "\/-EMAX5TS-\/ ", $_;
+    }
+    else {
+	print $_;
+    }
+}
+
+close(INFH);
+
+exit 0;
