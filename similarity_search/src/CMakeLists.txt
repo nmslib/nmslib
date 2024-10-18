@@ -31,8 +31,6 @@ else (Threads_FOUND)
     message (STATUS "Could not locate Threads.")
 endif (Threads_FOUND)
 
-add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES})
-
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")
     set (EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/release/")
@@ -40,6 +38,26 @@ else ()
     set (LIBRARY_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/debug/")
     set (EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/debug/")
 endif ()
+
+if (IMAX3NONC)
+    add_definitions (-DIMAX3)
+    set(IMAX_SOURCES ${CMAKE_SOURCE_DIR}/include/conv-c2d/emax7.h ${CMAKE_SOURCE_DIR}/include/conv-c2d/emax7lib.h)
+    add_custom_command(
+        OUTPUT method/hnsw_distfunc_opt-emax7.cc
+        DEPENDS method/hnsw_distfunc_opt.cc
+        COMMAND ${CMAKE_SOURCE_DIR}/include/conv-mark/conv-mark ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc > ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc-mark.cc
+        COMMAND cpp -P -DIMAX3 -DEMAX7 -DARMZYNQ -DFPDDMA -I${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc-mark.cc > ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc-cppo.cc
+        COMMAND ${CMAKE_SOURCE_DIR}/include/conv-c2d/conv-c2d ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc-cppo.cc
+        COMMAND mv ${CMAKE_SOURCE_DIR}/method/hnsw_distfunc_opt-emax7.c ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt-emax7.cc
+    )
+    add_custom_target(IMAX_KERNEL_GEN DEPENDS method/hnsw_distfunc_opt-emax7.cc)
+    target_sources(IMAX_KERNEL_GEN PRIVATE method/hnsw_distfunc_opt-emax7.cc)
+    set(IMAX_SOURCES ${IMAX_SOURCES} method/hnsw_distfunc_opt-emax7.cc)
+    set(IMAX_EXTRA_FLAGS ${GGML_EXTRA_FLAGS} -DIMAX3 -DEMAX7 -DARMZYNQ -DFPDDMA)
+    list(FILTER SRC_FILES EXCLUDE REGEX ".*hnsw_distfunc_opt.cc$")
+endif()
+
+add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES} ${IMAX_SOURCES})
 
 string(LENGTH ${PROJECT_SOURCE_DIR} PREFIX_LEN) 
 MATH(EXPR PREFIX_LEN "${PREFIX_LEN}+1")
