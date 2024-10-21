@@ -1,0 +1,8 @@
+services:
+  nmslib-dev:
+    build:
+      context: ./
+    volumes:
+      - ./:/code
+    tty: true
+    stdin_open: true

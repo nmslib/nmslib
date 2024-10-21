@@ -15,6 +15,7 @@ similarity_search/tmpfile.bin
 *.so
 *.pyc
 *.egg-info/
+*.egg/
 .idea
 dist/
 build/

@@ -180,6 +180,7 @@ namespace similarity {
                 changed = false;
                 int *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1) * (i - 1) * sizeof(int));
                 int size = *data;
+#define EMAXNC
 #ifdef EMAXNC
 #define IMAX_KERNEL_COL_SIZE 60
 #define NCHIP 1
@@ -204,11 +205,13 @@ namespace similarity {
 
                 for (int emb_blk_idx = 0; emb_blk_idx < imax_emb / IMAX_KERNEL_COL_SIZE; emb_blk_idx++) {
                     Ull imax_query_array_addr[IMAX_KERNEL_COL_SIZE];
+                    std::cout << std::hex << imax_query_array_addr[0] << std::endl;
                     for (int j = 0; j < IMAX_KERNEL_COL_SIZE; j++) {
                         imax_query_array_addr[j] = &imax_query_array[emb_blk_idx*IMAX_KERNEL_COL_SIZE + j];
                     }
 
                     Ull imax_key_array_addr[IMAX_KERNEL_COL_SIZE * 4];
+                    std::cout << std::hex << imax_key_array_addr[0] << std::endl;
                     for (int j = 0; j < IMAX_KERNEL_COL_SIZE; j++) {
                         for (int k = 0; k < 4; k++) {
                             imax_key_array_addr[j*4 + k] = (Ull)imax_key_array + (((emb_blk_idx*imax_size*j) + (k * 2))*4);
@@ -216,13 +219,14 @@ namespace similarity {
                     }
 
                     Ull imax_result_array_addr[4];
+                    std::cout << std::hex << imax_result_array_addr[0] << std::endl;
                     for (int j = 0; j < 4; j++) {
                         imax_result_array_addr[j] = (Ull)imax_result_array + (j * 8);
                     }
 
                     Ull CHIP, LOLP, INIT0, INIT1, LOOP0, LOOP1;
                     Ull cofs, rofs;
-                    Ull fetch_size = IMAX_KERNEL_COL_SIZE * imax_size * 4;
+                    Ull fetch_size = imax_size * 4 * 4;
                     Ull rofs_init = (0-4*8LL)&0xFFFFFFFF;
                     Ull BR[64][4][4], AR[64][4];
 
@@ -308,8 +312,8 @@ namespace similarity {
                 }
 
                 float minDist = std::numeric_limits<float>::max();
-                for (int j = 0; j < size; j++) {
-                    float result = (float*)imax_result_array[j];
+                for (int j = 1; j <= size; j++) {
+                    float result = *(float*)&imax_result_array[j-1];
                     if (result < minDist) {
                         minDist = result;
                     }
@@ -317,7 +321,6 @@ namespace similarity {
                         curdist = minDist;
                         curNodeNum = *(data + j);
                         changed = true;
-                        std::cout << "changed" << std::endl;
                     }
                 }
 #else
