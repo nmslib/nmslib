@@ -39,22 +39,38 @@ else ()
     set (EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/debug/")
 endif ()
 
-if (IMAX3NONC)
-    add_definitions (-DIMAX3)
-    set(IMAX_SOURCES ${CMAKE_SOURCE_DIR}/include/conv-c2d/emax7.h ${CMAKE_SOURCE_DIR}/include/conv-c2d/emax7lib.h)
-    add_custom_command(
-        OUTPUT method/hnsw_distfunc_opt-emax7.cc
-        DEPENDS method/hnsw_distfunc_opt.cc
-        COMMAND ${CMAKE_SOURCE_DIR}/include/conv-mark/conv-mark ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc > ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc-mark.cc
-        COMMAND cpp -P -DIMAX3 -DEMAX7 -DARMZYNQ -DFPDDMA -I${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc-mark.cc > ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc-cppo.cc
-        COMMAND ${CMAKE_SOURCE_DIR}/include/conv-c2d/conv-c2d ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc-cppo.cc
-        COMMAND mv ${CMAKE_SOURCE_DIR}/method/hnsw_distfunc_opt-emax7.c ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt-emax7.cc
-    )
-    add_custom_target(IMAX_KERNEL_GEN DEPENDS method/hnsw_distfunc_opt-emax7.cc)
-    target_sources(IMAX_KERNEL_GEN PRIVATE method/hnsw_distfunc_opt-emax7.cc)
-    set(IMAX_SOURCES ${IMAX_SOURCES} method/hnsw_distfunc_opt-emax7.cc)
-    set(IMAX_EXTRA_FLAGS ${GGML_EXTRA_FLAGS} -DIMAX3 -DEMAX7 -DARMZYNQ -DFPDDMA)
-    list(FILTER SRC_FILES EXCLUDE REGEX ".*hnsw_distfunc_opt.cc$")
+if (EMAX7)
+    add_definitions (-DEMAX7)
+    if (EMAXNC)
+        add_definitions (-DEMAXNC)
+    else ()
+        add_definitions (-DARMZYNQ -DFPDDMA)
+        set(IMAX_SOURCES ${CMAKE_SOURCE_DIR}/include/conv-c2d/emax7.h ${CMAKE_SOURCE_DIR}/include/conv-c2d/emax7lib.h)
+
+        # Set the path for intermediate files
+        set(TEMP_DIR ${CMAKE_BINARY_DIR}/tmp)
+
+        file(MAKE_DIRECTORY ${TEMP_DIR})
+
+        add_custom_command(
+            OUTPUT ${TEMP_DIR}/hnsw_distfunc_opt-emax7.cc
+            # Use the full path to hnsw_distfunc_opt.cc
+            DEPENDS ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc
+            COMMAND ${CMAKE_SOURCE_DIR}/include/conv-mark/conv-mark ${CMAKE_SOURCE_DIR}/src/method/hnsw_distfunc_opt.cc > ${TEMP_DIR}/hnsw_distfunc_opt.cc-mark.cc
+            COMMAND cpp -P -DEMAX7 -DARMZYNQ -DFPDDMA -I${CMAKE_SOURCE_DIR}/include ${TEMP_DIR}/hnsw_distfunc_opt.cc-mark.cc > ${TEMP_DIR}/hnsw_distfunc_opt.cc-cppo.cc
+            COMMAND ${CMAKE_SOURCE_DIR}/include/conv-c2d/conv-c2d ${TEMP_DIR}/hnsw_distfunc_opt.cc-cppo.cc
+            COMMAND mv ${TEMP_DIR}/hnsw_distfunc_opt-emax7.c ${TEMP_DIR}/hnsw_distfunc_opt-emax7.cc
+        )
+
+        add_custom_target(IMAX_KERNEL_GEN DEPENDS ${TEMP_DIR}/hnsw_distfunc_opt-emax7.cc)
+
+        target_sources(IMAX_KERNEL_GEN PRIVATE ${TEMP_DIR}/hnsw_distfunc_opt-emax7.cc)
+
+        set(IMAX_SOURCES ${IMAX_SOURCES} ${TEMP_DIR}/hnsw_distfunc_opt-emax7.cc)
+        set(IMAX_EXTRA_FLAGS ${GGML_EXTRA_FLAGS} -DIMAX3 -DEMAX7 -DARMZYNQ -DFPDDMA)
+        
+        list(FILTER SRC_FILES EXCLUDE REGEX ".*hnsw_distfunc_opt.cc$")
+    endif()
 endif()
 
 add_library (NonMetricSpaceLib ${SRC_FILES} ${HDR_FILES} ${IMAX_SOURCES})
