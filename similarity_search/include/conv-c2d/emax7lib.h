@@ -246,6 +246,7 @@ volatile struct emax_info {
 #include <dirent.h>
 #include <errno.h>
 #include <linux/ioctl.h>
+#include <signal.h>
 
 #define DMA_BASE_PHYS	 0x00000000a4000000LL
 #define DMA_BASE_PHYSOFS 0x0000000000010000LL
@@ -587,6 +588,7 @@ show_nanosec(int LANE)
 /*******************************************************************************/
 
 #if !defined(EMAXNC)
+int emax7_kick_dma(int LANE, int j);
 emax7_check_lmmi_and_dma(int LANE, int mode, int phase, int lastdist, int c, int i, int j)
 {
   /* mode   0:array, 1:drain */
