@@ -7,6 +7,21 @@
 /*******************************************************************************/
 /******************************** Defs *****************************************/
 /*******************************************************************************/
+#pragma once
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <dirent.h>
+#include <errno.h>
+#include <linux/ioctl.h>
+#include <signal.h>
 
 enum { NANOS_ARM, NANOS_DRAIN, NANOS_CONF, NANOS_REGV, NANOS_RANGE, NANOS_LOAD, NANOS_EXEC, NANOS_TOTAL, NANOS_CLASS };
 
@@ -232,21 +247,6 @@ volatile struct emax_info {
 /*******************************************************************************/
 /******************************** ZYNQ-COMMON **********************************/
 /*******************************************************************************/
-
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <dirent.h>
-#include <errno.h>
-#include <linux/ioctl.h>
-#include <signal.h>
 
 #define DMA_BASE_PHYS	 0x00000000a4000000LL
 #define DMA_BASE_PHYSOFS 0x0000000000010000LL
