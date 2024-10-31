@@ -6,7 +6,7 @@ import time
 data = numpy.random.randn(10000, 256).astype(numpy.float32)
 
 # initialize a new index, using a HNSW index on Cosine Similarity
-index = nmslib.init(method='hnsw', space='cosinesimil')
+index = nmslib.init(method='hnsw', space='negdotprod')
 start = time.time()
 index.addDataPointBatch(data)
 print('Time to add data: %f' % (time.time() - start))
@@ -20,6 +20,6 @@ ids, distances = index.knnQuery(data[0], k=10)
 # get all nearest neighbours for all the datapoint
 # using a pool of 4 threads to compute
 start = time.time()
-neighbours = index.knnQueryBatch(data, k=10, num_threads=4)
+neighbours = index.knnQueryBatch(data, k=10, num_threads=1)
 print('Time to query data: %f' % (time.time() - start))
 print(numpy.array(neighbours))

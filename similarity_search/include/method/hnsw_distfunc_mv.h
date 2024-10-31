@@ -1,5 +1,4 @@
-#ifndef __HNSW_DISTFUNC_MV_H__
-#define __HNSW_DISTFUNC_MV_H__
+#pragma once
 #include <stdio.h>
 #include <math.h>
 #include "conv-c2d/emax7.h"
@@ -21,8 +20,7 @@ void xmax_bzero(Uint *dst, int words);
 #if __cplusplus
 extern "C" {
 #endif
-int imax_search_mv(float curdist, int curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_);
+int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_);
 #if __cplusplus
 }
-#endif
 #endif
