@@ -20,5 +20,6 @@ similarity_search/tmpfile.bin
 dist/
 build/
 build_emax7/
+build_aarch64/
 lib/
 .vscode

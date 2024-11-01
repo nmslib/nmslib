@@ -226,13 +226,16 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
     int imax_emb = qty % IMAX_KERNEL_COL_SIZE ? ((qty/IMAX_KERNEL_COL_SIZE) + 1)*IMAX_KERNEL_COL_SIZE : qty;
     int imax_size = size % 32 ? ((size/32) + 1)*32 : size;
     #ifdef ARMZYNQ
+    if (membase == NULL) {sysinit(1024*1024*128*sizeof(float), 32);}
     int key_size = imax_size*imax_emb*sizeof(float);
     int query_size = imax_emb*sizeof(float);
     int result_size = imax_size*sizeof(float);
-    int all_size = key_size + query_size + result_size;
-    float *imax_key_array = (float *)imax_alloc(key_size, 32);
-    float *imax_query_array = (float *)imax_alloc(query_size, 32);
-    float *imax_result_array = (float *)imax_alloc(result_size, 32);
+    float *imax_key_array = (float *)membase;
+    float *imax_query_array = (float *)(membase + key_size);
+    float *imax_result_array = (float *)(membase + key_size + query_size);
+    for (int j = 0; j <  (result_size + (Ull)imax_result_array - (Ull)imax_key_array)/sizeof(float); j++) {
+        imax_key_array[j] = 0;
+    }
     #else
     float imax_key_array[imax_size*imax_emb];
     float imax_query_array[imax_emb];
@@ -308,10 +311,10 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
                 exe(OP_FAD, &AR[r][2], BR[rm1][0][0], EXP_H3210, AR[rm1][2], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
                 exe(OP_FAD, &AR[r][1], BR[rm1][1][1], EXP_H3210, AR[rm1][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
                 exe(OP_FAD, &AR[r][0], BR[rm1][1][0], EXP_H3210, AR[rm1][0], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
-                mop(OP_STR, 3, &AR[r][3], (Ull)raddr[0], (Ull)rofs, MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                mop(OP_STR, 3, &AR[r][2], (Ull)raddr[1], (Ull)rofs, MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                mop(OP_STR, 3, &AR[r][1], (Ull)raddr[2], (Ull)rofs, MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                mop(OP_STR, 3, &AR[r][0], (Ull)raddr[3], (Ull)rofs, MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size)
+                mop(OP_STR, 3, &AR[r][3], (Ull)rofs, (Ull)raddr[0], MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
+                mop(OP_STR, 3, &AR[r][2], (Ull)rofs, (Ull)raddr[1], MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
+                mop(OP_STR, 3, &AR[r][1], (Ull)rofs, (Ull)raddr[2], MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
+                mop(OP_STR, 3, &AR[r][0], (Ull)rofs, (Ull)raddr[3], MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size)
 
 //EMAX5A begin mv1 mapdist=0
         for (CHIP=0;CHIP<NCHIP;CHIP++) {
@@ -389,9 +392,9 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
     printf("]\n");
     printf("IMAX Done\n");
     #ifdef ARMZYNQ
-    imax_dealloc(key_size, 32);
-    imax_dealloc(query_size, 32);
-    imax_dealloc(result_size, 32);
+    // imax_dealloc(key_size, 32);
+    // imax_dealloc(query_size, 32);
+    // imax_dealloc(result_size, 32);
     #endif
     printf("imax_search_mv: changed=%d\n", changed);
     return changed;
