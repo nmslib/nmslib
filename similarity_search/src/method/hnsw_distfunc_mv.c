@@ -225,14 +225,15 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
     int imax_emb = qty % (IMAX_KERNEL_COL_SIZE*2) ? ((qty/(IMAX_KERNEL_COL_SIZE*2)) + 1)*IMAX_KERNEL_COL_SIZE*2 : qty;
     int imax_size = size % 32 ? ((size/32) + 1)*32 : size;
     #ifdef ARMZYNQ
-    if (membase == NULL) {sysinit(1024*1024*128*sizeof(float), 32);}
+    if (membase == NULL) sysinit(1024*1024*128*sizeof(float), 32);
+    xmax_bzero((Uint *)membase, 1024*1024*128);
     int key_size = imax_size*imax_emb*sizeof(float);
     int query_size = imax_emb*sizeof(float);
     int result_size = imax_size*sizeof(float);
     // 多分ここで問題発生してる
     float *imax_key_array = (float *)membase;
-    float *imax_query_array = imax_key_array + (imax_size*imax_emb);
-    float *imax_result_array = imax_query_array + imax_emb;
+    float *imax_query_array = imax_key_array + (imax_size*imax_emb)*4;
+    float *imax_result_array = imax_query_array + imax_emb*4;
     #else
     float imax_key_array[imax_size*imax_emb];
     float imax_query_array[imax_emb];
@@ -280,9 +281,10 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
         for (int j = 0; j < 4; j++) {
             raddr[j] = ((Ull)imax_result_array) + (IMAX_KERNEL_ROW_SIZE*row_blk_idx)*4 + j*4;
         }
-        printf("qaddr=%p, kaddr[0]=%p, raddr[0]=%p %d\n", qaddr, kaddr[0], raddr[0], row_blk_idx);
-        printf("qaddr_float=%f, %f, %f, %f\n", *(float *)qaddr[0], *(float *)qaddr[1], *(float *)qaddr[2], *(float *)qaddr[3]);
-        printf("kaddr_float=%f, %f, %f, %f\n", *(float *)kaddr[0], *(float *)kaddr[1], *(float *)kaddr[2], *(float *)kaddr[3]);
+
+        // printf("qaddr=%p, kaddr[0]=%p, raddr[0]=%p %d\n", qaddr, kaddr[0], raddr[0], row_blk_idx);
+        // printf("qaddr_float=%f, %f, %f, %f\n", *(float *)qaddr[0], *(float *)qaddr[1], *(float *)qaddr[2], *(float *)qaddr[3]);
+        // printf("kaddr_float=%f, %f, %f, %f\n", *(float *)kaddr[0], *(float *)kaddr[1], *(float *)kaddr[2], *(float *)kaddr[3]);
 
         Ull CHIP, LOLP, INIT0, INIT1, LOOP0, LOOP1;
         Ull cofs, rofs, oofs;
@@ -294,10 +296,10 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
         Ull BR[64][4][4], AR[64][4];
 
 #define mv1_core(r, rm1, k0, k1, k2, k3, q) \
-                    mop(OP_LDR,  3, &BR[rm1][0][1], (Ull)kaddr[k0], (Ull)cofs, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
-                    mop(OP_LDR,  3, &BR[rm1][0][0], (Ull)kaddr[k1], (Ull)cofs, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
-                    mop(OP_LDR,  3, &BR[rm1][1][1], (Ull)kaddr[k2], (Ull)cofs, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
-                    mop(OP_LDR,  3, &BR[rm1][1][0], (Ull)kaddr[k3], (Ull)cofs, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
+                    mop(OP_LDR,  3, &BR[rm1][0][1], (Ull)kaddr[k0], (Ull)cofs, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
+                    mop(OP_LDR,  3, &BR[rm1][0][0], (Ull)kaddr[k1], (Ull)cofs, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
+                    mop(OP_LDR,  3, &BR[rm1][1][1], (Ull)kaddr[k2], (Ull)cofs, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
+                    mop(OP_LDR,  3, &BR[rm1][1][0], (Ull)kaddr[k3], (Ull)cofs, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
                     mop(OP_LDR,  3, &BR[rm1][2][1], (Ull)qaddr[q],  (Ull)cofs, MSK_W0, (Ull)qaddr[0],  imax_emb,   0, 0, (Ull)NULL, imax_emb  ); \
                     exe(OP_FMA, &AR[r][3], AR[rm1][3], EXP_H3210, BR[rm1][0][1], EXP_H3210, BR[rm1][2][1], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
                     exe(OP_FMA, &AR[r][2], AR[rm1][2], EXP_H3210, BR[rm1][0][0], EXP_H3210, BR[rm1][2][1], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
