@@ -217,7 +217,7 @@ void xmax_bzero(Uint *dst, int words) {
 #endif
 
 #define IMAX_KERNEL_COL_SIZE 56
-#define IMAX_KERNEL_ROW_SIZE 4
+#define IMAX_KERNEL_ROW_SIZE 16
 #define NCHIP 1
 
 int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_) {
@@ -287,19 +287,19 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
         // printf("kaddr_float=%f, %f, %f, %f\n", *(float *)kaddr[0], *(float *)kaddr[1], *(float *)kaddr[2], *(float *)kaddr[3]);
 
         Ull CHIP, LOLP, INIT0, INIT1, LOOP0, LOOP1;
-        Ull cofs, rofs, oofs;
+        Ull cofs, rofs, oofs, cofs1;
         Ull fetch_size = imax_emb * IMAX_KERNEL_ROW_SIZE * 8;
-        Ull rofs_init = ((0-IMAX_KERNEL_ROW_SIZE*4LL)<<32)|((0-IMAX_KERNEL_ROW_SIZE*imax_emb*4LL)&0xFFFFFFFF);
+        Ull rofs_init = ((0-4*4LL)<<32)|((0-4*imax_emb*4LL)&0xFFFFFFFF);
         Ull cofs_init = 0<<32|((0-IMAX_KERNEL_COL_SIZE*8LL)&0xFFFFFFFF);
-        Ull rofs_add = (IMAX_KERNEL_ROW_SIZE*4LL<<32)|((IMAX_KERNEL_ROW_SIZE*imax_emb*4LL)&0xFFFFFFFF);
+        Ull rofs_add = ((4*4LL)<<32)|((4*imax_emb*4LL)&0xFFFFFFFF);
         Ull cofs_add = 0<<32|((IMAX_KERNEL_COL_SIZE*8LL)&0xffffffff);
         Ull BR[64][4][4], AR[64][4];
 
 #define mv1_core(r, rm1, k0, k1, k2, k3, q) \
-                    mop(OP_LDR,  3, &BR[rm1][0][1], (Ull)kaddr[k0], (Ull)cofs, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
-                    mop(OP_LDR,  3, &BR[rm1][0][0], (Ull)kaddr[k1], (Ull)cofs, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
-                    mop(OP_LDR,  3, &BR[rm1][1][1], (Ull)kaddr[k2], (Ull)cofs, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
-                    mop(OP_LDR,  3, &BR[rm1][1][0], (Ull)kaddr[k3], (Ull)cofs, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
+                    mop(OP_LDR,  3, &BR[rm1][0][1], (Ull)kaddr[k0], (Ull)cofs1, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
+                    mop(OP_LDR,  3, &BR[rm1][0][0], (Ull)kaddr[k1], (Ull)cofs1, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
+                    mop(OP_LDR,  3, &BR[rm1][1][1], (Ull)kaddr[k2], (Ull)cofs1, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
+                    mop(OP_LDR,  3, &BR[rm1][1][0], (Ull)kaddr[k3], (Ull)cofs1, MSK_W0, (Ull)kaddr[k0], fetch_size, 0, 0, (Ull)NULL, fetch_size); \
                     mop(OP_LDR,  3, &BR[rm1][2][1], (Ull)qaddr[q],  (Ull)cofs, MSK_W0, (Ull)qaddr[0],  imax_emb,   0, 0, (Ull)NULL, imax_emb  ); \
                     exe(OP_FMA, &AR[r][3], AR[rm1][3], EXP_H3210, BR[rm1][0][1], EXP_H3210, BR[rm1][2][1], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
                     exe(OP_FMA, &AR[r][2], AR[rm1][2], EXP_H3210, BR[rm1][0][0], EXP_H3210, BR[rm1][2][1], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
@@ -327,58 +327,60 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
                     exe(OP_ADD, &cofs, INIT0?cofs:cofs, EXP_H3210, cofs_add, EXP_H3210, 0LL, EXP_H3210, OP_AND, 0xffffffffffffffffLL, OP_NOP, 0LL);
                     exe(OP_ADD, &rofs, rofs, EXP_H3210, INIT0?rofs_add:0, EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
                     exe(OP_ADD, &oofs, rofs, EXP_H3232, 0LL, EXP_H3210, 0LL, EXP_H3210, OP_AND, 0xffffffffLL, OP_NOP, 0LL);
+                    exe(OP_ADD, &cofs1, cofs, EXP_H3210, rofs, EXP_H1010, 0LL, EXP_H3210, OP_AND, 0xffffffffLL, OP_NOP, 0LL);
 
-                    mop(OP_LDR,  3, &BR[1][0][1], (Ull)kaddr[0], (Ull)cofs, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size);
-                    mop(OP_LDR,  3, &BR[1][0][0], (Ull)kaddr[1], (Ull)cofs, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size);
-                    mop(OP_LDR,  3, &BR[1][1][1], (Ull)kaddr[2], (Ull)cofs, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size);
-                    mop(OP_LDR,  3, &BR[1][1][0], (Ull)kaddr[3], (Ull)cofs, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size);
-                    mop(OP_LDR,  3, &BR[1][2][1], (Ull)qaddr[0], (Ull)cofs, MSK_W0, (Ull)qaddr[0], imax_emb  , 0, 0, (Ull)NULL, imax_emb  );
+                    mop(OP_LDR,  3, &BR[2][0][1], (Ull)kaddr[0], (Ull)cofs1, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size);
+                    mop(OP_LDR,  3, &BR[2][0][0], (Ull)kaddr[1], (Ull)cofs1, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size);
+                    mop(OP_LDR,  3, &BR[2][1][1], (Ull)kaddr[2], (Ull)cofs1, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size);
+                    mop(OP_LDR,  3, &BR[2][1][0], (Ull)kaddr[3], (Ull)cofs1, MSK_W0, (Ull)kaddr[0], fetch_size, 0, 0, (Ull)NULL, fetch_size);
+                    mop(OP_LDR,  3, &BR[2][2][1], (Ull)qaddr[0], (Ull)cofs, MSK_W0, (Ull)qaddr[0], imax_emb  , 0, 0, (Ull)NULL, imax_emb  );
 
-                    exe(OP_FML, &AR[2][3], BR[1][0][1], EXP_H3210, BR[1][2][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
-                    exe(OP_FML, &AR[2][2], BR[1][0][0], EXP_H3210, BR[1][2][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
-                    exe(OP_FML, &AR[2][1], BR[1][0][1], EXP_H3210, BR[1][2][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
-                    exe(OP_FML, &AR[2][0], BR[1][0][0], EXP_H3210, BR[1][2][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                    exe(OP_FML, &AR[3][3], BR[2][0][1], EXP_H3210, BR[2][2][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                    exe(OP_FML, &AR[3][2], BR[2][0][0], EXP_H3210, BR[2][2][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                    exe(OP_FML, &AR[3][1], BR[2][0][1], EXP_H3210, BR[2][2][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                    exe(OP_FML, &AR[3][0], BR[2][0][0], EXP_H3210, BR[2][2][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
 
-                    mv1_core( 3,  2,  4,  5,  6,  7,  1);mv1_core( 4,  3,  8,  9, 10, 11,  2);
-                    mv1_core( 5,  4, 12, 13, 14, 15,  3);mv1_core( 6,  5, 16, 17, 18, 19,  4);
-                    mv1_core( 7,  6, 20, 21, 22, 23,  5);mv1_core( 8,  7, 24, 25, 26, 27,  6);
-                    mv1_core( 9,  8, 28, 29, 30, 31,  7);mv1_core(10,  9, 32, 33, 34, 35,  8);
-                    mv1_core(11, 10, 36, 37, 38, 39,  9);mv1_core(12, 11, 40, 41, 42, 43, 10);
-                    mv1_core(13, 12, 44, 45, 46, 47, 11);mv1_core(14, 13, 48, 49, 50, 51, 12);
-                    mv1_core(15, 14, 52, 53, 54, 55, 13);mv1_core(16, 15, 56, 57, 58, 59, 14);
-                    mv1_core(17, 16, 60, 61, 62, 63, 15);mv1_core(18, 17, 64, 65, 66, 67, 16);
-                    mv1_core(19, 18, 68, 69, 70, 71, 17);mv1_core(20, 19, 72, 73, 74, 75, 18);
-                    mv1_core(21, 20, 76, 77, 78, 79, 19);mv1_core(22, 21, 80, 81, 82, 83, 20);
-                    mv1_core(23, 22, 84, 85, 86, 87, 21);mv1_core(24, 23, 88, 89, 90, 91, 22);
-                    mv1_core(25, 24, 92, 93, 94, 95, 23);mv1_core(26, 25, 96, 97, 98, 99, 24);
-                    mv1_core(27, 26,100,101,102,103, 25);mv1_core(28, 27,104,105,106,107, 26);
-                    mv1_core(29, 28,108,109,110,111, 27);mv1_core(30, 29,112,113,114,115, 28);
-                    mv1_core(31, 30,116,117,118,119, 29);mv1_core(32, 31,120,121,122,123, 30);
-                    mv1_core(33, 32,124,125,126,127, 31);mv1_core(34, 33,128,129,130,131, 32);
-                    mv1_core(35, 34,132,133,134,135, 33);mv1_core(36, 35,136,137,138,139, 34);
-                    mv1_core(37, 36,140,141,142,143, 35);mv1_core(38, 37,144,145,146,147, 36);
-                    mv1_core(39, 38,148,149,150,151, 37);mv1_core(40, 39,152,153,154,155, 38);
-                    mv1_core(41, 40,156,157,158,159, 39);mv1_core(42, 41,160,161,162,163, 40);
-                    mv1_core(43, 42,164,165,166,167, 41);mv1_core(44, 43,168,169,170,171, 42);
-                    mv1_core(45, 44,172,173,174,175, 43);mv1_core(46, 45,176,177,178,179, 44);
-                    mv1_core(47, 46,180,181,182,183, 45);mv1_core(48, 47,184,185,186,187, 46);
-                    mv1_core(49, 48,188,189,190,191, 47);mv1_core(50, 49,192,193,194,195, 48);
-                    mv1_core(51, 50,196,197,198,199, 49);mv1_core(52, 51,200,201,202,203, 50);
-                    mv1_core(53, 52,204,205,206,207, 51);mv1_core(54, 53,208,209,210,211, 52);
-                    mv1_core(55, 54,212,213,214,215, 53);mv1_core(56, 55,216,217,218,219, 54);
-                    mv1_core(57, 56,220,221,222,223, 55);
+                    mv1_core( 4,  3,  4,  5,  6,  7,  1);mv1_core( 5,  4,  8,  9, 10, 11,  2);
+                    mv1_core( 6,  5, 12, 13, 14, 15,  3);mv1_core( 7,  6, 16, 17, 18, 19,  4);
+                    mv1_core( 8,  7, 20, 21, 22, 23,  5);mv1_core( 9,  8, 24, 25, 26, 27,  6);
+                    mv1_core(10,  9, 28, 29, 30, 31,  7);mv1_core(11, 10, 32, 33, 34, 35,  8);
+                    mv1_core(12, 11, 36, 37, 38, 39,  9);mv1_core(13, 12, 40, 41, 42, 43, 10);
+                    mv1_core(14, 13, 44, 45, 46, 47, 11);mv1_core(15, 14, 48, 49, 50, 51, 12);
+                    mv1_core(16, 15, 52, 53, 54, 55, 13);mv1_core(17, 16, 56, 57, 58, 59, 14);
+                    mv1_core(18, 17, 60, 61, 62, 63, 15);mv1_core(19, 18, 64, 65, 66, 67, 16);
+                    mv1_core(20, 19, 68, 69, 70, 71, 17);mv1_core(21, 20, 72, 73, 74, 75, 18);
+                    mv1_core(22, 21, 76, 77, 78, 79, 19);mv1_core(23, 22, 80, 81, 82, 83, 20);
+                    mv1_core(24, 23, 84, 85, 86, 87, 21);mv1_core(25, 24, 88, 89, 90, 91, 22);
+                    mv1_core(26, 25, 92, 93, 94, 95, 23);mv1_core(27, 26, 96, 97, 98, 99, 24);
+                    mv1_core(28, 27,100,101,102,103, 25);mv1_core(29, 28,104,105,106,107, 26);
+                    mv1_core(30, 29,108,109,110,111, 27);mv1_core(31, 30,112,113,114,115, 28);
+                    mv1_core(32, 31,116,117,118,119, 29);mv1_core(33, 32,120,121,122,123, 30);
+                    mv1_core(34, 33,124,125,126,127, 31);mv1_core(35, 34,128,129,130,131, 32);
+                    mv1_core(36, 35,132,133,134,135, 33);mv1_core(37, 36,136,137,138,139, 34);
+                    mv1_core(38, 37,140,141,142,143, 35);mv1_core(39, 38,144,145,146,147, 36);
+                    mv1_core(40, 39,148,149,150,151, 37);mv1_core(41, 40,152,153,154,155, 38);
+                    mv1_core(42, 41,156,157,158,159, 39);mv1_core(43, 42,160,161,162,163, 40);
+                    mv1_core(44, 43,164,165,166,167, 41);mv1_core(45, 44,168,169,170,171, 42);
+                    mv1_core(46, 45,172,173,174,175, 43);mv1_core(47, 46,176,177,178,179, 44);
+                    mv1_core(48, 47,180,181,182,183, 45);mv1_core(49, 48,184,185,186,187, 46);
+                    mv1_core(50, 49,188,189,190,191, 47);mv1_core(51, 50,192,193,194,195, 48);
+                    mv1_core(52, 51,196,197,198,199, 49);mv1_core(53, 52,200,201,202,203, 50);
+                    mv1_core(54, 53,204,205,206,207, 51);mv1_core(55, 54,208,209,210,211, 52);
+                    mv1_core(56, 55,212,213,214,215, 53);mv1_core(57, 56,216,217,218,219, 54);
+                    mv1_core(58, 57,220,221,222,223, 55);
+
 
                     // mv1_core(58, 57,224,225,226,227, 56);
                     // mv1_core(59, 58,228,229,230,231, 57);
                     // mv1_core(60, 59,232,233,234,235, 58);
                     // mv1_core(61, 60,236,237,238,239, 59);
 
-                    exe(OP_FAD, &AR[58][3], AR[57][3], EXP_H3232, AR[57][3], EXP_H1010, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
-                    exe(OP_FAD, &AR[58][2], AR[57][2], EXP_H3232, AR[57][2], EXP_H1010, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
-                    exe(OP_FAD, &AR[58][1], AR[57][1], EXP_H3232, AR[57][1], EXP_H1010, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
-                    exe(OP_FAD, &AR[58][0], AR[57][0], EXP_H3232, AR[57][0], EXP_H1010, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                    exe(OP_FAD, &AR[59][3], AR[58][3], EXP_H3232, AR[58][3], EXP_H1010, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                    exe(OP_FAD, &AR[59][2], AR[58][2], EXP_H3232, AR[58][2], EXP_H1010, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                    exe(OP_FAD, &AR[59][1], AR[58][1], EXP_H3232, AR[58][1], EXP_H1010, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
+                    exe(OP_FAD, &AR[59][0], AR[58][0], EXP_H3232, AR[58][0], EXP_H1010, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);
 
-                    mv1_store(62, 58);
+                    mv1_store(62, 59);
                 }
             }
         }
