@@ -29,9 +29,9 @@ namespace similarity {
 using std::unique_ptr;
 
 template <typename dist_t>
-KNNQuery<dist_t>::KNNQuery(const Space<dist_t>& space, const Object* query_object, const unsigned K, float eps)
+KNNQuery<dist_t>::KNNQuery(const Space<dist_t>& space, const Object* query_object, const unsigned K, float eps, size_t threadId, size_t maxThreadQty)
     : Query<dist_t>(space, query_object),
-      K_(K), eps_(eps),
+      K_(K), eps_(eps), threadId_(threadId), maxThreadQty_(maxThreadQty),
       result_(new KNNQueue<dist_t>(K)) {
 }
 

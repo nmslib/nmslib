@@ -151,7 +151,7 @@ struct IndexWrapper {
       py::gil_scoped_release l;
 
       ParallelFor(0, queries.size(), num_threads, [&](size_t query_index, size_t threadId) {
-        KNNQuery<dist_t> knn(*space, queries[query_index], k);
+        KNNQuery<dist_t> knn(*space, queries[query_index], k, 0, threadId, num_threads);
         index->Search(&knn, -1);
         results[query_index].reset(knn.Result()->Clone());
       });

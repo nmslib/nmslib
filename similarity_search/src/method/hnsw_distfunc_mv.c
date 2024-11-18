@@ -3,108 +3,69 @@
 
 #ifdef EMAX7
 #ifdef ARMZYNQ
-Uchar* membase = NULL;
-Uchar* prev = NULL;
+Uchar* membase[8] = {NULL};
+Uchar* prev[8] = {NULL};
 
-Uchar* sysinit(Uint memsize, Uint alignment) {
+Uchar** sysinit(Uint memsize, Uint alignment, Uint threadQty) {
 #if defined(ARMZYNQ) && defined(EMAX7)
-    if (emax7_open(1) == NULL) exit(1);
-    membase = emax_info[0].ddr_mmap;
-    {int i;for (i = 0; i < (memsize + sizeof(Dll) - 1) / sizeof(Dll); i++)*((Dll *)membase + i) = 0;}
-    prev = (Uchar *)((Dll *)membase + (memsize + sizeof(Dll) - 1) / sizeof(Dll));
+    if (emax7_open(threadQty) == NULL) exit(1);
+    for (int i = 0; i < threadQty; i++) {
+        membase[i] = emax_info[i].ddr_mmap + (i*256*1024*1024);
+        {int j;for (j = 0; j < (memsize + sizeof(Dll) - 1) / sizeof(Dll); j++)*((Dll *)membase[i] + j) = 0;}
+        prev[i] = (Uchar *)((Dll *)membase[i] + (memsize + sizeof(Dll) - 1) / sizeof(Dll));
+    }
 #elif __linux__ == 1
-    posix_memalign((void**)&membase, alignment, memsize);
+    for (int i = 0; i < threadQty; i++) {
+        posix_memalign((void**)&membase[i], alignment, memsize);
+    }
 #else
-    membase = (void *)malloc(memsize + alignment);
-    prev = membase;
-    if ((Ull)membase & (Ull)(alignment - 1)) {membase = (void *)(((Ull)membase & ~(Ull)(alignment - 1)) + alignment);}
+    for (int i = 0; i < threadQty; i++) {
+        membase[i] = (void *)malloc(memsize + alignment);
+        prev[i] = membase[i];
+        if ((Ull)membase[i] & (Ull)(alignment - 1)) {membase[i] = (void *)(((Ull)membase[i] & ~(Ull)(alignment - 1)) + alignment);}
+    }
 #endif
 
 #if !defined(ARMZYNQ) && defined(EMAX7)
-    emax_info[0].dma_phys = DMA_BASE2_PHYS; /* defined in emax7lib.h */
-    emax_info[0].dma_mmap = emax_info[0].dma_phys;
-    emax_info[0].reg_phys = REG_BASE2_PHYS; /* defined in emax7lib.h */
-    emax_info[0].reg_mmap = emax_info[0].reg_phys;
-    emax_info[0].lmm_phys = LMM_BASE2_PHYS;
-    emax_info[0].lmm_mmap = emax_info[0].lmm_phys;
-    emax_info[0].ddr_phys = membase;
-    emax_info[0].ddr_mmap = emax_info[0].ddr_phys;
-#endif
-#if (defined(ARMSIML) || defined(ARMZYNQ)) && defined(EMAX6)
-    emax6.dma_ctrl = emax_info.dma_mmap;
-    emax6.reg_ctrl = emax_info.reg_mmap;
-    ((struct reg_ctrl *)emax6.reg_ctrl)->i[0].cmd = CMD_RESET;
-#if defined(ARMZYNQ)
-    usleep(1);
-#endif
-    switch (((struct reg_ctrl *)emax6.reg_ctrl)->i[0].stat >> 8 & 0xf) {
-    case 3:
-        EMAX_DEPTH = 64;
-        break;
-    case 2:
-        EMAX_DEPTH = 32;
-        break;
-    case 1:
-        EMAX_DEPTH = 16;
-        break;
-    default:
-        EMAX_DEPTH = 8;
-        break;
+    for (int i = 0; i < threadQty; i++) {
+        emax_info[i].dma_phys = DMA_BASE2_PHYS; /* defined in emax7lib.h */
+        emax_info[i].dma_mmap = emax_info[i].dma_phys;
+        emax_info[i].reg_phys = REG_BASE2_PHYS; /* defined in emax7lib.h */
+        emax_info[i].reg_mmap = emax_info[i].reg_phys;
+        emax_info[i].lmm_phys = LMM_BASE2_PHYS;
+        emax_info[i].lmm_mmap = emax_info[i].lmm_phys;
+        emax_info[i].ddr_phys = membase[i];
+        emax_info[i].ddr_mmap = emax_info[i].ddr_phys;
     }
-    ((struct reg_ctrl *)emax6.reg_ctrl)->i[0].adtr = emax_info.ddr_mmap - emax_info.lmm_phys;
-    ((struct reg_ctrl *)emax6.reg_ctrl)->i[0].dmrp = 0LL;
 #endif
+
 #if (defined(ARMSIML) || defined(ARMZYNQ)) && defined(EMAX7)
-    emax7[0].dma_ctrl = emax_info[0].dma_mmap;
-    emax7[0].reg_ctrl = emax_info[0].reg_mmap;
-    ((struct reg_ctrl *)emax7[0].reg_ctrl)->i[0].cmd = CMD_RESET;
+    for (int i = 0; i < threadQty; i++) {
+        emax7[i].dma_ctrl = emax_info[i].dma_mmap;
+        emax7[i].reg_ctrl = emax_info[i].reg_mmap;
+        ((struct reg_ctrl *)emax7[i].reg_ctrl)->i[i].cmd = CMD_RESET;
 #if defined(ARMZYNQ)
-    usleep(1);
+        usleep(1);
 #endif
-    switch (((struct reg_ctrl *)emax7[0].reg_ctrl)->i[0].stat >> 8 & 0xf) {
-    case 3:
-        EMAX_DEPTH = 64;
-        break;
-    case 2:
-        EMAX_DEPTH = 32;
-        break;
-    case 1:
-        EMAX_DEPTH = 16;
-        break;
-    default:
-        EMAX_DEPTH = 8;
-        break;
+        switch (((struct reg_ctrl *)emax7[i].reg_ctrl)->i[i].stat >> 8 & 0xf) {
+        case 3:
+            EMAX_DEPTH = 64;
+            break;
+        case 2:
+            EMAX_DEPTH = 32;
+            break;
+        case 1:
+            EMAX_DEPTH = 16;
+            break;
+        default:
+            EMAX_DEPTH = 8;
+            break;
+        }
+        ((struct reg_ctrl *)emax7[i].reg_ctrl)->i[i].adtr = emax_info[i].ddr_mmap - emax_info[i].lmm_phys;
+        ((struct reg_ctrl *)emax7[i].reg_ctrl)->i[i].dmrp = 0LL;
     }
-    ((struct reg_ctrl *)emax7[0].reg_ctrl)->i[0].adtr = emax_info[0].ddr_mmap - emax_info[0].lmm_phys;
-    ((struct reg_ctrl *)emax7[0].reg_ctrl)->i[0].dmrp = 0LL;
 #endif
     return membase;
-}
-
-Uchar* imax_alloc(Uint memsize, Uint alignment) {
-    if (membase == NULL) {return sysinit(memsize, alignment);}
-    else {
-#if defined(ARMZYNQ) && defined(EMAX7)
-        membase = prev;
-        {int i; for (i=0; i<(memsize+sizeof(Dll)-1)/sizeof(Dll); i++) *((Dll*)prev+i)=0;}
-        prev = (Uchar*)&((Dll*)prev)[((memsize+sizeof(Dll)-1)/sizeof(Dll))];
-#elif __linux__ == 1
-        posix_memalign((void**)&membase, alignment, memsize);
-#else
-        membase = (void*)malloc(memsize+alignment);
-        prev = membase;
-        if ((Ull)membase & (Ull)(alignment-1)) {membase = (void*)(((Ull)membase & ~(Ull)(alignment-1))+alignment);}
-#endif
-        return membase;
-    }
-}
-
-void imax_dealloc(Uint memsize, Uint alignment) {
-    if (membase != NULL) {
-#if defined(ARMZYNQ) && defined(EMAX7)
-        prev = (Uchar*)&((Dll*)prev)[((memsize+sizeof(Dll)-1)/sizeof(Dll))];
-#endif
-    }
 }
 
 void imemcpy(Uint *dst, Uint *src, int words) {
@@ -217,21 +178,21 @@ void xmax_bzero(Uint *dst, int words) {
 #endif
 
 #define IMAX_KERNEL_COL_SIZE 56
-#define IMAX_KERNEL_ROW_SIZE 16
 #define NCHIP 1
 
-int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_) {
-    int LANE = 0;
+int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_, size_t threadId, size_t maxThreadQty) {
+    int LANE = threadId;
     int imax_emb = qty % (IMAX_KERNEL_COL_SIZE*2) ? ((qty/(IMAX_KERNEL_COL_SIZE*2)) + 1)*IMAX_KERNEL_COL_SIZE*2 : qty;
-    int imax_size = size % 32 ? ((size/32) + 1)*32 : size;
+    int imax_size = size % 4 ? ((size/4) + 1)*4 : size;
     #ifdef ARMZYNQ
-    if (membase == NULL) sysinit(1024*1024*128*sizeof(float), 32);
-    xmax_bzero((Uint *)membase, 1024*1024*128);
+    if (membase[LANE] == NULL) sysinit(1024*1024*128*sizeof(float), 32, maxThreadQty);
+    xmax_bzero((Uint *)membase[LANE], 1024*1024*128);
     int key_size = imax_size*imax_emb*sizeof(float);
     int query_size = imax_emb*sizeof(float);
     int result_size = imax_size*sizeof(float);
-    // 多分ここで問題発生してる
-    float *imax_key_array = (float *)membase;
+    // TODO: マルチレーンの二番目レーンの値がおかしい
+    // おそらくメモリ割り当ての問題
+    float *imax_key_array = (float *)membase[LANE];
     float *imax_query_array = imax_key_array + (imax_size*imax_emb)*4;
     float *imax_result_array = imax_query_array + imax_emb*4;
     #else
@@ -239,8 +200,6 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
     float imax_query_array[imax_emb];
     float imax_result_array[imax_size];
     #endif
-    // printf("imax_key_array=%p, imax_query_array=%p, imax_result_array=%p\n", imax_key_array, imax_query_array, imax_result_array);
-    // printf("imax_key_size=%d, imax_query_size=%d, imax_result_size=%d\n", imax_size*imax_emb, imax_emb, imax_size);
     int changed = 0;
     for (int j = 0; j < imax_emb; j++) {
         if (j < qty) {
@@ -267,28 +226,32 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
         imax_result_array[j-1] = 0;
     }
 
-    printf("imax_search_mv: imax_emb=%d, imax_size=%d\n", imax_emb, imax_size);
-    for (int row_blk_idx = 0; row_blk_idx*IMAX_KERNEL_ROW_SIZE < imax_size; row_blk_idx++) {
+    printf("LANE[%d] imax_search_mv: imax_emb=%d, imax_size=%d\n", LANE, imax_emb, imax_size);
+    printf("LANE[%d] imax_search_mv: imax_query_array=%p, imax_key_array=%p, imax_result_array=%p\n", LANE, imax_query_array, imax_key_array, imax_result_array);
+    int imax_kernel_row_size = (256*1024)/imax_emb;
+    if (imax_kernel_row_size < imax_size) {
+        imax_kernel_row_size -= imax_kernel_row_size % imax_size;
+    } else {
+        imax_kernel_row_size = imax_size;
+    }
+    for (int row_blk_idx = 0; row_blk_idx*imax_kernel_row_size < imax_size; row_blk_idx++) {
         Ull qaddr[IMAX_KERNEL_COL_SIZE];
         Ull kaddr[IMAX_KERNEL_COL_SIZE*4];
         Ull raddr[4];
         for (int k = 0; k < IMAX_KERNEL_COL_SIZE; k++) {
             for (int j = 0; j < 4; j++) {
-                kaddr[j + k*4] = ((Ull)imax_key_array) + ((row_blk_idx*IMAX_KERNEL_ROW_SIZE)+j)*imax_emb*4 + k*8;
+                kaddr[j + k*4] = ((Ull)imax_key_array) + ((row_blk_idx*imax_kernel_row_size)+j)*imax_emb*4 + k*8;
             }
             qaddr[k] = ((Ull)imax_query_array) + k*8;
         }
         for (int j = 0; j < 4; j++) {
-            raddr[j] = ((Ull)imax_result_array) + (IMAX_KERNEL_ROW_SIZE*row_blk_idx)*4 + j*4;
+            raddr[j] = ((Ull)imax_result_array) + (imax_kernel_row_size*row_blk_idx)*4 + j*4;
         }
-
-        // printf("qaddr=%p, kaddr[0]=%p, raddr[0]=%p %d\n", qaddr, kaddr[0], raddr[0], row_blk_idx);
-        // printf("qaddr_float=%f, %f, %f, %f\n", *(float *)qaddr[0], *(float *)qaddr[1], *(float *)qaddr[2], *(float *)qaddr[3]);
-        // printf("kaddr_float=%f, %f, %f, %f\n", *(float *)kaddr[0], *(float *)kaddr[1], *(float *)kaddr[2], *(float *)kaddr[3]);
 
         Ull CHIP, LOLP, INIT0, INIT1, LOOP0, LOOP1;
         Ull cofs, rofs, oofs, cofs1;
-        Ull fetch_size = imax_emb * IMAX_KERNEL_ROW_SIZE * 8;
+        Ull fetch_size = imax_emb * imax_kernel_row_size * 4;
+        Ull result_fetch_size = imax_size * 4;
         Ull rofs_init = ((0-4*4LL)<<32)|((0-4*imax_emb*4LL)&0xFFFFFFFF);
         Ull cofs_init = 0<<32|((0-IMAX_KERNEL_COL_SIZE*8LL)&0xFFFFFFFF);
         Ull rofs_add = ((4*4LL)<<32)|((4*imax_emb*4LL)&0xFFFFFFFF);
@@ -307,22 +270,22 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
                     exe(OP_FMA, &AR[r][0], AR[rm1][0], EXP_H3210, BR[rm1][1][0], EXP_H3210, BR[rm1][2][1], EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL)
 
 #define mv1_store(r, rm1) \
-                    mop(OP_LDWR, 3, &BR[rm1][0][1], (Ull)raddr[0], (Ull)oofs, MSK_W0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                    mop(OP_LDWR, 3, &BR[rm1][0][0], (Ull)raddr[1], (Ull)oofs, MSK_W0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                    mop(OP_LDWR, 3, &BR[rm1][1][1], (Ull)raddr[2], (Ull)oofs, MSK_W0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                    mop(OP_LDWR, 3, &BR[rm1][1][0], (Ull)raddr[3], (Ull)oofs, MSK_W0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
+                    mop(OP_LDWR, 3, &BR[rm1][0][1], (Ull)raddr[0], (Ull)oofs, MSK_W0, (Ull)raddr[0], result_fetch_size, 0, 0, (Ull)NULL, result_fetch_size); \
+                    mop(OP_LDWR, 3, &BR[rm1][0][0], (Ull)raddr[1], (Ull)oofs, MSK_W0, (Ull)raddr[0], result_fetch_size, 0, 0, (Ull)NULL, result_fetch_size); \
+                    mop(OP_LDWR, 3, &BR[rm1][1][1], (Ull)raddr[2], (Ull)oofs, MSK_W0, (Ull)raddr[0], result_fetch_size, 0, 0, (Ull)NULL, result_fetch_size); \
+                    mop(OP_LDWR, 3, &BR[rm1][1][0], (Ull)raddr[3], (Ull)oofs, MSK_W0, (Ull)raddr[0], result_fetch_size, 0, 0, (Ull)NULL, result_fetch_size); \
                     exe(OP_FAD, &AR[r][3], BR[rm1][0][1], EXP_H1010, AR[rm1][3], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
                     exe(OP_FAD, &AR[r][2], BR[rm1][0][0], EXP_H1010, AR[rm1][2], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
                     exe(OP_FAD, &AR[r][1], BR[rm1][1][1], EXP_H1010, AR[rm1][1], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
                     exe(OP_FAD, &AR[r][0], BR[rm1][1][0], EXP_H1010, AR[rm1][0], EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL); \
-                    mop(OP_STWR, 3, &AR[r][3], (Ull)oofs, (Ull)raddr[0], MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                    mop(OP_STWR, 3, &AR[r][2], (Ull)oofs, (Ull)raddr[1], MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                    mop(OP_STWR, 3, &AR[r][1], (Ull)oofs, (Ull)raddr[2], MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size); \
-                    mop(OP_STWR, 3, &AR[r][0], (Ull)oofs, (Ull)raddr[3], MSK_D0, (Ull)raddr[0], imax_size, 0, 0, (Ull)NULL, imax_size)
+                    mop(OP_STWR, 3, &AR[r][3], (Ull)oofs, (Ull)raddr[0], MSK_D0, (Ull)raddr[0], result_fetch_size, 0, 0, (Ull)NULL, result_fetch_size); \
+                    mop(OP_STWR, 3, &AR[r][2], (Ull)oofs, (Ull)raddr[1], MSK_D0, (Ull)raddr[0], result_fetch_size, 0, 0, (Ull)NULL, result_fetch_size); \
+                    mop(OP_STWR, 3, &AR[r][1], (Ull)oofs, (Ull)raddr[2], MSK_D0, (Ull)raddr[0], result_fetch_size, 0, 0, (Ull)NULL, result_fetch_size); \
+                    mop(OP_STWR, 3, &AR[r][0], (Ull)oofs, (Ull)raddr[3], MSK_D0, (Ull)raddr[0], result_fetch_size, 0, 0, (Ull)NULL, result_fetch_size)
 
 //EMAX5A begin mv1 mapdist=0
         for (CHIP=0;CHIP<NCHIP;CHIP++) {
-            for (INIT1=1,LOOP1=IMAX_KERNEL_ROW_SIZE/4,rofs=rofs_init;LOOP1--;INIT1=0) {
+            for (INIT1=1,LOOP1=imax_kernel_row_size/4,rofs=rofs_init;LOOP1--;INIT1=0) {
                 for (INIT0=1,LOOP0=imax_emb/(IMAX_KERNEL_COL_SIZE*2),cofs=cofs_init;LOOP0--;INIT0=0) {
                     exe(OP_ADD, &cofs, INIT0?cofs:cofs, EXP_H3210, cofs_add, EXP_H3210, 0LL, EXP_H3210, OP_AND, 0xffffffffffffffffLL, OP_NOP, 0LL);
                     exe(OP_ADD, &rofs, rofs, EXP_H3210, INIT0?rofs_add:0, EXP_H3210, 0LL, EXP_H3210, OP_NOP, 0LL, OP_NOP, 0LL);

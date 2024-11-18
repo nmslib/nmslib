@@ -10,9 +10,7 @@ typedef long double Dll;
 #else
 typedef struct { Ull u[2]; } Dll;
 #endif
-Uchar* sysinit(Uint memsize, Uint alignment);
-Uchar* imax_alloc(Uint memsize, Uint alignment);
-void imax_dealloc(Uint memsize, Uint alignment);
+Uchar** sysinit(Uint memsize, Uint alignment, Uint threadQty);
 void imemcpy(Uint *dst, Uint *src, int words);
 void xmax_bzero(Uint *dst, int words);
 #endif
@@ -20,7 +18,7 @@ void xmax_bzero(Uint *dst, int words);
 #if __cplusplus
 extern "C" {
 #endif
-int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_);
+int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_, size_t threadId, size_t maxThreadQty);
 #if __cplusplus
 }
 #endif

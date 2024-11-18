@@ -181,7 +181,7 @@ namespace similarity {
                 int *data = (int *)(linkLists_[curNodeNum] + (maxM_ + 1) * (i - 1) * sizeof(int));
                 int size = *data;
 #ifdef EMAX7
-                changed = imax_search_mv((float*)&curdist, &curNodeNum, pVectq, data, qty, size, data_level0_memory_, memoryPerObject_, offsetData_) ? true : false;
+                changed = imax_search_mv((float*)&curdist, &curNodeNum, pVectq, data, qty, size, data_level0_memory_, memoryPerObject_, offsetData_, query->GetThreadId(), query->GetMaxThreadQty()) ? true : false;
 #else
                 for (int j = 1; j <= size; j++) {
                     PREFETCH(data_level0_memory_ + (*(data + j)) * memoryPerObject_ + offsetData_, _MM_HINT_T0);

@@ -33,13 +33,15 @@ template <typename dist_t>
 class KNNQuery : public Query<dist_t> {
  public:
   ~KNNQuery();
-  KNNQuery(const Space<dist_t>& space, const Object* query_object, const unsigned K, float eps = 0);
+  KNNQuery(const Space<dist_t>& space, const Object* query_object, const unsigned K, float eps = 0, size_t threadId = 0, size_t maxThreadQty = 1);
 
   const KNNQueue<dist_t>* Result() const;
   virtual dist_t Radius() const;
   unsigned ResultSize() const;
   unsigned GetK() const { return K_; }
   float GetEPS() const { return eps_; }
+  size_t GetThreadId() const { return threadId_; }
+  size_t GetMaxThreadQty() const { return maxThreadQty_; }
 
   void Reset();
   bool CheckAndAddToResult(const dist_t distance, const Object* object);
@@ -52,6 +54,8 @@ class KNNQuery : public Query<dist_t> {
 
  protected:
   unsigned K_;
+  size_t threadId_;
+  size_t maxThreadQty_;
   float eps_;
   KNNQueue<dist_t>* result_;
 
