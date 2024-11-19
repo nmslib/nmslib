@@ -19,6 +19,7 @@ similarity_search/tmpfile.bin
 .idea
 dist/
 build/
+build_cpu/
 build_emax7/
 build_aarch64/
 lib/

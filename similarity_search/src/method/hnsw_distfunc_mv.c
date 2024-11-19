@@ -177,15 +177,21 @@ void xmax_bzero(Uint *dst, int words) {
 }
 #endif
 
+void copy_keys_to_imax(char *data_level0_memory_, size_t data_size, size_t maxThreadQty) {
+    if (membase[0] == NULL) { sysinit(1024*1024*128*sizeof(float), 32, maxThreadQty); }
+    imemcpy((Uint *)membase[0], (Uint *)data_level0_memory_, data_size);
+}
+
 #define IMAX_KERNEL_COL_SIZE 56
 #define NCHIP 1
 
 int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_, size_t threadId, size_t maxThreadQty) {
     int LANE = threadId;
+    reset_nanosec(threadId);
     int imax_emb = qty % (IMAX_KERNEL_COL_SIZE*2) ? ((qty/(IMAX_KERNEL_COL_SIZE*2)) + 1)*IMAX_KERNEL_COL_SIZE*2 : qty;
     int imax_size = size % 4 ? ((size/4) + 1)*4 : size;
     #ifdef ARMZYNQ
-    if (membase[LANE] == NULL) sysinit(1024*1024*128*sizeof(float), 32, maxThreadQty);
+    if (membase[LANE] == NULL) { sysinit(1024*1024*128*sizeof(float), 32, maxThreadQty); }
     xmax_bzero((Uint *)membase[LANE], 1024*1024*128);
     int key_size = imax_size*imax_emb*sizeof(float);
     int query_size = imax_emb*sizeof(float);
@@ -368,6 +374,8 @@ int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, si
             changed = 1;
         }
     }
+    get_nanosec(0, 0);
+    show_nanosec(0);
     printf("]\n");
     printf("IMAX Done\n");
     #ifdef ARMZYNQ

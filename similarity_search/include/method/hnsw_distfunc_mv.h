@@ -18,6 +18,7 @@ void xmax_bzero(Uint *dst, int words);
 #if __cplusplus
 extern "C" {
 #endif
+void copy_keys_to_imax(char *data_level0_memory_, size_t data_size, size_t maxThreadQty);
 int imax_search_mv(float *curdist, int *curNodeNum, float *pVectq, int *data, size_t qty, size_t size, char *data_level0_memory_, size_t memoryPerObject_, size_t offsetData_, size_t threadId, size_t maxThreadQty);
 #if __cplusplus
 }
