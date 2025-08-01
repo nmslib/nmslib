@@ -46,7 +46,7 @@ jobs:
           tox-uv tox -e py
 
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -70,7 +70,7 @@ jobs:
           name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
           path: python_bindings/dist/*.whl
   build_wheels_mac:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build (Mac)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
