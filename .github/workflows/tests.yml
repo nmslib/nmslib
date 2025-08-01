@@ -40,10 +40,6 @@ jobs:
         run:
           cd python_bindings && uvx -p ${{ matrix.python-version }} --with tox-uv tox -e py
 
-  name: Build
-
-  on: [ push, pull_request ]
-
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
