@@ -19,10 +19,22 @@ jobs:
         os: [ ubuntu-latest ]
         python-version: [ "3.13", "3.12", "3.11", "3.10", "3.9", "3.8" ]
     steps:
+      - name: Install prerequesites
+        run: |
+          sudo apt-get update
+          sudo apt-get install libboost-all-dev libgsl0-dev libeigen3-dev
+
       - uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
+
+      - name: Build and Install
+        run: |
+          cd similarity_search
+          cmake . -DWITH_EXTRAS=1
+          make
+          cd ..
 
       - name: Test with pytest and generate coverage file
         run:
