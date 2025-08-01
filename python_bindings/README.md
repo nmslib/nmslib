@@ -1,23 +1,24 @@
 # Python bindings for NMSLIB
 
-
 ## Installation
 
 This project works with Python on version 2.7+ and 3.5+, and on
 Linux, OSX and the Windows operating systems. To install:
 
-```
-pip install nmslib
+```console
+$ pip install nmslib
 ```
 
 To install from sources:
+
+```console
+$ pip install --no-binary :all: nmslib
 ```
-pip install --no-binary :all: nmslib
-```
+
 To install from sources, you may need to install Python dev-files. On Ubuntu, you can do it as follows:
 
-```
-sudo apt-get install python3-dev
+```console
+$ sudo apt-get install python3-dev
 ```
 
 Building on Windows requires Visual Studio 2015, see this [project for more
@@ -51,10 +52,14 @@ neighbours = index.knnQueryBatch(data, k=10, num_threads=4)
 ## Saving Indexes and Data
 
 It is possible to save both indexes (for some of the search methods) and serialized data in the binary format for subsequent faster loading. Then, one does not need to call `index.addDataPointBatch` and `index.createIndex`.  Instead, one can first call `index.saveIndex(indexLocation, save_data=True)` and then
-```
+
+```python
+import nmslib
+
 index = nmslib.init(method='hnsw', space='cosinesimil')
 index.loadIndex(indexLocal, load_data=True)
 ```
+
 One **catch** though is that for spaces `l2` and `cosinesimil`, HNSW's method `saveIndex` always saves its own copy of data. In this case, we say that HNSW saves an **optimized** version of the index. Thus, to avoid data duplication one can set parameters of `save_data` and `load_data`  to false.  Examples of doing so can be found [in sample Python notebooks](/python_bindings/notebooks/README.md). Note, though, that the function `getDistance` will **not work properly unless the data is reloaded** (this is certainly a deficiency, but it is not easy to fix).
 
 ## Basic tuning guidelines
@@ -65,7 +70,7 @@ The basic parameter tuning/selection guidelines are available [here](/manual/met
 
 NMSLIB produces quite a few informational messages. By default, they are not shown in Python. To enable debugging, one should use the following commands **before** importing the library:
 
-```
+```python
 import logging
 logging.basicConfig(level=logging.DEBUG)
 ```
@@ -77,17 +82,17 @@ To enable extra methods like those provided by FALCONN and LSHKIT you need to fo
 These methods require a development version of the
 following libraries: Boost, GNU scientific library, and Eigen3. To install on Ubuntu:
 
-```
-sudo apt-get install libboost-all-dev libgsl0-dev libeigen3-dev
+```console
+$ sudo apt-get install libboost-all-dev libgsl0-dev libeigen3-dev
 ```
 
 Next clone the repository and build with the C++ files using CMake:
 
-```
-cd similarity_search
-cmake . -DWITH_EXTRAS=1
-make
-cd ..
+```console
+$ cd similarity_search
+$ cmake . -DWITH_EXTRAS=1
+$ make
+$ cd ..
 ```
 
 Finally build and install the python extension:
@@ -104,5 +109,3 @@ $ pip install .
 * [A brief list of methods and parameters](/manual/methods.md)
 * [A brief list of supported spaces/distance](/manual/spaces.md)
 * [A detailed and formal description of spaces and methods with examples of benchmarking the methods (PDF)](/manual/latex/manual.pdf)
-
-
