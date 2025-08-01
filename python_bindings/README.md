@@ -92,10 +92,9 @@ cd ..
 
 Finally build and install the python extension:
 
-```
-cd python_bindings
-pip install -r requirements.txt
-python setup.py install
+```shell
+$ cd python_bindings
+$ pip install .
 ```
 
 ## Additional documentation
