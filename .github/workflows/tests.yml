@@ -46,6 +46,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
@@ -60,13 +61,14 @@ jobs:
         run: uv build --wheel python_bindings/
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
           path: python_bindings/dist/*.whl
   build_wheels_mac:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         os:
           - macos-13
           - macos-latest
@@ -80,5 +82,5 @@ jobs:
           CXXFLAGS="${CXXFLAGS/-march=native/}" uv build --wheel python_bindings/
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
           path: python_bindings/dist/*.whl
