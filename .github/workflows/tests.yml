@@ -1,0 +1,29 @@
+name: Tests
+
+permissions: { }
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  tests:
+    name: Tests
+    permissions:
+      contents: read
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        python-version: [ "3.7" ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Test with pytest and generate coverage file
+        run:
+          cd python_bindings && uvx -p ${{ matrix.python-version }} --with tox-uv tox -e py
