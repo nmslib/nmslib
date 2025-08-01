@@ -49,8 +49,8 @@ jobs:
         os:
           - ubuntu-latest
           - ubuntu-24.04-arm
-          #          - windows-latest
-          #          - windows-11-arm
+          - windows-latest
+          - windows-11-arm
           - macos-13
           - macos-latest
 
@@ -64,15 +64,9 @@ jobs:
         uses: astral-sh/setup-uv@v3
 
       - name: Build wheels
-        run: uvx cibuildwheel --output-dir wheelhouse python_bindings/
-        env:
-          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
-        # to supply options, put them in 'env', like:
-        # env:
-        #   CIBW_SOME_OPTION: value
-        #   ...
+        run: uv build python_bindings/ --wheel
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
-          path: ./wheelhouse/*.whl
+          name: wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: python_bindings/dist/*.whl
