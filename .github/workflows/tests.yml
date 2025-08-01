@@ -50,7 +50,7 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
           - windows-latest
-          - windows-11-arm
+          # - windows-11-arm # arm is busted, CIBW_ARCHS_WINDOWS=x86_64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
