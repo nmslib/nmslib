@@ -89,8 +89,29 @@ jobs:
         uses: astral-sh/setup-uv@v3
       - name: Build wheels
         run:
-          CXXFLAGS="${CXXFLAGS/-march=native/}" uv build --wheel python_bindings/
+          CXXFLAGS="${CXXFLAGS/-march=native/}" uv build --wheel
+          python_bindings/
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
           path: python_bindings/dist/*.whl
+
+  aggregate:
+    needs:
+      - build_wheels
+      - build_wheels_mac
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: combined-artifacts
+
+      - name: Show combined contents (optional)
+        run: ls -R combined-artifacts
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-platform-builds
+          path: combined-artifacts/
