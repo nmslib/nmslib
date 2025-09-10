@@ -17,9 +17,9 @@ jobs:
     strategy:
       matrix:
         # macos-13-xlarge is arm
-        #os: ["windows-2022", "ubuntu-24.04", "ubuntu-24.04-arm", "macos-13", "macos-13-xlarge"]
+        os: ["windows-2022", "ubuntu-24.04", "ubuntu-24.04-arm", "macos-13", "macos-13-xlarge"]
         #python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8", "3.7"]
-        os: ["windows-2022", "ubuntu-24.04"]
+        #os: ["windows-2022", "ubuntu-24.04"]
         python-version: ["3.13", "3.7"]
     steps:
       # No need 
@@ -47,39 +47,34 @@ jobs:
           ./release/test_integr
           make clean
 
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
       # Linux Intel only → export CFLAGS
       # See setup.py flag usage. This prevents from building native binaries, which might be non-portable.
       - name: Set Linux Intel flags
-        if: matrix.os == 'ubuntu-24.04'
-          run: echo "CFLAGS=-msse2" >> $GITHUB_ENV
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
+        run: echo "CFLAGS=-msse2" >> $GITHUB_ENV
 
       # Windows Intel only → export ARCH
       # See setup.py flag usage. This prevents from building native binaries, which might be non-portable.
       - name: Set Windows Intel flags
-        if: matrix.os == 'windows-2022'
-          run: echo "ARCH=SSE2" >> $GITHUB_ENV
+        if: ${{ matrix.os == 'windows-2022' }}
+        run: echo "ARCH=SSE2" >> $GITHUB_ENV
 
       # Linux only: run auditwheel
       - name: Install auditwheel
-        if: startsWith(matrix.os, 'ubuntu')
-          run: pip install auditwheel
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: pip install auditwheel
 
       - name: Build wheels
         run: uv build --wheel python_bindings/
 
       - name: Test with pytest and generate coverage file
-        run:
+        run: |
           echo "CFLAGS=$CFLAGS"
           echo "ARCH=$ARCH"
           cd python_bindings && tox -e py${{ matrix.python-version.replace('.', '') }} --installpkg dist/*.whl
 
       - name: Repair Linux wheels
-        if: startsWith(matrix.os, 'ubuntu')
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           mkdir -p wheelhouse
           for whl in python_bindings/dist/*.whl; do
@@ -95,8 +90,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
-          path: |
-            ${{ startsWith(matrix.os, 'ubuntu') && 'wheelhouse/*.whl' || 'python_bindings/dist/*.whl' }}
+          path: ${{ startsWith(matrix.os, 'ubuntu') && 'wheelhouse/*.whl' || 'python_bindings/dist/*.whl' }}
 
 
   aggregate:
