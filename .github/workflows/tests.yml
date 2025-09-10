@@ -53,11 +53,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       # Linux Intel only → export CFLAGS
+      # See setup.py flag usage. This prevents from building native binaries, which might be non-portable.
       - name: Set Linux Intel flags
         if: matrix.os == 'ubuntu-24.04'
           run: echo "CFLAGS=-msse2" >> $GITHUB_ENV
 
       # Windows Intel only → export ARCH
+      # See setup.py flag usage. This prevents from building native binaries, which might be non-portable.
       - name: Set Windows Intel flags
         if: matrix.os == 'windows-2022'
           run: echo "ARCH=SSE2" >> $GITHUB_ENV
