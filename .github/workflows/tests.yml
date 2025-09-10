@@ -20,7 +20,7 @@ jobs:
         os: ["windows-2022", "ubuntu-24.04", "ubuntu-24.04-arm", "macos-13", "macos-13-xlarge"]
         #python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8", "3.7"]
         #os: ["windows-2022", "ubuntu-24.04"]
-        python-version: ["3.13", "3.7"]
+        python-version: ["3.13"]
     steps:
       # No need 
       #- name: Install prerequisites
