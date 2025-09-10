@@ -71,7 +71,8 @@ jobs:
         run: |
           echo "CFLAGS=$CFLAGS"
           echo "ARCH=$ARCH"
-          cd python_bindings && tox -e py${{ matrix.python-version.replace('.', '') }} --installpkg dist/*.whl
+          PYTHON_VER_NO_DOT=${PYTHON_VERSION//./}
+          cd python_bindings && tox -e py${PYTHON_VER_NO_DOT} --installpkg dist/*.whl
 
       - name: Repair Linux wheels
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
