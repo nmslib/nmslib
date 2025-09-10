@@ -1,0 +1,117 @@
+name: Tests
+
+permissions: {}
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build_wheels_and_test:
+    name: Build and test
+    permissions:
+      contents: read
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # macos-13-xlarge is arm
+        #os: ["windows-2022", "ubuntu-24.04", "ubuntu-24.04-arm", "macos-13", "macos-13-xlarge"]
+        #python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8", "3.7"]
+        os: ["windows-2022", "ubuntu-24.04"]
+        python-version: ["3.13", "3.7"]
+    steps:
+      # No need 
+      #- name: Install prerequisites
+      #  run: |
+      #    sudo apt-get update
+      #    sudo apt-get install libboost-all-dev libgsl0-dev libeigen3-dev
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Build and run tests using binaries
+        run: |
+          cd similarity_search
+          # No extras at least for now
+          #cmake . -DWITH_EXTRAS=1
+          cmake .
+          make -j 8
+          ./release/bunit
+          ./release/test_integr
+          make clean
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Linux Intel only → export CFLAGS
+      - name: Set Linux Intel flags
+        if: matrix.os == 'ubuntu-24.04'
+          run: echo "CFLAGS=-msse2" >> $GITHUB_ENV
+
+      # Windows Intel only → export ARCH
+      - name: Set Windows Intel flags
+        if: matrix.os == 'windows-2022'
+          run: echo "ARCH=SSE2" >> $GITHUB_ENV
+
+      # Linux only: run auditwheel
+      - name: Install auditwheel
+        if: startsWith(matrix.os, 'ubuntu')
+          run: pip install auditwheel
+
+      - name: Build wheels
+        run: uv build --wheel python_bindings/
+
+      - name: Test with pytest and generate coverage file
+        run:
+          echo "CFLAGS=$CFLAGS"
+          echo "ARCH=$ARCH"
+          cd python_bindings && tox -e py${{ matrix.python-version.replace('.', '') }} --installpkg dist/*.whl
+
+      - name: Repair Linux wheels
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          mkdir -p wheelhouse
+          for whl in python_bindings/dist/*.whl; do
+            if [[ "${{ matrix.os }}" == "ubuntu-24.04" ]]; then
+              auditwheel repair --plat manylinux2010_x86_64 "$whl" -w wheelhouse/
+              auditwheel repair --plat manylinux1_x86_64 "$whl" -w wheelhouse/
+            elif [[ "${{ matrix.os }}" == "ubuntu-24.04-arm" ]]; then
+              auditwheel repair --plat manylinux2014_aarch64 "$whl" -w wheelhouse/
+            fi
+          done
+
+      # Upload artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
+          path: |
+            ${{ startsWith(matrix.os, 'ubuntu') && 'wheelhouse/*.whl' || 'python_bindings/dist/*.whl' }}
+
+
+  aggregate:
+    needs:
+      - build_wheels_and_test
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: combined-artifacts
+
+      - name: Show combined contents (optional)
+        run: ls -R combined-artifacts
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-platform-builds
+          path: combined-artifacts/
