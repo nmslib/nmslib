@@ -1,4 +1,4 @@
-name: Tests
+name: Build and test.
 
 permissions: {}
 
@@ -86,8 +86,7 @@ jobs:
           mkdir -p wheelhouse
           for whl in python_bindings/dist/*.whl; do
             if [[ "${{ matrix.os }}" == "ubuntu-24.04" ]]; then
-              auditwheel repair --plat manylinux2010_x86_64 "$whl" -w wheelhouse/
-              auditwheel repair --plat manylinux1_x86_64 "$whl" -w wheelhouse/
+              auditwheel repair --plat manylinux2014_x86_64 "$whl" -w wheelhouse/
             elif [[ "${{ matrix.os }}" == "ubuntu-24.04-arm" ]]; then
               auditwheel repair --plat manylinux2014_aarch64 "$whl" -w wheelhouse/
             fi
