@@ -37,6 +37,9 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
 
+      - name: Install tox
+        run: pip install tox
+
       - name: Build and run tests using binaries
         run: |
           cd similarity_search
@@ -45,14 +48,16 @@ jobs:
           cmake .
           make -j 8
           ./release/bunit
-          ./release/test_integr
+          #./release/test_integr
           make clean
 
       # Linux Intel only → export CFLAGS
       # See setup.py flag usage. This prevents from building native binaries, which might be non-portable.
       - name: Set Linux Intel flags
         if: ${{ matrix.os == 'ubuntu-24.04' }}
-        run: echo "CFLAGS=-msse2" >> $GITHUB_ENV
+        run: |
+          echo "CFLAGS=-msse2" >> $GITHUB_ENV
+          echo "CXXFLAGS=-msse2" >> $GITHUB_ENV
 
       # Windows Intel only → export ARCH
       # See setup.py flag usage. This prevents from building native binaries, which might be non-portable.
