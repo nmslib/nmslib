@@ -14,7 +14,7 @@ if [ "$arch" == "aarch64" -o "$arch" == "arm64" ]; then
     PLAT=manylinux2014_aarch64
     DOCKER_IMAGE=quay.io/pypa/$PLAT
     docker pull $DOCKER_IMAGE
-    docker run --rm -v `pwd`:/io -e PLAT=$PLAT -e PYTHON=$PYTHON -e CFLAGS=$CFLAGS $DOCKER_IMAGE $PRE_CMD /io/travis/build-wheels.sh
+    docker run --rm -v `pwd`:/io -e PLAT=$PLAT -e PYTHON=$PYTHON -e CFLAGS=$CFLAGS $DOCKER_IMAGE $PRE_CMD /io/build_linux_wheels/build-wheels.sh
 else
     CFLAGS=-msse2
     echo "Ignoring manylinux1_i686"
@@ -26,7 +26,7 @@ else
             PRE_CMD=""
         fi
         docker pull $DOCKER_IMAGE
-        docker run --rm -v `pwd`:/io -e PLAT=$PLAT -e PYTHON=$PYTHON -e CFLAGS=$CFLAGS $DOCKER_IMAGE $PRE_CMD /io/travis/build-wheels.sh
+        docker run --rm -v `pwd`:/io -e PLAT=$PLAT -e PYTHON=$PYTHON -e CFLAGS=$CFLAGS $DOCKER_IMAGE $PRE_CMD /io/build_linux_wheels/build-wheels.sh
     done
 fi
 WHEEL_DIR="wheelhouse"
