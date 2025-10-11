@@ -4,6 +4,8 @@ set -x
 git clean -fxd
 git clean -fXd   
 
+echo "Python version: $PYTHON"
+
 arch=`uname -m`
 # manylinux build
 echo "Building manylinux wheels with auditwheel and docker"
