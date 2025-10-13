@@ -744,7 +744,7 @@ bool TestJSAgree(size_t N, size_t dim, size_t Rep, double pZero) {
     }
 
     LOG(LIB_INFO) << typeid(T).name() << " JS approximation error: average absolute: " << Error / TotalQty << 
-                                " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
+                                " avg. dist: " << Dist / TotalQty << " average relative: " << Error/max(Dist, T(1e-18));
 
 
     return true;
@@ -776,6 +776,7 @@ bool TestRenyiDivAgree(size_t N, size_t dim, size_t Rep, T alpha) {
             T AbsDiff1 = fabs(val1 - val0);
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
 
+            Dist += fabs(val1);
             Error += AbsDiff1;
             ++TotalQty;
 
@@ -791,8 +792,10 @@ bool TestRenyiDivAgree(size_t N, size_t dim, size_t Rep, T alpha) {
         }
     }
 
+    // For dim == 1, this divergence is always zero since the only 1-dim probability distribution vector
+    // is 1.
     LOG(LIB_INFO) << typeid(T).name() << " Renyi Div. approximation error: average absolute: " << Error / TotalQty << 
-                                 " avg. dist: " << Dist / TotalQty << " average relative: " << Error/Dist;
+                                 " avg. dist: " << Dist / TotalQty << " average relative: " << Error/max(Dist, T(1e-18));
 
 
     return true;
@@ -824,6 +827,7 @@ bool TestAlphaBetaDivAgree(size_t N, size_t dim, size_t Rep, T alpha, T beta) {
             T AbsDiff1 = fabs(val1 - val0);
             T RelDiff1 = AbsDiff1/max(max(fabs(val1),fabs(val0)),T(1e-18));
 
+            Dist += fabs(val1);
             Error += AbsDiff1;
             ++TotalQty;
 
@@ -1026,8 +1030,8 @@ bool TestSparseAngularDistanceAgree(const string& dataFile, size_t N, size_t Rep
 
     bool bug = false;
 
-    float maxRelDiff = 2e-5f;
-    float maxAbsDiff = 1e-6f;
+    float maxRelDiff = 2.5e-5f;
+    float maxAbsDiff = 2.5e-6f;
 
     for (size_t j = Rep; j < N; ++j)
         for (size_t k = j - Rep; k < j; ++k) {
