@@ -69,8 +69,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
-          path: ${{ startsWith(matrix.os, 'ubuntu') && 'python_bindings/dist/*.whl' }}
-
+          path: 'python_bindings/dist/*.whl'
 
   aggregate:
     needs:
