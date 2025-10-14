@@ -19,8 +19,8 @@ jobs:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
         #os: ["macos-15", "macos-15-intel"]
-        os: ["macos-15"]
-        python-version: ["3.14"]
+        os: ["macos-15", "macos-15-intel", "ubuntu-24.04", "ubuntu-24.04-arm"]
+        python-version: ["3.13"]
     steps:
       # No need unless we test with extras 
       #- name: Install prerequisites
@@ -73,7 +73,7 @@ jobs:
     name: Build and test (Windows)
     permissions:
       contents: read
-    runs-on: windows-2022
+    runs-on: ["windows-11-arm", "windows-2022"]
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
