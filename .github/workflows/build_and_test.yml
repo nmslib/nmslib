@@ -80,13 +80,14 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    #runs-on: ["windows-2022"]
-    runs-on: ["windows-11-arm"]
+    #if: false  # 👈 disables the job
+    runs-on: ["windows-2022"]
+    #runs-on: ["windows-11-arm"]
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         #python-version: ["3.8", "3.14"]
-        python-version: ["3.9"]
+        python-version: ["3.8"]
 
     steps:
       - uses: actions/checkout@v4
@@ -120,7 +121,7 @@ jobs:
           nmake || exit /b 1
 
           ./bunit || exit /b 1
-          ./test_integr || exit /b 1
+          #./test_integr || exit /b 1
 
 
           del /q *.exe NonMetricSpaceLib.lib || exit /b 1

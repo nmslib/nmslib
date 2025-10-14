@@ -74,6 +74,7 @@ ext_modules = [
         libraries=libraries,
         language='c++',
         extra_objects=extra_objects,
+        define_macros=[("VERSION_INFO", f'"{__version__}"')],
     ),
 ]
 
@@ -153,13 +154,13 @@ class BuildExt(build_ext):
         ct = self.compiler.compiler_type
         opts = self.c_opts.get(ct, [])
         if ct == 'unix':
-            opts.append('-DVERSION_INFO="%s"' %
-                        self.distribution.get_version())
+            #opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
             opts.append(cpp_flag(self.compiler))
             if has_flag(self.compiler, '-fvisibility=hidden'):
                 opts.append('-fvisibility=hidden')
         elif ct == 'msvc':
-            opts.append('/DVERSION_INFO="%s"' % (self.distribution.get_version()))
+            pass
+            #opts.append('/DVERSION_INFO="%s"' % (self.distribution.get_version()))
 
         print('Extra compilation arguments:', opts)
 
