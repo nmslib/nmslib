@@ -59,7 +59,8 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: |
           uv build --wheel python_bindings/
-          cd python_bindings && tox -e py${{ matrix.python-version.replace('.', '') }} --installpkg dist/*.whl
+          PYTHON_VER_NO_DOT=${PYTHON_VERSION//./}
+          cd python_bindings && tox -e py${PYTHON_VER_NO_DOT} --installpkg dist/*.whl
 
       # Upload artifacts
       - uses: actions/upload-artifact@v4
