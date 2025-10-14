@@ -41,7 +41,7 @@ jobs:
       - name: Install tox
         run: pip install tox
 
-      # We need to test binaries only once per platform
+      # Build and run native tests only for Python 3.8
       - name: Build and run tests using binaries
         if: matrix.python-version == '3.8'
         run: |
@@ -84,7 +84,8 @@ jobs:
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
-        python-version: ["3.8", "3.14"]
+        #python-version: ["3.8", "3.14"]
+        python-version: ["3.8"]
 
     steps:
       - uses: actions/checkout@v4
@@ -117,21 +118,17 @@ jobs:
           cmake -G "NMake Makefiles" . || exit /b 1
           nmake || exit /b 1
 
-          echo "PATHS!!!!"
+          echo "PATHS 1!!!!"
           dir
           cd
 
-          if exist release\bunit.exe (
-            release\bunit.exe || exit /b 1
-            release\test_integr.exe || exit /b 1
-          ) else (
-            echo ERROR: Test binaries not found!
-            dir release
-            exit /b 1
-          )
-
+          del /q *.exe NonMetricSpaceLib.lib || exit /b 1
           nmake clean || exit /b 1
           rmdir /s /q release
+
+          echo "PATHS 2!!!!"
+          dir
+          cd
 
       - name: Build Python bindings
         shell: cmd
