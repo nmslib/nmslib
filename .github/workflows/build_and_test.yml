@@ -13,16 +13,17 @@ jobs:
     name: Build and test wheels for Linux and MacOS
     permissions:
       contents: read
-    if: false  # 👈 disables the job
+    #if: false  # 👈 disables the job
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
         #os: ["macos-15", "macos-15-intel"]
-        os: ["macos-15", "macos-15-intel", "ubuntu-24.04", "ubuntu-24.04-arm"]
+        #os: ["macos-15", "macos-15-intel", "ubuntu-24.04", "ubuntu-24.04-arm"]
         #python-version: ["3.13"]
-        python-version: ["3.8"]
+        os: ["macos-15-intel"]
+        python-version: ["3.8", "3.13"]
     steps:
       # No need unless we test with extras 
       #- name: Install prerequisites
@@ -81,8 +82,8 @@ jobs:
     permissions:
       contents: read
     #if: false  # 👈 disables the job
-    runs-on: ["windows-2022"]
-    #runs-on: ["windows-11-arm"]
+    #runs-on: ["windows-2022"]
+    runs-on: ["windows-11-arm"]
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
@@ -94,7 +95,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: x64
+          architecture: ${{ matrix.os == 'windows-11-arm' && 'arm64' || 'x64' }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -114,7 +115,14 @@ jobs:
             exit /b 1
           )
           echo Using Visual Studio at %VSPATH%
-          call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64 || exit /b 1
+
+          if "%RUNNER_ARCH%"=="ARM64" (
+            call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" arm64 || exit /b 1
+            set TARGET_ARCH=arm64
+          ) else (
+            call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64 || exit /b 1
+            set TARGET_ARCH=x64
+          )
 
           cd similarity_search || exit /b 1
           cmake -G "NMake Makefiles" . || exit /b 1
