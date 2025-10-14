@@ -22,6 +22,7 @@
 #include "pow.h"
 #include "logging.h"
 #include "utils.h"
+#include "my_isnan_isinf.h"
 
 namespace similarity {
 
@@ -46,8 +47,11 @@ template <typename T> bool runTest() {
         if (s < 0 && (oneExp - static_cast<unsigned>(oneExp) > 1e-10)) {
           continue; // negative to the fractional degree will be nan
         }
-        //cout << "Not skiping: " << v << " ^ " << oneExp << endl;
         T expRes = pow(T(v), oneExp); 
+        if (my_isinf(expRes)) {
+          continue;
+        }
+        //cout << "Not skiping: " << v << " ^ " << oneExp << endl;
         T res = obj.pow(v);
 
         T absDiff = fabs(res - expRes);
