@@ -132,8 +132,9 @@ jobs:
         run: |
           cd python_bindings
           uv build --wheel
+          $wheel = Get-ChildItem dist -Filter *.whl | Select-Object -ExpandProperty FullName
           $PYVER = "${{ matrix.python-version }}".Replace(".", "")
-          tox -e "py$PYVER" --installpkg dist/*.whl
+          tox -e "py$PYVER" --installpkg "$wheel"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
