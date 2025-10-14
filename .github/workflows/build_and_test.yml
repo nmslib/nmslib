@@ -19,8 +19,8 @@ jobs:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
         #os: ["macos-15", "macos-15-intel"]
-        os: ["macos-15-intel"]
-        python-version: ["3.13"]
+        os: ["macos-15"]
+        python-version: ["3.14"]
     steps:
       # No need unless we test with extras 
       #- name: Install prerequisites
@@ -77,7 +77,7 @@ jobs:
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
-        python-version: ["3.13"]
+        python-version: ["3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -141,7 +141,7 @@ jobs:
 
   aggregate:
     needs:
-      #- build_wheels_and_test
+      - build_wheels_and_test
       - build_windows_wheels_and_test
       - build_source_dist
     runs-on: ubuntu-24.04
