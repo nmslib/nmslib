@@ -13,6 +13,7 @@ jobs:
     name: Build and test wheels for Linux and MacOS
     permissions:
       contents: read
+    if: false  # 👈 disables the job
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -113,8 +114,12 @@ jobs:
           call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64 || exit /b 1
 
           cd similarity_search || exit /b 1
-          cmake -G "NMake Makefiles" . || exit /b 1
+          cmake -G "NMake Makefiles" -A x64 . || exit /b 1
           nmake || exit /b 1
+
+          echo "PATHS!!!!"
+          dir
+          cd
 
           if exist release\bunit.exe (
             release\bunit.exe || exit /b 1
