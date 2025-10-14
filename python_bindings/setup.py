@@ -139,12 +139,12 @@ class BuildExt(build_ext):
             # https://github.com/nmslib/nmslib/issues/476#issuecomment-876094529
             c_opts['unix'].append('-mcpu=apple-a14')
         else:
-            # This should default to a generic i86 CPU
-            pass
+            # SSE2 should be now anywhere
+            c_opts['unix'].append('-msse2')
 
 
-        c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
-        link_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
+        c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.9']
+        link_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.9']
     else:
         c_opts['unix'].append("-fopenmp")
         link_opts['unix'].extend(['-fopenmp', '-pthread'])
