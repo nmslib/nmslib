@@ -153,7 +153,7 @@ jobs:
         run: |
           rem --- Detect if this is a Windows ARM runner ---
           echo Matrix OS is: ${{ matrix.os }}
-          if /I "${{ matrix.os }}"=="windows-11-arm" (
+          if "%RUNNER_ARCH%"=="ARM64" (
               echo Detected ARM Windows runner.
               set CFLAGS=-march=armv8-a
               set CXXFLAGS=%CFLAGS%
