@@ -133,19 +133,14 @@ class BuildExt(build_ext):
     }
 
     if sys.platform == 'darwin':
+        c_opts['unix'].remove('-march=native')
         if platform.processor() in ('arm64', 'arm'):
-            c_opts['unix'].remove('-march=native')
             # thanks to @https://github.com/drkeoni
             # https://github.com/nmslib/nmslib/issues/476#issuecomment-876094529
             c_opts['unix'].append('-mcpu=apple-a14')
         else:
-            # override or filter sysconfig’s default flags
-            cfg_vars = sysconfig.get_config_vars()
-            # e.g. remove "-arch x86_64" / "-arch arm64" from cfg_vars['CFLAGS'] or so
-            for key in ('CFLAGS', 'OPT', 'BASECFLAGS'):
-                if cfg_vars.get(key):
-                    cfg_vars[key] = cfg_vars[key].replace('-arch x86_64', '')
-                    cfg_vars[key] = cfg_vars[key].replace('-arch arm64', '')
+            # This should default to a generic i86 CPU
+            pass
 
 
         c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
