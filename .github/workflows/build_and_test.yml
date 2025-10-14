@@ -9,19 +9,18 @@ on:
     branches: ["**"]
 
 jobs:
-  build_wheels_and_test:
+  build_wheels_and_test_linux:
     name: Build and test
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-13-xlarge is arm
-        #os: ["windows-2022", "ubuntu-24.04", "ubuntu-24.04-arm", "macos-13", "macos-13-xlarge"]
+        #python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8", "3.7"]
         #python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8", "3.7"]
         #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
-        #python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8", "3.7"]
-        os: ["ubuntu-24.04-arm"]
+        #os: ["macos-15", "macos-15-intel"]
+        os: ["macos-15-intel"]
         #python-version: ["3.10"]
         python-version: ["3.14"]
     steps:
@@ -51,9 +50,16 @@ jobs:
           make clean
 
       - name: Build and repair Linux wheels
+        if: startsWith(matrix.os, 'ubuntu')
         env:
           PYTHON: ${{ matrix.python-version }}
         run: ./build_linux_wheels/deploy.sh
+
+      - name: Build MacOS wheels
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          uv build --wheel python_bindings/
+          cd python_bindings && tox -e py${{ matrix.python-version.replace('.', '') }} --installpkg dist/*.whl
 
       # Upload artifacts
       - uses: actions/upload-artifact@v4
