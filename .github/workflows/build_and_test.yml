@@ -79,12 +79,12 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    #runs-on: ["windows-11-arm", "windows-2022"]
     runs-on: ["windows-2022"]
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
-        python-version: ["3.8"]
+        python-version: ["3.8", "3.14"]
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -92,43 +92,67 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - name: Set up environment
+      - name: Set up Python environment
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
-          python -m pip install --upgrade pip
-          python -m pip install setuptools six psutil scikit-learn pytest pytest-runner
+          python -m pip install --upgrade pip || exit /b 1
+          python -m pip install setuptools six psutil scikit-learn pytest pytest-runner || exit /b 1
 
-      # Build and run native tests for Python 3.8 only
+      # Build and run native tests only for Python 3.8
       - name: Build and run native C++ tests
         if: matrix.python-version == '3.8'
         shell: cmd
         run: |
-          cd similarity_search
-          cmake -G "Visual Studio 16 2019" -A x64 .
-          cmake --build . --config Release
-          cd Release
-          bunit.exe
-          test_integr.exe
-          cd ..
-          rmdir /s /q Release
+          echo Locating Visual Studio...
+          for /f "usebackq tokens=*" %%i in (`vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSPATH=%%i
+          if not exist "%VSPATH%" (
+            echo ERROR: Could not locate Visual Studio!
+            exit /b 1
+          )
+          echo Using Visual Studio at %VSPATH%
+          call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64 || exit /b 1
+
+          cd similarity_search || exit /b 1
+          cmake -G "NMake Makefiles" . || exit /b 1
+          nmake || exit /b 1
+
+          if exist release\bunit.exe (
+            release\bunit.exe || exit /b 1
+            release\test_integr.exe || exit /b 1
+          ) else (
+            echo ERROR: Test binaries not found!
+            dir release
+            exit /b 1
+          )
+
+          nmake clean || exit /b 1
+          rmdir /s /q release
 
       - name: Build Python bindings
+        shell: cmd
         run: |
-          cd python_bindings
-          pip install -r requirements.txt
-          python setup.py build_ext
-          pip install -U .
+          for /f "usebackq tokens=*" %%i in (`vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSPATH=%%i
+          if exist "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" (
+            call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64 || exit /b 1
+          ) else (
+            echo WARNING: vcvarsall.bat not found, proceeding without explicit setup
+          )
+          cd python_bindings || exit /b 1
+          pip install -r requirements.txt || exit /b 1
+          python setup.py build_ext || exit /b 1
+          pip install -U . || exit /b 1
 
-      - name: Run tests
+      - name: Run Python tests
+        shell: cmd
         run: |
-          cd python_bindings
-          pytest tests
+          cd python_bindings || exit /b 1
+          pytest tests || exit /b 1
 
       - name: Build wheel
+        shell: cmd
         run: |
-          cd python_bindings
-          python setup.py sdist bdist_wheel
+          cd python_bindings || exit /b 1
+          python setup.py sdist bdist_wheel || exit /b 1
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
