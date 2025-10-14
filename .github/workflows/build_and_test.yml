@@ -128,13 +128,13 @@ jobs:
 
       # 🔹 Build wheel with uv and test with tox (same pattern as Linux/Mac)
       - name: Build and test Python wheel
-        shell: pwsh
+        shell: cmd
         run: |
-          cd python_bindings
-          uv build --wheel
-          $wheel = Get-ChildItem dist -Filter *.whl | Select-Object -ExpandProperty FullName
-          $PYVER = "${{ matrix.python-version }}".Replace(".", "")
-          tox -e "py$PYVER" --installpkg "$wheel"
+          cd python_bindings || exit /b 1
+          uv build --wheel || exit /b 1
+          set PYVER=${{ matrix.python-version }}
+          set PYVER=%PYVER:.=%
+          for %%f in (dist\*.whl) do tox -e py%PYVER% --installpkg "%%f" || exit /b 1
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
