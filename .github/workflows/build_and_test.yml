@@ -114,7 +114,7 @@ jobs:
           call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64 || exit /b 1
 
           cd similarity_search || exit /b 1
-          cmake -G "NMake Makefiles" -A x64 . || exit /b 1
+          cmake -G "NMake Makefiles" . || exit /b 1
           nmake || exit /b 1
 
           echo "PATHS!!!!"
