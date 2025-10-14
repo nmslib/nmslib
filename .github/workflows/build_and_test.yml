@@ -94,11 +94,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
 
-      - name: Set up Python environment
-        shell: cmd
-        run: |
-          python -m pip install --upgrade pip || exit /b 1
-          python -m pip install setuptools six psutil scikit-learn pytest pytest-runner || exit /b 1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install tox
+        run: pip install tox
 
       # Build and run native tests only for Python 3.8
       - name: Build and run native C++ tests
@@ -126,32 +126,14 @@ jobs:
           nmake clean || exit /b 1
           rmdir /s /q release
 
-
-      - name: Build Python bindings
-        shell: cmd
+      # 🔹 Build wheel with uv and test with tox (same pattern as Linux/Mac)
+      - name: Build and test Python wheel
+        shell: pwsh
         run: |
-          for /f "usebackq tokens=*" %%i in (`vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSPATH=%%i
-          if exist "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" (
-            call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64 || exit /b 1
-          ) else (
-            echo WARNING: vcvarsall.bat not found, proceeding without explicit setup
-          )
-          cd python_bindings || exit /b 1
-          pip install -r requirements.txt || exit /b 1
-          python setup.py build_ext || exit /b 1
-          pip install -U . || exit /b 1
-
-      - name: Run Python tests
-        shell: cmd
-        run: |
-          cd python_bindings || exit /b 1
-          pytest tests || exit /b 1
-
-      - name: Build wheel
-        shell: cmd
-        run: |
-          cd python_bindings || exit /b 1
-          python setup.py sdist bdist_wheel || exit /b 1
+          cd python_bindings
+          uv build --wheel
+          $PYVER = "${{ matrix.python-version }}".Replace(".", "")
+          tox -e "py$PYVER" --installpkg dist/*.whl
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
