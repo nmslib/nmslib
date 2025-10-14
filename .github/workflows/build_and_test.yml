@@ -16,15 +16,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        #python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8", "3.7"]
-        #python-version: ["3.13", "3.12", "3.11", "3.10", "3.9", "3.8", "3.7"]
+        #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
         #os: ["macos-15", "macos-15-intel"]
         os: ["macos-15-intel"]
-        #python-version: ["3.10"]
-        python-version: ["3.14"]
+        #python-version: ["3.13"]
+        python-version: []
     steps:
-      # No need 
+      # No need unless we test with extras 
       #- name: Install prerequisites
       #  run: |
       #    sudo apt-get update
@@ -71,9 +70,81 @@ jobs:
           name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
           path: 'python_bindings/dist/*.whl'
 
+  build_windows_wheels_and_test:
+    name: Build and test (Windows)
+    permissions:
+      contents: read
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
+        python-version: ["3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
+
+      - name: Set up environment
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+          python -m pip install --upgrade pip
+          python -m pip install setuptools six psutil scikit-learn pytest pytest-runner
+
+      - name: Build Python bindings
+        run: |
+          cd python_bindings
+          pip install -r requirements.txt
+          python setup.py build_ext
+          pip install -U .
+
+      - name: Run tests
+        run: |
+          cd python_bindings
+          pytest tests
+
+      - name: Build wheel
+        run: |
+          cd python_bindings
+          python setup.py sdist bdist_wheel
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.python-version }}-windows
+          path: 'python_bindings/dist/*.whl'
+
+
+  build_source_dist:
+    name: Build source distribution
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build source distribution
+        run: |
+          cd python_bindings
+          python -m pip install --upgrade pip setuptools wheel
+          python setup.py sdist
+
+      - name: Upload source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-dist
+          path: python_bindings/dist/*.tar.gz
+
   aggregate:
     needs:
       - build_wheels_and_test
+      - build_windows_wheels_and_test
+      - build_source_dist
     runs-on: ubuntu-24.04
     steps:
       - name: Download all artifacts
