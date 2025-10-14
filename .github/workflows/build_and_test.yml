@@ -102,15 +102,16 @@ jobs:
       # Build and run native tests for Python 3.8 only
       - name: Build and run native C++ tests
         if: matrix.python-version == '3.8'
-        shell: bash
+        shell: cmd
         run: |
           cd similarity_search
-          cmake -G "NMake Makefiles" .
-          nmake
-          ./release/bunit.exe
-          ./release/test_integr.exe
-          nmake clean
-          rm -rf ./release
+          cmake -G "Visual Studio 16 2019" -A x64 .
+          cmake --build . --config Release
+          cd Release
+          bunit.exe
+          test_integr.exe
+          cd ..
+          rmdir /s /q Release
 
       - name: Build Python bindings
         run: |
