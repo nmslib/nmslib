@@ -20,8 +20,7 @@ jobs:
         #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
         #os: ["macos-15", "macos-15-intel"]
         os: ["macos-15-intel"]
-        #python-version: ["3.13"]
-        python-version: []
+        python-version: ["3.13"]
     steps:
       # No need unless we test with extras 
       #- name: Install prerequisites
@@ -142,7 +141,7 @@ jobs:
 
   aggregate:
     needs:
-      - build_wheels_and_test
+      #- build_wheels_and_test
       - build_windows_wheels_and_test
       - build_source_dist
     runs-on: ubuntu-24.04
