@@ -43,7 +43,7 @@ jobs:
         run: pip install tox
 
       # Build and run native tests only for Python 3.8
-      - name: Build and run tests using binaries
+      - name: Build and run native C++ tests
         if: matrix.python-version == '3.8'
         run: |
           cd similarity_search
@@ -67,6 +67,14 @@ jobs:
       - name: Build MacOS wheels
         if: startsWith(matrix.os, 'macos')
         run: |
+          ARCH=$(arch)
+          if [[ "$ARCH" == "arm64" ]]; then
+            export MACOSX_DEPLOYMENT_TARGET=11.0
+          else
+            export MACOSX_DEPLOYMENT_TARGET=10.13
+          fi
+          echo "Detected architecture: $ARCH"
+          echo "Using MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET"
           uv build --wheel python_bindings/
           PYTHON_VER_NO_DOT=${PYTHON_VERSION//./}
           cd python_bindings && tox -e py${PYTHON_VER_NO_DOT} --installpkg dist/*.whl
@@ -81,7 +89,7 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    #if: false  # 👈 disables the job
+    if: false  # 👈 disables the job
     #runs-on: ["windows-2022"]
     runs-on: ["windows-11-arm"]
     strategy:
