@@ -19,7 +19,9 @@
 
 // On 64-bit platforms SSE2 is always present, but Windows doesn't set SSE2 flag
 // http://stackoverflow.com/questions/1067630/sse2-option-in-visual-c-x64
-#if defined(__SSE2__) || defined(__AVX__) || defined(_MSC_VER)
+// Moreover: let's be careful about Windows-ARM
+#if (defined(__SSE2__) || defined(__AVX__) || defined(_MSC_VER)) && \
+    !(defined(_M_ARM64) || defined(_M_ARM))
 #define PORTABLE_SSE2
 #endif
 
