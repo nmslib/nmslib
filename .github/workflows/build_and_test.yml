@@ -152,16 +152,16 @@ jobs:
         shell: cmd
         run: |
           rem --- Detect if this is a Windows ARM runner ---
-          echo Matrix OS is: ${{ matrix.os }}
+          setlocal EnableDelayedExpansion
           if "%RUNNER_ARCH%"=="ARM64" (
               echo Detected ARM Windows runner.
               set CFLAGS=-march=armv8-a
-              set CXXFLAGS=%CFLAGS%
-              echo CFLAGS=%CFLAGS%
-              echo CXXFLAGS=%CXXFLAGS%
+              set CXXFLAGS=!CFLAGS!
           ) else (
               echo Not an ARM Windows runner. Skipping custom CFLAGS.
           )
+          python -c "import os; print('CFLAGS:', os.environ.get('CFLAGS'))"
+          python -c "import os; print('CXXFLAGS:', os.environ.get('CXXFLAGS'))"
 
           cd python_bindings || exit /b 1
           uv build --wheel || exit /b 1
