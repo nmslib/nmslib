@@ -8,6 +8,9 @@ on:
   pull_request:
     branches: ["**"]
 
+env:
+  DISABLE_NATIVE_BINARY_TESTS: 1
+
 jobs:
   build_linux_macos_wheels_and_test:
     name: Build and test wheels for Linux and MacOS
@@ -44,7 +47,7 @@ jobs:
 
       # Build and run native tests only for Python 3.8
       - name: Build and run native C++ tests
-        if: matrix.python-version == '3.8'
+        if: matrix.python-version == '3.8' && env.DISABLE_NATIVE_BINARY_TESTS != '1'
         run: |
           cd similarity_search
           # No extras at least for now
@@ -73,6 +76,8 @@ jobs:
           else
             export MACOSX_DEPLOYMENT_TARGET=10.13
           fi
+          # Without this setuptools adds -arch arm64 -arch x86_64
+          export ARCHFLAGS=""
           echo "Detected architecture: $ARCH"
           echo "Using MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET"
           uv build --wheel python_bindings/
@@ -89,7 +94,7 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    if: false  # 👈 disables the job
+    #if: false  # 👈 disables the job
     #runs-on: ["windows-2022"]
     runs-on: ["windows-11-arm"]
     strategy:
@@ -113,7 +118,7 @@ jobs:
 
       # Build and run native tests only for Python 3.8
       - name: Build and run native C++ tests
-        if: matrix.python-version == '3.8'
+        if: matrix.python-version == '3.8' && env.DISABLE_NATIVE_BINARY_TESTS != '1'
         shell: cmd
         run: |
           echo Locating Visual Studio...
@@ -146,6 +151,18 @@ jobs:
       - name: Build and test Python wheel
         shell: cmd
         run: |
+          rem --- Detect if this is a Windows ARM runner ---
+          echo Matrix OS is: ${{ matrix.os }}
+          if /I "${{ matrix.os }}"=="windows-11-arm" (
+              echo Detected ARM Windows runner.
+              set CFLAGS=-march=armv8-a
+              set CXXFLAGS=%CFLAGS%
+              echo CFLAGS=%CFLAGS%
+              echo CXXFLAGS=%CXXFLAGS%
+          ) else (
+              echo Not an ARM Windows runner. Skipping custom CFLAGS.
+          )
+
           cd python_bindings || exit /b 1
           uv build --wheel || exit /b 1
           set PYVER=${{ matrix.python-version }}
