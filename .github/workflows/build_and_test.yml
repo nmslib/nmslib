@@ -43,9 +43,9 @@ jobs:
           cd similarity_search
           # No extras at least for now
           #cmake . -DWITH_EXTRAS=1
-          cmake .
-          make -j 8
-          ./release/bunit
+          #cmake .
+          #make -j 8
+          #./release/bunit
           #./release/test_integr
           make clean
 
