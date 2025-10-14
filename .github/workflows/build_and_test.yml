@@ -125,7 +125,6 @@ jobs:
 
           del /q *.exe NonMetricSpaceLib.lib || exit /b 1
           nmake clean || exit /b 1
-          rmdir /s /q release
 
       # 🔹 Build wheel with uv and test with tox (same pattern as Linux/Mac)
       - name: Build and test Python wheel
