@@ -9,8 +9,8 @@ on:
     branches: ["**"]
 
 jobs:
-  build_wheels_and_test:
-    name: Build and test
+  build_linux_macos_wheels_and_test:
+    name: Build and test wheels for Linux and MacOS
     permissions:
       contents: read
     runs-on: ${{ matrix.os }}
@@ -20,7 +20,8 @@ jobs:
         #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
         #os: ["macos-15", "macos-15-intel"]
         os: ["macos-15", "macos-15-intel", "ubuntu-24.04", "ubuntu-24.04-arm"]
-        python-version: ["3.13"]
+        #python-version: ["3.13"]
+        python-version: ["3.8"]
     steps:
       # No need unless we test with extras 
       #- name: Install prerequisites
@@ -39,16 +40,21 @@ jobs:
       - name: Install tox
         run: pip install tox
 
+      # We need to test binaries only once per platform
       - name: Build and run tests using binaries
+        if: matrix.python-version == '3.8'
         run: |
           cd similarity_search
           # No extras at least for now
           #cmake . -DWITH_EXTRAS=1
           cmake .
-          #make -j 8
-          #./release/bunit
-          #./release/test_integr
+          make -j 8
+          ./release/bunit
+          ./release/test_integr
           make clean
+          # This is a bit paranoid
+          rm -rf ./release
+
 
       - name: Build and repair Linux wheels
         if: startsWith(matrix.os, 'ubuntu')
@@ -70,14 +76,15 @@ jobs:
           path: 'python_bindings/dist/*.whl'
 
   build_windows_wheels_and_test:
-    name: Build and test (Windows)
+    name: Build and test wheels for Windows
     permissions:
       contents: read
-    runs-on: ["windows-11-arm", "windows-2022"]
+    #runs-on: ["windows-11-arm", "windows-2022"]
+    runs-on: ["windows-2022"]
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
-        python-version: ["3.14"]
+        python-version: ["3.8"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -91,6 +98,19 @@ jobs:
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
           python -m pip install --upgrade pip
           python -m pip install setuptools six psutil scikit-learn pytest pytest-runner
+
+      # Build and run native tests for Python 3.8 only
+      - name: Build and run native C++ tests
+        if: matrix.python-version == '3.8'
+        shell: bash
+        run: |
+          cd similarity_search
+          cmake -G "NMake Makefiles" .
+          nmake
+          ./release/bunit.exe
+          ./release/test_integr.exe
+          nmake clean
+          rm -rf ./release
 
       - name: Build Python bindings
         run: |
@@ -141,7 +161,7 @@ jobs:
 
   aggregate:
     needs:
-      - build_wheels_and_test
+      - build_linux_macos_wheels_and_test
       - build_windows_wheels_and_test
       - build_source_dist
     runs-on: ubuntu-24.04
