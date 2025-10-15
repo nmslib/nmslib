@@ -239,28 +239,24 @@ jobs:
 
       # 🔹 Build wheel with uv and test with tox (same pattern as Linux/Mac)
       - name: Build and test Python wheel
-        shell: cmd
+        shell: pwsh
         run: |
-          rem Ensure we’re at the repo root
-          cd /d "%GITHUB_WORKSPACE%" || exit /b 1
-
-          rem --- Detect if this is a Windows ARM runner ---
-          setlocal EnableDelayedExpansion
-          if "%RUNNER_ARCH%"=="ARM64" (
-              echo Detected ARM Windows runner.
-              set ARCH=armv8.0
-          ) else (
-              echo Detected Intel Windows runner.
-              set ARCH=SSE2
-              echo Not an ARM Windows runner. Skipping custom CFLAGS.
-          )
+          Set-Location $env:GITHUB_WORKSPACE
+          if ($env:RUNNER_ARCH -eq "ARM64") {
+              Write-Host "Detected ARM Windows runner."
+              $env:ARCH = "armv8.0"
+          } else {
+              Write-Host "Detected Intel Windows runner."
+              $env:ARCH = "SSE2"
+          }
           python -c "import os; print('ARCH:', os.environ.get('ARCH'))"
+          Set-Location python_bindings
+          uv build --wheel
+          $pyver = "${{ matrix.python-version }}" -replace '\.', ''
+          Get-ChildItem dist\*.whl | ForEach-Object {
+              tox -e "py$pyver" --installpkg $_
+          }
 
-          cd python_bindings || exit /b 1
-          uv build --wheel || exit /b 1
-          set PYVER=${{ matrix.python-version }}
-          set PYVER=%PYVER:.=%
-          for %%f in (dist\*.whl) do tox -e py%PYVER% --installpkg "%%f" || exit /b 1
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
