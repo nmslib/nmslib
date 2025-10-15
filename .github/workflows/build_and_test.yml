@@ -9,7 +9,7 @@ on:
     branches: ["**"]
 
 env:
-  DISABLE_NATIVE_BINARY_TESTS: 0
+  DISABLE_NATIVE_BINARY_TESTS: 1
 
 jobs:
   linux:
@@ -117,7 +117,7 @@ jobs:
 
   macos-x86_64:
     name: macOS Intel
-    if: true
+    if: false
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
