@@ -9,7 +9,7 @@ on:
     branches: ["**"]
 
 env:
-  DISABLE_NATIVE_BINARY_TESTS: 1
+  DISABLE_NATIVE_BINARY_TESTS: 0
 
 jobs:
   linux:
