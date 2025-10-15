@@ -115,18 +115,18 @@ class BuildExt(build_ext):
         'msvc': [ '/EHsc', '/openmp', '/O2', '/permissive-'],
         'unix': [ '-O3'],
     }
-    arch_list = '-march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
+    arch_list = '-mcpu -march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
     if 'ARCH' in os.environ:
         # /arch:[IA32|SSE|SSE2|AVX|AVX2|ARMv7VE|VFPv4]
         # See https://docs.microsoft.com/en-us/cpp/build/reference/arch-x86
         c_opts['msvc'].append("/arch:{}".format(os.environ['ARCH']))  # bugfix
-    no_arch_flag=True
+    no_ext_arch_flag_provided=True
     if 'CFLAGS' in os.environ: 
       for flag in arch_list: 
         if flag in os.environ["CFLAGS"]:
-          no_arch_flag=False
+          no_ext_arch_flag_provided=False
           break
-    if no_arch_flag:
+    if no_ext_arch_flag_provided:
         c_opts['unix'].append('-march=native')
     link_opts = {
         'unix': [],
@@ -134,7 +134,9 @@ class BuildExt(build_ext):
     }
 
     if sys.platform == 'darwin':
-        c_opts['unix'].remove('-march=native')
+        # -march=native will fail on MacOS for at least some compilers
+        if '-march=native' in c_opts['unix']:
+            c_opts['unix'].remove('-march=native')
         if platform.processor() in ('arm64', 'arm'):
             # thanks to @https://github.com/drkeoni
             # https://github.com/nmslib/nmslib/issues/476#issuecomment-876094529
