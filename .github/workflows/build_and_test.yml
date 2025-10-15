@@ -73,7 +73,7 @@ jobs:
 
   macos-arm64:
     name: macOS ARM64 (M-series)
-    if: true
+    if: false
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -162,7 +162,7 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    if: false
+    if: true
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
