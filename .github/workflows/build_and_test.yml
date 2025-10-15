@@ -185,7 +185,8 @@ jobs:
         run: |
           Write-Host "Runner architecture: $env:RUNNER_ARCH"
           if ($env:RUNNER_ARCH -eq "ARM64") {
-              $pyver = "${{ matrix.python-version }}"
+              # Note we are adding zero to the path or else it will fail
+              $pyver = "${{ matrix.python-version }}.0"
               $url = "https://www.python.org/ftp/python/$pyver/python-$pyver-arm64.exe"
               Write-Host "Downloading ARM64 Python from $url"
               Invoke-WebRequest -Uri $url -OutFile python-installer.exe
