@@ -172,6 +172,7 @@ jobs:
         #os: ["windows-2022"]
         python-version: ["3.11"]
     steps:
+      - uses: actions/checkout@v4
       # --- Install Python ---
       # --- Setup Python for x64 using action ---
       - uses: actions/setup-python@v5
