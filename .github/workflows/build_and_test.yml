@@ -9,14 +9,18 @@ on:
     branches: ["**"]
 
 env:
-  DISABLE_NATIVE_BINARY_TESTS: 1
+  DISABLE_NATIVE_BINARY_TESTS: 0
+  BUILD_LINUX: 0
+  BUILD_WINDOWS: 0
+  BUILD_MACOS_X86: 1
+  BUILD_MACOS_ARM: 1
 
 jobs:
   linux:
     name: Build and test wheels for Linux 
     permissions:
       contents: read
-    if: false  # 👈 disables the job
+    if: env.BUILD_LINUX = '1'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -72,6 +76,7 @@ jobs:
           path: 'python_bindings/dist/*.whl'
 
   macos-arm64:
+    if: env.BUILD_MACOS_ARM = '1'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -113,7 +118,7 @@ jobs:
 
 
   macos-x86_64:
-    if: false  # 👈 disables the job
+    if: env.BUILD_MACOS_X86 = '1'
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
@@ -158,14 +163,14 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    if: false  # 👈 disables the job
+    if: env.BUILD_WINDOWS = '1'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         #os: ["windows-2022", "windows-11-arm"]
-        #os: ["windows-11-arm"]
-        os: ["windows-2022"]
+        os: ["windows-11-arm"]
+        #os: ["windows-2022"]
         python-version: ["3.8"]
     steps:
       - uses: actions/checkout@v4
