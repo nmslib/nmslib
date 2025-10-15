@@ -167,8 +167,8 @@ jobs:
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
-        #os: ["windows-2022", "windows-11-arm"]
-        os: ["windows-11-arm"]
+        os: ["windows-11-arm", "windows-2022"]
+        #os: ["windows-11-arm"]
         #os: ["windows-2022"]
         python-version: ["3.11"]
     steps:
@@ -241,6 +241,9 @@ jobs:
       - name: Build and test Python wheel
         shell: cmd
         run: |
+          rem Ensure we’re at the repo root
+          cd /d "%GITHUB_WORKSPACE%" || exit /b 1
+
           rem --- Detect if this is a Windows ARM runner ---
           setlocal EnableDelayedExpansion
           if "%RUNNER_ARCH%"=="ARM64" (
