@@ -104,6 +104,7 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=11.0
             ARCHFLAGS="-arch arm64"
+            FORCE_MACOS_ARM=1
           CIBW_TEST_COMMAND: "python -c \"import nmslib; print(nmslib.__version__)\""
         with:
           package-dir: python_bindings

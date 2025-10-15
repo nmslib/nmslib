@@ -144,7 +144,9 @@ class BuildExt(build_ext):
         except Exception:
             target = ''
 
-        if 'arm64' in target or platform.machine() == 'arm64':
+        force_arm = ("FORCE_MACOS_ARM" in os.environ) and int(os.environ["FORCE_MACOS_ARM"])
+
+        if force_arm or ('arm64' in target) or (platform.machine() == 'arm64'):
         # Apple Silicon
             # thanks to @https://github.com/drkeoni
             # https://github.com/nmslib/nmslib/issues/476#issuecomment-876094529
