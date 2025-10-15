@@ -72,7 +72,7 @@ jobs:
           path: 'python_bindings/dist/*.whl'
 
   macos-arm64:
-    runs-on: macos-15-xlarge
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       # Optional: have Python 3.13 around for any helper scripts
