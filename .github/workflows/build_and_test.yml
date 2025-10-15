@@ -79,6 +79,11 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.13" }
 
+      - name: Verify architecture
+        run: |
+          clang -dumpmachine
+          python3 -c "import platform; print('machine:', platform.machine())"
+
       - name: Build & run native C++ tests (arm64)
         if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
         run: |
@@ -98,6 +103,9 @@ jobs:
           #CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_BUILD: "cp38-* cp314-*"
           CIBW_ARCHS_MACOS: "arm64"
+          ARCHFLAGS="-arch arm64"
+          CFLAGS="-arch arm64"
+          CXXFLAGS="-arch arm64"
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=11.0
             ARCHFLAGS=
@@ -122,6 +130,11 @@ jobs:
       # Optional: have Python 3.8 around for any helper scripts
       - uses: actions/setup-python@v5
         with: { python-version: "3.8" }
+
+      - name: Verify architecture
+        run: |
+          clang -dumpmachine
+          python3 -c "import platform; print('machine:', platform.machine())"
 
       - name: Build & run native C++ tests (x86_64)
         if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
