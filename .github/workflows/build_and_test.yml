@@ -89,11 +89,53 @@ jobs:
           name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
           path: 'python_bindings/dist/*.whl'
 
+  macos-x86_64:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+
+      # Optional: have Python 3.8 around for any helper scripts
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.8" }
+
+      - name: Build & run native C++ tests (x86_64)
+        if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        run: |
+          export ARCHFLAGS=""
+          export MACOSX_DEPLOYMENT_TARGET=10.13
+          export CFLAGS="-msse2"
+          export CXXFLAGS="$CFLAGS"
+          cd similarity_search
+          cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} .
+          make -j"$(sysctl -n hw.ncpu)"
+          ./release/bunit
+          ./release/test_integr
+          make clean && rm -rf release
+
+      - uses: pypa/cibuildwheel@v2.20.0
+        env:
+          #CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "cp38-*"
+          CIBW_ARCHS_MACOS: "x86_64"
+          CIBW_ENVIRONMENT_MACOS: >
+            MACOSX_DEPLOYMENT_TARGET=10.13
+            ARCHFLAGS=
+            CFLAGS='-msse2'
+            CXXFLAGS='-msse2'
+          CIBW_TEST_COMMAND: "python -c \"import nmslib; print(nmslib.__version__)\""
+        with:
+          package-dir: python_bindings
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-x86_64-wheels
+          path: wheelhouse/*.whl
+
   build_windows_wheels_and_test:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    #if: false  # 👈 disables the job
+    if: false  # 👈 disables the job
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -101,7 +143,7 @@ jobs:
         #os: ["windows-2022", "windows-11-arm"]
         #os: ["windows-11-arm"]
         os: ["windows-2022"]
-        python-version: ["3.9"]
+        python-version: ["3.8"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
