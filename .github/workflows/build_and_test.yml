@@ -24,9 +24,9 @@ jobs:
         #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
         #os: ["macos-15", "macos-15-intel"]
         #os: ["macos-15", "macos-15-intel", "ubuntu-24.04", "ubuntu-24.04-arm"]
-        #python-version: ["3.13"]
         os: ["macos-15-intel"]
-        python-version: ["3.8", "3.13"]
+        python-version: ["3.8", "3.9"]
+        #python-version: ["3.8", "3.13"]
     steps:
       # No need unless we test with extras 
       #- name: Install prerequisites
@@ -80,7 +80,8 @@ jobs:
           export ARCHFLAGS=""
           echo "Detected architecture: $ARCH"
           echo "Using MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET"
-          uv build --wheel python_bindings/
+          uv build --wheel python_bindings/ \
+                   --config-setting=--plat-name=macosx-${MACOSX_DEPLOYMENT_TARGET}-$( [[ "$ARCH" == "arm64" ]] && echo arm64 || echo x86_64 )
           PYTHON_VER_NO_DOT=${PYTHON_VERSION//./}
           cd python_bindings && tox -e py${PYTHON_VER_NO_DOT} --installpkg dist/*.whl
 
@@ -96,7 +97,8 @@ jobs:
       contents: read
     #if: false  # 👈 disables the job
     #runs-on: ["windows-2022"]
-    runs-on: ["windows-11-arm"]
+    #runs-on: ["windows-11-arm"]
+    runs-on: ["windows-2022", "windows-11-arm"]
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
@@ -155,13 +157,13 @@ jobs:
           setlocal EnableDelayedExpansion
           if "%RUNNER_ARCH%"=="ARM64" (
               echo Detected ARM Windows runner.
-              set CFLAGS=-march=armv8-a
-              set CXXFLAGS=!CFLAGS!
+              # SSE2 is the default in recent VS, but let's keep just in case, see, e.g.: https://github.com/weidai11/cryptopp/issues/445
+              set ARCH=SSE2
           ) else (
+              set ARCH=armv8.0
               echo Not an ARM Windows runner. Skipping custom CFLAGS.
           )
-          python -c "import os; print('CFLAGS:', os.environ.get('CFLAGS'))"
-          python -c "import os; print('CXXFLAGS:', os.environ.get('CXXFLAGS'))"
+          python -c "import os; print('ARCH:', os.environ.get('ARCH'))"
 
           cd python_bindings || exit /b 1
           uv build --wheel || exit /b 1
