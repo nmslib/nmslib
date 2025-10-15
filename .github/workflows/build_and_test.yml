@@ -245,10 +245,10 @@ jobs:
           setlocal EnableDelayedExpansion
           if "%RUNNER_ARCH%"=="ARM64" (
               echo Detected ARM Windows runner.
-              rem --- Need to set ARM CPU flags
+              rem --- Need to set ARM CPU flags ---
               set ARCH=armv8.0
           ) else (
-              rem --- SSE2 is the default in recent VS, but let's keep just in case, see, e.g.: https://github.com/weidai11/cryptopp/issues/445
+              rem --- SSE2 is the default in recent VS, but let's keep just in case, see, e.g.: https://github.com/weidai11/cryptopp/issues/445 ---
               set ARCH=SSE2
               echo Not an ARM Windows runner. Skipping custom CFLAGS.
           )
