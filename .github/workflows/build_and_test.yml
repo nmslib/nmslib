@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: ["**"]
 
-env:
+vars:
   DISABLE_NATIVE_BINARY_TESTS: 1
   BUILD_LINUX: 0
   BUILD_WINDOWS: 0
@@ -20,7 +20,7 @@ jobs:
     name: Build and test wheels for Linux 
     permissions:
       contents: read
-    if: ${{ env.BUILD_LINUX == '1' }}
+    if: ${{ vars.BUILD_LINUX == '1' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -49,7 +49,7 @@ jobs:
 
       # Build and run native tests only for Python 3.8
       - name: Build and run native C++ tests
-        if: matrix.python-version == '3.8' && env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        if: matrix.python-version == '3.8' && vars.DISABLE_NATIVE_BINARY_TESTS != '1'
         run: |
           cd similarity_search
           # No extras at least for now
@@ -76,7 +76,8 @@ jobs:
           path: 'python_bindings/dist/*.whl'
 
   macos-arm64:
-    if: ${{ env.BUILD_MACOS_ARM == '1' }}
+    name: macOS ARM64 (M-series)
+    if: ${{ vars.BUILD_MACOS_ARM == '1' }}
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -90,7 +91,7 @@ jobs:
           python3 -c "import platform; print('machine:', platform.machine())"
 
       - name: Build & run native C++ tests (arm64)
-        if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        if: vars.DISABLE_NATIVE_BINARY_TESTS != '1'
         run: |
           cd similarity_search
           cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} .
@@ -118,7 +119,8 @@ jobs:
 
 
   macos-x86_64:
-    if: ${{ env.BUILD_MACOS_X86 == '1' }}
+    name: macOS Intel
+    if: ${{ vars.BUILD_MACOS_X86 == '1' }}
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
@@ -133,7 +135,7 @@ jobs:
           python3 -c "import platform; print('machine:', platform.machine())"
 
       - name: Build & run native C++ tests (x86_64)
-        if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        if: vars.DISABLE_NATIVE_BINARY_TESTS != '1'
         run: |
           cd similarity_search
           cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} .
@@ -163,7 +165,7 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    if: ${{ env.BUILD_WINDOWS == '1' }}
+    if: ${{ vars.BUILD_WINDOWS == '1' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -187,7 +189,7 @@ jobs:
 
       # Build and run native tests only for Python 3.8
       - name: Build and run native C++ tests
-        if: matrix.python-version == '3.8' && env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        if: matrix.python-version == '3.8' && vars.DISABLE_NATIVE_BINARY_TESTS != '1'
         shell: cmd
         run: |
           echo Locating Visual Studio...
