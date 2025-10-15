@@ -12,8 +12,8 @@ env:
   DISABLE_NATIVE_BINARY_TESTS: 1
 
 jobs:
-  build_linux_macos_wheels_and_test:
-    name: Build and test wheels for Linux and MacOS
+  linux:
+    name: Build and test wheels for Linux 
     permissions:
       contents: read
     if: false  # 👈 disables the job
@@ -65,31 +65,56 @@ jobs:
           PYTHON: ${{ matrix.python-version }}
         run: ./build_linux_wheels/deploy.sh
 
-      - name: Build MacOS wheels
-        if: startsWith(matrix.os, 'macos')
-        run: |
-          ARCH=$(arch)
-          if [[ "$ARCH" == "arm64" ]]; then
-            export MACOSX_DEPLOYMENT_TARGET=11.0
-          else
-            export MACOSX_DEPLOYMENT_TARGET=10.13
-          fi
-          # Without this setuptools adds -arch arm64 -arch x86_64
-          export ARCHFLAGS=""
-          echo "Detected architecture: $ARCH"
-          echo "Using MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET"
-          uv build --wheel python_bindings/ \
-                   --config-setting=--plat-name=macosx-${MACOSX_DEPLOYMENT_TARGET}-$( [[ "$ARCH" == "arm64" ]] && echo arm64 || echo x86_64 )
-          PYTHON_VER_NO_DOT=${PYTHON_VERSION//./}
-          cd python_bindings && tox -e py${PYTHON_VER_NO_DOT} --installpkg dist/*.whl
-
       # Upload artifacts
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
           path: 'python_bindings/dist/*.whl'
 
+  macos-arm64:
+    runs-on: macos-15-xlarge
+    steps:
+      - uses: actions/checkout@v4
+      # Optional: have Python 3.13 around for any helper scripts
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+
+      - name: Build & run native C++ tests (arm64)
+        if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        run: |
+          export ARCHFLAGS=""
+          export MACOSX_DEPLOYMENT_TARGET=10.13
+          export CFLAGS="-msse2"
+          export CXXFLAGS="$CFLAGS"
+          cd similarity_search
+          cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} .
+          make -j"$(sysctl -n hw.ncpu)"
+          ./release/bunit
+          ./release/test_integr
+          make clean && rm -rf release
+
+      - uses: pypa/cibuildwheel@v2.20.0
+        env:
+          #CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_BUILD: "cp38-* cp314-*"
+          CIBW_ARCHS_MACOS: "arm64"
+          CIBW_ENVIRONMENT_MACOS: >
+            MACOSX_DEPLOYMENT_TARGET=11.0
+            ARCHFLAGS=
+            CFLAGS='-mcpu=apple-a14'
+            CXXFLAGS='-mcpu=apple-a14'
+          CIBW_TEST_COMMAND: "python -c \"import nmslib; print(nmslib.__version__)\""
+        with:
+          package-dir: python_bindings
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-arm64-wheels
+          path: wheelhouse/*.whl
+
+
   macos-x86_64:
+    if: false  # 👈 disables the job
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
@@ -131,7 +156,7 @@ jobs:
           name: macos-x86_64-wheels
           path: wheelhouse/*.whl
 
-  build_windows_wheels_and_test:
+  windows:
     name: Build and test wheels for Windows
     permissions:
       contents: read
@@ -217,7 +242,7 @@ jobs:
           path: 'python_bindings/dist/*.whl'
 
 
-  build_source_dist:
+  source_dist:
     name: Build source distribution
     permissions:
       contents: read
@@ -242,9 +267,11 @@ jobs:
 
   aggregate:
     needs:
-      - build_linux_macos_wheels_and_test
-      - build_windows_wheels_and_test
-      - build_source_dist
+      - macos-x86_64 
+      - macos-arm64
+      - linux
+      - windows
+      - source_dist
     runs-on: ubuntu-24.04
     steps:
       - name: Download all artifacts
