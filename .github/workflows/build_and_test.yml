@@ -172,11 +172,32 @@ jobs:
         #os: ["windows-2022"]
         python-version: ["3.8"]
     steps:
-      - uses: actions/checkout@v4
+      # --- Install Python ---
+      # --- Setup Python for x64 using action ---
       - uses: actions/setup-python@v5
+        if: runner.arch != 'ARM64'
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.os == 'windows-11-arm' && 'arm64' || 'x64' }}
+          architecture: 'x64'
+      # For ARM extra work is needed
+      - name: Install Python (ARM64 manually, x64 via setup-python)
+        shell: pwsh
+        run: |
+          Write-Host "Runner architecture: $env:RUNNER_ARCH"
+          if ($env:RUNNER_ARCH -eq "ARM64") {
+              $pyver = "${{ matrix.python-version }}"
+              $url = "https://www.python.org/ftp/python/$pyver/python-$pyver-arm64.exe"
+              Write-Host "Downloading ARM64 Python from $url"
+              Invoke-WebRequest -Uri $url -OutFile python-installer.exe
+              Start-Process python-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_test=0' -Wait
+              Remove-Item python-installer.exe
+          } else {
+              Write-Host "Installing Python ${{ matrix.python-version }} via setup-python..."
+              echo "::add-mask::${{ matrix.python-version }}"
+          }
+          python --version
+          python -c "import platform; print('Python arch:', platform.machine())"
+        continue-on-error: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
