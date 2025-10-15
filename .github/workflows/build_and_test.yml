@@ -170,7 +170,7 @@ jobs:
         #os: ["windows-11-arm", "windows-2022"]
         os: ["windows-11-arm"]
         #os: ["windows-2022"]
-        python-version: ["3.11"]
+        python-version: ["3.13"]
     steps:
       - uses: actions/checkout@v4
       # --- Install Python ---
