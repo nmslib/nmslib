@@ -87,10 +87,6 @@ jobs:
       - name: Build & run native C++ tests (arm64)
         if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
         run: |
-          export ARCHFLAGS=""
-          export MACOSX_DEPLOYMENT_TARGET=10.13
-          export CFLAGS="-msse2"
-          export CXXFLAGS="$CFLAGS"
           cd similarity_search
           cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} .
           make -j"$(sysctl -n hw.ncpu)"
@@ -103,14 +99,9 @@ jobs:
           #CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_BUILD: "cp38-* cp314-*"
           CIBW_ARCHS_MACOS: "arm64"
-          ARCHFLAGS="-arch arm64"
-          CFLAGS="-arch arm64"
-          CXXFLAGS="-arch arm64"
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=11.0
-            ARCHFLAGS=
-            CFLAGS='-mcpu=apple-a14'
-            CXXFLAGS='-mcpu=apple-a14'
+            ARCHFLAGS="-arch arm64"
           CIBW_TEST_COMMAND: "python -c \"import nmslib; print(nmslib.__version__)\""
         with:
           package-dir: python_bindings
@@ -139,10 +130,6 @@ jobs:
       - name: Build & run native C++ tests (x86_64)
         if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
         run: |
-          export ARCHFLAGS=""
-          export MACOSX_DEPLOYMENT_TARGET=10.13
-          export CFLAGS="-msse2"
-          export CXXFLAGS="$CFLAGS"
           cd similarity_search
           cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} .
           make -j"$(sysctl -n hw.ncpu)"
@@ -153,13 +140,11 @@ jobs:
       - uses: pypa/cibuildwheel@v2.20.0
         env:
           #CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*"
-          CIBW_BUILD: "cp38-*"
+          CIBW_BUILD: "cp38-* cp313-*"
           CIBW_ARCHS_MACOS: "x86_64"
           CIBW_ENVIRONMENT_MACOS: >
             MACOSX_DEPLOYMENT_TARGET=10.13
             ARCHFLAGS=
-            CFLAGS='-msse2'
-            CXXFLAGS='-msse2'
           CIBW_TEST_COMMAND: "python -c \"import nmslib; print(nmslib.__version__)\""
         with:
           package-dir: python_bindings
