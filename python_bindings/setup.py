@@ -6,6 +6,7 @@ import setuptools
 import struct
 import platform
 import sysconfig
+import subprocess
 
 USE_EXISTING_LIB=False
 
@@ -137,7 +138,14 @@ class BuildExt(build_ext):
         # -march=native will fail on MacOS for at least some compilers
         if '-march=native' in c_opts['unix']:
             c_opts['unix'].remove('-march=native')
-        if platform.processor() in ('arm64', 'arm'):
+
+        try:
+            target = subprocess.check_output(['clang', '-dumpmachine']).decode().strip()
+        except Exception:
+            target = ''
+
+        if 'arm64' in target or platform.machine() == 'arm64':
+        # Apple Silicon
             # thanks to @https://github.com/drkeoni
             # https://github.com/nmslib/nmslib/issues/476#issuecomment-876094529
             c_opts['unix'].append('-mcpu=apple-a14')
