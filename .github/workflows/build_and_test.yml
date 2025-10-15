@@ -16,16 +16,14 @@ jobs:
     name: Build and test wheels for Linux and MacOS
     permissions:
       contents: read
-    #if: false  # 👈 disables the job
+    if: false  # 👈 disables the job
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
-        #os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
-        #os: ["macos-15", "macos-15-intel"]
         #os: ["macos-15", "macos-15-intel", "ubuntu-24.04", "ubuntu-24.04-arm"]
-        os: ["macos-15-intel"]
-        python-version: ["3.8", "3.9"]
+        #os: ["macos-15-intel"]
+        python-version: ["3.8"]
         #python-version: ["3.8", "3.13"]
     steps:
       # No need unless we test with extras 
@@ -96,9 +94,13 @@ jobs:
     permissions:
       contents: read
     #if: false  # 👈 disables the job
-    #runs-on: ["windows-2022"]
-    #runs-on: ["windows-11-arm"]
-    runs-on: ["windows-2022", "windows-11-arm"]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
+        #os: ["windows-2022", "windows-11-arm"]
+        os: ["windows-11-arm"]
+        python-version: ["3.8"]
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
