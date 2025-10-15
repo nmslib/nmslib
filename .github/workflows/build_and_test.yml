@@ -190,8 +190,8 @@ jobs:
               # We can't use 3.11.0 though because it was immature and didn't properly register Python
               # Construct full version with patch suffix
               if ("${{ matrix.python-version }}" -eq "3.11") {
-                  # Python 3.11.2 fixes ARM registry bugs
-                  $pyver = "3.11.2"
+                  # Python 3.11.9 fixes ARM registry bugs
+                  $pyver = "3.11.9"
               } else {
                   # For all other versions, default to .0 (e.g., 3.12.0, 3.13.0, etc.)
                   $pyver = "${{ matrix.python-version }}.0"
