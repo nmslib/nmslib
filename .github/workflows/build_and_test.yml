@@ -68,7 +68,7 @@ jobs:
       # Upload artifacts
       - uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.python-version }}-${{ matrix.os }}
+          name: wheels-${{ matrix.python-version }}-${{ matrix.os}}-${{ runner.arch }}
           path: 'python_bindings/dist/*.whl'
 
   macos-arm64:
@@ -111,7 +111,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: macos-arm64-wheels
+          name: wheels-${{ matrix.python-version }}-${{ matrix.os}}-${{ runner.arch }}
           path: wheelhouse/*.whl
 
 
@@ -155,7 +155,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: macos-x86_64-wheels
+          name: wheels-${{ matrix.python-version }}-${{ matrix.os}}-${{ runner.arch }}
           path: wheelhouse/*.whl
 
   windows:
@@ -313,7 +313,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.python-version }}-windows
+          name: wheels-${{ matrix.python-version }}-${{ matrix.os}}-${{ runner.arch }}
           path: 'python_bindings/dist/*.whl'
 
 
