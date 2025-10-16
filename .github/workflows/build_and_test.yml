@@ -290,6 +290,8 @@ jobs:
       - name: Build and test Python wheel
         shell: pwsh
         run: |
+          # Let's get rid of quotes
+          $env:PYTHON_ROOT = $env:PYTHON_ROOT.Trim('"')
           Set-Location $env:GITHUB_WORKSPACE
           if ($env:RUNNER_ARCH -eq "ARM64") {
               Write-Host "Detected ARM Windows runner."
