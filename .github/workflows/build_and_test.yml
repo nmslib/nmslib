@@ -170,7 +170,7 @@ jobs:
         #os: ["windows-11-arm", "windows-2022"]
         os: ["windows-11-arm"]
         #os: ["windows-2022"]
-        python-version: ["3.13"]
+        python-version: ["3.11"]
     steps:
       - uses: actions/checkout@v4
       # --- Install Python ---
@@ -201,21 +201,20 @@ jobs:
               Invoke-WebRequest -Uri $url -OutFile python-installer.exe
               Start-Process python-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_test=0' -Wait
               Remove-Item python-installer.exe
+
+              $pythonRoot = "C:\Program Files\Python$($pyver -replace '\.','')"
+              Add-Content -Path $env:GITHUB_PATH -Value "$pythonRoot"
+              Add-Content -Path $env:GITHUB_PATH -Value "$pythonRoot\Scripts"
           } else {
               Write-Host "Installing Python ${{ matrix.python-version }} via setup-python..."
               echo "::add-mask::${{ matrix.python-version }}"
           }
           python --version
           python -c "import platform; print('Python arch:', platform.machine())"
+          pip install tox uv
         continue-on-error: false
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v3
-
-      - name: Install tox
-        run: pip install tox
-
-      # Build and run native tests only for Python 3.8
+      # Build and run native tests only for the case of Python 3.8
       - name: Build and run native C++ tests
         if: matrix.python-version == '3.8' && env.DISABLE_NATIVE_BINARY_TESTS != '1'
         shell: cmd
