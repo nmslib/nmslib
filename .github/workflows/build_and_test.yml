@@ -209,8 +209,9 @@ jobs:
               }
               Remove-Item python-installer.exe
 
-              $pythonRoot = "C:\Program Files\Python$($pyver -replace '\.','')"
-              # Update both the local and global paths
+              $matrixPyVer = "${{ matrix.python-version }}"   # e.g. "3.11", "3.12"
+              $majorMinor = $matrixPyVer -replace '\.', ''     # -> "311", "312", etc.
+              $pythonRoot = "C:\Program Files\Python$majorMinor-arm64"
           } else {
               $pythonRoot = & python -c "import os, sys; print(os.path.dirname(sys.executable))"
               Write-Host "Installing Python ${{ matrix.python-version }} via setup-python..."
