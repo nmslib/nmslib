@@ -199,7 +199,14 @@ jobs:
               $url = "https://www.python.org/ftp/python/$pyver/python-$pyver-arm64.exe"
               Write-Host "Downloading ARM64 Python from $url"
               Invoke-WebRequest -Uri $url -OutFile python-installer.exe
-              Start-Process python-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_test=0' -Wait
+              # Start the Python installer and wait synchronously
+              $proc = Start-Process -FilePath "python-installer.exe" `
+                  -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_test=0' `
+                  -PassThru -Wait
+
+              if ($proc.ExitCode -ne 0) {
+                  throw "Python installer failed with exit code $($proc.ExitCode)"
+              }
               Remove-Item python-installer.exe
 
               $pythonRoot = "C:\Program Files\Python$($pyver -replace '\.','')"
