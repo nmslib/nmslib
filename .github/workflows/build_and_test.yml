@@ -181,7 +181,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: 'x64'
       # For ARM extra work is needed
-      - name: Install Python (ARM64 manually, x64 via setup-python)
+      - name: Install Python for ARM64 ourselves + install tox and uv
         shell: pwsh
         run: |
           Write-Host "Runner architecture: $env:RUNNER_ARCH"
@@ -203,6 +203,8 @@ jobs:
               Remove-Item python-installer.exe
 
               $pythonRoot = "C:\Program Files\Python$($pyver -replace '\.','')"
+              # Update both the local and global paths
+              $env:PATH = "$pythonRoot;$pythonRoot\Scripts;" + $env:PATH
               Add-Content -Path $env:GITHUB_PATH -Value "$pythonRoot"
               Add-Content -Path $env:GITHUB_PATH -Value "$pythonRoot\Scripts"
           } else {
