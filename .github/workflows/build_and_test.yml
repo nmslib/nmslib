@@ -211,16 +211,21 @@ jobs:
 
               $pythonRoot = "C:\Program Files\Python$($pyver -replace '\.','')"
               # Update both the local and global paths
-              $env:PATH = "$pythonRoot;$pythonRoot\Scripts;" + $env:PATH
-              Add-Content -Path $env:GITHUB_PATH -Value "$pythonRoot"
-              Add-Content -Path $env:GITHUB_PATH -Value "$pythonRoot\Scripts"
           } else {
+              $pythonRoot = & python -c "import os, sys; print(os.path.dirname(sys.executable))"
               Write-Host "Installing Python ${{ matrix.python-version }} via setup-python..."
               echo "::add-mask::${{ matrix.python-version }}"
           }
-          python --version
-          python -c "import platform; print('Python arch:', platform.machine())"
-          pip install tox uv
+          if (!(Test-Path "$pythonRoot\python.exe")) {
+              throw "Python not found at $pythonRoot"
+          }
+          $env:PYTHON_ROOT = $pythonRoot
+          "PYTHON_ROOT=`"$pythonRoot`"" | Out-File -FilePath $env:GITHUB_ENV -Append
+          
+          & "$env:PYTHON_ROOT\python.exe" --version
+          & "$env:PYTHON_ROOT\python.exe" -c "import platform; print('Python arch:', platform.machine())"
+          & "$env:PYTHON_ROOT\python.exe" -m pip install tox uv
+
         continue-on-error: false
 
       # Build and run native tests only for the case of Python 3.8
@@ -266,13 +271,14 @@ jobs:
               Write-Host "Detected Intel Windows runner."
               $env:ARCH = "SSE2"
           }
-          python -c "import os; print('ARCH:', os.environ.get('ARCH'))"
+          & "$env:PYTHON_ROOT\python.exe" -c "import os; print('ARCH:', os.environ.get('ARCH'))"
           Set-Location python_bindings
-          uv build --wheel
+          & "$env:PYTHON_ROOT\python.exe" -m uv build --wheel
           $pyver = "${{ matrix.python-version }}" -replace '\.', ''
           Get-ChildItem dist\*.whl | ForEach-Object {
-              tox -e "py$pyver" --installpkg $_
+              & "$env:PYTHON_ROOT\python.exe" -m tox -e "py$pyver" --installpkg $_
           }
+        continue-on-error: false
 
 
       - name: Upload artifacts
