@@ -216,6 +216,32 @@ jobs:
               Write-Host "Installing Python ${{ matrix.python-version }} via setup-python..."
               echo "::add-mask::${{ matrix.python-version }}"
           }
+          Write-Host "---- Diagnostic info ----"
+          Write-Host "Expected Python root: $pythonRoot"
+          Write-Host "Checking directory existence:"
+          Get-ChildItem -Path "C:\Program Files\" -Directory | Where-Object { $_.Name -like 'Python*' } | Select-Object -ExpandProperty FullName
+          Write-Host "Checking both Program Files locations:"
+          if (Test-Path "C:\Program Files (x86)") {
+              Get-ChildItem -Path "C:\Program Files (x86)\" -Directory | Where-Object { $_.Name -like 'Python*' } | Select-Object -ExpandProperty FullName
+          }
+          Write-Host "Listing environment variables related to Python:"
+          Get-ChildItem env: | Where-Object { $_.Name -match 'PYTHON' -or $_.Name -match 'Path' }
+
+          Write-Host "Checking registry for PythonCore keys (HKLM):"
+          Get-ChildItem "HKLM:\SOFTWARE\Python\PythonCore" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
+
+          Write-Host "Checking 32-bit registry hive (Wow6432Node):"
+          Get-ChildItem "HKLM:\SOFTWARE\WOW6432Node\Python\PythonCore" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
+
+          Write-Host "Verifying installer exit code:"
+          if ($proc) { Write-Host "Installer exit code: $($proc.ExitCode)" } else { Write-Host "Installer process object missing" }
+
+          Write-Host "---- End diagnostic info ----"
+
+          if (!(Test-Path "$pythonRoot\python.exe")) {
+              throw "Python not found at $pythonRoot"
+          }
+
           if (!(Test-Path "$pythonRoot\python.exe")) {
               throw "Python not found at $pythonRoot"
           }
