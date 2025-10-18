@@ -160,14 +160,12 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    if: |
-        true && !(
-          (startsWith(matrix.os, 'windows-11-arm') && (
-            matrix.python-version == '3.10' ||
+    if: >-
+      ${{ true &&
+          !(startsWith(matrix.os, 'windows-11-arm') &&
+            (matrix.python-version == '3.10' ||
             matrix.python-version == '3.9' ||
-            matrix.python-version == '3.8'
-          ))
-        )
+            matrix.python-version == '3.8')) }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
