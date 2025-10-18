@@ -10,17 +10,31 @@ on:
 
 env:
   DISABLE_NATIVE_BINARY_TESTS: 0
-  BUILD_LINUX: false
-  BUILD_WINDOWS: true
-  BUILD_MACOS_INTEL: false
-  BUILD_MACOS_ARM: false
+
+# Add this tiny config job above all build jobs
+config:
+  runs-on: ubuntu-latest
+  outputs:
+    build_linux: ${{ steps.set.outputs.build_linux }}
+    build_windows: ${{ steps.set.outputs.build_windows }}
+    build_macos_intel: ${{ steps.set.outputs.build_macos_intel }}
+    build_macos_arm: ${{ steps.set.outputs.build_macos_arm }}
+  steps:
+    - id: set
+      run: |
+        echo "build_linux=${{ env.BUILD_LINUX }}" >> $GITHUB_OUTPUT
+        echo "build_windows=${{ env.BUILD_WINDOWS }}" >> $GITHUB_OUTPUT
+        echo "build_macos_intel=${{ env.BUILD_MACOS_INTEL }}" >> $GITHUB_OUTPUT
+        echo "build_macos_arm=${{ env.BUILD_MACOS_ARM }}" >> $GITHUB_OUTPUT
+
 
 jobs:
   linux:
     name: Build and test wheels for Linux 
     permissions:
       contents: read
-    if: ${{ env.BUILD_LINUX == 'true' }}
+    needs: config
+    if: ${{ needs.config.outputs.build_linux == 'true' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -75,7 +89,8 @@ jobs:
 
   macos-arm64:
     name: macOS ARM64 (M-series)
-    if: ${{ env.BUILD_MACOS_ARM == 'true' }}
+    needs: config
+    if: ${{ needs.config.outputs.build_macos_arm == 'true' }}
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -119,7 +134,8 @@ jobs:
 
   macos-x86_64:
     name: macOS Intel
-    if: ${{ env.BUILD_MACOS_INTEL == 'true' }}
+    needs: config
+    if: ${{ needs.config.outputs.build_macos_intel == 'true' }}
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
@@ -164,7 +180,8 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    if: ${{ env.BUILD_WINDOWS == 'true' }}
+    needs: config
+    if: ${{ needs.config.outputs.build_windows == 'true' }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
