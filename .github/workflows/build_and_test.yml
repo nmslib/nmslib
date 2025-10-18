@@ -160,8 +160,8 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    if: true && |
-        !(
+    if: |
+        true && !(
           (startsWith(matrix.os, 'windows-11-arm') && (
             matrix.python-version == '3.10' ||
             matrix.python-version == '3.9' ||
