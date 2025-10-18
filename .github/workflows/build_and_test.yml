@@ -13,7 +13,7 @@ env:
   BUILD_LINUX: false
   BUILD_MACOS_ARM: false
   BUILD_MACOS_INTEL: false
-  BUILD_WINDOWS: true
+  BUILD_WINDOWS: false
 
 jobs:
   # Add this tiny config job above all build jobs
@@ -193,8 +193,8 @@ jobs:
         python-version: ["3.8", "3.11"]
         # No early Python versions for windows-11-arm
         exclude:
-          - os: windows-2022
-            python-version: "3.11"
+          #- os: windows-2022
+            #python-version: "3.11"
           - os: windows-11-arm
             python-version: "3.10"
           - os: windows-11-arm
