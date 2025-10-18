@@ -10,25 +10,28 @@ on:
 
 env:
   DISABLE_NATIVE_BINARY_TESTS: 0
-
-# Add this tiny config job above all build jobs
-config:
-  runs-on: ubuntu-latest
-  outputs:
-    build_linux: ${{ steps.set.outputs.build_linux }}
-    build_windows: ${{ steps.set.outputs.build_windows }}
-    build_macos_intel: ${{ steps.set.outputs.build_macos_intel }}
-    build_macos_arm: ${{ steps.set.outputs.build_macos_arm }}
-  steps:
-    - id: set
-      run: |
-        echo "build_linux=${{ env.BUILD_LINUX }}" >> $GITHUB_OUTPUT
-        echo "build_windows=${{ env.BUILD_WINDOWS }}" >> $GITHUB_OUTPUT
-        echo "build_macos_intel=${{ env.BUILD_MACOS_INTEL }}" >> $GITHUB_OUTPUT
-        echo "build_macos_arm=${{ env.BUILD_MACOS_ARM }}" >> $GITHUB_OUTPUT
-
+  BUILD_LINUX: false
+  BUILD_MACOS_ARM: false
+  BUILD_MACOS_INTEL: false
+  BUILD_WINDOWS: true
 
 jobs:
+  # Add this tiny config job above all build jobs
+  # Super-hacky but should work
+  config:
+    runs-on: ubuntu-latest
+    outputs:
+      build_linux: ${{ steps.set.outputs.build_linux }}
+      build_windows: ${{ steps.set.outputs.build_windows }}
+      build_macos_intel: ${{ steps.set.outputs.build_macos_intel }}
+      build_macos_arm: ${{ steps.set.outputs.build_macos_arm }}
+    steps:
+      - id: set
+        run: |
+          echo "build_linux=${{ env.BUILD_LINUX }}" >> $GITHUB_OUTPUT
+          echo "build_windows=${{ env.BUILD_WINDOWS }}" >> $GITHUB_OUTPUT
+          echo "build_macos_intel=${{ env.BUILD_MACOS_INTEL }}" >> $GITHUB_OUTPUT
+          echo "build_macos_arm=${{ env.BUILD_MACOS_ARM }}" >> $GITHUB_OUTPUT
   linux:
     name: Build and test wheels for Linux 
     permissions:
