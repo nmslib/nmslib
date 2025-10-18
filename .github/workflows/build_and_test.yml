@@ -20,11 +20,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: ["ubuntu-24.04", "ubuntu-24.04-arm"]
+        python-version: ["3.8", "3.13"]
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
-        #os: ["macos-15", "macos-15-intel", "ubuntu-24.04", "ubuntu-24.04-arm"]
-        #os: ["macos-15-intel"]
-        python-version: ["3.8"]
-        #python-version: ["3.8", "3.13"]
     steps:
       # No need unless we test with extras 
       #- name: Install prerequisites
@@ -162,15 +160,20 @@ jobs:
     name: Build and test wheels for Windows
     permissions:
       contents: read
-    if: true
+    if: true && |
+        !(
+          (startsWith(matrix.os, 'windows-11-arm') && (
+            matrix.python-version == '3.10' ||
+            matrix.python-version == '3.9' ||
+            matrix.python-version == '3.8'
+          ))
+        )
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         #python-version: ["3.14", "3.13", "3.12", "3.11", "3.10", "3.9", "3.8"]
         os: ["windows-11-arm", "windows-2022"]
-        #os: ["windows-11-arm"]
-        #os: ["windows-2022"]
-        python-version: ["3.11"]
+        python-version: ["3.8", "3.11"]
     steps:
       - uses: actions/checkout@v4
       # --- Install Python ---
@@ -257,7 +260,11 @@ jobs:
 
       # Build and run native tests only for the case of Python 3.8
       - name: Build and run native C++ tests
-        if: matrix.python-version == '3.8' && env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        if: |
+          (
+            (runner.arch != 'ARM64' && matrix.python-version == '3.8') ||
+            (runner.arch == 'ARM64' && matrix.python-version == '3.11')
+          ) && env.DISABLE_NATIVE_BINARY_TESTS != '1'
         shell: cmd
         run: |
           echo Locating Visual Studio...
