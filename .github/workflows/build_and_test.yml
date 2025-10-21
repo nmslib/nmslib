@@ -333,7 +333,8 @@ jobs:
           $pythonExe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
 
           $bat = "$vsPath\VC\Auxiliary\Build\vcvarsall.bat"
-          Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$bat`" $archArg && `"$pythonExe`" -m cibuildwheel --platform windows --output-dir dist" -Wait -NoNewWindow
+          cmd /c "`"$bat`" $archArg && `"$pythonExe`" -m cibuildwheel --platform windows --output-dir dist"
+          
 
           Get-ChildItem dist\*.whl | ForEach-Object {
               & (Join-Path $env:PYTHON_ROOT "python.exe") -m tox -e "py$pyver" --installpkg $_
