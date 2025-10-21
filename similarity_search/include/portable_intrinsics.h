@@ -25,6 +25,13 @@
 #define PORTABLE_SSE2
 #endif
 
+// For Windows+MSVC there's no __ARM_NEON so let's define it ourselves on ARM64
+#if defined(_MSC_VER)
+  #if defined(_M_ARM64) && !defined(__ARM_NEON)
+    #define __ARM_NEON 1
+  #endif
+#endif
+
 // Unfortunately on Win32/64, windows does not define SSE4
 #if defined(__SSE4_2__) || defined(__AVX__)
 #define PORTABLE_SSE4
