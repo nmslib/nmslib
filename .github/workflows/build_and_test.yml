@@ -9,11 +9,12 @@ on:
     branches: ["**"]
 
 env:
+  ACTIONS_RUNNER_DEBUG: false
   DISABLE_NATIVE_BINARY_TESTS: 0
   BUILD_LINUX: false
   BUILD_MACOS_ARM: false
   BUILD_MACOS_INTEL: false
-  BUILD_WINDOWS: false
+  BUILD_WINDOWS: true
 
 jobs:
   # Add this tiny config job above all build jobs
@@ -247,41 +248,40 @@ jobs:
               Write-Host "Installing Python ${{ matrix.python-version }} via setup-python..."
               echo "::add-mask::${{ matrix.python-version }}"
           }
-          Write-Host "---- Diagnostic info ----"
-          Write-Host "Expected Python root: $pythonRoot"
-          Write-Host "Checking directory existence:"
-          Get-ChildItem -Path "C:\Program Files\" -Directory | Where-Object { $_.Name -like 'Python*' } | Select-Object -ExpandProperty FullName
-          Write-Host "Checking both Program Files locations:"
-          if (Test-Path "C:\Program Files (x86)") {
-              Get-ChildItem -Path "C:\Program Files (x86)\" -Directory | Where-Object { $_.Name -like 'Python*' } | Select-Object -ExpandProperty FullName
-          }
-          Write-Host "Listing environment variables related to Python:"
-          Get-ChildItem env: | Where-Object { $_.Name -match 'PYTHON' -or $_.Name -match 'Path' }
+          if ($env:ACTIONS_RUNNER_DEBUG -eq "true") {
+              Write-Host "---- Diagnostic info ----"
+              Write-Host "Expected Python root: $pythonRoot"
+              Write-Host "Checking directory existence:"
+              Get-ChildItem -Path "C:\Program Files\" -Directory | Where-Object { $_.Name -like 'Python*' } | Select-Object -ExpandProperty FullName
+              Write-Host "Checking both Program Files locations:"
+              if (Test-Path "C:\Program Files (x86)") {
+                  Get-ChildItem -Path "C:\Program Files (x86)\" -Directory | Where-Object { $_.Name -like 'Python*' } | Select-Object -ExpandProperty FullName
+              }
+              Write-Host "Listing environment variables related to Python:"
+              Get-ChildItem env: | Where-Object { $_.Name -match 'PYTHON' -or $_.Name -match 'Path' }
+    
+              Write-Host "Checking registry for PythonCore keys (HKLM):"
+              Get-ChildItem "HKLM:\SOFTWARE\Python\PythonCore" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
 
-          Write-Host "Checking registry for PythonCore keys (HKLM):"
-          Get-ChildItem "HKLM:\SOFTWARE\Python\PythonCore" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
+              Write-Host "Checking 32-bit registry hive (Wow6432Node):"
+              Get-ChildItem "HKLM:\SOFTWARE\WOW6432Node\Python\PythonCore" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
 
-          Write-Host "Checking 32-bit registry hive (Wow6432Node):"
-          Get-ChildItem "HKLM:\SOFTWARE\WOW6432Node\Python\PythonCore" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
+              Write-Host "Verifying installer exit code:"
+              if ($proc) { Write-Host "Installer exit code: $($proc.ExitCode)" } else { Write-Host "Installer process object missing" }
 
-          Write-Host "Verifying installer exit code:"
-          if ($proc) { Write-Host "Installer exit code: $($proc.ExitCode)" } else { Write-Host "Installer process object missing" }
-
-          Write-Host "---- End diagnostic info ----"
-
-          if (!(Test-Path "$pythonRoot\python.exe")) {
-              throw "Python not found at $pythonRoot"
+              Write-Host "---- End diagnostic info ----"
           }
 
           if (!(Test-Path "$pythonRoot\python.exe")) {
               throw "Python not found at $pythonRoot"
           }
+
           $env:PYTHON_ROOT = $pythonRoot
           "PYTHON_ROOT=`"$pythonRoot`"" | Out-File -FilePath $env:GITHUB_ENV -Append
           
           & "$env:PYTHON_ROOT\python.exe" --version
           & "$env:PYTHON_ROOT\python.exe" -c "import platform; print('Python arch:', platform.machine())"
-          & "$env:PYTHON_ROOT\python.exe" -m pip install tox uv
+          & "$env:PYTHON_ROOT\python.exe" -m pip install tox uv cibuildwheel
 
         continue-on-error: false
 
@@ -320,10 +320,21 @@ jobs:
           del /q *.exe NonMetricSpaceLib.lib || exit /b 1
           nmake clean || exit /b 1
 
-      # 🔹 Build wheel with uv and test with tox (same pattern as Linux/Mac)
-      - name: Build and test Python wheel
+      # --- Build wheels using cibuildwheel ---
+      - name: Build wheels with cibuildwheel
         shell: pwsh
+        env:
+          CIBW_ARCHS_WINDOWS: "AMD64 ARM64"
+          CIBW_ENVIRONMENT_WINDOWS: >
+            DISTUTILS_USE_SDK=1
+            MSSdk=1
+            CL=/DWINVER=0x0A00 /D_WIN32_WINNT=0x0A00
+          CIBW_TEST_COMMAND: "python -c \"import nmslib; print(nmslib.__version__)\""
+          CIBW_SKIP: "*-musllinux_*"
         run: |
+          $pyver = "${{ matrix.python-version }}" -replace '\.', ''
+          $env:CIBW_BUILD = "cp$pyver-*"
+          Write-Host "Building only for $env:CIBW_BUILD"
           # Let's get rid of quotes
           $env:PYTHON_ROOT = $env:PYTHON_ROOT.Trim('"')
           Set-Location $env:GITHUB_WORKSPACE
@@ -334,12 +345,15 @@ jobs:
               Write-Host "Detected Intel Windows runner."
               $env:ARCH = "SSE2"
           }
-          & (Join-Path $env:PYTHON_ROOT "python.exe") -c "import os; print('ARCH:', os.environ.get('ARCH'))"
           Set-Location python_bindings
-          & (Join-Path $env:PYTHON_ROOT "python.exe") -m uv build --wheel
-          $pyver = "${{ matrix.python-version }}" -replace '\.', ''
+          Write-Host "Building wheels from $PWD"
+          if ($env:RUNNER_ARCH -eq "ARM64") {
+              & "$env:PYTHON_ROOT\python.exe" -m cibuildwheel --platform windows --output-dir dist
+          } else {
+              python -m cibuildwheel --platform windows --output-dir dist
+          }
           Get-ChildItem dist\*.whl | ForEach-Object {
-              & (Join-Path $env:PYTHON_ROOT "python.exe")-m tox -e "py$pyver" --installpkg $_
+              & (Join-Path $env:PYTHON_ROOT "python.exe") -m tox -e "py$pyver" --installpkg $_
           }
         continue-on-error: false
 
