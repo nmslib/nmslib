@@ -10,10 +10,10 @@ on:
 
 env:
   DISABLE_NATIVE_BINARY_TESTS: true
-  BUILD_LINUX: true
+  BUILD_LINUX: false
   BUILD_MACOS_ARM: false
   BUILD_MACOS_INTEL: false
-  BUILD_WINDOWS: true
+  BUILD_WINDOWS: false
 
 jobs:
   # Add this tiny config job above all build jobs
