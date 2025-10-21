@@ -338,13 +338,22 @@ jobs:
           # Let's get rid of quotes
           $env:PYTHON_ROOT = $env:PYTHON_ROOT.Trim('"')
           Set-Location $env:GITHUB_WORKSPACE
+
+
+          # Determine VS installation and initialize proper toolchain
+          Write-Host "Locating Visual Studio..."
+          $vsPath = & vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vsPath) { throw "Visual Studio not found!" }
           if ($env:RUNNER_ARCH -eq "ARM64") {
-              Write-Host "Detected ARM Windows runner."
+              Write-Host "Initializing ARM64 Visual Studio environment..."
+              & "$vsPath\VC\Auxiliary\Build\vcvarsall.bat" arm64
               $env:ARCH = "armv8.0"
           } else {
-              Write-Host "Detected Intel Windows runner."
+              Write-Host "Initializing x64 Visual Studio environment..."
+              & "$vsPath\VC\Auxiliary\Build\vcvarsall.bat" x64
               $env:ARCH = "SSE2"
           }
+
           Set-Location python_bindings
           Write-Host "Building wheels from $PWD"
           if ($env:RUNNER_ARCH -eq "ARM64") {
