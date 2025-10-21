@@ -208,7 +208,8 @@ jobs:
       - uses: actions/setup-python@v5
         if: runner.arch != 'ARM64'
         with:
-          python-version: ${{ matrix.python-version }}
+          # Always install 3.11 because it's needed for cibuildwheel
+          python-version: 3.11
           architecture: 'x64'
       # For ARM extra work is needed
       - name: Install Python for ARM64 ourselves + install tox and uv
@@ -219,13 +220,8 @@ jobs:
               # Note we are adding a patch number to the path or else it will fail
               # We can't use 3.11.0 though because it was immature and didn't properly register Python
               # Construct full version with patch suffix
-              if ("${{ matrix.python-version }}" -eq "3.11") {
-                  # Python 3.11.9 fixes ARM registry bugs
-                  $pyver = "3.11.9"
-              } else {
-                  # For all other versions, default to .0 (e.g., 3.12.0, 3.13.0, etc.)
-                  $pyver = "${{ matrix.python-version }}.0"
-              }
+              $matrixPyVer = "3.11"
+              $pyver = "$matrixPyVer.9"
               $url = "https://www.python.org/ftp/python/$pyver/python-$pyver-arm64.exe"
               Write-Host "Downloading ARM64 Python from $url"
               Invoke-WebRequest -Uri $url -OutFile python-installer.exe
@@ -239,7 +235,6 @@ jobs:
               }
               Remove-Item python-installer.exe
 
-              $matrixPyVer = "${{ matrix.python-version }}"   # e.g. "3.11", "3.12"
               $majorMinor = $matrixPyVer -replace '\.', ''     # -> "311", "312", etc.
               $pythonRoot = "C:\Program Files\Python$majorMinor-arm64"
           } else {
@@ -330,7 +325,7 @@ jobs:
           $vsPath = & vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           if (-not $vsPath) { throw "Visual Studio not found!" }
           $archArg = if ($env:RUNNER_ARCH -eq "ARM64") { "arm64" } else { "x64" }
-          $pythonExe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
+          $pythonExe = "$env:PYTHON_ROOT\python.exe"
 
           $bat = "$vsPath\VC\Auxiliary\Build\vcvarsall.bat"
           cmd /c "`"$bat`" $archArg && `"$pythonExe`" -m cibuildwheel --platform windows --output-dir dist"
