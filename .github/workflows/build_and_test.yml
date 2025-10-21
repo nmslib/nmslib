@@ -9,8 +9,7 @@ on:
     branches: ["**"]
 
 env:
-  ACTIONS_RUNNER_DEBUG: false
-  DISABLE_NATIVE_BINARY_TESTS: 0
+  DISABLE_NATIVE_BINARY_TESTS: true
   BUILD_LINUX: false
   BUILD_MACOS_ARM: false
   BUILD_MACOS_INTEL: false
@@ -65,7 +64,7 @@ jobs:
 
       # Build and run native tests only for Python 3.8
       - name: Build and run native C++ tests
-        if: matrix.python-version == '3.8' && env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        if: matrix.python-version == '3.8' && env.DISABLE_NATIVE_BINARY_TESTS != 'true'
         run: |
           cd similarity_search
           # No extras at least for now
@@ -108,7 +107,7 @@ jobs:
           python3 -c "import platform; print('machine:', platform.machine())"
 
       - name: Build & run native C++ tests (arm64)
-        if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        if: env.DISABLE_NATIVE_BINARY_TESTS != 'true'
         run: |
           cd similarity_search
           cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} .
@@ -154,7 +153,7 @@ jobs:
           python3 -c "import platform; print('machine:', platform.machine())"
 
       - name: Build & run native C++ tests (x86_64)
-        if: env.DISABLE_NATIVE_BINARY_TESTS != '1'
+        if: env.DISABLE_NATIVE_BINARY_TESTS != 'true'
         run: |
           cd similarity_search
           cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET} .
@@ -248,29 +247,6 @@ jobs:
               Write-Host "Installing Python ${{ matrix.python-version }} via setup-python..."
               echo "::add-mask::${{ matrix.python-version }}"
           }
-          if ($env:ACTIONS_RUNNER_DEBUG -eq "true") {
-              Write-Host "---- Diagnostic info ----"
-              Write-Host "Expected Python root: $pythonRoot"
-              Write-Host "Checking directory existence:"
-              Get-ChildItem -Path "C:\Program Files\" -Directory | Where-Object { $_.Name -like 'Python*' } | Select-Object -ExpandProperty FullName
-              Write-Host "Checking both Program Files locations:"
-              if (Test-Path "C:\Program Files (x86)") {
-                  Get-ChildItem -Path "C:\Program Files (x86)\" -Directory | Where-Object { $_.Name -like 'Python*' } | Select-Object -ExpandProperty FullName
-              }
-              Write-Host "Listing environment variables related to Python:"
-              Get-ChildItem env: | Where-Object { $_.Name -match 'PYTHON' -or $_.Name -match 'Path' }
-    
-              Write-Host "Checking registry for PythonCore keys (HKLM):"
-              Get-ChildItem "HKLM:\SOFTWARE\Python\PythonCore" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
-
-              Write-Host "Checking 32-bit registry hive (Wow6432Node):"
-              Get-ChildItem "HKLM:\SOFTWARE\WOW6432Node\Python\PythonCore" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name }
-
-              Write-Host "Verifying installer exit code:"
-              if ($proc) { Write-Host "Installer exit code: $($proc.ExitCode)" } else { Write-Host "Installer process object missing" }
-
-              Write-Host "---- End diagnostic info ----"
-          }
 
           if (!(Test-Path "$pythonRoot\python.exe")) {
               throw "Python not found at $pythonRoot"
@@ -291,7 +267,7 @@ jobs:
           (
             (runner.arch != 'ARM64' && matrix.python-version == '3.8') ||
             (runner.arch == 'ARM64' && matrix.python-version == '3.11')
-          ) && env.DISABLE_NATIVE_BINARY_TESTS != '1'
+          ) && env.DISABLE_NATIVE_BINARY_TESTS != 'true'
         shell: cmd
         run: |
           echo Locating Visual Studio...
@@ -324,7 +300,6 @@ jobs:
       - name: Build wheels with cibuildwheel
         shell: pwsh
         env:
-          CIBW_ARCHS_WINDOWS: "AMD64 ARM64"
           CIBW_ENVIRONMENT_WINDOWS: >
             DISTUTILS_USE_SDK=1
             MSSdk=1
@@ -342,8 +317,10 @@ jobs:
 
           if ($env:RUNNER_ARCH -eq "ARM64") {
               $env:ARCH = "armv8.0"
+              $env:CIBW_ARCHS_WINDOWS = "ARM64"
           } else {
               $env:ARCH = "SSE2"
+              $env:CIBW_ARCHS_WINDOWS = "AMD64"
           }
 
           Set-Location python_bindings
