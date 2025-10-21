@@ -331,7 +331,9 @@ jobs:
           if (-not $vsPath) { throw "Visual Studio not found!" }
           $archArg = if ($env:RUNNER_ARCH -eq "ARM64") { "arm64" } else { "x64" }
           $pythonExe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
-          cmd /c """$vsPath\VC\Auxiliary\Build\vcvarsall.bat"" $archArg && $pythonExe -m cibuildwheel --platform windows --output-dir dist"
+
+          $bat = "$vsPath\VC\Auxiliary\Build\vcvarsall.bat"
+          Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$bat`" $archArg && `"$pythonExe`" -m cibuildwheel --platform windows --output-dir dist" -Wait -NoNewWindow
 
           Get-ChildItem dist\*.whl | ForEach-Object {
               & (Join-Path $env:PYTHON_ROOT "python.exe") -m tox -e "py$pyver" --installpkg $_
