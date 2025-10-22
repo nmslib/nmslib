@@ -7,6 +7,8 @@ yum install -y atlas-devel
 #yum install -y gsl-devel
 #yum install -y boost-devel
 
+export CXXFLAGS=$CFLAGS
+
 OUT_DIR=/io/python_bindings/dist/
 mkdir -p "${OUT_DIR}"
 for PYBIN in /opt/python/*/bin; do

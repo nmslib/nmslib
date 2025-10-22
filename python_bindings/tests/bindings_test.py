@@ -316,7 +316,7 @@ class BallTreeTestCase(TestCaseBase, DenseIndexTestMixin):
         return nmslib.init(method='vptree', space=space)
 
     def testReloadIndex(self):
-        return NotImplemented
+        pass
 
 
 class StringTestCase(TestCaseBase):

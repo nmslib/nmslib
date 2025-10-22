@@ -449,18 +449,8 @@ PYBIND11_PLUGIN(nmslib) {
 
   initLibrary(0 /* seed */, LIB_LOGCUSTOM, NULL);
 
-#define STRINGIZER(x)   #x
-
-//
-// It looks like newer version of Python >3.9 just enclose VERSION_INFO in "",
-// when "" are missing. Not the older ones, previously this was possible to fix
-// at the level of setup.py by passing an escaping character, but this stopped
-// working after circa 2000 for some reason. In any case, STRINGIZER works just
-// fine and when applied to the quoted string, it doesn't change it. Thus
-// it works for both old and new Python versions.
-//
 #ifdef VERSION_INFO
-  m.attr("__version__") = py::str(STRINGIZER(VERSION_INFO));
+  m.attr("__version__") = py::str(VERSION_INFO);
 #else
   m.attr("__version__") = py::str("dev");
 #endif

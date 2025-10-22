@@ -5,18 +5,22 @@ import sys
 import setuptools
 import struct
 import platform
+import sysconfig
+import subprocess
+
+USE_EXISTING_LIB=False
 
 __version__ = '2.1.2'
 
 if sys.platform.startswith("win") and struct.calcsize("P") * 8 == 32:
     raise RuntimeError("Windows 32-bit is not supported.")
 
-dep_list = ['pybind11>=2.2.3', 'psutil']
+dep_list = ['pybind11>=2.2.3', 'scipy']
 dep_list.append("numpy>=1.10.0 ; python_version>='3.5'")
 
 py_version = tuple([int(s.split('rc')[0]) if 'rc' in s else int(s) for s in platform.python_version().split('.')])[0:2]
-if py_version != (2, 7) and py_version < (3, 5):
-    raise RuntimeError("Python version 2.7 or >=3.5 required.")
+if py_version < (3, 8):
+    raise RuntimeError("Python version >=3.8 required.")
 
 print('Dependence list:', dep_list)
 
@@ -32,7 +36,7 @@ source_files = ['nmslib.cc', 'tensorflow/cpu_feature_guard.cc', 'tensorflow/cpu_
 libraries = []
 extra_objects = []
 
-if os.path.exists(library_file):
+if USE_EXISTING_LIB and os.path.exists(library_file):
     # if we have a prebuilt nmslib library file, use that.
     extra_objects.append(library_file)
 
@@ -71,6 +75,7 @@ ext_modules = [
         libraries=libraries,
         language='c++',
         extra_objects=extra_objects,
+        define_macros=[("VERSION_INFO", f'"{__version__}"')],
     ),
 ]
 
@@ -111,18 +116,18 @@ class BuildExt(build_ext):
         'msvc': [ '/EHsc', '/openmp', '/O2', '/permissive-'],
         'unix': [ '-O3'],
     }
-    arch_list = '-march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
+    arch_list = '-mcpu -march -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2'.split()
     if 'ARCH' in os.environ:
         # /arch:[IA32|SSE|SSE2|AVX|AVX2|ARMv7VE|VFPv4]
         # See https://docs.microsoft.com/en-us/cpp/build/reference/arch-x86
         c_opts['msvc'].append("/arch:{}".format(os.environ['ARCH']))  # bugfix
-    no_arch_flag=True
+    no_ext_arch_flag_provided=True
     if 'CFLAGS' in os.environ: 
       for flag in arch_list: 
         if flag in os.environ["CFLAGS"]:
-          no_arch_flag=False
+          no_ext_arch_flag_provided=False
           break
-    if no_arch_flag:
+    if no_ext_arch_flag_provided:
         c_opts['unix'].append('-march=native')
     link_opts = {
         'unix': [],
@@ -130,13 +135,29 @@ class BuildExt(build_ext):
     }
 
     if sys.platform == 'darwin':
-        if platform.processor() in ('arm64', 'arm'):
+        # -march=native will fail on MacOS for at least some compilers
+        if '-march=native' in c_opts['unix']:
             c_opts['unix'].remove('-march=native')
+
+        try:
+            target = subprocess.check_output(['clang', '-dumpmachine']).decode().strip()
+        except Exception:
+            target = ''
+
+        force_arm = ("FORCE_MACOS_ARM" in os.environ) and int(os.environ["FORCE_MACOS_ARM"])
+
+        if force_arm or ('arm64' in target) or (platform.machine() == 'arm64'):
+        # Apple Silicon
             # thanks to @https://github.com/drkeoni
             # https://github.com/nmslib/nmslib/issues/476#issuecomment-876094529
             c_opts['unix'].append('-mcpu=apple-a14')
-        c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
-        link_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.7']
+        else:
+            # SSE2 should be now anywhere
+            c_opts['unix'].append('-msse2')
+
+
+        c_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.9']
+        link_opts['unix'] += ['-stdlib=libc++', '-mmacosx-version-min=10.9']
     else:
         c_opts['unix'].append("-fopenmp")
         link_opts['unix'].extend(['-fopenmp', '-pthread'])
@@ -145,13 +166,13 @@ class BuildExt(build_ext):
         ct = self.compiler.compiler_type
         opts = self.c_opts.get(ct, [])
         if ct == 'unix':
-            opts.append('-DVERSION_INFO="%s"' %
-                        self.distribution.get_version())
+            #opts.append('-DVERSION_INFO="%s"' % self.distribution.get_version())
             opts.append(cpp_flag(self.compiler))
             if has_flag(self.compiler, '-fvisibility=hidden'):
                 opts.append('-fvisibility=hidden')
         elif ct == 'msvc':
-            opts.append('/DVERSION_INFO="%s"' % (self.distribution.get_version()))
+            pass
+            #opts.append('/DVERSION_INFO="%s"' % (self.distribution.get_version()))
 
         print('Extra compilation arguments:', opts)
 

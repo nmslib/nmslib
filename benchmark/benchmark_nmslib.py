@@ -149,7 +149,7 @@ def main():
         # Check installed bindings
         ver = nmslib.__version__
         if ver != args.binding_ver:
-            print('A mismatch between installed bindings version {ver} and requested one to test: {args.binding_ver}')
+            print(f'A mismatch between installed bindings version {ver} and requested one to test: {args.binding_ver}')
             sys.exit(1)
 
     for case_id, case in enumerate(TEST_CASES):
