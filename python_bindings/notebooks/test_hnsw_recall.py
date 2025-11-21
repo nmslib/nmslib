@@ -10,7 +10,7 @@ import time
 import math 
 
 from sklearn.neighbors import NearestNeighbors
-from sklearn.datasets.samples_generator import make_blobs
+from sklearn.datasets import make_blobs
 
 def testHnswRecallL2(dataMatrix, queryMatrix, k, M=30, efC=200, efS=1000, numThreads=4):
   queryQty = queryMatrix.shape[0]

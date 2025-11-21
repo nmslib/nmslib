@@ -19,13 +19,13 @@ def read_data(fn):
 def read_data_fast(fn, sep='\t'):
     import pandas
     df = pandas.read_csv(fn, sep=sep, header=None)
-    return np.ascontiguousarray(df.as_matrix(), dtype=np.float32)
+    return np.ascontiguousarray(df.values, dtype=np.float32)
 
 
 def read_data_fast_batch(fn, batch_size, sep='\t'):
     import pandas
     for df in pandas.read_csv(fn, sep=sep, header=None, chunksize=batch_size):
-        yield np.ascontiguousarray(df.as_matrix(), dtype=np.float32)
+        yield np.ascontiguousarray(df.values, dtype=np.float32)
 
 
 def read_sparse_data(fn):
