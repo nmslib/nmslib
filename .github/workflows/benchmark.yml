@@ -126,10 +126,10 @@ jobs:
       contents: read
     strategy:
       fail-fast: true
+      # Disabling Windows-ARM until sklearn becomes available there.
       matrix:
-        os: ${{ fromJson(needs.config.outputs.run_arm == 'true'
-          && '["windows-2022","windows-11-arm"]'
-          || '["windows-2022"]') }}
+        #os: ${{ fromJson(needs.config.outputs.run_arm == 'true' && '["windows-2022","windows-11-arm"]' || '["windows-2022"]') }}
+        os: ${{ fromJson(needs.config.outputs.run_arm == 'true' && '["windows-2022"]' || '["windows-2022"]') }}
 
     steps:
       - name: Validate Python version on Windows ARM
