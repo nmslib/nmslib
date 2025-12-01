@@ -96,7 +96,7 @@ def plot_entry(entry: dict, out_root: Path):
     return out_path
 
 
-def load_entries(data) -> list[dict]:
+def load_entries(data):
     """
     Normalize input JSON into a list of entry dicts.
     Accepts:
