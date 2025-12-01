@@ -10,6 +10,7 @@ on:
       PYTHON_VER:
         description: "Python version to use (e.g., 3.11)"
         required: true
+        default: "3.11"
         type: string
       RUN_ARM:
         description: "Run ARM-based benchmarks? true/false"
@@ -50,12 +51,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: >
-          ${{ fromJson(
-            needs.config.outputs.run_arm == 'true'
-            && '["ubuntu-24.04", "ubuntu-24.04-arm", "macos-15", "macos-15-intel"]'
-            || '["ubuntu-24.04", "macos-15-intel"]'
-          ) }}
+        os: ${{ fromJson(needs.config.outputs.run_arm == 'true'
+          && '["ubuntu-24.04","ubuntu-24.04-arm","macos-15","macos-15-intel"]'
+          || '["ubuntu-24.04","macos-15-intel"]') }}
 
     steps:
       - uses: actions/checkout@v4
@@ -129,14 +127,18 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: >
-          ${{ fromJson(
-            needs.config.outputs.run_arm == 'true'
-            && '["windows-2022", "windows-11-arm"]'
-            || '["windows-2022"]'
-          ) }}
+        os: ${{ fromJson(needs.config.outputs.run_arm == 'true'
+          && '["windows-2022","windows-11-arm"]'
+          || '["windows-2022"]') }}
 
     steps:
+      - name: Validate Python version on Windows ARM
+        if: ${{ runner.arch == 'ARM64' && inputs.PYTHON_VER < '3.11' }}
+        shell: pwsh
+        run: |
+          Write-Host "Python < 3.11 is not supported on windows-11-arm"
+          exit 1
+
       - uses: actions/checkout@v4
 
       # Setup Python:
