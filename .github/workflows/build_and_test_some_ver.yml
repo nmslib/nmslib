@@ -3,10 +3,11 @@ name: build & test
 permissions: {}
 
 on:
-  push:
-    branches: ["**"]
-  pull_request:
-    branches: ["**"]
+  workflow_dispatch:
+  #push:
+  #  branches: ["**"]
+  #pull_request:
+  #  branches: ["**"]
 
 env:
   DISABLE_NATIVE_BINARY_TESTS: false

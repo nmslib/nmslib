@@ -13,7 +13,7 @@ SIFT1M = 'sift1m'
 GLOVE100D = 'glove100d'
 WIKI250K = 'wiki250K'
 
-BASE_URL='https://pub-9f9b6b8d87734ec19359b06a8a76fc50.r2.dev/'
+BASE_URL='https://pub-9f9b6b8d87734ec19359b06a8a76fc50.r2.dev'
 TEXT_SUFF='.txt'
 DATA_PROC_IND_SUFF='.data_proc'
 
@@ -49,6 +49,7 @@ def download_and_process_data(dst_dir):
 
     :param dst_dir: destination directory
     """
+
     for name, prop in DATASET_DESC.items():
         data_done_path  = os.path.join(dst_dir, name + DATA_PROC_IND_SUFF)
         data_text_path = os.path.join(dst_dir, name + TEXT_SUFF)

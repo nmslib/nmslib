@@ -2,17 +2,20 @@
 import sys
 import argparse
 import nmslib
+import os
 import json
+import platform
 
 DEFAULT_HNSW_INDEX_TIME_PARAM = {'M': 20, 'efConstruction': 200, 'post': 0}
 
 DEFAULT_QUERY_QTY=5000
 
+sys.path.append('.')
+
 from eval import *
 from datasets import *
 from data_utils import *
-
-sys.path.append('.')
+from misc_utils import ensure_file_parent_dir
 
 TestCase = collections.namedtuple('TestCase',
                                   'dataset_name dist_type K method_name index_time_params query_time_param_arr')
@@ -23,6 +26,7 @@ ExpandExperResult = collections.namedtuple('ExpandExperResult',
                                            'is_binary is_index_reload '
                                            'repeat_qty query_qty max_data_qty '
                                            'num_threads '
+                                           'cpu os_ver py_ver '
                                            'result_list')
 
 DEFAULT_HSNW_QUERY_TIME_PARAM_ARR = [{'ef':25}, {'ef': 50}, {'ef':100}, {'ef':250}, {'ef':500}, {'ef':1000}, {'ef': 2000 }]
@@ -141,6 +145,7 @@ def main():
         sys.exit(1)
 
     # First make sure we have all the data
+    os.makedirs(args.dataset_dir, exist_ok=True)
     download_and_process_data(args.dataset_dir)
 
     results = []
@@ -151,6 +156,8 @@ def main():
         if ver != args.binding_ver:
             print(f'A mismatch between installed bindings version {ver} and requested one to test: {args.binding_ver}')
             sys.exit(1)
+
+    os.makedirs(args.work_dir, exist_ok=True)
 
     for case_id, case in enumerate(TEST_CASES):
         if args.dataset_name is not None and args.dataset_name != case.dataset_name:
@@ -172,7 +179,7 @@ def main():
             elif data_type == VECTOR_SPARSE:
                 all_data = load_sparse(os.path.join(args.dataset_dir, case.dataset_name ))
             else:
-                raise Exception(f'Illegal data type: {prop.type}')
+                raise Exception(f'Illegal data type: {data_type}')
 
             data, queries = split_data(all_data, test_size=args.query_qty)
 
@@ -194,6 +201,7 @@ def main():
                                                  is_binary=False, is_index_reload=phase==PHASE_RELOAD_INDEX,
                                                  repeat_qty=args.repeat_qty, query_qty=args.query_qty,
                                                  max_data_qty=args.max_data_qty,
+                                                 cpu=platform.machine(), os_ver=platform.platform(), py_ver=platform.python_version(),
                                                  result_list=result_dict[phase])._asdict())
 
         if args.binary_dir is not None:
@@ -217,8 +225,10 @@ def main():
                                                  is_binary=True, is_index_reload=phase==PHASE_RELOAD_INDEX,
                                                  repeat_qty=args.repeat_qty, query_qty=args.query_qty,
                                                  max_data_qty=args.max_data_qty,
+                                                 cpu=platform.machine(), os_ver=platform.platform(), py_ver=platform.python_version(),
                                                  result_list=result_dict[phase])._asdict())
 
+    ensure_file_parent_dir(args.output)
     with open(args.output, 'w') as f:
         json.dump(results,
                   f,
