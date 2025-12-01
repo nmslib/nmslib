@@ -36,7 +36,7 @@ def get_bin_suff(data_type):
     elif data_type == VECTOR_SPARSE:
         return NPZ_SUFF
     else:
-        raise Exception(f'Illegal data type: {prop.type}')
+        raise Exception(f'Illegal data type: {data_type}')
 
 
 def download_and_process_data(dst_dir):
@@ -51,15 +51,16 @@ def download_and_process_data(dst_dir):
     """
 
     for name, prop in DATASET_DESC.items():
+        dst_name = name + TEXT_SUFF
         data_done_path  = os.path.join(dst_dir, name + DATA_PROC_IND_SUFF)
-        data_text_path = os.path.join(dst_dir, name + TEXT_SUFF)
+        data_text_path = os.path.join(dst_dir, dst_name)
         data_bin_path = os.path.join(dst_dir, name)
 
         if os.path.exists(data_done_path):
             print(f'Ignore already processed dataset {name}')
             continue
 
-        download_and_unpack(url=prop.url, dst_dir=dst_dir, dst_name=data_text_path)
+        download_and_unpack(url=prop.url, dst_dir=dst_dir, dst_name=dst_name)
 
         if prop.type == VECTOR_DENSE:
             print('Converting to numpy format')
