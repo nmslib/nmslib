@@ -144,6 +144,9 @@ def main():
         print('You need to specify either --binary_dir or --binding_ver')
         sys.exit(1)
 
+    if args.dataset_name == "":
+        args.dataset_name = None
+
     # First make sure we have all the data
     os.makedirs(args.dataset_dir, exist_ok=True)
     download_and_process_data(args.dataset_dir)

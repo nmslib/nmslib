@@ -17,6 +17,11 @@ on:
         required: true
         default: "true"
         type: string
+      DATASET_NAME:
+        description: "Choose a specific dataset to test, if empty all datasets will be used"
+        required: true
+        default: ""
+        type: string
 
 permissions: {}
 
@@ -24,6 +29,7 @@ env:
   # Will be set from inputs inside jobs as well (handy for artifact names)
   NMSLIB_VERSION: ${{ inputs.NMSLIB_VER }}
   PY_VERSION: ${{ inputs.PYTHON_VER }}
+  DATASET_NAME: ${{ inputs.DATASET_NAME }}
 
 jobs:
   # Tiny config job to allow easy enable/disable like your wheel builder
@@ -94,20 +100,15 @@ jobs:
         shell: bash
         env:
           BINDING_VER: ${{ env.NMSLIB_VERSION }}
+          DATASET_NAME: ${{ env.DATASET_NAME }}
         run: |
           set -euo pipefail
           python ./benchmark_nmslib.py \
+            --dataset_name "${DATASET_NAME}"  \
             --dataset_dir ./workdir/datasets \
             --work_dir ./workdir \
             --output "./workdir/${{ env.SUBDIR }}/results.json" \
             --binding_ver "${BINDING_VER}"
-
-      - name: Make plots
-        working-directory: benchmark
-        shell: bash
-        run: |
-          python ./make_plots.py "./workdir/${{ env.SUBDIR }}/results.json" \
-            --out "./workdir/${{ env.SUBDIR }}/plots"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -115,7 +116,6 @@ jobs:
           name: ${{ steps.prep.outputs.subdir }}
           path: |
             benchmark/workdir/${{ env.SUBDIR }}/results.json
-            benchmark/workdir/${{ env.SUBDIR }}/plots/
 
   windows:
     name: Windows benchmark
@@ -209,21 +209,15 @@ jobs:
         shell: pwsh
         env:
           BINDING_VER: ${{ env.NMSLIB_VERSION }}
+          DATASET_NAME: ${{ env.DATASET_NAME }}
         run: |
           $exe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
           & $exe .\benchmark_nmslib.py `
+             --dataset_name "$env:DATASET_NAME"  `
              --dataset_dir .\workdir\datasets `
              --work_dir .\workdir `
              --output ".\workdir\${{ env.SUBDIR }}\results.json" `
              --binding_ver "$env:BINDING_VER"
-
-      - name: Make plots
-        working-directory: benchmark
-        shell: pwsh
-        run: |
-          $exe = if ($env:RUNNER_ARCH -eq "ARM64") { "$env:PYTHON_ROOT\python.exe" } else { "python" }
-          & $exe .\make_plots.py ".\workdir\${{ env.SUBDIR }}\results.json" `
-             --out ".\workdir\${{ env.SUBDIR }}\plots"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -231,23 +225,50 @@ jobs:
           name: ${{ steps.prep.outputs.subdir }}
           path: |
             benchmark/workdir/${{ env.SUBDIR }}/results.json
-            benchmark/workdir/${{ env.SUBDIR }}/plots/
 
   aggregate:
     name: Aggregate all benchmark artifacts
     needs: [linux_macos, windows]
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: combined-benchmark-artifacts
 
+      - name: Setup Python for plotting
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.PYTHON_VER }}
+          allow-prereleases: true
+
+      - name: Install plotting requirements
+        run: |
+          python -m pip install -U pip
+          # Use the same requirements the benchmark uses (contains matplotlib, etc.)
+          python -m pip install -r benchmark/requirements.txt
+
+      - name: Render plots for every results.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find combined-benchmark-artifacts -type f -name results.json)
+          echo "Found ${#files[@]} results.json files"
+          for f in "${files[@]}"; do
+            outdir="$(dirname "$f")/plots"
+            mkdir -p "$outdir"
+            echo "Plotting: $f -> $outdir"
+            python benchmark/make_plots.py "$f" --out "$outdir"
+          done
+
       - name: Show combined contents
         run: ls -R combined-benchmark-artifacts
 
-      - name: Upload combined artifact
+      - name: Upload combined artifact (results + plots)
         uses: actions/upload-artifact@v4
         with:
           name: all-benchmark-results
           path: combined-benchmark-artifacts/
+
