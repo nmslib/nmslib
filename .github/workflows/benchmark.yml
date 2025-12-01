@@ -4,12 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       NMSLIB_VER:
-        description: "nmslib version to pip install (e.g., 2.12.2)"
+        description: "nmslib version to pip install (e.g., 2.1.2)"
         required: true
         type: string
       PYTHON_VER:
         description: "Python version to use (e.g., 3.11)"
         required: true
+        type: string
+      RUN_ARM:
+        description: "Run ARM-based benchmarks? true/false"
+        required: true
+        default: "true"
         type: string
 
 permissions: {}
@@ -26,11 +31,14 @@ jobs:
     outputs:
       run_linux_macos: ${{ steps.set.outputs.linux_macos }}
       run_windows: ${{ steps.set.outputs.windows }}
+      run_arm: ${{ steps.set.outputs.run_arm }}
     steps:
       - id: set
         run: |
           echo "linux_macos=true" >> "$GITHUB_OUTPUT"
           echo "windows=true" >> "$GITHUB_OUTPUT"
+          echo "run_arm=${{ inputs.RUN_ARM }}" >> "$GITHUB_OUTPUT"
+
 
   linux_macos:
     name: Linux & macOS benchmark
@@ -40,10 +48,15 @@ jobs:
     permissions:
       contents: read
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        # x64 + arm runners
-        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, macos-15-intel]
+        os: >
+          ${{ fromJson(
+            needs.config.outputs.run_arm == 'true'
+            && '["ubuntu-24.04", "ubuntu-24.04-arm", "macos-15", "macos-15-intel"]'
+            || '["ubuntu-24.04", "macos-15-intel"]'
+          ) }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -114,9 +127,15 @@ jobs:
     permissions:
       contents: read
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        os: [windows-2022, windows-11-arm]
+        os: >
+          ${{ fromJson(
+            needs.config.outputs.run_arm == 'true'
+            && '["windows-2022", "windows-11-arm"]'
+            || '["windows-2022"]'
+          ) }}
+
     steps:
       - uses: actions/checkout@v4
 
