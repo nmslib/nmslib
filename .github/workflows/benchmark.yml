@@ -20,7 +20,7 @@ on:
       DATASET_NAME:
         description: "Choose a specific dataset to test, if empty all datasets will be used"
         required: true
-        default: ""
+        default: "all"
         type: string
 
 permissions: {}

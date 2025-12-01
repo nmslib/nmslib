@@ -144,7 +144,7 @@ def main():
         print('You need to specify either --binary_dir or --binding_ver')
         sys.exit(1)
 
-    if args.dataset_name == "":
+    if args.dataset_name and args.dataset_name.lower() == "all":
         args.dataset_name = None
 
     # First make sure we have all the data
