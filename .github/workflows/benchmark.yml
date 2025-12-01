@@ -52,6 +52,7 @@ jobs:
     needs: config
     if: ${{ needs.config.outputs.run_linux_macos == 'true' }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 1200 
     permissions:
       contents: read
     strategy:
@@ -122,6 +123,7 @@ jobs:
     needs: config
     if: ${{ needs.config.outputs.run_windows == 'true' }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 1200 
     permissions:
       contents: read
     strategy:
