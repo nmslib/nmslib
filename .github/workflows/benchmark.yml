@@ -18,7 +18,7 @@ on:
         default: "true"
         type: string
       DATASET_NAME:
-        description: "Choose a specific dataset to test, if empty all datasets will be used"
+        description: "Choose a specific dataset to test, if set to 'all' then all datasets will be used"
         required: true
         default: "all"
         type: string
@@ -59,8 +59,8 @@ jobs:
       fail-fast: true
       matrix:
         os: ${{ fromJson(needs.config.outputs.run_arm == 'true'
-          && '["ubuntu-24.04","ubuntu-24.04-arm","macos-15","macos-15-intel"]'
-          || '["ubuntu-24.04","macos-15-intel"]') }}
+          && '["ubuntu-24.04", "ubuntu-24.04-arm", "macos-14", "macos-15", "macos-15-intel"]'
+          || '["ubuntu-24.04", "macos-15-intel"]') }}
 
     steps:
       - uses: actions/checkout@v4
