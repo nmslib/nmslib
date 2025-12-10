@@ -10,6 +10,7 @@
 * NMSLIB is generic but fast.
 * A history of creation of the library is covered in [this episode of the Vector Podcast](https://www.youtube.com/watch?v=gzWErcOXIKk&t=19s).
 * A standalone implementation of our fastest method HNSW [also exists as a header-only library](https://github.com/nmslib/hnswlib).
+* We provide binaries for Python 3.8-3.13 (also 3.14 for Linux) for three OS (Linux, MacOS, Windows) and two types of CPU (Intel, ARM).
 * **All the documentation** (including using **Python bindings** and the query server, description of methods and spaces, building the library, etc) can be found [on this page](/manual/README.md).
 * For **generic questions/inquiries**, please, use [**the Gitter chat**](https://gitter.im/nmslib/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge): GitHub issues page is for bugs and feature requests.
 
