@@ -22,7 +22,7 @@ MEM_TEST_ITER2=5
 # The key to stable memory testing is using a reasonably large number of points
 MEM_TEST_DATA_QTY=25000
 MEM_TEST_QUERY_QTY=200
-MEM_GROW_COEFF=1.5 # This is a bit adhoc but seems to work in practice
+MEM_GROW_COEFF=1.7 # This is a bit adhoc but seems to work in practice
 MEM_TEST_DATA_DIM=4
 
 RTOL=1e-7
