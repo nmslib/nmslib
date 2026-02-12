@@ -59,6 +59,15 @@ template <class T> T L2NormSIMD(const T* pVect1, const T* pVect2, size_t qty);
 
 float L2SqrSIMD(const float* pVect1, const float* pVect2, size_t qty);
 
+// Batched SIMD distance function with threshold checking between batches
+float L2SqrSIMDBatched(const float* pVect1, const float* pVect2, size_t qty, size_t batch_size, float threshold_sqr);
+
+// Batched SIMD LInf with threshold checking between batches
+float LInfNormSIMDBatched(const float* pVect1, const float* pVect2, size_t qty, size_t batch_size, float threshold);
+
+// Batched SIMD normalized scalar product (cosine similarity) with threshold checking
+// For top-k search where HIGHER similarity is better, threshold is minimum acceptable similarity
+float NormScalarProductSIMDBatched(const float* pVect1, const float* pVect2, size_t qty, size_t batch_size, float threshold);
 /*
  * Scalar product related distances 
  */

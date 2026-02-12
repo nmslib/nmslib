@@ -449,3 +449,57 @@ T LPGenericDistanceOptim(const T* x, const T* y, const int length, const T p) {
 template float LPGenericDistanceOptim<float>(const float* x, const float* y, const int length, const float p);
 
 }
+
+// Threshold-aware implementations with SIMD
+namespace similarity {
+
+// Batched SIMD implementation with threshold checking between batches
+float L2SqrSIMDBatched(const float* pVect1, const float* pVect2, size_t qty, size_t batch_size, float threshold_sqr) {
+    float res = 0.0f;
+    size_t processed = 0;
+    
+    while (processed < qty) {
+        size_t current_batch = (processed + batch_size <= qty) ? batch_size : (qty - processed);
+        
+        // Compute distance for current batch using SIMD (no branches in loop)
+        float batch_dist = L2SqrSIMD(&pVect1[processed], &pVect2[processed], current_batch);
+        res += batch_dist;
+        processed += current_batch;
+        
+        // Check threshold after batch (predictable branch location)
+        if (res > threshold_sqr) {
+            return res;
+        }
+    }
+    
+    return res;
+}
+
+// Batched SIMD LInf with threshold checking between batches
+float LInfNormSIMDBatched(const float* pVect1, const float* pVect2, size_t qty, size_t batch_size, float threshold) {
+    float max_diff = 0.0f;
+    size_t processed = 0;
+    
+    while (processed < qty) {
+        size_t current_batch = (processed + batch_size <= qty) ? batch_size : (qty - processed);
+        
+        // Compute max difference for current batch using SIMD (no branches in loop)
+        float batch_max = LInfNormSIMD(&pVect1[processed], &pVect2[processed], current_batch);
+        
+        // Update global max
+        if (batch_max > max_diff) {
+            max_diff = batch_max;
+        }
+        
+        processed += current_batch;
+        
+        // Check threshold after batch (predictable branch location)
+        if (max_diff > threshold) {
+            return max_diff;
+        }
+    }
+    
+    return max_diff;
+}
+
+} // namespace similarity
