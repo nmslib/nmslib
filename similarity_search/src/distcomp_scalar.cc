@@ -272,4 +272,36 @@ T CosineSimilarity(const T *p1, const T *p2, size_t qty)
 
 template float  CosineSimilarity<float>(const float* pVect1, const float* pVect2, size_t qty);
 
+// Batched normalized scalar product (cosine similarity) with threshold checking
+// ASSUMES PRE-NORMALIZED VECTORS (||v1|| = ||v2|| = 1.0)
+// For top-k: threshold is minimum acceptable similarity (higher is better)
+float NormScalarProductSIMDBatched(const float* pVect1, const float* pVect2, size_t qty, 
+                                   size_t batch_size, float threshold) {
+    // For normalized vectors, cosine similarity = dot product
+    // This reduces to simple dot product accumulation with early abort
+    
+    float dot_sum = 0.0f;
+    size_t processed = 0;
+    
+    while (processed < qty) {
+        size_t current_batch = (processed + batch_size <= qty) ? batch_size : (qty - processed);
+        
+        // Use SIMD to compute dot product for current batch
+        float batch_dot = ScalarProductSIMD(&pVect1[processed], &pVect2[processed], current_batch);
+        dot_sum += batch_dot;
+        processed += current_batch;
+        
+        // Optimistic bound: assume remaining dimensions contribute maximally (+1 each)
+        size_t remaining = qty - processed;
+        float optimistic_dot = dot_sum + remaining;
+        
+        // If even optimistic estimate is below threshold, abort
+        if (optimistic_dot < threshold) {
+            return dot_sum;
+        }
+    }
+    
+    return std::max(-1.0f, std::min(1.0f, dot_sum));
+}
+
 }
