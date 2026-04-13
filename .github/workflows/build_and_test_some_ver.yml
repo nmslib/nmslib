@@ -3,7 +3,7 @@ name: build & test
 permissions: {}
 
 on:
-  #workflow_dispatch:
+  workflow_dispatch:
   push:
     branches: ["**"]
   pull_request:
