@@ -24,6 +24,7 @@
  */
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
 
 #include "logging.h"
