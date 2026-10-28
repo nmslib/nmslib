@@ -51,6 +51,7 @@ struct IndexThreadParamsSW {
   SmallWorldRand<dist_t>&                     index_;
   IdType                                      startNodeId_;
   const ObjectVector&                         batchData_;
+  size_t                                      start_add_;
   size_t                                      index_every_;
   size_t                                      out_of_;
   ProgressDisplay*                            progress_bar_;
@@ -62,6 +63,7 @@ struct IndexThreadParamsSW {
                      SmallWorldRand<dist_t>&          index, 
                      IdType                           startNodeId,
                      const ObjectVector&              batchData,
+                     size_t                           start_add,
                      size_t                           index_every,
                      size_t                           out_of,
                      ProgressDisplay*                 progress_bar,
@@ -72,6 +74,7 @@ struct IndexThreadParamsSW {
                      index_(index), 
                      startNodeId_(startNodeId),
                      batchData_(batchData),
+                     start_add_(start_add),
                      index_every_(index_every),
                      out_of_(out_of),
                      progress_bar_(progress_bar),
@@ -86,12 +89,12 @@ struct IndexThreadSW {
     ProgressDisplay*  progress_bar = prm.progress_bar_;
     mutex&            display_mutex(prm.display_mutex_); 
     /* 
-     * Skip the first element, it was added already in the AddBatch
+     * Skip the first element only if AddBatch initialized an empty index
      */
     size_t futureNextNodeId = prm.startNodeId_ + prm.batchData_.size();
 
     size_t nextQty = prm.progress_update_qty_;
-    for (size_t id = 1; id < prm.batchData_.size(); ++id) {
+    for (size_t id = prm.start_add_; id < prm.batchData_.size(); ++id) {
       if (prm.index_every_ == id % prm.out_of_) {
         MSWNode* node = new MSWNode(prm.batchData_[id], id + prm.startNodeId_);
         prm.index_.add(node, futureNextNodeId);
@@ -187,7 +190,7 @@ void SmallWorldRand<dist_t>::AddBatch(const ObjectVector& batchData,
     for (size_t i = 0; i < indexThreadQty_; ++i) {
       threadParams.push_back(shared_ptr<IndexThreadParamsSW<dist_t>>(
                               new IndexThreadParamsSW<dist_t>(space_, *this, NextNodeId_, 
-                                                              batchData, 
+                                                              batchData, start_add,
                                                               i, indexThreadQty_,
                                                               progress_bar.get(), progressBarMutex, 200)));
     }
